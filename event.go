@@ -1,15 +1,18 @@
 package cloudevents
 
-// TODO: There is a value in providing a general-use function like this, but is it feasible?
+// Version01 holds a version string for CloudEvents specification version 0.1. See also EventV01 interface
+// https://github.com/cloudevents/spec/blob/v0.1/spec.md
+const Version01 = "0.1"
 
-// NewEvent takes map of attributes and optional data, and produces a CloudEvent with version that best matches
-// the provided input
-func NewEvent(context map[string]interface{}, data interface{}) (CloudEvent, error) {
-	panic("not implemented")
-}
-
-// FromJSON takes the data input and produces an instance of CloudEvent, if possible.
-// TODO: might make more sense in a encoding sub-package
-func FromJSON(data []byte) (CloudEvent, error) {
-	panic("not implemented")
+// Event interface is a generic abstraction over all possible versions and implementations of CloudEvents.
+type Event interface {
+	// CloudEventVersion returns the version of Event specification followed by the underlying implementation.
+	CloudEventVersion() string
+	// Get takes a property name and, if it exists, returns the value of that property. The ok return value can
+	// be used to verify if the property exists.
+	Get(property string) (value interface{}, ok bool)
+	// Set sets the property value
+	Set(property string, value interface{})
+	// Properties returns a map of all event properties as keys and their mandatory status as values
+	Properties() map[string]bool
 }
