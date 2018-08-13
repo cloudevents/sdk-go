@@ -28,3 +28,10 @@ type ContentTypeNotSupportedError string
 func (e ContentTypeNotSupportedError) Error() string {
 	return "provided content type " + string(e) + " is not supported"
 }
+
+// IllegalArgumentError is returned when an argument passed to a method is an illegal value
+type IllegalArgumentError string
+
+func (e IllegalArgumentError) Error() string {
+	return "argument " + string(e) + "is illegal"
+}

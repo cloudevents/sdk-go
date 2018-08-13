@@ -2,15 +2,19 @@ package cloudevents
 
 import (
 	"net/http"
-
-	"github.com/dispatchframework/cloudevents-go-sdk/v01"
+	"reflect"
 )
 
-// FromHTTPRequest parses a CloudEvent from any known encoding.
-func FromHTTPRequest(req *http.Request) (Event, error) {
-	// TODO: this should check the version of incoming CloudVersion header and create an appropriate event structure.
-	e := &v01.Event{}
-	err := e.FromHTTPRequest(req)
-	return e, err
+// HTTPMarshaller an interface with methods for creating CloudEvents
+type HTTPMarshaller interface {
+	FromRequest(req *http.Request) (Event, error)
+	ToRequest(req *http.Request, event Event) error
+}
 
+// HTTPCloudEventConverter an interface for defining converters that can read/write CloudEvents from HTTP requests
+type HTTPCloudEventConverter interface {
+	CanRead(t reflect.Type, mediaType string) bool
+	CanWrite(t reflect.Type, mediaType string) bool
+	Read(t reflect.Type, req *http.Request) (Event, error)
+	Write(t reflect.Type, req *http.Request, event Event) error
 }
