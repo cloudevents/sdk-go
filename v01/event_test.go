@@ -13,14 +13,14 @@ import (
 )
 
 func TestNewEvent(t *testing.T) {
-	timestamp, err := time.Parse(time.RFC3339, "2018-08-08T15:00:00+07:00")
+	timestamp, err := time.Parse(time.RFC3339, "2018-04-05T17:31:00Z")
 	require.NoError(t, err)
 
 	event := &v01.Event{
-		EventType:        "testType",
-		EventTypeVersion: "testVersion",
-		Source:           "version",
-		EventID:          "12345",
+		EventType:        "com.example.someevent",
+		EventTypeVersion: "1.1",
+		Source:           "/mycontext",
+		EventID:          "1234-1234-1234",
 		EventTime:        &timestamp,
 		SchemaURL:        "http://example.com/schema",
 		ContentType:      "application/json",
@@ -39,10 +39,10 @@ func TestNewEvent(t *testing.T) {
 
 func TestGetSet(t *testing.T) {
 	event := &v01.Event{
-		EventType:        "testType",
-		EventTypeVersion: "testVersion",
-		Source:           "version",
-		EventID:          "12345",
+		EventType:        "com.example.someevent",
+		EventTypeVersion: "1.1",
+		Source:           "/mycontext",
+		EventID:          "1234-1234-1234",
 		EventTime:        nil,
 		SchemaURL:        "http://example.com/schema",
 		ContentType:      "application/json",
@@ -88,12 +88,12 @@ func TestProperties(t *testing.T) {
 func TestUnmarshallJSON(t *testing.T) {
 
 	var actual v01.Event
-	err := json.Unmarshal([]byte("{\"eventType\":\"dispatch\", \"eventTime\":\"2018-08-08T15:00:00+07:00\", \"myextension\":\"myValue\", \"data\": {\"topKey\" : \"topValue\", \"objectKey\": {\"embedKey\" : \"embedValue\"} }}"), &actual)
+	err := json.Unmarshal([]byte("{\"eventType\":\"com.example.someevent\", \"eventTime\":\"2018-04-05T17:31:00Z\", \"myextension\":\"myValue\", \"data\": {\"topKey\" : \"topValue\", \"objectKey\": {\"embedKey\" : \"embedValue\"} }}"), &actual)
 	assert.NoError(t, err)
 
-	timestamp, _ := time.Parse(time.RFC3339, "2018-08-08T15:00:00+07:00")
+	timestamp, _ := time.Parse(time.RFC3339, "2018-04-05T17:31:00Z")
 	expected := v01.Event{
-		EventType: "dispatch",
+		EventType: "com.example.someevent",
 		EventTime: &timestamp,
 		Data: map[string]interface{}{
 			"topKey": "topValue",
@@ -108,12 +108,12 @@ func TestUnmarshallJSON(t *testing.T) {
 }
 
 func TestMarshallJSON(t *testing.T) {
-	timestamp, _ := time.Parse(time.RFC3339, "2018-08-08T15:00:00+07:00")
+	timestamp, _ := time.Parse(time.RFC3339, "2018-04-05T17:31:00Z")
 	input := v01.Event{
 		CloudEventsVersion: "0.1",
-		EventID:            "00001",
-		EventType:          "dispatch",
-		Source:             "cloudevents.producer",
+		EventID:            "1234-1234-1234",
+		EventType:          "com.example.someevent",
+		Source:             "/mycontext",
 		EventTime:          &timestamp,
 		Data: map[string]interface{}{
 			"topKey": "topValue",
@@ -125,7 +125,7 @@ func TestMarshallJSON(t *testing.T) {
 	input.Set("myExtension", "myValue")
 
 	actual, err := json.Marshal(input)
-	expected := []byte("{\"cloudEventsVersion\":\"0.1\",\"data\":{\"objectKey\":{\"embedKey\":\"embedValue\"},\"topKey\":\"topValue\"},\"eventID\":\"00001\",\"eventTime\":\"2018-08-08T15:00:00+07:00\",\"eventType\":\"dispatch\",\"myextension\":\"myValue\",\"source\":\"cloudevents.producer\"}")
+	expected := []byte("{\"cloudEventsVersion\":\"0.1\",\"data\":{\"objectKey\":{\"embedKey\":\"embedValue\"},\"topKey\":\"topValue\"},\"eventID\":\"1234-1234-1234\",\"eventTime\":\"2018-04-05T17:31:00Z\",\"eventType\":\"com.example.someevent\",\"myextension\":\"myValue\",\"source\":\"/mycontext\"}")
 	assert.NoError(t, err)
 	assert.Equal(t, expected, actual)
 }

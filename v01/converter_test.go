@@ -102,7 +102,7 @@ func TestFromRequestConverterError(t *testing.T) {
 
 func TestFromRequestSuccess(t *testing.T) {
 	expected := &v01.Event{
-		EventType:        "example",
+		EventType:        "com.example.someevent",
 		EventID:          "00001",
 		EventTypeVersion: "0.1",
 	}
@@ -267,7 +267,7 @@ func TestJSONConverterReadError(t *testing.T) {
 func TestJSONConverterReadSuccess(t *testing.T) {
 	principal := v01.NewJSONHTTPCloudEventConverter()
 
-	body := bytes.NewBufferString("{\"eventType\":\"example\"}")
+	body := bytes.NewBufferString("{\"eventType\":\"com.example.someevent\"}")
 	req := httptest.NewRequest("GET", "localhost:8080", body)
 
 	actual, err := principal.Read(reflect.TypeOf(v01.Event{}), req)
@@ -275,7 +275,7 @@ func TestJSONConverterReadSuccess(t *testing.T) {
 	require.NoError(t, err)
 
 	expected := &v01.Event{
-		EventType: "example",
+		EventType: "com.example.someevent",
 	}
 
 	assert.Equal(t, expected, actual)
@@ -295,16 +295,16 @@ func TestJSONConverterWriteError(t *testing.T) {
 func TestFromRequestJSONSuccess(t *testing.T) {
 	factory := v01.NewDefaultHTTPMarshaller()
 
-	myDate, err := time.Parse(time.RFC3339, "2018-08-08T15:00:00+07:00")
+	myDate, err := time.Parse(time.RFC3339, "2018-04-05T03:56:24Z")
 	if err != nil {
 		t.Error(err.Error())
 	}
 	event := v01.Event{
 		CloudEventsVersion: "0.1",
-		EventType:          "dispatch",
-		EventTypeVersion:   "0.1",
-		EventID:            "00001",
-		Source:             "dispatch",
+		EventType:          "com.example.someevent",
+		EventTypeVersion:   "1.1",
+		EventID:            "1234-1234-1234",
+		Source:             "/mycontext/subcontext",
 		SchemaURL:          "http://example.com",
 		EventTime:          &myDate,
 	}
@@ -320,10 +320,10 @@ func TestFromRequestJSONSuccess(t *testing.T) {
 
 	expected := &v01.Event{
 		CloudEventsVersion: "0.1",
-		EventType:          "dispatch",
-		EventTypeVersion:   "0.1",
-		EventID:            "00001",
-		Source:             "dispatch",
+		EventType:          "com.example.someevent",
+		EventTypeVersion:   "1.1",
+		EventID:            "1234-1234-1234",
+		Source:             "/mycontext/subcontext",
 		SchemaURL:          "http://example.com",
 		EventTime:          &myDate,
 	}
@@ -335,10 +335,10 @@ func TestHTTPMarshallerToRequestJSONSuccess(t *testing.T) {
 	factory := v01.NewDefaultHTTPMarshaller()
 
 	event := v01.Event{
-		EventType:        "dispatch",
-		EventTypeVersion: "0.1",
-		EventID:          "00001",
-		Source:           "dispatch",
+		EventType:        "com.example.someevent",
+		EventTypeVersion: "1.1",
+		EventID:          "1234-1234-1234",
+		Source:           "/mycontext/subcontext",
 	}
 	event.Set("myint", 100)
 	event.Set("myfloat", 100e+3)
@@ -366,12 +366,12 @@ func TestHTTPMarshallerFromRequestBinarySuccess(t *testing.T) {
 
 	header := http.Header{}
 	header.Set("Content-Type", "application/json")
-	header.Set("CE-EventType", "dispatch")
-	header.Set("CE-Source", "dispatch")
-	header.Set("CE-EventID", "00001")
+	header.Set("CE-EventType", "com.example.someevent")
+	header.Set("CE-Source", "/mycontext/subcontext")
+	header.Set("CE-EventID", "1234-1234-1234")
 	header.Set("CE-MyExtension", "myvalue")
 	header.Set("CE-AnotherExtension", "anothervalue")
-	header.Set("CE-EventTime", "2018-08-08T15:00:00-07:00")
+	header.Set("CE-EventTime", "2018-04-05T03:56:24Z")
 
 	body := bytes.NewBufferString("{\"key1\":\"value1\", \"key2\":\"value2\"}")
 	req := httptest.NewRequest("GET", "localhost:8080", ioutil.NopCloser(body))
@@ -380,12 +380,12 @@ func TestHTTPMarshallerFromRequestBinarySuccess(t *testing.T) {
 	actual, err := factory.FromRequest(req)
 	require.NoError(t, err)
 
-	timestamp, err := time.Parse(time.RFC3339, "2018-08-08T15:00:00-07:00")
+	timestamp, err := time.Parse(time.RFC3339, "2018-04-05T03:56:24Z")
 	expected := &v01.Event{
 		ContentType: "application/json",
-		EventType:   "dispatch",
-		Source:      "dispatch",
-		EventID:     "00001",
+		EventType:   "com.example.someevent",
+		Source:      "/mycontext/subcontext",
+		EventID:     "1234-1234-1234",
 		EventTime:   &timestamp,
 		Data: map[string]interface{}{
 			"key1": "value1",
@@ -403,10 +403,10 @@ func TestHTTPMarshallerToRequestBinarySuccess(t *testing.T) {
 	factory := v01.NewDefaultHTTPMarshaller()
 
 	event := v01.Event{
-		EventType:        "dispatch",
-		EventTypeVersion: "0.1",
-		EventID:          "00001",
-		Source:           "dispatch",
+		EventType:        "com.example.someevent",
+		EventTypeVersion: "1.1",
+		EventID:          "1234-1234-1234",
+		Source:           "/mycontext/subcontext",
 		ContentType:      "application/json",
 		Data: map[string]interface{}{
 			"key1": "value1",
@@ -429,10 +429,10 @@ func TestHTTPMarshallerToRequestBinarySuccess(t *testing.T) {
 		"key2": "value2",
 	})
 	expected, _ := http.NewRequest("GET", "localhost:8080", &buffer)
-	expected.Header.Set("CE-EventID", "00001")
-	expected.Header.Set("CE-EventType", "dispatch")
-	expected.Header.Set("CE-EventTypeVersion", "0.1")
-	expected.Header.Set("CE-Source", "dispatch")
+	expected.Header.Set("CE-EventID", "1234-1234-1234")
+	expected.Header.Set("CE-EventType", "com.example.someevent")
+	expected.Header.Set("CE-EventTypeVersion", "1.1")
+	expected.Header.Set("CE-Source", "/mycontext/subcontext")
 	expected.Header.Set("CE-Myfloat", "100000")
 	expected.Header.Set("CE-Myint", "100")
 	expected.Header.Set("CE-Mybool", "true")

@@ -7,12 +7,13 @@ Package cloudevents provides primitives to work with CloudEvents specification: 
 Parsing Event from HTTP Request:
 ```go
 import "github.com/dispatchframework/cloudevents-go-sdk"
+	marshaller := v01.NewDefaultHTTPMarshaller()
 	// req is *http.Request
-	event, err := cloudEvents.FromHTTPRequest(req)
+	event, err := marshaller.FromRequest(req)
 	if err != nil {
 		panic("Unable to parse event from http Request: " + err.String())
 	}
-	fmt.Printf("eventType: %s", event.EventType)
+	fmt.Printf("eventType: %s", event.Get("eventType")
 ```
 
 Creating a minimal CloudEvent in version 0.1:
@@ -27,8 +28,9 @@ import "github.com/dispatchframework/cloudevents-go-sdk/v01"
 
 Creating HTTP request from CloudEvent:
 ```
+marshaller := v01.NewDefaultHTTPMarshaller()
 var req *http.Request
-err := event.ToHTTPRequest(req)
+err := event.ToRequest(req)
 if err != nil {
 	panic("Unable to marshal event into http Request: " + err.String())
 }

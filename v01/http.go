@@ -45,7 +45,7 @@ func (e Event) MarshalBinary(req *http.Request) error {
 
 		opts := parseCloudEventsTag(structField)
 
-		if opts.body {
+		if opts.body { // ignore the field designated as the body
 			continue
 		}
 
