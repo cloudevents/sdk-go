@@ -3,15 +3,13 @@ package v01
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
+	"encoding/xml"
 	"fmt"
+	"io"
 	"io/ioutil"
-	"mime"
 	"net/http"
+	"reflect"
 	"strings"
-	"time"
-
-	"github.com/dispatchframework/cloudevents-go-sdk"
 )
 
 // HTTPFormat type wraps supported modes of formatting CloudEvent as HTTP request.
@@ -31,150 +29,157 @@ const (
 	ceContentType = "application/cloudevents"
 )
 
-// FromHTTPRequest parses the http request and returns a CloudEvent.
-// https://github.com/cloudevents/spec/blob/a12b6b618916c89bfa5595fc76732f07f89219b5/http-transport-binding.md
-func (e *Event) FromHTTPRequest(req *http.Request) error {
-	if req == nil {
-		return errors.New("cannot process nil-request")
-	}
+// MarshalBinary marshal an event in the binary representation
+func (e Event) MarshalBinary(req *http.Request) error {
+	t := reflect.TypeOf(e)
+	eventValue := reflect.ValueOf(e)
 
-	reqContentType := req.Header.Get("Content-Type")
-	if strings.HasPrefix(reqContentType, ceContentType) {
-		// CE content type should indicate structured mode according to spec
-		return e.eventFromRequestStructured(req)
-	}
-	// binary mode
+	header := http.Header{}
 
-	e.Source = req.Header.Get(headerize(sourceKey))
-	e.EventID = req.Header.Get(headerize(eventIDKey))
-	e.EventType = req.Header.Get(headerize(eventTypeKey))
-
-	if err := e.Validate(); err != nil {
-		return fmt.Errorf("unable to parse event context from request headers: %s", err.Error())
-	}
-
-	e.ContentType = req.Header.Get("Content-Type")
-	e.EventTypeVersion = req.Header.Get(headerize(eventTypeVersionKey))
-	e.SchemaURL = req.Header.Get(headerize(schemaURLKey))
-	timeString := req.Header.Get(headerize(eventTimeKey))
-	if timeString != "" {
-
-		t, err := time.Parse(time.RFC3339, timeString)
-		if err != nil {
-			return fmt.Errorf("error parsing the %s header: %s", headerize(eventTimeKey), err.Error())
+	for i := 0; i < t.NumField(); i++ {
+		field := eventValue.Field(i)
+		structField := t.Field(i)
+		if !field.CanInterface() || isZero(field, structField.Type) { //ignore unexported/unset fields
+			continue
 		}
-		e.EventTime = &t
+
+		opts := parseCloudEventsTag(structField)
+
+		if opts.body { // ignore the field designated as the body
+			continue
+		}
+
+		header.Set(opts.name, fmt.Sprintf("%v", field.Interface()))
 	}
 
-	// TODO: implement encoder/decoder registry
-
-	if req.ContentLength == 0 {
-		return nil
+	for k, v := range e.extension {
+		header.Set(headerize(k), fmt.Sprintf("%v", v))
 	}
 
-	var err error
-	e.Data, err = ioutil.ReadAll(req.Body)
-	if err != nil {
-		return fmt.Errorf("error reading request body: %s", err.Error())
+	req.Header = header
+
+	data := e.Data
+	buffer := &bytes.Buffer{}
+	switch req.Header.Get("Content-Type") {
+	case "application/json":
+		json.NewEncoder(buffer).Encode(data)
+	case "application/xml":
+		xml.NewEncoder(buffer).Encode(data)
+	default:
+		buffer = bytes.NewBuffer(data.([]byte))
 	}
+
+	req.Body = ioutil.NopCloser(buffer)
+	req.ContentLength = int64(buffer.Len())
+	req.GetBody = func() (io.ReadCloser, error) {
+		reader := bytes.NewReader(buffer.Bytes())
+		return ioutil.NopCloser(reader), nil
+	}
+
 	return nil
-
 }
 
-func (e *Event) eventFromRequestStructured(req *http.Request) error {
-	mimeType, _, err := mime.ParseMediaType(req.Header.Get("Content-Type"))
-	if err != nil {
-		return fmt.Errorf("error parsing request content type: %s", err.Error())
+// UnmarshalBinary unmarshal an event into the binary representation
+func (e *Event) UnmarshalBinary(req *http.Request) error {
+	t := reflect.TypeOf(*e)
+	target := reflect.New(t).Elem()
+
+	extension := make(map[string]interface{})
+
+	var fieldNames = make(map[string]string, t.NumField())
+	for i := 0; i < t.NumField(); i++ {
+		name := t.Field(i).Name
+		fieldNames[strings.ToLower(name)] = name
 	}
-	switch {
-	case strings.HasSuffix(mimeType, "+json"):
-		data, err := ioutil.ReadAll(req.Body)
+
+	for k, v := range req.Header {
+		if !strings.HasPrefix(k, "Ce") {
+			continue
+		}
+
+		k = strings.TrimLeft(k, "Ce-")
+		k = strings.TrimLeft(k, "X-")
+		k = strings.Replace(k, "-", "", -1)
+
+		fieldName, ok := fieldNames[strings.ToLower(k)]
+
+		if !ok {
+			extension[strings.ToLower(k)] = v[0]
+			continue
+		}
+
+		field := target.FieldByName(fieldName)
+		assignToFieldByType(&field, v[0])
+	}
+
+	contentType := req.Header.Get("Content-Type")
+	target.FieldByName("ContentType").SetString(contentType)
+
+	if req.ContentLength != 0 {
+		var data interface{}
+		var err error
+		switch contentType {
+		case "application/json":
+			err = json.NewDecoder(req.Body).Decode(&data)
+		case "application/xml":
+			err = xml.NewDecoder(req.Body).Decode(&data)
+		default:
+			buffer := &bytes.Buffer{}
+			buffer.ReadFrom(req.Body)
+			data = buffer.Bytes()
+		}
+
 		if err != nil {
 			return fmt.Errorf("error reading request body: %s", err.Error())
 		}
 
-		err = json.Unmarshal(data, e)
-		if err != nil {
-			return fmt.Errorf("error parsing request json: %s", err.Error())
-		}
-		return nil
-
-	default:
-		return cloudevents.ContentTypeNotSupportedError(mimeType)
+		target.FieldByName("Data").Set(reflect.ValueOf(data))
 	}
+
+	targetEvent := target.Interface().(Event)
+	targetEvent.extension = extension
+	*e = targetEvent
+
+	return nil
 }
 
-// ToHTTPRequest takes a pointer to existing http.Request struct and a binding format,
-// and injects the event into to the struct using a format specified in CloudEvents HTTP transport binding.
-// https://github.com/cloudevents/spec/blob/a12b6b618916c89bfa5595fc76732f07f89219b5/http-transport-binding.md
-func (e *Event) ToHTTPRequest(req *http.Request, format HTTPFormat) error {
-	switch format {
-	case FormatBinary:
-		req.Header.Set(headerize(eventTypeKey), e.EventType)
-		req.Header.Set(headerize(eventIDKey), e.EventID)
-		req.Header.Set(headerize(sourceKey), e.Source)
+type cloudeventsEncodeOpts struct {
+	name     string
+	required bool
+	body     bool
+	ignored  bool
+}
 
-		if e.ContentType != "" {
-			req.Header.Set("Content-Type", e.ContentType)
-		}
-		if e.EventTypeVersion != "" {
-			req.Header.Set(headerize(eventTypeVersionKey), e.EventTypeVersion)
-		}
-		if e.SchemaURL != "" {
-			req.Header.Set(headerize(schemaURLKey), e.SchemaURL)
-		}
-		if e.EventTime != nil {
-			req.Header.Set(headerize(eventTimeKey), e.EventTime.Format(time.RFC3339))
-		}
-
-		// TODO: this is not bulletproof, should take care of nested keys
-		for key, extensionVal := range e.Extensions {
-			req.Header.Set("CE-X-"+strings.Title(key), fmt.Sprintf("%v", extensionVal))
-		}
-
-		data, err := marshalEventData(e.ContentType, e.Data)
-		if err != nil {
-			return fmt.Errorf("error marshaling event data: %s", err.Error())
-		}
-		req.Body = ioutil.NopCloser(bytes.NewReader(data))
-
-		return nil
-
-	case FormatJSON:
-		data, err := e.MarshalJSON()
-		if err != nil {
-			return fmt.Errorf("error marshaling event to JSON: %s", err.Error())
-		}
-		req.Body = ioutil.NopCloser(bytes.NewBuffer(data))
-		return nil
-	default:
-		return fmt.Errorf("format %s not implemented", format)
+func parseCloudEventsTag(field reflect.StructField) cloudeventsEncodeOpts {
+	tag := field.Tag.Get("cloudevents")
+	opts := cloudeventsEncodeOpts{}
+	if tag == "-" {
+		opts.ignored = true
+		return opts
 	}
 
+	options := strings.SplitN(tag, ",", 2)
+
+	opts.name = options[0]
+	if opts.name == "" {
+		opts.name = field.Name
+	}
+
+	if len(options) == 1 {
+		return opts
+	}
+
+	if strings.Contains(options[1], "required") {
+		opts.required = true
+	}
+
+	if strings.Contains(options[1], "body") {
+		opts.body = true
+	}
+
+	return opts
 }
 
 func headerize(property string) string {
 	return "CE-" + strings.Title(property)
-}
-
-func marshalEventData(encoding string, data interface{}) ([]byte, error) {
-	var b []byte
-	var err error
-
-	switch {
-	case isJSONEncoding(encoding):
-		b, err = json.Marshal(data)
-
-	default:
-		return nil, fmt.Errorf("cannot encode content type %s", encoding)
-	}
-
-	if err != nil {
-		return nil, err
-	}
-	return b, nil
-}
-
-func isJSONEncoding(encoding string) bool {
-	return encoding == "application/json" || encoding == "text/json"
 }
