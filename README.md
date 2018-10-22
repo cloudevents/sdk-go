@@ -52,6 +52,6 @@ the same API. It will use semantic versioning with following rules:
 
 Existing projects that added support for CloudEvents in Go are listed below. It's our goal to identify existing patterns
 of using CloudEvents in Go-based project and design the SDK to support these patterns (where it makes sense).
-- https://github.com/google/cloudevents-demo/tree/master/pkg/event
+- https://github.com/knative/eventing/tree/master/pkg/event
 - https://github.com/vmware/dispatch/blob/master/pkg/events/cloudevent.go
 - https://github.com/serverless/event-gateway/tree/master/event
