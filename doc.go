@@ -11,7 +11,7 @@ Parsing Event from HTTP Request:
 
 
 Creating a minimal CloudEvent in version 0.1:
-    import "github.com/dispatchframework/cloudevents-go-sdk/v01"
+    import "github.com/cloudevents/sdk-go/v01"
 	event := v01.Event{
 		EventType:        "com.example.file.created",
 		Source:           "/providers/Example.COM/storage/account#fileServices/default/{new-file}",

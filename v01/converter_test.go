@@ -11,14 +11,12 @@ import (
 	"testing"
 	"time"
 
+	cloudevents "github.com/cloudevents/sdk-go"
+	mocks "github.com/cloudevents/sdk-go/mocks"
+	"github.com/cloudevents/sdk-go/v01"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-
-	"github.com/stretchr/testify/assert"
-
-	cloudevents "github.com/dispatchframework/cloudevents-go-sdk"
-	mocks "github.com/dispatchframework/cloudevents-go-sdk/mocks"
-	"github.com/dispatchframework/cloudevents-go-sdk/v01"
 )
 
 func TestFromRequestNilRequest(t *testing.T) {

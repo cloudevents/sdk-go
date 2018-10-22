@@ -6,7 +6,7 @@ Package cloudevents provides primitives to work with CloudEvents specification: 
 
 Parsing Event from HTTP Request:
 ```go
-import "github.com/dispatchframework/cloudevents-go-sdk"
+import "github.com/cloudevents/sdk-go"
 	marshaller := v01.NewDefaultHTTPMarshaller()
 	// req is *http.Request
 	event, err := marshaller.FromRequest(req)
@@ -18,7 +18,7 @@ import "github.com/dispatchframework/cloudevents-go-sdk"
 
 Creating a minimal CloudEvent in version 0.1:
 ```go
-import "github.com/dispatchframework/cloudevents-go-sdk/v01"
+import "github.com/cloudevents/sdk-go/v01"
 	event := v01.Event{
 		EventType:        "com.example.file.created",
 		Source:           "/providers/Example.COM/storage/account#fileServices/default/{new-file}",
