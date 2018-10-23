@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"reflect"
 
-	"github.com/dispatchframework/cloudevents-go-sdk"
+	"github.com/cloudevents/sdk-go"
 )
 
 // HTTPMarshaller A struct representing the v01 version of the HTTPMarshaller

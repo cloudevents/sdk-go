@@ -6,10 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-
-	"github.com/dispatchframework/cloudevents-go-sdk/v01"
+	"github.com/cloudevents/sdk-go/v01"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewEvent(t *testing.T) {
