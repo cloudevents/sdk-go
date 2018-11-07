@@ -97,8 +97,8 @@ func (e *Event) UnmarshalBinary(req *http.Request) error {
 			continue
 		}
 
-		k = strings.TrimLeft(k, "Ce-")
-		k = strings.TrimLeft(k, "X-")
+		k = strings.TrimPrefix(k, "Ce-")
+		k = strings.TrimPrefix(k, "X-")
 		k = strings.Replace(k, "-", "", -1)
 
 		fieldName, ok := fieldNames[strings.ToLower(k)]

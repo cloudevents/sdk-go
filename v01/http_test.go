@@ -24,6 +24,7 @@ func TestHTTPMarshallerFromRequestBinaryBase64Success(t *testing.T) {
 	header.Set("CE-MyExtension", "myvalue")
 	header.Set("CE-AnotherExtension", "anothervalue")
 	header.Set("CE-EventTime", "2018-04-05T17:31:00Z")
+	header.Set("CE-CloudEventsVersion", "0.1")
 
 	body := bytes.NewBufferString("This is a byte array of data.")
 	req := httptest.NewRequest("GET", "localhost:8080", ioutil.NopCloser(body))
@@ -34,12 +35,13 @@ func TestHTTPMarshallerFromRequestBinaryBase64Success(t *testing.T) {
 
 	timestamp, err := time.Parse(time.RFC3339, "2018-04-05T17:31:00Z")
 	expected := &v01.Event{
-		ContentType: "application/octet-stream",
-		EventType:   "com.example.someevent",
-		Source:      "/mycontext",
-		EventID:     "1234-1234-1234",
-		EventTime:   &timestamp,
-		Data:        []byte("This is a byte array of data."),
+		CloudEventsVersion: "0.1",
+		ContentType:        "application/octet-stream",
+		EventType:          "com.example.someevent",
+		Source:             "/mycontext",
+		EventID:            "1234-1234-1234",
+		EventTime:          &timestamp,
+		Data:               []byte("This is a byte array of data."),
 	}
 
 	expected.Set("myextension", "myvalue")
