@@ -1,4 +1,4 @@
-package v01
+package v02
 
 import (
 	"encoding/json"
@@ -7,49 +7,40 @@ import (
 	"time"
 )
 
-// Event implements the the CloudEvents specification version 0.1
-// https://github.com/cloudevents/spec/blob/v0.1/spec.md
+// Event implements the the CloudEvents specification version master (0.2)
+// https://github.com/cloudevents/spec/blob/master/spec.md
 type Event struct {
-	// CloudEventsVersion is a mandatory property
-	// https://github.com/cloudevents/spec/blob/v0.1/spec.md#cloudeventsversion
-	CloudEventsVersion string `json:"cloudEventsVersion" cloudevents:"CE-CloudEventsVersion,required"`
+	// SpecVersion is a mandatory property
+	// https://github.com/cloudevents/spec/blob/master/spec.md#specversion
+	SpecVersion string `json:"specversion" cloudevents:"CE-SpecVersion,required"`
 	// EventType is a mandatory property
-	// https://github.com/cloudevents/spec/blob/v0.1/spec.md#eventtype
-	EventType string `json:"eventType" cloudevents:"CE-EventType,required"`
+	// https://github.com/cloudevents/spec/blob/master/spec.md#eventtype
+	Type string `json:"type" cloudevents:"CE-Type,required"`
 	// EventTypeVersion is an optional property
-	// https://github.com/cloudevents/spec/blob/v0.1/spec.md#eventtypeversion
-	EventTypeVersion string `json:"eventTypeVersion,omitempty" cloudevents:"CE-EventTypeVersion"`
-	// Source is a mandatory property
-	// TODO: ensure URI parsing
-	// https://github.com/cloudevents/spec/blob/v0.1/spec.md#source
+	// https://github.com/cloudevents/spec/blob/master/spec.md#eventtypeversion
 	Source string `json:"source" cloudevents:"CE-Source,required"`
 	// EventID is a mandatory property
-	// https://github.com/cloudevents/spec/blob/v0.1/spec.md#eventid
-	EventID string `json:"eventID" cloudevents:"CE-EventID,required"`
+	// https://github.com/cloudevents/spec/blob/master/spec.md#eventid
+	ID string `json:"id" cloudevents:"CE-ID,required"`
 	// EventTime is an optional property
-	// https://github.com/cloudevents/spec/blob/v0.1/spec.md#eventtime
-	EventTime *time.Time `json:"eventTime,omitempty" cloudevents:"CE-EventTime"`
+	// https://github.com/cloudevents/spec/blob/master/spec.md#eventtime
+	Time *time.Time `json:"time,omitempty" cloudevents:"CE-Time"`
 	// SchemaURL is an optional property
-	// https://github.com/cloudevents/spec/blob/v0.1/spec.md#schemaurl
-	SchemaURL string `json:"schemaURL,omitempty" cloudevents:"CE-SchemaURL"`
+	// https://github.com/cloudevents/spec/blob/master/spec.md#schemaurl
+	SchemaURL string `json:"schemaurl,omitempty" cloudevents:"CE-SchemaURL"`
 	// ContentType is an optional property
-	// https://github.com/cloudevents/spec/blob/v0.1/spec.md#contenttype
-	ContentType string `json:"contentType,omitempty" cloudevents:"Content-Type"`
+	// https://github.com/cloudevents/spec/blob/master/spec.md#contenttype
+	ContentType string `json:"contenttype,omitempty" cloudevents:"Content-Type"`
 	// Data is an optional property
-	// https://github.com/cloudevents/spec/blob/v0.1/spec.md#data-1
+	// https://github.com/cloudevents/spec/blob/master/spec.md#data-1
 	Data interface{} `json:"data,omitempty" cloudevents:",body"`
 	// extension an internal map for extension properties not defined in the spec
 	extension map[string]interface{}
 }
 
-// CloudEventVersion returns the CloudEvents specification version supported by this implementation
-func (e Event) CloudEventVersion() (version string) {
-	return e.CloudEventsVersion
-}
-
-// GetSpecVersion returns the CloudEvents specification version supported by this implementation (forwards compatible with 0.1+)
+// GetSpecVersion returns the CloudEvents specification version supported by this implementation
 func (e Event) GetSpecVersion() (version string) {
-	return e.CloudEventsVersion
+	return e.SpecVersion
 }
 
 // Get gets a CloudEvent property value

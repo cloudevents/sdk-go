@@ -6,8 +6,8 @@ const Version01 = "0.1"
 
 // Event interface is a generic abstraction over all possible versions and implementations of CloudEvents.
 type Event interface {
-	// CloudEventVersion returns the version of Event specification followed by the underlying implementation.
-	CloudEventVersion() string
+	// GetSpecVersion returns the version of Event specification followed by the underlying implementation.
+	GetSpecVersion() string
 	// Get takes a property name and, if it exists, returns the value of that property. The ok return value can
 	// be used to verify if the property exists.
 	Get(property string) (value interface{}, ok bool)
