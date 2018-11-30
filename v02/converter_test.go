@@ -297,7 +297,7 @@ func TestFromRequestJSONSuccess(t *testing.T) {
 		t.Error(err.Error())
 	}
 	event := v02.Event{
-		SpecVersion: "0.1",
+		SpecVersion: cloudevents.Version02,
 		Type:        "com.example.someevent",
 		ID:          "1234-1234-1234",
 		Source:      "/mycontext/subcontext",
@@ -315,7 +315,7 @@ func TestFromRequestJSONSuccess(t *testing.T) {
 	require.NoError(t, err)
 
 	expected := &v02.Event{
-		SpecVersion: "0.1",
+		SpecVersion: cloudevents.Version02,
 		Type:        "com.example.someevent",
 		ID:          "1234-1234-1234",
 		Source:      "/mycontext/subcontext",

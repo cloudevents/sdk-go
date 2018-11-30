@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/v02"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -52,7 +53,7 @@ func TestHTTPMarshallerToRequestBinaryBase64Success(t *testing.T) {
 	factory := v02.NewDefaultHTTPMarshaller()
 
 	event := v02.Event{
-		SpecVersion: "0.1",
+		SpecVersion: cloudevents.Version02,
 		Type:        "com.example.someevent",
 		ID:          "1234-1234-1234",
 		Source:      "/mycontext",
@@ -72,7 +73,7 @@ func TestHTTPMarshallerToRequestBinaryBase64Success(t *testing.T) {
 	buffer := bytes.NewBufferString("This is a byte array of data")
 
 	expected, _ := http.NewRequest("GET", "localhost:8080", buffer)
-	expected.Header.Set("CE-SpecVersion", "0.1")
+	expected.Header.Set("CE-SpecVersion", cloudevents.Version02)
 	expected.Header.Set("CE-ID", "1234-1234-1234")
 	expected.Header.Set("CE-Type", "com.example.someevent")
 	expected.Header.Set("CE-Source", "/mycontext")

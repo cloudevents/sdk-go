@@ -107,7 +107,7 @@ func TestUnmarshallJSON(t *testing.T) {
 func TestMarshallJSON(t *testing.T) {
 	timestamp, _ := time.Parse(time.RFC3339, "2018-04-05T17:31:00Z")
 	input := v02.Event{
-		SpecVersion: "0.1",
+		SpecVersion: "0.2",
 		ID:          "1234-1234-1234",
 		Type:        "com.example.someevent",
 		Source:      "/mycontext",
