@@ -2,33 +2,39 @@
 
 **NOTE: This SDK is still considered work in progress, things might (and will) break with every update.**
 
+## New for v0.2
+For this release extensions have been moved to top level properties. Previously extensions were defined in an extensions map, which was itself a top level property. All CloudEvent properties can be accessed using the generic Get method, or the type checked versions, e.g. GetString, GetMap, etc., but only the well known properties allow for direct field access. The marshallers handle packing and unpacking the extensions into an internal map.
+
+This release also makes significant changes to the CloudEvent property names. All property names on the wire are now lower case with no separator characters. This ensures that these names are recognized across transports, which have different standards for property names. This release also removes the redundant 'event' prefix on property names. So EventType becomes Type and EventID become ID, etc. One special case is CloudEventsVersion, which becomes SpecVersion. 
+
+## Working with CloudEvents
 Package cloudevents provides primitives to work with CloudEvents specification: https://github.com/cloudevents/spec.
 
 Parsing Event from HTTP Request:
 ```go
 import "github.com/cloudevents/sdk-go"
-	marshaller := v01.NewDefaultHTTPMarshaller()
+	marshaller := v02.NewDefaultHTTPMarshaller()
 	// req is *http.Request
 	event, err := marshaller.FromRequest(req)
 	if err != nil {
 		panic("Unable to parse event from http Request: " + err.String())
 	}
-	fmt.Printf("eventType: %s", event.Get("eventType")
+	fmt.Printf("type: %s", event.Get("type")
 ```
 
-Creating a minimal CloudEvent in version 0.1:
+Creating a minimal CloudEvent in version 0.2:
 ```go
-import "github.com/cloudevents/sdk-go/v01"
-	event := v01.Event{
-		EventType:        "com.example.file.created",
+import "github.com/cloudevents/sdk-go/v02"
+	event := v02.Event{
+		Type:        "com.example.file.created",
 		Source:           "/providers/Example.COM/storage/account#fileServices/default/{new-file}",
-		EventID:          "ea35b24ede421",
+		ID:          "ea35b24ede421",
 	}
 ```
 
 Creating HTTP request from CloudEvent:
 ```
-marshaller := v01.NewDefaultHTTPMarshaller()
+marshaller := v02.NewDefaultHTTPMarshaller()
 var req *http.Request
 err := event.ToRequest(req)
 if err != nil {

@@ -1,4 +1,4 @@
-package v01
+package v02
 
 import (
 	"encoding/json"
@@ -8,32 +8,32 @@ import (
 	"time"
 )
 
-// Event implements the the CloudEvents specification version 0.1
-// https://github.com/cloudevents/spec/blob/v0.1/spec.md
+// Event implements the the CloudEvents specification version 0.2
+// https://github.com/cloudevents/spec/blob/v0.2/spec.md
 type Event struct {
-	// CloudEventsVersion is a mandatory property
-	// https://github.com/cloudevents/spec/blob/v0.1/spec.md#cloudeventsversion
-	CloudEventsVersion string `json:"cloudeventsversion" cloudevents:"ce-cloudeventsversion,required"`
+	// SpecVersion is a mandatory property
+	// https://github.com/cloudevents/spec/blob/v0.2/spec.md#cloudeventsversion
+	SpecVersion string `json:"specversion" cloudevents:"ce-specversion,required"`
 	// EventType is a mandatory property
-	// https://github.com/cloudevents/spec/blob/v0.1/spec.md#eventtype
-	EventType string `json:"eventtype" cloudevents:"ce-eventtype,required"`
+	// https://github.com/cloudevents/spec/blob/v0.2/spec.md#eventtype
+	Type string `json:"type" cloudevents:"ce-type,required"`
 	// Source is a mandatory property
-	// https://github.com/cloudevents/spec/blob/v0.1/spec.md#source
+	// https://github.com/cloudevents/spec/blob/v0.2/spec.md#source
 	Source url.URL `json:"source" cloudevents:"ce-source,required"`
-	// EventID is a mandatory property
-	// https://github.com/cloudevents/spec/blob/v0.1/spec.md#eventid
-	EventID string `json:"eventid" cloudevents:"ce-eventid,required"`
-	// EventTime is an optional property
-	// https://github.com/cloudevents/spec/blob/v0.1/spec.md#eventtime
-	EventTime *time.Time `json:"eventtime,omitempty" cloudevents:"ce-eventtime"`
+	// ID is a mandatory property
+	// https://github.com/cloudevents/spec/blob/v0.2/spec.md#eventid
+	ID string `json:"id" cloudevents:"ce-id,required"`
+	// Time is an optional property
+	// https://github.com/cloudevents/spec/blob/v0.2/spec.md#eventtime
+	Time *time.Time `json:"time,omitempty" cloudevents:"ce-time"`
 	// SchemaURL is an optional property
-	// https://github.com/cloudevents/spec/blob/v0.1/spec.md#schemaurl
+	// https://github.com/cloudevents/spec/blob/v0.2/spec.md#schemaurl
 	SchemaURL url.URL `json:"schemaurl,omitempty" cloudevents:"ce-schemaurl"`
 	// ContentType is an optional property
-	// https://github.com/cloudevents/spec/blob/v0.1/spec.md#contenttype
+	// https://github.com/cloudevents/spec/blob/v0.2/spec.md#contenttype
 	ContentType string `json:"contenttype,omitempty" cloudevents:"content-type"`
 	// Data is an optional property
-	// https://github.com/cloudevents/spec/blob/v0.1/spec.md#data-1
+	// https://github.com/cloudevents/spec/blob/v0.2/spec.md#data-1
 	Data interface{} `json:"data,omitempty" cloudevents:",body"`
 	// extension an internal map for extension properties not defined in the spec
 	extension map[string]interface{}
@@ -41,21 +41,21 @@ type Event struct {
 
 // CloudEventVersion returns the CloudEvents specification version supported by this implementation
 func (e Event) CloudEventVersion() (version string) {
-	return e.CloudEventsVersion
+	return e.SpecVersion
 }
 
 // Get gets a CloudEvent property value
-func (e Event) Get(property string) (interface{}, bool) {
+func (e Event) Get(key string) (interface{}, bool) {
 	t := reflect.TypeOf(e)
 	for i := 0; i < t.NumField(); i++ {
 		// Find a matching field by name, ignoring case
-		if strings.EqualFold(t.Field(i).Name, property) {
+		if strings.EqualFold(t.Field(i).Name, key) {
 			// return the value of that field
 			return reflect.ValueOf(e).Field(i).Interface(), true
 		}
 	}
 
-	v, ok := e.extension[strings.ToLower(property)]
+	v, ok := e.extension[strings.ToLower(key)]
 	return v, ok
 }
 
@@ -151,11 +151,11 @@ func (e Event) GetURL(property string) (value url.URL, ok bool) {
 
 // Set sets a CloudEvent property value. If setting a well known field the type of
 // value must be assignable to the type of the well known field.
-func (e *Event) Set(property string, value interface{}) {
+func (e *Event) Set(key string, value interface{}) {
 	t := reflect.TypeOf(*e)
 	for i := 0; i < t.NumField(); i++ {
 		// Find a matching field by name, ignoring case
-		if strings.EqualFold(t.Field(i).Name, property) {
+		if strings.EqualFold(t.Field(i).Name, key) {
 			// set that field to the passed in value
 			reflect.ValueOf(e).Elem().Field(i).Set(reflect.ValueOf(value))
 			return
@@ -167,7 +167,7 @@ func (e *Event) Set(property string, value interface{}) {
 		e.extension = map[string]interface{}{}
 	}
 
-	e.extension[strings.ToLower(property)] = value
+	e.extension[strings.ToLower(key)] = value
 }
 
 // Properties returns the map of all supported properties in version 0.1.
