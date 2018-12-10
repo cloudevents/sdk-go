@@ -1,4 +1,4 @@
-package v01_test
+package v02_test
 
 import (
 	"encoding/json"
@@ -8,7 +8,7 @@ import (
 	"time"
 
 	cloudevents "github.com/cloudevents/sdk-go"
-	"github.com/cloudevents/sdk-go/v01"
+	"github.com/cloudevents/sdk-go/v02"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -17,13 +17,13 @@ func TestNewEvent(t *testing.T) {
 	timestamp, err := time.Parse(time.RFC3339, "2018-04-05T17:31:00Z")
 	require.NoError(t, err)
 
-	event := &v01.Event{
-		EventType: "com.example.someevent",
+	event := &v02.Event{
+		Type: "com.example.someevent",
 		Source: url.URL{
 			Path: "/mycontext",
 		},
-		EventID:   "1234-1234-1234",
-		EventTime: &timestamp,
+		ID:   "1234-1234-1234",
+		Time: &timestamp,
 		SchemaURL: url.URL{
 			Scheme: "http",
 			Host:   "example.com",
@@ -38,19 +38,19 @@ func TestNewEvent(t *testing.T) {
 	}
 	fmt.Printf("%s", data)
 
-	eventUnmarshaled := &v01.Event{}
+	eventUnmarshaled := &v02.Event{}
 	json.Unmarshal(data, eventUnmarshaled)
 	assert.EqualValues(t, event, eventUnmarshaled)
 }
 
 func TestGetSet(t *testing.T) {
-	event := &v01.Event{
-		EventType: "com.example.someevent",
+	event := &v02.Event{
+		Type: "com.example.someevent",
 		Source: url.URL{
 			Path: "/mycontext",
 		},
-		EventID:   "1234-1234-1234",
-		EventTime: nil,
+		ID:   "1234-1234-1234",
+		Time: nil,
 		SchemaURL: url.URL{
 			Scheme: "http",
 			Host:   "example.com",
@@ -68,8 +68,8 @@ func TestGetSet(t *testing.T) {
 	assert.True(t, ok, "ok for existing key should be true, but isn't")
 	assert.Equal(t, "application/json", value, "value for contentType should be application/json, but is %s", value)
 
-	event.Set("eventType", "newType")
-	assert.Equal(t, "newType", event.EventType, "expected eventType to be 'newType', got %s", event.EventType)
+	event.Set("type", "newType")
+	assert.Equal(t, "newType", event.Type, "expected eventType to be 'newType', got %s", event.Type)
 
 	event.Set("ext", "somevalue")
 	value, ok = event.Get("ext")
@@ -78,18 +78,18 @@ func TestGetSet(t *testing.T) {
 }
 
 func TestProperties(t *testing.T) {
-	event := v01.Event{}
+	event := v02.Event{}
 
 	props := event.Properties()
 
-	assert.True(t, props["eventid"])
-	delete(props, "eventid")
+	assert.True(t, props["id"])
+	delete(props, "id")
 	assert.True(t, props["source"])
 	delete(props, "source")
-	assert.True(t, props["eventtype"])
-	delete(props, "eventtype")
-	assert.True(t, props["cloudeventsversion"])
-	delete(props, "cloudeventsversion")
+	assert.True(t, props["type"])
+	delete(props, "type")
+	assert.True(t, props["specversion"])
+	delete(props, "specversion")
 
 	for k, v := range props {
 		assert.False(t, v, "property %s should not be required.", k)
@@ -97,7 +97,7 @@ func TestProperties(t *testing.T) {
 }
 
 func TestGetIntOk(t *testing.T) {
-	var principal cloudevents.Event = &v01.Event{}
+	var principal cloudevents.Event = &v02.Event{}
 	var expected int32 = 100
 	principal.Set("myint", expected)
 
@@ -108,7 +108,7 @@ func TestGetIntOk(t *testing.T) {
 }
 
 func TestGetIntWrongType(t *testing.T) {
-	var principal cloudevents.Event = &v01.Event{}
+	var principal cloudevents.Event = &v02.Event{}
 	principal.Set("notint", "not an int")
 
 	actual, ok := principal.GetInt("notint")
@@ -118,7 +118,7 @@ func TestGetIntWrongType(t *testing.T) {
 }
 
 func TestGetIntMissing(t *testing.T) {
-	var principal cloudevents.Event = &v01.Event{}
+	var principal cloudevents.Event = &v02.Event{}
 
 	actual, ok := principal.GetInt("missing")
 
@@ -127,34 +127,34 @@ func TestGetIntMissing(t *testing.T) {
 }
 
 func TestGetStringOk(t *testing.T) {
-	var principal cloudevents.Event = &v01.Event{
-		EventType: "com.example.someevent",
+	var actual cloudevents.Event = &v02.Event{
+		Type: "com.example.someevent",
 	}
 
-	actual, ok := principal.GetString("EventType")
+	eventType, ok := actual.GetString("type")
 
 	assert.True(t, ok)
-	assert.Equal(t, actual, "com.example.someevent")
+	assert.Equal(t, eventType, "com.example.someevent")
 }
 
 func TestGetStringWrongType(t *testing.T) {
-	var principal cloudevents.Event = &v01.Event{}
+	var actual cloudevents.Event = &v02.Event{}
 
-	principal.Set("mystringfail", 100)
+	actual.Set("mystringfail", 100)
 
-	actual, ok := principal.GetString("mystringfail")
+	mystring, ok := actual.GetString("mystringfail")
 
 	assert.False(t, ok)
-	assert.Equal(t, "", actual)
+	assert.Equal(t, "", mystring)
 }
 
 func TestGetTimeOk(t *testing.T) {
 	expected := time.Now()
-	var principal cloudevents.Event = &v01.Event{
-		EventTime: &expected,
+	var principal cloudevents.Event = &v02.Event{
+		Time: &expected,
 	}
 
-	actual, ok := principal.GetTime("EventTime")
+	actual, ok := principal.GetTime("Time")
 
 	assert.True(t, ok)
 	assert.Equal(t, &expected, actual)
@@ -162,7 +162,7 @@ func TestGetTimeOk(t *testing.T) {
 
 func TestGetTimeExtensionOk(t *testing.T) {
 	expected := time.Now()
-	var principal cloudevents.Event = &v01.Event{}
+	var principal cloudevents.Event = &v02.Event{}
 	principal.Set("mytime", expected)
 
 	actual, ok := principal.GetTime("mytime")
@@ -173,7 +173,7 @@ func TestGetTimeExtensionOk(t *testing.T) {
 
 func TestGetTimePointerExtensionOk(t *testing.T) {
 	expected := time.Now()
-	var principal cloudevents.Event = &v01.Event{}
+	var principal cloudevents.Event = &v02.Event{}
 	principal.Set("mytime", &expected)
 
 	actual, ok := principal.GetTime("mytime")
@@ -184,7 +184,7 @@ func TestGetTimePointerExtensionOk(t *testing.T) {
 
 func TestGetTimeStringOk(t *testing.T) {
 	expected := time.Now().Format(time.RFC3339)
-	var principal cloudevents.Event = &v01.Event{}
+	var principal cloudevents.Event = &v02.Event{}
 	principal.Set("mytimestring", expected)
 
 	actual, ok := principal.GetTime("mytimestring")
@@ -194,7 +194,7 @@ func TestGetTimeStringOk(t *testing.T) {
 }
 
 func TestGetTimeMissingValue(t *testing.T) {
-	var principal cloudevents.Event = &v01.Event{}
+	var principal cloudevents.Event = &v02.Event{}
 
 	actual, ok := principal.GetTime("mytime")
 
@@ -203,7 +203,7 @@ func TestGetTimeMissingValue(t *testing.T) {
 }
 
 func TestGetTimeInvalidType(t *testing.T) {
-	var principal cloudevents.Event = &v01.Event{}
+	var principal cloudevents.Event = &v02.Event{}
 	principal.Set("mywrongtype", 100)
 
 	actual, ok := principal.GetTime("mywrongtype")
@@ -213,7 +213,7 @@ func TestGetTimeInvalidType(t *testing.T) {
 }
 
 func TestGetMapOk(t *testing.T) {
-	var principal cloudevents.Event = &v01.Event{}
+	var principal cloudevents.Event = &v02.Event{}
 
 	expected := map[string]interface{}{
 		"mykey": "myvalue",
@@ -227,7 +227,7 @@ func TestGetMapOk(t *testing.T) {
 }
 
 func TestGetMapWrongType(t *testing.T) {
-	var principal cloudevents.Event = &v01.Event{}
+	var principal cloudevents.Event = &v02.Event{}
 
 	expected := 100
 	principal.Set("mywrongmap", expected)
@@ -239,7 +239,7 @@ func TestGetMapWrongType(t *testing.T) {
 }
 
 func TestGetMapExtendedTypeOk(t *testing.T) {
-	var principal cloudevents.Event = &v01.Event{}
+	var principal cloudevents.Event = &v02.Event{}
 
 	expected := map[string]interface{}{
 		"mykey": map[int]interface{}{
@@ -256,7 +256,7 @@ func TestGetMapExtendedTypeOk(t *testing.T) {
 }
 
 func TestGetBinaryOk(t *testing.T) {
-	var principal cloudevents.Event = &v01.Event{}
+	var principal cloudevents.Event = &v02.Event{}
 
 	expected := []byte{0, 0, 0}
 	principal.Set("mybinaryarray", expected)
@@ -268,7 +268,7 @@ func TestGetBinaryOk(t *testing.T) {
 }
 
 func TestGetBinaryMissing(t *testing.T) {
-	var principal cloudevents.Event = &v01.Event{}
+	var principal cloudevents.Event = &v02.Event{}
 
 	actual, ok := principal.GetBinary("missingarray")
 
@@ -277,7 +277,7 @@ func TestGetBinaryMissing(t *testing.T) {
 }
 
 func TestGetBinaryWrongType(t *testing.T) {
-	var principal cloudevents.Event = &v01.Event{}
+	var principal cloudevents.Event = &v02.Event{}
 	expected := 100
 	principal.Set("wrongtype", expected)
 
@@ -288,7 +288,7 @@ func TestGetBinaryWrongType(t *testing.T) {
 }
 
 func TestGetURLOk(t *testing.T) {
-	var principal cloudevents.Event = &v01.Event{
+	var principal cloudevents.Event = &v02.Event{
 		SchemaURL: url.URL{
 			Scheme: "http",
 			Host:   "www.example.com",
@@ -304,7 +304,7 @@ func TestGetURLOk(t *testing.T) {
 }
 
 func TestGetURLMissingKey(t *testing.T) {
-	var principal cloudevents.Event = &v01.Event{}
+	var principal cloudevents.Event = &v02.Event{}
 
 	actual, ok := principal.GetURL("missing")
 
@@ -313,7 +313,7 @@ func TestGetURLMissingKey(t *testing.T) {
 }
 
 func TestGetURLStringOk(t *testing.T) {
-	var principal cloudevents.Event = &v01.Event{}
+	var principal cloudevents.Event = &v02.Event{}
 	input := "http://example.com"
 	expected, _ := url.ParseRequestURI(input)
 
@@ -326,7 +326,7 @@ func TestGetURLStringOk(t *testing.T) {
 }
 
 func TestGetURLStringParseErr(t *testing.T) {
-	var principal cloudevents.Event = &v01.Event{}
+	var principal cloudevents.Event = &v02.Event{}
 	principal.Set("invalidurl", "")
 
 	actual, ok := principal.GetURL("invalidurl")
@@ -336,7 +336,7 @@ func TestGetURLStringParseErr(t *testing.T) {
 }
 
 func TestGetURLWrongType(t *testing.T) {
-	var principal cloudevents.Event = &v01.Event{}
+	var principal cloudevents.Event = &v02.Event{}
 	principal.Set("wrongtype", 100)
 
 	actual, ok := principal.GetURL("wrongtype")
@@ -346,14 +346,14 @@ func TestGetURLWrongType(t *testing.T) {
 }
 func TestUnmarshalJSON(t *testing.T) {
 
-	var actual v01.Event
-	err := json.Unmarshal([]byte("{\"eventtype\":\"com.example.someevent\", \"eventtime\":\"2018-04-05T17:31:00Z\", \"myextension\":\"myValue\", \"data\": {\"topKey\" : \"topValue\", \"objectKey\": {\"embedKey\" : \"embedValue\"} }}"), &actual)
+	var actual v02.Event
+	err := json.Unmarshal([]byte("{\"type\":\"com.example.someevent\", \"time\":\"2018-04-05T17:31:00Z\", \"myextension\":\"myValue\", \"data\": {\"topKey\" : \"topValue\", \"objectKey\": {\"embedKey\" : \"embedValue\"} }}"), &actual)
 	assert.NoError(t, err)
 
 	timestamp, _ := time.Parse(time.RFC3339, "2018-04-05T17:31:00Z")
-	expected := v01.Event{
-		EventType: "com.example.someevent",
-		EventTime: &timestamp,
+	expected := v02.Event{
+		Type: "com.example.someevent",
+		Time: &timestamp,
 		Data: map[string]interface{}{
 			"topKey": "topValue",
 			"objectKey": map[string]interface{}{
@@ -368,14 +368,14 @@ func TestUnmarshalJSON(t *testing.T) {
 
 func TestMarshallJSON(t *testing.T) {
 	timestamp, _ := time.Parse(time.RFC3339, "2018-04-05T17:31:00Z")
-	input := v01.Event{
-		CloudEventsVersion: "0.1",
-		EventID:            "1234-1234-1234",
-		EventType:          "com.example.someevent",
+	input := v02.Event{
+		SpecVersion: "0.2",
+		ID:          "1234-1234-1234",
+		Type:        "com.example.someevent",
 		Source: url.URL{
 			Path: "/mycontext",
 		},
-		EventTime: &timestamp,
+		Time: &timestamp,
 		Data: map[string]interface{}{
 			"topKey": "topValue",
 			"objectKey": map[string]interface{}{
@@ -386,7 +386,7 @@ func TestMarshallJSON(t *testing.T) {
 	input.Set("myExtension", "myValue")
 
 	actual, err := json.Marshal(input)
-	expected := []byte("{\"cloudeventsversion\":\"0.1\",\"data\":{\"objectKey\":{\"embedKey\":\"embedValue\"},\"topKey\":\"topValue\"},\"eventid\":\"1234-1234-1234\",\"eventtime\":\"2018-04-05T17:31:00Z\",\"eventtype\":\"com.example.someevent\",\"myextension\":\"myValue\",\"source\":\"/mycontext\"}")
+	expected := []byte("{\"data\":{\"objectKey\":{\"embedKey\":\"embedValue\"},\"topKey\":\"topValue\"},\"id\":\"1234-1234-1234\",\"myextension\":\"myValue\",\"source\":\"/mycontext\",\"specversion\":\"0.2\",\"time\":\"2018-04-05T17:31:00Z\",\"type\":\"com.example.someevent\"}")
 	assert.NoError(t, err)
 	assert.Equal(t, expected, actual)
 }
