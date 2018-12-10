@@ -36,7 +36,7 @@ Creating HTTP request from CloudEvent:
 ```
 marshaller := v02.NewDefaultHTTPMarshaller()
 var req *http.Request
-err := event.ToRequest(req)
+err := marshaller.ToRequest(req)
 if err != nil {
 	panic("Unable to marshal event into http Request: " + err.String())
 }
