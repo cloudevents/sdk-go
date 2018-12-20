@@ -31,23 +31,25 @@ func TestHTTPMarshallerFromRequestBinaryBase64Success(t *testing.T) {
 	req := httptest.NewRequest("GET", "localhost:8080", ioutil.NopCloser(body))
 	req.Header = header
 
-	actual, err := factory.FromRequest(req)
+	var actual v02.Event
+	err := factory.FromRequest(req, &actual)
 	require.NoError(t, err)
 
 	timestamp, err := time.Parse(time.RFC3339, "2018-04-05T17:31:00Z")
-	expected := &v02.Event{
-		SpecVersion: "0.2",
-		ContentType: "application/octet-stream",
-		Type:        "com.example.someevent",
-		Source: url.URL{
+	builder := v02.NewCloudEventBuilder()
+	expected, _ := builder.
+		SpecVersion("0.2").
+		ContentType("application/octet-stream").
+		Type("com.example.someevent").
+		Source(url.URL{
 			Scheme: "http",
 			Host:   "example.com",
 			Path:   "/mycontext",
-		},
-		ID:   "1234-1234-1234",
-		Time: &timestamp,
-		Data: []byte("This is a byte array of data."),
-	}
+		}).
+		ID("1234-1234-1234").
+		Time(timestamp).
+		Data([]byte("This is a byte array of data.")).
+		Build()
 
 	expected.Set("myextension", "myvalue")
 	expected.Set("anotherextension", "anothervalue")
@@ -58,18 +60,19 @@ func TestHTTPMarshallerFromRequestBinaryBase64Success(t *testing.T) {
 func TestHTTPMarshallerToRequestBinaryBase64Success(t *testing.T) {
 	factory := v02.NewDefaultHTTPMarshaller()
 
-	event := v02.Event{
-		SpecVersion: "0.2",
-		Type:        "com.example.someevent",
-		ID:          "1234-1234-1234",
-		Source: url.URL{
+	builder := v02.NewCloudEventBuilder()
+	event, _ := builder.
+		SpecVersion("0.2").
+		Type("com.example.someevent").
+		ID("1234-1234-1234").
+		Source(url.URL{
 			Scheme: "http",
 			Host:   "example.com",
 			Path:   "/mycontext",
-		},
-		ContentType: "application/octet-stream",
-		Data:        []byte("This is a byte array of data"),
-	}
+		}).
+		ContentType("application/octet-stream").
+		Data([]byte("This is a byte array of data")).
+		Build()
 
 	event.Set("myfloat", 100e+3)
 	event.Set("myint", 100)

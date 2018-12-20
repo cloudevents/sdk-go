@@ -8,6 +8,17 @@ import (
 	"time"
 )
 
+// type Event interface {
+// 	SpecVersion(specVersion ...string) string
+// 	Type(t ...string) string
+// 	Source(source ...url.URL) url.URL
+// 	ID(id ...string) string
+// 	Time(t ...*time.Time) *time.Time
+// 	SchemaURL(schemaURL ...url.URL) url.URL
+// 	ContentType(contentType ...string) string
+// 	Data(data ...interface{}) interface{}
+// }
+
 // Event implements the the CloudEvents specification version 0.2
 // https://github.com/cloudevents/spec/blob/v0.2/spec.md
 type Event struct {
@@ -42,6 +53,10 @@ type Event struct {
 // CloudEventVersion returns the CloudEvents specification version supported by this implementation
 func (e Event) CloudEventVersion() (version string) {
 	return e.SpecVersion
+}
+
+func (e Event) GetContentType() string {
+	return e.ContentType
 }
 
 // Get gets a CloudEvent property value

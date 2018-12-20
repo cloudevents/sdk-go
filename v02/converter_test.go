@@ -23,9 +23,10 @@ import (
 func TestFromRequestNilRequest(t *testing.T) {
 	principal := v02.NewDefaultHTTPMarshaller()
 
-	event, err := principal.FromRequest(nil)
+	var actual v02.Event
+	err := principal.FromRequest(nil, &actual)
 
-	assert.Nil(t, event)
+	assert.Zero(t, actual)
 	require.Error(t, err)
 	assert.Equal(t, cloudevents.IllegalArgumentError("req"), err)
 }
@@ -35,9 +36,10 @@ func TestFromRequestNoContentType(t *testing.T) {
 
 	req := httptest.NewRequest("GET", "localhost:8080", nil)
 
-	event, err := principal.FromRequest(req)
+	var actual v02.Event
+	err := principal.FromRequest(req, &actual)
 
-	assert.Nil(t, event)
+	assert.Zero(t, actual)
 	assert.Error(t, err)
 }
 
@@ -47,8 +49,9 @@ func TestFromRequestInvalidContentType(t *testing.T) {
 	req := httptest.NewRequest("GET", "localhost:8080", nil)
 	req.Header.Set("Content-Type", "application/")
 
-	event, err := principal.FromRequest(req)
-	assert.Nil(t, event)
+	var actual v02.Event
+	err := principal.FromRequest(req, &actual)
+	assert.Zero(t, actual)
 	assert.Error(t, err)
 }
 
@@ -58,24 +61,26 @@ func TestFromRequestNoConverters(t *testing.T) {
 	req := httptest.NewRequest("GET", "localhost:8080", nil)
 	req.Header.Set("Content-Type", "application/cloudevents+json")
 
-	event, err := principal.FromRequest(req)
+	var actual v02.Event
+	err := principal.FromRequest(req, &actual)
 
-	assert.Nil(t, event)
+	assert.Zero(t, actual)
 	require.Error(t, err)
 	assert.Equal(t, cloudevents.ContentTypeNotSupportedError("application/cloudevents+json"), err)
 }
 
 func TestFromRequestWrongConverter(t *testing.T) {
 	jsonConverter := &mocks.HTTPCloudEventConverter{}
-	jsonConverter.On("CanRead", reflect.TypeOf(v02.Event{}), "application/json").Return(false)
+	var actual v02.Event
+	jsonConverter.On("CanRead", reflect.TypeOf(&actual), "application/json").Return(false)
 	principal := v02.NewHTTPMarshaller(jsonConverter)
 
 	req := httptest.NewRequest("GET", "localhost:8080", nil)
 	req.Header.Set("Content-Type", "application/json")
 
-	event, err := principal.FromRequest(req)
+	err := principal.FromRequest(req, &actual)
 
-	assert.Nil(t, event)
+	assert.Zero(t, actual)
 	jsonConverter.AssertNumberOfCalls(t, "CanRead", 1)
 	jsonConverter.AssertNotCalled(t, "Read")
 	require.Error(t, err)
@@ -84,16 +89,17 @@ func TestFromRequestWrongConverter(t *testing.T) {
 
 func TestFromRequestConverterError(t *testing.T) {
 	jsonConverter := &mocks.HTTPCloudEventConverter{}
-	jsonConverter.On("CanRead", reflect.TypeOf(v02.Event{}), "application/json").Return(true)
-	jsonConverter.On("Read", reflect.TypeOf(v02.Event{}), mock.AnythingOfType(reflect.TypeOf((*http.Request)(nil)).String())).Return(nil, errors.New("read error"))
+	var actual v02.Event
+	jsonConverter.On("CanRead", reflect.TypeOf(&actual), "application/json").Return(true)
+	jsonConverter.On("Read", mock.AnythingOfType(reflect.TypeOf((*http.Request)(nil)).String()), &actual).Return(errors.New("read error"))
 	principal := v02.NewHTTPMarshaller(jsonConverter)
 
 	req := httptest.NewRequest("GET", "localhost:8080", nil)
 	req.Header.Set("Content-Type", "application/json")
 
-	event, err := principal.FromRequest(req)
+	err := principal.FromRequest(req, &actual)
 
-	assert.Nil(t, event)
+	assert.Zero(t, actual)
 	jsonConverter.AssertNumberOfCalls(t, "CanRead", 1)
 	jsonConverter.AssertNumberOfCalls(t, "Read", 1)
 	require.Error(t, err)
@@ -101,16 +107,27 @@ func TestFromRequestConverterError(t *testing.T) {
 }
 
 func TestFromRequestSuccess(t *testing.T) {
-	expected := &v02.Event{
-		Type: "com.example.someevent",
-		ID:   "00001",
-	}
+	builder := v02.NewCloudEventBuilder()
+	expected, _ := builder.
+		Type("com.example.someevent").
+		ID("00001").
+		Source(url.URL{
+			Scheme: "http",
+			Host:   "example.com",
+			Path:   "/cloudevent",
+		}).
+		Build()
+
+	var actual v02.Event
 
 	jsonConverter := &mocks.HTTPCloudEventConverter{}
-	jsonConverter.On("CanRead", reflect.TypeOf(v02.Event{}), "application/json").Return(false)
+	jsonConverter.On("CanRead", reflect.TypeOf(&actual), "application/json").Return(false)
 	binaryConverter := &mocks.HTTPCloudEventConverter{}
-	binaryConverter.On("CanRead", reflect.TypeOf(v02.Event{}), "application/json").Return(true)
-	binaryConverter.On("Read", reflect.TypeOf(v02.Event{}), mock.AnythingOfType(reflect.TypeOf((*http.Request)(nil)).String())).Return(expected, nil)
+	binaryConverter.On("CanRead", reflect.TypeOf(&actual), "application/json").Return(true)
+	binaryConverter.On("Read", mock.AnythingOfType(reflect.TypeOf((*http.Request)(nil)).String()), &actual).Run(func(args mock.Arguments) {
+		arg := args.Get(1).(*v02.Event)
+		*arg = expected
+	}).Return(nil)
 
 	principal := v02.NewHTTPMarshaller(jsonConverter, binaryConverter)
 
@@ -119,7 +136,7 @@ func TestFromRequestSuccess(t *testing.T) {
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	actual, err := principal.FromRequest(req)
+	err := principal.FromRequest(req, &actual)
 
 	binaryConverter.AssertNumberOfCalls(t, "CanRead", 1)
 	binaryConverter.AssertNumberOfCalls(t, "Read", 1)
@@ -149,26 +166,34 @@ func TestToRequestNilEvent(t *testing.T) {
 
 func TestToRequestDefaultContentType(t *testing.T) {
 	jsonConverter := &mocks.HTTPCloudEventConverter{}
-	jsonConverter.On("CanWrite", reflect.TypeOf(v02.Event{}), "application/cloudevents+json").Return(true)
+	event := &v02.Event{}
+	jsonConverter.On("CanWrite", reflect.TypeOf(event), "application/cloudevents+json").Return(true)
 	jsonConverter.On("Write", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 	principal := v02.NewHTTPMarshaller(jsonConverter)
 
 	req := httptest.NewRequest("GET", "localhost:8080", nil)
-	event := &v02.Event{}
 	err := principal.ToRequest(req, event)
 
 	assert.NoError(t, err)
-	jsonConverter.AssertCalled(t, "CanWrite", reflect.TypeOf(v02.Event{}), "application/cloudevents+json")
+	jsonConverter.AssertCalled(t, "CanWrite", reflect.TypeOf(event), "application/cloudevents+json")
 }
 
 func TestToRequestInvalidContentType(t *testing.T) {
 	principal := v02.NewDefaultHTTPMarshaller()
 
 	req := httptest.NewRequest("GET", "localhost:8080", nil)
-	event := &v02.Event{
-		ContentType: "application/",
-	}
+	builder := v02.NewCloudEventBuilder()
+	event, _ := builder.
+		ContentType("application/").
+		ID("000001").
+		Type("com.example.sample").
+		Source(url.URL{
+			Scheme: "http",
+			Host:   "example.com",
+			Path:   "/cloudevent",
+		}).
+		Build()
 
 	err := principal.ToRequest(req, event)
 
@@ -188,13 +213,13 @@ func TestToRequestNoConverters(t *testing.T) {
 
 func TestToRequestWriteError(t *testing.T) {
 	jsonConverter := &mocks.HTTPCloudEventConverter{}
-	jsonConverter.On("CanWrite", reflect.TypeOf(v02.Event{}), "application/cloudevents+json").Return(true)
-	jsonConverter.On("Write", reflect.TypeOf(v02.Event{}), mock.AnythingOfType(reflect.TypeOf((*http.Request)(nil)).String()), &v02.Event{}).Return(errors.New("write error"))
+	event := v02.Event{}
+	jsonConverter.On("CanWrite", reflect.TypeOf(event), "application/cloudevents+json").Return(true)
+	jsonConverter.On("Write", reflect.TypeOf(event), mock.AnythingOfType(reflect.TypeOf((*http.Request)(nil)).String()), event).Return(errors.New("write error"))
 
 	principal := v02.NewHTTPMarshaller(jsonConverter)
 
 	req := httptest.NewRequest("GET", "localhost:8080", nil)
-	event := &v02.Event{}
 
 	err := principal.ToRequest(req, event)
 
@@ -203,12 +228,12 @@ func TestToRequestWriteError(t *testing.T) {
 
 func TestToRequestWrongConverter(t *testing.T) {
 	binaryConverter := &mocks.HTTPCloudEventConverter{}
-	binaryConverter.On("CanWrite", reflect.TypeOf(v02.Event{}), "application/cloudevents+json").Return(false)
+	event := &v02.Event{}
+	binaryConverter.On("CanWrite", reflect.TypeOf(event), "application/cloudevents+json").Return(false)
 
 	principal := v02.NewHTTPMarshaller(binaryConverter)
 
 	req := httptest.NewRequest("GET", "localhost:8080", nil)
-	event := &v02.Event{}
 
 	err := principal.ToRequest(req, event)
 
@@ -248,10 +273,11 @@ func TestJSONConverterCanReadCanWriteWrongMediaType(t *testing.T) {
 func TestJSONConverterCanReadCanWriteSuccess(t *testing.T) {
 	principal := v02.NewJSONHTTPCloudEventConverter()
 
-	actual := principal.CanRead(reflect.TypeOf(v02.Event{}), "application/cloudevents+json")
+	var event v02.Event
+	actual := principal.CanRead(reflect.TypeOf(&event), "application/cloudevents+json")
 	assert.Equal(t, true, actual)
 
-	actual = principal.CanWrite(reflect.TypeOf(v02.Event{}), "application/cloudevents+json")
+	actual = principal.CanWrite(reflect.TypeOf(&event), "application/cloudevents+json")
 	assert.Equal(t, true, actual)
 }
 
@@ -259,25 +285,34 @@ func TestJSONConverterReadError(t *testing.T) {
 	principal := v02.NewJSONHTTPCloudEventConverter()
 
 	req := httptest.NewRequest("GET", "locahost:8080", nil)
-	actual, err := principal.Read(reflect.TypeOf(v02.Event{}), req)
+	var actual v02.Event
+	err := principal.Read(req, &actual)
 
 	assert.Error(t, err)
-	assert.Nil(t, actual)
+	assert.Zero(t, actual)
 }
 
 func TestJSONConverterReadSuccess(t *testing.T) {
 	principal := v02.NewJSONHTTPCloudEventConverter()
 
-	body := bytes.NewBufferString("{\"type\":\"com.example.someevent\"}")
+	body := bytes.NewBufferString("{\"id\":\"1234-1234-1234\", \"source\": \"http://example.com/cloudevent\", \"specversion\": \"0.2\", \"type\":\"com.example.someevent\"}")
 	req := httptest.NewRequest("GET", "localhost:8080", body)
 
-	actual, err := principal.Read(reflect.TypeOf(v02.Event{}), req)
+	var actual v02.Event
+	err := principal.Read(req, &actual)
 
 	require.NoError(t, err)
 
-	expected := &v02.Event{
-		Type: "com.example.someevent",
-	}
+	builder := v02.NewCloudEventBuilder()
+	expected, err := builder.
+		Type("com.example.someevent").
+		ID("1234-1234-1234").
+		Source(url.URL{
+			Scheme: "http",
+			Host:   "example.com",
+			Path:   "/cloudevent",
+		}).
+		Build()
 
 	assert.Equal(t, expected, actual)
 }
@@ -288,7 +323,7 @@ func TestJSONConverterWriteError(t *testing.T) {
 	req := httptest.NewRequest("GET", "localhost:8080", nil)
 	event := &v02.Event{}
 
-	err := principal.Write(reflect.TypeOf(v02.Event{}), req, event)
+	err := principal.Write(req, event)
 
 	assert.NoError(t, err)
 }
@@ -300,21 +335,23 @@ func TestFromRequestJSONSuccess(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	event := v02.Event{
-		SpecVersion: "0.2",
-		Type:        "com.example.someevent",
-		ID:          "1234-1234-1234",
-		Source: url.URL{
+
+	builder := v02.NewCloudEventBuilder()
+	event, err := builder.
+		SpecVersion("0.2").
+		Type("com.example.someevent").
+		ID("1234-1234-1234").
+		Source(url.URL{
 			Scheme: "http",
 			Host:   "example.com",
 			Path:   "/mycontext/subcontext",
-		},
-		SchemaURL: url.URL{
+		}).
+		SchemaURL(url.URL{
 			Scheme: "http",
 			Host:   "example.com",
-		},
-		Time: &myDate,
-	}
+		}).
+		Time(myDate).
+		Build()
 
 	var buffer bytes.Buffer
 	json.NewEncoder(&buffer).Encode(event)
@@ -322,24 +359,26 @@ func TestFromRequestJSONSuccess(t *testing.T) {
 	req.Header = http.Header{}
 	req.Header.Set("Content-Type", "application/cloudevents+json")
 
-	actual, err := factory.FromRequest(req)
+	var actual v02.Event
+	err = factory.FromRequest(req, &actual)
 	require.NoError(t, err)
 
-	expected := &v02.Event{
-		SpecVersion: "0.2",
-		Type:        "com.example.someevent",
-		ID:          "1234-1234-1234",
-		Source: url.URL{
+	builder = v02.NewCloudEventBuilder()
+	expected, err := builder.
+		SpecVersion("0.2").
+		Type("com.example.someevent").
+		ID("1234-1234-1234").
+		Source(url.URL{
 			Scheme: "http",
 			Host:   "example.com",
 			Path:   "/mycontext/subcontext",
-		},
-		SchemaURL: url.URL{
+		}).
+		SchemaURL(url.URL{
 			Scheme: "http",
 			Host:   "example.com",
-		},
-		Time: &myDate,
-	}
+		}).
+		Time(myDate).
+		Build()
 
 	assert.EqualValues(t, expected, actual)
 }
@@ -347,20 +386,22 @@ func TestFromRequestJSONSuccess(t *testing.T) {
 func TestHTTPMarshallerToRequestJSONSuccess(t *testing.T) {
 	factory := v02.NewDefaultHTTPMarshaller()
 
-	event := v02.Event{
-		Type: "com.example.someevent",
-		ID:   "1234-1234-1234",
-		Source: url.URL{
+	builder := v02.NewCloudEventBuilder()
+	event, err := builder.
+		Type("com.example.someevent").
+		ID("1234-1234-1234").
+		Source(url.URL{
 			Path: "/mycontext/subcontext",
-		},
-	}
+		}).
+		Build()
+
 	event.Set("myint", 100)
 	event.Set("myfloat", 100e+3)
 	event.Set("mybool", true)
 	event.Set("mystring", "string")
 
 	actual, _ := http.NewRequest("GET", "localhost:8080", nil)
-	err := factory.ToRequest(actual, &event)
+	err = factory.ToRequest(actual, event)
 	require.NoError(t, err)
 
 	buffer := bytes.Buffer{}
@@ -379,6 +420,7 @@ func TestHTTPMarshallerFromRequestBinarySuccess(t *testing.T) {
 	factory := v02.NewDefaultHTTPMarshaller()
 
 	header := http.Header{}
+	header.Set("ce-specversion", "0.2")
 	header.Set("content-type", "application/json")
 	header.Set("ce-type", "com.example.someevent")
 	header.Set("ce-source", "/mycontext/subcontext")
@@ -391,23 +433,25 @@ func TestHTTPMarshallerFromRequestBinarySuccess(t *testing.T) {
 	req := httptest.NewRequest("GET", "localhost:8080", ioutil.NopCloser(body))
 	req.Header = header
 
-	actual, err := factory.FromRequest(req)
+	var actual v02.Event
+	err := factory.FromRequest(req, &actual)
 	require.NoError(t, err)
 
 	timestamp, err := time.Parse(time.RFC3339, "2018-04-05T03:56:24Z")
-	expected := &v02.Event{
-		ContentType: "application/json",
-		Type:        "com.example.someevent",
-		Source: url.URL{
+	builder := v02.NewCloudEventBuilder()
+	expected, err := builder.
+		ContentType("application/json").
+		Type("com.example.someevent").
+		Source(url.URL{
 			Path: "/mycontext/subcontext",
-		},
-		ID:   "1234-1234-1234",
-		Time: &timestamp,
-		Data: map[string]interface{}{
+		}).
+		ID("1234-1234-1234").
+		Time(timestamp).
+		Data(map[string]interface{}{
 			"key1": "value1",
 			"key2": "value2",
-		},
-	}
+		}).
+		Build()
 
 	expected.Set("myextension", "myvalue")
 	expected.Set("anotherextension", "anothervalue")
@@ -418,20 +462,21 @@ func TestHTTPMarshallerFromRequestBinarySuccess(t *testing.T) {
 func TestHTTPMarshallerToRequestBinarySuccess(t *testing.T) {
 	factory := v02.NewDefaultHTTPMarshaller()
 
-	event := v02.Event{
-		Type: "com.example.someevent",
-		ID:   "1234-1234-1234",
-		Source: url.URL{
+	builder := v02.NewCloudEventBuilder()
+	event, err := builder.
+		Type("com.example.someevent").
+		ID("1234-1234-1234").
+		Source(url.URL{
 			Scheme: "http",
 			Host:   "example.com",
 			Path:   "/mycontext/subcontext",
-		},
-		ContentType: "application/json",
-		Data: map[string]interface{}{
+		}).
+		ContentType("application/json").
+		Data(map[string]interface{}{
 			"key1": "value1",
 			"key2": "value2",
-		},
-	}
+		}).
+		Build()
 
 	event.Set("myfloat", 100e+3)
 	event.Set("myint", 100)
@@ -439,7 +484,7 @@ func TestHTTPMarshallerToRequestBinarySuccess(t *testing.T) {
 	event.Set("mystring", "string")
 
 	actual, _ := http.NewRequest("GET", "localhost:8080", nil)
-	err := factory.ToRequest(actual, &event)
+	err = factory.ToRequest(actual, &event)
 	require.NoError(t, err)
 
 	buffer := bytes.Buffer{}
@@ -448,6 +493,7 @@ func TestHTTPMarshallerToRequestBinarySuccess(t *testing.T) {
 		"key2": "value2",
 	})
 	expected, _ := http.NewRequest("GET", "localhost:8080", &buffer)
+	expected.Header.Set("ce-specversion", "0.2")
 	expected.Header.Set("ce-id", "1234-1234-1234")
 	expected.Header.Set("ce-type", "com.example.someevent")
 	expected.Header.Set("ce-source", "http://example.com/mycontext/subcontext")
