@@ -6,5 +6,5 @@ import "github.com/cloudevents/sdk-go/pkg/cloudevents/canonical"
 // specific payloads and the Message interface.
 type Codec interface {
 	Encode(canonical.Event) (Message, error)
-	Decode(Message) (canonical.Event, error)
+	Decode(Message) (*canonical.Event, error)
 }

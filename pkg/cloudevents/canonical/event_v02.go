@@ -23,7 +23,7 @@ type EventContextV02 struct {
 	// ID of the event; must be non-empty and unique within the scope of the producer.
 	ID string `json:"id"`
 	// Timestamp when the event happened.
-	Time *time.Time `json:"time,omitempty"`
+	Time time.Time `json:"time,omitempty"`
 	// A link to the schema that the `data` attribute adheres to.
 	SchemaURL *url.URL `json:"schemaurl,omitempty"`
 	// A MIME (RFC2046) string describing the media type of `data`.

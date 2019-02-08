@@ -19,7 +19,7 @@ type EventContextV01 struct {
 	// ID of the event; must be non-empty and unique within the scope of the producer.
 	EventID string `json:"eventID"`
 	// Timestamp when the event happened.
-	EventTime *time.Time `json:"eventTime,omitempty"`
+	EventTime time.Time `json:"eventTime,omitempty"`
 	// Type of occurrence which has happened.
 	EventType string `json:"eventType"`
 	// The version of the `eventType`; this is producer-specific.

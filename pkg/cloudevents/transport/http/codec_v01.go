@@ -1,9 +1,14 @@
 package http
 
 import (
+	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/canonical"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
+	"net/http"
+	"strings"
+	"time"
 )
 
 type CodecV01 struct {
@@ -25,7 +30,7 @@ func (v CodecV01) Encode(e canonical.Event) (transport.Message, error) {
 	}
 }
 
-func (v CodecV01) Decode(msg transport.Message) (canonical.Event, error) {
+func (v CodecV01) Decode(msg transport.Message) (*canonical.Event, error) {
 	switch v.inspectEncoding(msg) {
 	case BinaryV01:
 		return v.decodeBinary(msg)
@@ -37,21 +42,114 @@ func (v CodecV01) Decode(msg transport.Message) (canonical.Event, error) {
 }
 
 func (v CodecV01) encodeBinary(e canonical.Event) (transport.Message, error) {
-	return nil, fmt.Errorf("not implemented")
+	body, err := marshalEventData(e.Context.DataContentType(), e.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	header, err := v.asHeaders(e.Context.AsV01())
+	if err != nil {
+		return nil, err
+	}
+
+	msg := &Message{
+		Header: header,
+		Body:   body,
+	}
+
+	return msg, nil
+}
+
+// AsHeaders implements the BinarySender interface.
+func (v CodecV01) asHeaders(ec canonical.EventContextV01) (http.Header, error) {
+	// Preserve case in v0.1, even though HTTP headers are case-insensitive.
+	h := http.Header{}
+	h["CE-CloudEventsVersion"] = []string{ec.CloudEventsVersion}
+	h["CE-EventID"] = []string{ec.EventID}
+	h["CE-EventType"] = []string{ec.EventType}
+	h["CE-Source"] = []string{ec.Source.String()}
+	if ec.CloudEventsVersion == "" {
+		h["CE-CloudEventsVersion"] = []string{canonical.CloudEventsVersionV01}
+	}
+	if !ec.EventTime.IsZero() {
+		h["CE-EventTime"] = []string{ec.EventTime.Format(time.RFC3339Nano)}
+	}
+	if ec.EventTypeVersion != "" {
+		h["CE-EventTypeVersion"] = []string{ec.EventTypeVersion}
+	}
+	if ec.SchemaURL != nil {
+		h["CE-SchemaURL"] = []string{ec.SchemaURL.String()}
+	}
+	if v.Encoding == Default || v.Encoding == BinaryV01 {
+		// in binary v0.1, the Content-Type header is tied to ec.ContentType
+		// This was later found to be an issue with the spec, but yolo.
+		if ec.ContentType != "" {
+			h.Set("Content-Type", ec.ContentType)
+		} else {
+			// TODO: not sure what the default should be?
+			h.Set("Content-Type", "application/json")
+		}
+	}
+
+	// Regarding Extensions, v0.1 Spec says the following:
+	// * Each map entry name MUST be prefixed with "CE-X-"
+	// * Each map entry name's first character MUST be capitalized
+	for k, v := range ec.Extensions {
+		encoded, err := json.Marshal(v)
+		if err != nil {
+			return nil, err
+		}
+		h["CE-X-"+strings.Title(k)] = []string{string(encoded)}
+	}
+	return h, nil
 }
 
 func (v CodecV01) encodeStructured(e canonical.Event) (transport.Message, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 
-func (v CodecV01) decodeBinary(msg transport.Message) (canonical.Event, error) {
+func (v CodecV01) decodeBinary(msg transport.Message) (*canonical.Event, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 
-func (v CodecV01) decodeStructured(msg transport.Message) (canonical.Event, error) {
+func (v CodecV01) decodeStructured(msg transport.Message) (*canonical.Event, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 
 func (v CodecV01) inspectEncoding(msg transport.Message) Encoding {
 	return Unknown
+}
+
+// ----------
+// These go in the data codec:
+
+func isJSONEncoding(encoding string) bool {
+	// TODO: this is more tricky, it could be anything +json at the end.
+	return encoding == "application/json" || encoding == "text/json"
+}
+
+func isXMLEncoding(encoding string) bool {
+	return encoding == "application/xml" || encoding == "text/xml"
+}
+
+func marshalEventData(encoding string, data interface{}) ([]byte, error) {
+	if data == nil {
+		return []byte(nil), nil
+	}
+
+	var b []byte
+	var err error
+
+	if encoding == "" || isJSONEncoding(encoding) {
+		b, err = json.Marshal(data)
+	} else if isXMLEncoding(encoding) {
+		b, err = xml.Marshal(data)
+	} else {
+		err = fmt.Errorf("cannot encode content type %q", encoding)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
 }

@@ -25,7 +25,7 @@ func (v CodecV02) Encode(e canonical.Event) (transport.Message, error) {
 	}
 }
 
-func (v CodecV02) Decode(msg transport.Message) (canonical.Event, error) {
+func (v CodecV02) Decode(msg transport.Message) (*canonical.Event, error) {
 	switch v.inspectEncoding(msg) {
 	case BinaryV02:
 		return v.decodeBinary(msg)
@@ -44,11 +44,11 @@ func (v CodecV02) encodeStructured(e canonical.Event) (transport.Message, error)
 	return nil, fmt.Errorf("not implemented")
 }
 
-func (v CodecV02) decodeBinary(msg transport.Message) (canonical.Event, error) {
+func (v CodecV02) decodeBinary(msg transport.Message) (*canonical.Event, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 
-func (v CodecV02) decodeStructured(msg transport.Message) (canonical.Event, error) {
+func (v CodecV02) decodeStructured(msg transport.Message) (*canonical.Event, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 
