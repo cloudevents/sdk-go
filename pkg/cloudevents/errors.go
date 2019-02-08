@@ -33,5 +33,5 @@ func (e ContentTypeNotSupportedError) Error() string {
 type IllegalArgumentError string
 
 func (e IllegalArgumentError) Error() string {
-	return "argument " + string(e) + "is illegal"
+	return "argument " + string(e) + " is illegal"
 }
