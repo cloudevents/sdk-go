@@ -10,3 +10,7 @@ const (
 	StructuredV02
 	Unknown
 )
+
+const (
+	CloudEventsStructuredMediaType string = "application/cloudevents+json"
+)
