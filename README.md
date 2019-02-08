@@ -15,32 +15,38 @@ Package cloudevents provides primitives to work with CloudEvents specification: 
 Parsing Event from HTTP Request:
 ```go
 import "github.com/cloudevents/sdk-go/pkg/cloudevents"
-	marshaller := v02.NewDefaultHTTPMarshaller()
-	// req is *http.Request
-	event, err := marshaller.FromRequest(req)
-	if err != nil {
-		panic("Unable to parse event from http Request: " + err.String())
-	}
-	fmt.Printf("type: %s", event.Get("type")
+marshaller := v02.NewDefaultHTTPMarshaller()
+// req is *http.Request
+event, err := marshaller.FromRequest(req)
+if err != nil {
+    panic("Unable to parse event from http Request: " + err.Error())
+}
+if t, ok := event.Get("type"); ok {
+    fmt.Printf("type: %s\n", t)
+}
 ```
 
 Creating a minimal CloudEvent in version 0.2:
 ```go
 import "github.com/cloudevents/sdk-go/pkg/cloudevents/v02"
-	event := v02.Event{
-		Type:        "com.example.file.created",
-		Source:           "/providers/Example.COM/storage/account#fileServices/default/{new-file}",
-		ID:          "ea35b24ede421",
-	}
+event := v02.Event{
+    Type:        "com.example.file.created",
+    Source:           "/providers/Example.COM/storage/account#fileServices/default/{new-file}",
+    ID:          "ea35b24ede421",
+}
 ```
 
 Creating HTTP request from CloudEvent:
 ```go
 marshaller := v02.NewDefaultHTTPMarshaller()
-var req *http.Request
+req := &http.Request{
+    Method: http.MethodPost,
+    URL:    "http://localhost:8080/",
+    Header: http.Header{},
+}
 err := marshaller.ToRequest(req, &event)
 if err != nil {
-	panic("Unable to marshal event into http Request: " + err.String())
+	panic("Unable to marshal event into http Request: " + err.Error())
 }
 ```
 
