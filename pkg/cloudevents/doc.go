@@ -26,3 +26,61 @@ the same API. It will use semantic versioning with following rules:
 * PATCH version increments when a backwards compatible bug fix is introduced.
 */
 package cloudevents
+
+/*
+
+New plan.
+
+Everything gets converted into the Canonical form of the event, this
+then can select a transport, the transport provides encodings.
+
+At the moment we have Canonical.[v01, v02]
+
+Canonical form holds an encoded data packet that takes in a provided Codec
+
+Canonical form has two members: Context, and Data
+
+
+Sending:
+Canonical.[v01, v02] -> { Codec.Encode -> HttpMessage -> Transport[Http] }
+
+Receiving:
+{ Transport[Http] -> HttpMessage -> Codec.Decode } -> Canonical.[v01, v02]
+
+Note: Transport and Codec are grouped.
+
+Transport Codecs supported:
+[Binary, Structured, StructuredMirrorHeaders]
+
+
+## Working with inner data:
+Canonical.[v01, v02].Decode(DataCodec) -> custom data
+
+Working with inner data,
+
+Sending:
+Canonical.[v01, v02].data -> DataCodec.Decode -> custom data
+
+Receiving:
+custom data -> DataCodec.Encode -> Canonical.[v01, v02].data,contentType
+
+Data Codecs supported:
+[json, xml, base64, text]
+
+
+This imples that there is only one canonical form and it evolves and is marked
+deprecated as the model evolves.
+
+Spec says:
+
+Event[Context, Data] -> Message
+
+Http Message should have:
+
+Headers
+Body
+ContentType
+ContentLength
+
+
+*/

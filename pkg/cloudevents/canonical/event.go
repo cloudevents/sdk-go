@@ -1,4 +1,4 @@
-package cloudevents
+package canonical
 
 import (
 	"net/url"

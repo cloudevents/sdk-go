@@ -1,4 +1,4 @@
-package cloudevents
+package errors
 
 // RequiredPropertyError is return when a property of an event that is required by specification is not set
 type RequiredPropertyError string
