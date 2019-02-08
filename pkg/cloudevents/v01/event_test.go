@@ -9,7 +9,6 @@ import (
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/v01"
-	"github.com/cloudevents/sdk-go/v01"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
