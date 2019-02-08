@@ -20,3 +20,7 @@ bazel-*
 
 # Output of the go coverage tool
 *.out
+
+# Others
+## IDE-specific
+*.iml
