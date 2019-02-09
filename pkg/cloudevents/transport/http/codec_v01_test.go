@@ -1,8 +1,6 @@
 package http_test
 
 import (
-	"encoding/json"
-	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/canonical"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 	"github.com/google/go-cmp/cmp"
@@ -208,7 +206,7 @@ func TestCodecV01_Encode(t *testing.T) {
 
 			if tc.wantErr != nil || err != nil {
 				if diff := cmp.Diff(tc.wantErr, err); diff != "" {
-					t.Errorf("unexpected (-want, +got) = %v", diff)
+					t.Errorf("unexpected error (-want, +got) = %v", diff)
 				}
 				return
 			}
@@ -220,20 +218,12 @@ func TestCodecV01_Encode(t *testing.T) {
 					want := string(tc.want.Body)
 					got := string(msg.Body)
 					if diff := cmp.Diff(want, got); diff != "" {
-						t.Errorf("unexpected (-want, +got) = %v", diff)
+						t.Errorf("unexpected message body (-want, +got) = %v", diff)
 						return
 					}
 				}
-				t.Errorf("unexpected (-want, +got) = %v", diff)
+				t.Errorf("unexpected message (-want, +got) = %v", diff)
 			}
 		})
 	}
-}
-
-func toBytes(body map[string]interface{}) []byte {
-	b, err := json.Marshal(body)
-	if err != nil {
-		return []byte(fmt.Sprintf(`{"error":%q}`, err.Error()))
-	}
-	return b
 }

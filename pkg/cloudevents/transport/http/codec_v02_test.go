@@ -199,7 +199,7 @@ func TestCodecV02_Encode(t *testing.T) {
 
 			if tc.wantErr != nil || err != nil {
 				if diff := cmp.Diff(tc.wantErr, err); diff != "" {
-					t.Errorf("unexpected (-want, +got) = %v", diff)
+					t.Errorf("unexpected error (-want, +got) = %v", diff)
 				}
 				return
 			}
@@ -211,12 +211,12 @@ func TestCodecV02_Encode(t *testing.T) {
 					want := string(tc.want.Body)
 					got := string(msg.Body)
 					if diff := cmp.Diff(want, got); diff != "" {
-						t.Errorf("unexpected (-want, +got) = %v", diff)
+						t.Errorf("unexpected message body (-want, +got) = %v", diff)
 						return
 					}
 				}
 
-				t.Errorf("unexpected (-want, +got) = %v", diff)
+				t.Errorf("unexpected message (-want, +got) = %v", diff)
 			}
 		})
 	}

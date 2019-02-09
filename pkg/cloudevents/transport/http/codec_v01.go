@@ -2,11 +2,12 @@ package http
 
 import (
 	"encoding/json"
-	"encoding/xml"
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/canonical"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
+	"log"
 	"net/http"
+	"net/textproto"
 	"strings"
 )
 
@@ -41,7 +42,7 @@ func (v CodecV01) Decode(msg transport.Message) (*canonical.Event, error) {
 }
 
 func (v CodecV01) encodeBinary(e canonical.Event) (transport.Message, error) {
-	header, err := v.asHeaders(e.Context.AsV01())
+	header, err := v.toHeaders(e.Context.AsV01())
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +60,7 @@ func (v CodecV01) encodeBinary(e canonical.Event) (transport.Message, error) {
 	return msg, nil
 }
 
-func (v CodecV01) asHeaders(ec canonical.EventContextV01) (http.Header, error) {
+func (v CodecV01) toHeaders(ec canonical.EventContextV01) (http.Header, error) {
 	// Preserve case in v0.1, even though HTTP headers are case-insensitive.
 	h := http.Header{}
 	h["CE-CloudEventsVersion"] = []string{ec.CloudEventsVersion}
@@ -142,7 +143,56 @@ func (v CodecV01) encodeStructured(e canonical.Event) (transport.Message, error)
 }
 
 func (v CodecV01) decodeBinary(msg transport.Message) (*canonical.Event, error) {
-	return nil, fmt.Errorf("not implemented")
+	m, ok := msg.(*Message)
+	if !ok {
+		return nil, fmt.Errorf("failed to convert transport.Message to http.Message")
+	}
+	ctx, err := v.fromHeaders(m.Header)
+	if err != nil {
+		return nil, err
+	}
+	var body interface{}
+	if len(m.Body) > 0 {
+		body = m.Body
+	}
+	return &canonical.Event{
+		Context: ctx,
+		Data:    body,
+	}, nil
+}
+
+func (v CodecV01) fromHeaders(h http.Header) (canonical.EventContextV01, error) {
+
+	// Normalize headers.
+	for k, v := range h {
+		ck := textproto.CanonicalMIMEHeaderKey(k)
+		if k != ck {
+			log.Printf("[warn] received header with non-canonical form; canonical: %q, got %q", ck, k)
+			h[ck] = v
+		}
+	}
+
+	ec := canonical.EventContextV01{}
+	ec.CloudEventsVersion = h.Get("CE-CloudEventsVersion")
+	ec.EventID = h.Get("CE-EventID")
+	ec.EventType = h.Get("CE-EventType")
+	source := canonical.ParseURLRef(h.Get("CE-Source"))
+	if source != nil {
+		ec.Source = *source
+	}
+	ec.EventTime = canonical.ParseTimestamp(h.Get("CE-EventTime"))
+	ec.EventTypeVersion = h.Get("CE-EventTypeVersion")
+	ec.SchemaURL = canonical.ParseURLRef(h.Get("CE-SchemaURL"))
+	ec.ContentType = h.Get("Content-Type")
+
+	//for k, v := range ec.Extensions {  <-- this is a challenge
+	//	encoded, err := json.Marshal(v)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//	h["CE-X-"+strings.Title(k)] = []string{string(encoded)}
+	//}
+	return ec, nil
 }
 
 func (v CodecV01) decodeStructured(msg transport.Message) (*canonical.Event, error) {
@@ -150,47 +200,6 @@ func (v CodecV01) decodeStructured(msg transport.Message) (*canonical.Event, err
 }
 
 func (v CodecV01) inspectEncoding(msg transport.Message) Encoding {
-	return Unknown
-}
-
-func marshalEvent(event interface{}) ([]byte, error) {
-	b, err := json.Marshal(event)
-	if err != nil {
-		return nil, err
-	}
-	return b, nil
-}
-
-// ----------
-// These go in the data codec:
-
-func isJSONEncoding(encoding string) bool {
-	// TODO: this is more tricky, it could be anything +json at the end.
-	return encoding == "application/json" || encoding == "text/json"
-}
-
-func isXMLEncoding(encoding string) bool {
-	return encoding == "application/xml" || encoding == "text/xml"
-}
-
-func marshalEventData(encoding string, data interface{}) ([]byte, error) {
-	if data == nil {
-		return []byte(nil), nil
-	}
-
-	var b []byte
-	var err error
-
-	if encoding == "" || isJSONEncoding(encoding) {
-		b, err = json.Marshal(data)
-	} else if isXMLEncoding(encoding) {
-		b, err = xml.Marshal(data)
-	} else {
-		err = fmt.Errorf("cannot encode content type %q", encoding)
-	}
-
-	if err != nil {
-		return nil, err
-	}
-	return b, nil
+	return BinaryV01 // Lets try to get the decoder working before inspection code.
+	//return Unknown
 }

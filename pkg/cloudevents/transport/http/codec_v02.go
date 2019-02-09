@@ -39,7 +39,7 @@ func (v CodecV02) Decode(msg transport.Message) (*canonical.Event, error) {
 }
 
 func (v CodecV02) encodeBinary(e canonical.Event) (transport.Message, error) {
-	header, err := v.asHeaders(e.Context.AsV02())
+	header, err := v.toHeaders(e.Context.AsV02())
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func (v CodecV02) encodeBinary(e canonical.Event) (transport.Message, error) {
 	return msg, nil
 }
 
-func (v CodecV02) asHeaders(ec canonical.EventContextV02) (http.Header, error) {
+func (v CodecV02) toHeaders(ec canonical.EventContextV02) (http.Header, error) {
 	h := http.Header{}
 	h.Set("ce-specversion", ec.SpecVersion)
 	h.Set("ce-type", ec.Type)

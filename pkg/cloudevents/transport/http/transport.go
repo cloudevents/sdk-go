@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/canonical"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
+	"github.com/davecgh/go-spew/spew"
 	"io/ioutil"
+	"log"
 	"net/http"
 )
 
@@ -19,29 +21,29 @@ type Transport struct {
 	codec transport.Codec
 }
 
-func (s *Transport) Send(event canonical.Event, req *http.Request) (*http.Response, error) {
-	if s.Client == nil {
-		s.Client = &http.Client{}
+func (t *Transport) Send(event canonical.Event, req *http.Request) (*http.Response, error) {
+	if t.Client == nil {
+		t.Client = &http.Client{}
 	}
 
-	if s.codec == nil {
-		switch s.Encoding {
+	if t.codec == nil {
+		switch t.Encoding {
 		case Default: // Move this to set default codec
 			fallthrough
 		case BinaryV01:
 			fallthrough
 		case StructuredV01:
-			s.codec = &CodecV01{Encoding: s.Encoding}
+			t.codec = &CodecV01{Encoding: t.Encoding}
 		case BinaryV02:
 			fallthrough
 		case StructuredV02:
-			s.codec = &CodecV02{Encoding: s.Encoding}
+			t.codec = &CodecV02{Encoding: t.Encoding}
 		default:
-			return nil, fmt.Errorf("unknown codec set on sender: %d", s.codec)
+			return nil, fmt.Errorf("unknown codec set on sender: %d", t.codec)
 		}
 	}
 
-	msg, err := s.codec.Encode(event)
+	msg, err := t.codec.Encode(event)
 	if err != nil {
 		return nil, err
 	}
@@ -51,36 +53,27 @@ func (s *Transport) Send(event canonical.Event, req *http.Request) (*http.Respon
 		req.Header = m.Header
 		req.Body = ioutil.NopCloser(bytes.NewBuffer(m.Body))
 		req.ContentLength = int64(len(m.Body))
-		return s.Client.Do(req)
+		return t.Client.Do(req)
 	}
 
 	return nil, fmt.Errorf("failed to encode Event into a Message")
 }
 
-// TODO: next is the decode.
 // ServeHTTP implements http.Handler
-//func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-//	args := make([]reflect.Value, 0, 2)
-//
-//	if h.numIn > 0 {
-//		dataPtr, dataArg := allocate(h.dataType)
-//		eventContext, err := FromRequest(dataPtr, r)
-//		if err != nil {
-//			log.Printf("Failed to handle request %s; error %s", spew.Sdump(r), err)
-//			w.WriteHeader(http.StatusBadRequest)
-//			w.Write([]byte(`Invalid request`))
-//			return
-//		}
-//
-//		ctx := r.Context()
-//		ctx = context.WithValue(ctx, contextKey, eventContext)
-//		args = append(args, reflect.ValueOf(ctx))
-//
-//		if h.numIn == 2 {
-//			args = append(args, dataArg)
-//		}
-//	}
-//
-//	res := h.fnValue.Call(args)
-//	respondHTTP(res, h.fnValue, w)
-//}
+func (t *Transport) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("Failed to handle request: %s %s", err, spew.Sdump(r))
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"error":"Invalid request"}`))
+		return
+	}
+	msg := &Message{
+		Header: r.Header,
+		Body:   body,
+	}
+	_ = msg // TODO
+
+	// TODO: respond correctly based on decode.
+	w.WriteHeader(http.StatusNoContent)
+}

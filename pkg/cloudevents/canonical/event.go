@@ -31,6 +31,17 @@ type Timestamp struct {
 	time.Time
 }
 
+func ParseTimestamp(t string) *Timestamp {
+	if t == "" {
+		return nil
+	}
+	timestamp, err := time.Parse(time.RFC3339Nano, t)
+	if err != nil {
+		return nil
+	}
+	return &Timestamp{Time: timestamp}
+}
+
 // This allows json marshaling to always be in RFC3339Nano format.
 func (t Timestamp) MarshalJSON() ([]byte, error) {
 	if t.IsZero() {
@@ -46,6 +57,17 @@ func (t Timestamp) String() string {
 
 type URLRef struct {
 	url.URL
+}
+
+func ParseURLRef(u string) *URLRef {
+	if u == "" {
+		return nil
+	}
+	pu, err := url.Parse(u)
+	if err != nil {
+		return nil
+	}
+	return &URLRef{URL: *pu}
 }
 
 // This allows json marshaling to always be in RFC3339Nano format.
