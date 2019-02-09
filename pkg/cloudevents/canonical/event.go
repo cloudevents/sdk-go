@@ -1,5 +1,11 @@
 package canonical
 
+import (
+	"fmt"
+	"net/url"
+	"time"
+)
+
 type Event struct {
 	Context EventContext
 	Data    interface{}
@@ -19,4 +25,27 @@ type EventContext interface {
 	// DataContentType returns the MIME content type for encoding data, which is
 	// needed by both encoding and decoding.
 	DataContentType() string
+}
+
+type Timestamp struct {
+	time.Time
+}
+
+// This allows json marshaling to always be in RFC3339Nano format.
+func (t Timestamp) MarshalJSON() ([]byte, error) {
+	if t.IsZero() {
+		return []byte(`""`), nil
+	}
+	rfc3339 := fmt.Sprintf("%q", t.Format(time.RFC3339Nano))
+	return []byte(rfc3339), nil
+}
+
+type URLRef struct {
+	url.URL
+}
+
+// This allows json marshaling to always be in RFC3339Nano format.
+func (u URLRef) MarshalJSON() ([]byte, error) {
+	rfc3339 := fmt.Sprintf("%q", u.String())
+	return []byte(rfc3339), nil
 }

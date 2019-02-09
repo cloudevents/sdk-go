@@ -1,10 +1,5 @@
 package canonical
 
-import (
-	"net/url"
-	"time"
-)
-
 const (
 	// CloudEventsVersionV01 represents the version 0.1 of the CloudEvents spec.
 	CloudEventsVersionV01 = "0.1"
@@ -19,18 +14,18 @@ type EventContextV01 struct {
 	// ID of the event; must be non-empty and unique within the scope of the producer.
 	EventID string `json:"eventID"`
 	// Timestamp when the event happened.
-	EventTime time.Time `json:"eventTime,omitempty"`
+	EventTime *Timestamp `json:"eventTime,omitempty"`
 	// Type of occurrence which has happened.
 	EventType string `json:"eventType"`
 	// The version of the `eventType`; this is producer-specific.
 	EventTypeVersion string `json:"eventTypeVersion,omitempty"`
 	// A link to the schema that the `data` attribute adheres to.
-	SchemaURL *url.URL `json:"schemaURL,omitempty"`
+	SchemaURL *URLRef `json:"schemaURL,omitempty"`
 	// A MIME (RFC 2046) string describing the media type of `data`.
 	// TODO: Should an empty string assume `application/json`, or auto-detect the content?
 	ContentType string `json:"contentType,omitempty"`
 	// A URI describing the event producer.
-	Source url.URL `json:"source"`
+	Source URLRef `json:"source"`
 	// Additional metadata without a well-defined structure.
 	Extensions map[string]interface{} `json:"extensions,omitempty"`
 }

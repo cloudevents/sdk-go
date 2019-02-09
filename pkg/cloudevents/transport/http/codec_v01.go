@@ -42,12 +42,12 @@ func (v CodecV01) Decode(msg transport.Message) (*canonical.Event, error) {
 }
 
 func (v CodecV01) encodeBinary(e canonical.Event) (transport.Message, error) {
-	body, err := marshalEventData(e.Context.DataContentType(), e.Data)
+	header, err := v.asHeaders(e.Context.AsV01())
 	if err != nil {
 		return nil, err
 	}
 
-	header, err := v.asHeaders(e.Context.AsV01())
+	body, err := marshalEventData(e.Context.DataContentType(), e.Data)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +71,7 @@ func (v CodecV01) asHeaders(ec canonical.EventContextV01) (http.Header, error) {
 	if ec.CloudEventsVersion == "" {
 		h["CE-CloudEventsVersion"] = []string{canonical.CloudEventsVersionV01}
 	}
-	if !ec.EventTime.IsZero() {
+	if ec.EventTime != nil && !ec.EventTime.IsZero() {
 		h["CE-EventTime"] = []string{ec.EventTime.Format(time.RFC3339Nano)}
 	}
 	if ec.EventTypeVersion != "" {
@@ -80,15 +80,13 @@ func (v CodecV01) asHeaders(ec canonical.EventContextV01) (http.Header, error) {
 	if ec.SchemaURL != nil {
 		h["CE-SchemaURL"] = []string{ec.SchemaURL.String()}
 	}
-	if v.Encoding == Default || v.Encoding == BinaryV01 {
+	if ec.ContentType != "" {
+		h.Set("Content-Type", ec.ContentType)
+	} else if v.Encoding == Default || v.Encoding == BinaryV01 {
 		// in binary v0.1, the Content-Type header is tied to ec.ContentType
 		// This was later found to be an issue with the spec, but yolo.
-		if ec.ContentType != "" {
-			h.Set("Content-Type", ec.ContentType)
-		} else {
-			// TODO: not sure what the default should be?
-			h.Set("Content-Type", "application/json")
-		}
+		// TODO: not sure what the default should be?
+		h.Set("Content-Type", "application/json")
 	}
 
 	// Regarding Extensions, v0.1 Spec says the following:
@@ -105,7 +103,47 @@ func (v CodecV01) asHeaders(ec canonical.EventContextV01) (http.Header, error) {
 }
 
 func (v CodecV01) encodeStructured(e canonical.Event) (transport.Message, error) {
-	return nil, fmt.Errorf("not implemented")
+	header := http.Header{}
+	header.Set("Content-Type", "application/cloudevents+json")
+
+	ctx, err := marshalEvent(e.Context.AsV01())
+	if err != nil {
+		return nil, err
+	}
+
+	var body []byte
+
+	b := map[string]interface{}{}
+	if err := json.Unmarshal([]byte(ctx), &b); err != nil {
+		return nil, err
+	}
+
+	dataContentType := e.Context.DataContentType()
+	if dataContentType == "application/json" {
+		if e.Data != nil {
+			b["data"] = e.Data
+		}
+	} else {
+		data, err := marshalEventData(e.Context.DataContentType(), e.Data)
+		if err != nil {
+			return nil, err
+		}
+
+		if data != nil {
+			b["data"] = data
+		}
+	}
+	body, err = json.Marshal(b)
+	if err != nil {
+		return nil, err
+	}
+
+	msg := &Message{
+		Header: header,
+		Body:   body,
+	}
+
+	return msg, nil
 }
 
 func (v CodecV01) decodeBinary(msg transport.Message) (*canonical.Event, error) {
@@ -118,6 +156,14 @@ func (v CodecV01) decodeStructured(msg transport.Message) (*canonical.Event, err
 
 func (v CodecV01) inspectEncoding(msg transport.Message) Encoding {
 	return Unknown
+}
+
+func marshalEvent(event interface{}) ([]byte, error) {
+	b, err := json.Marshal(event)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
 }
 
 // ----------

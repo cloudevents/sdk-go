@@ -9,7 +9,7 @@ import (
 )
 
 func TestContextAsV01(t *testing.T) {
-	now := time.Now()
+	now := c.Timestamp{Time: time.Now()}
 
 	testCases := map[string]struct {
 		event c.Event
@@ -29,9 +29,9 @@ func TestContextAsV01(t *testing.T) {
 		},
 		"full v01, no conversion": {
 			event: c.Event{
-				Context: FullEventContextV01(&now),
+				Context: FullEventContextV01(now),
 			},
-			want: FullEventContextV01(&now),
+			want: FullEventContextV01(now),
 		},
 		"min v02 -> v01": {
 			event: c.Event{
@@ -41,9 +41,9 @@ func TestContextAsV01(t *testing.T) {
 		},
 		"full v02 -> v01": {
 			event: c.Event{
-				Context: FullEventContextV02(&now),
+				Context: FullEventContextV02(now),
 			},
-			want: FullEventContextV01(&now),
+			want: FullEventContextV01(now),
 		},
 	}
 	for n, tc := range testCases {
@@ -59,7 +59,7 @@ func TestContextAsV01(t *testing.T) {
 }
 
 func TestContextAsV02(t *testing.T) {
-	now := time.Now()
+	now := c.Timestamp{Time: time.Now()}
 
 	testCases := map[string]struct {
 		event c.Event
@@ -79,9 +79,9 @@ func TestContextAsV02(t *testing.T) {
 		},
 		"full v02, no conversion": {
 			event: c.Event{
-				Context: FullEventContextV02(&now),
+				Context: FullEventContextV02(now),
 			},
-			want: FullEventContextV02(&now),
+			want: FullEventContextV02(now),
 		},
 		"min v01 -> v02": {
 			event: c.Event{
@@ -91,9 +91,9 @@ func TestContextAsV02(t *testing.T) {
 		},
 		"full v01 -> v2": {
 			event: c.Event{
-				Context: FullEventContextV01(&now),
+				Context: FullEventContextV01(now),
 			},
-			want: FullEventContextV02(&now),
+			want: FullEventContextV02(now),
 		},
 	}
 	for n, tc := range testCases {
@@ -109,7 +109,7 @@ func TestContextAsV02(t *testing.T) {
 }
 
 func TestGetDataContentType(t *testing.T) {
-	now := time.Now()
+	now := c.Timestamp{Time: time.Now()}
 
 	testCases := map[string]struct {
 		event c.Event
@@ -123,7 +123,7 @@ func TestGetDataContentType(t *testing.T) {
 		},
 		"full v01, json": {
 			event: c.Event{
-				Context: FullEventContextV01(&now),
+				Context: FullEventContextV01(now),
 			},
 			want: "application/json",
 		},
@@ -135,7 +135,7 @@ func TestGetDataContentType(t *testing.T) {
 		},
 		"full v02, json": {
 			event: c.Event{
-				Context: FullEventContextV02(&now),
+				Context: FullEventContextV02(now),
 			},
 			want: "application/json",
 		},
@@ -153,7 +153,8 @@ func TestGetDataContentType(t *testing.T) {
 }
 
 func MinEventContextV01() c.EventContextV01 {
-	source, _ := url.Parse("http://example.com/source")
+	sourceUrl, _ := url.Parse("http://example.com/source")
+	source := &c.URLRef{URL: *sourceUrl}
 
 	return c.EventContextV01{
 		CloudEventsVersion: c.CloudEventsVersionV01,
@@ -164,7 +165,8 @@ func MinEventContextV01() c.EventContextV01 {
 }
 
 func MinEventContextV02() c.EventContextV02 {
-	source, _ := url.Parse("http://example.com/source")
+	sourceUrl, _ := url.Parse("http://example.com/source")
+	source := &c.URLRef{*sourceUrl}
 
 	return c.EventContextV02{
 		SpecVersion: c.CloudEventsVersionV02,
@@ -174,9 +176,12 @@ func MinEventContextV02() c.EventContextV02 {
 	}
 }
 
-func FullEventContextV01(now *time.Time) c.EventContextV01 {
-	source, _ := url.Parse("http://example.com/source")
-	schema, _ := url.Parse("http://example.com/schema")
+func FullEventContextV01(now c.Timestamp) c.EventContextV01 {
+	sourceUrl, _ := url.Parse("http://example.com/source")
+	source := &c.URLRef{URL: *sourceUrl}
+
+	schemaUrl, _ := url.Parse("http://example.com/schema")
+	schema := &c.URLRef{URL: *schemaUrl}
 
 	extensions := make(map[string]interface{})
 	extensions["test"] = "extended"
@@ -194,9 +199,12 @@ func FullEventContextV01(now *time.Time) c.EventContextV01 {
 	}
 }
 
-func FullEventContextV02(now *time.Time) c.EventContextV02 {
-	source, _ := url.Parse("http://example.com/source")
-	schema, _ := url.Parse("http://example.com/schema")
+func FullEventContextV02(now c.Timestamp) c.EventContextV02 {
+	sourceUrl, _ := url.Parse("http://example.com/source")
+	source := &c.URLRef{URL: *sourceUrl}
+
+	schemaUrl, _ := url.Parse("http://example.com/schema")
+	schema := &c.URLRef{URL: *schemaUrl}
 
 	extensions := make(map[string]interface{})
 	extensions["test"] = "extended"
