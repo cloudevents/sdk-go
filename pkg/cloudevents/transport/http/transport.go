@@ -57,6 +57,7 @@ func (s *Transport) Send(event canonical.Event, req *http.Request) (*http.Respon
 	return nil, fmt.Errorf("failed to encode Event into a Message")
 }
 
+// TODO: next is the decode.
 // ServeHTTP implements http.Handler
 //func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 //	args := make([]reflect.Value, 0, 2)
