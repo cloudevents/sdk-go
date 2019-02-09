@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func TestEncode(t *testing.T) {
+func TestCodecV01_Encode(t *testing.T) {
 	now := canonical.Timestamp{Time: time.Now()}
 	sourceUrl, _ := url.Parse("http://example.com/source")
 	source := &canonical.URLRef{URL: *sourceUrl}
@@ -29,7 +29,7 @@ func TestEncode(t *testing.T) {
 			codec: http.CodecV01{},
 			event: canonical.Event{
 				Context: canonical.EventContextV01{
-					CloudEventsVersion: canonical.CloudEventsVersionV01,
+					CloudEventsVersion: "TestIfDefaulted",
 					EventType:          "com.example.test",
 					Source:             *source,
 					EventID:            "ABC-123",
@@ -49,14 +49,13 @@ func TestEncode(t *testing.T) {
 			codec: http.CodecV01{},
 			event: canonical.Event{
 				Context: canonical.EventContextV01{
-					CloudEventsVersion: canonical.CloudEventsVersionV01,
-					EventID:            "ABC-123",
-					EventTime:          &now,
-					EventType:          "com.example.full",
-					EventTypeVersion:   "v1alpha1",
-					SchemaURL:          schema,
-					ContentType:        "application/json",
-					Source:             *source,
+					EventID:          "ABC-123",
+					EventTime:        &now,
+					EventType:        "com.example.full",
+					EventTypeVersion: "v1alpha1",
+					SchemaURL:        schema,
+					ContentType:      "application/json",
+					Source:           *source,
 					Extensions: map[string]interface{}{
 						"test": "extended",
 					},
@@ -84,10 +83,9 @@ func TestEncode(t *testing.T) {
 			codec: http.CodecV01{Encoding: http.BinaryV01},
 			event: canonical.Event{
 				Context: canonical.EventContextV01{
-					CloudEventsVersion: canonical.CloudEventsVersionV01,
-					EventType:          "com.example.test",
-					Source:             *source,
-					EventID:            "ABC-123",
+					EventType: "com.example.test",
+					Source:    *source,
+					EventID:   "ABC-123",
 				},
 			},
 			want: &http.Message{
@@ -104,14 +102,13 @@ func TestEncode(t *testing.T) {
 			codec: http.CodecV01{Encoding: http.BinaryV01},
 			event: canonical.Event{
 				Context: canonical.EventContextV01{
-					CloudEventsVersion: canonical.CloudEventsVersionV01,
-					EventID:            "ABC-123",
-					EventTime:          &now,
-					EventType:          "com.example.full",
-					EventTypeVersion:   "v1alpha1",
-					SchemaURL:          schema,
-					ContentType:        "application/json",
-					Source:             *source,
+					EventID:          "ABC-123",
+					EventTime:        &now,
+					EventType:        "com.example.full",
+					EventTypeVersion: "v1alpha1",
+					SchemaURL:        schema,
+					ContentType:      "application/json",
+					Source:           *source,
 					Extensions: map[string]interface{}{
 						"test": "extended",
 					},
@@ -139,10 +136,9 @@ func TestEncode(t *testing.T) {
 			codec: http.CodecV01{Encoding: http.StructuredV01},
 			event: canonical.Event{
 				Context: canonical.EventContextV01{
-					CloudEventsVersion: canonical.CloudEventsVersionV01,
-					EventType:          "com.example.test",
-					Source:             *source,
-					EventID:            "ABC-123",
+					EventType: "com.example.test",
+					Source:    *source,
+					EventID:   "ABC-123",
 				},
 			},
 			want: &http.Message{
@@ -164,14 +160,13 @@ func TestEncode(t *testing.T) {
 			codec: http.CodecV01{Encoding: http.StructuredV01},
 			event: canonical.Event{
 				Context: canonical.EventContextV01{
-					CloudEventsVersion: canonical.CloudEventsVersionV01,
-					EventID:            "ABC-123",
-					EventTime:          &now,
-					EventType:          "com.example.full",
-					EventTypeVersion:   "v1alpha1",
-					SchemaURL:          schema,
-					ContentType:        "application/json",
-					Source:             *source,
+					EventID:          "ABC-123",
+					EventTime:        &now,
+					EventType:        "com.example.full",
+					EventTypeVersion: "v1alpha1",
+					SchemaURL:        schema,
+					ContentType:      "application/json",
+					Source:           *source,
 					Extensions: map[string]interface{}{
 						"test": "extended",
 					},
@@ -222,10 +217,13 @@ func TestEncode(t *testing.T) {
 
 				if msg, ok := got.(*http.Message); ok {
 					// It is hard to read the byte dump
-					t.Logf("Want: %s\n", string(tc.want.Body))
-					t.Logf("Got:  %s\n", string(msg.Body))
+					want := string(tc.want.Body)
+					got := string(msg.Body)
+					if diff := cmp.Diff(want, got); diff != "" {
+						t.Errorf("unexpected (-want, +got) = %v", diff)
+						return
+					}
 				}
-
 				t.Errorf("unexpected (-want, +got) = %v", diff)
 			}
 		})

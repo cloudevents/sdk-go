@@ -40,6 +40,10 @@ func (t Timestamp) MarshalJSON() ([]byte, error) {
 	return []byte(rfc3339), nil
 }
 
+func (t Timestamp) String() string {
+	return t.Format(time.RFC3339Nano)
+}
+
 type URLRef struct {
 	url.URL
 }

@@ -8,7 +8,6 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	"net/http"
 	"strings"
-	"time"
 )
 
 type CodecV01 struct {
@@ -60,10 +59,7 @@ func (v CodecV01) encodeBinary(e canonical.Event) (transport.Message, error) {
 	return msg, nil
 }
 
-// AsHeaders implements the BinarySender interface.
 func (v CodecV01) asHeaders(ec canonical.EventContextV01) (http.Header, error) {
-	ec.CloudEventsVersion = canonical.CloudEventsVersionV01
-
 	// Preserve case in v0.1, even though HTTP headers are case-insensitive.
 	h := http.Header{}
 	h["CE-CloudEventsVersion"] = []string{ec.CloudEventsVersion}
@@ -71,7 +67,7 @@ func (v CodecV01) asHeaders(ec canonical.EventContextV01) (http.Header, error) {
 	h["CE-EventType"] = []string{ec.EventType}
 	h["CE-Source"] = []string{ec.Source.String()}
 	if ec.EventTime != nil && !ec.EventTime.IsZero() {
-		h["CE-EventTime"] = []string{ec.EventTime.Format(time.RFC3339Nano)}
+		h["CE-EventTime"] = []string{ec.EventTime.String()}
 	}
 	if ec.EventTypeVersion != "" {
 		h["CE-EventTypeVersion"] = []string{ec.EventTypeVersion}

@@ -10,16 +10,16 @@ import (
 )
 
 // type check that this transport message impl matches the contract
-var _ transport.Sender = (*Sender)(nil)
+var _ transport.Sender = (*Transport)(nil)
 
-type Sender struct {
+type Transport struct {
 	Encoding Encoding
 	Client   *http.Client
 
 	codec transport.Codec
 }
 
-func (s *Sender) Send(event canonical.Event, req *http.Request) (*http.Response, error) {
+func (s *Transport) Send(event canonical.Event, req *http.Request) (*http.Response, error) {
 	if s.Client == nil {
 		s.Client = &http.Client{}
 	}
@@ -35,7 +35,7 @@ func (s *Sender) Send(event canonical.Event, req *http.Request) (*http.Response,
 		case BinaryV02:
 			fallthrough
 		case StructuredV02:
-			fallthrough
+			s.codec = &CodecV02{Encoding: s.Encoding}
 		default:
 			return nil, fmt.Errorf("unknown codec set on sender: %d", s.codec)
 		}
@@ -56,3 +56,30 @@ func (s *Sender) Send(event canonical.Event, req *http.Request) (*http.Response,
 
 	return nil, fmt.Errorf("failed to encode Event into a Message")
 }
+
+// ServeHTTP implements http.Handler
+//func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+//	args := make([]reflect.Value, 0, 2)
+//
+//	if h.numIn > 0 {
+//		dataPtr, dataArg := allocate(h.dataType)
+//		eventContext, err := FromRequest(dataPtr, r)
+//		if err != nil {
+//			log.Printf("Failed to handle request %s; error %s", spew.Sdump(r), err)
+//			w.WriteHeader(http.StatusBadRequest)
+//			w.Write([]byte(`Invalid request`))
+//			return
+//		}
+//
+//		ctx := r.Context()
+//		ctx = context.WithValue(ctx, contextKey, eventContext)
+//		args = append(args, reflect.ValueOf(ctx))
+//
+//		if h.numIn == 2 {
+//			args = append(args, dataArg)
+//		}
+//	}
+//
+//	res := h.fnValue.Call(args)
+//	respondHTTP(res, h.fnValue, w)
+//}

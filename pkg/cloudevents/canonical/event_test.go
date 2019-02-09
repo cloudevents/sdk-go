@@ -19,7 +19,9 @@ func TestContextAsV01(t *testing.T) {
 			event: c.Event{
 				Context: c.EventContextV01{},
 			},
-			want: c.EventContextV01{},
+			want: c.EventContextV01{
+				CloudEventsVersion: "0.1",
+			},
 		},
 		"min v01, no conversion": {
 			event: c.Event{
@@ -69,7 +71,9 @@ func TestContextAsV02(t *testing.T) {
 			event: c.Event{
 				Context: c.EventContextV02{},
 			},
-			want: c.EventContextV02{},
+			want: c.EventContextV02{
+				SpecVersion: "0.2",
+			},
 		},
 		"min v02, no conversion": {
 			event: c.Event{
@@ -189,7 +193,7 @@ func FullEventContextV01(now c.Timestamp) c.EventContextV01 {
 	return c.EventContextV01{
 		CloudEventsVersion: c.CloudEventsVersionV01,
 		EventID:            "ABC-123",
-		EventTime:          now,
+		EventTime:          &now,
 		EventType:          "com.example.simple",
 		EventTypeVersion:   "v1alpha1",
 		SchemaURL:          schema,
@@ -213,7 +217,7 @@ func FullEventContextV02(now c.Timestamp) c.EventContextV02 {
 	return c.EventContextV02{
 		SpecVersion: c.CloudEventsVersionV02,
 		ID:          "ABC-123",
-		Time:        now,
+		Time:        &now,
 		Type:        "com.example.simple",
 		SchemaURL:   schema,
 		ContentType: "application/json",

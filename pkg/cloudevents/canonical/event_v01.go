@@ -32,17 +32,15 @@ type EventContextV01 struct {
 
 var _ EventContext = (*EventContextV01)(nil)
 
-// DataContentType implements the StructuredSender interface.
 func (ec EventContextV01) DataContentType() string {
 	return ec.ContentType
 }
 
-// AsV01 implements the ContextTranslator interface.
 func (ec EventContextV01) AsV01() EventContextV01 {
+	ec.CloudEventsVersion = CloudEventsVersionV01
 	return ec
 }
 
-// AsV02 implements the ContextTranslator interface.
 func (ec EventContextV01) AsV02() EventContextV02 {
 	ret := EventContextV02{
 		SpecVersion: CloudEventsVersionV02,

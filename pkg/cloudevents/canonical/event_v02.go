@@ -28,17 +28,15 @@ type EventContextV02 struct {
 	// TODO: Should an empty string assume `application/json`, `application/octet-stream`, or auto-detect the content?
 	ContentType string `json:"contenttype,omitempty"`
 	// Additional extension metadata beyond the base spec.
-	Extensions map[string]interface{} `json:"-,omitempty"`
+	Extensions map[string]interface{} `json:"-,omitempty"` // TODO: decide how we want extensions to be inserted
 }
 
 var _ EventContext = (*EventContextV02)(nil)
 
-// DataContentType implements the StructuredSender interface.
 func (ec EventContextV02) DataContentType() string {
 	return ec.ContentType
 }
 
-// AsV01 implements the ContextTranslator interface.
 func (ec EventContextV02) AsV01() EventContextV01 {
 	ret := EventContextV01{
 		CloudEventsVersion: CloudEventsVersionV01,
@@ -67,7 +65,7 @@ func (ec EventContextV02) AsV01() EventContextV01 {
 	return ret
 }
 
-// AsV02 implements the ContextTranslator interface.
 func (ec EventContextV02) AsV02() EventContextV02 {
+	ec.SpecVersion = CloudEventsVersionV02
 	return ec
 }

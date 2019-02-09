@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-// Sender is the interface for transport sender to send the converted Message
+// Transport is the interface for transport sender to send the converted Message
 // over the underlying transport.
 type Sender interface {
 	Send(canonical.Event, *http.Request) (*http.Response, error)

@@ -113,7 +113,7 @@ func _main(args []string, env envConfig) int {
 		Message: "Hello, World!",
 		Source:  *source,
 		Target:  *target,
-		Sender:  &cloudeventshttp.Sender{Encoding: cloudeventshttp.BinaryV01},
+		Sender:  &cloudeventshttp.Transport{Encoding: cloudeventshttp.BinaryV02},
 	}
 
 	for i := 0; i < 10; i++ {
