@@ -1,11 +1,9 @@
 package http
 
 import (
-	"fmt"
+	"encoding/json"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	"net/http"
-	"net/url"
-	"time"
 )
 
 // type check that this transport message impl matches the contract
@@ -17,65 +15,38 @@ type Message struct {
 }
 
 func (m Message) CloudEventVersion() string {
+
+	// TODO: the impl of this method needs to move into the codec.
+
+	if m.Header != nil {
+		// Try headers first.
+		// v0.1
+		v := m.Header["CE-CloudEventsVersion"]
+		if len(v) == 1 {
+			return v[1]
+		}
+		// v0.2
+		v = m.Header["ce-SpecVersion"]
+		if len(v) == 1 {
+			return v[1]
+		}
+	}
+
+	// Then try the data body.
+	b := map[string]string{}
+	if err := json.Unmarshal(m.Body, &b); err != nil {
+		return ""
+	}
+
+	// v0.1
+	if b["cloudEventsVersion"] != "" {
+		return b["cloudEventsVersion"]
+	}
+
+	// v0.2
+	if b["specVersion"] != "" {
+		return b["specVersion"]
+	}
+
 	return ""
-}
-
-//func (m *Message) ContextAttributes() []string {
-//	return nil
-//}
-
-func (m Message) Get(key string) (interface{}, bool) {
-	return nil, false
-}
-
-func (m *Message) Set(key string, value interface{}) error {
-	return fmt.Errorf("not implemented")
-}
-
-func (m Message) GetInt(key string) (int32, bool) {
-	return 0, false
-}
-
-func (m *Message) SetInt(key string, value int32) error {
-	return fmt.Errorf("not implemented")
-}
-
-func (m Message) GetString(key string) (string, bool) {
-	return "", false
-}
-
-func (m *Message) SetString(key string, value string) error {
-	return fmt.Errorf("not implemented")
-}
-
-func (m Message) GetBinary(key string) ([]byte, bool) {
-	return nil, false
-}
-
-func (m *Message) SetBinary(key string, value string) error {
-	return fmt.Errorf("not implemented")
-}
-
-func (m Message) GetMap(key string) (map[string]interface{}, bool) {
-	return nil, false
-}
-
-func (m *Message) SetMap(key string, value map[string]interface{}) error {
-	return fmt.Errorf("not implemented")
-}
-
-func (m Message) GetTime(key string) (time.Time, bool) {
-	return time.Time{}, false
-}
-
-func (m *Message) SetTime(key string, value time.Time) error {
-	return fmt.Errorf("not implemented")
-}
-
-func (m Message) GetURL(key string) (url.URL, bool) {
-	return url.URL{}, false
-}
-
-func (m *Message) SetURL(key string, value url.URL) error {
-	return fmt.Errorf("not implemented")
 }
