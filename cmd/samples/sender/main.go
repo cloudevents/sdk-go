@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/canonical"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
+	cloudeventshttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -9,7 +12,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/v02"
 	"github.com/google/uuid"
 
 	"github.com/kelseyhightower/envconfig"
@@ -30,11 +32,12 @@ func main() {
 }
 
 // Simple holder for the sending sample.
-type Sender struct {
+type Demo struct {
 	Message string
 	Source  url.URL
 	Target  url.URL
-	Client  *http.Client
+
+	Sender transport.Sender
 }
 
 // Basic data struct.
@@ -43,34 +46,28 @@ type Example struct {
 	Message  string `json:"message"`
 }
 
-func (s *Sender) Send(i int) error {
+func (d *Demo) Send(i int) error {
 
 	data := &Example{
 		Sequence: i,
-		Message:  s.Message,
+		Message:  d.Message,
 	}
 
 	now := time.Now()
-	event := v02.Event{
-		Type:   "com.cloudevents.sample.sent",
-		Source: s.Source,
-		ID:     uuid.New().String(),
-		Time:   &now,
-		Data:   data,
+	event := canonical.Event{
+		Context: canonical.EventContextV01{
+			EventID:   uuid.New().String(),
+			EventType: "com.cloudevents.sample.sent",
+			EventTime: &canonical.Timestamp{Time: now},
+			Source:    canonical.URLRef{URL: d.Source},
+		},
+		Data: data,
 	}
-
-	marshaller := v02.NewDefaultHTTPMarshaller()
 	req := &http.Request{
 		Method: http.MethodPost,
-		URL:    &s.Target,
-		Header: http.Header{},
+		URL:    &d.Target,
 	}
-	err := marshaller.ToRequest(req, &event)
-	if err != nil {
-		return fmt.Errorf("unable to marshal event into http Request: %v", err)
-	}
-
-	resp, err := s.Client.Do(req)
+	resp, err := d.Sender.Send(event, req)
 	if err != nil {
 		return err
 	}
@@ -111,15 +108,16 @@ func _main(args []string, env envConfig) int {
 		log.Printf("failed to parse target url, %v", err)
 		return 1
 	}
-	s := &Sender{
+
+	d := &Demo{
 		Message: "Hello, World!",
 		Source:  *source,
 		Target:  *target,
-		Client:  &http.Client{},
+		Sender:  &cloudeventshttp.Sender{Encoding: cloudeventshttp.BinaryV01},
 	}
 
 	for i := 0; i < 10; i++ {
-		if err := s.Send(i); err != nil {
+		if err := d.Send(i); err != nil {
 			log.Printf("failed to send: %v", err)
 			return 1
 		}

@@ -62,15 +62,14 @@ func (v CodecV01) encodeBinary(e canonical.Event) (transport.Message, error) {
 
 // AsHeaders implements the BinarySender interface.
 func (v CodecV01) asHeaders(ec canonical.EventContextV01) (http.Header, error) {
+	ec.CloudEventsVersion = canonical.CloudEventsVersionV01
+
 	// Preserve case in v0.1, even though HTTP headers are case-insensitive.
 	h := http.Header{}
 	h["CE-CloudEventsVersion"] = []string{ec.CloudEventsVersion}
 	h["CE-EventID"] = []string{ec.EventID}
 	h["CE-EventType"] = []string{ec.EventType}
 	h["CE-Source"] = []string{ec.Source.String()}
-	if ec.CloudEventsVersion == "" {
-		h["CE-CloudEventsVersion"] = []string{canonical.CloudEventsVersionV01}
-	}
 	if ec.EventTime != nil && !ec.EventTime.IsZero() {
 		h["CE-EventTime"] = []string{ec.EventTime.Format(time.RFC3339Nano)}
 	}
