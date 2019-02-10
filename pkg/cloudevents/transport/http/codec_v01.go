@@ -162,7 +162,6 @@ func (v CodecV01) decodeBinary(msg transport.Message) (*canonical.Event, error) 
 }
 
 func (v CodecV01) fromHeaders(h http.Header) (canonical.EventContextV01, error) {
-
 	// Normalize headers.
 	for k, v := range h {
 		ck := textproto.CanonicalMIMEHeaderKey(k)
@@ -185,21 +184,93 @@ func (v CodecV01) fromHeaders(h http.Header) (canonical.EventContextV01, error) 
 	ec.SchemaURL = canonical.ParseURLRef(h.Get("CE-SchemaURL"))
 	ec.ContentType = h.Get("Content-Type")
 
-	//for k, v := range ec.Extensions {  <-- this is a challenge
-	//	encoded, err := json.Marshal(v)
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//	h["CE-X-"+strings.Title(k)] = []string{string(encoded)}
-	//}
+	extensions := make(map[string]interface{})
+	for k, v := range h {
+		if strings.EqualFold(k[:len("CE-X-")], "CE-X-") {
+			key := k[len("CE-X-"):]
+			var tmp interface{}
+			if err := json.Unmarshal([]byte(v[0]), &tmp); err == nil {
+				extensions[key] = tmp
+			} else {
+				// If we can't unmarshal the data, treat it as a string.
+				extensions[key] = v[0]
+			}
+		}
+	}
+	if len(extensions) > 0 {
+		ec.Extensions = extensions
+	}
 	return ec, nil
 }
 
 func (v CodecV01) decodeStructured(msg transport.Message) (*canonical.Event, error) {
-	return nil, fmt.Errorf("not implemented")
+	m, ok := msg.(*Message)
+	if !ok {
+		return nil, fmt.Errorf("failed to convert transport.Message to http.Message")
+	}
+
+	raw := make(map[string]json.RawMessage)
+	if err := json.Unmarshal(m.Body, &raw); err != nil {
+		return nil, err
+	}
+
+	ec := canonical.EventContextV01{}
+	var data interface{}
+	for k, v := range raw {
+		log.Printf("decodeStructured - key %s", k)
+		_ = v
+		switch k {
+		case "cloudEventsVersion":
+			if err := json.Unmarshal(v, &ec.CloudEventsVersion); err != nil {
+				return nil, err
+			}
+		case "eventType":
+			if err := json.Unmarshal(v, &ec.EventType); err != nil {
+				return nil, err
+			}
+		case "eventTypeVersion":
+			if err := json.Unmarshal(v, &ec.EventTypeVersion); err != nil {
+				return nil, err
+			}
+		case "eventID":
+			if err := json.Unmarshal(v, &ec.EventID); err != nil {
+				return nil, err
+			}
+		case "source":
+			var src string
+			if err := json.Unmarshal(v, &src); err != nil {
+				return nil, err
+			}
+			source := canonical.ParseURLRef(src)
+			if source != nil {
+				ec.Source = *source
+			}
+		default:
+			log.Printf("[warn] decode structrued, unknown key %q", k)
+		}
+	}
+
+	return &canonical.Event{
+		Context: ec,
+		Data:    data,
+	}, nil
 }
 
 func (v CodecV01) inspectEncoding(msg transport.Message) Encoding {
-	return BinaryV01 // Lets try to get the decoder working before inspection code.
-	//return Unknown
+	version := msg.CloudEventVersion()
+	if version != canonical.CloudEventsVersionV01 {
+		return Unknown
+	}
+	m, ok := msg.(*Message)
+	if !ok {
+		return Unknown
+	}
+	contentType := m.Header.Get("Content-Type")
+	if contentType == "application/json" {
+		return BinaryV01
+	}
+	if contentType == "application/cloudevents+json" {
+		return StructuredV01
+	}
+	return Unknown
 }

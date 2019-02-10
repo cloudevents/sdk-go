@@ -153,5 +153,20 @@ func (v CodecV02) decodeStructured(msg transport.Message) (*canonical.Event, err
 }
 
 func (v CodecV02) inspectEncoding(msg transport.Message) Encoding {
+	version := msg.CloudEventVersion()
+	if version != canonical.CloudEventsVersionV02 {
+		return Unknown
+	}
+	m, ok := msg.(*Message)
+	if !ok {
+		return Unknown
+	}
+	contentType := m.Header.Get("Content-Type")
+	if contentType == "application/json" {
+		return BinaryV02
+	}
+	if contentType == "application/cloudevents+json" {
+		return StructuredV02
+	}
 	return Unknown
 }

@@ -21,14 +21,14 @@ func (m Message) CloudEventVersion() string {
 	if m.Header != nil {
 		// Try headers first.
 		// v0.1
-		v := m.Header["CE-CloudEventsVersion"]
+		v := m.Header["CE-CloudEventsVersion"] // TODO: this will fail for real headers.
 		if len(v) == 1 {
-			return v[1]
+			return v[0]
 		}
 		// v0.2
-		v = m.Header["ce-SpecVersion"]
+		v = m.Header["ce-SpecVersion"] // TODO: this will fail for real headers.
 		if len(v) == 1 {
-			return v[1]
+			return v[0]
 		}
 	}
 

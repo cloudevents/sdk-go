@@ -193,20 +193,20 @@ func TestCodecDecode(t *testing.T) {
 		//},
 		//"simple v2 binary": {
 		//	codec: http.Codec{Encoding: http.BinaryV02},
-		//	event: canonical.Event{
-		//		Context: canonical.EventContextV02{
-		//			Type:   "com.example.test",
-		//			Source: *source,
-		//			ID:     "ABC-123",
-		//		},
-		//	},
-		//	want: &http.Message{
+		//	msg: &http.Message{
 		//		Header: map[string][]string{
 		//			"Ce-Specversion": {"0.2"},
 		//			"Ce-Id":          {"ABC-123"},
 		//			"Ce-Type":        {"com.example.test"},
 		//			"Ce-Source":      {"http://example.com/source"},
 		//			"Content-Type":   {"application/json"},
+		//		},
+		//	},
+		//	want: &canonical.Event{
+		//		Context: canonical.EventContextV02{
+		//			Type:   "com.example.test",
+		//			Source: *source,
+		//			ID:     "ABC-123",
 		//		},
 		//	},
 		//},

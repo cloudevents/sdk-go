@@ -227,3 +227,160 @@ func TestCodecV01_Encode(t *testing.T) {
 		})
 	}
 }
+
+func TestCodecV01_Decode(t *testing.T) {
+	now := canonical.Timestamp{Time: time.Now()}
+	sourceUrl, _ := url.Parse("http://example.com/source")
+	source := &canonical.URLRef{URL: *sourceUrl}
+
+	schemaUrl, _ := url.Parse("http://example.com/schema")
+	schema := &canonical.URLRef{URL: *schemaUrl}
+
+	testCases := map[string]struct {
+		codec   http.CodecV01
+		msg     *http.Message
+		want    *canonical.Event
+		wantErr error
+	}{
+		"simple v1 binary": {
+			codec: http.CodecV01{},
+			msg: &http.Message{
+				Header: map[string][]string{
+					"CE-CloudEventsVersion": {"0.1"},
+					"CE-EventID":            {"ABC-123"},
+					"CE-EventType":          {"com.example.test"},
+					"CE-Source":             {"http://example.com/source"},
+					"Content-Type":          {"application/json"},
+				},
+			},
+			want: &canonical.Event{
+				Context: canonical.EventContextV01{
+					CloudEventsVersion: canonical.CloudEventsVersionV01,
+					EventType:          "com.example.test",
+					Source:             *source,
+					EventID:            "ABC-123",
+					ContentType:        "application/json",
+				},
+			},
+		},
+		"full v1 binary": {
+			codec: http.CodecV01{},
+			msg: &http.Message{
+				Header: map[string][]string{
+					"CE-CloudEventsVersion": {"0.1"},
+					"CE-EventID":            {"ABC-123"},
+					"CE-EventTime":          {now.Format(time.RFC3339Nano)},
+					"CE-EventType":          {"com.example.full"},
+					"CE-EventTypeVersion":   {"v1alpha1"},
+					"CE-Source":             {"http://example.com/source"},
+					"CE-SchemaURL":          {"http://example.com/schema"},
+					"Content-Type":          {"application/json"},
+					"CE-X-Test":             {`"extended"`},
+				},
+				Body: []byte(`{"hello":"world"}`),
+			},
+			want: &canonical.Event{
+				Context: canonical.EventContextV01{
+					CloudEventsVersion: canonical.CloudEventsVersionV01,
+					EventID:            "ABC-123",
+					EventTime:          &now,
+					EventType:          "com.example.full",
+					EventTypeVersion:   "v1alpha1",
+					SchemaURL:          schema,
+					ContentType:        "application/json",
+					Source:             *source,
+					Extensions: map[string]interface{}{
+						"Test": "extended",
+					},
+				},
+				Data: []byte(`{"hello":"world"}`),
+			},
+		},
+		"simple v1 structured": {
+			codec: http.CodecV01{},
+			msg: &http.Message{
+				Header: map[string][]string{
+					"Content-Type": {"application/cloudevents+json"},
+				},
+				Body: func() []byte {
+					body := map[string]interface{}{
+						"cloudEventsVersion": "0.1",
+						"eventID":            "ABC-123",
+						"eventType":          "com.example.test",
+						"source":             "http://example.com/source",
+					}
+					return toBytes(body)
+				}(),
+			},
+			want: &canonical.Event{
+				Context: canonical.EventContextV01{
+					CloudEventsVersion: canonical.CloudEventsVersionV01,
+					EventType:          "com.example.test",
+					Source:             *source,
+					EventID:            "ABC-123",
+				},
+			},
+		},
+		//"full v1 structured": {
+		//	codec: http.Codec{},
+		//	msg: &http.Message{
+		//		Header: map[string][]string{
+		//			"Content-Type": {"application/cloudevents+json"},
+		//		},
+		//		Body: func() []byte {
+		//			body := map[string]interface{}{
+		//				"cloudEventsVersion": "0.1",
+		//				"contentType":        "application/json",
+		//				"data": map[string]interface{}{
+		//					"hello": "world",
+		//				},
+		//				"eventID":          "ABC-123",
+		//				"eventTime":        now,
+		//				"eventType":        "com.example.full",
+		//				"eventTypeVersion": "v1alpha1",
+		//				"extensions": map[string]interface{}{
+		//					"test": "extended",
+		//				},
+		//				"schemaURL": "http://example.com/schema",
+		//				"source":    "http://example.com/source",
+		//			}
+		//			return toBytes(body)
+		//		}(),
+		//	},
+		//	want: &canonical.Event{
+		//		Context: canonical.EventContextV01{
+		//			EventID:          "ABC-123",
+		//			EventTime:        &now,
+		//			EventType:        "com.example.full",
+		//			EventTypeVersion: "v1alpha1",
+		//			SchemaURL:        schema,
+		//			ContentType:      "application/json",
+		//			Source:           *source,
+		//			Extensions: map[string]interface{}{
+		//				"test": "extended",
+		//			},
+		//		},
+		//		Data: map[string]interface{}{
+		//			"hello": "world",
+		//		},
+		//	},
+		//},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+
+			got, err := tc.codec.Decode(tc.msg)
+
+			if tc.wantErr != nil || err != nil {
+				if diff := cmp.Diff(tc.wantErr, err); diff != "" {
+					t.Errorf("unexpected error (-want, +got) = %v", diff)
+				}
+				return
+			}
+
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("unexpected event (-want, +got) = %v", diff)
+			}
+		})
+	}
+}
