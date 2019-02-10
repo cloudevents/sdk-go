@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/canonical"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
+	"log"
 	"net/http"
+	"net/textproto"
 )
 
 type CodecV02 struct {
@@ -145,11 +147,91 @@ func (v CodecV02) encodeStructured(e canonical.Event) (transport.Message, error)
 }
 
 func (v CodecV02) decodeBinary(msg transport.Message) (*canonical.Event, error) {
-	return nil, fmt.Errorf("not implemented")
+	m, ok := msg.(*Message)
+	if !ok {
+		return nil, fmt.Errorf("failed to convert transport.Message to http.Message")
+	}
+	ctx, err := v.fromHeaders(m.Header)
+	if err != nil {
+		return nil, err
+	}
+	var body interface{}
+	if len(m.Body) > 0 {
+		body = m.Body
+	}
+	return &canonical.Event{
+		Context: ctx,
+		Data:    body,
+	}, nil
+}
+
+func (v CodecV02) fromHeaders(h http.Header) (canonical.EventContextV02, error) {
+	// Normalize headers.
+	for k, v := range h {
+		ck := textproto.CanonicalMIMEHeaderKey(k)
+		if k != ck {
+			log.Printf("[warn] received header with non-canonical form; canonical: %q, got %q", ck, k)
+			h[ck] = v
+		}
+	}
+
+	ec := canonical.EventContextV02{}
+	ec.SpecVersion = h.Get("ce-specversion")
+	ec.ID = h.Get("ce-id")
+	ec.Type = h.Get("ce-type")
+	source := canonical.ParseURLRef(h.Get("ce-source"))
+	if source != nil {
+		ec.Source = *source
+	}
+	ec.Time = canonical.ParseTimestamp(h.Get("ce-time"))
+	ec.SchemaURL = canonical.ParseURLRef(h.Get("ce-schemaurl"))
+	ec.ContentType = h.Get("Content-Type")
+
+	// TODO: fix extensions
+	//extensions := make(map[string]interface{})
+	//for k, v := range h {
+	//	if strings.EqualFold(k[:len("CE-X-")], "CE-X-") {
+	//		key := k[len("CE-X-"):]
+	//		var tmp interface{}
+	//		if err := json.Unmarshal([]byte(v[0]), &tmp); err == nil {
+	//			extensions[key] = tmp
+	//		} else {
+	//			// If we can't unmarshal the data, treat it as a string.
+	//			extensions[key] = v[0]
+	//		}
+	//	}
+	//}
+	//if len(extensions) > 0 {
+	//	ec.Extensions = extensions
+	//}
+	return ec, nil
 }
 
 func (v CodecV02) decodeStructured(msg transport.Message) (*canonical.Event, error) {
-	return nil, fmt.Errorf("not implemented")
+	m, ok := msg.(*Message)
+	if !ok {
+		return nil, fmt.Errorf("failed to convert transport.Message to http.Message")
+	}
+
+	ec := canonical.EventContextV02{}
+	if err := json.Unmarshal(m.Body, &ec); err != nil {
+		return nil, err
+	}
+
+	raw := make(map[string]json.RawMessage)
+
+	if err := json.Unmarshal(m.Body, &raw); err != nil {
+		return nil, err
+	}
+	var data interface{}
+	if d, ok := raw["data"]; ok {
+		data = []byte(d)
+	}
+
+	return &canonical.Event{
+		Context: ec,
+		Data:    data,
+	}, nil
 }
 
 func (v CodecV02) inspectEncoding(msg transport.Message) Encoding {

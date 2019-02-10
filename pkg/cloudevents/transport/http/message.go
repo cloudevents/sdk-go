@@ -26,7 +26,7 @@ func (m Message) CloudEventsVersion() string {
 			return v[0]
 		}
 		// v0.2
-		v = m.Header["ce-SpecVersion"] // TODO: this will fail for real headers.
+		v = m.Header["ce-specversion"] // TODO: this will fail for real headers.
 		if len(v) == 1 {
 			return v[0]
 		}
@@ -50,7 +50,7 @@ func (m Message) CloudEventsVersion() string {
 	}
 
 	// v0.2
-	if v, ok := raw["specVersion"]; ok {
+	if v, ok := raw["specversion"]; ok {
 		var version string
 		if err := json.Unmarshal(v, &version); err != nil {
 			return ""

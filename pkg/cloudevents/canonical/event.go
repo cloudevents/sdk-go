@@ -1,6 +1,7 @@
 package canonical
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"time"
@@ -51,6 +52,15 @@ func (t Timestamp) MarshalJSON() ([]byte, error) {
 	return []byte(rfc3339), nil
 }
 
+func (t *Timestamp) UnmarshalJSON(b []byte) error {
+	var timestamp string
+	if err := json.Unmarshal(b, &timestamp); err != nil {
+		return err
+	}
+	*t = *ParseTimestamp(timestamp)
+	return nil
+}
+
 func (t Timestamp) String() string {
 	return t.Format(time.RFC3339Nano)
 }
@@ -74,4 +84,13 @@ func ParseURLRef(u string) *URLRef {
 func (u URLRef) MarshalJSON() ([]byte, error) {
 	rfc3339 := fmt.Sprintf("%q", u.String())
 	return []byte(rfc3339), nil
+}
+
+func (u *URLRef) UnmarshalJSON(b []byte) error {
+	var ref string
+	if err := json.Unmarshal(b, &ref); err != nil {
+		return err
+	}
+	*u = *ParseURLRef(ref)
+	return nil
 }

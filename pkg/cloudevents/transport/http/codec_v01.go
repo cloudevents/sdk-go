@@ -209,67 +209,19 @@ func (v CodecV01) decodeStructured(msg transport.Message) (*canonical.Event, err
 		return nil, fmt.Errorf("failed to convert transport.Message to http.Message")
 	}
 
-	raw := make(map[string]json.RawMessage)
-	if err := json.Unmarshal(m.Body, &raw); err != nil {
+	ec := canonical.EventContextV01{}
+	if err := json.Unmarshal(m.Body, &ec); err != nil {
 		return nil, err
 	}
 
-	ec := canonical.EventContextV01{}
+	raw := make(map[string]json.RawMessage)
+
+	if err := json.Unmarshal(m.Body, &raw); err != nil {
+		return nil, err
+	}
 	var data interface{}
-	for k, v := range raw {
-		log.Printf("decodeStructured - key %s", k)
-		_ = v
-		switch k {
-		case "cloudEventsVersion":
-			if err := json.Unmarshal(v, &ec.CloudEventsVersion); err != nil {
-				return nil, err
-			}
-		case "eventType":
-			if err := json.Unmarshal(v, &ec.EventType); err != nil {
-				return nil, err
-			}
-		case "eventTypeVersion":
-			if err := json.Unmarshal(v, &ec.EventTypeVersion); err != nil {
-				return nil, err
-			}
-		case "eventID":
-			if err := json.Unmarshal(v, &ec.EventID); err != nil {
-				return nil, err
-			}
-		case "source":
-			var src string
-			if err := json.Unmarshal(v, &src); err != nil {
-				return nil, err
-			}
-			source := canonical.ParseURLRef(src)
-			if source != nil {
-				ec.Source = *source
-			}
-		case "schemaURL":
-			var schemaURL string
-			if err := json.Unmarshal(v, &schemaURL); err != nil {
-				return nil, err
-			}
-			ec.SchemaURL = canonical.ParseURLRef(schemaURL)
-		case "contentType":
-			if err := json.Unmarshal(v, &ec.ContentType); err != nil {
-				return nil, err
-			}
-		case "eventTime":
-			var t string
-			if err := json.Unmarshal(v, &t); err != nil {
-				return nil, err
-			}
-			ec.EventTime = canonical.ParseTimestamp(t)
-		case "data":
-			data = []byte(v)
-		case "extensions":
-			if err := json.Unmarshal(v, &ec.Extensions); err != nil {
-				return nil, err
-			}
-		default:
-			log.Printf("[warn] decode structrued, unknown key %q", k)
-		}
+	if d, ok := raw["data"]; ok {
+		data = []byte(d)
 	}
 
 	return &canonical.Event{
