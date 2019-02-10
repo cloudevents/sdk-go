@@ -1,8 +1,8 @@
 package transport
 
 type Message interface {
-	// CloudEventVersion returns the version of the CloudEvent.
-	CloudEventVersion() string
+	// CloudEventsVersion returns the version of the CloudEvent.
+	CloudEventsVersion() string
 
 	// TODO maybe get encoding
 }

@@ -277,7 +277,9 @@ func TestCodecV01_Decode(t *testing.T) {
 					"Content-Type":          {"application/json"},
 					"CE-X-Test":             {`"extended"`},
 				},
-				Body: []byte(`{"hello":"world"}`),
+				Body: toBytes(map[string]interface{}{
+					"hello": "world",
+				}),
 			},
 			want: &canonical.Event{
 				Context: canonical.EventContextV01{
@@ -293,7 +295,9 @@ func TestCodecV01_Decode(t *testing.T) {
 						"Test": "extended",
 					},
 				},
-				Data: []byte(`{"hello":"world"}`),
+				Data: toBytes(map[string]interface{}{
+					"hello": "world",
+				}),
 			},
 		},
 		"simple v1 structured": {
@@ -302,15 +306,12 @@ func TestCodecV01_Decode(t *testing.T) {
 				Header: map[string][]string{
 					"Content-Type": {"application/cloudevents+json"},
 				},
-				Body: func() []byte {
-					body := map[string]interface{}{
-						"cloudEventsVersion": "0.1",
-						"eventID":            "ABC-123",
-						"eventType":          "com.example.test",
-						"source":             "http://example.com/source",
-					}
-					return toBytes(body)
-				}(),
+				Body: toBytes(map[string]interface{}{
+					"cloudEventsVersion": "0.1",
+					"eventID":            "ABC-123",
+					"eventType":          "com.example.test",
+					"source":             "http://example.com/source",
+				}),
 			},
 			want: &canonical.Event{
 				Context: canonical.EventContextV01{
@@ -321,50 +322,48 @@ func TestCodecV01_Decode(t *testing.T) {
 				},
 			},
 		},
-		//"full v1 structured": {
-		//	codec: http.Codec{},
-		//	msg: &http.Message{
-		//		Header: map[string][]string{
-		//			"Content-Type": {"application/cloudevents+json"},
-		//		},
-		//		Body: func() []byte {
-		//			body := map[string]interface{}{
-		//				"cloudEventsVersion": "0.1",
-		//				"contentType":        "application/json",
-		//				"data": map[string]interface{}{
-		//					"hello": "world",
-		//				},
-		//				"eventID":          "ABC-123",
-		//				"eventTime":        now,
-		//				"eventType":        "com.example.full",
-		//				"eventTypeVersion": "v1alpha1",
-		//				"extensions": map[string]interface{}{
-		//					"test": "extended",
-		//				},
-		//				"schemaURL": "http://example.com/schema",
-		//				"source":    "http://example.com/source",
-		//			}
-		//			return toBytes(body)
-		//		}(),
-		//	},
-		//	want: &canonical.Event{
-		//		Context: canonical.EventContextV01{
-		//			EventID:          "ABC-123",
-		//			EventTime:        &now,
-		//			EventType:        "com.example.full",
-		//			EventTypeVersion: "v1alpha1",
-		//			SchemaURL:        schema,
-		//			ContentType:      "application/json",
-		//			Source:           *source,
-		//			Extensions: map[string]interface{}{
-		//				"test": "extended",
-		//			},
-		//		},
-		//		Data: map[string]interface{}{
-		//			"hello": "world",
-		//		},
-		//	},
-		//},
+		"full v1 structured": {
+			codec: http.CodecV01{},
+			msg: &http.Message{
+				Header: map[string][]string{
+					"Content-Type": {"application/cloudevents+json"},
+				},
+				Body: toBytes(map[string]interface{}{
+					"cloudEventsVersion": "0.1",
+					"contentType":        "application/json",
+					"data": map[string]interface{}{
+						"hello": "world",
+					},
+					"eventID":          "ABC-123",
+					"eventTime":        now,
+					"eventType":        "com.example.full",
+					"eventTypeVersion": "v1alpha1",
+					"extensions": map[string]interface{}{
+						"test": "extended",
+					},
+					"schemaURL": "http://example.com/schema",
+					"source":    "http://example.com/source",
+				}),
+			},
+			want: &canonical.Event{
+				Context: canonical.EventContextV01{
+					CloudEventsVersion: canonical.CloudEventsVersionV01,
+					EventID:            "ABC-123",
+					EventTime:          &now,
+					EventType:          "com.example.full",
+					EventTypeVersion:   "v1alpha1",
+					SchemaURL:          schema,
+					ContentType:        "application/json",
+					Source:             *source,
+					Extensions: map[string]interface{}{
+						"test": "extended",
+					},
+				},
+				Data: toBytes(map[string]interface{}{
+					"hello": "world",
+				}),
+			},
+		},
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {

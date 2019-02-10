@@ -245,6 +245,28 @@ func (v CodecV01) decodeStructured(msg transport.Message) (*canonical.Event, err
 			if source != nil {
 				ec.Source = *source
 			}
+		case "schemaURL":
+			var schemaURL string
+			if err := json.Unmarshal(v, &schemaURL); err != nil {
+				return nil, err
+			}
+			ec.SchemaURL = canonical.ParseURLRef(schemaURL)
+		case "contentType":
+			if err := json.Unmarshal(v, &ec.ContentType); err != nil {
+				return nil, err
+			}
+		case "eventTime":
+			var t string
+			if err := json.Unmarshal(v, &t); err != nil {
+				return nil, err
+			}
+			ec.EventTime = canonical.ParseTimestamp(t)
+		case "data":
+			data = []byte(v)
+		case "extensions":
+			if err := json.Unmarshal(v, &ec.Extensions); err != nil {
+				return nil, err
+			}
 		default:
 			log.Printf("[warn] decode structrued, unknown key %q", k)
 		}
@@ -257,7 +279,7 @@ func (v CodecV01) decodeStructured(msg transport.Message) (*canonical.Event, err
 }
 
 func (v CodecV01) inspectEncoding(msg transport.Message) Encoding {
-	version := msg.CloudEventVersion()
+	version := msg.CloudEventsVersion()
 	if version != canonical.CloudEventsVersionV01 {
 		return Unknown
 	}

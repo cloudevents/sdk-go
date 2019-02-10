@@ -153,7 +153,7 @@ func (v CodecV02) decodeStructured(msg transport.Message) (*canonical.Event, err
 }
 
 func (v CodecV02) inspectEncoding(msg transport.Message) Encoding {
-	version := msg.CloudEventVersion()
+	version := msg.CloudEventsVersion()
 	if version != canonical.CloudEventsVersionV02 {
 		return Unknown
 	}

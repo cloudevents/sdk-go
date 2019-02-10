@@ -14,7 +14,7 @@ type Message struct {
 	Body   []byte
 }
 
-func (m Message) CloudEventVersion() string {
+func (m Message) CloudEventsVersion() string {
 
 	// TODO: the impl of this method needs to move into the codec.
 
@@ -33,19 +33,29 @@ func (m Message) CloudEventVersion() string {
 	}
 
 	// Then try the data body.
-	b := map[string]string{}
-	if err := json.Unmarshal(m.Body, &b); err != nil {
+	// TODO: we need to use the correct decoding based on content type.
+
+	raw := make(map[string]json.RawMessage)
+	if err := json.Unmarshal(m.Body, &raw); err != nil {
 		return ""
 	}
 
 	// v0.1
-	if b["cloudEventsVersion"] != "" {
-		return b["cloudEventsVersion"]
+	if v, ok := raw["cloudEventsVersion"]; ok {
+		var version string
+		if err := json.Unmarshal(v, &version); err != nil {
+			return ""
+		}
+		return version
 	}
 
 	// v0.2
-	if b["specVersion"] != "" {
-		return b["specVersion"]
+	if v, ok := raw["specVersion"]; ok {
+		var version string
+		if err := json.Unmarshal(v, &version); err != nil {
+			return ""
+		}
+		return version
 	}
 
 	return ""
