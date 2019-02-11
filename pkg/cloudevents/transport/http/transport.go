@@ -18,18 +18,16 @@ type Transport struct {
 	Encoding Encoding
 	Client   *http.Client
 
+	Receiver transport.Receiver
+
 	codec transport.Codec
 }
 
-func (t *Transport) Send(event cloudevents.Event, req *http.Request) (*http.Response, error) {
-	if t.Client == nil {
-		t.Client = &http.Client{}
-	}
-
+func (t *Transport) loadCodec() bool {
 	if t.codec == nil {
 		switch t.Encoding {
-		case Default: // Move this to set default codec
-			fallthrough
+		case Default:
+			t.codec = &Codec{}
 		case BinaryV01:
 			fallthrough
 		case StructuredV01:
@@ -39,8 +37,19 @@ func (t *Transport) Send(event cloudevents.Event, req *http.Request) (*http.Resp
 		case StructuredV02:
 			t.codec = &CodecV02{Encoding: t.Encoding}
 		default:
-			return nil, fmt.Errorf("unknown codec set on sender: %d", t.codec)
+			return false
 		}
+	}
+	return true
+}
+
+func (t *Transport) Send(event cloudevents.Event, req *http.Request) (*http.Response, error) {
+	if t.Client == nil {
+		t.Client = &http.Client{}
+	}
+
+	if ok := t.loadCodec(); !ok {
+		return nil, fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
 	}
 
 	msg, err := t.codec.Encode(event)
@@ -63,7 +72,7 @@ func (t *Transport) Send(event cloudevents.Event, req *http.Request) (*http.Resp
 func (t *Transport) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		log.Printf("Failed to handle request: %s %s", err, spew.Sdump(r))
+		log.Printf("failed to handle request: %s %s", err, spew.Sdump(r))
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(`{"error":"Invalid request"}`))
 		return
@@ -73,6 +82,25 @@ func (t *Transport) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		Body:   body,
 	}
 	_ = msg // TODO
+
+	if ok := t.loadCodec(); !ok {
+		err := fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
+		log.Printf("failed to load codec: %s", err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(fmt.Sprintf(`{"error":%q}`, err.Error())))
+		return
+	}
+	event, err := t.codec.Decode(msg)
+	if err != nil {
+		log.Printf("failed to decode message: %s %s", err, spew.Sdump(msg))
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"error":"Decoding Error"}`))
+		return
+	}
+
+	if t.Receiver != nil {
+		go t.Receiver.Receive(*event)
+	}
 
 	// TODO: respond correctly based on decode.
 	w.WriteHeader(http.StatusNoContent)
