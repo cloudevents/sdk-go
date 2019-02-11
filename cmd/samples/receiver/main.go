@@ -26,44 +26,22 @@ func main() {
 
 type Receiver struct{}
 
-func (r *Receiver) Receive(event cloudevents.Event) {
-	fmt.Printf("Got Event: %v\n", event)
-	fmt.Printf("----------------------------\n")
+type Example struct {
+	Sequence int    `json:"id"`
+	Message  string `json:"message"`
 }
 
-//
-//func (r *Receiver) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-//	marshaller := v02.NewDefaultHTTPMarshaller()
-//	// req is *http.Request
-//	event, err := marshaller.FromRequest(req)
-//	if err != nil {
-//		log.Printf("Unable to parse event from http Request: " + err.Error())
-//		w.WriteHeader(http.StatusBadRequest)
-//		w.Write([]byte(`Invalid request`))
-//		return
-//	}
-//	if t, ok := event.Get("type"); ok {
-//		fmt.Printf("type: %s\n", t)
-//	}
-//	if s, ok := event.GetURL("source"); ok {
-//		fmt.Printf("source: %s\n", s.RequestURI())
-//	}
-//	if t, ok := event.GetTime("time"); ok {
-//		fmt.Printf("time: %s\n", t)
-//	}
-//	if d, ok := event.GetBinary("data"); ok {
-//		fmt.Printf("data as binary: %s\n", string(d))
-//	}
-//	if d, ok := event.GetMap("data"); ok {
-//		fmt.Printf("data as map:\n")
-//		for k, v := range d {
-//			fmt.Printf("\t%q: %v\n", k, v)
-//		}
-//
-//	}
-//	fmt.Printf("----------------------------\n")
-//	w.WriteHeader(http.StatusNoContent)
-//}
+func (r *Receiver) Receive(event cloudevents.Event) {
+	fmt.Printf("Got Event Context: %+v\n", event.Context)
+
+	data := &Example{}
+	if err := event.DataAs(data); err != nil {
+		fmt.Printf("Got Data Error: %s\n", err.Error())
+	}
+	fmt.Printf("Got Data: %+v\n", data)
+
+	fmt.Printf("----------------------------\n")
+}
 
 func _main(args []string, env envConfig) int {
 	r := &Receiver{}

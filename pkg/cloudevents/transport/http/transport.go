@@ -14,6 +14,7 @@ import (
 // type check that this transport message impl matches the contract
 var _ transport.Sender = (*Transport)(nil)
 
+// Transport acts as both a http client and a http handler.
 type Transport struct {
 	Encoding Encoding
 	Client   *http.Client

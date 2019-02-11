@@ -4,8 +4,10 @@ import (
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 	c "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/gin-gonic/gin/json"
 	"github.com/google/go-cmp/cmp"
 	"net/url"
+	"reflect"
 	"testing"
 	"time"
 )
@@ -156,6 +158,119 @@ func TestGetDataContentType(t *testing.T) {
 			}
 		})
 	}
+}
+
+type DataExample struct {
+	AnInt   int                       `json:"a,omitempty"`
+	AString string                    `json:"b,omitempty"`
+	AnArray []string                  `json:"c,omitempty"`
+	AMap    map[string]map[string]int `json:"d,omitempty"`
+	ATime   *time.Time                `json:"e,omitempty"`
+}
+
+func TestDataAs(t *testing.T) {
+	now := types.Timestamp{Time: time.Now()}
+
+	testCases := map[string]struct {
+		event ce.Event
+		want  interface{}
+	}{
+		"empty": {
+			event: ce.Event{
+				Context: MinEventContextV01(),
+			},
+			want: nil,
+		},
+		"json simple": {
+			event: ce.Event{
+				Context: FullEventContextV01(now),
+				Data:    []byte(`{"a":"apple","b":"banana"}`),
+			},
+			want: &map[string]string{
+				"a": "apple",
+				"b": "banana",
+			},
+		},
+		"json complex empty": {
+			event: ce.Event{
+				Context: FullEventContextV01(now),
+				Data:    []byte(`{}`),
+			},
+			want: &DataExample{},
+		},
+		"json complex filled": {
+			event: ce.Event{
+				Context: FullEventContextV01(now),
+				Data: func() []byte {
+					data := &DataExample{
+						AnInt: 42,
+						AMap: map[string]map[string]int{
+							"a": {"1": 1, "2": 2, "3": 3},
+							"z": {"3": 3, "2": 2, "1": 1},
+						},
+						AString: "Hello, World!",
+						ATime:   &now.Time,
+						AnArray: []string{"Anne", "Bob", "Chad"},
+					}
+					j, err := json.Marshal(data)
+					if err != nil {
+						t.Errorf("failed to marshal test data: %s", err.Error())
+					}
+					return j
+				}(),
+			},
+			want: &DataExample{
+				AnInt: 42,
+				AMap: map[string]map[string]int{
+					"a": {"1": 1, "2": 2, "3": 3},
+					"z": {"3": 3, "2": 2, "1": 1},
+				},
+				AString: "Hello, World!",
+				ATime:   &now.Time,
+				AnArray: []string{"Anne", "Bob", "Chad"},
+			},
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+
+			dataType := reflect.TypeOf(tc.want)
+
+			t.Logf("got dataType: %s", dataType)
+
+			got, _ := allocate(dataType)
+
+			err := tc.event.DataAs(got)
+			//got := data
+
+			_ = err // TODO
+
+			if dataType != nil {
+				if diff := cmp.Diff(tc.want, got); diff != "" {
+					t.Errorf("unexpected data (-want, +got) = %v", diff)
+				}
+			}
+		})
+	}
+}
+
+// Alocates a new instance of type t and returns:
+// asPtr is of type t if t is a pointer type and of type &t otherwise (used for unmarshalling)
+// asValue is a Value of type t pointing to the same data as asPtr
+func allocate(t reflect.Type) (asPtr interface{}, asValue reflect.Value) {
+	if t == nil {
+		return nil, reflect.Value{}
+	}
+	if t.Kind() == reflect.Ptr {
+		reflectPtr := reflect.New(t.Elem())
+		asPtr = reflectPtr.Interface()
+		asValue = reflectPtr
+	} else {
+		reflectPtr := reflect.New(t)
+		asPtr = reflectPtr.Interface()
+		asValue = reflectPtr.Elem()
+	}
+	return
 }
 
 func MinEventContextV01() c.EventContextV01 {

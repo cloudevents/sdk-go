@@ -48,22 +48,15 @@ type Example struct {
 	Message  string `json:"message"`
 }
 
-func (d *Demo) Send(i int) error {
-
+func (d *Demo) Send(eventContext context.EventContext, i int) error {
 	data := &Example{
 		Sequence: i,
 		Message:  d.Message,
 	}
 
-	now := time.Now()
 	event := cloudevents.Event{
-		Context: context.EventContextV01{
-			EventID:   uuid.New().String(),
-			EventType: "com.cloudevents.sample.sent",
-			EventTime: &types.Timestamp{Time: now},
-			Source:    types.URLRef{URL: d.Source},
-		},
-		Data: data,
+		Context: eventContext,
+		Data:    data,
 	}
 	req := &http.Request{
 		Method: http.MethodPost,
@@ -111,19 +104,32 @@ func _main(args []string, env envConfig) int {
 		return 1
 	}
 
-	d := &Demo{
-		Message: "Hello, World!",
-		Source:  *source,
-		Target:  *target,
-		Sender:  &cloudeventshttp.Transport{Encoding: cloudeventshttp.StructuredV02},
-	}
+	seq := 0
+	for _, encoding := range []cloudeventshttp.Encoding{cloudeventshttp.BinaryV01, cloudeventshttp.StructuredV01, cloudeventshttp.BinaryV02, cloudeventshttp.StructuredV02} {
 
-	for i := 0; i < 10; i++ {
-		if err := d.Send(i); err != nil {
-			log.Printf("failed to send: %v", err)
-			return 1
+		d := &Demo{
+			Message: fmt.Sprintf("Hello, %s!", encoding),
+			Source:  *source,
+			Target:  *target,
+			Sender:  &cloudeventshttp.Transport{Encoding: encoding},
 		}
-		time.Sleep(1 * time.Second)
+
+		for i := 0; i < 10; i++ {
+			now := time.Now()
+			ctx := context.EventContextV01{
+				EventID:     uuid.New().String(),
+				EventType:   "com.cloudevents.sample.sent",
+				EventTime:   &types.Timestamp{Time: now},
+				Source:      types.URLRef{URL: d.Source},
+				ContentType: "application/json",
+			}
+			if err := d.Send(ctx, seq); err != nil {
+				log.Printf("failed to send: %v", err)
+				return 1
+			}
+			seq++
+			time.Sleep(200 * time.Millisecond)
+		}
 	}
 
 	return 0
