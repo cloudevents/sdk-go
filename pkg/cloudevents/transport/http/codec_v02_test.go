@@ -105,6 +105,14 @@ func TestCodecV02_Encode(t *testing.T) {
 					Source:      *source,
 					Extensions: map[string]interface{}{
 						"test": "extended",
+						"asmap": map[string]interface{}{
+							"a": "apple",
+							"b": "banana",
+							"c": map[string]interface{}{
+								"d": "dog",
+								"e": "eel",
+							},
+						},
 					},
 				},
 				Data: map[string]interface{}{
@@ -120,6 +128,9 @@ func TestCodecV02_Encode(t *testing.T) {
 					"Ce-Source":      {"http://example.com/source"},
 					"Ce-Schemaurl":   {"http://example.com/schema"},
 					"Ce-Test":        {`"extended"`},
+					"Ce-Asmap-A":     {`"apple"`},
+					"Ce-Asmap-B":     {`"banana"`},
+					"Ce-Asmap-C":     {`{"d":"dog","e":"eel"}`},
 					"Content-Type":   {"application/json"},
 				},
 				Body: []byte(`{"hello":"world"}`),
@@ -181,7 +192,7 @@ func TestCodecV02_Encode(t *testing.T) {
 						"id":   "ABC-123",
 						"time": now,
 						"type": "com.example.test",
-						"-": map[string]interface{}{
+						"-": map[string]interface{}{ // TODO: this could be an issue.
 							"test": "extended",
 						},
 						"schemaurl": "http://example.com/schema",
@@ -269,8 +280,11 @@ func TestCodecV02_Decode(t *testing.T) {
 					"ce-type":        {"com.example.test"},
 					"ce-source":      {"http://example.com/source"},
 					"ce-schemaurl":   {"http://example.com/schema"},
-					//"ce-test":        {`"extended"`},
-					"Content-Type": {"application/json"},
+					"ce-test":        {`"extended"`},
+					"ce-asmap-a":     {`"apple"`},
+					"ce-asmap-b":     {`"banana"`},
+					"ce-asmap-c":     {`{"d":"dog","e":"eel"}`},
+					"Content-Type":   {"application/json"},
 				},
 				Body: toBytes(map[string]interface{}{
 					"hello": "world",
@@ -285,9 +299,14 @@ func TestCodecV02_Decode(t *testing.T) {
 					SchemaURL:   schema,
 					ContentType: "application/json",
 					Source:      *source,
-					//Extensions: map[string]interface{}{
-					//	"test": "extended",
-					//},
+					Extensions: map[string]interface{}{
+						"test": "extended",
+						"asmap": map[string]interface{}{
+							"a": []string{`"apple"`},
+							"b": []string{`"banana"`},
+							"c": []string{`{"d":"dog","e":"eel"}`},
+						},
+					},
 				},
 				Data: toBytes(map[string]interface{}{
 					"hello": "world",
@@ -331,9 +350,9 @@ func TestCodecV02_Decode(t *testing.T) {
 					"id":   "ABC-123",
 					"time": now,
 					"type": "com.example.test",
-					//"extensions": map[string]interface{}{
-					//	"test": "extended",
-					//},
+					"extensions": map[string]interface{}{
+						"test": "extended",
+					},
 					"schemaurl": "http://example.com/schema",
 					"source":    "http://example.com/source",
 				}),
@@ -347,9 +366,9 @@ func TestCodecV02_Decode(t *testing.T) {
 					SchemaURL:   schema,
 					ContentType: "application/json",
 					Source:      *source,
-					//Extensions: map[string]interface{}{
-					//	"test": "extended",
-					//},
+					Extensions: map[string]interface{}{
+						"test": "extended",
+					},
 				},
 				Data: toBytes(map[string]interface{}{
 					"hello": "world",

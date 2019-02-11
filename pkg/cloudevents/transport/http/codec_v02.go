@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"net/textproto"
+	"strings"
 )
 
 type CodecV02 struct {
@@ -171,39 +172,75 @@ func (v CodecV02) fromHeaders(h http.Header) (canonical.EventContextV02, error) 
 		ck := textproto.CanonicalMIMEHeaderKey(k)
 		if k != ck {
 			log.Printf("[warn] received header with non-canonical form; canonical: %q, got %q", ck, k)
+			delete(h, k)
 			h[ck] = v
 		}
 	}
 
 	ec := canonical.EventContextV02{}
+
 	ec.SpecVersion = h.Get("ce-specversion")
+	h.Del("ce-specversion")
+
 	ec.ID = h.Get("ce-id")
+	h.Del("ce-id")
+
 	ec.Type = h.Get("ce-type")
+	h.Del("ce-type")
+
 	source := canonical.ParseURLRef(h.Get("ce-source"))
 	if source != nil {
 		ec.Source = *source
 	}
-	ec.Time = canonical.ParseTimestamp(h.Get("ce-time"))
-	ec.SchemaURL = canonical.ParseURLRef(h.Get("ce-schemaurl"))
-	ec.ContentType = h.Get("Content-Type")
+	h.Del("ce-source")
 
-	// TODO: fix extensions
-	//extensions := make(map[string]interface{})
-	//for k, v := range h {
-	//	if strings.EqualFold(k[:len("CE-X-")], "CE-X-") {
-	//		key := k[len("CE-X-"):]
-	//		var tmp interface{}
-	//		if err := json.Unmarshal([]byte(v[0]), &tmp); err == nil {
-	//			extensions[key] = tmp
-	//		} else {
-	//			// If we can't unmarshal the data, treat it as a string.
-	//			extensions[key] = v[0]
-	//		}
-	//	}
-	//}
-	//if len(extensions) > 0 {
-	//	ec.Extensions = extensions
-	//}
+	ec.Time = canonical.ParseTimestamp(h.Get("ce-time"))
+	h.Del("ce-time")
+
+	ec.SchemaURL = canonical.ParseURLRef(h.Get("ce-schemaurl"))
+	h.Del("ce-schemaurl")
+
+	ec.ContentType = h.Get("Content-Type")
+	h.Del("Content-Type")
+
+	// At this point, we have deleted all the known headers.
+	// Everything left is assumed to be an extension.
+
+	extensions := make(map[string]interface{})
+	for k, v := range h {
+		if strings.EqualFold(k[:len("ce-")], "ce-") {
+			ak := strings.ToLower(k[len("ce-"):])
+			if i := strings.Index(ak, "-"); i > 0 {
+				// attrib-key
+				attrib := ak[:i]
+				key := ak[(i + 1):]
+				if xv, ok := extensions[attrib]; ok {
+					if m, ok := xv.(map[string]interface{}); ok {
+						m[key] = v
+						continue
+					}
+					// TODO: revisit how we want to bubble errors up.
+					return ec, fmt.Errorf("failed to process map type extension")
+				} else {
+					m := make(map[string]interface{})
+					m[key] = v
+					extensions[attrib] = m
+				}
+			} else {
+				// key
+				var tmp interface{}
+				if err := json.Unmarshal([]byte(v[0]), &tmp); err == nil {
+					extensions[ak] = tmp
+				} else {
+					// If we can't unmarshal the data, treat it as a string.
+					extensions[ak] = v[0]
+				}
+			}
+		}
+	}
+	if len(extensions) > 0 {
+		ec.Extensions = extensions
+	}
 	return ec, nil
 }
 
