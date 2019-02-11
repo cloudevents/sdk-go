@@ -20,15 +20,22 @@ func (m Message) CloudEventsVersion() string {
 
 	if m.Header != nil {
 		// Try headers first.
-		// v0.1
-		v := m.Header["CE-CloudEventsVersion"] // TODO: this will fail for real headers.
-		if len(v) == 1 {
+		// v0.1, cased from the spec
+		if v := m.Header["CE-CloudEventsVersion"]; len(v) == 1 {
 			return v[0]
 		}
-		// v0.2
-		v = m.Header["ce-specversion"] // TODO: this will fail for real headers.
-		if len(v) == 1 {
+		// v0.2, canonical casing
+		if ver := m.Header.Get("CE-CloudEventsVersion"); ver != "" {
+			return ver
+		}
+
+		// v0.2, cased from the spec
+		if v := m.Header["ce-specversion"]; len(v) == 1 {
 			return v[0]
+		}
+		// v0.2, canonical casing
+		if ver := m.Header.Get("ce-specversion"); ver != "" {
+			return ver
 		}
 	}
 

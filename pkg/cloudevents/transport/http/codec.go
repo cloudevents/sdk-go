@@ -48,7 +48,11 @@ func (c *Codec) Decode(msg transport.Message) (*cloudevents.Event, error) {
 		if c.v01 == nil {
 			c.v01 = &CodecV01{Encoding: c.Encoding}
 		}
-		return c.v01.Decode(msg)
+		if event, err := c.v01.Decode(msg); err != nil {
+			return nil, err
+		} else {
+			return c.convertEvent(event), nil
+		}
 	case BinaryV02:
 		fallthrough
 	case StructuredV02:
@@ -58,6 +62,37 @@ func (c *Codec) Decode(msg transport.Message) (*cloudevents.Event, error) {
 		return c.v02.Decode(msg)
 	default:
 		return nil, fmt.Errorf("unknown encoding for message %v", msg)
+	}
+}
+
+// Give the context back as the user expects
+func (c *Codec) convertEvent(event *cloudevents.Event) *cloudevents.Event {
+	if event == nil {
+		return nil
+	}
+	switch c.Encoding {
+	case Default:
+		return event
+	case BinaryV01:
+		fallthrough
+	case StructuredV01:
+		if c.v01 == nil {
+			c.v01 = &CodecV01{Encoding: c.Encoding}
+		}
+		ctx := event.Context.AsV01()
+		event.Context = ctx
+		return event
+	case BinaryV02:
+		fallthrough
+	case StructuredV02:
+		if c.v02 == nil {
+			c.v02 = &CodecV02{Encoding: c.Encoding}
+		}
+		ctx := event.Context.AsV02()
+		event.Context = ctx
+		return event
+	default:
+		return nil
 	}
 }
 

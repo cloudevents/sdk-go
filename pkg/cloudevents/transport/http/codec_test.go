@@ -169,73 +169,77 @@ func TestCodecDecode(t *testing.T) {
 				},
 			},
 		},
-		//"simple v1 structured": {
-		//	codec: http.Codec{Encoding: http.StructuredV01},
-		//	event: cloudevents.Event{
-		//		Context: context.EventContextV01{
-		//			EventType: "com.example.test",
-		//			Source:    *source,
-		//			EventID:   "ABC-123",
-		//		},
-		//	},
-		//	want: &http.Message{
-		//		Header: map[string][]string{
-		//			"Content-Type": {"application/cloudevents+json"},
-		//		},
-		//		Body: func() []byte {
-		//			body := map[string]interface{}{
-		//				"cloudEventsVersion": "0.1",
-		//				"eventID":            "ABC-123",
-		//				"eventType":          "com.example.test",
-		//				"source":             "http://example.com/source",
-		//			}
-		//			return toBytes(body)
-		//		}(),
-		//	},
-		//},
-		//"simple v2 binary": {
-		//	codec: http.Codec{Encoding: http.BinaryV02},
-		//	msg: &http.Message{
-		//		Header: map[string][]string{
-		//			"Ce-Specversion": {"0.2"},
-		//			"Ce-Id":          {"ABC-123"},
-		//			"Ce-Type":        {"com.example.test"},
-		//			"Ce-Source":      {"http://example.com/source"},
-		//			"Content-Type":   {"application/json"},
-		//		},
-		//	},
-		//	want: &cloudevents.Event{
-		//		Context: context.EventContextV02{
-		//			Type:   "com.example.test",
-		//			Source: *source,
-		//			ID:     "ABC-123",
-		//		},
-		//	},
-		//},
-		//"simple v2 structured": {
-		//	codec: http.Codec{Encoding: http.StructuredV02},
-		//	event: cloudevents.Event{
-		//		Context: context.EventContextV02{
-		//			Type:   "com.example.test",
-		//			Source: *source,
-		//			ID:     "ABC-123",
-		//		},
-		//	},
-		//	want: &http.Message{
-		//		Header: map[string][]string{
-		//			"Content-Type": {"application/cloudevents+json"},
-		//		},
-		//		Body: func() []byte {
-		//			body := map[string]interface{}{
-		//				"specversion": "0.2",
-		//				"id":          "ABC-123",
-		//				"type":        "com.example.test",
-		//				"source":      "http://example.com/source",
-		//			}
-		//			return toBytes(body)
-		//		}(),
-		//	},
-		//},
+		"simple v1 structured": {
+			codec: http.Codec{Encoding: http.StructuredV01},
+			msg: &http.Message{
+				Header: map[string][]string{
+					"Content-Type": {"application/cloudevents+json"},
+				},
+				Body: func() []byte {
+					body := map[string]interface{}{
+						"cloudEventsVersion": "0.1",
+						"eventID":            "ABC-123",
+						"eventType":          "com.example.test",
+						"source":             "http://example.com/source",
+					}
+					return toBytes(body)
+				}(),
+			},
+			want: &cloudevents.Event{
+				Context: context.EventContextV01{
+					CloudEventsVersion: context.CloudEventsVersionV01,
+					EventType:          "com.example.test",
+					Source:             *source,
+					EventID:            "ABC-123",
+				},
+			},
+		},
+		"simple v2 binary": {
+			codec: http.Codec{Encoding: http.BinaryV02},
+			msg: &http.Message{
+				Header: map[string][]string{
+					"Ce-Specversion": {"0.2"},
+					"Ce-Id":          {"ABC-123"},
+					"Ce-Type":        {"com.example.test"},
+					"Ce-Source":      {"http://example.com/source"},
+					"Content-Type":   {"application/json"},
+				},
+			},
+			want: &cloudevents.Event{
+				Context: context.EventContextV02{
+					SpecVersion: context.CloudEventsVersionV02,
+					Type:        "com.example.test",
+					Source:      *source,
+					ID:          "ABC-123",
+					ContentType: "application/json",
+				},
+			},
+		},
+		"simple v2 structured": {
+			codec: http.Codec{Encoding: http.StructuredV02},
+			msg: &http.Message{
+				Header: map[string][]string{
+					"Content-Type": {"application/cloudevents+json"},
+				},
+				Body: func() []byte {
+					body := map[string]interface{}{
+						"specversion": "0.2",
+						"id":          "ABC-123",
+						"type":        "com.example.test",
+						"source":      "http://example.com/source",
+					}
+					return toBytes(body)
+				}(),
+			},
+			want: &cloudevents.Event{
+				Context: context.EventContextV02{
+					SpecVersion: context.CloudEventsVersionV02,
+					Type:        "com.example.test",
+					Source:      *source,
+					ID:          "ABC-123",
+				},
+			},
+		},
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
