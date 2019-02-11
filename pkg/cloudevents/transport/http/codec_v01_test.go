@@ -1,8 +1,10 @@
 package http_test
 
 import (
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/canonical"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"github.com/google/go-cmp/cmp"
 	"net/url"
 	"testing"
@@ -10,23 +12,23 @@ import (
 )
 
 func TestCodecV01_Encode(t *testing.T) {
-	now := canonical.Timestamp{Time: time.Now()}
+	now := types.Timestamp{Time: time.Now()}
 	sourceUrl, _ := url.Parse("http://example.com/source")
-	source := &canonical.URLRef{URL: *sourceUrl}
+	source := &types.URLRef{URL: *sourceUrl}
 
 	schemaUrl, _ := url.Parse("http://example.com/schema")
-	schema := &canonical.URLRef{URL: *schemaUrl}
+	schema := &types.URLRef{URL: *schemaUrl}
 
 	testCases := map[string]struct {
 		codec   http.CodecV01
-		event   canonical.Event
+		event   cloudevents.Event
 		want    *http.Message
 		wantErr error
 	}{
 		"simple v1 default": {
 			codec: http.CodecV01{},
-			event: canonical.Event{
-				Context: canonical.EventContextV01{
+			event: cloudevents.Event{
+				Context: context.EventContextV01{
 					CloudEventsVersion: "TestIfDefaulted",
 					EventType:          "com.example.test",
 					Source:             *source,
@@ -45,8 +47,8 @@ func TestCodecV01_Encode(t *testing.T) {
 		},
 		"full v1 default": {
 			codec: http.CodecV01{},
-			event: canonical.Event{
-				Context: canonical.EventContextV01{
+			event: cloudevents.Event{
+				Context: context.EventContextV01{
 					EventID:          "ABC-123",
 					EventTime:        &now,
 					EventType:        "com.example.full",
@@ -79,8 +81,8 @@ func TestCodecV01_Encode(t *testing.T) {
 		},
 		"simple v1 binary": {
 			codec: http.CodecV01{Encoding: http.BinaryV01},
-			event: canonical.Event{
-				Context: canonical.EventContextV01{
+			event: cloudevents.Event{
+				Context: context.EventContextV01{
 					EventType: "com.example.test",
 					Source:    *source,
 					EventID:   "ABC-123",
@@ -98,8 +100,8 @@ func TestCodecV01_Encode(t *testing.T) {
 		},
 		"full v1 binary": {
 			codec: http.CodecV01{Encoding: http.BinaryV01},
-			event: canonical.Event{
-				Context: canonical.EventContextV01{
+			event: cloudevents.Event{
+				Context: context.EventContextV01{
 					EventID:          "ABC-123",
 					EventTime:        &now,
 					EventType:        "com.example.full",
@@ -132,8 +134,8 @@ func TestCodecV01_Encode(t *testing.T) {
 		},
 		"simple v1 structured": {
 			codec: http.CodecV01{Encoding: http.StructuredV01},
-			event: canonical.Event{
-				Context: canonical.EventContextV01{
+			event: cloudevents.Event{
+				Context: context.EventContextV01{
 					EventType: "com.example.test",
 					Source:    *source,
 					EventID:   "ABC-123",
@@ -156,8 +158,8 @@ func TestCodecV01_Encode(t *testing.T) {
 		},
 		"full v1 structured": {
 			codec: http.CodecV01{Encoding: http.StructuredV01},
-			event: canonical.Event{
-				Context: canonical.EventContextV01{
+			event: cloudevents.Event{
+				Context: context.EventContextV01{
 					EventID:          "ABC-123",
 					EventTime:        &now,
 					EventType:        "com.example.full",
@@ -229,17 +231,17 @@ func TestCodecV01_Encode(t *testing.T) {
 }
 
 func TestCodecV01_Decode(t *testing.T) {
-	now := canonical.Timestamp{Time: time.Now()}
+	now := types.Timestamp{Time: time.Now()}
 	sourceUrl, _ := url.Parse("http://example.com/source")
-	source := &canonical.URLRef{URL: *sourceUrl}
+	source := &types.URLRef{URL: *sourceUrl}
 
 	schemaUrl, _ := url.Parse("http://example.com/schema")
-	schema := &canonical.URLRef{URL: *schemaUrl}
+	schema := &types.URLRef{URL: *schemaUrl}
 
 	testCases := map[string]struct {
 		codec   http.CodecV01
 		msg     *http.Message
-		want    *canonical.Event
+		want    *cloudevents.Event
 		wantErr error
 	}{
 		"simple v1 binary": {
@@ -253,9 +255,9 @@ func TestCodecV01_Decode(t *testing.T) {
 					"Content-Type":          {"application/json"},
 				},
 			},
-			want: &canonical.Event{
-				Context: canonical.EventContextV01{
-					CloudEventsVersion: canonical.CloudEventsVersionV01,
+			want: &cloudevents.Event{
+				Context: context.EventContextV01{
+					CloudEventsVersion: context.CloudEventsVersionV01,
 					EventType:          "com.example.test",
 					Source:             *source,
 					EventID:            "ABC-123",
@@ -281,9 +283,9 @@ func TestCodecV01_Decode(t *testing.T) {
 					"hello": "world",
 				}),
 			},
-			want: &canonical.Event{
-				Context: canonical.EventContextV01{
-					CloudEventsVersion: canonical.CloudEventsVersionV01,
+			want: &cloudevents.Event{
+				Context: context.EventContextV01{
+					CloudEventsVersion: context.CloudEventsVersionV01,
 					EventID:            "ABC-123",
 					EventTime:          &now,
 					EventType:          "com.example.full",
@@ -313,9 +315,9 @@ func TestCodecV01_Decode(t *testing.T) {
 					"source":             "http://example.com/source",
 				}),
 			},
-			want: &canonical.Event{
-				Context: canonical.EventContextV01{
-					CloudEventsVersion: canonical.CloudEventsVersionV01,
+			want: &cloudevents.Event{
+				Context: context.EventContextV01{
+					CloudEventsVersion: context.CloudEventsVersionV01,
 					EventType:          "com.example.test",
 					Source:             *source,
 					EventID:            "ABC-123",
@@ -345,9 +347,9 @@ func TestCodecV01_Decode(t *testing.T) {
 					"source":    "http://example.com/source",
 				}),
 			},
-			want: &canonical.Event{
-				Context: canonical.EventContextV01{
-					CloudEventsVersion: canonical.CloudEventsVersionV01,
+			want: &cloudevents.Event{
+				Context: context.EventContextV01{
+					CloudEventsVersion: context.CloudEventsVersionV01,
 					EventID:            "ABC-123",
 					EventTime:          &now,
 					EventType:          "com.example.full",

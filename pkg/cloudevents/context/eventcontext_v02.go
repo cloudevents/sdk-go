@@ -1,6 +1,7 @@
-package canonical
+package context
 
 import (
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"strings"
 )
 
@@ -17,13 +18,13 @@ type EventContextV02 struct {
 	// The type of the occurrence which has happened.
 	Type string `json:"type"`
 	// A URI describing the event producer.
-	Source URLRef `json:"source"`
+	Source types.URLRef `json:"source"`
 	// ID of the event; must be non-empty and unique within the scope of the producer.
 	ID string `json:"id"`
 	// Timestamp when the event happened.
-	Time *Timestamp `json:"time,omitempty"`
+	Time *types.Timestamp `json:"time,omitempty"`
 	// A link to the schema that the `data` attribute adheres to.
-	SchemaURL *URLRef `json:"schemaurl,omitempty"`
+	SchemaURL *types.URLRef `json:"schemaurl,omitempty"`
 	// A MIME (RFC2046) string describing the media type of `data`.
 	// TODO: Should an empty string assume `application/json`, `application/octet-stream`, or auto-detect the content?
 	ContentType string `json:"contenttype,omitempty"`

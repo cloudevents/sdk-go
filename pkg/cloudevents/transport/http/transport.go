@@ -3,7 +3,7 @@ package http
 import (
 	"bytes"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/canonical"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	"github.com/davecgh/go-spew/spew"
 	"io/ioutil"
@@ -21,7 +21,7 @@ type Transport struct {
 	codec transport.Codec
 }
 
-func (t *Transport) Send(event canonical.Event, req *http.Request) (*http.Response, error) {
+func (t *Transport) Send(event cloudevents.Event, req *http.Request) (*http.Response, error) {
 	if t.Client == nil {
 		t.Client = &http.Client{}
 	}

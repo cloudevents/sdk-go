@@ -34,7 +34,7 @@ New plan.
 Everything gets converted into the Canonical form of the event, this
 then can select a transport, the transport provides encodings.
 
-At the moment we have Canonical.[v01, v02]
+At the moment we have cloudevents.[v01, v02]
 
 Canonical form holds an encoded data packet that takes in a provided Codec
 
@@ -42,10 +42,10 @@ Canonical form has two members: Context, and Data
 
 
 Sending:
-Canonical.[v01, v02] -> { Codec.Encode -> HttpMessage -> Transport[Http] }
+cloudevents.[v01, v02] -> { Codec.Encode -> HttpMessage -> Transport[Http] }
 
 Receiving:
-{ Transport[Http] -> HttpMessage -> Codec.Decode } -> Canonical.[v01, v02]
+{ Transport[Http] -> HttpMessage -> Codec.Decode } -> cloudevents.[v01, v02]
 
 Note: Transport and Codec are grouped.
 
@@ -54,15 +54,15 @@ Transport Codecs supported:
 
 
 ## Working with inner data:
-Canonical.[v01, v02].Decode(DataCodec) -> custom data
+cloudevents.[v01, v02].Decode(DataCodec) -> custom data
 
 Working with inner data,
 
 Sending:
-Canonical.[v01, v02].data -> DataCodec.Decode -> custom data
+cloudevents.[v01, v02].data -> DataCodec.Decode -> custom data
 
 Receiving:
-custom data -> DataCodec.Encode -> Canonical.[v01, v02].data,contentType
+custom data -> DataCodec.Encode -> cloudevents.[v01, v02].data,contentType
 
 Data Codecs supported:
 [json, xml, base64, text]

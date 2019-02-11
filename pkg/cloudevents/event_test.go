@@ -1,7 +1,9 @@
-package canonical_test
+package cloudevents_test
 
 import (
-	c "github.com/cloudevents/sdk-go/pkg/cloudevents/canonical"
+	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
+	c "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"github.com/google/go-cmp/cmp"
 	"net/url"
 	"testing"
@@ -9,14 +11,14 @@ import (
 )
 
 func TestContextAsV01(t *testing.T) {
-	now := c.Timestamp{Time: time.Now()}
+	now := types.Timestamp{Time: time.Now()}
 
 	testCases := map[string]struct {
-		event c.Event
+		event ce.Event
 		want  c.EventContextV01
 	}{
 		"empty, no conversion": {
-			event: c.Event{
+			event: ce.Event{
 				Context: c.EventContextV01{},
 			},
 			want: c.EventContextV01{
@@ -24,25 +26,25 @@ func TestContextAsV01(t *testing.T) {
 			},
 		},
 		"min v01, no conversion": {
-			event: c.Event{
+			event: ce.Event{
 				Context: MinEventContextV01(),
 			},
 			want: MinEventContextV01(),
 		},
 		"full v01, no conversion": {
-			event: c.Event{
+			event: ce.Event{
 				Context: FullEventContextV01(now),
 			},
 			want: FullEventContextV01(now),
 		},
 		"min v02 -> v01": {
-			event: c.Event{
+			event: ce.Event{
 				Context: MinEventContextV02(),
 			},
 			want: MinEventContextV01(),
 		},
 		"full v02 -> v01": {
-			event: c.Event{
+			event: ce.Event{
 				Context: FullEventContextV02(now),
 			},
 			want: FullEventContextV01(now),
@@ -61,14 +63,14 @@ func TestContextAsV01(t *testing.T) {
 }
 
 func TestContextAsV02(t *testing.T) {
-	now := c.Timestamp{Time: time.Now()}
+	now := types.Timestamp{Time: time.Now()}
 
 	testCases := map[string]struct {
-		event c.Event
+		event ce.Event
 		want  c.EventContextV02
 	}{
 		"empty, no conversion": {
-			event: c.Event{
+			event: ce.Event{
 				Context: c.EventContextV02{},
 			},
 			want: c.EventContextV02{
@@ -76,25 +78,25 @@ func TestContextAsV02(t *testing.T) {
 			},
 		},
 		"min v02, no conversion": {
-			event: c.Event{
+			event: ce.Event{
 				Context: MinEventContextV02(),
 			},
 			want: MinEventContextV02(),
 		},
 		"full v02, no conversion": {
-			event: c.Event{
+			event: ce.Event{
 				Context: FullEventContextV02(now),
 			},
 			want: FullEventContextV02(now),
 		},
 		"min v01 -> v02": {
-			event: c.Event{
+			event: ce.Event{
 				Context: MinEventContextV01(),
 			},
 			want: MinEventContextV02(),
 		},
 		"full v01 -> v2": {
-			event: c.Event{
+			event: ce.Event{
 				Context: FullEventContextV01(now),
 			},
 			want: FullEventContextV02(now),
@@ -113,32 +115,32 @@ func TestContextAsV02(t *testing.T) {
 }
 
 func TestGetDataContentType(t *testing.T) {
-	now := c.Timestamp{Time: time.Now()}
+	now := types.Timestamp{Time: time.Now()}
 
 	testCases := map[string]struct {
-		event c.Event
+		event ce.Event
 		want  string
 	}{
 		"min v01, blank": {
-			event: c.Event{
+			event: ce.Event{
 				Context: MinEventContextV01(),
 			},
 			want: "",
 		},
 		"full v01, json": {
-			event: c.Event{
+			event: ce.Event{
 				Context: FullEventContextV01(now),
 			},
 			want: "application/json",
 		},
 		"min v02, blank": {
-			event: c.Event{
+			event: ce.Event{
 				Context: MinEventContextV02(),
 			},
 			want: "",
 		},
 		"full v02, json": {
-			event: c.Event{
+			event: ce.Event{
 				Context: FullEventContextV02(now),
 			},
 			want: "application/json",
@@ -158,7 +160,7 @@ func TestGetDataContentType(t *testing.T) {
 
 func MinEventContextV01() c.EventContextV01 {
 	sourceUrl, _ := url.Parse("http://example.com/source")
-	source := &c.URLRef{URL: *sourceUrl}
+	source := &types.URLRef{URL: *sourceUrl}
 
 	return c.EventContextV01{
 		CloudEventsVersion: c.CloudEventsVersionV01,
@@ -170,7 +172,7 @@ func MinEventContextV01() c.EventContextV01 {
 
 func MinEventContextV02() c.EventContextV02 {
 	sourceUrl, _ := url.Parse("http://example.com/source")
-	source := &c.URLRef{*sourceUrl}
+	source := &types.URLRef{*sourceUrl}
 
 	return c.EventContextV02{
 		SpecVersion: c.CloudEventsVersionV02,
@@ -180,12 +182,12 @@ func MinEventContextV02() c.EventContextV02 {
 	}
 }
 
-func FullEventContextV01(now c.Timestamp) c.EventContextV01 {
+func FullEventContextV01(now types.Timestamp) c.EventContextV01 {
 	sourceUrl, _ := url.Parse("http://example.com/source")
-	source := &c.URLRef{URL: *sourceUrl}
+	source := &types.URLRef{URL: *sourceUrl}
 
 	schemaUrl, _ := url.Parse("http://example.com/schema")
-	schema := &c.URLRef{URL: *schemaUrl}
+	schema := &types.URLRef{URL: *schemaUrl}
 
 	extensions := make(map[string]interface{})
 	extensions["test"] = "extended"
@@ -203,12 +205,12 @@ func FullEventContextV01(now c.Timestamp) c.EventContextV01 {
 	}
 }
 
-func FullEventContextV02(now c.Timestamp) c.EventContextV02 {
+func FullEventContextV02(now types.Timestamp) c.EventContextV02 {
 	sourceUrl, _ := url.Parse("http://example.com/source")
-	source := &c.URLRef{URL: *sourceUrl}
+	source := &types.URLRef{URL: *sourceUrl}
 
 	schemaUrl, _ := url.Parse("http://example.com/schema")
-	schema := &c.URLRef{URL: *schemaUrl}
+	schema := &types.URLRef{URL: *schemaUrl}
 
 	extensions := make(map[string]interface{})
 	extensions["test"] = "extended"

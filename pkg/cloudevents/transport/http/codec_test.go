@@ -3,8 +3,10 @@ package http_test
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/canonical"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"github.com/google/go-cmp/cmp"
 	"net/url"
 	"testing"
@@ -12,18 +14,18 @@ import (
 
 func TestCodecEncode(t *testing.T) {
 	sourceUrl, _ := url.Parse("http://example.com/source")
-	source := &canonical.URLRef{URL: *sourceUrl}
+	source := &types.URLRef{URL: *sourceUrl}
 
 	testCases := map[string]struct {
 		codec   http.Codec
-		event   canonical.Event
+		event   cloudevents.Event
 		want    *http.Message
 		wantErr error
 	}{
 		"simple v1 binary": {
 			codec: http.Codec{Encoding: http.BinaryV01},
-			event: canonical.Event{
-				Context: canonical.EventContextV01{
+			event: cloudevents.Event{
+				Context: context.EventContextV01{
 					EventType: "com.example.test",
 					Source:    *source,
 					EventID:   "ABC-123",
@@ -41,8 +43,8 @@ func TestCodecEncode(t *testing.T) {
 		},
 		"simple v1 structured": {
 			codec: http.Codec{Encoding: http.StructuredV01},
-			event: canonical.Event{
-				Context: canonical.EventContextV01{
+			event: cloudevents.Event{
+				Context: context.EventContextV01{
 					EventType: "com.example.test",
 					Source:    *source,
 					EventID:   "ABC-123",
@@ -65,8 +67,8 @@ func TestCodecEncode(t *testing.T) {
 		},
 		"simple v2 binary": {
 			codec: http.Codec{Encoding: http.BinaryV02},
-			event: canonical.Event{
-				Context: canonical.EventContextV02{
+			event: cloudevents.Event{
+				Context: context.EventContextV02{
 					Type:   "com.example.test",
 					Source: *source,
 					ID:     "ABC-123",
@@ -84,8 +86,8 @@ func TestCodecEncode(t *testing.T) {
 		},
 		"simple v2 structured": {
 			codec: http.Codec{Encoding: http.StructuredV02},
-			event: canonical.Event{
-				Context: canonical.EventContextV02{
+			event: cloudevents.Event{
+				Context: context.EventContextV02{
 					Type:   "com.example.test",
 					Source: *source,
 					ID:     "ABC-123",
@@ -138,12 +140,12 @@ func TestCodecEncode(t *testing.T) {
 
 func TestCodecDecode(t *testing.T) {
 	sourceUrl, _ := url.Parse("http://example.com/source")
-	source := &canonical.URLRef{URL: *sourceUrl}
+	source := &types.URLRef{URL: *sourceUrl}
 
 	testCases := map[string]struct {
 		codec   http.Codec
 		msg     *http.Message
-		want    *canonical.Event
+		want    *cloudevents.Event
 		wantErr error
 	}{
 		"simple v1 binary": {
@@ -157,9 +159,9 @@ func TestCodecDecode(t *testing.T) {
 					"Content-Type":          {"application/json"},
 				},
 			},
-			want: &canonical.Event{
-				Context: canonical.EventContextV01{
-					CloudEventsVersion: canonical.CloudEventsVersionV01,
+			want: &cloudevents.Event{
+				Context: context.EventContextV01{
+					CloudEventsVersion: context.CloudEventsVersionV01,
 					EventType:          "com.example.test",
 					Source:             *source,
 					EventID:            "ABC-123",
@@ -169,8 +171,8 @@ func TestCodecDecode(t *testing.T) {
 		},
 		//"simple v1 structured": {
 		//	codec: http.Codec{Encoding: http.StructuredV01},
-		//	event: canonical.Event{
-		//		Context: canonical.EventContextV01{
+		//	event: cloudevents.Event{
+		//		Context: context.EventContextV01{
 		//			EventType: "com.example.test",
 		//			Source:    *source,
 		//			EventID:   "ABC-123",
@@ -202,8 +204,8 @@ func TestCodecDecode(t *testing.T) {
 		//			"Content-Type":   {"application/json"},
 		//		},
 		//	},
-		//	want: &canonical.Event{
-		//		Context: canonical.EventContextV02{
+		//	want: &cloudevents.Event{
+		//		Context: context.EventContextV02{
 		//			Type:   "com.example.test",
 		//			Source: *source,
 		//			ID:     "ABC-123",
@@ -212,8 +214,8 @@ func TestCodecDecode(t *testing.T) {
 		//},
 		//"simple v2 structured": {
 		//	codec: http.Codec{Encoding: http.StructuredV02},
-		//	event: canonical.Event{
-		//		Context: canonical.EventContextV02{
+		//	event: cloudevents.Event{
+		//		Context: context.EventContextV02{
 		//			Type:   "com.example.test",
 		//			Source: *source,
 		//			ID:     "ABC-123",

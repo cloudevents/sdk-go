@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/canonical"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 )
 
@@ -17,7 +17,7 @@ type Codec struct {
 
 var _ transport.Codec = (*Codec)(nil)
 
-func (c *Codec) Encode(e canonical.Event) (transport.Message, error) {
+func (c *Codec) Encode(e cloudevents.Event) (transport.Message, error) {
 	switch c.Encoding {
 	case Default:
 		fallthrough
@@ -40,7 +40,7 @@ func (c *Codec) Encode(e canonical.Event) (transport.Message, error) {
 	}
 }
 
-func (c *Codec) Decode(msg transport.Message) (*canonical.Event, error) {
+func (c *Codec) Decode(msg transport.Message) (*cloudevents.Event, error) {
 	switch c.inspectEncoding(msg) {
 	case BinaryV01:
 		fallthrough

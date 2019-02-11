@@ -3,8 +3,10 @@ package http
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/canonical"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"log"
 	"net/http"
 	"net/textproto"
@@ -17,7 +19,7 @@ type CodecV02 struct {
 
 var _ transport.Codec = (*CodecV02)(nil)
 
-func (v CodecV02) Encode(e canonical.Event) (transport.Message, error) {
+func (v CodecV02) Encode(e cloudevents.Event) (transport.Message, error) {
 	switch v.Encoding {
 	case Default:
 		fallthrough
@@ -30,7 +32,7 @@ func (v CodecV02) Encode(e canonical.Event) (transport.Message, error) {
 	}
 }
 
-func (v CodecV02) Decode(msg transport.Message) (*canonical.Event, error) {
+func (v CodecV02) Decode(msg transport.Message) (*cloudevents.Event, error) {
 	switch v.inspectEncoding(msg) {
 	case BinaryV02:
 		return v.decodeBinary(msg)
@@ -41,7 +43,7 @@ func (v CodecV02) Decode(msg transport.Message) (*canonical.Event, error) {
 	}
 }
 
-func (v CodecV02) encodeBinary(e canonical.Event) (transport.Message, error) {
+func (v CodecV02) encodeBinary(e cloudevents.Event) (transport.Message, error) {
 	header, err := v.toHeaders(e.Context.AsV02())
 	if err != nil {
 		return nil, err
@@ -60,7 +62,7 @@ func (v CodecV02) encodeBinary(e canonical.Event) (transport.Message, error) {
 	return msg, nil
 }
 
-func (v CodecV02) toHeaders(ec canonical.EventContextV02) (http.Header, error) {
+func (v CodecV02) toHeaders(ec context.EventContextV02) (http.Header, error) {
 	h := http.Header{}
 	h.Set("ce-specversion", ec.SpecVersion)
 	h.Set("ce-type", ec.Type)
@@ -103,7 +105,7 @@ func (v CodecV02) toHeaders(ec canonical.EventContextV02) (http.Header, error) {
 	return h, nil
 }
 
-func (v CodecV02) encodeStructured(e canonical.Event) (transport.Message, error) {
+func (v CodecV02) encodeStructured(e cloudevents.Event) (transport.Message, error) {
 	header := http.Header{}
 	header.Set("Content-Type", "application/cloudevents+json")
 
@@ -147,7 +149,7 @@ func (v CodecV02) encodeStructured(e canonical.Event) (transport.Message, error)
 	return msg, nil
 }
 
-func (v CodecV02) decodeBinary(msg transport.Message) (*canonical.Event, error) {
+func (v CodecV02) decodeBinary(msg transport.Message) (*cloudevents.Event, error) {
 	m, ok := msg.(*Message)
 	if !ok {
 		return nil, fmt.Errorf("failed to convert transport.Message to http.Message")
@@ -160,13 +162,13 @@ func (v CodecV02) decodeBinary(msg transport.Message) (*canonical.Event, error) 
 	if len(m.Body) > 0 {
 		body = m.Body
 	}
-	return &canonical.Event{
+	return &cloudevents.Event{
 		Context: ctx,
 		Data:    body,
 	}, nil
 }
 
-func (v CodecV02) fromHeaders(h http.Header) (canonical.EventContextV02, error) {
+func (v CodecV02) fromHeaders(h http.Header) (context.EventContextV02, error) {
 	// Normalize headers.
 	for k, v := range h {
 		ck := textproto.CanonicalMIMEHeaderKey(k)
@@ -177,7 +179,7 @@ func (v CodecV02) fromHeaders(h http.Header) (canonical.EventContextV02, error) 
 		}
 	}
 
-	ec := canonical.EventContextV02{}
+	ec := context.EventContextV02{}
 
 	ec.SpecVersion = h.Get("ce-specversion")
 	h.Del("ce-specversion")
@@ -188,16 +190,16 @@ func (v CodecV02) fromHeaders(h http.Header) (canonical.EventContextV02, error) 
 	ec.Type = h.Get("ce-type")
 	h.Del("ce-type")
 
-	source := canonical.ParseURLRef(h.Get("ce-source"))
+	source := types.ParseURLRef(h.Get("ce-source"))
 	if source != nil {
 		ec.Source = *source
 	}
 	h.Del("ce-source")
 
-	ec.Time = canonical.ParseTimestamp(h.Get("ce-time"))
+	ec.Time = types.ParseTimestamp(h.Get("ce-time"))
 	h.Del("ce-time")
 
-	ec.SchemaURL = canonical.ParseURLRef(h.Get("ce-schemaurl"))
+	ec.SchemaURL = types.ParseURLRef(h.Get("ce-schemaurl"))
 	h.Del("ce-schemaurl")
 
 	ec.ContentType = h.Get("Content-Type")
@@ -244,13 +246,13 @@ func (v CodecV02) fromHeaders(h http.Header) (canonical.EventContextV02, error) 
 	return ec, nil
 }
 
-func (v CodecV02) decodeStructured(msg transport.Message) (*canonical.Event, error) {
+func (v CodecV02) decodeStructured(msg transport.Message) (*cloudevents.Event, error) {
 	m, ok := msg.(*Message)
 	if !ok {
 		return nil, fmt.Errorf("failed to convert transport.Message to http.Message")
 	}
 
-	ec := canonical.EventContextV02{}
+	ec := context.EventContextV02{}
 	if err := json.Unmarshal(m.Body, &ec); err != nil {
 		return nil, err
 	}
@@ -265,7 +267,7 @@ func (v CodecV02) decodeStructured(msg transport.Message) (*canonical.Event, err
 		data = []byte(d)
 	}
 
-	return &canonical.Event{
+	return &cloudevents.Event{
 		Context: ec,
 		Data:    data,
 	}, nil
@@ -273,7 +275,7 @@ func (v CodecV02) decodeStructured(msg transport.Message) (*canonical.Event, err
 
 func (v CodecV02) inspectEncoding(msg transport.Message) Encoding {
 	version := msg.CloudEventsVersion()
-	if version != canonical.CloudEventsVersionV02 {
+	if version != context.CloudEventsVersionV02 {
 		return Unknown
 	}
 	m, ok := msg.(*Message)

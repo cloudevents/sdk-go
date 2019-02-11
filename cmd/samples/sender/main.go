@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/canonical"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	cloudeventshttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -54,12 +56,12 @@ func (d *Demo) Send(i int) error {
 	}
 
 	now := time.Now()
-	event := canonical.Event{
-		Context: canonical.EventContextV01{
+	event := cloudevents.Event{
+		Context: context.EventContextV01{
 			EventID:   uuid.New().String(),
 			EventType: "com.cloudevents.sample.sent",
-			EventTime: &canonical.Timestamp{Time: now},
-			Source:    canonical.URLRef{URL: d.Source},
+			EventTime: &types.Timestamp{Time: now},
+			Source:    types.URLRef{URL: d.Source},
 		},
 		Data: data,
 	}
