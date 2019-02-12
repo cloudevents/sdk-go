@@ -2,6 +2,7 @@ package http
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
@@ -44,18 +45,33 @@ func (t *Transport) loadCodec() bool {
 	return true
 }
 
-func (t *Transport) Send(event cloudevents.Event, req *http.Request) (*http.Response, error) {
+// Opaque key type used to store Http Request
+type requestKeyType struct{}
+
+var requestKey = requestKeyType{}
+
+func ContextWithValue(ctx context.Context, request http.Request) context.Context {
+	return context.WithValue(ctx, requestKey, request)
+}
+
+func FromContext(ctx context.Context) http.Request {
+	return ctx.Value(requestKey).(http.Request)
+}
+
+func (t *Transport) Send(ctx context.Context, event cloudevents.Event) error {
 	if t.Client == nil {
 		t.Client = &http.Client{}
 	}
 
+	req := FromContext(ctx)
+
 	if ok := t.loadCodec(); !ok {
-		return nil, fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
+		return fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
 	}
 
 	msg, err := t.codec.Encode(event)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// TODO: merge the incoming request with msg, for now just replace.
@@ -63,10 +79,54 @@ func (t *Transport) Send(event cloudevents.Event, req *http.Request) (*http.Resp
 		req.Header = m.Header
 		req.Body = ioutil.NopCloser(bytes.NewBuffer(m.Body))
 		req.ContentLength = int64(len(m.Body))
-		return t.Client.Do(req)
+		//t.Client.Do(&req)
+		return httpDo(ctx, &req, func(resp *http.Response, err error) error {
+			if err != nil {
+				return err
+			}
+			defer resp.Body.Close()
+
+			if accepted(resp) {
+				return nil
+			}
+			return fmt.Errorf("error sending cloudevent: %s", status(resp))
+		})
 	}
 
-	return nil, fmt.Errorf("failed to encode Event into a Message")
+	return fmt.Errorf("failed to encode Event into a Message")
+}
+
+func httpDo(ctx context.Context, req *http.Request, f func(*http.Response, error) error) error {
+	// Run the HTTP request in a goroutine and pass the response to f.
+	c := make(chan error, 1)
+	req = req.WithContext(ctx)
+	go func() { c <- f(http.DefaultClient.Do(req)) }()
+	select {
+	case <-ctx.Done():
+		<-c // Wait for f to return.
+		return ctx.Err()
+	case err := <-c:
+		return err
+	}
+}
+
+// accepted is a helper method to understand if the response from the target
+// accepted the CloudEvent.
+func accepted(resp *http.Response) bool {
+	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+		return true
+	}
+	return false
+}
+
+// status is a helper method to read the response of the target.
+func status(resp *http.Response) string {
+	status := resp.Status
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Sprintf("Status[%s] error reading response body: %v", status, err)
+	}
+	return fmt.Sprintf("Status[%s] %s", status, body)
 }
 
 // ServeHTTP implements http.Handler

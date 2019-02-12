@@ -1,13 +1,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	cloudeventshttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -48,7 +47,7 @@ type Example struct {
 	Message  string `json:"message"`
 }
 
-func (d *Demo) Send(eventContext context.EventContext, i int) error {
+func (d *Demo) Send(eventContext cloudevents.EventContext, i int) error {
 	data := &Example{
 		Sequence: i,
 		Message:  d.Message,
@@ -62,34 +61,10 @@ func (d *Demo) Send(eventContext context.EventContext, i int) error {
 		Method: http.MethodPost,
 		URL:    &d.Target,
 	}
-	resp, err := d.Sender.Send(event, req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	if accepted(resp) {
-		return nil
-	}
-	return fmt.Errorf("error sending cloudevent: %s", status(resp))
-}
 
-// accepted is a helper method to understand if the response from the target
-// accepted the CloudEvent.
-func accepted(resp *http.Response) bool {
-	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
-		return true
-	}
-	return false
-}
+	httpCtx := cloudeventshttp.ContextWithValue(context.TODO(), *req)
 
-// status is a helper method to read the response of the target.
-func status(resp *http.Response) string {
-	status := resp.Status
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return fmt.Sprintf("Status[%s] error reading response body: %v", status, err)
-	}
-	return fmt.Sprintf("Status[%s] %s", status, body)
+	return d.Sender.Send(httpCtx, event)
 }
 
 func _main(args []string, env envConfig) int {
@@ -117,7 +92,7 @@ func _main(args []string, env envConfig) int {
 
 			for i := 0; i < 10; i++ {
 				now := time.Now()
-				ctx := context.EventContextV01{
+				ctx := cloudevents.EventContextV01{
 					EventID:     uuid.New().String(),
 					EventType:   "com.cloudevents.sample.sent",
 					EventTime:   &types.Timestamp{Time: now},

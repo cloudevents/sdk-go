@@ -1,4 +1,4 @@
-package context
+package cloudevents
 
 type EventContext interface {
 	// AsV01 provides a translation from whatever the "native" encoding of the

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"log"
@@ -62,7 +61,7 @@ func (v CodecV02) encodeBinary(e cloudevents.Event) (transport.Message, error) {
 	return msg, nil
 }
 
-func (v CodecV02) toHeaders(ec context.EventContextV02) (http.Header, error) {
+func (v CodecV02) toHeaders(ec cloudevents.EventContextV02) (http.Header, error) {
 	h := http.Header{}
 	h.Set("ce-specversion", ec.SpecVersion)
 	h.Set("ce-type", ec.Type)
@@ -168,7 +167,7 @@ func (v CodecV02) decodeBinary(msg transport.Message) (*cloudevents.Event, error
 	}, nil
 }
 
-func (v CodecV02) fromHeaders(h http.Header) (context.EventContextV02, error) {
+func (v CodecV02) fromHeaders(h http.Header) (cloudevents.EventContextV02, error) {
 	// Normalize headers.
 	for k, v := range h {
 		ck := textproto.CanonicalMIMEHeaderKey(k)
@@ -179,7 +178,7 @@ func (v CodecV02) fromHeaders(h http.Header) (context.EventContextV02, error) {
 		}
 	}
 
-	ec := context.EventContextV02{}
+	ec := cloudevents.EventContextV02{}
 
 	ec.SpecVersion = h.Get("ce-specversion")
 	h.Del("ce-specversion")
@@ -252,7 +251,7 @@ func (v CodecV02) decodeStructured(msg transport.Message) (*cloudevents.Event, e
 		return nil, fmt.Errorf("failed to convert transport.Message to http.Message")
 	}
 
-	ec := context.EventContextV02{}
+	ec := cloudevents.EventContextV02{}
 	if err := json.Unmarshal(m.Body, &ec); err != nil {
 		return nil, err
 	}
@@ -275,7 +274,7 @@ func (v CodecV02) decodeStructured(msg transport.Message) (*cloudevents.Event, e
 
 func (v CodecV02) inspectEncoding(msg transport.Message) Encoding {
 	version := msg.CloudEventsVersion()
-	if version != context.CloudEventsVersionV02 {
+	if version != cloudevents.CloudEventsVersionV02 {
 		return Unknown
 	}
 	m, ok := msg.(*Message)

@@ -1,4 +1,4 @@
-package context
+package cloudevents
 
 import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"

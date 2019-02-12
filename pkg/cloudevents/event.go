@@ -1,13 +1,12 @@
 package cloudevents
 
 import (
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec"
 )
 
 // Event represents the canonical representation of a CloudEvent.
 type Event struct {
-	Context context.EventContext
+	Context EventContext
 	Data    interface{}
 }
 

@@ -2,7 +2,6 @@ package cloudevents_test
 
 import (
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
-	c "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"github.com/gin-gonic/gin/json"
 	"github.com/google/go-cmp/cmp"
@@ -151,31 +150,31 @@ func TestDataAs(t *testing.T) {
 	}
 }
 
-func MinEventContextV01() c.EventContextV01 {
+func MinEventContextV01() ce.EventContextV01 {
 	sourceUrl, _ := url.Parse("http://example.com/source")
 	source := &types.URLRef{URL: *sourceUrl}
 
-	return c.EventContextV01{
-		CloudEventsVersion: c.CloudEventsVersionV01,
+	return ce.EventContextV01{
+		CloudEventsVersion: ce.CloudEventsVersionV01,
 		EventType:          "com.example.simple",
 		Source:             *source,
 		EventID:            "ABC-123",
 	}
 }
 
-func MinEventContextV02() c.EventContextV02 {
+func MinEventContextV02() ce.EventContextV02 {
 	sourceUrl, _ := url.Parse("http://example.com/source")
 	source := &types.URLRef{*sourceUrl}
 
-	return c.EventContextV02{
-		SpecVersion: c.CloudEventsVersionV02,
+	return ce.EventContextV02{
+		SpecVersion: ce.CloudEventsVersionV02,
 		Type:        "com.example.simple",
 		Source:      *source,
 		ID:          "ABC-123",
 	}
 }
 
-func FullEventContextV01(now types.Timestamp) c.EventContextV01 {
+func FullEventContextV01(now types.Timestamp) ce.EventContextV01 {
 	sourceUrl, _ := url.Parse("http://example.com/source")
 	source := &types.URLRef{URL: *sourceUrl}
 
@@ -185,8 +184,8 @@ func FullEventContextV01(now types.Timestamp) c.EventContextV01 {
 	extensions := make(map[string]interface{})
 	extensions["test"] = "extended"
 
-	return c.EventContextV01{
-		CloudEventsVersion: c.CloudEventsVersionV01,
+	return ce.EventContextV01{
+		CloudEventsVersion: ce.CloudEventsVersionV01,
 		EventID:            "ABC-123",
 		EventTime:          &now,
 		EventType:          "com.example.simple",
@@ -198,7 +197,7 @@ func FullEventContextV01(now types.Timestamp) c.EventContextV01 {
 	}
 }
 
-func FullEventContextV02(now types.Timestamp) c.EventContextV02 {
+func FullEventContextV02(now types.Timestamp) ce.EventContextV02 {
 	sourceUrl, _ := url.Parse("http://example.com/source")
 	source := &types.URLRef{URL: *sourceUrl}
 
@@ -209,8 +208,8 @@ func FullEventContextV02(now types.Timestamp) c.EventContextV02 {
 	extensions["test"] = "extended"
 	extensions["eventTypeVersion"] = "v1alpha1"
 
-	return c.EventContextV02{
-		SpecVersion: c.CloudEventsVersionV02,
+	return ce.EventContextV02{
+		SpecVersion: ce.CloudEventsVersionV02,
 		ID:          "ABC-123",
 		Time:        &now,
 		Type:        "com.example.simple",

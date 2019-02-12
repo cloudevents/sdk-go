@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"log"
@@ -62,7 +61,7 @@ func (v CodecV01) encodeBinary(e cloudevents.Event) (transport.Message, error) {
 	return msg, nil
 }
 
-func (v CodecV01) toHeaders(ec context.EventContextV01) (http.Header, error) {
+func (v CodecV01) toHeaders(ec cloudevents.EventContextV01) (http.Header, error) {
 	// Preserve case in v0.1, even though HTTP headers are case-insensitive.
 	h := http.Header{}
 	h["CE-CloudEventsVersion"] = []string{ec.CloudEventsVersion}
@@ -163,7 +162,7 @@ func (v CodecV01) decodeBinary(msg transport.Message) (*cloudevents.Event, error
 	}, nil
 }
 
-func (v CodecV01) fromHeaders(h http.Header) (context.EventContextV01, error) {
+func (v CodecV01) fromHeaders(h http.Header) (cloudevents.EventContextV01, error) {
 	// Normalize headers.
 	for k, v := range h {
 		ck := textproto.CanonicalMIMEHeaderKey(k)
@@ -173,7 +172,7 @@ func (v CodecV01) fromHeaders(h http.Header) (context.EventContextV01, error) {
 		}
 	}
 
-	ec := context.EventContextV01{}
+	ec := cloudevents.EventContextV01{}
 	ec.CloudEventsVersion = h.Get("CE-CloudEventsVersion")
 	ec.EventID = h.Get("CE-EventID")
 	ec.EventType = h.Get("CE-EventType")
@@ -211,7 +210,7 @@ func (v CodecV01) decodeStructured(msg transport.Message) (*cloudevents.Event, e
 		return nil, fmt.Errorf("failed to convert transport.Message to http.Message")
 	}
 
-	ec := context.EventContextV01{}
+	ec := cloudevents.EventContextV01{}
 	if err := json.Unmarshal(m.Body, &ec); err != nil {
 		return nil, err
 	}
@@ -234,7 +233,7 @@ func (v CodecV01) decodeStructured(msg transport.Message) (*cloudevents.Event, e
 
 func (v CodecV01) inspectEncoding(msg transport.Message) Encoding {
 	version := msg.CloudEventsVersion()
-	if version != context.CloudEventsVersionV01 {
+	if version != cloudevents.CloudEventsVersionV01 {
 		return Unknown
 	}
 	m, ok := msg.(*Message)
