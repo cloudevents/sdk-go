@@ -105,30 +105,32 @@ func _main(args []string, env envConfig) int {
 	}
 
 	seq := 0
-	for _, encoding := range []cloudeventshttp.Encoding{cloudeventshttp.BinaryV01, cloudeventshttp.StructuredV01, cloudeventshttp.BinaryV02, cloudeventshttp.StructuredV02} {
+	for _, contentType := range []string{"application/json", "application/xml"} {
+		for _, encoding := range []cloudeventshttp.Encoding{cloudeventshttp.BinaryV01, cloudeventshttp.StructuredV01, cloudeventshttp.BinaryV02, cloudeventshttp.StructuredV02} {
 
-		d := &Demo{
-			Message: fmt.Sprintf("Hello, %s!", encoding),
-			Source:  *source,
-			Target:  *target,
-			Sender:  &cloudeventshttp.Transport{Encoding: encoding},
-		}
+			d := &Demo{
+				Message: fmt.Sprintf("Hello, %s!", encoding),
+				Source:  *source,
+				Target:  *target,
+				Sender:  &cloudeventshttp.Transport{Encoding: encoding},
+			}
 
-		for i := 0; i < 10; i++ {
-			now := time.Now()
-			ctx := context.EventContextV01{
-				EventID:     uuid.New().String(),
-				EventType:   "com.cloudevents.sample.sent",
-				EventTime:   &types.Timestamp{Time: now},
-				Source:      types.URLRef{URL: d.Source},
-				ContentType: "application/json",
+			for i := 0; i < 10; i++ {
+				now := time.Now()
+				ctx := context.EventContextV01{
+					EventID:     uuid.New().String(),
+					EventType:   "com.cloudevents.sample.sent",
+					EventTime:   &types.Timestamp{Time: now},
+					Source:      types.URLRef{URL: d.Source},
+					ContentType: contentType,
+				}
+				if err := d.Send(ctx, seq); err != nil {
+					log.Printf("failed to send: %v", err)
+					return 1
+				}
+				seq++
+				time.Sleep(100 * time.Millisecond)
 			}
-			if err := d.Send(ctx, seq); err != nil {
-				log.Printf("failed to send: %v", err)
-				return 1
-			}
-			seq++
-			time.Sleep(200 * time.Millisecond)
 		}
 	}
 

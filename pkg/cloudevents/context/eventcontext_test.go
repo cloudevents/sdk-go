@@ -1,53 +1,59 @@
-package cloudevents_test
+package context_test
 
 import (
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 	c "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
-	"github.com/gin-gonic/gin/json"
 	"github.com/google/go-cmp/cmp"
 	"net/url"
-	"reflect"
 	"testing"
 	"time"
 )
 
-func TestGetDataContentType(t *testing.T) {
+func TestContextAsV01(t *testing.T) {
 	now := types.Timestamp{Time: time.Now()}
 
 	testCases := map[string]struct {
 		event ce.Event
-		want  string
+		want  c.EventContextV01
 	}{
-		"min v01, blank": {
+		"empty, no conversion": {
+			event: ce.Event{
+				Context: c.EventContextV01{},
+			},
+			want: c.EventContextV01{
+				CloudEventsVersion: "0.1",
+			},
+		},
+		"min v01, no conversion": {
 			event: ce.Event{
 				Context: MinEventContextV01(),
 			},
-			want: "",
+			want: MinEventContextV01(),
 		},
-		"full v01, json": {
+		"full v01, no conversion": {
 			event: ce.Event{
 				Context: FullEventContextV01(now),
 			},
-			want: "application/json",
+			want: FullEventContextV01(now),
 		},
-		"min v02, blank": {
+		"min v02 -> v01": {
 			event: ce.Event{
 				Context: MinEventContextV02(),
 			},
-			want: "",
+			want: MinEventContextV01(),
 		},
-		"full v02, json": {
+		"full v02 -> v01": {
 			event: ce.Event{
 				Context: FullEventContextV02(now),
 			},
-			want: "application/json",
+			want: FullEventContextV01(now),
 		},
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 
-			got := tc.event.Context.DataContentType()
+			got := tc.event.Context.AsV01()
 
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("unexpected (-want, +got) = %v", diff)
@@ -56,96 +62,53 @@ func TestGetDataContentType(t *testing.T) {
 	}
 }
 
-type DataExample struct {
-	AnInt   int                       `json:"a,omitempty"`
-	AString string                    `json:"b,omitempty"`
-	AnArray []string                  `json:"c,omitempty"`
-	AMap    map[string]map[string]int `json:"d,omitempty"`
-	ATime   *time.Time                `json:"e,omitempty"`
-}
-
-func TestDataAs(t *testing.T) {
+func TestContextAsV02(t *testing.T) {
 	now := types.Timestamp{Time: time.Now()}
 
 	testCases := map[string]struct {
-		event   ce.Event
-		want    interface{}
-		wantErr error
+		event ce.Event
+		want  c.EventContextV02
 	}{
-		"empty": {
+		"empty, no conversion": {
+			event: ce.Event{
+				Context: c.EventContextV02{},
+			},
+			want: c.EventContextV02{
+				SpecVersion: "0.2",
+			},
+		},
+		"min v02, no conversion": {
+			event: ce.Event{
+				Context: MinEventContextV02(),
+			},
+			want: MinEventContextV02(),
+		},
+		"full v02, no conversion": {
+			event: ce.Event{
+				Context: FullEventContextV02(now),
+			},
+			want: FullEventContextV02(now),
+		},
+		"min v01 -> v02": {
 			event: ce.Event{
 				Context: MinEventContextV01(),
 			},
-			want: nil,
+			want: MinEventContextV02(),
 		},
-		"json simple": {
+		"full v01 -> v2": {
 			event: ce.Event{
 				Context: FullEventContextV01(now),
-				Data:    []byte(`{"a":"apple","b":"banana"}`),
 			},
-			want: &map[string]string{
-				"a": "apple",
-				"b": "banana",
-			},
-		},
-		"json complex empty": {
-			event: ce.Event{
-				Context: FullEventContextV01(now),
-				Data:    []byte(`{}`),
-			},
-			want: &DataExample{},
-		},
-		"json complex filled": {
-			event: ce.Event{
-				Context: FullEventContextV01(now),
-				Data: func() []byte {
-					data := &DataExample{
-						AnInt: 42,
-						AMap: map[string]map[string]int{
-							"a": {"1": 1, "2": 2, "3": 3},
-							"z": {"3": 3, "2": 2, "1": 1},
-						},
-						AString: "Hello, World!",
-						ATime:   &now.Time,
-						AnArray: []string{"Anne", "Bob", "Chad"},
-					}
-					j, err := json.Marshal(data)
-					if err != nil {
-						t.Errorf("failed to marshal test data: %s", err.Error())
-					}
-					return j
-				}(),
-			},
-			want: &DataExample{
-				AnInt: 42,
-				AMap: map[string]map[string]int{
-					"a": {"1": 1, "2": 2, "3": 3},
-					"z": {"3": 3, "2": 2, "1": 1},
-				},
-				AString: "Hello, World!",
-				ATime:   &now.Time,
-				AnArray: []string{"Anne", "Bob", "Chad"},
-			},
+			want: FullEventContextV02(now),
 		},
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 
-			dataType := reflect.TypeOf(tc.want)
-			got, _ := types.Allocate(dataType)
-			err := tc.event.DataAs(got)
+			got := tc.event.Context.AsV02()
 
-			if tc.wantErr != nil || err != nil {
-				if diff := cmp.Diff(tc.wantErr, err); diff != "" {
-					t.Errorf("unexpected error (-want, +got) = %v", diff)
-				}
-				return
-			}
-
-			if dataType != nil {
-				if diff := cmp.Diff(tc.want, got); diff != "" {
-					t.Errorf("unexpected data (-want, +got) = %v", diff)
-				}
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("unexpected (-want, +got) = %v", diff)
 			}
 		})
 	}

@@ -31,7 +31,7 @@ Creating a minimal CloudEvent in version 0.2:
 import "github.com/cloudevents/sdk-go/pkg/cloudevents/v02"
 event := v02.Event{
     Type:        "com.example.file.created",
-    Source:           "/providers/Example.COM/storage/account#fileServices/default/{new-file}",
+    Source:      "/providers/Example.COM/storage/account#fileServices/default/{new-file}",
     ID:          "ea35b24ede421",
 }
 ```
