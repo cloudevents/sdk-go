@@ -4,11 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	cloudeventshttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"log"
-	"net/http"
 	"net/url"
 	"os"
 	"time"
@@ -38,7 +37,7 @@ type Demo struct {
 	Source  url.URL
 	Target  url.URL
 
-	Sender transport.Sender
+	Client *client.Client
 }
 
 // Basic data struct.
@@ -48,23 +47,14 @@ type Example struct {
 }
 
 func (d *Demo) Send(eventContext cloudevents.EventContext, i int) error {
-	data := &Example{
-		Sequence: i,
-		Message:  d.Message,
-	}
-
 	event := cloudevents.Event{
 		Context: eventContext,
-		Data:    data,
+		Data: &Example{
+			Sequence: i,
+			Message:  d.Message,
+		},
 	}
-	req := &http.Request{
-		Method: http.MethodPost,
-		URL:    &d.Target,
-	}
-
-	httpCtx := cloudeventshttp.ContextWithValue(context.TODO(), *req)
-
-	return d.Sender.Send(httpCtx, event)
+	return d.Client.Send(event)
 }
 
 func _main(args []string, env envConfig) int {
@@ -73,21 +63,21 @@ func _main(args []string, env envConfig) int {
 		log.Printf("failed to parse source url, %v", err)
 		return 1
 	}
-	target, err := url.Parse(env.Target)
-	if err != nil {
-		log.Printf("failed to parse target url, %v", err)
-		return 1
-	}
 
 	seq := 0
 	for _, contentType := range []string{"application/json", "application/xml"} {
 		for _, encoding := range []cloudeventshttp.Encoding{cloudeventshttp.BinaryV01, cloudeventshttp.StructuredV01, cloudeventshttp.BinaryV02, cloudeventshttp.StructuredV02} {
 
+			c, err := client.NewHttpClient(context.TODO(), env.Target, encoding)
+			if err != nil {
+				log.Printf("failed to create client, %v", err)
+				return 1
+			}
+
 			d := &Demo{
 				Message: fmt.Sprintf("Hello, %s!", encoding),
 				Source:  *source,
-				Target:  *target,
-				Sender:  &cloudeventshttp.Transport{Encoding: encoding},
+				Client:  c,
 			}
 
 			for i := 0; i < 10; i++ {

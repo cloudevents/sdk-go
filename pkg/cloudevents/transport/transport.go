@@ -9,7 +9,6 @@ import (
 // over the underlying transport.
 type Sender interface {
 	Send(context.Context, cloudevents.Event) error
-	//MakeContext(...interface{}) context.Context
 }
 
 // Receiver TODO not sure yet.

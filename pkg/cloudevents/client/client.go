@@ -1,67 +1,44 @@
 package client
 
 import (
+	"context"
+	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
+	cloudeventshttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+	"net/http"
+	"net/url"
 )
 
-// Client wraps Builder, and is intended to be configured for a single event
-// type and target
 type Client struct {
+	ctx    context.Context
 	sender transport.Sender
 }
 
-func NewHttpClient(target string) *Client { // , builder Builder
-	c := &Client{
-		//builder: builder,
-		//Target:  target,
+func NewHttpClient(ctx context.Context, targetUrl string, encoding cloudeventshttp.Encoding) (*Client, error) {
+	target, err := url.Parse(targetUrl)
+	if err != nil {
+		return nil, err
 	}
-	return c
+
+	req := http.Request{
+		Method: http.MethodPost,
+		URL:    target,
+	}
+	ctx = cloudeventshttp.ContextWithValue(ctx, req)
+
+	sender := cloudeventshttp.Transport{Encoding: encoding}
+
+	c := &Client{
+		ctx:    ctx,
+		sender: &sender,
+	}
+	return c, nil
 }
 
 func (c *Client) Send(event cloudevents.Event) error {
-	//c.sender.Send()
-	//
-	//context.WithValue()
-	//
-	//ctx := context.TODO()
-	//
-	//ctx.
-	//
-	//
-	//req, err := c.builder.Build(c.Target, data, overrides...)
-	//if err != nil {
-	//	return err
-	//}
-	//client := &http.Client{}
-	//resp, err := client.Do(req)
-	//if err != nil {
-	//	return err
-	//}
-	//defer resp.Body.Close()
-	//if accepted(resp) {
-	//	return nil
-	//}
-	//return fmt.Errorf("error sending cloudevent: %s", status(resp))
-	return nil
+	if c.sender == nil {
+		return fmt.Errorf("client not ready, transport not initalized")
+	}
+	return c.sender.Send(c.ctx, event)
 }
-
-//
-//// accepted is a helper method to understand if the response from the target
-//// accepted the CloudEvent.
-//func accepted(resp *http.Response) bool {
-//	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
-//		return true
-//	}
-//	return false
-//}
-//
-//// status is a helper method to read the response of the target.
-//func status(resp *http.Response) string {
-//	status := resp.Status
-//	body, err := ioutil.ReadAll(resp.Body)
-//	if err != nil {
-//		return fmt.Sprintf("Status[%s] error reading response body: %v", status, err)
-//	}
-//	return fmt.Sprintf("Status[%s] %s", status, body)
-//}
