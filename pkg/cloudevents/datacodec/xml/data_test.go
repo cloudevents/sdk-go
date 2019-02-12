@@ -17,6 +17,12 @@ type DataExample struct {
 	ATime   *time.Time `xml:"e,omitempty"`
 }
 
+// Basic data struct.
+type Example struct {
+	Sequence int    `json:"id"`
+	Message  string `json:"message"`
+}
+
 func TestCodecDecode(t *testing.T) {
 	now := time.Now()
 
@@ -26,6 +32,10 @@ func TestCodecDecode(t *testing.T) {
 		wantErr error
 	}{
 		"empty": {},
+		"structured type encoding": {
+			in:   []byte(`"PEV4YW1wbGU+PFNlcXVlbmNlPjc8L1NlcXVlbmNlPjxNZXNzYWdlPkhlbGxvLCBTdHJ1Y3R1cmVkIEVuY29kaW5nIHYwLjIhPC9NZXNzYWdlPjwvRXhhbXBsZT4="`),
+			want: &Example{Sequence: 7, Message: "Hello, Structured Encoding v0.2!"},
+		},
 		"complex filled": {
 			in: func() []byte {
 				data := &DataExample{

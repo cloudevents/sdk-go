@@ -21,6 +21,7 @@ func NewHttpClient(ctx context.Context, targetUrl string, encoding cloudeventsht
 		return nil, err
 	}
 
+	// TODO: context is added to overload the http Method and others. Plumb this.
 	req := http.Request{
 		Method: http.MethodPost,
 		URL:    target,

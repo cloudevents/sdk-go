@@ -285,6 +285,9 @@ func (v CodecV02) inspectEncoding(msg transport.Message) Encoding {
 	if contentType == "application/json" {
 		return BinaryV02
 	}
+	if contentType == "application/xml" {
+		return BinaryV02
+	}
 	if contentType == "application/cloudevents+json" {
 		return StructuredV02
 	}

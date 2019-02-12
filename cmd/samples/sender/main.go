@@ -17,6 +17,10 @@ import (
 	"github.com/kelseyhightower/envconfig"
 )
 
+const (
+	count = 1
+)
+
 type envConfig struct {
 	// Target URL where to send cloudevents
 	Target string `envconfig:"TARGET" default:"http://localhost:8080" required:"true"`
@@ -80,7 +84,7 @@ func _main(args []string, env envConfig) int {
 				Client:  c,
 			}
 
-			for i := 0; i < 10; i++ {
+			for i := 0; i < count; i++ {
 				now := time.Now()
 				ctx := cloudevents.EventContextV01{
 					EventID:     uuid.New().String(),
