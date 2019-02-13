@@ -53,11 +53,21 @@ Checkout the sample [sender](./cmd/samples/sender) and
 
 ## TODO list
 
+### General 
+
 - [ ] Add more tests for edge cases
 - [ ] Use contexts to override internal defaults.
 - [ ] Fill in Event.Context defaults with values (like ID and time) if 
       nil/empty.
-- [ ]] Might be nice to have the client have a Receive hook.
+- [ ] Might be nice to have the client have a Receive hook.
+
+### HTTP
+- [ ] Support overrides for method.
+- [ ] Merge headers from context on send.
+
+### Nats
+- [ ] Plumb in auth for the nats server.
+
 ## Existing Go for CloudEvents
 
 Existing projects that added support for CloudEvents in Go are listed below. 
