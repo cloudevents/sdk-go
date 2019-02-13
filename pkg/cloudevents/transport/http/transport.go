@@ -50,11 +50,11 @@ type requestKeyType struct{}
 
 var requestKey = requestKeyType{}
 
-func ContextWithValue(ctx context.Context, request http.Request) context.Context {
+func ContextWithRequest(ctx context.Context, request http.Request) context.Context {
 	return context.WithValue(ctx, requestKey, request)
 }
 
-func FromContext(ctx context.Context) http.Request {
+func RequestFromContext(ctx context.Context) http.Request {
 	return ctx.Value(requestKey).(http.Request)
 }
 
@@ -63,7 +63,7 @@ func (t *Transport) Send(ctx context.Context, event cloudevents.Event) error {
 		t.Client = &http.Client{}
 	}
 
-	req := FromContext(ctx)
+	req := RequestFromContext(ctx)
 
 	if ok := t.loadCodec(); !ok {
 		return fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
