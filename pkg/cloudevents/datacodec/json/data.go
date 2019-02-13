@@ -23,3 +23,7 @@ func Decode(in, out interface{}) error {
 	}
 	return nil
 }
+
+func Encode(in interface{}) ([]byte, error) {
+	return json.Marshal(in)
+}
