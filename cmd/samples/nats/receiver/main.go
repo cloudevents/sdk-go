@@ -1,13 +1,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	cloudeventsnats "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/nats"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/nats-io/go-nats"
 	"log"
 	"os"
-	"time"
 )
 
 type envConfig struct {
@@ -47,47 +48,30 @@ func (r *Receiver) Receive(event cloudevents.Event) {
 }
 
 func _main(args []string, env envConfig) int {
-	//r := &Receiver{}
-	//t := &cloudeventshttp.Transport{Receiver: r}
 
-	//log.Printf("listening on port %s\n", env.Port)
-	//log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", env.Port), t))
-
-	// Connect to a server
-	nc, _ := nats.Connect(env.NatsServer)
-
-	// Simple Async Subscriber
-	sub, err := nc.Subscribe(env.Subject, func(m *nats.Msg) {
-		fmt.Printf("Received a message: %s\n", string(m.Data))
-	})
+	conn, err := nats.Connect(env.NatsServer)
 	if err != nil {
-		return 1
+		log.Fatalf("failed to connect to nats server, %s", err.Error())
 	}
 
-	time.Sleep(5 * time.Minute)
+	r := &Receiver{}
+	t := &cloudeventsnats.Transport{
+		Conn:     conn,
+		Receiver: r,
+	}
 
-	// Unsubscribe
-	sub.Unsubscribe()
+	ctx := context.TODO()
 
-	// Drain
-	//sub.Drain()
+	err = t.Listen(ctx, env.Subject)
+	if err != nil {
+		log.Fatalf("failed to listen, %s", err.Error())
+	}
 
-	//// Requests
-	//msg, err := nc.Request("help", []byte("help me"), 10*time.Millisecond)
-	//
-	//// Replies
-	//nc.Subscribe("help", func(m *Msg) {
-	//	nc.Publish(m.Reply, []byte("I can help!"))
-	//})
+	// Wait until done.
+	<-ctx.Done()
 
-	// Drain connection (Preferred for responders)
-	// Close() not needed if this is called.
-	//nc.Drain()
-
-	// Close connection
-	nc.Close()
-
-	//	return nil
+	// Close connection.
+	conn.Close()
 
 	return 0
 }

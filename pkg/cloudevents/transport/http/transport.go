@@ -142,7 +142,6 @@ func (t *Transport) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		Header: r.Header,
 		Body:   body,
 	}
-	_ = msg // TODO
 
 	if ok := t.loadCodec(); !ok {
 		err := fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
