@@ -6,6 +6,8 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	cloudeventshttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+	cloudeventsnats "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/nats"
+	"github.com/nats-io/go-nats"
 	"net/http"
 	"net/url"
 )
@@ -26,10 +28,28 @@ func NewHttpClient(ctx context.Context, targetUrl string, encoding cloudeventsht
 		Method: http.MethodPost,
 		URL:    target,
 	}
-	ctx = cloudeventshttp.ContextWithValue(ctx, req)
+	ctx = cloudeventshttp.ContextWithRequest(ctx, req)
 
 	sender := cloudeventshttp.Transport{Encoding: encoding}
 
+	c := &Client{
+		ctx:    ctx,
+		sender: &sender,
+	}
+	return c, nil
+}
+
+func NewNatsClient(ctx context.Context, natsServer, subject string) (*Client, error) {
+	// TODO: context is added to overload defaults. Plumb this.
+	conn, err := nats.Connect(natsServer)
+	if err != nil {
+		return nil, err
+	}
+	sender := cloudeventsnats.Transport{
+		Conn: conn,
+	}
+	// add subject
+	ctx = cloudeventsnats.ContextWithSubject(ctx, subject)
 	c := &Client{
 		ctx:    ctx,
 		sender: &sender,
