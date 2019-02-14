@@ -6,6 +6,7 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
+	"log"
 )
 
 type Codec struct {
@@ -42,6 +43,11 @@ func (c *Codec) Decode(msg transport.Message) (*cloudevents.Event, error) {
 // TODO: Should move these somewhere else. the methods are shared for all versions.
 
 func marshalEvent(event interface{}) ([]byte, error) {
+
+	if b, ok := event.([]byte); ok {
+		log.Printf("json.marshalEvent asked to encode bytes... wrong? %s", string(b))
+	}
+
 	b, err := json.Marshal(event)
 	if err != nil {
 		return nil, err

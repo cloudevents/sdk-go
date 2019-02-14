@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/xml"
 	"fmt"
+	"log"
 )
 
 func Decode(in, out interface{}) error {
@@ -23,10 +24,13 @@ func Decode(in, out interface{}) error {
 	// If the message is encoded as a base64 block as a string, we need to
 	// decode that first before trying to unmarshal the bytes
 	if len(b) > 0 && b[0] == byte('"') {
-		bs, err := base64.StdEncoding.DecodeString(string(b[1:]))
+		bs, err := base64.StdEncoding.DecodeString(string(b[1 : len(b)-1]))
 		if err != nil {
-			b = bs
+			return err
 		}
+		b = bs
+
+		log.Printf("popping quotes made %s", string(b))
 	}
 
 	if err := xml.Unmarshal(b, out); err != nil {
@@ -36,5 +40,9 @@ func Decode(in, out interface{}) error {
 }
 
 func Encode(in interface{}) ([]byte, error) {
+	if b, ok := in.([]byte); ok {
+		log.Printf("asked to encode bytes... wrong? %s", string(b))
+	}
+
 	return xml.Marshal(in)
 }
