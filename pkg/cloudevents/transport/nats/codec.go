@@ -53,5 +53,9 @@ func marshalEventData(encoding string, data interface{}) ([]byte, error) {
 	if data == nil {
 		return []byte(nil), nil
 	}
+	// already encoded?
+	if b, ok := data.([]byte); ok {
+		return b, nil
+	}
 	return datacodec.Encode(encoding, data)
 }
