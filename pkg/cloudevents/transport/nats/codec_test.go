@@ -33,6 +33,7 @@ func TestCodecEncode(t *testing.T) {
 			want: &nats.Message{
 				Body: func() []byte {
 					body := map[string]interface{}{
+						"contenttype": "application/json",
 						"specversion": "0.2",
 						"id":          "ABC-123",
 						"type":        "com.example.test",

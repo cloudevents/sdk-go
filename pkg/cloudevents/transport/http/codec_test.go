@@ -56,6 +56,7 @@ func TestCodecEncode(t *testing.T) {
 				},
 				Body: func() []byte {
 					body := map[string]interface{}{
+						"contentType":        "application/json",
 						"cloudEventsVersion": "0.1",
 						"eventID":            "ABC-123",
 						"eventType":          "com.example.test",
@@ -99,6 +100,7 @@ func TestCodecEncode(t *testing.T) {
 				},
 				Body: func() []byte {
 					body := map[string]interface{}{
+						"contenttype": "application/json",
 						"specversion": "0.2",
 						"id":          "ABC-123",
 						"type":        "com.example.test",
