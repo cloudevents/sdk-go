@@ -103,34 +103,31 @@ func (v CodecV01) encodeStructured(e cloudevents.Event) (transport.Message, erro
 	header := http.Header{}
 	header.Set("Content-Type", "application/cloudevents+json")
 
-	ctx, err := marshalEvent(e.Context.AsV01())
+	ctxv1 := e.Context.AsV01()
+	if ctxv1.ContentType == "" {
+		ctxv1.ContentType = "application/json"
+	}
+
+	ctx, err := marshalEvent(ctxv1)
 	if err != nil {
 		return nil, err
 	}
 
 	var body []byte
 
-	b := map[string]interface{}{}
+	b := map[string]json.RawMessage{}
 	if err := json.Unmarshal([]byte(ctx), &b); err != nil {
 		return nil, err
 	}
 
-	dataContentType := e.Context.DataContentType()
-
-	if dataContentType == "application/json" {
-		if e.Data != nil {
-			b["data"] = e.Data
-		}
-	} else {
-		data, err := marshalEventData(e.Context.DataContentType(), e.Data)
-		if err != nil {
-			return nil, err
-		}
-
-		if data != nil {
-			b["data"] = data
-		}
+	data, err := marshalEventData(e.Context.DataContentType(), e.Data)
+	if err != nil {
+		return nil, err
 	}
+	if data != nil {
+		b["data"] = data
+	}
+
 	body, err = json.Marshal(b)
 	if err != nil {
 		return nil, err
