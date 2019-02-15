@@ -10,14 +10,6 @@
   version = "v1.1.1"
 
 [[projects]]
-  digest = "1:9234b5f0816fc0375452528081d5caaf5891f8a5548acf424d57ac40e8811e26"
-  name = "github.com/gin-gonic/gin"
-  packages = ["json"]
-  pruneopts = "UT"
-  revision = "b869fe1415e4b9eb52f247441830d502aece2d4d"
-  version = "v1.3.0"
-
-[[projects]]
   digest = "1:2e3c336fc7fde5c984d2841455a658a6d626450b1754a854b3b32e7a8f49a07a"
   name = "github.com/google/go-cmp"
   packages = [
@@ -37,14 +29,6 @@
   pruneopts = "UT"
   revision = "9b3b1e0f5f99ae461456d768e7d301a7acdaa2d8"
   version = "v1.1.0"
-
-[[projects]]
-  digest = "1:be97e109f627d3ba8edfef50c9c74f0d0c17cbe3a2e924a8985e4804a894f282"
-  name = "github.com/json-iterator/go"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "36b14963da70d11297d313183d7e6388c8510e1e"
-  version = "1.0.0"
 
 [[projects]]
   digest = "1:edbef42561faa44c19129b68d1e109fbc1647f63239250391eadc8d0e7c9f669"
@@ -98,7 +82,6 @@
   analyzer-version = 1
   input-imports = [
     "github.com/davecgh/go-spew/spew",
-    "github.com/gin-gonic/gin/json",
     "github.com/google/go-cmp/cmp",
     "github.com/google/uuid",
     "github.com/kelseyhightower/envconfig",

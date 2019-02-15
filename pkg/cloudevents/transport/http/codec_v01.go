@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"net/textproto"
+	"strconv"
 	"strings"
 )
 
@@ -120,12 +121,21 @@ func (v CodecV01) encodeStructured(e cloudevents.Event) (transport.Message, erro
 		return nil, err
 	}
 
-	data, err := marshalEventData(e.Context.DataContentType(), e.Data)
+	// TODO: this is common for []byte json type transports, refactor
+	dataContentType := e.Context.DataContentType()
+	data, err := marshalEventData(dataContentType, e.Data)
 	if err != nil {
 		return nil, err
 	}
 	if data != nil {
-		b["data"] = data
+		if dataContentType == "" || dataContentType == "application/json" {
+			b["data"] = data
+		} else if data[0] != byte('"') {
+			b["data"] = []byte(strconv.QuoteToASCII(string(data)))
+		} else {
+			// already quoted
+			b["data"] = data
+		}
 	}
 
 	body, err = json.Marshal(b)

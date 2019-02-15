@@ -111,7 +111,7 @@ func _main(args []string, env envConfig) int {
 				contentType,
 				*source,
 			); err != nil {
-				log.Printf("failed to do demo: %v", err)
+				log.Printf("failed to do http demo: %v, %s", err, contentType)
 				return 1
 			}
 		}
@@ -129,7 +129,7 @@ func _main(args []string, env envConfig) int {
 			contentType,
 			*source,
 		); err != nil {
-			log.Printf("failed to do demo: %v", err)
+			log.Printf("failed to do nats demo: %v, %s", err, contentType)
 			return 1
 		}
 	}
