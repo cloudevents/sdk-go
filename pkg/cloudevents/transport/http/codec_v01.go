@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/codec"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"log"
 	"net/http"
 	"net/textproto"
-	"strconv"
 	"strings"
 )
 
@@ -104,41 +104,7 @@ func (v CodecV01) encodeStructured(e cloudevents.Event) (transport.Message, erro
 	header := http.Header{}
 	header.Set("Content-Type", "application/cloudevents+json")
 
-	ctxv1 := e.Context.AsV01()
-	if ctxv1.ContentType == "" {
-		ctxv1.ContentType = "application/json"
-	}
-
-	ctx, err := marshalEvent(ctxv1)
-	if err != nil {
-		return nil, err
-	}
-
-	var body []byte
-
-	b := map[string]json.RawMessage{}
-	if err := json.Unmarshal([]byte(ctx), &b); err != nil {
-		return nil, err
-	}
-
-	// TODO: this is common for []byte json type transports, refactor
-	dataContentType := e.Context.DataContentType()
-	data, err := marshalEventData(dataContentType, e.Data)
-	if err != nil {
-		return nil, err
-	}
-	if data != nil {
-		if dataContentType == "" || dataContentType == "application/json" {
-			b["data"] = data
-		} else if data[0] != byte('"') {
-			b["data"] = []byte(strconv.QuoteToASCII(string(data)))
-		} else {
-			// already quoted
-			b["data"] = data
-		}
-	}
-
-	body, err = json.Marshal(b)
+	body, err := codec.JsonEncodeV01(e)
 	if err != nil {
 		return nil, err
 	}
@@ -217,26 +183,7 @@ func (v CodecV01) decodeStructured(msg transport.Message) (*cloudevents.Event, e
 	if !ok {
 		return nil, fmt.Errorf("failed to convert transport.Message to http.Message")
 	}
-
-	ec := cloudevents.EventContextV01{}
-	if err := json.Unmarshal(m.Body, &ec); err != nil {
-		return nil, err
-	}
-
-	raw := make(map[string]json.RawMessage)
-
-	if err := json.Unmarshal(m.Body, &raw); err != nil {
-		return nil, err
-	}
-	var data interface{}
-	if d, ok := raw["data"]; ok {
-		data = []byte(d)
-	}
-
-	return &cloudevents.Event{
-		Context: ec,
-		Data:    data,
-	}, nil
+	return codec.JsonDecodeV01(m.Body)
 }
 
 func (v CodecV01) inspectEncoding(msg transport.Message) Encoding {

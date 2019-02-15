@@ -1,12 +1,9 @@
 package nats
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
-	"log"
 )
 
 type Codec struct {
@@ -37,30 +34,4 @@ func (c *Codec) Decode(msg transport.Message) (*cloudevents.Event, error) {
 	}
 	// There is only one encoding as of v0.2
 	return c.v02.Decode(msg)
-}
-
-// ---------
-// TODO: Should move these somewhere else. the methods are shared for all versions.
-
-func marshalEvent(event interface{}) ([]byte, error) {
-	if b, ok := event.([]byte); ok {
-		log.Printf("json.marshalEvent asked to encode bytes... wrong? %s", string(b))
-	}
-
-	b, err := json.Marshal(event)
-	if err != nil {
-		return nil, err
-	}
-	return b, nil
-}
-
-func marshalEventData(encoding string, data interface{}) ([]byte, error) {
-	if data == nil {
-		return []byte(nil), nil
-	}
-	// already encoded?
-	if b, ok := data.([]byte); ok {
-		return b, nil
-	}
-	return datacodec.Encode(encoding, data)
 }

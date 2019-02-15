@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/codec"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"log"
 	"net/http"
 	"net/textproto"
-	"strconv"
 	"strings"
 )
 
@@ -109,40 +109,7 @@ func (v CodecV02) encodeStructured(e cloudevents.Event) (transport.Message, erro
 	header := http.Header{}
 	header.Set("Content-Type", "application/cloudevents+json")
 
-	ctxv2 := e.Context.AsV02()
-	if ctxv2.ContentType == "" {
-		ctxv2.ContentType = "application/json"
-	}
-
-	ctx, err := marshalEvent(ctxv2)
-	if err != nil {
-		return nil, err
-	}
-
-	var body []byte
-
-	b := map[string]json.RawMessage{}
-	if err := json.Unmarshal([]byte(ctx), &b); err != nil {
-		return nil, err
-	}
-
-	dataContentType := e.Context.DataContentType()
-	data, err := marshalEventData(dataContentType, e.Data)
-	if err != nil {
-		return nil, err
-	}
-	if data != nil {
-		if dataContentType == "" || dataContentType == "application/json" {
-			b["data"] = data
-		} else if data[0] != byte('"') {
-			b["data"] = []byte(strconv.QuoteToASCII(string(data)))
-		} else {
-			// already quoted
-			b["data"] = data
-		}
-	}
-
-	body, err = json.Marshal(b)
+	body, err := codec.JsonEncodeV02(e)
 	if err != nil {
 		return nil, err
 	}

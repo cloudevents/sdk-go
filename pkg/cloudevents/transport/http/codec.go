@@ -1,7 +1,6 @@
 package http
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec"
@@ -126,14 +125,6 @@ func (c *Codec) inspectEncoding(msg transport.Message) Encoding {
 
 // ---------
 // TODO: Should move these somewhere else. the methods are shared for all versions.
-
-func marshalEvent(event interface{}) ([]byte, error) {
-	b, err := json.Marshal(event)
-	if err != nil {
-		return nil, err
-	}
-	return b, nil
-}
 
 func marshalEventData(encoding string, data interface{}) ([]byte, error) {
 	if data == nil {
