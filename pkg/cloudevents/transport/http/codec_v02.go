@@ -125,12 +125,17 @@ func (v CodecV02) encodeStructured(e cloudevents.Event) (transport.Message, erro
 		return nil, err
 	}
 
-	data, err := marshalEventData(e.Context.DataContentType(), e.Data)
+	dataContentType := e.Context.DataContentType()
+	data, err := marshalEventData(dataContentType, e.Data)
 	if err != nil {
 		return nil, err
 	}
 	if data != nil {
-		b["data"] = data
+		if dataContentType == "application/json" {
+			b["data"] = data
+		} else {
+			b["data"] = []byte(fmt.Sprintf("%q", string(data)))
+		}
 	}
 
 	body, err = json.Marshal(b)

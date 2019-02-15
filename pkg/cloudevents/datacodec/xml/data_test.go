@@ -31,7 +31,11 @@ func TestCodecDecode(t *testing.T) {
 		wantErr error
 	}{
 		"empty": {},
-		"structured type encoding": {
+		"structured type encoding, escaped": {
+			in:   []byte(`"<Example><Sequence>7</Sequence><Message>Hello, Structured Encoding v0.2!</Message></Example>"`),
+			want: &Example{Sequence: 7, Message: "Hello, Structured Encoding v0.2!"},
+		},
+		"structured type encoding, base64": {
 			in:   []byte(`"PEV4YW1wbGU+PFNlcXVlbmNlPjc8L1NlcXVlbmNlPjxNZXNzYWdlPkhlbGxvLCBTdHJ1Y3R1cmVkIEVuY29kaW5nIHYwLjIhPC9NZXNzYWdlPjwvRXhhbXBsZT4="`),
 			want: &Example{Sequence: 7, Message: "Hello, Structured Encoding v0.2!"},
 		},
@@ -71,6 +75,7 @@ func TestCodecDecode(t *testing.T) {
 		t.Run(n, func(t *testing.T) {
 
 			got, _ := types.Allocate(tc.want)
+
 			err := cex.Decode(tc.in, got)
 
 			if tc.wantErr != nil || err != nil {

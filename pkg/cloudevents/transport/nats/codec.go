@@ -43,7 +43,6 @@ func (c *Codec) Decode(msg transport.Message) (*cloudevents.Event, error) {
 // TODO: Should move these somewhere else. the methods are shared for all versions.
 
 func marshalEvent(event interface{}) ([]byte, error) {
-
 	if b, ok := event.([]byte); ok {
 		log.Printf("json.marshalEvent asked to encode bytes... wrong? %s", string(b))
 	}
