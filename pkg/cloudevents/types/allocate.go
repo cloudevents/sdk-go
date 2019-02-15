@@ -10,11 +10,7 @@ func Allocate(obj interface{}) (asPtr interface{}, asValue reflect.Value) {
 		return nil, reflect.Value{}
 	}
 
-	t := reflect.TypeOf(obj)
-
-	//t, ok := obj.(reflect.Type)
-	//if ok {
-	switch t.Kind() {
+	switch t := reflect.TypeOf(obj); t.Kind() {
 	case reflect.Ptr:
 		reflectPtr := reflect.New(t.Elem())
 		asPtr = reflectPtr.Interface()
@@ -24,15 +20,17 @@ func Allocate(obj interface{}) (asPtr interface{}, asValue reflect.Value) {
 		asPtr = reflectPtr.Interface()
 		asValue = reflectPtr
 	case reflect.String:
-
 		reflectPtr := reflect.New(t)
 		asPtr = ""
 		asValue = reflectPtr.Elem()
+	case reflect.Slice:
+		reflectPtr := reflect.MakeSlice(t, 0, 0)
+		asPtr = reflectPtr.Interface()
+		asValue = reflectPtr
 	default:
 		reflectPtr := reflect.New(t)
 		asPtr = reflectPtr.Interface()
 		asValue = reflectPtr.Elem()
 	}
-	//}
 	return
 }

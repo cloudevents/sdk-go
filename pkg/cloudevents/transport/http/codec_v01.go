@@ -116,6 +116,7 @@ func (v CodecV01) encodeStructured(e cloudevents.Event) (transport.Message, erro
 	}
 
 	dataContentType := e.Context.DataContentType()
+
 	if dataContentType == "application/json" {
 		if e.Data != nil {
 			b["data"] = e.Data

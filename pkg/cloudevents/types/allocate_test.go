@@ -27,6 +27,13 @@ func TestAllocate(t *testing.T) {
 			},
 			want: map[string]string{},
 		},
+		"slice": {
+			obj: []string{
+				"test",
+				"case",
+			},
+			want: []string{},
+		},
 		"string": {
 			obj:  "test",
 			want: "",

@@ -2,6 +2,7 @@ package cloudevents
 
 import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"strings"
 )
 
 const (
@@ -37,6 +38,14 @@ type EventContextV01 struct {
 var _ EventContext = (*EventContextV01)(nil)
 
 func (ec EventContextV01) DataContentType() string {
+	// TODO: there are cases where there is char encoding info on the content type.
+	// Fix this for these cases as we find them.
+	if strings.HasSuffix(ec.ContentType, "json") {
+		return "application/json"
+	}
+	if strings.HasSuffix(ec.ContentType, "xml") {
+		return "application/xml"
+	}
 	return ec.ContentType
 }
 
