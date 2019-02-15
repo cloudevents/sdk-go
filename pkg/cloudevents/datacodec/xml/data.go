@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"encoding/xml"
 	"fmt"
-	"log"
 	"strconv"
 )
 
@@ -24,14 +23,12 @@ func Decode(in, out interface{}) error {
 
 	// If the message is encoded as a base64 block as a string, we need to
 	// decode that first before trying to unmarshal the bytes
-	if len(b) > 0 && b[0] == byte('"') {
-		b = b[1 : len(b)-1]
+	if len(b) > 1 && (b[0] == byte('"') || (b[0] == byte('\\') && b[1] == byte('"'))) {
 		s, err := strconv.Unquote(string(b))
 		if err != nil {
 			return err
 		}
 		if len(s) > 0 && s[0] == '<' {
-			log.Printf("decode xml as string: %s", s)
 			// looks like xml, use it
 			b = []byte(s)
 		} else if len(s) > 0 {

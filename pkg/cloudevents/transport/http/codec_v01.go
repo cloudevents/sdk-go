@@ -128,11 +128,13 @@ func (v CodecV01) encodeStructured(e cloudevents.Event) (transport.Message, erro
 		return nil, err
 	}
 	if data != nil {
-		if dataContentType == "application/json" {
+		if dataContentType == "" || dataContentType == "application/json" {
 			b["data"] = data
+		} else if data[0] != byte('"') {
+			b["data"] = []byte(strconv.QuoteToASCII(string(data)))
 		} else {
-			b["data"] = []byte(strconv.Quote(string(data)))
-			//b["data"] = []byte(fmt.Sprintf("%q", string(data)))
+			// already quoted
+			b["data"] = data
 		}
 	}
 

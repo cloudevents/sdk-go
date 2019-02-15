@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
+	"strconv"
 )
 
 type CodecV02 struct {
@@ -53,10 +54,13 @@ func (v CodecV02) encodeStructured(e cloudevents.Event) (transport.Message, erro
 		return nil, err
 	}
 	if data != nil {
-		if dataContentType == "application/json" {
+		if dataContentType == "" || dataContentType == "application/json" {
 			b["data"] = data
+		} else if data[0] != byte('"') {
+			b["data"] = []byte(strconv.QuoteToASCII(string(data)))
 		} else {
-			b["data"] = []byte(fmt.Sprintf("%q", string(data)))
+			// already quoted
+			b["data"] = data
 		}
 	}
 

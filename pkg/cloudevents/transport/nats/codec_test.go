@@ -127,11 +127,11 @@ func TestCodecDecode(t *testing.T) {
 }
 
 type DataExample struct {
-	AnInt   int                       `json:"a,omitempty"`
-	AString string                    `json:"b,omitempty"`
-	AnArray []string                  `json:"c,omitempty"`
-	AMap    map[string]map[string]int `json:"d,omitempty"`
-	ATime   *time.Time                `json:"e,omitempty"`
+	AnInt   int                       `json:"a,omitempty" xml:"a,omitempty"`
+	AString string                    `json:"b,omitempty" xml:"b,omitempty"`
+	AnArray []string                  `json:"c,omitempty" xml:"c,omitempty"`
+	AMap    map[string]map[string]int `json:"d,omitempty" xml:"d,omitempty"`
+	ATime   *time.Time                `json:"e,omitempty" xml:"e,omitempty"`
 }
 
 func TestCodecRoundTrip(t *testing.T) {
