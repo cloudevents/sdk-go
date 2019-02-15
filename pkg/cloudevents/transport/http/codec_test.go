@@ -9,6 +9,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"net/url"
 	"testing"
+	"time"
 )
 
 func TestCodecEncode(t *testing.T) {
@@ -55,6 +56,7 @@ func TestCodecEncode(t *testing.T) {
 				},
 				Body: func() []byte {
 					body := map[string]interface{}{
+						"contentType":        "application/json",
 						"cloudEventsVersion": "0.1",
 						"eventID":            "ABC-123",
 						"eventType":          "com.example.test",
@@ -98,6 +100,7 @@ func TestCodecEncode(t *testing.T) {
 				},
 				Body: func() []byte {
 					body := map[string]interface{}{
+						"contenttype": "application/json",
 						"specversion": "0.2",
 						"id":          "ABC-123",
 						"type":        "com.example.test",
@@ -351,6 +354,270 @@ func TestCodecDecode(t *testing.T) {
 				t.Errorf("unexpected event (-want, +got) = %v", diff)
 			}
 		})
+	}
+}
+
+type DataExample struct {
+	AnInt   int                       `json:"a,omitempty"`
+	AString string                    `json:"b,omitempty"`
+	AnArray []string                  `json:"c,omitempty"`
+	AMap    map[string]map[string]int `json:"d,omitempty"`
+	ATime   *time.Time                `json:"e,omitempty"`
+}
+
+func TestCodecRoundTrip(t *testing.T) {
+	sourceUrl, _ := url.Parse("http://example.com/source")
+	source := &types.URLRef{URL: *sourceUrl}
+
+	for _, encoding := range []http.Encoding{http.BinaryV01, http.BinaryV02, http.StructuredV01, http.StructuredV02} {
+
+		testCases := map[string]struct {
+			codec   http.Codec
+			event   cloudevents.Event
+			want    cloudevents.Event
+			wantErr error
+		}{
+			"simple data": {
+				codec: http.Codec{Encoding: encoding},
+				event: cloudevents.Event{
+					Context: cloudevents.EventContextV01{
+						EventType: "com.example.test",
+						Source:    *source,
+						EventID:   "ABC-123",
+					},
+					Data: map[string]string{
+						"a": "apple",
+						"b": "banana",
+					},
+				},
+				want: cloudevents.Event{
+					Context: cloudevents.EventContextV01{
+						CloudEventsVersion: cloudevents.CloudEventsVersionV01,
+						EventType:          "com.example.test",
+						Source:             *source,
+						EventID:            "ABC-123",
+						ContentType:        "application/json",
+					},
+					Data: map[string]interface{}{
+						"a": "apple",
+						"b": "banana",
+					},
+				},
+			},
+			"struct data": {
+				codec: http.Codec{Encoding: encoding},
+				event: cloudevents.Event{
+					Context: cloudevents.EventContextV01{
+						EventType: "com.example.test",
+						Source:    *source,
+						EventID:   "ABC-123",
+					},
+					Data: DataExample{
+						AnInt:   42,
+						AString: "testing",
+					},
+				},
+				want: cloudevents.Event{
+					Context: cloudevents.EventContextV01{
+						CloudEventsVersion: cloudevents.CloudEventsVersionV01,
+						EventType:          "com.example.test",
+						Source:             *source,
+						EventID:            "ABC-123",
+						ContentType:        "application/json",
+					},
+					Data: &DataExample{
+						AnInt:   42,
+						AString: "testing",
+					},
+				},
+			},
+		}
+		for n, tc := range testCases {
+			n = fmt.Sprintf("%s, %s", encoding, n)
+			t.Run(n, func(t *testing.T) {
+
+				msg, err := tc.codec.Encode(tc.event)
+				if err != nil {
+					if diff := cmp.Diff(tc.wantErr, err); diff != "" {
+						t.Errorf("unexpected error (-want, +got) = %v", diff)
+					}
+					return
+				}
+
+				got, err := tc.codec.Decode(msg)
+				if err != nil {
+					if diff := cmp.Diff(tc.wantErr, err); diff != "" {
+						t.Errorf("unexpected error (-want, +got) = %v", diff)
+					}
+					return
+				}
+
+				if tc.event.Data != nil {
+					// We have to be pretty tricky in the test to get the correct type.
+					data, _ := types.Allocate(tc.want.Data)
+					err := got.DataAs(&data)
+					if err != nil {
+						if diff := cmp.Diff(tc.wantErr, err); diff != "" {
+							t.Errorf("unexpected error (-want, +got) = %v", diff)
+						}
+						return
+					}
+					got.Data = data
+				}
+
+				if tc.wantErr != nil || err != nil {
+					if diff := cmp.Diff(tc.wantErr, err); diff != "" {
+						t.Errorf("unexpected error (-want, +got) = %v", diff)
+					}
+					return
+				}
+
+				// fix the context back to v1 to test.
+				ctxv1 := got.Context.AsV01()
+				got.Context = ctxv1
+
+				if diff := cmp.Diff(tc.want, *got); diff != "" {
+					t.Errorf("unexpected event (-want, +got) = %v", diff)
+				}
+			})
+		}
+
+	}
+}
+
+func TestCodecAsMiddleware(t *testing.T) {
+	sourceUrl, _ := url.Parse("http://example.com/source")
+	source := &types.URLRef{URL: *sourceUrl}
+
+	for _, encoding := range []http.Encoding{http.BinaryV01, http.BinaryV02, http.StructuredV01, http.StructuredV02} {
+
+		testCases := map[string]struct {
+			codec   http.Codec
+			event   cloudevents.Event
+			want    cloudevents.Event
+			wantErr error
+		}{
+			"simple data": {
+				codec: http.Codec{Encoding: encoding},
+				event: cloudevents.Event{
+					Context: cloudevents.EventContextV01{
+						EventType: "com.example.test",
+						Source:    *source,
+						EventID:   "ABC-123",
+					},
+					Data: map[string]string{
+						"a": "apple",
+						"b": "banana",
+					},
+				},
+				want: cloudevents.Event{
+					Context: cloudevents.EventContextV01{
+						CloudEventsVersion: cloudevents.CloudEventsVersionV01,
+						EventType:          "com.example.test",
+						Source:             *source,
+						EventID:            "ABC-123",
+						ContentType:        "application/json",
+					},
+					Data: map[string]interface{}{
+						"a": "apple",
+						"b": "banana",
+					},
+				},
+			},
+			"struct data": {
+				codec: http.Codec{Encoding: encoding},
+				event: cloudevents.Event{
+					Context: cloudevents.EventContextV01{
+						EventType: "com.example.test",
+						Source:    *source,
+						EventID:   "ABC-123",
+					},
+					Data: DataExample{
+						AnInt:   42,
+						AString: "testing",
+					},
+				},
+				want: cloudevents.Event{
+					Context: cloudevents.EventContextV01{
+						CloudEventsVersion: cloudevents.CloudEventsVersionV01,
+						EventType:          "com.example.test",
+						Source:             *source,
+						EventID:            "ABC-123",
+						ContentType:        "application/json",
+					},
+					Data: &DataExample{
+						AnInt:   42,
+						AString: "testing",
+					},
+				},
+			},
+		}
+		for n, tc := range testCases {
+			n = fmt.Sprintf("%s, %s", encoding, n)
+			t.Run(n, func(t *testing.T) {
+
+				msg1, err := tc.codec.Encode(tc.event)
+				if err != nil {
+					if diff := cmp.Diff(tc.wantErr, err); diff != "" {
+						t.Errorf("unexpected error (-want, +got) = %v", diff)
+					}
+					return
+				}
+
+				midEvent, err := tc.codec.Decode(msg1)
+				if err != nil {
+					if diff := cmp.Diff(tc.wantErr, err); diff != "" {
+						t.Errorf("unexpected error (-want, +got) = %v", diff)
+					}
+					return
+				}
+
+				msg2, err := tc.codec.Encode(*midEvent)
+				if err != nil {
+					if diff := cmp.Diff(tc.wantErr, err); diff != "" {
+						t.Errorf("unexpected error (-want, +got) = %v", diff)
+					}
+					return
+				}
+
+				got, err := tc.codec.Decode(msg2)
+				if err != nil {
+					if diff := cmp.Diff(tc.wantErr, err); diff != "" {
+						t.Errorf("unexpected error (-want, +got) = %v", diff)
+					}
+					return
+				}
+
+				if tc.event.Data != nil {
+					// We have to be pretty tricky in the test to get the correct type.
+					data, _ := types.Allocate(tc.want.Data)
+					err := got.DataAs(&data)
+					if err != nil {
+						if diff := cmp.Diff(tc.wantErr, err); diff != "" {
+							t.Errorf("unexpected error (-want, +got) = %v", diff)
+						}
+						return
+					}
+					got.Data = data
+				}
+
+				if tc.wantErr != nil || err != nil {
+					if diff := cmp.Diff(tc.wantErr, err); diff != "" {
+						t.Errorf("unexpected error (-want, +got) = %v", diff)
+					}
+					return
+				}
+
+				// fix the context back to v1 to test.
+				ctxv1 := got.Context.AsV01()
+				got.Context = ctxv1
+
+				if diff := cmp.Diff(tc.want, *got); diff != "" {
+					t.Errorf("unexpected event (-want, +got) = %v", diff)
+				}
+			})
+		}
+
 	}
 }
 

@@ -19,7 +19,7 @@ func Decode(in, out interface{}) error {
 		}
 	}
 	if err := json.Unmarshal(b, out); err != nil {
-		return fmt.Errorf("[json] found bytes, but failed to unmarshal: %s", err.Error())
+		return fmt.Errorf("[json] found bytes %q, but failed to unmarshal: %s", string(b), err.Error())
 	}
 	return nil
 }
