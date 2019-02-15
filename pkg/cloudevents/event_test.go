@@ -1,9 +1,9 @@
 package cloudevents_test
 
 import (
+	"encoding/json"
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
-	"github.com/gin-gonic/gin/json"
 	"github.com/google/go-cmp/cmp"
 	"net/url"
 	"testing"
