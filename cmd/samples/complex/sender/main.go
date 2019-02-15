@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	count = 5
+	count = 1
 	delay = 100 * time.Millisecond
 )
 

@@ -5,7 +5,6 @@ import (
 	cej "github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec/json"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"github.com/google/go-cmp/cmp"
-	"reflect"
 	"testing"
 	"time"
 )
@@ -79,15 +78,9 @@ func TestCodecDecode(t *testing.T) {
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
-
-			dataType := reflect.TypeOf(tc.want)
-
-			t.Logf("got dataType: %s", dataType)
-
-			got, _ := types.Allocate(dataType)
+			got, _ := types.Allocate(tc.want)
 
 			err := cej.Decode(tc.in, got)
-
 			if tc.wantErr != nil || err != nil {
 				if diff := cmp.Diff(tc.wantErr, err); diff != "" {
 					t.Errorf("unexpected error (-want, +got) = %v", diff)
@@ -95,7 +88,7 @@ func TestCodecDecode(t *testing.T) {
 				return
 			}
 
-			if dataType != nil {
+			if tc.want != nil {
 				if diff := cmp.Diff(tc.want, got); diff != "" {
 					t.Errorf("unexpected data (-want, +got) = %v", diff)
 				}

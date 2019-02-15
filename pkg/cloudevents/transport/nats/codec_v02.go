@@ -30,33 +30,31 @@ func (v CodecV02) Decode(msg transport.Message) (*cloudevents.Event, error) {
 }
 
 func (v CodecV02) encodeStructured(e cloudevents.Event) (transport.Message, error) {
-	ctx, err := marshalEvent(e.Context.AsV02())
+	ctxv2 := e.Context.AsV02()
+	if ctxv2.ContentType == "" {
+		ctxv2.ContentType = "application/json"
+	}
+
+	ctx, err := marshalEvent(ctxv2)
 	if err != nil {
 		return nil, err
 	}
 
 	var body []byte
 
-	b := map[string]interface{}{}
+	b := map[string]json.RawMessage{}
 	if err := json.Unmarshal([]byte(ctx), &b); err != nil {
 		return nil, err
 	}
 
-	dataContentType := e.Context.DataContentType()
-	if dataContentType == "application/json" {
-		if e.Data != nil {
-			b["data"] = e.Data
-		}
-	} else {
-		data, err := marshalEventData(e.Context.DataContentType(), e.Data)
-		if err != nil {
-			return nil, err
-		}
-
-		if data != nil {
-			b["data"] = data
-		}
+	data, err := marshalEventData(e.Context.DataContentType(), e.Data)
+	if err != nil {
+		return nil, err
 	}
+	if data != nil {
+		b["data"] = data
+	}
+
 	body, err = json.Marshal(b)
 	if err != nil {
 		return nil, err

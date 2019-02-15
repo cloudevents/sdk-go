@@ -6,7 +6,6 @@ import (
 	"github.com/gin-gonic/gin/json"
 	"github.com/google/go-cmp/cmp"
 	"net/url"
-	"reflect"
 	"testing"
 	"time"
 )
@@ -130,8 +129,7 @@ func TestDataAs(t *testing.T) {
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 
-			dataType := reflect.TypeOf(tc.want)
-			got, _ := types.Allocate(dataType)
+			got, _ := types.Allocate(tc.want)
 			err := tc.event.DataAs(got)
 
 			if tc.wantErr != nil || err != nil {
@@ -141,7 +139,7 @@ func TestDataAs(t *testing.T) {
 				return
 			}
 
-			if dataType != nil {
+			if tc.want != nil {
 				if diff := cmp.Diff(tc.want, got); diff != "" {
 					t.Errorf("unexpected data (-want, +got) = %v", diff)
 				}

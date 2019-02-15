@@ -152,6 +152,7 @@ func TestCodecV02_Encode(t *testing.T) {
 				},
 				Body: func() []byte {
 					body := map[string]interface{}{
+						"contenttype": "application/json",
 						"specversion": "0.2",
 						"id":          "ABC-123",
 						"type":        "com.example.test",
