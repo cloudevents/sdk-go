@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"encoding/xml"
 	"fmt"
-	"log"
 )
 
 func Decode(in, out interface{}) error {
@@ -29,8 +28,6 @@ func Decode(in, out interface{}) error {
 			return err
 		}
 		b = bs
-
-		log.Printf("popping quotes made %s", string(b))
 	}
 
 	if err := xml.Unmarshal(b, out); err != nil {
@@ -40,9 +37,5 @@ func Decode(in, out interface{}) error {
 }
 
 func Encode(in interface{}) ([]byte, error) {
-	if b, ok := in.([]byte); ok {
-		log.Printf("asked to encode bytes... wrong? %s", string(b))
-	}
-
 	return xml.Marshal(in)
 }
