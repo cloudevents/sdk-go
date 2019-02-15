@@ -147,8 +147,6 @@ func (v CodecV02) encodeStructured(e cloudevents.Event) (transport.Message, erro
 		return nil, err
 	}
 
-	log.Printf("body turned into : %s", string(body))
-
 	msg := &Message{
 		Header: header,
 		Body:   body,
