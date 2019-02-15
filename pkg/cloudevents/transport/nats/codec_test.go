@@ -58,7 +58,6 @@ func TestCodecEncode(t *testing.T) {
 			}
 
 			if diff := cmp.Diff(tc.want, got); diff != "" {
-
 				if msg, ok := got.(*nats.Message); ok {
 					// It is hard to read the byte dump
 					want := string(tc.want.Body)
