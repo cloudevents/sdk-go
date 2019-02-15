@@ -445,6 +445,12 @@ func TestCodecRoundTrip(t *testing.T) {
 				}
 
 				got, err := tc.codec.Decode(msg)
+				if err != nil {
+					if diff := cmp.Diff(tc.wantErr, err); diff != "" {
+						t.Errorf("unexpected error (-want, +got) = %v", diff)
+					}
+					return
+				}
 
 				if tc.event.Data != nil {
 					// We have to be pretty tricky in the test to get the correct type.
@@ -471,16 +477,142 @@ func TestCodecRoundTrip(t *testing.T) {
 				got.Context = ctxv1
 
 				if diff := cmp.Diff(tc.want, *got); diff != "" {
+					t.Errorf("unexpected event (-want, +got) = %v", diff)
+				}
+			})
+		}
 
-					//if msg, ok := got.(*http.Message); ok {
-					//	// It is hard to read the byte dump
-					//	want := string(tc.want.Body)
-					//	got := string(msg.Body)
-					//	if diff := cmp.Diff(want, got); diff != "" {
-					//		t.Errorf("unexpected (-want, +got) = %v", diff)
-					//		return
-					//	}
-					//}
+	}
+}
+
+func TestCodecAsMiddleware(t *testing.T) {
+	sourceUrl, _ := url.Parse("http://example.com/source")
+	source := &types.URLRef{URL: *sourceUrl}
+
+	for _, encoding := range []http.Encoding{http.BinaryV01, http.BinaryV02, http.StructuredV01, http.StructuredV02} {
+
+		testCases := map[string]struct {
+			codec   http.Codec
+			event   cloudevents.Event
+			want    cloudevents.Event
+			wantErr error
+		}{
+			"simple data": {
+				codec: http.Codec{Encoding: encoding},
+				event: cloudevents.Event{
+					Context: cloudevents.EventContextV01{
+						EventType: "com.example.test",
+						Source:    *source,
+						EventID:   "ABC-123",
+					},
+					Data: map[string]string{
+						"a": "apple",
+						"b": "banana",
+					},
+				},
+				want: cloudevents.Event{
+					Context: cloudevents.EventContextV01{
+						CloudEventsVersion: cloudevents.CloudEventsVersionV01,
+						EventType:          "com.example.test",
+						Source:             *source,
+						EventID:            "ABC-123",
+						ContentType:        "application/json",
+					},
+					Data: map[string]interface{}{
+						"a": "apple",
+						"b": "banana",
+					},
+				},
+			},
+			"struct data": {
+				codec: http.Codec{Encoding: encoding},
+				event: cloudevents.Event{
+					Context: cloudevents.EventContextV01{
+						EventType: "com.example.test",
+						Source:    *source,
+						EventID:   "ABC-123",
+					},
+					Data: DataExample{
+						AnInt:   42,
+						AString: "testing",
+					},
+				},
+				want: cloudevents.Event{
+					Context: cloudevents.EventContextV01{
+						CloudEventsVersion: cloudevents.CloudEventsVersionV01,
+						EventType:          "com.example.test",
+						Source:             *source,
+						EventID:            "ABC-123",
+						ContentType:        "application/json",
+					},
+					Data: &DataExample{
+						AnInt:   42,
+						AString: "testing",
+					},
+				},
+			},
+		}
+		for n, tc := range testCases {
+			n = fmt.Sprintf("%s, %s", encoding, n)
+			t.Run(n, func(t *testing.T) {
+
+				msg1, err := tc.codec.Encode(tc.event)
+				if err != nil {
+					if diff := cmp.Diff(tc.wantErr, err); diff != "" {
+						t.Errorf("unexpected error (-want, +got) = %v", diff)
+					}
+					return
+				}
+
+				midEvent, err := tc.codec.Decode(msg1)
+				if err != nil {
+					if diff := cmp.Diff(tc.wantErr, err); diff != "" {
+						t.Errorf("unexpected error (-want, +got) = %v", diff)
+					}
+					return
+				}
+
+				msg2, err := tc.codec.Encode(*midEvent)
+				if err != nil {
+					if diff := cmp.Diff(tc.wantErr, err); diff != "" {
+						t.Errorf("unexpected error (-want, +got) = %v", diff)
+					}
+					return
+				}
+
+				got, err := tc.codec.Decode(msg2)
+				if err != nil {
+					if diff := cmp.Diff(tc.wantErr, err); diff != "" {
+						t.Errorf("unexpected error (-want, +got) = %v", diff)
+					}
+					return
+				}
+
+				if tc.event.Data != nil {
+					// We have to be pretty tricky in the test to get the correct type.
+					data, _ := types.Allocate(tc.want.Data)
+					err := got.DataAs(&data)
+					if err != nil {
+						if diff := cmp.Diff(tc.wantErr, err); diff != "" {
+							t.Errorf("unexpected error (-want, +got) = %v", diff)
+						}
+						return
+					}
+					got.Data = data
+				}
+
+				if tc.wantErr != nil || err != nil {
+					if diff := cmp.Diff(tc.wantErr, err); diff != "" {
+						t.Errorf("unexpected error (-want, +got) = %v", diff)
+					}
+					return
+				}
+
+				// fix the context back to v1 to test.
+				ctxv1 := got.Context.AsV01()
+				got.Context = ctxv1
+
+				if diff := cmp.Diff(tc.want, *got); diff != "" {
 					t.Errorf("unexpected event (-want, +got) = %v", diff)
 				}
 			})
