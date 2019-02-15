@@ -1,18 +1,18 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	cloudeventshttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	"github.com/kelseyhightower/envconfig"
 	"log"
-	"net/http"
 	"os"
 )
 
 type envConfig struct {
 	// Port on which to listen for cloudevents
-	Port string `envconfig:"PORT" default:"8080"`
+	Port int `envconfig:"PORT" default:"8080"`
 }
 
 func main() {
@@ -24,31 +24,36 @@ func main() {
 	os.Exit(_main(os.Args[1:], env))
 }
 
-type Receiver struct{}
-
 type Example struct {
 	Sequence int    `json:"id"`
 	Message  string `json:"message"`
 }
 
-func (r *Receiver) Receive(event cloudevents.Event) {
+func gotEvent(event cloudevents.Event) {
 	fmt.Printf("Got Event Context: %+v\n", event.Context)
-
 	data := &Example{}
 	if err := event.DataAs(data); err != nil {
 		fmt.Printf("Got Data Error: %s\n", err.Error())
 	}
 	fmt.Printf("Got Data: %+v\n", data)
-
 	fmt.Printf("----------------------------\n")
 }
 
 func _main(args []string, env envConfig) int {
-	r := &Receiver{}
-	t := &cloudeventshttp.Transport{Receiver: r}
 
-	log.Printf("listening on port %s\n", env.Port)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", env.Port), t))
+	ctx := client.ContextWithPort(context.TODO(), env.Port)
+
+	c, err := client.NewHttpClient(ctx, "", 0)
+	if err != nil {
+		log.Fatalf("failed to create client: %s", err.Error())
+	}
+
+	if err = c.StartReceiver(gotEvent); err != nil {
+		log.Fatalf("failed to start receiver: %s", err.Error())
+	}
+
+	log.Printf("listening on port %d\n", env.Port)
+	<-ctx.Done()
 
 	return 0
 }
