@@ -49,7 +49,7 @@ func (v CodecV01) encodeBinary(e cloudevents.Event) (transport.Message, error) {
 		return nil, err
 	}
 
-	body, err := marshalEventData(e.Context.DataContentType(), e.Data)
+	body, err := marshalEventData(e.Context.GetDataContentType(), e.Data)
 	if err != nil {
 		return nil, err
 	}

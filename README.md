@@ -55,11 +55,21 @@ Checkout the sample [sender](./cmd/samples/sender) and
 
 ### General 
 
-- [ ] Add more tests for edge cases
+- [ ] increase `./pkg` code coverage to > 90%. (70% as of Feb 19, 2019)
+- [ ] Most tests are happy path, add sad path tests (edge cases).
 - [ ] Use contexts to override internal defaults.
 - [ ] Fill in Event.Context defaults with values (like ID and time) if 
       nil/empty.
-- [ ] Might be nice to have the client have a Receive hook.
+- [x] Might be nice to have the client have a Receive hook.
+
+### Webhook
+- [ ] Implement Auth in webhook
+- [ ] Implement Callback in webhook
+- [ ] Implement Allowed Origin
+- [ ] Implement Allowed Rate
+
+### JSON
+- [ ] Support json value as body. 
 
 ### HTTP
 - [ ] Support overrides for method.
@@ -67,6 +77,10 @@ Checkout the sample [sender](./cmd/samples/sender) and
 
 ### Nats
 - [ ] Plumb in auth for the nats server.
+- [ ] v0.2 and v0.3 are very similar. Combine decode logic?
+
+### For v3
+- [ ] Support batch json
 
 ## Existing Go for CloudEvents
 

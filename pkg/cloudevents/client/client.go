@@ -47,14 +47,15 @@ func NewHttpClient(ctx context.Context, targetUrl string, encoding cloudeventsht
 	return c, nil
 }
 
-func NewNatsClient(ctx context.Context, natsServer, subject string) (*Client, error) {
+func NewNatsClient(ctx context.Context, natsServer, subject string, encoding cloudeventsnats.Encoding) (*Client, error) {
 	// TODO: context is added to overload defaults. Plumb this.
 	conn, err := nats.Connect(natsServer)
 	if err != nil {
 		return nil, err
 	}
 	sender := cloudeventsnats.Transport{
-		Conn: conn,
+		Conn:     conn,
+		Encoding: encoding,
 	}
 	// add subject
 	ctx = cloudeventsnats.ContextWithSubject(ctx, subject)

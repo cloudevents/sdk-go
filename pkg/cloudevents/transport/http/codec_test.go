@@ -22,7 +22,7 @@ func TestCodecEncode(t *testing.T) {
 		want    *http.Message
 		wantErr error
 	}{
-		"simple v1 binary": {
+		"simple v0.1 binary": {
 			codec: http.Codec{Encoding: http.BinaryV01},
 			event: cloudevents.Event{
 				Context: cloudevents.EventContextV01{
@@ -41,7 +41,7 @@ func TestCodecEncode(t *testing.T) {
 				},
 			},
 		},
-		"simple v1 structured": {
+		"simple v0.1 structured": {
 			codec: http.Codec{Encoding: http.StructuredV01},
 			event: cloudevents.Event{
 				Context: cloudevents.EventContextV01{
@@ -66,7 +66,7 @@ func TestCodecEncode(t *testing.T) {
 				}(),
 			},
 		},
-		"simple v2 binary": {
+		"simple v0.2 binary": {
 			codec: http.Codec{Encoding: http.BinaryV02},
 			event: cloudevents.Event{
 				Context: cloudevents.EventContextV02{
@@ -85,7 +85,7 @@ func TestCodecEncode(t *testing.T) {
 				},
 			},
 		},
-		"simple v2 structured": {
+		"simple v0.2 structured": {
 			codec: http.Codec{Encoding: http.StructuredV02},
 			event: cloudevents.Event{
 				Context: cloudevents.EventContextV02{
@@ -105,6 +105,50 @@ func TestCodecEncode(t *testing.T) {
 						"id":          "ABC-123",
 						"type":        "com.example.test",
 						"source":      "http://example.com/source",
+					}
+					return toBytes(body)
+				}(),
+			},
+		},
+		"simple v0.3 binary": {
+			codec: http.Codec{Encoding: http.BinaryV03},
+			event: cloudevents.Event{
+				Context: cloudevents.EventContextV02{
+					Type:   "com.example.test",
+					Source: *source,
+					ID:     "ABC-123",
+				},
+			},
+			want: &http.Message{
+				Header: map[string][]string{
+					"Ce-Specversion": {"0.3"},
+					"Ce-Id":          {"ABC-123"},
+					"Ce-Type":        {"com.example.test"},
+					"Ce-Source":      {"http://example.com/source"},
+					"Content-Type":   {"application/json"},
+				},
+			},
+		},
+		"simple v0.3 structured": {
+			codec: http.Codec{Encoding: http.StructuredV03},
+			event: cloudevents.Event{
+				Context: cloudevents.EventContextV03{
+					Type:   "com.example.test",
+					Source: *source,
+					ID:     "ABC-123",
+				},
+			},
+			want: &http.Message{
+				Header: map[string][]string{
+					"Content-Type": {"application/cloudevents+json"},
+				},
+				Body: func() []byte {
+					body := map[string]interface{}{
+						"datacontenttype": "application/json",
+						"specversion":     "0.3",
+						"id":              "ABC-123",
+						"type":            "com.example.test",
+						"source":          "http://example.com/source",
 					}
 					return toBytes(body)
 				}(),
@@ -150,7 +194,7 @@ func TestCodecDecode(t *testing.T) {
 		want    *cloudevents.Event
 		wantErr error
 	}{
-		"simple v1 binary": {
+		"simple v0.1 binary": {
 			codec: http.Codec{Encoding: http.BinaryV01},
 			msg: &http.Message{
 				Header: map[string][]string{
@@ -171,7 +215,7 @@ func TestCodecDecode(t *testing.T) {
 				},
 			},
 		},
-		"simple v1 structured": {
+		"simple v0.1 structured": {
 			codec: http.Codec{Encoding: http.StructuredV01},
 			msg: &http.Message{
 				Header: map[string][]string{
@@ -196,7 +240,7 @@ func TestCodecDecode(t *testing.T) {
 				},
 			},
 		},
-		"simple v2 binary": {
+		"simple v0.2 binary": {
 			codec: http.Codec{Encoding: http.BinaryV02},
 			msg: &http.Message{
 				Header: map[string][]string{
@@ -217,7 +261,7 @@ func TestCodecDecode(t *testing.T) {
 				},
 			},
 		},
-		"simple v2 structured": {
+		"simple v0.2 structured": {
 			codec: http.Codec{Encoding: http.StructuredV02},
 			msg: &http.Message{
 				Header: map[string][]string{
@@ -236,6 +280,53 @@ func TestCodecDecode(t *testing.T) {
 			want: &cloudevents.Event{
 				Context: cloudevents.EventContextV02{
 					SpecVersion: cloudevents.CloudEventsVersionV02,
+					Type:        "com.example.test",
+					Source:      *source,
+					ID:          "ABC-123",
+				},
+			},
+		},
+
+		"simple v0.3 binary": {
+			codec: http.Codec{Encoding: http.BinaryV03},
+			msg: &http.Message{
+				Header: map[string][]string{
+					"Ce-Specversion": {"0.3"},
+					"Ce-Id":          {"ABC-123"},
+					"Ce-Type":        {"com.example.test"},
+					"Ce-Source":      {"http://example.com/source"},
+					"Content-Type":   {"application/json"},
+				},
+			},
+			want: &cloudevents.Event{
+				Context: cloudevents.EventContextV03{
+					SpecVersion:     cloudevents.CloudEventsVersionV03,
+					Type:            "com.example.test",
+					Source:          *source,
+					ID:              "ABC-123",
+					DataContentType: "application/json",
+				},
+			},
+		},
+		"simple v0.3 structured": {
+			codec: http.Codec{Encoding: http.StructuredV03},
+			msg: &http.Message{
+				Header: map[string][]string{
+					"Content-Type": {"application/cloudevents+json"},
+				},
+				Body: func() []byte {
+					body := map[string]interface{}{
+						"specversion": "0.3",
+						"id":          "ABC-123",
+						"type":        "com.example.test",
+						"source":      "http://example.com/source",
+					}
+					return toBytes(body)
+				}(),
+			},
+			want: &cloudevents.Event{
+				Context: cloudevents.EventContextV03{
+					SpecVersion: cloudevents.CloudEventsVersionV03,
 					Type:        "com.example.test",
 					Source:      *source,
 					ID:          "ABC-123",
@@ -245,7 +336,7 @@ func TestCodecDecode(t *testing.T) {
 
 		// Conversion tests.
 
-		"simple v1 binary -> v2 binary": {
+		"simple v0.1 binary -> v0.2 binary": {
 			codec: http.Codec{Encoding: http.BinaryV02},
 			msg: &http.Message{
 				Header: map[string][]string{
@@ -266,7 +357,7 @@ func TestCodecDecode(t *testing.T) {
 				},
 			},
 		},
-		"simple v1 structured -> v2 structured": {
+		"simple v0.1 structured -> v0.2 structured": {
 			codec: http.Codec{Encoding: http.StructuredV02},
 			msg: &http.Message{
 				Header: map[string][]string{
@@ -291,7 +382,7 @@ func TestCodecDecode(t *testing.T) {
 				},
 			},
 		},
-		"simple v2 binary -> v1 binary": {
+		"simple v0.2 binary -> v0.1 binary": {
 			codec: http.Codec{Encoding: http.BinaryV01},
 			msg: &http.Message{
 				Header: map[string][]string{
@@ -312,7 +403,7 @@ func TestCodecDecode(t *testing.T) {
 				},
 			},
 		},
-		"simple v2 structured -> v1 structured": {
+		"simple v0.2 structured -> v0.1 structured": {
 			codec: http.Codec{Encoding: http.StructuredV01},
 			msg: &http.Message{
 				Header: map[string][]string{
@@ -337,6 +428,8 @@ func TestCodecDecode(t *testing.T) {
 				},
 			},
 		},
+		// TODO:: add the v0.3 conversion tests. Might want to think of a new way to do this.
+		// The tests are getting very long...
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
@@ -376,7 +469,7 @@ func TestCodecRoundTrip(t *testing.T) {
 			want    cloudevents.Event
 			wantErr error
 		}{
-			"simple data": {
+			"simple data v0.1": {
 				codec: http.Codec{Encoding: encoding},
 				event: cloudevents.Event{
 					Context: cloudevents.EventContextV01{
@@ -403,7 +496,7 @@ func TestCodecRoundTrip(t *testing.T) {
 					},
 				},
 			},
-			"struct data": {
+			"struct data v0.1": {
 				codec: http.Codec{Encoding: encoding},
 				event: cloudevents.Event{
 					Context: cloudevents.EventContextV01{
@@ -430,6 +523,7 @@ func TestCodecRoundTrip(t *testing.T) {
 					},
 				},
 			},
+			// TODO: add tests for other versions. (note not really needed because these is tested internally too)
 		}
 		for n, tc := range testCases {
 			n = fmt.Sprintf("%s, %s", encoding, n)
@@ -484,12 +578,13 @@ func TestCodecRoundTrip(t *testing.T) {
 	}
 }
 
+// Tests v0.1 -> X -> v0.1
 func TestCodecAsMiddleware(t *testing.T) {
 	sourceUrl, _ := url.Parse("http://example.com/source")
 	source := &types.URLRef{URL: *sourceUrl}
 
 	for _, contentType := range []string{"application/json", "application/xml"} {
-		for _, encoding := range []http.Encoding{http.BinaryV01, http.BinaryV02, http.StructuredV01, http.StructuredV02} {
+		for _, encoding := range []http.Encoding{http.BinaryV01, http.BinaryV02, http.BinaryV03, http.StructuredV01, http.StructuredV02, http.StructuredV03} {
 
 			testCases := map[string]struct {
 				codec   http.Codec
@@ -497,6 +592,7 @@ func TestCodecAsMiddleware(t *testing.T) {
 				want    cloudevents.Event
 				wantErr error
 			}{
+				// TODO: this is commented out because xml does not support maps.
 				//"simple data": {
 				//	codec: http.Codec{Encoding: encoding},
 				//	event: cloudevents.Event{

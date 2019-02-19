@@ -34,7 +34,7 @@ type EventContextV02 struct {
 
 var _ EventContext = (*EventContextV02)(nil)
 
-func (ec EventContextV02) DataContentType() string {
+func (ec EventContextV02) GetDataContentType() string {
 	return ec.ContentType
 }
 
@@ -69,4 +69,18 @@ func (ec EventContextV02) AsV01() EventContextV01 {
 func (ec EventContextV02) AsV02() EventContextV02 {
 	ec.SpecVersion = CloudEventsVersionV02
 	return ec
+}
+
+func (ec EventContextV02) AsV03() EventContextV03 {
+	ret := EventContextV03{
+		SpecVersion:     CloudEventsVersionV03,
+		ID:              ec.ID,
+		Time:            ec.Time,
+		Type:            ec.Type,
+		SchemaURL:       ec.SchemaURL,
+		DataContentType: ec.ContentType,
+		Source:          ec.Source,
+		Extensions:      ec.Extensions,
+	}
+	return ret
 }

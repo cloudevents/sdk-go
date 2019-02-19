@@ -37,7 +37,7 @@ type EventContextV01 struct {
 
 var _ EventContext = (*EventContextV01)(nil)
 
-func (ec EventContextV01) DataContentType() string {
+func (ec EventContextV01) GetDataContentType() string {
 	// TODO: there are cases where there is char encoding info on the content type.
 	// Fix this for these cases as we find them.
 	if strings.HasSuffix(ec.ContentType, "json") {
@@ -78,4 +78,9 @@ func (ec EventContextV01) AsV02() EventContextV02 {
 		ret.Extensions = nil
 	}
 	return ret
+}
+
+func (ec EventContextV01) AsV03() EventContextV03 {
+	ecv2 := ec.AsV02()
+	return ecv2.AsV03()
 }

@@ -12,6 +12,7 @@ type Codec struct {
 
 	v01 *CodecV01
 	v02 *CodecV02
+	v03 *CodecV03
 }
 
 var _ transport.Codec = (*Codec)(nil)
@@ -34,8 +35,15 @@ func (c *Codec) Encode(e cloudevents.Event) (transport.Message, error) {
 			c.v02 = &CodecV02{Encoding: c.Encoding}
 		}
 		return c.v02.Encode(e)
+	case BinaryV03:
+		fallthrough
+	case StructuredV03:
+		if c.v03 == nil {
+			c.v03 = &CodecV03{Encoding: c.Encoding}
+		}
+		return c.v03.Encode(e)
 	default:
-		return nil, fmt.Errorf("unknown encoding: %d", c.Encoding)
+		return nil, fmt.Errorf("unknown encoding: %s", c.Encoding)
 	}
 }
 
@@ -59,6 +67,19 @@ func (c *Codec) Decode(msg transport.Message) (*cloudevents.Event, error) {
 			c.v02 = &CodecV02{Encoding: c.Encoding}
 		}
 		if event, err := c.v02.Decode(msg); err != nil {
+			return nil, err
+		} else {
+			return c.convertEvent(event), nil
+		}
+	case BinaryV03:
+		fallthrough
+	case StructuredV03:
+		fallthrough
+	case BatchedV03:
+		if c.v03 == nil {
+			c.v03 = &CodecV03{Encoding: c.Encoding}
+		}
+		if event, err := c.v03.Decode(msg); err != nil {
 			return nil, err
 		} else {
 			return c.convertEvent(event), nil
@@ -94,6 +115,17 @@ func (c *Codec) convertEvent(event *cloudevents.Event) *cloudevents.Event {
 		ctx := event.Context.AsV02()
 		event.Context = ctx
 		return event
+	case BinaryV03:
+		fallthrough
+	case StructuredV03:
+		fallthrough
+	case BatchedV03:
+		if c.v03 == nil {
+			c.v03 = &CodecV03{Encoding: c.Encoding}
+		}
+		ctx := event.Context.AsV03()
+		event.Context = ctx
+		return event
 	default:
 		return nil
 	}
@@ -115,6 +147,15 @@ func (c *Codec) inspectEncoding(msg transport.Message) Encoding {
 	}
 	// Try v0.2.
 	encoding = c.v02.inspectEncoding(msg)
+	if encoding != Unknown {
+		return encoding
+	}
+
+	if c.v03 == nil {
+		c.v03 = &CodecV03{Encoding: c.Encoding}
+	}
+	// Try v0.3.
+	encoding = c.v03.inspectEncoding(msg)
 	if encoding != Unknown {
 		return encoding
 	}
