@@ -62,6 +62,12 @@ Checkout the sample [sender](./cmd/samples/sender) and
       nil/empty.
 - [x] Might be nice to have the client have a Receive hook.
 
+### Webhook
+- [ ] Implement Auth in webhook
+- [ ] Implement Callback in webhook
+- [ ] Implement Allowed Origin
+- [ ] Implement Allowed Rate
+
 ### JSON
 - [ ] Support json value as body. 
 
