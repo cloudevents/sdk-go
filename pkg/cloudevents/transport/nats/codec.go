@@ -10,6 +10,7 @@ type Codec struct {
 	Encoding Encoding
 
 	v02 *CodecV02
+	v03 *CodecV03
 }
 
 var _ transport.Codec = (*Codec)(nil)
@@ -23,6 +24,11 @@ func (c *Codec) Encode(e cloudevents.Event) (transport.Message, error) {
 			c.v02 = &CodecV02{Encoding: c.Encoding}
 		}
 		return c.v02.Encode(e)
+	case StructuredV03:
+		if c.v03 == nil {
+			c.v03 = &CodecV03{Encoding: c.Encoding}
+		}
+		return c.v03.Encode(e)
 	default:
 		return nil, fmt.Errorf("unknown encoding: %d", c.Encoding)
 	}

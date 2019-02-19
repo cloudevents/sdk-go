@@ -70,6 +70,7 @@ Checkout the sample [sender](./cmd/samples/sender) and
 
 ### Nats
 - [ ] Plumb in auth for the nats server.
+- [ ] v0.2 and v0.3 are very similar. Combine decode logic?
 
 ### For v3
 - [ ] Support batch json
