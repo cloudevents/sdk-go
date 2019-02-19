@@ -38,6 +38,12 @@ func (t *Transport) loadCodec() bool {
 			fallthrough
 		case StructuredV02:
 			t.codec = &CodecV02{Encoding: t.Encoding}
+		case BinaryV03:
+			fallthrough
+		case StructuredV03:
+			fallthrough
+		case BatchedV03:
+			t.codec = &CodecV03{Encoding: t.Encoding}
 		default:
 			return false
 		}

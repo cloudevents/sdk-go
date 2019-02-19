@@ -6,6 +6,7 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	cloudeventshttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+	cloudeventsnats "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/nats"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"github.com/google/uuid"
 	"github.com/kelseyhightower/envconfig"
@@ -96,7 +97,7 @@ func _main(args []string, env envConfig) int {
 
 	for _, contentType := range []string{"application/json", "application/xml"} {
 		// HTTP
-		for _, encoding := range []cloudeventshttp.Encoding{cloudeventshttp.BinaryV01, cloudeventshttp.StructuredV01, cloudeventshttp.BinaryV02, cloudeventshttp.StructuredV02} {
+		for _, encoding := range []cloudeventshttp.Encoding{cloudeventshttp.Default, cloudeventshttp.BinaryV01, cloudeventshttp.StructuredV01, cloudeventshttp.BinaryV02, cloudeventshttp.StructuredV02, cloudeventshttp.BinaryV03, cloudeventshttp.StructuredV03} {
 
 			c, err := client.NewHttpClient(context.TODO(), env.HttpTarget, encoding)
 			if err != nil {
@@ -117,20 +118,22 @@ func _main(args []string, env envConfig) int {
 		}
 
 		// NATS
-		c, err := client.NewNatsClient(context.TODO(), env.NatsServer, env.Subject)
-		if err != nil {
-			log.Printf("failed to create client, %v", err)
-			return 1
-		}
-		if err := doDemo(
-			c,
-			"com.cloudevents.sample.nats.sent",
-			fmt.Sprintf("Hello, %s!", "default nats encoding"),
-			contentType,
-			*source,
-		); err != nil {
-			log.Printf("failed to do nats demo: %v, %s", err, contentType)
-			return 1
+		for _, encoding := range []cloudeventsnats.Encoding{cloudeventsnats.Default, cloudeventsnats.StructuredV02, cloudeventsnats.StructuredV03} {
+			c, err := client.NewNatsClient(context.TODO(), env.NatsServer, env.Subject, encoding)
+			if err != nil {
+				log.Printf("failed to create client, %v", err)
+				return 1
+			}
+			if err := doDemo(
+				c,
+				"com.cloudevents.sample.nats.sent",
+				fmt.Sprintf("Hello, %s!", encoding),
+				contentType,
+				*source,
+			); err != nil {
+				log.Printf("failed to do nats demo: %v, %s", err, contentType)
+				return 1
+			}
 		}
 	}
 

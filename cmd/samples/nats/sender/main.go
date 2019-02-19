@@ -72,7 +72,7 @@ func _main(args []string, env envConfig) int {
 
 	seq := 0
 	for _, contentType := range []string{"application/json", "application/xml"} {
-		c, err := client.NewNatsClient(context.TODO(), env.NatsServer, env.Subject)
+		c, err := client.NewNatsClient(context.TODO(), env.NatsServer, env.Subject, 0)
 		if err != nil {
 			log.Printf("failed to create client, %v", err)
 			return 1

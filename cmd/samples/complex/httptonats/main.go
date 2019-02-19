@@ -61,7 +61,7 @@ func (r *Receiver) Receive(event cloudevents.Event) {
 
 func _main(args []string, env envConfig) int {
 
-	c, err := client.NewNatsClient(context.TODO(), env.NatsServer, env.Subject)
+	c, err := client.NewNatsClient(context.TODO(), env.NatsServer, env.Subject, 0)
 	if err != nil {
 		log.Printf("failed to create client, %v", err)
 		return 1
