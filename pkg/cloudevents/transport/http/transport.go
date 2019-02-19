@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
-	"github.com/davecgh/go-spew/spew"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -139,7 +138,7 @@ func status(resp *http.Response) string {
 func (t *Transport) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		log.Printf("failed to handle request: %s %s", err, spew.Sdump(r))
+		log.Printf("failed to handle request: %s %v", err, r)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(`{"error":"Invalid request"}`))
 		return
@@ -158,7 +157,7 @@ func (t *Transport) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	event, err := t.codec.Decode(msg)
 	if err != nil {
-		log.Printf("failed to decode message: %s %s", err, spew.Sdump(msg))
+		log.Printf("failed to decode message: %s %v", err, r)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(`{"error":"Decoding Error"}`))
 		return
