@@ -61,6 +61,7 @@ Checkout the sample [sender](./cmd/samples/sender) and
 - [ ] Fill in Event.Context defaults with values (like ID and time) if 
       nil/empty.
 - [x] Might be nice to have the client have a Receive hook.
+- [ ] Might be an issue with zero body length requests.
 
 ### Webhook
 - [ ] Implement Auth in webhook
