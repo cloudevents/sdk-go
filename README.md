@@ -55,7 +55,8 @@ Checkout the sample [sender](./cmd/samples/sender) and
 
 ### General 
 
-- [ ] Add more tests for edge cases
+- [ ] increase `./pkg` code coverage to > 90%. (70% as of Feb 19, 2019)
+- [ ] Most tests are happy path, add sad path tests (edge cases).
 - [ ] Use contexts to override internal defaults.
 - [ ] Fill in Event.Context defaults with values (like ID and time) if 
       nil/empty.
