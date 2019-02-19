@@ -37,6 +37,20 @@ func TestCodecDecode(t *testing.T) {
 			in:   []byte(`{}`),
 			want: &DataExample{},
 		},
+		"simple array": {
+			in: []byte(`["apple","banana"]`),
+			want: &[]string{
+				"apple",
+				"banana",
+			},
+		},
+		"simple quoted array": {
+			in: []byte(`"[\"apple\",\"banana\"]"`),
+			want: &[]string{
+				"apple",
+				"banana",
+			},
+		},
 		"complex filled": {
 			in: func() []byte {
 				data := &DataExample{

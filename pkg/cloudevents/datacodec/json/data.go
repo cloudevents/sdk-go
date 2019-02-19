@@ -25,7 +25,7 @@ func Decode(in, out interface{}) error {
 		if err != nil {
 			return err
 		}
-		if len(s) > 0 && s[0] == '{' {
+		if len(s) > 0 && (s[0] == '{' || s[0] == '[') {
 			// looks like json, use it
 			b = []byte(s)
 		}
