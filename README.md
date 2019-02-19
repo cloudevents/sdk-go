@@ -59,7 +59,10 @@ Checkout the sample [sender](./cmd/samples/sender) and
 - [ ] Use contexts to override internal defaults.
 - [ ] Fill in Event.Context defaults with values (like ID and time) if 
       nil/empty.
-- [ ] Might be nice to have the client have a Receive hook.
+- [x] Might be nice to have the client have a Receive hook.
+
+### JSON
+- [ ] Support json value as body. 
 
 ### HTTP
 - [ ] Support overrides for method.
@@ -67,6 +70,9 @@ Checkout the sample [sender](./cmd/samples/sender) and
 
 ### Nats
 - [ ] Plumb in auth for the nats server.
+
+### For v3
+- [ ] Support batch json
 
 ## Existing Go for CloudEvents
 

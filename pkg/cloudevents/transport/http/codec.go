@@ -12,6 +12,7 @@ type Codec struct {
 
 	v01 *CodecV01
 	v02 *CodecV02
+	v03 *CodecV03
 }
 
 var _ transport.Codec = (*Codec)(nil)
@@ -63,6 +64,19 @@ func (c *Codec) Decode(msg transport.Message) (*cloudevents.Event, error) {
 		} else {
 			return c.convertEvent(event), nil
 		}
+	case BinaryV03:
+		fallthrough
+	case StructuredV03:
+		fallthrough
+	case BatchedV03:
+		if c.v03 == nil {
+			c.v03 = &CodecV03{Encoding: c.Encoding}
+		}
+		if event, err := c.v03.Decode(msg); err != nil {
+			return nil, err
+		} else {
+			return c.convertEvent(event), nil
+		}
 	default:
 		return nil, fmt.Errorf("unknown encoding for message %v", msg)
 	}
@@ -94,6 +108,17 @@ func (c *Codec) convertEvent(event *cloudevents.Event) *cloudevents.Event {
 		ctx := event.Context.AsV02()
 		event.Context = ctx
 		return event
+	case BinaryV03:
+		fallthrough
+	case StructuredV03:
+		fallthrough
+	case BatchedV03:
+		if c.v03 == nil {
+			c.v03 = &CodecV03{Encoding: c.Encoding}
+		}
+		ctx := event.Context.AsV03()
+		event.Context = ctx
+		return event
 	default:
 		return nil
 	}
@@ -115,6 +140,15 @@ func (c *Codec) inspectEncoding(msg transport.Message) Encoding {
 	}
 	// Try v0.2.
 	encoding = c.v02.inspectEncoding(msg)
+	if encoding != Unknown {
+		return encoding
+	}
+
+	if c.v03 == nil {
+		c.v03 = &CodecV03{Encoding: c.Encoding}
+	}
+	// Try v0.3.
+	encoding = c.v03.inspectEncoding(msg)
 	if encoding != Unknown {
 		return encoding
 	}

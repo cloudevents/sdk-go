@@ -24,7 +24,7 @@ func TestCodecV01_Encode(t *testing.T) {
 		want    *http.Message
 		wantErr error
 	}{
-		"simple v1 default": {
+		"simple v0.1 default": {
 			codec: http.CodecV01{},
 			event: cloudevents.Event{
 				Context: cloudevents.EventContextV01{
@@ -44,7 +44,7 @@ func TestCodecV01_Encode(t *testing.T) {
 				},
 			},
 		},
-		"full v1 default": {
+		"full v0.1 default": {
 			codec: http.CodecV01{},
 			event: cloudevents.Event{
 				Context: cloudevents.EventContextV01{
@@ -78,7 +78,7 @@ func TestCodecV01_Encode(t *testing.T) {
 				Body: []byte(`{"hello":"world"}`),
 			},
 		},
-		"simple v1 binary": {
+		"simple v0.1 binary": {
 			codec: http.CodecV01{Encoding: http.BinaryV01},
 			event: cloudevents.Event{
 				Context: cloudevents.EventContextV01{
@@ -97,7 +97,7 @@ func TestCodecV01_Encode(t *testing.T) {
 				},
 			},
 		},
-		"full v1 binary": {
+		"full v0.1 binary": {
 			codec: http.CodecV01{Encoding: http.BinaryV01},
 			event: cloudevents.Event{
 				Context: cloudevents.EventContextV01{
@@ -131,7 +131,7 @@ func TestCodecV01_Encode(t *testing.T) {
 				Body: []byte(`{"hello":"world"}`),
 			},
 		},
-		"simple v1 structured": {
+		"simple v0.1 structured": {
 			codec: http.CodecV01{Encoding: http.StructuredV01},
 			event: cloudevents.Event{
 				Context: cloudevents.EventContextV01{
@@ -156,7 +156,7 @@ func TestCodecV01_Encode(t *testing.T) {
 				}(),
 			},
 		},
-		"full v1 structured": {
+		"full v0.1 structured": {
 			codec: http.CodecV01{Encoding: http.StructuredV01},
 			event: cloudevents.Event{
 				Context: cloudevents.EventContextV01{
@@ -244,7 +244,7 @@ func TestCodecV01_Decode(t *testing.T) {
 		want    *cloudevents.Event
 		wantErr error
 	}{
-		"simple v1 binary": {
+		"simple v0.1 binary": {
 			codec: http.CodecV01{},
 			msg: &http.Message{
 				Header: map[string][]string{
@@ -265,7 +265,7 @@ func TestCodecV01_Decode(t *testing.T) {
 				},
 			},
 		},
-		"full v1 binary": {
+		"full v0.1 binary": {
 			codec: http.CodecV01{},
 			msg: &http.Message{
 				Header: map[string][]string{
@@ -302,7 +302,7 @@ func TestCodecV01_Decode(t *testing.T) {
 				}),
 			},
 		},
-		"simple v1 structured": {
+		"simple v0.1 structured": {
 			codec: http.CodecV01{},
 			msg: &http.Message{
 				Header: map[string][]string{
@@ -324,7 +324,7 @@ func TestCodecV01_Decode(t *testing.T) {
 				},
 			},
 		},
-		"full v1 structured": {
+		"full v0.1 structured": {
 			codec: http.CodecV01{},
 			msg: &http.Message{
 				Header: map[string][]string{

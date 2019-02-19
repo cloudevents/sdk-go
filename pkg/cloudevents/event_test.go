@@ -41,11 +41,23 @@ func TestGetDataContentType(t *testing.T) {
 			},
 			want: "application/json",
 		},
+		"min v03, blank": {
+			event: ce.Event{
+				Context: MinEventContextV03(),
+			},
+			want: "",
+		},
+		"full v03, json": {
+			event: ce.Event{
+				Context: FullEventContextV03(now),
+			},
+			want: "application/json",
+		},
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 
-			got := tc.event.Context.DataContentType()
+			got := tc.event.Context.GetDataContentType()
 
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("unexpected (-want, +got) = %v", diff)
@@ -153,23 +165,32 @@ func MinEventContextV01() ce.EventContextV01 {
 	source := &types.URLRef{URL: *sourceUrl}
 
 	return ce.EventContextV01{
-		CloudEventsVersion: ce.CloudEventsVersionV01,
-		EventType:          "com.example.simple",
-		Source:             *source,
-		EventID:            "ABC-123",
-	}
+		EventType: "com.example.simple",
+		Source:    *source,
+		EventID:   "ABC-123",
+	}.AsV01()
 }
 
 func MinEventContextV02() ce.EventContextV02 {
 	sourceUrl, _ := url.Parse("http://example.com/source")
-	source := &types.URLRef{*sourceUrl}
+	source := &types.URLRef{URL: *sourceUrl}
 
 	return ce.EventContextV02{
-		SpecVersion: ce.CloudEventsVersionV02,
-		Type:        "com.example.simple",
-		Source:      *source,
-		ID:          "ABC-123",
-	}
+		Type:   "com.example.simple",
+		Source: *source,
+		ID:     "ABC-123",
+	}.AsV02()
+}
+
+func MinEventContextV03() ce.EventContextV03 {
+	sourceUrl, _ := url.Parse("http://example.com/source")
+	source := &types.URLRef{URL: *sourceUrl}
+
+	return ce.EventContextV03{
+		Type:   "com.example.simple",
+		Source: *source,
+		ID:     "ABC-123",
+	}.AsV03()
 }
 
 func FullEventContextV01(now types.Timestamp) ce.EventContextV01 {
@@ -183,16 +204,15 @@ func FullEventContextV01(now types.Timestamp) ce.EventContextV01 {
 	extensions["test"] = "extended"
 
 	return ce.EventContextV01{
-		CloudEventsVersion: ce.CloudEventsVersionV01,
-		EventID:            "ABC-123",
-		EventTime:          &now,
-		EventType:          "com.example.simple",
-		EventTypeVersion:   "v1alpha1",
-		SchemaURL:          schema,
-		ContentType:        "application/json",
-		Source:             *source,
-		Extensions:         extensions,
-	}
+		EventID:          "ABC-123",
+		EventTime:        &now,
+		EventType:        "com.example.simple",
+		EventTypeVersion: "v1alpha1",
+		SchemaURL:        schema,
+		ContentType:      "application/json",
+		Source:           *source,
+		Extensions:       extensions,
+	}.AsV01()
 }
 
 func FullEventContextV02(now types.Timestamp) ce.EventContextV02 {
@@ -207,7 +227,6 @@ func FullEventContextV02(now types.Timestamp) ce.EventContextV02 {
 	extensions["eventTypeVersion"] = "v1alpha1"
 
 	return ce.EventContextV02{
-		SpecVersion: ce.CloudEventsVersionV02,
 		ID:          "ABC-123",
 		Time:        &now,
 		Type:        "com.example.simple",
@@ -215,5 +234,27 @@ func FullEventContextV02(now types.Timestamp) ce.EventContextV02 {
 		ContentType: "application/json",
 		Source:      *source,
 		Extensions:  extensions,
-	}
+	}.AsV02()
+}
+
+func FullEventContextV03(now types.Timestamp) ce.EventContextV03 {
+	sourceUrl, _ := url.Parse("http://example.com/source")
+	source := &types.URLRef{URL: *sourceUrl}
+
+	schemaUrl, _ := url.Parse("http://example.com/schema")
+	schema := &types.URLRef{URL: *schemaUrl}
+
+	extensions := make(map[string]interface{})
+	extensions["test"] = "extended"
+	extensions["eventTypeVersion"] = "v1alpha1"
+
+	return ce.EventContextV03{
+		ID:              "ABC-123",
+		Time:            &now,
+		Type:            "com.example.simple",
+		SchemaURL:       schema,
+		DataContentType: "application/json",
+		Source:          *source,
+		Extensions:      extensions,
+	}.AsV03()
 }

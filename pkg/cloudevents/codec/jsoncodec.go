@@ -24,6 +24,14 @@ func JsonEncodeV02(e cloudevents.Event) ([]byte, error) {
 	return jsonEncode(ctx, e.Data)
 }
 
+func JsonEncodeV03(e cloudevents.Event) ([]byte, error) {
+	ctx := e.Context.AsV03()
+	if ctx.DataContentType == "" {
+		ctx.DataContentType = "application/json"
+	}
+	return jsonEncode(ctx, e.Data)
+}
+
 func jsonEncode(ctx cloudevents.EventContext, data interface{}) ([]byte, error) {
 	ctxb, err := marshalEvent(ctx)
 	if err != nil {
@@ -37,7 +45,7 @@ func jsonEncode(ctx cloudevents.EventContext, data interface{}) ([]byte, error) 
 		return nil, err
 	}
 
-	dataContentType := ctx.DataContentType()
+	dataContentType := ctx.GetDataContentType()
 	datab, err := marshalEventData(dataContentType, data)
 	if err != nil {
 		return nil, err
@@ -85,6 +93,28 @@ func JsonDecodeV01(body []byte) (*cloudevents.Event, error) {
 
 func JsonDecodeV02(body []byte) (*cloudevents.Event, error) {
 	ec := cloudevents.EventContextV02{}
+	if err := json.Unmarshal(body, &ec); err != nil {
+		return nil, err
+	}
+
+	raw := make(map[string]json.RawMessage)
+
+	if err := json.Unmarshal(body, &raw); err != nil {
+		return nil, err
+	}
+	var data interface{}
+	if d, ok := raw["data"]; ok {
+		data = []byte(d)
+	}
+
+	return &cloudevents.Event{
+		Context: ec,
+		Data:    data,
+	}, nil
+}
+
+func JsonDecodeV03(body []byte) (*cloudevents.Event, error) {
+	ec := cloudevents.EventContextV03{}
 	if err := json.Unmarshal(body, &ec); err != nil {
 		return nil, err
 	}

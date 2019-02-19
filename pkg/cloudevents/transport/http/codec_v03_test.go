@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func TestCodecV02_Encode(t *testing.T) {
+func TestCodecV03_Encode(t *testing.T) {
 	now := types.Timestamp{Time: time.Now()}
 	sourceUrl, _ := url.Parse("http://example.com/source")
 	source := &types.URLRef{URL: *sourceUrl}
@@ -19,15 +19,15 @@ func TestCodecV02_Encode(t *testing.T) {
 	schema := &types.URLRef{URL: *schemaUrl}
 
 	testCases := map[string]struct {
-		codec   http.CodecV02
+		codec   http.CodecV03
 		event   cloudevents.Event
 		want    *http.Message
 		wantErr error
 	}{
-		"simple v0.2 default": {
-			codec: http.CodecV02{},
+		"simple v0.3 default": {
+			codec: http.CodecV03{},
 			event: cloudevents.Event{
-				Context: cloudevents.EventContextV02{
+				Context: cloudevents.EventContextV03{
 					Type:   "com.example.test",
 					Source: *source,
 					ID:     "ABC-123",
@@ -35,7 +35,7 @@ func TestCodecV02_Encode(t *testing.T) {
 			},
 			want: &http.Message{
 				Header: map[string][]string{
-					"Ce-Specversion": {"0.2"},
+					"Ce-Specversion": {"0.3"},
 					"Ce-Id":          {"ABC-123"},
 					"Ce-Type":        {"com.example.test"},
 					"Ce-Source":      {"http://example.com/source"},
@@ -43,16 +43,16 @@ func TestCodecV02_Encode(t *testing.T) {
 				},
 			},
 		},
-		"full v0.2 default": {
-			codec: http.CodecV02{},
+		"full v0.3 default": {
+			codec: http.CodecV03{},
 			event: cloudevents.Event{
-				Context: cloudevents.EventContextV02{
-					ID:          "ABC-123",
-					Time:        &now,
-					Type:        "com.example.test",
-					SchemaURL:   schema,
-					ContentType: "application/json",
-					Source:      *source,
+				Context: cloudevents.EventContextV03{
+					ID:              "ABC-123",
+					Time:            &now,
+					Type:            "com.example.test",
+					SchemaURL:       schema,
+					DataContentType: "application/json",
+					Source:          *source,
 					Extensions: map[string]interface{}{
 						"test": "extended",
 					},
@@ -63,7 +63,7 @@ func TestCodecV02_Encode(t *testing.T) {
 			},
 			want: &http.Message{
 				Header: map[string][]string{
-					"Ce-Specversion": {"0.2"},
+					"Ce-Specversion": {"0.3"},
 					"Ce-Id":          {"ABC-123"},
 					"Ce-Time":        {now.Format(time.RFC3339Nano)},
 					"Ce-Type":        {"com.example.test"},
@@ -75,10 +75,10 @@ func TestCodecV02_Encode(t *testing.T) {
 				Body: []byte(`{"hello":"world"}`),
 			},
 		},
-		"simple v0.2 binary": {
-			codec: http.CodecV02{Encoding: http.BinaryV02},
+		"simple v0.3 binary": {
+			codec: http.CodecV03{Encoding: http.BinaryV03},
 			event: cloudevents.Event{
-				Context: cloudevents.EventContextV02{
+				Context: cloudevents.EventContextV03{
 					Type:   "com.example.test",
 					Source: *source,
 					ID:     "ABC-123",
@@ -86,7 +86,7 @@ func TestCodecV02_Encode(t *testing.T) {
 			},
 			want: &http.Message{
 				Header: map[string][]string{
-					"Ce-Specversion": {"0.2"},
+					"Ce-Specversion": {"0.3"},
 					"Ce-Id":          {"ABC-123"},
 					"Ce-Type":        {"com.example.test"},
 					"Ce-Source":      {"http://example.com/source"},
@@ -94,16 +94,16 @@ func TestCodecV02_Encode(t *testing.T) {
 				},
 			},
 		},
-		"full v0.2 binary": {
-			codec: http.CodecV02{Encoding: http.BinaryV02},
+		"full v0.3 binary": {
+			codec: http.CodecV03{Encoding: http.BinaryV03},
 			event: cloudevents.Event{
-				Context: cloudevents.EventContextV02{
-					ID:          "ABC-123",
-					Time:        &now,
-					Type:        "com.example.test",
-					SchemaURL:   schema,
-					ContentType: "application/json",
-					Source:      *source,
+				Context: cloudevents.EventContextV03{
+					ID:              "ABC-123",
+					Time:            &now,
+					Type:            "com.example.test",
+					SchemaURL:       schema,
+					DataContentType: "application/json",
+					Source:          *source,
 					Extensions: map[string]interface{}{
 						"test": "extended",
 						"asmap": map[string]interface{}{
@@ -122,7 +122,7 @@ func TestCodecV02_Encode(t *testing.T) {
 			},
 			want: &http.Message{
 				Header: map[string][]string{
-					"Ce-Specversion": {"0.2"},
+					"Ce-Specversion": {"0.3"},
 					"Ce-Id":          {"ABC-123"},
 					"Ce-Time":        {now.Format(time.RFC3339Nano)},
 					"Ce-Type":        {"com.example.test"},
@@ -137,10 +137,10 @@ func TestCodecV02_Encode(t *testing.T) {
 				Body: []byte(`{"hello":"world"}`),
 			},
 		},
-		"simple v0.2 structured": {
-			codec: http.CodecV02{Encoding: http.StructuredV02},
+		"simple v0.3 structured": {
+			codec: http.CodecV03{Encoding: http.StructuredV03},
 			event: cloudevents.Event{
-				Context: cloudevents.EventContextV02{
+				Context: cloudevents.EventContextV03{
 					Type:   "com.example.test",
 					Source: *source,
 					ID:     "ABC-123",
@@ -152,26 +152,26 @@ func TestCodecV02_Encode(t *testing.T) {
 				},
 				Body: func() []byte {
 					body := map[string]interface{}{
-						"contenttype": "application/json",
-						"specversion": "0.2",
-						"id":          "ABC-123",
-						"type":        "com.example.test",
-						"source":      "http://example.com/source",
+						"datacontenttype": "application/json",
+						"specversion":     "0.3",
+						"id":              "ABC-123",
+						"type":            "com.example.test",
+						"source":          "http://example.com/source",
 					}
 					return toBytes(body)
 				}(),
 			},
 		},
-		"full v0.2 structured": {
-			codec: http.CodecV02{Encoding: http.StructuredV02},
+		"full v0.3 structured": {
+			codec: http.CodecV03{Encoding: http.StructuredV03},
 			event: cloudevents.Event{
-				Context: cloudevents.EventContextV02{
-					ID:          "ABC-123",
-					Time:        &now,
-					Type:        "com.example.test",
-					SchemaURL:   schema,
-					ContentType: "application/json",
-					Source:      *source,
+				Context: cloudevents.EventContextV03{
+					ID:              "ABC-123",
+					Time:            &now,
+					Type:            "com.example.test",
+					SchemaURL:       schema,
+					DataContentType: "application/json",
+					Source:          *source,
 					Extensions: map[string]interface{}{
 						"test": "extended",
 					},
@@ -186,8 +186,8 @@ func TestCodecV02_Encode(t *testing.T) {
 				},
 				Body: func() []byte {
 					body := map[string]interface{}{
-						"specversion": "0.2",
-						"contenttype": "application/json",
+						"specversion":     "0.3",
+						"datacontenttype": "application/json",
 						"data": map[string]interface{}{
 							"hello": "world",
 						},
@@ -235,9 +235,9 @@ func TestCodecV02_Encode(t *testing.T) {
 	}
 }
 
-// TODO: figure out extensions for v0.2
+// TODO: figure out extensions for v0.3
 
-func TestCodecV02_Decode(t *testing.T) {
+func TestCodecV03_Decode(t *testing.T) {
 	now := types.Timestamp{Time: time.Now()}
 	sourceUrl, _ := url.Parse("http://example.com/source")
 	source := &types.URLRef{URL: *sourceUrl}
@@ -246,16 +246,16 @@ func TestCodecV02_Decode(t *testing.T) {
 	schema := &types.URLRef{URL: *schemaUrl}
 
 	testCases := map[string]struct {
-		codec   http.CodecV02
+		codec   http.CodecV03
 		msg     *http.Message
 		want    *cloudevents.Event
 		wantErr error
 	}{
-		"simple v0.2 binary": {
-			codec: http.CodecV02{},
+		"simple v0.3 binary": {
+			codec: http.CodecV03{},
 			msg: &http.Message{
 				Header: map[string][]string{
-					"ce-specversion": {"0.2"},
+					"ce-specversion": {"0.3"},
 					"ce-id":          {"ABC-123"},
 					"ce-type":        {"com.example.test"},
 					"ce-source":      {"http://example.com/source"},
@@ -263,20 +263,20 @@ func TestCodecV02_Decode(t *testing.T) {
 				},
 			},
 			want: &cloudevents.Event{
-				Context: cloudevents.EventContextV02{
-					SpecVersion: cloudevents.CloudEventsVersionV02,
-					ContentType: "application/json",
-					Type:        "com.example.test",
-					Source:      *source,
-					ID:          "ABC-123",
+				Context: cloudevents.EventContextV03{
+					SpecVersion:     cloudevents.CloudEventsVersionV03,
+					DataContentType: "application/json",
+					Type:            "com.example.test",
+					Source:          *source,
+					ID:              "ABC-123",
 				},
 			},
 		},
-		"full v0.2 binary": {
-			codec: http.CodecV02{},
+		"full v0.3 binary": {
+			codec: http.CodecV03{},
 			msg: &http.Message{
 				Header: map[string][]string{
-					"ce-specversion": {"0.2"},
+					"ce-specversion": {"0.3"},
 					"ce-id":          {"ABC-123"},
 					"ce-time":        {now.Format(time.RFC3339Nano)},
 					"ce-type":        {"com.example.test"},
@@ -293,14 +293,14 @@ func TestCodecV02_Decode(t *testing.T) {
 				}),
 			},
 			want: &cloudevents.Event{
-				Context: cloudevents.EventContextV02{
-					SpecVersion: cloudevents.CloudEventsVersionV02,
-					ID:          "ABC-123",
-					Time:        &now,
-					Type:        "com.example.test",
-					SchemaURL:   schema,
-					ContentType: "application/json",
-					Source:      *source,
+				Context: cloudevents.EventContextV03{
+					SpecVersion:     cloudevents.CloudEventsVersionV03,
+					ID:              "ABC-123",
+					Time:            &now,
+					Type:            "com.example.test",
+					SchemaURL:       schema,
+					DataContentType: "application/json",
+					Source:          *source,
 					Extensions: map[string]interface{}{
 						"test": "extended",
 						"asmap": map[string]interface{}{
@@ -315,37 +315,37 @@ func TestCodecV02_Decode(t *testing.T) {
 				}),
 			},
 		},
-		"simple v0.2 structured": {
-			codec: http.CodecV02{},
+		"simple v0.3 structured": {
+			codec: http.CodecV03{},
 			msg: &http.Message{
 				Header: map[string][]string{
 					"Content-Type": {"application/cloudevents+json"},
 				},
 				Body: toBytes(map[string]interface{}{
-					"specversion": "0.2",
+					"specversion": "0.3",
 					"id":          "ABC-123",
 					"type":        "com.example.test",
 					"source":      "http://example.com/source",
 				}),
 			},
 			want: &cloudevents.Event{
-				Context: cloudevents.EventContextV02{
-					SpecVersion: cloudevents.CloudEventsVersionV02,
+				Context: cloudevents.EventContextV03{
+					SpecVersion: cloudevents.CloudEventsVersionV03,
 					Type:        "com.example.test",
 					Source:      *source,
 					ID:          "ABC-123",
 				},
 			},
 		},
-		"full v0.2 structured": {
-			codec: http.CodecV02{},
+		"full v0.3 structured": {
+			codec: http.CodecV03{},
 			msg: &http.Message{
 				Header: map[string][]string{
 					"Content-Type": {"application/cloudevents+json"},
 				},
 				Body: toBytes(map[string]interface{}{
-					"specversion": "0.2",
-					"contenttype": "application/json",
+					"specversion":     "0.3",
+					"datacontenttype": "application/json",
 					"data": map[string]interface{}{
 						"hello": "world",
 					},
@@ -360,14 +360,14 @@ func TestCodecV02_Decode(t *testing.T) {
 				}),
 			},
 			want: &cloudevents.Event{
-				Context: cloudevents.EventContextV02{
-					SpecVersion: cloudevents.CloudEventsVersionV02,
-					ID:          "ABC-123",
-					Time:        &now,
-					Type:        "com.example.test",
-					SchemaURL:   schema,
-					ContentType: "application/json",
-					Source:      *source,
+				Context: cloudevents.EventContextV03{
+					SpecVersion:     cloudevents.CloudEventsVersionV03,
+					ID:              "ABC-123",
+					Time:            &now,
+					Type:            "com.example.test",
+					SchemaURL:       schema,
+					DataContentType: "application/json",
+					Source:          *source,
 					Extensions: map[string]interface{}{
 						"test": "extended",
 					},

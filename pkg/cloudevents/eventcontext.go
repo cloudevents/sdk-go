@@ -11,7 +11,12 @@ type EventContext interface {
 	// from extensions as necessary.
 	AsV02() EventContextV02
 
-	// DataContentType returns the MIME content type for encoding data, which is
+	// AsV03 provides a translation from whatever the "native" encoding of the
+	// CloudEvent was to the equivalent in v0.3 field names, moving fields to or
+	// from extensions as necessary.
+	AsV03() EventContextV03
+
+	// GetDataContentType returns the MIME content type for encoding data, which is
 	// needed by both encoding and decoding.
-	DataContentType() string
+	GetDataContentType() string
 }

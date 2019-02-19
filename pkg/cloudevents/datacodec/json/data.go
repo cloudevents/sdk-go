@@ -20,6 +20,7 @@ func Decode(in, out interface{}) error {
 		}
 	}
 
+	// TODO: the spec says json could be just data... At the moment we expect wrapped.
 	if len(b) > 1 && (b[0] == byte('"') || (b[0] == byte('\\') && b[1] == byte('"'))) {
 		s, err := strconv.Unquote(string(b))
 		if err != nil {
