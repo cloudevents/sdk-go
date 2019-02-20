@@ -62,6 +62,8 @@ Checkout the sample [sender](./cmd/samples/sender) and
       nil/empty.
 - [x] Might be nice to have the client have a Receive hook.
 - [ ] Might be an issue with zero body length requests.
+- [ ] Need a change to the client to make making events easier
+- [ ] Implement String() for event context
 
 ### Webhook
 - [ ] Implement Auth in webhook
