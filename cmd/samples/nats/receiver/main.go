@@ -4,9 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	cloudeventsnats "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/nats"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	"github.com/kelseyhightower/envconfig"
-	"github.com/nats-io/go-nats"
 	"log"
 	"os"
 )
@@ -28,14 +27,12 @@ func main() {
 	os.Exit(_main(os.Args[1:], env))
 }
 
-type Receiver struct{}
-
 type Example struct {
 	Sequence int    `json:"id"`
 	Message  string `json:"message"`
 }
 
-func (r *Receiver) Receive(event cloudevents.Event) {
+func receive(event cloudevents.Event) {
 	fmt.Printf("Got Event Context: %+v\n", event.Context)
 
 	data := &Example{}
@@ -49,29 +46,19 @@ func (r *Receiver) Receive(event cloudevents.Event) {
 
 func _main(args []string, env envConfig) int {
 
-	conn, err := nats.Connect(env.NatsServer)
-	if err != nil {
-		log.Fatalf("failed to connect to nats server, %s", err.Error())
-	}
-
-	r := &Receiver{}
-	t := &cloudeventsnats.Transport{
-		Conn:     conn,
-		Receiver: r,
-	}
-
 	ctx := context.TODO()
 
-	err = t.Listen(ctx, env.Subject)
+	c, err := client.NewNatsClient(ctx, env.NatsServer, env.Subject, 0)
 	if err != nil {
-		log.Fatalf("failed to listen, %s", err.Error())
+		log.Fatalf("failed to create nats client, %s", err.Error())
+	}
+
+	if err := c.StartReceiver(receive); err != nil {
+		log.Fatalf("failed to start nats receiver, %s", err.Error())
 	}
 
 	// Wait until done.
 	<-ctx.Done()
-
-	// Close connection.
-	conn.Close()
 
 	return 0
 }

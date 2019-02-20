@@ -19,4 +19,11 @@ type EventContext interface {
 	// GetDataContentType returns the MIME content type for encoding data, which is
 	// needed by both encoding and decoding.
 	GetDataContentType() string
+
+	// GetSpecVersion returns the native CloudEvents Spec version of the event
+	// context.
+	GetSpecVersion() string
+
+	// GetType returns the CloudEvents type from the context.
+	GetType() string
 }

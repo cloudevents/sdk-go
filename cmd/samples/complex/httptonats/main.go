@@ -5,10 +5,8 @@ import (
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	cloudeventshttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 	"github.com/kelseyhightower/envconfig"
 	"log"
-	"net/http"
 	"os"
 )
 
@@ -61,18 +59,22 @@ func (r *Receiver) Receive(event cloudevents.Event) {
 
 func _main(args []string, env envConfig) int {
 
-	c, err := client.NewNatsClient(context.TODO(), env.NatsServer, env.Subject, 0)
+	ctx := context.TODO()
+
+	nc, err := client.NewNatsClient(ctx, env.NatsServer, env.Subject, 0)
 	if err != nil {
 		log.Printf("failed to create client, %v", err)
 		return 1
 	}
 
-	t := &cloudeventshttp.Transport{
-		Receiver: &Receiver{Client: c},
+	r := &Receiver{Client: nc}
+
+	if err := client.StartHttpReceiver(&ctx, r.Receive); err != nil {
+		log.Printf("failed to StartHttpReceiver, %v", err)
 	}
 
 	log.Printf("listening on port %s\n", env.Port)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", env.Port), t))
+	<-ctx.Done()
 
 	return 0
 }

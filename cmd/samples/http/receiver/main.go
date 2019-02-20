@@ -43,12 +43,7 @@ func _main(args []string, env envConfig) int {
 
 	ctx := client.ContextWithPort(context.TODO(), env.Port)
 
-	c, err := client.NewHttpClient(ctx, "", 0)
-	if err != nil {
-		log.Fatalf("failed to create client: %s", err.Error())
-	}
-
-	if err = c.StartReceiver(gotEvent); err != nil {
+	if err := client.StartHttpReceiver(&ctx, gotEvent); err != nil {
 		log.Fatalf("failed to start receiver: %s", err.Error())
 	}
 

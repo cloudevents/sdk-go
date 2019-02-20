@@ -160,6 +160,65 @@ func TestDataAs(t *testing.T) {
 	}
 }
 
+func TestString(t *testing.T) {
+	now := types.Timestamp{Time: time.Now()}
+
+	testCases := map[string]struct {
+		event ce.Event
+		want  string
+	}{
+		"empty v0.1": {
+			event: ce.Event{
+				Context: MinEventContextV01(),
+			},
+			want: "SpecVersion: 0.1\nType: com.example.simple",
+		},
+		"empty v0.2": {
+			event: ce.Event{
+				Context: MinEventContextV02(),
+			},
+			want: "SpecVersion: 0.2\nType: com.example.simple",
+		},
+		"empty v0.3": {
+			event: ce.Event{
+				Context: MinEventContextV03(),
+			},
+			want: "SpecVersion: 0.3\nType: com.example.simple",
+		},
+		"json simple, v0.1": {
+			event: ce.Event{
+				Context: FullEventContextV01(now),
+				Data:    []byte(`{"a":"apple","b":"banana"}`),
+			},
+			want: "SpecVersion: 0.1\nType: com.example.simple\nDataContentType: application/json",
+		},
+		"json simple, v0.2": {
+			event: ce.Event{
+				Context: FullEventContextV02(now),
+				Data:    []byte(`{"a":"apple","b":"banana"}`),
+			},
+			want: "SpecVersion: 0.2\nType: com.example.simple\nDataContentType: application/json",
+		},
+		"json simple, v0.3": {
+			event: ce.Event{
+				Context: FullEventContextV03(now),
+				Data:    []byte(`{"a":"apple","b":"banana"}`),
+			},
+			want: "SpecVersion: 0.3\nType: com.example.simple\nDataContentType: application/json",
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+
+			got := tc.event.String()
+
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("unexpected string (-want, +got) = %v", diff)
+			}
+		})
+	}
+}
+
 func MinEventContextV01() ce.EventContextV01 {
 	sourceUrl, _ := url.Parse("http://example.com/source")
 	source := &types.URLRef{URL: *sourceUrl}
