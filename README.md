@@ -55,6 +55,8 @@ Checkout the sample [sender](./cmd/samples/sender) and
 
 ### General 
 
+- [ ] Add details to what the samples are showing.
+- [ ] Add a sample to show how to use the transport without the client.
 - [ ] increase `./pkg` code coverage to > 90%. (70% as of Feb 19, 2019)
 - [ ] Most tests are happy path, add sad path tests (edge cases).
 - [ ] Use contexts to override internal defaults.
@@ -90,6 +92,4 @@ Checkout the sample [sender](./cmd/samples/sender) and
 Existing projects that added support for CloudEvents in Go are listed below. 
 It's our goal to identify existing patterns of using CloudEvents in Go-based 
 project and design the SDK to support these patterns (where it makes sense).
-- https://github.com/knative/pkg/tree/master/cloudevents
-- https://github.com/vmware/dispatch/blob/master/pkg/events/cloudevent.go
 - https://github.com/serverless/event-gateway/tree/master/event
