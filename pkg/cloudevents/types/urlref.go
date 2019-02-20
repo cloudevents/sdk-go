@@ -23,8 +23,8 @@ func ParseURLRef(u string) *URLRef {
 
 // This allows json marshaling to always be in RFC3339Nano format.
 func (u URLRef) MarshalJSON() ([]byte, error) {
-	rfc3339 := fmt.Sprintf("%q", u.String())
-	return []byte(rfc3339), nil
+	b := fmt.Sprintf("%q", u.String())
+	return []byte(b), nil
 }
 
 func (u *URLRef) UnmarshalJSON(b []byte) error {
@@ -34,4 +34,11 @@ func (u *URLRef) UnmarshalJSON(b []byte) error {
 	}
 	*u = *ParseURLRef(ref)
 	return nil
+}
+
+func (u *URLRef) String() string {
+	if u == nil {
+		return ""
+	}
+	return u.URL.String()
 }
