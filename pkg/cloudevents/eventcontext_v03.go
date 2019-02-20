@@ -35,8 +35,19 @@ type EventContextV03 struct {
 
 var _ EventContext = (*EventContextV03)(nil)
 
+func (ec EventContextV03) GetSpecVersion() string {
+	if ec.SpecVersion != "" {
+		return ec.SpecVersion
+	}
+	return CloudEventsVersionV03
+}
+
 func (ec EventContextV03) GetDataContentType() string {
 	return ec.DataContentType
+}
+
+func (ec EventContextV03) GetType() string {
+	return ec.Type
 }
 
 func (ec EventContextV03) AsV01() EventContextV01 {

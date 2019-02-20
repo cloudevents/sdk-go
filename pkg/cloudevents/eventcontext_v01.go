@@ -37,6 +37,13 @@ type EventContextV01 struct {
 
 var _ EventContext = (*EventContextV01)(nil)
 
+func (ec EventContextV01) GetSpecVersion() string {
+	if ec.CloudEventsVersion != "" {
+		return ec.CloudEventsVersion
+	}
+	return CloudEventsVersionV01
+}
+
 func (ec EventContextV01) GetDataContentType() string {
 	// TODO: there are cases where there is char encoding info on the content type.
 	// Fix this for these cases as we find them.
@@ -47,6 +54,10 @@ func (ec EventContextV01) GetDataContentType() string {
 		return "application/xml"
 	}
 	return ec.ContentType
+}
+
+func (ec EventContextV01) GetType() string {
+	return ec.EventType
 }
 
 func (ec EventContextV01) AsV01() EventContextV01 {
