@@ -2,64 +2,94 @@
 
 [![go-doc](https://godoc.org/github.com/cloudevents/sdk-go?status.svg)](https://godoc.org/github.com/cloudevents/sdk-go)
 
-**NOTE: This SDK is still considered work in progress, things might (and will) break with every update.**
-
-## New for v0.2
-For this release extensions have been moved to top level properties. Previously extensions were defined in an extensions map, which was itself a top level property. All CloudEvent properties can be accessed using the generic Get method, or the type checked versions, e.g. GetString, GetMap, etc., but only the well known properties allow for direct field access. The marshallers handle packing and unpacking the extensions into an internal map.
-
-This release also makes significant changes to the CloudEvent property names. All property names on the wire are now lower case with no separator characters. This ensures that these names are recognized across transports, which have different standards for property names. This release also removes the redundant 'event' prefix on property names. So EventType becomes Type and EventID become ID, etc. One special case is CloudEventsVersion, which becomes SpecVersion. 
+**NOTE: This SDK is still considered work in progress, things might (and will) 
+break with every update.**
 
 ## Working with CloudEvents
-Package cloudevents provides primitives to work with CloudEvents specification: https://github.com/cloudevents/spec.
+Package [cloudevents](./pkg/cloudevents) provides primitives to work with 
+CloudEvents specification: https://github.com/cloudevents/spec.
 
-Parsing Event from HTTP Request:
+Receiving a cloudevents.Event via the Http Transport:
+
 ```go
-import "github.com/cloudevents/sdk-go"
-	marshaller := v02.NewDefaultHTTPMarshaller()
-	// req is *http.Request
-	event, err := marshaller.FromRequest(req)
-	if err != nil {
-		panic("Unable to parse event from http Request: " + err.String())
-	}
-	fmt.Printf("type: %s", event.Get("type")
-```
+type Receiver struct{}
 
-Creating a minimal CloudEvent in version 0.2:
-```go
-import "github.com/cloudevents/sdk-go/v02"
-	event := v02.Event{
-		Type:        "com.example.file.created",
-		Source:           "/providers/Example.COM/storage/account#fileServices/default/{new-file}",
-		ID:          "ea35b24ede421",
-	}
-```
+func (r *Receiver) Receive(event cloudevents.Event) {
+	// do something with event.Context and event.Data (via event.DataAs(foo) 
+}
 
-Creating HTTP request from CloudEvent:
-```
-marshaller := v02.NewDefaultHTTPMarshaller()
-var req *http.Request
-err := marshaller.ToRequest(req)
-if err != nil {
-	panic("Unable to marshal event into http Request: " + err.String())
+func main() {
+	t := &cloudeventshttp.Transport{Receiver: &Receiver{}}
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", env.Port), t))
 }
 ```
 
-The goal of this package is to provide support for all released versions of CloudEvents, ideally while maintaining
-the same API. It will use semantic versioning with following rules:
-* MAJOR version increments when backwards incompatible changes is introduced.
-* MINOR version increments when backwards compatible feature is introduced INCLUDING support for new CloudEvents version.
-* PATCH version increments when a backwards compatible bug fix is introduced.
+Creating a minimal CloudEvent in version 0.2:
 
+```go
+event := cloudevents.Event{
+    Context: cloudevents.EventContextV02{
+        ID:     uuid.New().String(),
+        Type:   "com.cloudevents.readme.sent",
+        Source: types.ParseURLRef("http://localhost:8080/"),
+    },
+}
+```
+
+Sending a cloudevents.Event via the Http Transport with Binary v0.2 encoding:
+
+```go
+c, err := client.NewHttpClient(context.TODO(), "http://localhost:8080/", cloudeventshttp.BinaryV02)
+if err != nil {
+	panic("unable to create cloudevent client: " + err.Error())
+}
+if err := c.Send(event); err != nil {
+	panic("failed to send cloudevent: " + err.Error())
+}
+```
+
+Checkout the sample [sender](./cmd/samples/sender) and 
+[receiver](./cmd/samples/receiver) applications for working demo. 
 
 ## TODO list
 
-- [ ] Add encoders registry, where SDK user can register their custom content-type encoders/decoders
-- [ ] Add more tests for edge cases
+### General 
+
+- [ ] Add details to what the samples are showing.
+- [ ] Add a sample to show how to use the transport without the client.
+- [ ] increase `./pkg` code coverage to > 90%. (70% as of Feb 19, 2019)
+- [ ] Most tests are happy path, add sad path tests (edge cases).
+- [ ] Use contexts to override internal defaults.
+- [ ] Fill in Event.Context defaults with values (like ID and time) if 
+      nil/empty.
+- [x] Might be nice to have the client have a Receive hook.
+- [ ] Might be an issue with zero body length requests.
+- [ ] Need a change to the client to make making events easier
+- [ ] Implement String() for event context
+
+### Webhook
+- [ ] Implement Auth in webhook
+- [ ] Implement Callback in webhook
+- [ ] Implement Allowed Origin
+- [ ] Implement Allowed Rate
+
+### JSON
+- [ ] Support json value as body. 
+
+### HTTP
+- [ ] Support overrides for method.
+- [ ] Merge headers from context on send.
+
+### Nats
+- [ ] Plumb in auth for the nats server.
+- [ ] v0.2 and v0.3 are very similar. Combine decode logic?
+
+### For v3
+- [ ] Support batch json
 
 ## Existing Go for CloudEvents
 
-Existing projects that added support for CloudEvents in Go are listed below. It's our goal to identify existing patterns
-of using CloudEvents in Go-based project and design the SDK to support these patterns (where it makes sense).
-- https://github.com/knative/pkg/tree/master/cloudevents
-- https://github.com/vmware/dispatch/blob/master/pkg/events/cloudevent.go
+Existing projects that added support for CloudEvents in Go are listed below. 
+It's our goal to identify existing patterns of using CloudEvents in Go-based 
+project and design the SDK to support these patterns (where it makes sense).
 - https://github.com/serverless/event-gateway/tree/master/event
