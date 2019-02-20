@@ -18,9 +18,12 @@ type DataExample struct {
 func TestAllocate(t *testing.T) {
 	testCases := map[string]struct {
 		obj  interface{}
-		like interface{}
 		want interface{}
 	}{
+		"nil": {
+			obj:  nil,
+			want: nil,
+		},
 		"map": {
 			obj: map[string]string{
 				"test": "case",
@@ -40,6 +43,12 @@ func TestAllocate(t *testing.T) {
 		},
 		"struct": {
 			obj: DataExample{
+				AnInt: 42,
+			},
+			want: &DataExample{},
+		},
+		"pointer": {
+			obj: &DataExample{
 				AnInt: 42,
 			},
 			want: &DataExample{},
