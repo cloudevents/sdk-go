@@ -107,7 +107,7 @@ func (ec EventContextV01) AsV03() EventContextV03 {
 // Validate returns errors based on requirements from the CloudEvents spec.
 // For more details, see https://github.com/cloudevents/spec/blob/v0.1/spec.md
 func (ec EventContextV01) Validate() error {
-	sb := strings.Builder{}
+	errors := []string(nil)
 
 	// eventType
 	// Type: String
@@ -117,10 +117,7 @@ func (ec EventContextV01) Validate() error {
 	// 	SHOULD be prefixed with a reverse-DNS name. The prefixed domain dictates the organization which defines the semantics of this event type.
 	eventType := strings.TrimSpace(ec.EventType)
 	if eventType == "" {
-		if sb.Len() > 0 {
-			sb.WriteString("\n")
-		}
-		sb.WriteString("eventType: MUST be a non-empty string")
+		errors = append(errors, "eventType: MUST be a non-empty string")
 	}
 
 	// eventTypeVersion
@@ -131,10 +128,7 @@ func (ec EventContextV01) Validate() error {
 	if ec.EventTypeVersion != nil {
 		eventTypeVersion := strings.TrimSpace(*ec.EventTypeVersion)
 		if eventTypeVersion == "" {
-			if sb.Len() > 0 {
-				sb.WriteString("\n")
-			}
-			sb.WriteString("eventTypeVersion: if present, MUST be a non-empty string")
+			errors = append(errors, "eventTypeVersion: if present, MUST be a non-empty string")
 		}
 	}
 
@@ -145,10 +139,7 @@ func (ec EventContextV01) Validate() error {
 	// 	MUST be a non-empty string
 	cloudEventsVersion := strings.TrimSpace(ec.CloudEventsVersion)
 	if cloudEventsVersion == "" {
-		if sb.Len() > 0 {
-			sb.WriteString("\n")
-		}
-		sb.WriteString("cloudEventsVersion: MUST be a non-empty string")
+		errors = append(errors, "cloudEventsVersion: MUST be a non-empty string")
 	}
 
 	// source
@@ -157,10 +148,7 @@ func (ec EventContextV01) Validate() error {
 	// 	REQUIRED
 	source := strings.TrimSpace(ec.Source.String())
 	if source == "" {
-		if sb.Len() > 0 {
-			sb.WriteString("\n")
-		}
-		sb.WriteString("source: REQUIRED")
+		errors = append(errors, "source: REQUIRED")
 	}
 
 	// eventID
@@ -171,10 +159,7 @@ func (ec EventContextV01) Validate() error {
 	// 	MUST be unique within the scope of the producer
 	eventID := strings.TrimSpace(ec.EventID)
 	if eventID == "" {
-		if sb.Len() > 0 {
-			sb.WriteString("\n")
-		}
-		sb.WriteString("eventID: MUST be a non-empty string")
+		errors = append(errors, "eventID: MUST be a non-empty string")
 
 		// no way to test "MUST be unique within the scope of the producer"
 	}
@@ -195,10 +180,7 @@ func (ec EventContextV01) Validate() error {
 		schemaURL := strings.TrimSpace(ec.SchemaURL.String())
 		// empty string is not RFC 3986 compatible.
 		if schemaURL == "" {
-			if sb.Len() > 0 {
-				sb.WriteString("\n")
-			}
-			sb.WriteString("schemaURL: if present, MUST adhere to the format specified in RFC 3986")
+			errors = append(errors, "schemaURL: if present, MUST adhere to the format specified in RFC 3986")
 		}
 	}
 
@@ -210,11 +192,8 @@ func (ec EventContextV01) Validate() error {
 	if ec.ContentType != nil {
 		contentType := strings.TrimSpace(*ec.ContentType)
 		if contentType == "" {
-			if sb.Len() > 0 {
-				sb.WriteString("\n")
-			}
 			// TODO: need to test for RFC 2046
-			sb.WriteString("contentType: if present, MUST adhere to the format specified in RFC 2046")
+			errors = append(errors, "contentType: if present, MUST adhere to the format specified in RFC 2046")
 		}
 	}
 
@@ -225,15 +204,12 @@ func (ec EventContextV01) Validate() error {
 	// 	If present, MUST contain at least one entry
 	if ec.Extensions != nil {
 		if len(ec.Extensions) == 0 {
-			if sb.Len() > 0 {
-				sb.WriteString("\n")
-			}
-			sb.WriteString("extensions: if present, MUST contain at least one entry")
+			errors = append(errors, "extensions: if present, MUST contain at least one entry")
 		}
 	}
 
-	if sb.Len() > 0 {
-		return fmt.Errorf(sb.String())
+	if len(errors) > 0 {
+		return fmt.Errorf(strings.Join(errors, "\n"))
 	}
 	return nil
 }
