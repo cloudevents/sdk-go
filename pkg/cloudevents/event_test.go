@@ -6,6 +6,7 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"github.com/google/go-cmp/cmp"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 )
@@ -160,6 +161,73 @@ func TestDataAs(t *testing.T) {
 	}
 }
 
+func TestValidate(t *testing.T) {
+	now := types.Timestamp{Time: time.Now()}
+
+	testCases := map[string]struct {
+		event ce.Event
+		want  []string
+	}{
+		"min valid v0.1": {
+			event: ce.Event{
+				Context: MinEventContextV01(),
+			},
+		},
+		"min valid v0.2": {
+			event: ce.Event{
+				Context: MinEventContextV02(),
+			},
+			want: []string{"not implemented"},
+		},
+		"min valid v0.3": {
+			event: ce.Event{
+				Context: MinEventContextV03(),
+			},
+			want: []string{"not implemented"},
+		},
+		"json valid, v0.1": {
+			event: ce.Event{
+				Context: FullEventContextV01(now),
+				Data:    []byte(`{"a":"apple","b":"banana"}`),
+			},
+		},
+		"json valid, v0.2": {
+			event: ce.Event{
+				Context: FullEventContextV02(now),
+				Data:    []byte(`{"a":"apple","b":"banana"}`),
+			},
+			want: []string{"not implemented"},
+		},
+		"json valid, v0.3": {
+			event: ce.Event{
+				Context: FullEventContextV03(now),
+				Data:    []byte(`{"a":"apple","b":"banana"}`),
+			},
+			want: []string{"not implemented"},
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+
+			got := tc.event.Validate()
+			var gotErr string
+			if got != nil {
+				gotErr = got.Error()
+
+				if len(tc.want) == 0 {
+					t.Errorf("unexpected no error, got %q", gotErr)
+				}
+			}
+
+			for _, want := range tc.want {
+				if !strings.Contains(gotErr, want) {
+					t.Errorf("unexpected error, expected to contain %q, got: %q ", want, gotErr)
+				}
+			}
+		})
+	}
+}
+
 func TestString(t *testing.T) {
 	now := types.Timestamp{Time: time.Now()}
 
@@ -219,6 +287,10 @@ func TestString(t *testing.T) {
 	}
 }
 
+func strptr(s string) *string {
+	return &s
+}
+
 func MinEventContextV01() ce.EventContextV01 {
 	sourceUrl, _ := url.Parse("http://example.com/source")
 	source := &types.URLRef{URL: *sourceUrl}
@@ -266,9 +338,9 @@ func FullEventContextV01(now types.Timestamp) ce.EventContextV01 {
 		EventID:          "ABC-123",
 		EventTime:        &now,
 		EventType:        "com.example.simple",
-		EventTypeVersion: "v1alpha1",
+		EventTypeVersion: strptr("v1alpha1"),
 		SchemaURL:        schema,
-		ContentType:      "application/json",
+		ContentType:      strptr("application/json"),
 		Source:           *source,
 		Extensions:       extensions,
 	}.AsV01()

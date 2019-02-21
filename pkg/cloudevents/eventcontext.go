@@ -26,4 +26,6 @@ type EventContext interface {
 
 	// GetType returns the CloudEvents type from the context.
 	GetType() string
+
+	Validate() error
 }

@@ -1,6 +1,7 @@
 package cloudevents
 
 import (
+	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"strings"
 )
@@ -23,12 +24,12 @@ type EventContextV01 struct {
 	// Type of occurrence which has happened.
 	EventType string `json:"eventType"`
 	// The version of the `eventType`; this is producer-specific.
-	EventTypeVersion string `json:"eventTypeVersion,omitempty"`
+	EventTypeVersion *string `json:"eventTypeVersion,omitempty"`
 	// A link to the schema that the `data` attribute adheres to.
 	SchemaURL *types.URLRef `json:"schemaURL,omitempty"`
 	// A MIME (RFC 2046) string describing the media type of `data`.
 	// TODO: Should an empty string assume `application/json`, or auto-detect the content?
-	ContentType string `json:"contentType,omitempty"`
+	ContentType *string `json:"contentType,omitempty"`
 	// A URI describing the event producer.
 	Source types.URLRef `json:"source"`
 	// Additional metadata without a well-defined structure.
@@ -47,13 +48,16 @@ func (ec EventContextV01) GetSpecVersion() string {
 func (ec EventContextV01) GetDataContentType() string {
 	// TODO: there are cases where there is char encoding info on the content type.
 	// Fix this for these cases as we find them.
-	if strings.HasSuffix(ec.ContentType, "json") {
-		return "application/json"
+	if ec.ContentType != nil {
+		if strings.HasSuffix(*ec.ContentType, "json") {
+			return "application/json"
+		}
+		if strings.HasSuffix(*ec.ContentType, "xml") {
+			return "application/xml"
+		}
+		return *ec.ContentType
 	}
-	if strings.HasSuffix(ec.ContentType, "xml") {
-		return "application/xml"
-	}
-	return ec.ContentType
+	return ""
 }
 
 func (ec EventContextV01) GetType() string {
@@ -73,12 +77,16 @@ func (ec EventContextV01) AsV02() EventContextV02 {
 		ID:          ec.EventID,
 		Time:        ec.EventTime,
 		SchemaURL:   ec.SchemaURL,
-		ContentType: ec.ContentType,
 		Extensions:  make(map[string]interface{}),
 	}
+
+	if ec.ContentType != nil {
+		ret.ContentType = *ec.ContentType
+	}
+
 	// eventTypeVersion was retired in v0.2, so put it in an extension.
-	if ec.EventTypeVersion != "" {
-		ret.Extensions["eventTypeVersion"] = ec.EventTypeVersion
+	if ec.EventTypeVersion != nil {
+		ret.Extensions["eventTypeVersion"] = *ec.EventTypeVersion
 	}
 	if ec.Extensions != nil {
 		for k, v := range ec.Extensions {
@@ -94,4 +102,138 @@ func (ec EventContextV01) AsV02() EventContextV02 {
 func (ec EventContextV01) AsV03() EventContextV03 {
 	ecv2 := ec.AsV02()
 	return ecv2.AsV03()
+}
+
+// Validate returns errors based on requirements from the CloudEvents spec.
+// For more details, see https://github.com/cloudevents/spec/blob/v0.1/spec.md
+func (ec EventContextV01) Validate() error {
+	sb := strings.Builder{}
+
+	// eventType
+	// Type: String
+	// Constraints:
+	// 	REQUIRED
+	// 	MUST be a non-empty string
+	// 	SHOULD be prefixed with a reverse-DNS name. The prefixed domain dictates the organization which defines the semantics of this event type.
+	eventType := strings.TrimSpace(ec.EventType)
+	if eventType == "" {
+		if sb.Len() > 0 {
+			sb.WriteString("\n")
+		}
+		sb.WriteString("eventType: MUST be a non-empty string")
+	}
+
+	// eventTypeVersion
+	// Type: String
+	// Constraints:
+	// 	OPTIONAL
+	// 	If present, MUST be a non-empty string
+	if ec.EventTypeVersion != nil {
+		eventTypeVersion := strings.TrimSpace(*ec.EventTypeVersion)
+		if eventTypeVersion == "" {
+			if sb.Len() > 0 {
+				sb.WriteString("\n")
+			}
+			sb.WriteString("eventTypeVersion: if present, MUST be a non-empty string")
+		}
+	}
+
+	// cloudEventsVersion
+	// Type: String
+	// Constraints:
+	// 	REQUIRED
+	// 	MUST be a non-empty string
+	cloudEventsVersion := strings.TrimSpace(ec.CloudEventsVersion)
+	if cloudEventsVersion == "" {
+		if sb.Len() > 0 {
+			sb.WriteString("\n")
+		}
+		sb.WriteString("cloudEventsVersion: MUST be a non-empty string")
+	}
+
+	// source
+	// Type: URI
+	// Constraints:
+	// 	REQUIRED
+	source := strings.TrimSpace(ec.Source.String())
+	if source == "" {
+		if sb.Len() > 0 {
+			sb.WriteString("\n")
+		}
+		sb.WriteString("source: REQUIRED")
+	}
+
+	// eventID
+	// Type: String
+	// Constraints:
+	// 	REQUIRED
+	// 	MUST be a non-empty string
+	// 	MUST be unique within the scope of the producer
+	eventID := strings.TrimSpace(ec.EventID)
+	if eventID == "" {
+		if sb.Len() > 0 {
+			sb.WriteString("\n")
+		}
+		sb.WriteString("eventID: MUST be a non-empty string")
+
+		// no way to test "MUST be unique within the scope of the producer"
+	}
+
+	// eventTime
+	// Type: Timestamp
+	// Constraints:
+	// 	OPTIONAL
+	//	If present, MUST adhere to the format specified in RFC 3339
+	// --> no need to test this, no way to set the eventTime without it being valid.
+
+	// schemaURL
+	// Type: URI
+	// Constraints:
+	// 	OPTIONAL
+	// 	If present, MUST adhere to the format specified in RFC 3986
+	if ec.SchemaURL != nil {
+		schemaURL := strings.TrimSpace(ec.SchemaURL.String())
+		// empty string is not RFC 3986 compatible.
+		if schemaURL == "" {
+			if sb.Len() > 0 {
+				sb.WriteString("\n")
+			}
+			sb.WriteString("schemaURL: if present, MUST adhere to the format specified in RFC 3986")
+		}
+	}
+
+	// contentType
+	// Type: String per RFC 2046
+	// Constraints:
+	// 	OPTIONAL
+	// 	If present, MUST adhere to the format specified in RFC 2046
+	if ec.ContentType != nil {
+		contentType := strings.TrimSpace(*ec.ContentType)
+		if contentType == "" {
+			if sb.Len() > 0 {
+				sb.WriteString("\n")
+			}
+			// TODO: need to test for RFC 2046
+			sb.WriteString("contentType: if present, MUST adhere to the format specified in RFC 2046")
+		}
+	}
+
+	// extensions
+	// Type: Map
+	// Constraints:
+	// 	OPTIONAL
+	// 	If present, MUST contain at least one entry
+	if ec.Extensions != nil {
+		if len(ec.Extensions) == 0 {
+			if sb.Len() > 0 {
+				sb.WriteString("\n")
+			}
+			sb.WriteString("extensions: if present, MUST contain at least one entry")
+		}
+	}
+
+	if sb.Len() > 0 {
+		return fmt.Errorf(sb.String())
+	}
+	return nil
 }

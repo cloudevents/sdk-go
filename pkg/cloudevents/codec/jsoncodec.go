@@ -10,8 +10,9 @@ import (
 
 func JsonEncodeV01(e cloudevents.Event) ([]byte, error) {
 	ctx := e.Context.AsV01()
-	if ctx.ContentType == "" {
-		ctx.ContentType = "application/json"
+	if ctx.ContentType == nil {
+		appJson := "application/json"
+		ctx.ContentType = &appJson
 	}
 	return jsonEncode(ctx, e.Data)
 }

@@ -72,14 +72,14 @@ func (v CodecV01) toHeaders(ec cloudevents.EventContextV01) (http.Header, error)
 	if ec.EventTime != nil && !ec.EventTime.IsZero() {
 		h["CE-EventTime"] = []string{ec.EventTime.String()}
 	}
-	if ec.EventTypeVersion != "" {
-		h["CE-EventTypeVersion"] = []string{ec.EventTypeVersion}
+	if ec.EventTypeVersion != nil {
+		h["CE-EventTypeVersion"] = []string{*ec.EventTypeVersion}
 	}
 	if ec.SchemaURL != nil {
 		h["CE-SchemaURL"] = []string{ec.SchemaURL.String()}
 	}
-	if ec.ContentType != "" {
-		h.Set("Content-Type", ec.ContentType)
+	if ec.ContentType != nil {
+		h.Set("Content-Type", *ec.ContentType)
 	} else if v.Encoding == Default || v.Encoding == BinaryV01 {
 		// in binary v0.1, the Content-Type header is tied to ec.ContentType
 		// This was later found to be an issue with the spec, but yolo.
@@ -155,9 +155,13 @@ func (v CodecV01) fromHeaders(h http.Header) (cloudevents.EventContextV01, error
 		ec.Source = *source
 	}
 	ec.EventTime = types.ParseTimestamp(h.Get("CE-EventTime"))
-	ec.EventTypeVersion = h.Get("CE-EventTypeVersion")
+	etv := h.Get("CE-EventTypeVersion")
+	if etv != "" {
+		ec.EventTypeVersion = &etv
+	}
 	ec.SchemaURL = types.ParseURLRef(h.Get("CE-SchemaURL"))
-	ec.ContentType = h.Get("Content-Type")
+	et := h.Get("Content-Type")
+	ec.ContentType = &et
 
 	extensions := make(map[string]interface{})
 	for k, v := range h {

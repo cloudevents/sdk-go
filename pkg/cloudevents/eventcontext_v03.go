@@ -1,6 +1,7 @@
 package cloudevents
 
 import (
+	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 )
 
@@ -72,4 +73,8 @@ func (ec EventContextV03) AsV02() EventContextV02 {
 func (ec EventContextV03) AsV03() EventContextV03 {
 	ec.SpecVersion = CloudEventsVersionV03
 	return ec
+}
+
+func (ec EventContextV03) Validate() error {
+	return fmt.Errorf("not implemented")
 }

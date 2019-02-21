@@ -91,7 +91,7 @@ func _main(args []string, env envConfig) int {
 				EventType:   "com.cloudevents.sample.sent",
 				EventTime:   &types.Timestamp{Time: now},
 				Source:      types.URLRef{URL: d.Source},
-				ContentType: contentType,
+				ContentType: &contentType,
 			}
 			if err := d.Send(ctx, seq); err != nil {
 				log.Printf("failed to send: %v", err)

@@ -83,7 +83,7 @@ func (d *Demo) context() cloudevents.EventContext {
 		EventType:   d.EventType,
 		EventTime:   &types.Timestamp{Time: now},
 		Source:      types.URLRef{URL: d.Source},
-		ContentType: d.ContentType,
+		ContentType: &d.ContentType,
 	}
 	return ctx
 }

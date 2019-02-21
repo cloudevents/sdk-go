@@ -1,6 +1,7 @@
 package cloudevents
 
 import (
+	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"strings"
 )
@@ -56,16 +57,20 @@ func (ec EventContextV02) AsV01() EventContextV01 {
 		EventTime:          ec.Time,
 		EventType:          ec.Type,
 		SchemaURL:          ec.SchemaURL,
-		ContentType:        ec.ContentType,
 		Source:             ec.Source,
 		Extensions:         make(map[string]interface{}),
 	}
+
+	if ec.ContentType != "" {
+		ret.ContentType = &ec.ContentType
+	}
+
 	for k, v := range ec.Extensions {
 		// eventTypeVersion was retired in v0.2
 		if strings.EqualFold(k, "eventTypeVersion") {
 			etv, ok := v.(string)
-			if ok {
-				ret.EventTypeVersion = etv
+			if ok && etv != "" {
+				ret.EventTypeVersion = &etv
 			}
 			continue
 		}
@@ -94,4 +99,8 @@ func (ec EventContextV02) AsV03() EventContextV03 {
 		Extensions:      ec.Extensions,
 	}
 	return ret
+}
+
+func (ec EventContextV02) Validate() error {
+	return fmt.Errorf("not implemented")
 }

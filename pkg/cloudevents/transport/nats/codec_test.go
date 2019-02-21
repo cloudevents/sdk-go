@@ -12,6 +12,10 @@ import (
 	"time"
 )
 
+func strptr(s string) *string {
+	return &s
+}
+
 func TestCodecEncode(t *testing.T) {
 	sourceUrl, _ := url.Parse("http://example.com/source")
 	source := &types.URLRef{URL: *sourceUrl}
@@ -164,7 +168,7 @@ func TestCodecRoundTrip(t *testing.T) {
 						EventType:          "com.example.test",
 						Source:             *source,
 						EventID:            "ABC-123",
-						ContentType:        "application/json",
+						ContentType:        strptr("application/json"),
 					},
 					Data: map[string]interface{}{
 						"a": "apple",
@@ -191,7 +195,7 @@ func TestCodecRoundTrip(t *testing.T) {
 						EventType:          "com.example.test",
 						Source:             *source,
 						EventID:            "ABC-123",
-						ContentType:        "application/json",
+						ContentType:        strptr("application/json"),
 					},
 					Data: &DataExample{
 						AnInt:   42,
@@ -284,7 +288,7 @@ func TestCodecAsMiddleware(t *testing.T) {
 						EventType:          "com.example.test",
 						Source:             *source,
 						EventID:            "ABC-123",
-						ContentType:        "application/json",
+						ContentType:        strptr("application/json"),
 					},
 					Data: map[string]interface{}{
 						"a": "apple",
@@ -311,7 +315,7 @@ func TestCodecAsMiddleware(t *testing.T) {
 						EventType:          "com.example.test",
 						Source:             *source,
 						EventID:            "ABC-123",
-						ContentType:        "application/json",
+						ContentType:        strptr("application/json"),
 					},
 					Data: &DataExample{
 						AnInt:   42,
