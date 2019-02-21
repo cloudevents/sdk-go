@@ -12,15 +12,16 @@ CloudEvents specification: https://github.com/cloudevents/spec.
 Receiving a cloudevents.Event via the Http Transport:
 
 ```go
-type Receiver struct{}
-
-func (r *Receiver) Receive(event cloudevents.Event) {
+func Receive(event cloudevents.Event) {
 	// do something with event.Context and event.Data (via event.DataAs(foo) 
 }
 
 func main() {
-	t := &cloudeventshttp.Transport{Receiver: &Receiver{}}
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", env.Port), t))
+	ctx := context.TODO()
+	if err := client.StartHttpReceiver(ctx, Receive); err != nil {
+		log.Fatal(err)
+	}
+	<-ctx.Done()
 }
 ```
 
