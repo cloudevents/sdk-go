@@ -9,18 +9,14 @@ import (
 )
 
 func NewHttpClient(opts ...ClientOption) (*Client, error) {
-	transport := cloudeventshttp.Transport{}
-
 	c := &Client{
-		ctx:       context.Background(),
-		transport: &transport,
+		transport: &cloudeventshttp.Transport{
+			// Default the request method.
+			Req: &http.Request{
+				Method: http.MethodPost,
+			},
+		},
 	}
-
-	// Default request method.
-	req := http.Request{
-		Method: http.MethodPost,
-	}
-	c.ctx = cloudeventshttp.ContextWithRequest(c.ctx, req)
 
 	if err := c.applyClientOptions(opts...); err != nil {
 		return nil, err
@@ -29,20 +25,19 @@ func NewHttpClient(opts ...ClientOption) (*Client, error) {
 	return c, nil
 }
 
-func StartHttpReceiver(fn Receiver, opts ...ClientOption) (context.Context, error) {
+func StartHttpReceiver(ctx context.Context, fn Receiver, opts ...ClientOption) (*Client, error) {
 	c, err := NewHttpClient(opts...)
 	if err != nil {
 		return nil, err
 	}
-	ctx := ContextWithClient(c.ctx, c)
 
-	if err := c.StartReceiver(fn); err != nil {
-		return ctx, err
+	if err := c.StartReceiver(ctx, fn); err != nil {
+		return c, err
 	}
-	return ctx, nil
+	return c, nil
 }
 
-func (c *Client) startHttpReceiver(t *cloudeventshttp.Transport, fn Receiver) error {
+func (c *Client) startHttpReceiver(ctx context.Context, t *cloudeventshttp.Transport, fn Receiver) error {
 	if c.receiver != nil {
 		return fmt.Errorf("client already has a receiver")
 	}

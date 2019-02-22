@@ -50,7 +50,7 @@ func (r *Receiver) Receive(event cloudevents.Event) {
 
 	fmt.Printf("forwarding...")
 
-	if err := r.Client.Send(event); err != nil {
+	if err := r.Client.Send(context.TODO(), event); err != nil {
 		fmt.Printf("forwarding failed: %s", err.Error())
 	}
 
@@ -60,7 +60,7 @@ func (r *Receiver) Receive(event cloudevents.Event) {
 func _main(args []string, env envConfig) int {
 	ctx := context.Background()
 
-	nc, err := client.NewNatsClient(env.NatsServer, env.Subject, client.WithContext(ctx))
+	nc, err := client.NewNatsClient(env.NatsServer, env.Subject)
 	if err != nil {
 		log.Printf("failed to create client, %v", err)
 		return 1
@@ -68,7 +68,7 @@ func _main(args []string, env envConfig) int {
 
 	r := &Receiver{Client: nc}
 
-	ctx, err = client.StartHttpReceiver(r.Receive, client.WithContext(ctx), client.WithHttpPort(env.Port))
+	_, err = client.StartHttpReceiver(context.TODO(), r.Receive, client.WithHttpPort(env.Port))
 	if err != nil {
 		log.Printf("failed to StartHttpReceiver, %v", err)
 	}

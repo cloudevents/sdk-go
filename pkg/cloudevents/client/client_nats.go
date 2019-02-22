@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"fmt"
 	cloudeventsnats "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/nats"
 	"github.com/nats-io/go-nats"
@@ -27,7 +28,7 @@ func NewNatsClient(natsServer, subject string, opts ...ClientOption) (*Client, e
 	return c, nil
 }
 
-func (c *Client) startNatsReceiver(t *cloudeventsnats.Transport, fn Receiver) error {
+func (c *Client) startNatsReceiver(ctx context.Context, t *cloudeventsnats.Transport, fn Receiver) error {
 	if t.Conn == nil {
 		return fmt.Errorf("nats connection is required to be set")
 	}
@@ -42,7 +43,7 @@ func (c *Client) startNatsReceiver(t *cloudeventsnats.Transport, fn Receiver) er
 	t.Receiver = c
 
 	go func() {
-		if err := t.Listen(c.ctx); err != nil {
+		if err := t.Listen(ctx); err != nil {
 			log.Fatalf("failed to listen, %s", err.Error())
 		}
 	}()

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
@@ -57,7 +58,7 @@ func (d *Demo) Send(eventContext cloudevents.EventContext, i int) error {
 			Message:  d.Message,
 		},
 	}
-	return d.Client.Send(event)
+	return d.Client.Send(context.TODO(), event)
 }
 
 func _main(args []string, env envConfig) int {

@@ -12,16 +12,15 @@ import (
 type Receiver func(event cloudevents.Event)
 
 type Client struct {
-	ctx       context.Context
 	transport transport.Sender
 	receiver  Receiver
 }
 
-func (c *Client) Send(event cloudevents.Event) error {
+func (c *Client) Send(ctx context.Context, event cloudevents.Event) error {
 	if c.transport == nil {
 		return fmt.Errorf("client not ready, transport not initalized")
 	}
-	return c.transport.Send(c.ctx, event)
+	return c.transport.Send(ctx, event)
 }
 
 func (c *Client) Receive(event cloudevents.Event) {
@@ -30,17 +29,17 @@ func (c *Client) Receive(event cloudevents.Event) {
 	}
 }
 
-func (c *Client) StartReceiver(fn Receiver) error {
+func (c *Client) StartReceiver(ctx context.Context, fn Receiver) error {
 	if c.transport == nil {
 		return fmt.Errorf("client not ready, transport not initalized")
 	}
 
 	if t, ok := c.transport.(*http.Transport); ok {
-		return c.startHttpReceiver(t, fn)
+		return c.startHttpReceiver(ctx, t, fn)
 	}
 
 	if t, ok := c.transport.(*nats.Transport); ok {
-		return c.startNatsReceiver(t, fn)
+		return c.startNatsReceiver(ctx, t, fn)
 	}
 
 	return fmt.Errorf("unknown transport type: %T", c.transport)
