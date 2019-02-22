@@ -10,7 +10,7 @@ import (
 
 type ClientOption func(*Client) error
 
-// WithTarget sets the outbound recipient of cloudevents when using a http request.
+// WithTarget sets the outbound recipient of cloudevents when using an HTTP request.
 func WithTarget(targetUrl string) ClientOption {
 	return func(c *Client) error {
 		if t, ok := c.transport.(*http.Transport); ok {
@@ -33,11 +33,11 @@ func WithTarget(targetUrl string) ClientOption {
 				return fmt.Errorf("target option was empty string")
 			}
 		}
-		return fmt.Errorf("invalid client option recieved for given transport type")
+		return fmt.Errorf("invalid target client option recieved for transport type")
 	}
 }
 
-// WithTarget sets the outbound recipient of cloudevents when using a http request.
+// WithHTTPMethod sets the outbound recipient of cloudevents when using an HTTP request.
 func WithHTTPMethod(method string) ClientOption {
 	return func(c *Client) error {
 		if t, ok := c.transport.(*http.Transport); ok {
@@ -51,7 +51,7 @@ func WithHTTPMethod(method string) ClientOption {
 				return fmt.Errorf("context client option was nil")
 			}
 		}
-		return fmt.Errorf("invalid client option recieved for given transport type")
+		return fmt.Errorf("invalid HTTP method client option recieved for transport type")
 	}
 }
 
@@ -62,11 +62,11 @@ func WithHTTPEncoding(encoding http.Encoding) ClientOption {
 			t.Encoding = encoding
 			return nil
 		}
-		return fmt.Errorf("invalid client option recieved for given client type")
+		return fmt.Errorf("invalid HTTP encoding client option recieved for transport type")
 	}
 }
 
-// WithHTTPPort sets the port for accepting requests using HTTP transport.
+// WithHTTPPort sets the port for for clients with HTTP transports.
 func WithHTTPPort(port int) ClientOption {
 	return func(c *Client) error {
 		if t, ok := c.transport.(*http.Transport); ok {
@@ -76,7 +76,7 @@ func WithHTTPPort(port int) ClientOption {
 			t.Port = port
 			return nil
 		}
-		return fmt.Errorf("invalid client option recieved for given client type")
+		return fmt.Errorf("invalid HTTP port client option recieved for transport type")
 	}
 }
 
@@ -87,6 +87,6 @@ func WithNATSEncoding(encoding nats.Encoding) ClientOption {
 			t.Encoding = encoding
 			return nil
 		}
-		return fmt.Errorf("invalid client option recieved for given client type")
+		return fmt.Errorf("invalid NATS encoding client option recieved for transport type")
 	}
 }
