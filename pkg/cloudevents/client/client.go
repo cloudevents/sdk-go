@@ -45,3 +45,12 @@ func (c *Client) StartReceiver(fn Receiver) error {
 
 	return fmt.Errorf("unknown transport type: %T", c.transport)
 }
+
+func (c *Client) applyClientOptions(opts ...ClientOption) error {
+	for _, fn := range opts {
+		if err := fn(c); err != nil {
+			return err
+		}
+	}
+	return nil
+}

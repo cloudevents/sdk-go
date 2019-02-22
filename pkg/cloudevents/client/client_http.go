@@ -22,10 +22,8 @@ func NewHttpClient(opts ...ClientOption) (*Client, error) {
 	}
 	c.ctx = cloudeventshttp.ContextWithRequest(c.ctx, req)
 
-	for _, fn := range opts {
-		if err := fn(c); err != nil {
-			return nil, err
-		}
+	if err := c.applyClientOptions(opts...); err != nil {
+		return nil, err
 	}
 
 	return c, nil

@@ -1,29 +1,29 @@
 package client
 
 import (
-	"context"
 	"fmt"
 	cloudeventsnats "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/nats"
 	"github.com/nats-io/go-nats"
 	"log"
 )
 
-func NewNatsClient(ctx context.Context, natsServer, subject string, encoding cloudeventsnats.Encoding) (*Client, error) {
-	// TODO: context is added to overload defaults. Plumb this.
+func NewNatsClient(natsServer, subject string, opts ...ClientOption) (*Client, error) {
 	conn, err := nats.Connect(natsServer)
 	if err != nil {
 		return nil, err
 	}
 	transport := cloudeventsnats.Transport{
-		Conn:     conn,
-		Encoding: encoding,
+		Conn:    conn,
+		Subject: subject,
 	}
-	// add subject
-	ctx = cloudeventsnats.ContextWithSubject(ctx, subject)
 	c := &Client{
-		ctx:       ctx,
 		transport: &transport,
 	}
+
+	if err := c.applyClientOptions(opts...); err != nil {
+		return nil, err
+	}
+
 	return c, nil
 }
 
@@ -41,13 +41,8 @@ func (c *Client) startNatsReceiver(t *cloudeventsnats.Transport, fn Receiver) er
 	c.receiver = fn
 	t.Receiver = c
 
-	subject := cloudeventsnats.SubjectFromContext(c.ctx)
-	if subject == "" {
-		return fmt.Errorf("subject is required for nats receiver")
-	}
-
 	go func() {
-		if err := t.Listen(c.ctx, subject); err != nil {
+		if err := t.Listen(c.ctx); err != nil {
 			log.Fatalf("failed to listen, %s", err.Error())
 		}
 	}()

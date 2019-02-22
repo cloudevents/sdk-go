@@ -45,10 +45,9 @@ func receive(event cloudevents.Event) {
 }
 
 func _main(args []string, env envConfig) int {
+	ctx := context.Background()
 
-	ctx := context.TODO()
-
-	c, err := client.NewNatsClient(ctx, env.NatsServer, env.Subject, 0)
+	c, err := client.NewNatsClient(env.NatsServer, env.Subject, client.WithContext(ctx))
 	if err != nil {
 		log.Fatalf("failed to create nats client, %s", err.Error())
 	}

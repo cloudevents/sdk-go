@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/nats"
 	"net/url"
 )
 
@@ -80,6 +81,17 @@ func WithHttpPort(port int) ClientOption {
 				return fmt.Errorf("client option was given an invalid port: %d", port)
 			}
 			t.Port = port
+			return nil
+		}
+		return fmt.Errorf("invalid client option recieved for given client type")
+	}
+}
+
+// WithNatsEncoding sets the encoding for clients with NATS transport.
+func WithNatsEncoding(encoding nats.Encoding) ClientOption {
+	return func(c *Client) error {
+		if t, ok := c.transport.(*nats.Transport); ok {
+			t.Encoding = encoding
 			return nil
 		}
 		return fmt.Errorf("invalid client option recieved for given client type")

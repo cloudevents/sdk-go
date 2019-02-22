@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
@@ -72,7 +71,7 @@ func _main(args []string, env envConfig) int {
 
 	seq := 0
 	for _, contentType := range []string{"application/json", "application/xml"} {
-		c, err := client.NewNatsClient(context.TODO(), env.NatsServer, env.Subject, 0)
+		c, err := client.NewNatsClient(env.NatsServer, env.Subject)
 		if err != nil {
 			log.Printf("failed to create client, %v", err)
 			return 1

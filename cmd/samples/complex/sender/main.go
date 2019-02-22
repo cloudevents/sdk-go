@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
@@ -108,7 +107,7 @@ func _main(args []string, env envConfig) int {
 			if err := doDemo(
 				c,
 				"com.cloudevents.sample.http.sent",
-				fmt.Sprintf("Hello, %s!", encoding),
+				fmt.Sprintf("Hello, %s using %s!", encoding, contentType),
 				contentType,
 				*source,
 			); err != nil {
@@ -119,7 +118,7 @@ func _main(args []string, env envConfig) int {
 
 		// NATS
 		for _, encoding := range []cloudeventsnats.Encoding{cloudeventsnats.Default, cloudeventsnats.StructuredV02, cloudeventsnats.StructuredV03} {
-			c, err := client.NewNatsClient(context.TODO(), env.NatsServer, env.Subject, encoding)
+			c, err := client.NewNatsClient(env.NatsServer, env.Subject, client.WithNatsEncoding(encoding))
 			if err != nil {
 				log.Printf("failed to create client, %v", err)
 				return 1
@@ -127,7 +126,7 @@ func _main(args []string, env envConfig) int {
 			if err := doDemo(
 				c,
 				"com.cloudevents.sample.nats.sent",
-				fmt.Sprintf("Hello, %s!", encoding),
+				fmt.Sprintf("Hello, %s using %s!", encoding, contentType),
 				contentType,
 				*source,
 			); err != nil {
