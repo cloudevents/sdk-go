@@ -13,19 +13,19 @@ import (
 
 func TestWithTarget(t *testing.T) {
 	testCases := map[string]struct {
-		c       *Client
+		c       *ceClient
 		target  string
-		want    *Client
+		want    *ceClient
 		wantErr string
 	}{
 		"valid url": {
-			c: &Client{
+			c: &ceClient{
 				transport: &http.Transport{
 					Req: &nethttp.Request{},
 				},
 			},
 			target: "http://localhost:8080/",
-			want: &Client{transport: &http.Transport{
+			want: &ceClient{transport: &http.Transport{
 				Req: &nethttp.Request{
 					URL: func() *url.URL {
 						u, _ := url.Parse("http://localhost:8080/")
@@ -35,11 +35,11 @@ func TestWithTarget(t *testing.T) {
 			}},
 		},
 		"valid url, unset req": {
-			c: &Client{
+			c: &ceClient{
 				transport: &http.Transport{},
 			},
 			target: "http://localhost:8080/",
-			want: &Client{transport: &http.Transport{
+			want: &ceClient{transport: &http.Transport{
 				Req: &nethttp.Request{
 					Method: nethttp.MethodPost,
 					URL: func() *url.URL {
@@ -50,7 +50,7 @@ func TestWithTarget(t *testing.T) {
 			}},
 		},
 		"invalid url": {
-			c: &Client{
+			c: &ceClient{
 				transport: &http.Transport{
 					Req: &nethttp.Request{},
 				},
@@ -59,7 +59,7 @@ func TestWithTarget(t *testing.T) {
 			wantErr: `client option failed to parse target url: parse %: invalid URL escape "%"`,
 		},
 		"empty target": {
-			c: &Client{
+			c: &ceClient{
 				transport: &http.Transport{
 					Req: &nethttp.Request{},
 				},
@@ -68,7 +68,7 @@ func TestWithTarget(t *testing.T) {
 			wantErr: `target option was empty string`,
 		},
 		"whitespace target": {
-			c: &Client{
+			c: &ceClient{
 				transport: &http.Transport{
 					Req: &nethttp.Request{},
 				},
@@ -77,18 +77,18 @@ func TestWithTarget(t *testing.T) {
 			wantErr: `target option was empty string`,
 		},
 		"empty transport": {
-			c:       &Client{},
+			c:       &ceClient{},
 			wantErr: `invalid target client option received for transport type`,
 		},
 		"wrong transport": {
-			c:       &Client{transport: &nats.Transport{}},
+			c:       &ceClient{transport: &nats.Transport{}},
 			wantErr: `invalid target client option received for transport type`,
 		},
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 
-			err := tc.c.applyClientOptions(WithTarget(tc.target))
+			err := tc.c.applyOptions(WithTarget(tc.target))
 
 			if tc.wantErr != "" || err != nil {
 				var gotErr string
@@ -113,37 +113,37 @@ func TestWithTarget(t *testing.T) {
 
 func TestWithHTTPMethod(t *testing.T) {
 	testCases := map[string]struct {
-		c       *Client
+		c       *ceClient
 		method  string
-		want    *Client
+		want    *ceClient
 		wantErr string
 	}{
 		"valid method": {
-			c: &Client{
+			c: &ceClient{
 				transport: &http.Transport{
 					Req: &nethttp.Request{},
 				},
 			},
 			method: "GET",
-			want: &Client{transport: &http.Transport{
+			want: &ceClient{transport: &http.Transport{
 				Req: &nethttp.Request{
 					Method: nethttp.MethodGet,
 				},
 			}},
 		},
 		"valid method, unset req": {
-			c: &Client{
+			c: &ceClient{
 				transport: &http.Transport{},
 			},
 			method: "PUT",
-			want: &Client{transport: &http.Transport{
+			want: &ceClient{transport: &http.Transport{
 				Req: &nethttp.Request{
 					Method: nethttp.MethodPut,
 				},
 			}},
 		},
 		"empty method": {
-			c: &Client{
+			c: &ceClient{
 				transport: &http.Transport{
 					Req: &nethttp.Request{},
 				},
@@ -152,7 +152,7 @@ func TestWithHTTPMethod(t *testing.T) {
 			wantErr: `method option was empty string`,
 		},
 		"whitespace method": {
-			c: &Client{
+			c: &ceClient{
 				transport: &http.Transport{
 					Req: &nethttp.Request{},
 				},
@@ -161,18 +161,18 @@ func TestWithHTTPMethod(t *testing.T) {
 			wantErr: `method option was empty string`,
 		},
 		"empty transport": {
-			c:       &Client{},
+			c:       &ceClient{},
 			wantErr: `invalid HTTP method client option received for transport type`,
 		},
 		"wrong transport": {
-			c:       &Client{transport: &nats.Transport{}},
+			c:       &ceClient{transport: &nats.Transport{}},
 			wantErr: `invalid HTTP method client option received for transport type`,
 		},
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 
-			err := tc.c.applyClientOptions(WithHTTPMethod(tc.method))
+			err := tc.c.applyOptions(WithHTTPMethod(tc.method))
 
 			if tc.wantErr != "" || err != nil {
 				var gotErr string
@@ -197,40 +197,40 @@ func TestWithHTTPMethod(t *testing.T) {
 
 func TestWithPort(t *testing.T) {
 	testCases := map[string]struct {
-		c       *Client
+		c       *ceClient
 		port    int
-		want    *Client
+		want    *ceClient
 		wantErr string
 	}{
 		"valid port": {
-			c: &Client{
+			c: &ceClient{
 				transport: &http.Transport{},
 			},
 			port: 8181,
-			want: &Client{transport: &http.Transport{
+			want: &ceClient{transport: &http.Transport{
 				Port: 8181,
 			}},
 		},
 		"invalid port": {
-			c: &Client{
+			c: &ceClient{
 				transport: &http.Transport{},
 			},
 			port:    0,
 			wantErr: `client option was given an invalid port: 0`,
 		},
 		"empty transport": {
-			c:       &Client{},
+			c:       &ceClient{},
 			wantErr: `invalid HTTP port client option received for transport type`,
 		},
 		"wrong transport": {
-			c:       &Client{transport: &nats.Transport{}},
+			c:       &ceClient{transport: &nats.Transport{}},
 			wantErr: `invalid HTTP port client option received for transport type`,
 		},
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 
-			err := tc.c.applyClientOptions(WithHTTPPort(tc.port))
+			err := tc.c.applyOptions(WithHTTPPort(tc.port))
 
 			if tc.wantErr != "" || err != nil {
 				var gotErr string
@@ -255,33 +255,33 @@ func TestWithPort(t *testing.T) {
 
 func TestWithHTTPEncoding(t *testing.T) {
 	testCases := map[string]struct {
-		c        *Client
+		c        *ceClient
 		encoding http.Encoding
-		want     *Client
+		want     *ceClient
 		wantErr  string
 	}{
 		"valid encoding": {
-			c: &Client{
+			c: &ceClient{
 				transport: &http.Transport{},
 			},
 			encoding: http.StructuredV03,
-			want: &Client{transport: &http.Transport{
+			want: &ceClient{transport: &http.Transport{
 				Encoding: http.StructuredV03,
 			}},
 		},
 		"empty transport": {
-			c:       &Client{},
+			c:       &ceClient{},
 			wantErr: `invalid HTTP encoding client option received for transport type`,
 		},
 		"wrong transport": {
-			c:       &Client{transport: &nats.Transport{}},
+			c:       &ceClient{transport: &nats.Transport{}},
 			wantErr: `invalid HTTP encoding client option received for transport type`,
 		},
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 
-			err := tc.c.applyClientOptions(WithHTTPEncoding(tc.encoding))
+			err := tc.c.applyOptions(WithHTTPEncoding(tc.encoding))
 
 			if tc.wantErr != "" || err != nil {
 				var gotErr string
@@ -306,33 +306,33 @@ func TestWithHTTPEncoding(t *testing.T) {
 
 func TestWithNATSEncoding(t *testing.T) {
 	testCases := map[string]struct {
-		c        *Client
+		c        *ceClient
 		encoding nats.Encoding
-		want     *Client
+		want     *ceClient
 		wantErr  string
 	}{
 		"valid encoding": {
-			c: &Client{
+			c: &ceClient{
 				transport: &nats.Transport{},
 			},
 			encoding: nats.StructuredV03,
-			want: &Client{transport: &nats.Transport{
+			want: &ceClient{transport: &nats.Transport{
 				Encoding: nats.StructuredV03,
 			}},
 		},
 		"empty transport": {
-			c:       &Client{},
+			c:       &ceClient{},
 			wantErr: `invalid NATS encoding client option received for transport type`,
 		},
 		"wrong transport": {
-			c:       &Client{transport: &http.Transport{}},
+			c:       &ceClient{transport: &http.Transport{}},
 			wantErr: `invalid NATS encoding client option received for transport type`,
 		},
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 
-			err := tc.c.applyClientOptions(WithNATSEncoding(tc.encoding))
+			err := tc.c.applyOptions(WithNATSEncoding(tc.encoding))
 
 			if tc.wantErr != "" || err != nil {
 				var gotErr string

@@ -9,11 +9,11 @@ import (
 	"strings"
 )
 
-type ClientOption func(*Client) error
+type Option func(*ceClient) error
 
 // WithTarget sets the outbound recipient of cloudevents when using an HTTP request.
-func WithTarget(targetUrl string) ClientOption {
-	return func(c *Client) error {
+func WithTarget(targetUrl string) Option {
+	return func(c *ceClient) error {
 		if t, ok := c.transport.(*http.Transport); ok {
 			targetUrl = strings.TrimSpace(targetUrl)
 			if targetUrl != "" {
@@ -40,8 +40,8 @@ func WithTarget(targetUrl string) ClientOption {
 }
 
 // WithHTTPMethod sets the outbound recipient of cloudevents when using an HTTP request.
-func WithHTTPMethod(method string) ClientOption {
-	return func(c *Client) error {
+func WithHTTPMethod(method string) Option {
+	return func(c *ceClient) error {
 		if t, ok := c.transport.(*http.Transport); ok {
 			method = strings.TrimSpace(method)
 			if method != "" {
@@ -59,8 +59,8 @@ func WithHTTPMethod(method string) ClientOption {
 }
 
 // WithHTTPEncoding sets the encoding for clients with HTTP transports.
-func WithHTTPEncoding(encoding http.Encoding) ClientOption {
-	return func(c *Client) error {
+func WithHTTPEncoding(encoding http.Encoding) Option {
+	return func(c *ceClient) error {
 		if t, ok := c.transport.(*http.Transport); ok {
 			t.Encoding = encoding
 			return nil
@@ -70,8 +70,8 @@ func WithHTTPEncoding(encoding http.Encoding) ClientOption {
 }
 
 // WithHTTPPort sets the port for for clients with HTTP transports.
-func WithHTTPPort(port int) ClientOption {
-	return func(c *Client) error {
+func WithHTTPPort(port int) Option {
+	return func(c *ceClient) error {
 		if t, ok := c.transport.(*http.Transport); ok {
 			if port == 0 {
 				return fmt.Errorf("client option was given an invalid port: %d", port)
@@ -84,8 +84,8 @@ func WithHTTPPort(port int) ClientOption {
 }
 
 // WithNATSEncoding sets the encoding for clients with NATS transport.
-func WithNATSEncoding(encoding nats.Encoding) ClientOption {
-	return func(c *Client) error {
+func WithNATSEncoding(encoding nats.Encoding) Option {
+	return func(c *ceClient) error {
 		if t, ok := c.transport.(*nats.Transport); ok {
 			t.Encoding = encoding
 			return nil
