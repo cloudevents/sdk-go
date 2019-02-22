@@ -42,7 +42,7 @@ func gotEvent(event cloudevents.Event) {
 func _main(args []string, env envConfig) int {
 	ctx := context.Background()
 
-	_, err := client.StartHTTPReceiver(context.TODO(), gotEvent, client.WithHTTPPort(env.Port))
+	_, err := client.StartHTTPReceiver(ctx, gotEvent, client.WithHTTPPort(env.Port))
 	if err != nil {
 		log.Fatalf("failed to start receiver: %s", err.Error())
 	}
