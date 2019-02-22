@@ -8,26 +8,27 @@ import (
 	"log"
 )
 
-func NewNatsClient(ctx context.Context, natsServer, subject string, encoding cloudeventsnats.Encoding) (*Client, error) {
-	// TODO: context is added to overload defaults. Plumb this.
+func NewNATSClient(natsServer, subject string, opts ...ClientOption) (*Client, error) {
 	conn, err := nats.Connect(natsServer)
 	if err != nil {
 		return nil, err
 	}
 	transport := cloudeventsnats.Transport{
-		Conn:     conn,
-		Encoding: encoding,
+		Conn:    conn,
+		Subject: subject,
 	}
-	// add subject
-	ctx = cloudeventsnats.ContextWithSubject(ctx, subject)
 	c := &Client{
-		ctx:       ctx,
 		transport: &transport,
 	}
+
+	if err := c.applyClientOptions(opts...); err != nil {
+		return nil, err
+	}
+
 	return c, nil
 }
 
-func (c *Client) startNatsReceiver(t *cloudeventsnats.Transport, fn Receiver) error {
+func (c *Client) startNATSReceiver(ctx context.Context, t *cloudeventsnats.Transport, fn Receiver) error {
 	if t.Conn == nil {
 		return fmt.Errorf("nats connection is required to be set")
 	}
@@ -41,13 +42,8 @@ func (c *Client) startNatsReceiver(t *cloudeventsnats.Transport, fn Receiver) er
 	c.receiver = fn
 	t.Receiver = c
 
-	subject := cloudeventsnats.SubjectFromContext(c.ctx)
-	if subject == "" {
-		return fmt.Errorf("subject is required for nats receiver")
-	}
-
 	go func() {
-		if err := t.Listen(c.ctx, subject); err != nil {
+		if err := t.Listen(ctx); err != nil {
 			log.Fatalf("failed to listen, %s", err.Error())
 		}
 	}()

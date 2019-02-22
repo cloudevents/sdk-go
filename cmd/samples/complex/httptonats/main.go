@@ -12,10 +12,10 @@ import (
 
 type envConfig struct {
 	// Port on which to listen for cloudevents
-	Port string `envconfig:"PORT" default:"8080"`
+	Port int `envconfig:"PORT" default:"8080"`
 
-	// NatsServer URL to connect to the nats server.
-	NatsServer string `envconfig:"NATS_SERVER" default:"http://localhost:4222" required:"true"`
+	// NATSServer URL to connect to the nats server.
+	NATSServer string `envconfig:"NATS_SERVER" default:"http://localhost:4222" required:"true"`
 
 	// Subject is the nats subject to publish cloudevents on.
 	Subject string `envconfig:"SUBJECT" default:"sample" required:"true"`
@@ -50,7 +50,7 @@ func (r *Receiver) Receive(event cloudevents.Event) {
 
 	fmt.Printf("forwarding...")
 
-	if err := r.Client.Send(event); err != nil {
+	if err := r.Client.Send(context.TODO(), event); err != nil {
 		fmt.Printf("forwarding failed: %s", err.Error())
 	}
 
@@ -58,10 +58,9 @@ func (r *Receiver) Receive(event cloudevents.Event) {
 }
 
 func _main(args []string, env envConfig) int {
+	ctx := context.Background()
 
-	ctx := context.TODO()
-
-	nc, err := client.NewNatsClient(ctx, env.NatsServer, env.Subject, 0)
+	nc, err := client.NewNATSClient(env.NATSServer, env.Subject)
 	if err != nil {
 		log.Printf("failed to create client, %v", err)
 		return 1
@@ -69,11 +68,12 @@ func _main(args []string, env envConfig) int {
 
 	r := &Receiver{Client: nc}
 
-	if err := client.StartHttpReceiver(&ctx, r.Receive); err != nil {
-		log.Printf("failed to StartHttpReceiver, %v", err)
+	_, err = client.StartHTTPReceiver(context.TODO(), r.Receive, client.WithHTTPPort(env.Port))
+	if err != nil {
+		log.Printf("failed to StartHTTPReceiver, %v", err)
 	}
 
-	log.Printf("listening on port %s\n", env.Port)
+	log.Printf("listening on port %d\n", env.Port)
 	<-ctx.Done()
 
 	return 0

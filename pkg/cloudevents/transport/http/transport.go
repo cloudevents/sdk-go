@@ -17,8 +17,13 @@ var _ transport.Sender = (*Transport)(nil)
 // Transport acts as both a http client and a http handler.
 type Transport struct {
 	Encoding Encoding
-	Client   *http.Client
 
+	// Sending
+	Client *http.Client
+	Req    *http.Request
+
+	// Receiving
+	Port     int
 	Receiver transport.Receiver
 
 	codec transport.Codec
@@ -50,25 +55,16 @@ func (t *Transport) loadCodec() bool {
 	return true
 }
 
-// Opaque key type used to store Http Request
-type requestKeyType struct{}
-
-var requestKey = requestKeyType{}
-
-func ContextWithRequest(ctx context.Context, request http.Request) context.Context {
-	return context.WithValue(ctx, requestKey, request)
-}
-
-func RequestFromContext(ctx context.Context) http.Request {
-	return ctx.Value(requestKey).(http.Request)
-}
-
 func (t *Transport) Send(ctx context.Context, event cloudevents.Event) error {
 	if t.Client == nil {
 		t.Client = &http.Client{}
 	}
 
-	req := RequestFromContext(ctx)
+	var req http.Request
+	if t.Req != nil {
+		req.Method = t.Req.Method
+		req.URL = t.Req.URL
+	}
 
 	if ok := t.loadCodec(); !ok {
 		return fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
@@ -169,4 +165,11 @@ func (t *Transport) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: respond correctly based on decode.
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (t *Transport) GetPort() int {
+	if t.Port > 0 {
+		return t.Port
+	}
+	return 8080 // default
 }
