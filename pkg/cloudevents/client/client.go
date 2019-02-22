@@ -35,11 +35,11 @@ func (c *Client) StartReceiver(ctx context.Context, fn Receiver) error {
 	}
 
 	if t, ok := c.transport.(*http.Transport); ok {
-		return c.startHttpReceiver(ctx, t, fn)
+		return c.startHTTPReceiver(ctx, t, fn)
 	}
 
 	if t, ok := c.transport.(*nats.Transport); ok {
-		return c.startNatsReceiver(ctx, t, fn)
+		return c.startNATSReceiver(ctx, t, fn)
 	}
 
 	return fmt.Errorf("unknown transport type: %T", c.transport)

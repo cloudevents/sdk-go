@@ -38,7 +38,7 @@ func WithTarget(targetUrl string) ClientOption {
 }
 
 // WithTarget sets the outbound recipient of cloudevents when using a http request.
-func WithHttpMethod(method string) ClientOption {
+func WithHTTPMethod(method string) ClientOption {
 	return func(c *Client) error {
 		if t, ok := c.transport.(*http.Transport); ok {
 			if method != "" {
@@ -55,8 +55,8 @@ func WithHttpMethod(method string) ClientOption {
 	}
 }
 
-// WithHttpEncoding sets the encoding for clients with HTTP transports.
-func WithHttpEncoding(encoding http.Encoding) ClientOption {
+// WithHTTPEncoding sets the encoding for clients with HTTP transports.
+func WithHTTPEncoding(encoding http.Encoding) ClientOption {
 	return func(c *Client) error {
 		if t, ok := c.transport.(*http.Transport); ok {
 			t.Encoding = encoding
@@ -66,8 +66,8 @@ func WithHttpEncoding(encoding http.Encoding) ClientOption {
 	}
 }
 
-// WithHttpPort sets the port for accepting requests using HTTP transport.
-func WithHttpPort(port int) ClientOption {
+// WithHTTPPort sets the port for accepting requests using HTTP transport.
+func WithHTTPPort(port int) ClientOption {
 	return func(c *Client) error {
 		if t, ok := c.transport.(*http.Transport); ok {
 			if port == 0 {
@@ -80,8 +80,8 @@ func WithHttpPort(port int) ClientOption {
 	}
 }
 
-// WithNatsEncoding sets the encoding for clients with NATS transport.
-func WithNatsEncoding(encoding nats.Encoding) ClientOption {
+// WithNATSEncoding sets the encoding for clients with NATS transport.
+func WithNATSEncoding(encoding nats.Encoding) ClientOption {
 	return func(c *Client) error {
 		if t, ok := c.transport.(*nats.Transport); ok {
 			t.Encoding = encoding

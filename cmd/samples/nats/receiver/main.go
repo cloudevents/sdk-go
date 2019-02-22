@@ -11,8 +11,8 @@ import (
 )
 
 type envConfig struct {
-	// NatsServer URL to connect to the nats server.
-	NatsServer string `envconfig:"NATS_SERVER" default:"http://localhost:4222" required:"true"`
+	// NATSServer URL to connect to the nats server.
+	NATSServer string `envconfig:"NATS_SERVER" default:"http://localhost:4222" required:"true"`
 
 	// Subject is the nats subject to subscribe for cloudevents on.
 	Subject string `envconfig:"SUBJECT" default:"sample" required:"true"`
@@ -45,7 +45,7 @@ func receive(event cloudevents.Event) {
 }
 
 func _main(args []string, env envConfig) int {
-	c, err := client.NewNatsClient(env.NatsServer, env.Subject)
+	c, err := client.NewNATSClient(env.NATSServer, env.Subject)
 	if err != nil {
 		log.Fatalf("failed to create nats client, %s", err.Error())
 	}

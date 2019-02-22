@@ -21,8 +21,8 @@ const (
 )
 
 type envConfig struct {
-	// NatsServer URL to connect to the nats server.
-	NatsServer string `envconfig:"NATS_SERVER" default:"http://localhost:4222" required:"true"`
+	// NATSServer URL to connect to the nats server.
+	NATSServer string `envconfig:"NATS_SERVER" default:"http://localhost:4222" required:"true"`
 
 	// Subject is the nats subject to publish cloudevents on.
 	Subject string `envconfig:"SUBJECT" default:"sample" required:"true"`
@@ -72,7 +72,7 @@ func _main(args []string, env envConfig) int {
 
 	seq := 0
 	for _, contentType := range []string{"application/json", "application/xml"} {
-		c, err := client.NewNatsClient(env.NatsServer, env.Subject)
+		c, err := client.NewNATSClient(env.NATSServer, env.Subject)
 		if err != nil {
 			log.Printf("failed to create client, %v", err)
 			return 1

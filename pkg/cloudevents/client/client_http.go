@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func NewHttpClient(opts ...ClientOption) (*Client, error) {
+func NewHTTPClient(opts ...ClientOption) (*Client, error) {
 	c := &Client{
 		transport: &cloudeventshttp.Transport{
 			// Default the request method.
@@ -25,8 +25,8 @@ func NewHttpClient(opts ...ClientOption) (*Client, error) {
 	return c, nil
 }
 
-func StartHttpReceiver(ctx context.Context, fn Receiver, opts ...ClientOption) (*Client, error) {
-	c, err := NewHttpClient(opts...)
+func StartHTTPReceiver(ctx context.Context, fn Receiver, opts ...ClientOption) (*Client, error) {
+	c, err := NewHTTPClient(opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func StartHttpReceiver(ctx context.Context, fn Receiver, opts ...ClientOption) (
 	return c, nil
 }
 
-func (c *Client) startHttpReceiver(ctx context.Context, t *cloudeventshttp.Transport, fn Receiver) error {
+func (c *Client) startHTTPReceiver(ctx context.Context, t *cloudeventshttp.Transport, fn Receiver) error {
 	if c.receiver != nil {
 		return fmt.Errorf("client already has a receiver")
 	}

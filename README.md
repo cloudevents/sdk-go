@@ -17,7 +17,7 @@ func Receive(event cloudevents.Event) {
 }
 
 func main() {
-	_, err := client.StartHttpReceiver(Receive)
+	_, err := client.StartHTTPReceiver(Receive)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -40,9 +40,9 @@ event := cloudevents.Event{
 Sending a cloudevents.Event via the HTTP Transport with Binary v0.2 encoding:
 
 ```go
-c, err := client.NewHttpClient(
+c, err := client.NewHTTPClient(
 	client.WithTarget("http://localhost:8080/"),
-	client.WithHttpEncoding(cloudeventshttp.BinaryV02), 
+	client.WithHTTPEncoding(cloudeventshttp.BinaryV02), 
 )
 if err != nil {
 	panic("unable to create cloudevent client: " + err.Error())
@@ -84,7 +84,7 @@ Checkout the sample [sender](./cmd/samples/sender) and
 - [ ] Support overrides for method.
 - [ ] Merge headers from context on send.
 
-### Nats
+### NATS
 - [ ] Plumb in auth for the nats server.
 - [ ] v0.2 and v0.3 are very similar. Combine decode logic?
 

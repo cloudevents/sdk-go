@@ -72,7 +72,7 @@ func _main(args []string, env envConfig) int {
 	for _, contentType := range []string{"application/json", "application/xml"} {
 		for _, encoding := range []cloudeventshttp.Encoding{cloudeventshttp.BinaryV01, cloudeventshttp.StructuredV01, cloudeventshttp.BinaryV02, cloudeventshttp.StructuredV02} {
 
-			c, err := client.NewHttpClient(client.WithTarget(env.Target), client.WithHttpEncoding(encoding))
+			c, err := client.NewHTTPClient(client.WithTarget(env.Target), client.WithHTTPEncoding(encoding))
 			if err != nil {
 				log.Printf("failed to create client, %v", err)
 				return 1

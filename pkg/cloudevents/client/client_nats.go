@@ -8,7 +8,7 @@ import (
 	"log"
 )
 
-func NewNatsClient(natsServer, subject string, opts ...ClientOption) (*Client, error) {
+func NewNATSClient(natsServer, subject string, opts ...ClientOption) (*Client, error) {
 	conn, err := nats.Connect(natsServer)
 	if err != nil {
 		return nil, err
@@ -28,7 +28,7 @@ func NewNatsClient(natsServer, subject string, opts ...ClientOption) (*Client, e
 	return c, nil
 }
 
-func (c *Client) startNatsReceiver(ctx context.Context, t *cloudeventsnats.Transport, fn Receiver) error {
+func (c *Client) startNATSReceiver(ctx context.Context, t *cloudeventsnats.Transport, fn Receiver) error {
 	if t.Conn == nil {
 		return fmt.Errorf("nats connection is required to be set")
 	}
