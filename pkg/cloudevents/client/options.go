@@ -6,6 +6,7 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/nats"
 	nethttp "net/http"
 	"net/url"
+	"strings"
 )
 
 type ClientOption func(*Client) error
@@ -14,6 +15,7 @@ type ClientOption func(*Client) error
 func WithTarget(targetUrl string) ClientOption {
 	return func(c *Client) error {
 		if t, ok := c.transport.(*http.Transport); ok {
+			targetUrl = strings.TrimSpace(targetUrl)
 			if targetUrl != "" {
 				var err error
 				var target *url.URL
@@ -33,7 +35,7 @@ func WithTarget(targetUrl string) ClientOption {
 				return fmt.Errorf("target option was empty string")
 			}
 		}
-		return fmt.Errorf("invalid target client option recieved for transport type")
+		return fmt.Errorf("invalid target client option received for transport type")
 	}
 }
 
@@ -41,6 +43,7 @@ func WithTarget(targetUrl string) ClientOption {
 func WithHTTPMethod(method string) ClientOption {
 	return func(c *Client) error {
 		if t, ok := c.transport.(*http.Transport); ok {
+			method = strings.TrimSpace(method)
 			if method != "" {
 				if t.Req == nil {
 					t.Req = &nethttp.Request{}
@@ -48,10 +51,10 @@ func WithHTTPMethod(method string) ClientOption {
 				t.Req.Method = method
 				return nil
 			} else {
-				return fmt.Errorf("context client option was nil")
+				return fmt.Errorf("method option was empty string")
 			}
 		}
-		return fmt.Errorf("invalid HTTP method client option recieved for transport type")
+		return fmt.Errorf("invalid HTTP method client option received for transport type")
 	}
 }
 
@@ -62,7 +65,7 @@ func WithHTTPEncoding(encoding http.Encoding) ClientOption {
 			t.Encoding = encoding
 			return nil
 		}
-		return fmt.Errorf("invalid HTTP encoding client option recieved for transport type")
+		return fmt.Errorf("invalid HTTP encoding client option received for transport type")
 	}
 }
 
@@ -76,7 +79,7 @@ func WithHTTPPort(port int) ClientOption {
 			t.Port = port
 			return nil
 		}
-		return fmt.Errorf("invalid HTTP port client option recieved for transport type")
+		return fmt.Errorf("invalid HTTP port client option received for transport type")
 	}
 }
 
@@ -87,6 +90,6 @@ func WithNATSEncoding(encoding nats.Encoding) ClientOption {
 			t.Encoding = encoding
 			return nil
 		}
-		return fmt.Errorf("invalid NATS encoding client option recieved for transport type")
+		return fmt.Errorf("invalid NATS encoding client option received for transport type")
 	}
 }
