@@ -17,11 +17,11 @@ func Receive(event cloudevents.Event) {
 }
 
 func main() {
-	ctx, err := client.StartHttpReceiver(Receive)
+	_, err := client.StartHttpReceiver(Receive)
 	if err != nil {
 		log.Fatal(err)
 	}
-	<-ctx.Done()
+	<-context.Background().Done()
 }
 ```
 
