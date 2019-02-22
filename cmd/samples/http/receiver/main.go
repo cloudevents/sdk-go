@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
@@ -41,9 +40,8 @@ func gotEvent(event cloudevents.Event) {
 
 func _main(args []string, env envConfig) int {
 
-	ctx := client.ContextWithPort(context.TODO(), env.Port)
-
-	if err := client.StartHttpReceiver(&ctx, gotEvent); err != nil {
+	ctx, err := client.StartHttpReceiver(gotEvent, client.WithHttpPort(env.Port))
+	if err != nil {
 		log.Fatalf("failed to start receiver: %s", err.Error())
 	}
 

@@ -99,7 +99,7 @@ func _main(args []string, env envConfig) int {
 		// HTTP
 		for _, encoding := range []cloudeventshttp.Encoding{cloudeventshttp.Default, cloudeventshttp.BinaryV01, cloudeventshttp.StructuredV01, cloudeventshttp.BinaryV02, cloudeventshttp.StructuredV02, cloudeventshttp.BinaryV03, cloudeventshttp.StructuredV03} {
 
-			c, err := client.NewHttpClient(context.TODO(), env.HttpTarget, encoding)
+			c, err := client.NewHttpClient(client.WithTarget(env.HttpTarget), client.WithHttpEncoding(encoding))
 			if err != nil {
 				log.Printf("failed to create client, %v", err)
 				return 1

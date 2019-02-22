@@ -18,7 +18,7 @@ var _ transport.Sender = (*Transport)(nil)
 type Transport struct {
 	Encoding Encoding
 	Client   *http.Client
-
+	Port     int
 	Receiver transport.Receiver
 
 	codec transport.Codec
@@ -169,4 +169,11 @@ func (t *Transport) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: respond correctly based on decode.
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (t *Transport) GetPort() int {
+	if t.Port > 0 {
+		return t.Port
+	}
+	return 8080 // default
 }

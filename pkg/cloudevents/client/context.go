@@ -20,20 +20,3 @@ func ClientFromContext(ctx context.Context) *Client {
 	}
 	return nil
 }
-
-// Opaque key type used to store Http Request
-type portKeyType struct{}
-
-var portKey = portKeyType{}
-
-func ContextWithPort(ctx context.Context, port int) context.Context {
-	return context.WithValue(ctx, portKey, port)
-}
-
-func PortFromContext(ctx context.Context) int {
-	port := ctx.Value(portKey)
-	if port != nil {
-		return port.(int)
-	}
-	return 8080 // default
-}

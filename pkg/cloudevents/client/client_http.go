@@ -6,49 +6,42 @@ import (
 	cloudeventshttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 	"log"
 	"net/http"
-	"net/url"
 )
 
-func NewHttpClient(ctx context.Context, targetUrl string, encoding cloudeventshttp.Encoding) (*Client, error) {
-	var target *url.URL
-	if targetUrl != "" {
-		var err error
-		target, err = url.Parse(targetUrl)
-		if err != nil {
+func NewHttpClient(opts ...ClientOption) (*Client, error) {
+	transport := cloudeventshttp.Transport{}
+
+	c := &Client{
+		ctx:       context.Background(),
+		transport: &transport,
+	}
+
+	// Default request method.
+	req := http.Request{
+		Method: http.MethodPost,
+	}
+	c.ctx = cloudeventshttp.ContextWithRequest(c.ctx, req)
+
+	for _, fn := range opts {
+		if err := fn(c); err != nil {
 			return nil, err
 		}
 	}
 
-	// TODO: context is added to overload the http Method and others. Plumb this.
-	req := http.Request{
-		Method: http.MethodPost,
-		URL:    target,
-	}
-	ctx = cloudeventshttp.ContextWithRequest(ctx, req)
-
-	transport := cloudeventshttp.Transport{Encoding: encoding}
-
-	c := &Client{
-		ctx:       ctx,
-		transport: &transport,
-	}
 	return c, nil
 }
 
-func StartHttpReceiver(ctx *context.Context, fn Receiver) error {
-	if ctx == nil {
-		return fmt.Errorf("context object required for Client.StartReceiver")
-	}
-	c, err := NewHttpClient(*ctx, "", 0)
+func StartHttpReceiver(fn Receiver, opts ...ClientOption) (context.Context, error) {
+	c, err := NewHttpClient(opts...)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	*ctx = ContextWithClient(*ctx, c)
+	ctx := ContextWithClient(c.ctx, c)
 
 	if err := c.StartReceiver(fn); err != nil {
-		return err
+		return ctx, err
 	}
-	return nil
+	return ctx, nil
 }
 
 func (c *Client) startHttpReceiver(t *cloudeventshttp.Transport, fn Receiver) error {
@@ -60,10 +53,9 @@ func (c *Client) startHttpReceiver(t *cloudeventshttp.Transport, fn Receiver) er
 	}
 	c.receiver = fn
 	t.Receiver = c
-	port := PortFromContext(c.ctx)
 
 	go func() {
-		log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), t))
+		log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", t.GetPort()), t))
 	}()
 
 	return nil

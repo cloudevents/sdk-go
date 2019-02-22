@@ -12,7 +12,7 @@ import (
 
 type envConfig struct {
 	// Port on which to listen for cloudevents
-	Port string `envconfig:"PORT" default:"8080"`
+	Port int `envconfig:"PORT" default:"8080"`
 
 	// NatsServer URL to connect to the nats server.
 	NatsServer string `envconfig:"NATS_SERVER" default:"http://localhost:4222" required:"true"`
@@ -59,7 +59,7 @@ func (r *Receiver) Receive(event cloudevents.Event) {
 
 func _main(args []string, env envConfig) int {
 
-	ctx := context.TODO()
+	ctx := context.Background()
 
 	nc, err := client.NewNatsClient(ctx, env.NatsServer, env.Subject, 0)
 	if err != nil {
@@ -69,11 +69,12 @@ func _main(args []string, env envConfig) int {
 
 	r := &Receiver{Client: nc}
 
-	if err := client.StartHttpReceiver(&ctx, r.Receive); err != nil {
+	ctx, err = client.StartHttpReceiver(r.Receive, client.WithContext(ctx), client.WithHttpPort(env.Port))
+	if err != nil {
 		log.Printf("failed to StartHttpReceiver, %v", err)
 	}
 
-	log.Printf("listening on port %s\n", env.Port)
+	log.Printf("listening on port %d\n", env.Port)
 	<-ctx.Done()
 
 	return 0
