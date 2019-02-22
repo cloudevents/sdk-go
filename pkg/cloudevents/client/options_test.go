@@ -6,6 +6,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	nethttp "net/http"
+	"net/http/httptest"
 	"net/url"
 
 	"testing"
@@ -189,6 +190,60 @@ func TestWithHTTPMethod(t *testing.T) {
 
 			if diff := cmp.Diff(tc.want.transport, got.transport,
 				cmpopts.IgnoreUnexported(http.Transport{}), cmpopts.IgnoreUnexported(nethttp.Request{})); diff != "" {
+				t.Errorf("unexpected (-want, +got) = %v", diff)
+			}
+		})
+	}
+}
+
+func TestWithHTTPClient(t *testing.T) {
+	testCases := map[string]struct {
+		c       *ceClient
+		netc    *nethttp.Client
+		want    *ceClient
+		wantErr string
+	}{
+		"valid client": {
+			c:    &ceClient{transport: &http.Transport{}},
+			netc: httptest.NewServer(nil).Client(),
+			want: &ceClient{transport: &http.Transport{
+				Client: httptest.NewServer(nil).Client(),
+			}},
+		},
+		"nil client": {
+			c:       &ceClient{transport: &http.Transport{}},
+			wantErr: `client option was given an nil HTTP client`,
+		},
+		"empty transport": {
+			c:       &ceClient{},
+			wantErr: `invalid HTTP client client option received for transport type`,
+		},
+		"wrong transport": {
+			c:       &ceClient{transport: &nats.Transport{}},
+			wantErr: `invalid HTTP client client option received for transport type`,
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+
+			err := tc.c.applyOptions(WithHTTPClient(tc.netc))
+
+			if tc.wantErr != "" || err != nil {
+				var gotErr string
+				if err != nil {
+					gotErr = err.Error()
+				}
+				if diff := cmp.Diff(tc.wantErr, gotErr); diff != "" {
+					t.Errorf("unexpected error (-want, +got) = %v", diff)
+				}
+				return
+			}
+
+			got := tc.c
+
+			if diff := cmp.Diff(tc.want.transport, got.transport,
+				cmpopts.IgnoreUnexported(http.Transport{}),
+				cmpopts.IgnoreUnexported(nethttp.Transport{})); diff != "" {
 				t.Errorf("unexpected (-want, +got) = %v", diff)
 			}
 		})

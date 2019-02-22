@@ -83,6 +83,20 @@ func WithHTTPPort(port int) Option {
 	}
 }
 
+// WithHTTPClient sets the internal HTTP client for cloudevent clients with HTTP transports.
+func WithHTTPClient(netclient *nethttp.Client) Option {
+	return func(c *ceClient) error {
+		if t, ok := c.transport.(*http.Transport); ok {
+			if netclient == nil {
+				return fmt.Errorf("client option was given an nil HTTP client")
+			}
+			t.Client = netclient
+			return nil
+		}
+		return fmt.Errorf("invalid HTTP client client option received for transport type")
+	}
+}
+
 // WithNATSEncoding sets the encoding for clients with NATS transport.
 func WithNATSEncoding(encoding nats.Encoding) Option {
 	return func(c *ceClient) error {
