@@ -22,11 +22,11 @@ const (
 )
 
 type envConfig struct {
-	// Target URL where to send cloudevents
-	HttpTarget string `envconfig:"HTTP_TARGET" default:"http://localhost:8080" required:"true"`
+	// HTTPTarget is the target URL where to send cloudevents
+	HTTPTarget string `envconfig:"HTTP_TARGET" default:"http://localhost:8080" required:"true"`
 
-	// NatsServer URL to connect to the nats server.
-	NatsServer string `envconfig:"NATS_SERVER" default:"http://localhost:4222" required:"true"`
+	// NATSServer URL to connect to the nats server.
+	NATSServer string `envconfig:"NATS_SERVER" default:"http://localhost:4222" required:"true"`
 
 	// Subject is the nats subject to publish cloudevents on.
 	Subject string `envconfig:"SUBJECT" default:"sample" required:"true"`
@@ -73,7 +73,7 @@ func (d *Demo) Send() error {
 		},
 	}
 	seq++
-	return d.Client.Send(event)
+	return d.Client.Send(context.TODO(), event)
 }
 
 func (d *Demo) context() cloudevents.EventContext {
@@ -99,7 +99,7 @@ func _main(args []string, env envConfig) int {
 		// HTTP
 		for _, encoding := range []cloudeventshttp.Encoding{cloudeventshttp.Default, cloudeventshttp.BinaryV01, cloudeventshttp.StructuredV01, cloudeventshttp.BinaryV02, cloudeventshttp.StructuredV02, cloudeventshttp.BinaryV03, cloudeventshttp.StructuredV03} {
 
-			c, err := client.NewHttpClient(context.TODO(), env.HttpTarget, encoding)
+			c, err := client.NewHTTPClient(client.WithTarget(env.HTTPTarget), client.WithHTTPEncoding(encoding))
 			if err != nil {
 				log.Printf("failed to create client, %v", err)
 				return 1
@@ -108,7 +108,7 @@ func _main(args []string, env envConfig) int {
 			if err := doDemo(
 				c,
 				"com.cloudevents.sample.http.sent",
-				fmt.Sprintf("Hello, %s!", encoding),
+				fmt.Sprintf("Hello, %s using %s!", encoding, contentType),
 				contentType,
 				*source,
 			); err != nil {
@@ -119,7 +119,7 @@ func _main(args []string, env envConfig) int {
 
 		// NATS
 		for _, encoding := range []cloudeventsnats.Encoding{cloudeventsnats.Default, cloudeventsnats.StructuredV02, cloudeventsnats.StructuredV03} {
-			c, err := client.NewNatsClient(context.TODO(), env.NatsServer, env.Subject, encoding)
+			c, err := client.NewNATSClient(env.NATSServer, env.Subject, client.WithNATSEncoding(encoding))
 			if err != nil {
 				log.Printf("failed to create client, %v", err)
 				return 1
@@ -127,7 +127,7 @@ func _main(args []string, env envConfig) int {
 			if err := doDemo(
 				c,
 				"com.cloudevents.sample.nats.sent",
-				fmt.Sprintf("Hello, %s!", encoding),
+				fmt.Sprintf("Hello, %s using %s!", encoding, contentType),
 				contentType,
 				*source,
 			); err != nil {

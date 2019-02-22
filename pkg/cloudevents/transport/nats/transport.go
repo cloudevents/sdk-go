@@ -16,6 +16,7 @@ var _ transport.Sender = (*Transport)(nil)
 type Transport struct {
 	Encoding Encoding
 	Conn     *nats.Conn
+	Subject  string
 
 	sub *nats.Subscription
 
@@ -40,19 +41,6 @@ func (t *Transport) loadCodec() bool {
 	return true
 }
 
-// Opaque key type used to store nats subject
-type subjectKeyType struct{}
-
-var subjectKey = subjectKeyType{}
-
-func ContextWithSubject(ctx context.Context, subject string) context.Context {
-	return context.WithValue(ctx, subjectKey, subject)
-}
-
-func SubjectFromContext(ctx context.Context) string {
-	return ctx.Value(subjectKey).(string)
-}
-
 func (t *Transport) Send(ctx context.Context, event cloudevents.Event) error {
 	if ok := t.loadCodec(); !ok {
 		return fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
@@ -63,16 +51,14 @@ func (t *Transport) Send(ctx context.Context, event cloudevents.Event) error {
 		return err
 	}
 
-	subject := SubjectFromContext(ctx)
-
 	if m, ok := msg.(*Message); ok {
-		return t.Conn.Publish(subject, m.Body)
+		return t.Conn.Publish(t.Subject, m.Body)
 	}
 
 	return fmt.Errorf("failed to encode Event into a Message")
 }
 
-func (t *Transport) Listen(ctx context.Context, subject string) error {
+func (t *Transport) Listen(ctx context.Context) error {
 	if t.sub != nil {
 		return fmt.Errorf("already subscribed")
 	}
@@ -84,16 +70,13 @@ func (t *Transport) Listen(ctx context.Context, subject string) error {
 	// TODO: there could be more than one subscription. Might have to do a map
 	// of subject to subscription.
 
-	if subject == "" {
-		subject = SubjectFromContext(ctx)
-	}
-	if subject == "" {
+	if t.Subject == "" {
 		return fmt.Errorf("subject required for nats listen")
 	}
 
 	var err error
 	// Simple Async Subscriber
-	t.sub, err = t.Conn.Subscribe(subject, func(m *nats.Msg) {
+	t.sub, err = t.Conn.Subscribe(t.Subject, func(m *nats.Msg) {
 		msg := &Message{
 			Body: m.Data,
 		}
