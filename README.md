@@ -9,7 +9,7 @@ break with every update.**
 Package [cloudevents](./pkg/cloudevents) provides primitives to work with 
 CloudEvents specification: https://github.com/cloudevents/spec.
 
-Receiving a cloudevents.Event via the Http Transport:
+Receiving a cloudevents.Event via the HTTP Transport:
 
 ```go
 func Receive(event cloudevents.Event) {
@@ -17,8 +17,8 @@ func Receive(event cloudevents.Event) {
 }
 
 func main() {
-	ctx := context.TODO()
-	if err := client.StartHttpReceiver(ctx, Receive); err != nil {
+	ctx, err := client.StartHttpReceiver(Receive)
+	if err != nil {
 		log.Fatal(err)
 	}
 	<-ctx.Done()
@@ -37,10 +37,13 @@ event := cloudevents.Event{
 }
 ```
 
-Sending a cloudevents.Event via the Http Transport with Binary v0.2 encoding:
+Sending a cloudevents.Event via the HTTP Transport with Binary v0.2 encoding:
 
 ```go
-c, err := client.NewHttpClient(context.TODO(), "http://localhost:8080/", cloudeventshttp.BinaryV02)
+c, err := client.NewHttpClient(
+	client.WithTarget("http://localhost:8080/"),
+	client.WithHttpEncoding(cloudeventshttp.BinaryV02), 
+)
 if err != nil {
 	panic("unable to create cloudevent client: " + err.Error())
 }
@@ -85,7 +88,7 @@ Checkout the sample [sender](./cmd/samples/sender) and
 - [ ] Plumb in auth for the nats server.
 - [ ] v0.2 and v0.3 are very similar. Combine decode logic?
 
-### For v3
+### For v0.3
 - [ ] Support batch json
 
 ## Existing Go for CloudEvents
