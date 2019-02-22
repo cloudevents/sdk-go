@@ -237,17 +237,35 @@ func TestString(t *testing.T) {
 	}{
 		"empty v0.1": {
 			event: ce.Event{
+				Context: ce.EventContextV01{},
+			},
+			want: "SpecVersion: 0.1",
+		},
+		"empty v0.2": {
+			event: ce.Event{
+				Context: ce.EventContextV02{},
+			},
+			want: "SpecVersion: 0.2",
+		},
+		"empty v0.3": {
+			event: ce.Event{
+				Context: ce.EventContextV03{},
+			},
+			want: "SpecVersion: 0.3",
+		},
+		"min v0.1": {
+			event: ce.Event{
 				Context: MinEventContextV01(),
 			},
 			want: "SpecVersion: 0.1\nType: com.example.simple",
 		},
-		"empty v0.2": {
+		"min v0.2": {
 			event: ce.Event{
 				Context: MinEventContextV02(),
 			},
 			want: "SpecVersion: 0.2\nType: com.example.simple",
 		},
-		"empty v0.3": {
+		"min v0.3": {
 			event: ce.Event{
 				Context: MinEventContextV03(),
 			},

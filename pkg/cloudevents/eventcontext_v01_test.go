@@ -59,9 +59,20 @@ func TestValidateV01(t *testing.T) {
 				CloudEventsVersion: "",
 				EventID:            "ABC-123",
 				EventType:          "com.example.simple",
+				EventTypeVersion:   strptr("v1alpha1"),
 				Source:             *source,
 			},
 			want: []string{"cloudEventsVersion:"},
+		},
+		"non-empty eventTypeVersion": {
+			ctx: ce.EventContextV01{
+				CloudEventsVersion: ce.CloudEventsVersionV01,
+				EventID:            "ABC-123",
+				EventType:          "com.example.simple",
+				EventTypeVersion:   strptr(""),
+				Source:             *source,
+			},
+			want: []string{"eventTypeVersion:"},
 		},
 		"missing source": {
 			ctx: ce.EventContextV01{
