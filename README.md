@@ -17,11 +17,12 @@ func Receive(event cloudevents.Event) {
 }
 
 func main() {
-	_, err := client.StartHTTPReceiver(Receive)
+	ctx := context.Background()
+	_, err := client.StartHTTPReceiver(ctx, Receive)
 	if err != nil {
 		log.Fatal(err)
 	}
-	<-context.Background().Done()
+	<-ctx.Done()
 }
 ```
 
@@ -47,7 +48,7 @@ c, err := client.NewHTTPClient(
 if err != nil {
 	panic("unable to create cloudevent client: " + err.Error())
 }
-if err := c.Send(event); err != nil {
+if err := c.Send(ctx, event); err != nil {
 	panic("failed to send cloudevent: " + err.Error())
 }
 ```

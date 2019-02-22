@@ -73,7 +73,7 @@ func (d *Demo) Send() error {
 		},
 	}
 	seq++
-	return d.Client.Send(context.TODO(), event)
+	return d.Client.Send(context.Background(), event)
 }
 
 func (d *Demo) context() cloudevents.EventContext {

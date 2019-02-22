@@ -58,7 +58,7 @@ func (d *Demo) Send(eventContext cloudevents.EventContext, i int) error {
 			Message:  d.Message,
 		},
 	}
-	return d.Client.Send(context.TODO(), event)
+	return d.Client.Send(context.Background(), event)
 }
 
 func _main(args []string, env envConfig) int {

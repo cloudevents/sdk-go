@@ -21,7 +21,6 @@ func NewHTTPClient(opts ...ClientOption) (*Client, error) {
 	if err := c.applyClientOptions(opts...); err != nil {
 		return nil, err
 	}
-
 	return c, nil
 }
 
@@ -32,7 +31,7 @@ func StartHTTPReceiver(ctx context.Context, fn Receiver, opts ...ClientOption) (
 	}
 
 	if err := c.StartReceiver(ctx, fn); err != nil {
-		return c, err
+		return nil, err
 	}
 	return c, nil
 }

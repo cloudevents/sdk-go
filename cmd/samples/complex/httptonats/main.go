@@ -50,7 +50,7 @@ func (r *Receiver) Receive(event cloudevents.Event) {
 
 	fmt.Printf("forwarding...")
 
-	if err := r.Client.Send(context.TODO(), event); err != nil {
+	if err := r.Client.Send(context.Background(), event); err != nil {
 		fmt.Printf("forwarding failed: %s", err.Error())
 	}
 
@@ -68,7 +68,7 @@ func _main(args []string, env envConfig) int {
 
 	r := &Receiver{Client: nc}
 
-	_, err = client.StartHTTPReceiver(context.TODO(), r.Receive, client.WithHTTPPort(env.Port))
+	_, err = client.StartHTTPReceiver(ctx, r.Receive, client.WithHTTPPort(env.Port))
 	if err != nil {
 		log.Printf("failed to StartHTTPReceiver, %v", err)
 	}
