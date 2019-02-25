@@ -43,7 +43,7 @@ type Demo struct {
 	Source  url.URL
 	Target  url.URL
 
-	Client *client.Client
+	Client client.Client
 }
 
 // Basic data struct.

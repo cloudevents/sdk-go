@@ -31,7 +31,7 @@ func main() {
 }
 
 type Receiver struct {
-	Client *client.Client
+	Client client.Client
 }
 
 type Example struct {
