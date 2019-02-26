@@ -80,7 +80,6 @@ func (t *Transport) Send(ctx context.Context, event cloudevents.Event) error {
 		req.Header = m.Header
 		req.Body = ioutil.NopCloser(bytes.NewBuffer(m.Body))
 		req.ContentLength = int64(len(m.Body))
-		//t.Client.Do(&req)
 		return httpDo(ctx, &req, func(resp *http.Response, err error) error {
 			if err != nil {
 				return err

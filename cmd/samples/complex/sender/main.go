@@ -43,7 +43,7 @@ func main() {
 
 // Simple holder for the sending sample.
 type Demo struct {
-	Client *client.Client
+	Client client.Client
 
 	// Content
 	EventType   string
@@ -73,7 +73,7 @@ func (d *Demo) Send() error {
 		},
 	}
 	seq++
-	return d.Client.Send(context.TODO(), event)
+	return d.Client.Send(context.Background(), event)
 }
 
 func (d *Demo) context() cloudevents.EventContext {
@@ -140,7 +140,7 @@ func _main(args []string, env envConfig) int {
 	return 0
 }
 
-func doDemo(c *client.Client, eventType, message, contentType string, source url.URL) error {
+func doDemo(c client.Client, eventType, message, contentType string, source url.URL) error {
 	d := &Demo{
 		Message:     message,
 		Client:      c,
