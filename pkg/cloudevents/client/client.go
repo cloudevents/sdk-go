@@ -27,6 +27,9 @@ func (c *ceClient) Send(ctx context.Context, event cloudevents.Event) error {
 	if c.transport == nil {
 		return fmt.Errorf("client not ready, transport not initalized")
 	}
+	if err := event.Validate(); err != nil {
+		return err
+	}
 	return c.transport.Send(ctx, event)
 }
 

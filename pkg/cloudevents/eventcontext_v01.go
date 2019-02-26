@@ -3,6 +3,8 @@ package cloudevents
 import (
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"log"
+	"mime"
 	"strings"
 )
 
@@ -46,16 +48,20 @@ func (ec EventContextV01) GetSpecVersion() string {
 }
 
 func (ec EventContextV01) GetDataContentType() string {
-	// TODO: there are cases where there is char encoding info on the content type.
-	// Fix this for these cases as we find them.
 	if ec.ContentType != nil {
-		if strings.HasSuffix(*ec.ContentType, "json") {
-			return "application/json"
-		}
-		if strings.HasSuffix(*ec.ContentType, "xml") {
-			return "application/xml"
-		}
 		return *ec.ContentType
+	}
+	return ""
+}
+
+func (ec EventContextV01) GetDataMediaType() string {
+	if ec.ContentType != nil {
+		mediaType, _, err := mime.ParseMediaType(*ec.ContentType)
+		if err != nil {
+			log.Printf("failed to parse media type from ContentType: %s", err)
+			return ""
+		}
+		return mediaType
 	}
 	return ""
 }
@@ -77,11 +83,8 @@ func (ec EventContextV01) AsV02() EventContextV02 {
 		ID:          ec.EventID,
 		Time:        ec.EventTime,
 		SchemaURL:   ec.SchemaURL,
+		ContentType: ec.ContentType,
 		Extensions:  make(map[string]interface{}),
-	}
-
-	if ec.ContentType != nil {
-		ret.ContentType = *ec.ContentType
 	}
 
 	// eventTypeVersion was retired in v0.2, so put it in an extension.

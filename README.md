@@ -34,7 +34,7 @@ event := cloudevents.Event{
         ID:     uuid.New().String(),
         Type:   "com.cloudevents.readme.sent",
         Source: types.ParseURLRef("http://localhost:8080/"),
-    },
+    }.AsV02(),
 }
 ```
 

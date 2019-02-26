@@ -53,7 +53,7 @@ func TestCodecV01_Encode(t *testing.T) {
 					EventType:        "com.example.full",
 					EventTypeVersion: strptr("v1alpha1"),
 					SchemaURL:        schema,
-					ContentType:      strptr("application/json"),
+					ContentType:      cloudevents.StringOfApplicationJSON(),
 					Source:           *source,
 					Extensions: map[string]interface{}{
 						"test": "extended",
@@ -106,7 +106,7 @@ func TestCodecV01_Encode(t *testing.T) {
 					EventType:        "com.example.full",
 					EventTypeVersion: strptr("v1alpha1"),
 					SchemaURL:        schema,
-					ContentType:      strptr("application/json"),
+					ContentType:      cloudevents.StringOfApplicationJSON(),
 					Source:           *source,
 					Extensions: map[string]interface{}{
 						"test": "extended",
@@ -165,7 +165,7 @@ func TestCodecV01_Encode(t *testing.T) {
 					EventType:        "com.example.full",
 					EventTypeVersion: strptr("v1alpha1"),
 					SchemaURL:        schema,
-					ContentType:      strptr("application/json"),
+					ContentType:      cloudevents.StringOfApplicationJSON(),
 					Source:           *source,
 					Extensions: map[string]interface{}{
 						"test": "extended",
@@ -261,7 +261,7 @@ func TestCodecV01_Decode(t *testing.T) {
 					EventType:          "com.example.test",
 					Source:             *source,
 					EventID:            "ABC-123",
-					ContentType:        strptr("application/json"),
+					ContentType:        cloudevents.StringOfApplicationJSON(),
 				},
 			},
 		},
@@ -291,7 +291,7 @@ func TestCodecV01_Decode(t *testing.T) {
 					EventType:          "com.example.full",
 					EventTypeVersion:   strptr("v1alpha1"),
 					SchemaURL:          schema,
-					ContentType:        strptr("application/json"),
+					ContentType:        cloudevents.StringOfApplicationJSON(),
 					Source:             *source,
 					Extensions: map[string]interface{}{
 						"Test": "extended",
@@ -355,7 +355,7 @@ func TestCodecV01_Decode(t *testing.T) {
 					EventType:          "com.example.full",
 					EventTypeVersion:   strptr("v1alpha1"),
 					SchemaURL:          schema,
-					ContentType:        strptr("application/json"),
+					ContentType:        cloudevents.StringOfApplicationJSON(),
 					Source:             *source,
 					Extensions: map[string]interface{}{
 						"test": "extended",

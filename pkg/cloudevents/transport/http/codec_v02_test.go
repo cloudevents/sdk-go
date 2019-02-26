@@ -51,7 +51,7 @@ func TestCodecV02_Encode(t *testing.T) {
 					Time:        &now,
 					Type:        "com.example.test",
 					SchemaURL:   schema,
-					ContentType: "application/json",
+					ContentType: cloudevents.StringOfApplicationJSON(),
 					Source:      *source,
 					Extensions: map[string]interface{}{
 						"test": "extended",
@@ -102,7 +102,7 @@ func TestCodecV02_Encode(t *testing.T) {
 					Time:        &now,
 					Type:        "com.example.test",
 					SchemaURL:   schema,
-					ContentType: "application/json",
+					ContentType: cloudevents.StringOfApplicationJSON(),
 					Source:      *source,
 					Extensions: map[string]interface{}{
 						"test": "extended",
@@ -170,7 +170,7 @@ func TestCodecV02_Encode(t *testing.T) {
 					Time:        &now,
 					Type:        "com.example.test",
 					SchemaURL:   schema,
-					ContentType: "application/json",
+					ContentType: cloudevents.StringOfApplicationJSON(),
 					Source:      *source,
 					Extensions: map[string]interface{}{
 						"test": "extended",
@@ -265,7 +265,7 @@ func TestCodecV02_Decode(t *testing.T) {
 			want: &cloudevents.Event{
 				Context: cloudevents.EventContextV02{
 					SpecVersion: cloudevents.CloudEventsVersionV02,
-					ContentType: "application/json",
+					ContentType: cloudevents.StringOfApplicationJSON(),
 					Type:        "com.example.test",
 					Source:      *source,
 					ID:          "ABC-123",
@@ -299,7 +299,7 @@ func TestCodecV02_Decode(t *testing.T) {
 					Time:        &now,
 					Type:        "com.example.test",
 					SchemaURL:   schema,
-					ContentType: "application/json",
+					ContentType: cloudevents.StringOfApplicationJSON(),
 					Source:      *source,
 					Extensions: map[string]interface{}{
 						"test": "extended",
@@ -366,7 +366,7 @@ func TestCodecV02_Decode(t *testing.T) {
 					Time:        &now,
 					Type:        "com.example.test",
 					SchemaURL:   schema,
-					ContentType: "application/json",
+					ContentType: cloudevents.StringOfApplicationJSON(),
 					Source:      *source,
 					Extensions: map[string]interface{}{
 						"test": "extended",

@@ -13,7 +13,7 @@ type Event struct {
 }
 
 func (e Event) DataAs(data interface{}) error {
-	return datacodec.Decode(e.Context.GetDataContentType(), e.Data, data)
+	return datacodec.Decode(e.Context.GetDataMediaType(), e.Data, data)
 }
 
 func (e Event) SpecVersion() string {

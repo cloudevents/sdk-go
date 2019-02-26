@@ -58,7 +58,7 @@ func TestGetDataContentType(t *testing.T) {
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 
-			got := tc.event.Context.GetDataContentType()
+			got := tc.event.Context.GetDataMediaType()
 
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("unexpected (-want, +got) = %v", diff)
@@ -177,13 +177,11 @@ func TestValidate(t *testing.T) {
 			event: ce.Event{
 				Context: MinEventContextV02(),
 			},
-			want: []string{"not implemented"},
 		},
 		"min valid v0.3": {
 			event: ce.Event{
 				Context: MinEventContextV03(),
 			},
-			want: []string{"not implemented"},
 		},
 		"json valid, v0.1": {
 			event: ce.Event{
@@ -196,14 +194,12 @@ func TestValidate(t *testing.T) {
 				Context: FullEventContextV02(now),
 				Data:    []byte(`{"a":"apple","b":"banana"}`),
 			},
-			want: []string{"not implemented"},
 		},
 		"json valid, v0.3": {
 			event: ce.Event{
 				Context: FullEventContextV03(now),
 				Data:    []byte(`{"a":"apple","b":"banana"}`),
 			},
-			want: []string{"not implemented"},
 		},
 	}
 	for n, tc := range testCases {
@@ -358,7 +354,7 @@ func FullEventContextV01(now types.Timestamp) ce.EventContextV01 {
 		EventType:        "com.example.simple",
 		EventTypeVersion: strptr("v1alpha1"),
 		SchemaURL:        schema,
-		ContentType:      strptr("application/json"),
+		ContentType:      ce.StringOfApplicationJSON(),
 		Source:           *source,
 		Extensions:       extensions,
 	}.AsV01()
@@ -380,7 +376,7 @@ func FullEventContextV02(now types.Timestamp) ce.EventContextV02 {
 		Time:        &now,
 		Type:        "com.example.simple",
 		SchemaURL:   schema,
-		ContentType: "application/json",
+		ContentType: ce.StringOfApplicationJSON(),
 		Source:      *source,
 		Extensions:  extensions,
 	}.AsV02()
@@ -402,7 +398,7 @@ func FullEventContextV03(now types.Timestamp) ce.EventContextV03 {
 		Time:            &now,
 		Type:            "com.example.simple",
 		SchemaURL:       schema,
-		DataContentType: "application/json",
+		DataContentType: ce.StringOfApplicationJSON(),
 		Source:          *source,
 		Extensions:      extensions,
 	}.AsV03()

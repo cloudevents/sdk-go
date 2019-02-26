@@ -92,7 +92,7 @@ func _main(args []string, env envConfig) int {
 					EventTime:   &types.Timestamp{Time: now},
 					Source:      types.URLRef{URL: d.Source},
 					ContentType: &contentType,
-				}
+				}.AsV01()
 				if err := d.Send(ctx, seq); err != nil {
 					log.Printf("failed to send: %v", err)
 					return 1

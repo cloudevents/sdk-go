@@ -53,7 +53,7 @@ func (v CodecV03) encodeBinary(e cloudevents.Event) (transport.Message, error) {
 		return nil, err
 	}
 
-	body, err := marshalEventData(e.Context.GetDataContentType(), e.Data)
+	body, err := marshalEventData(e.Context.GetDataMediaType(), e.Data)
 	if err != nil {
 		return nil, err
 	}
@@ -79,13 +79,13 @@ func (v CodecV03) toHeaders(ec cloudevents.EventContextV03) (http.Header, error)
 		h.Set("ce-schemaurl", ec.SchemaURL.String())
 	}
 
-	if ec.DataContentType != "" {
-		h.Set("Content-Type", ec.DataContentType)
+	if ec.DataContentType != nil {
+		h.Set("Content-Type", *ec.DataContentType)
 	} else if v.Encoding == Default || v.Encoding == BinaryV03 {
 		// in binary v0.2, the Content-Type header is tied to ec.ContentType
 		// This was later found to be an issue with the spec, but yolo.
 		// TODO: not sure what the default should be?
-		h.Set("Content-Type", "application/json")
+		h.Set("Content-Type", cloudevents.ApplicationJSON)
 	}
 	for k, v := range ec.Extensions {
 		// Per spec, map-valued extensions are converted to a list of headers as:
@@ -180,7 +180,10 @@ func (v CodecV03) fromHeaders(h http.Header) (cloudevents.EventContextV03, error
 	ec.SchemaURL = types.ParseURLRef(h.Get("ce-schemaurl"))
 	h.Del("ce-schemaurl")
 
-	ec.DataContentType = h.Get("Content-Type")
+	contentType := h.Get("Content-Type")
+	if contentType != "" {
+		ec.DataContentType = &contentType
+	}
 	h.Del("Content-Type")
 
 	// At this point, we have deleted all the known headers.
@@ -261,16 +264,16 @@ func (v CodecV03) inspectEncoding(msg transport.Message) Encoding {
 		return Unknown
 	}
 	contentType := m.Header.Get("Content-Type")
-	if contentType == "application/json" {
+	if contentType == cloudevents.ApplicationJSON {
 		return BinaryV03
 	}
-	if contentType == "application/xml" {
+	if contentType == cloudevents.ApplicationXML {
 		return BinaryV03
 	}
-	if contentType == "application/cloudevents+json" {
+	if contentType == cloudevents.ApplicationCloudEventsJSON {
 		return StructuredV03
 	}
-	if contentType == "application/cloudevents-batch+json" {
+	if contentType == cloudevents.ApplicationCloudEventsBatchJSON {
 		return BatchedV03
 	}
 	return Unknown

@@ -41,7 +41,7 @@ func TestValidateV01(t *testing.T) {
 				EventType:          "com.example.simple",
 				EventTypeVersion:   strptr("v1alpha1"),
 				SchemaURL:          schema,
-				ContentType:        strptr("application/json"),
+				ContentType:        ce.StringOfApplicationJSON(),
 				Source:             *source,
 				Extensions:         extensions,
 			},

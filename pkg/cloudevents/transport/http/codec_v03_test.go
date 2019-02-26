@@ -51,7 +51,7 @@ func TestCodecV03_Encode(t *testing.T) {
 					Time:            &now,
 					Type:            "com.example.test",
 					SchemaURL:       schema,
-					DataContentType: "application/json",
+					DataContentType: cloudevents.StringOfApplicationJSON(),
 					Source:          *source,
 					Extensions: map[string]interface{}{
 						"test": "extended",
@@ -102,7 +102,7 @@ func TestCodecV03_Encode(t *testing.T) {
 					Time:            &now,
 					Type:            "com.example.test",
 					SchemaURL:       schema,
-					DataContentType: "application/json",
+					DataContentType: cloudevents.StringOfApplicationJSON(),
 					Source:          *source,
 					Extensions: map[string]interface{}{
 						"test": "extended",
@@ -170,7 +170,7 @@ func TestCodecV03_Encode(t *testing.T) {
 					Time:            &now,
 					Type:            "com.example.test",
 					SchemaURL:       schema,
-					DataContentType: "application/json",
+					DataContentType: cloudevents.StringOfApplicationJSON(),
 					Source:          *source,
 					Extensions: map[string]interface{}{
 						"test": "extended",
@@ -265,7 +265,7 @@ func TestCodecV03_Decode(t *testing.T) {
 			want: &cloudevents.Event{
 				Context: cloudevents.EventContextV03{
 					SpecVersion:     cloudevents.CloudEventsVersionV03,
-					DataContentType: "application/json",
+					DataContentType: cloudevents.StringOfApplicationJSON(),
 					Type:            "com.example.test",
 					Source:          *source,
 					ID:              "ABC-123",
@@ -299,7 +299,7 @@ func TestCodecV03_Decode(t *testing.T) {
 					Time:            &now,
 					Type:            "com.example.test",
 					SchemaURL:       schema,
-					DataContentType: "application/json",
+					DataContentType: cloudevents.StringOfApplicationJSON(),
 					Source:          *source,
 					Extensions: map[string]interface{}{
 						"test": "extended",
@@ -366,7 +366,7 @@ func TestCodecV03_Decode(t *testing.T) {
 					Time:            &now,
 					Type:            "com.example.test",
 					SchemaURL:       schema,
-					DataContentType: "application/json",
+					DataContentType: cloudevents.StringOfApplicationJSON(),
 					Source:          *source,
 					Extensions: map[string]interface{}{
 						"test": "extended",
