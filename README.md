@@ -65,8 +65,8 @@ c, err := client.NewHTTPClient(
 )
 ```
 
-Checkout the sample [sender](./cmd/samples/sender) and
-[receiver](./cmd/samples/receiver) applications for working demo.
+Checkout the sample [sender](./cmd/samples/http/sender) and
+[receiver](./cmd/samples/http/receiver) applications for working demo.
 
 ## TODO list
 
