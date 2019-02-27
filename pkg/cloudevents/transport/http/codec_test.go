@@ -16,6 +16,94 @@ func strptr(s string) *string {
 	return &s
 }
 
+func TestDefaultBinaryEncodingSelectionStrategy(t *testing.T) {
+	testCases := map[string]struct {
+		event cloudevents.Event
+		want  http.Encoding
+	}{
+		"default, unknown version": {
+			event: cloudevents.Event{
+				Context: cloudevents.EventContextV01{
+					CloudEventsVersion: "unknown",
+				},
+			},
+			want: http.Default,
+		},
+		"v0.1": {
+			event: cloudevents.Event{
+				Context: cloudevents.EventContextV01{}.AsV01(),
+			},
+			want: http.BinaryV01,
+		},
+		"v0.2": {
+			event: cloudevents.Event{
+				Context: cloudevents.EventContextV02{}.AsV02(),
+			},
+			want: http.BinaryV02,
+		},
+		"v0.3": {
+			event: cloudevents.Event{
+				Context: cloudevents.EventContextV03{}.AsV03(),
+			},
+			want: http.BinaryV03,
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+
+			got := http.DefaultBinaryEncodingSelectionStrategy(tc.event)
+
+			if got != tc.want {
+				t.Errorf("unexpected selection want: %s, got: %s", tc.want, got)
+			}
+		})
+	}
+}
+
+func TestDefaultStructuredEncodingSelectionStrategy(t *testing.T) {
+	testCases := map[string]struct {
+		event cloudevents.Event
+		want  http.Encoding
+	}{
+		"default, unknown version": {
+			event: cloudevents.Event{
+				Context: cloudevents.EventContextV01{
+					CloudEventsVersion: "unknown",
+				},
+			},
+			want: http.Default,
+		},
+		"v0.1": {
+			event: cloudevents.Event{
+				Context: cloudevents.EventContextV01{}.AsV01(),
+			},
+			want: http.StructuredV01,
+		},
+		"v0.2": {
+			event: cloudevents.Event{
+				Context: cloudevents.EventContextV02{}.AsV02(),
+			},
+			want: http.StructuredV02,
+		},
+		"v0.3": {
+			event: cloudevents.Event{
+				Context: cloudevents.EventContextV03{}.AsV03(),
+			},
+			want: http.StructuredV03,
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+
+			got := http.DefaultStructuredEncodingSelectionStrategy(tc.event)
+
+			if got != tc.want {
+				t.Errorf("unexpected selection want: %s, got: %s", tc.want, got)
+			}
+		})
+	}
+}
+
 func TestCodecEncode(t *testing.T) {
 	sourceUrl, _ := url.Parse("http://example.com/source")
 	source := &types.URLRef{URL: *sourceUrl}
@@ -26,6 +114,150 @@ func TestCodecEncode(t *testing.T) {
 		want    *http.Message
 		wantErr error
 	}{
+		"default v0.1 binary": {
+			codec: http.Codec{
+				DefaultEncodingSelectionFn: http.DefaultBinaryEncodingSelectionStrategy,
+			},
+			event: cloudevents.Event{
+				Context: cloudevents.EventContextV01{
+					EventType: "com.example.test",
+					Source:    *source,
+					EventID:   "ABC-123",
+				},
+			},
+			want: &http.Message{
+				Header: map[string][]string{
+					"CE-CloudEventsVersion": {"0.1"},
+					"CE-EventID":            {"ABC-123"},
+					"CE-EventType":          {"com.example.test"},
+					"CE-Source":             {"http://example.com/source"},
+					"Content-Type":          {"application/json"},
+				},
+			},
+		},
+		"default v0.1 structured": {
+			codec: http.Codec{
+				DefaultEncodingSelectionFn: http.DefaultStructuredEncodingSelectionStrategy,
+			},
+			event: cloudevents.Event{
+				Context: cloudevents.EventContextV01{
+					EventType: "com.example.test",
+					Source:    *source,
+					EventID:   "ABC-123",
+				},
+			},
+			want: &http.Message{
+				Header: map[string][]string{
+					"Content-Type": {"application/cloudevents+json"},
+				},
+				Body: func() []byte {
+					body := map[string]interface{}{
+						"contentType":        "application/json",
+						"cloudEventsVersion": "0.1",
+						"eventID":            "ABC-123",
+						"eventType":          "com.example.test",
+						"source":             "http://example.com/source",
+					}
+					return toBytes(body)
+				}(),
+			},
+		},
+		"default v0.2 binary": {
+			codec: http.Codec{
+				DefaultEncodingSelectionFn: http.DefaultBinaryEncodingSelectionStrategy,
+			},
+			event: cloudevents.Event{
+				Context: cloudevents.EventContextV02{
+					Type:   "com.example.test",
+					Source: *source,
+					ID:     "ABC-123",
+				},
+			},
+			want: &http.Message{
+				Header: map[string][]string{
+					"Ce-Specversion": {"0.2"},
+					"Ce-Id":          {"ABC-123"},
+					"Ce-Type":        {"com.example.test"},
+					"Ce-Source":      {"http://example.com/source"},
+					"Content-Type":   {"application/json"},
+				},
+			},
+		},
+		"default v0.2 structured": {
+			codec: http.Codec{
+				DefaultEncodingSelectionFn: http.DefaultStructuredEncodingSelectionStrategy,
+			},
+			event: cloudevents.Event{
+				Context: cloudevents.EventContextV02{
+					Type:   "com.example.test",
+					Source: *source,
+					ID:     "ABC-123",
+				},
+			},
+			want: &http.Message{
+				Header: map[string][]string{
+					"Content-Type": {"application/cloudevents+json"},
+				},
+				Body: func() []byte {
+					body := map[string]interface{}{
+						"contenttype": "application/json",
+						"specversion": "0.2",
+						"id":          "ABC-123",
+						"type":        "com.example.test",
+						"source":      "http://example.com/source",
+					}
+					return toBytes(body)
+				}(),
+			},
+		},
+		"default v0.3 binary": {
+			codec: http.Codec{
+				DefaultEncodingSelectionFn: http.DefaultBinaryEncodingSelectionStrategy,
+			},
+			event: cloudevents.Event{
+				Context: cloudevents.EventContextV03{
+					Type:   "com.example.test",
+					Source: *source,
+					ID:     "ABC-123",
+				},
+			},
+			want: &http.Message{
+				Header: map[string][]string{
+					"Ce-Specversion": {"0.3"},
+					"Ce-Id":          {"ABC-123"},
+					"Ce-Type":        {"com.example.test"},
+					"Ce-Source":      {"http://example.com/source"},
+					"Content-Type":   {"application/json"},
+				},
+			},
+		},
+		"default v0.3 structured": {
+			codec: http.Codec{
+				DefaultEncodingSelectionFn: http.DefaultStructuredEncodingSelectionStrategy,
+			},
+			event: cloudevents.Event{
+				Context: cloudevents.EventContextV03{
+					Type:   "com.example.test",
+					Source: *source,
+					ID:     "ABC-123",
+				},
+			},
+			want: &http.Message{
+				Header: map[string][]string{
+					"Content-Type": {"application/cloudevents+json"},
+				},
+				Body: func() []byte {
+					body := map[string]interface{}{
+						"datacontenttype": "application/json",
+						"specversion":     "0.3",
+						"id":              "ABC-123",
+						"type":            "com.example.test",
+						"source":          "http://example.com/source",
+					}
+					return toBytes(body)
+				}(),
+			},
+		},
 		"simple v0.1 binary": {
 			codec: http.Codec{Encoding: http.BinaryV01},
 			event: cloudevents.Event{
@@ -117,7 +349,7 @@ func TestCodecEncode(t *testing.T) {
 		"simple v0.3 binary": {
 			codec: http.Codec{Encoding: http.BinaryV03},
 			event: cloudevents.Event{
-				Context: cloudevents.EventContextV02{
+				Context: cloudevents.EventContextV03{
 					Type:   "com.example.test",
 					Source: *source,
 					ID:     "ABC-123",

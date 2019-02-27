@@ -10,6 +10,8 @@ import (
 type Codec struct {
 	Encoding Encoding
 
+	DefaultEncodingSelectionFn EncodingSelector
+
 	v01 *CodecV01
 	v02 *CodecV02
 	v03 *CodecV03
@@ -17,33 +19,65 @@ type Codec struct {
 
 var _ transport.Codec = (*Codec)(nil)
 
+func DefaultBinaryEncodingSelectionStrategy(e cloudevents.Event) Encoding {
+	switch e.SpecVersion() {
+	case cloudevents.CloudEventsVersionV01:
+		return BinaryV01
+	case cloudevents.CloudEventsVersionV02:
+		return BinaryV02
+	case cloudevents.CloudEventsVersionV03:
+		return BinaryV03
+	}
+	// Unknown version, return Default.
+	return Default
+}
+
+func DefaultStructuredEncodingSelectionStrategy(e cloudevents.Event) Encoding {
+	switch e.SpecVersion() {
+	case cloudevents.CloudEventsVersionV01:
+		return StructuredV01
+	case cloudevents.CloudEventsVersionV02:
+		return StructuredV02
+	case cloudevents.CloudEventsVersionV03:
+		return StructuredV03
+	}
+	// Unknown version, return Default.
+	return Default
+}
+
 func (c *Codec) Encode(e cloudevents.Event) (transport.Message, error) {
-	switch c.Encoding {
+	encoding := c.Encoding
+
+	if encoding == Default && c.DefaultEncodingSelectionFn != nil {
+		encoding = c.DefaultEncodingSelectionFn(e)
+	}
+
+	switch encoding {
 	case Default:
 		fallthrough
 	case BinaryV01:
 		fallthrough
 	case StructuredV01:
 		if c.v01 == nil {
-			c.v01 = &CodecV01{Encoding: c.Encoding}
+			c.v01 = &CodecV01{Encoding: encoding}
 		}
 		return c.v01.Encode(e)
 	case BinaryV02:
 		fallthrough
 	case StructuredV02:
 		if c.v02 == nil {
-			c.v02 = &CodecV02{Encoding: c.Encoding}
+			c.v02 = &CodecV02{Encoding: encoding}
 		}
 		return c.v02.Encode(e)
 	case BinaryV03:
 		fallthrough
 	case StructuredV03:
 		if c.v03 == nil {
-			c.v03 = &CodecV03{Encoding: c.Encoding}
+			c.v03 = &CodecV03{Encoding: encoding}
 		}
 		return c.v03.Encode(e)
 	default:
-		return nil, fmt.Errorf("unknown encoding: %s", c.Encoding)
+		return nil, fmt.Errorf("unknown encoding: %s", encoding)
 	}
 }
 

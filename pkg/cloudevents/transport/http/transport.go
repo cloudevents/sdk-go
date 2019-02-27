@@ -11,12 +11,15 @@ import (
 	"net/http"
 )
 
+type EncodingSelector func(e cloudevents.Event) Encoding
+
 // type check that this transport message impl matches the contract
 var _ transport.Sender = (*Transport)(nil)
 
 // Transport acts as both a http client and a http handler.
 type Transport struct {
-	Encoding Encoding
+	Encoding                   Encoding
+	DefaultEncodingSelectionFn EncodingSelector
 
 	// Sending
 	Client *http.Client
@@ -31,25 +34,12 @@ type Transport struct {
 
 func (t *Transport) loadCodec() bool {
 	if t.codec == nil {
-		switch t.Encoding {
-		case Default:
-			t.codec = &Codec{}
-		case BinaryV01:
-			fallthrough
-		case StructuredV01:
-			t.codec = &CodecV01{Encoding: t.Encoding}
-		case BinaryV02:
-			fallthrough
-		case StructuredV02:
-			t.codec = &CodecV02{Encoding: t.Encoding}
-		case BinaryV03:
-			fallthrough
-		case StructuredV03:
-			fallthrough
-		case BatchedV03:
-			t.codec = &CodecV03{Encoding: t.Encoding}
-		default:
-			return false
+		if t.DefaultEncodingSelectionFn != nil && t.Encoding != Default {
+			log.Printf("[warn] Transport has a DefaultEncodingSelectionFn set but Encoding is not Default. DefaultEncodingSelectionFn will be ignored.")
+		}
+		t.codec = &Codec{
+			Encoding:                   t.Encoding,
+			DefaultEncodingSelectionFn: t.DefaultEncodingSelectionFn,
 		}
 	}
 	return true
