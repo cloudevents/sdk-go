@@ -6,6 +6,7 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"github.com/google/go-cmp/cmp"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 )
@@ -57,7 +58,7 @@ func TestGetDataContentType(t *testing.T) {
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 
-			got := tc.event.Context.GetDataContentType()
+			got := tc.event.Context.GetDataMediaType()
 
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("unexpected (-want, +got) = %v", diff)
@@ -160,6 +161,69 @@ func TestDataAs(t *testing.T) {
 	}
 }
 
+func TestValidate(t *testing.T) {
+	now := types.Timestamp{Time: time.Now()}
+
+	testCases := map[string]struct {
+		event ce.Event
+		want  []string
+	}{
+		"min valid v0.1": {
+			event: ce.Event{
+				Context: MinEventContextV01(),
+			},
+		},
+		"min valid v0.2": {
+			event: ce.Event{
+				Context: MinEventContextV02(),
+			},
+		},
+		"min valid v0.3": {
+			event: ce.Event{
+				Context: MinEventContextV03(),
+			},
+		},
+		"json valid, v0.1": {
+			event: ce.Event{
+				Context: FullEventContextV01(now),
+				Data:    []byte(`{"a":"apple","b":"banana"}`),
+			},
+		},
+		"json valid, v0.2": {
+			event: ce.Event{
+				Context: FullEventContextV02(now),
+				Data:    []byte(`{"a":"apple","b":"banana"}`),
+			},
+		},
+		"json valid, v0.3": {
+			event: ce.Event{
+				Context: FullEventContextV03(now),
+				Data:    []byte(`{"a":"apple","b":"banana"}`),
+			},
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+
+			got := tc.event.Validate()
+			var gotErr string
+			if got != nil {
+				gotErr = got.Error()
+
+				if len(tc.want) == 0 {
+					t.Errorf("unexpected no error, got %q", gotErr)
+				}
+			}
+
+			for _, want := range tc.want {
+				if !strings.Contains(gotErr, want) {
+					t.Errorf("unexpected error, expected to contain %q, got: %q ", want, gotErr)
+				}
+			}
+		})
+	}
+}
+
 func TestString(t *testing.T) {
 	now := types.Timestamp{Time: time.Now()}
 
@@ -169,17 +233,35 @@ func TestString(t *testing.T) {
 	}{
 		"empty v0.1": {
 			event: ce.Event{
+				Context: ce.EventContextV01{},
+			},
+			want: "SpecVersion: 0.1",
+		},
+		"empty v0.2": {
+			event: ce.Event{
+				Context: ce.EventContextV02{},
+			},
+			want: "SpecVersion: 0.2",
+		},
+		"empty v0.3": {
+			event: ce.Event{
+				Context: ce.EventContextV03{},
+			},
+			want: "SpecVersion: 0.3",
+		},
+		"min v0.1": {
+			event: ce.Event{
 				Context: MinEventContextV01(),
 			},
 			want: "SpecVersion: 0.1\nType: com.example.simple",
 		},
-		"empty v0.2": {
+		"min v0.2": {
 			event: ce.Event{
 				Context: MinEventContextV02(),
 			},
 			want: "SpecVersion: 0.2\nType: com.example.simple",
 		},
-		"empty v0.3": {
+		"min v0.3": {
 			event: ce.Event{
 				Context: MinEventContextV03(),
 			},
@@ -217,6 +299,10 @@ func TestString(t *testing.T) {
 			}
 		})
 	}
+}
+
+func strptr(s string) *string {
+	return &s
 }
 
 func MinEventContextV01() ce.EventContextV01 {
@@ -266,9 +352,9 @@ func FullEventContextV01(now types.Timestamp) ce.EventContextV01 {
 		EventID:          "ABC-123",
 		EventTime:        &now,
 		EventType:        "com.example.simple",
-		EventTypeVersion: "v1alpha1",
+		EventTypeVersion: strptr("v1alpha1"),
 		SchemaURL:        schema,
-		ContentType:      "application/json",
+		ContentType:      ce.StringOfApplicationJSON(),
 		Source:           *source,
 		Extensions:       extensions,
 	}.AsV01()
@@ -290,7 +376,7 @@ func FullEventContextV02(now types.Timestamp) ce.EventContextV02 {
 		Time:        &now,
 		Type:        "com.example.simple",
 		SchemaURL:   schema,
-		ContentType: "application/json",
+		ContentType: ce.StringOfApplicationJSON(),
 		Source:      *source,
 		Extensions:  extensions,
 	}.AsV02()
@@ -312,7 +398,7 @@ func FullEventContextV03(now types.Timestamp) ce.EventContextV03 {
 		Time:            &now,
 		Type:            "com.example.simple",
 		SchemaURL:       schema,
-		DataContentType: "application/json",
+		DataContentType: ce.StringOfApplicationJSON(),
 		Source:          *source,
 		Extensions:      extensions,
 	}.AsV03()

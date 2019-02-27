@@ -10,24 +10,24 @@ import (
 
 func JsonEncodeV01(e cloudevents.Event) ([]byte, error) {
 	ctx := e.Context.AsV01()
-	if ctx.ContentType == "" {
-		ctx.ContentType = "application/json"
+	if ctx.ContentType == nil {
+		ctx.ContentType = cloudevents.StringOfApplicationJSON()
 	}
 	return jsonEncode(ctx, e.Data)
 }
 
 func JsonEncodeV02(e cloudevents.Event) ([]byte, error) {
 	ctx := e.Context.AsV02()
-	if ctx.ContentType == "" {
-		ctx.ContentType = "application/json"
+	if ctx.ContentType == nil {
+		ctx.ContentType = cloudevents.StringOfApplicationJSON()
 	}
 	return jsonEncode(ctx, e.Data)
 }
 
 func JsonEncodeV03(e cloudevents.Event) ([]byte, error) {
 	ctx := e.Context.AsV03()
-	if ctx.DataContentType == "" {
-		ctx.DataContentType = "application/json"
+	if ctx.DataContentType == nil {
+		ctx.DataContentType = cloudevents.StringOfApplicationJSON()
 	}
 	return jsonEncode(ctx, e.Data)
 }
@@ -45,13 +45,13 @@ func jsonEncode(ctx cloudevents.EventContext, data interface{}) ([]byte, error) 
 		return nil, err
 	}
 
-	dataContentType := ctx.GetDataContentType()
-	datab, err := marshalEventData(dataContentType, data)
+	mediaType := ctx.GetDataMediaType()
+	datab, err := marshalEventData(mediaType, data)
 	if err != nil {
 		return nil, err
 	}
 	if data != nil {
-		if dataContentType == "" || dataContentType == "application/json" {
+		if mediaType == "" || mediaType == cloudevents.ApplicationJSON {
 			b["data"] = datab
 		} else if datab[0] != byte('"') {
 			b["data"] = []byte(strconv.QuoteToASCII(string(datab)))

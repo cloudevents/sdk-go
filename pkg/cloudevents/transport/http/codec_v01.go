@@ -49,7 +49,7 @@ func (v CodecV01) encodeBinary(e cloudevents.Event) (transport.Message, error) {
 		return nil, err
 	}
 
-	body, err := marshalEventData(e.Context.GetDataContentType(), e.Data)
+	body, err := marshalEventData(e.Context.GetDataMediaType(), e.Data)
 	if err != nil {
 		return nil, err
 	}
@@ -72,19 +72,19 @@ func (v CodecV01) toHeaders(ec cloudevents.EventContextV01) (http.Header, error)
 	if ec.EventTime != nil && !ec.EventTime.IsZero() {
 		h["CE-EventTime"] = []string{ec.EventTime.String()}
 	}
-	if ec.EventTypeVersion != "" {
-		h["CE-EventTypeVersion"] = []string{ec.EventTypeVersion}
+	if ec.EventTypeVersion != nil {
+		h["CE-EventTypeVersion"] = []string{*ec.EventTypeVersion}
 	}
 	if ec.SchemaURL != nil {
 		h["CE-SchemaURL"] = []string{ec.SchemaURL.String()}
 	}
-	if ec.ContentType != "" {
-		h.Set("Content-Type", ec.ContentType)
+	if ec.ContentType != nil {
+		h.Set("Content-Type", *ec.ContentType)
 	} else if v.Encoding == Default || v.Encoding == BinaryV01 {
 		// in binary v0.1, the Content-Type header is tied to ec.ContentType
 		// This was later found to be an issue with the spec, but yolo.
 		// TODO: not sure what the default should be?
-		h.Set("Content-Type", "application/json")
+		h.Set("Content-Type", cloudevents.ApplicationJSON)
 	}
 
 	// Regarding Extensions, v0.1 Spec says the following:
@@ -102,7 +102,7 @@ func (v CodecV01) toHeaders(ec cloudevents.EventContextV01) (http.Header, error)
 
 func (v CodecV01) encodeStructured(e cloudevents.Event) (transport.Message, error) {
 	header := http.Header{}
-	header.Set("Content-Type", "application/cloudevents+json")
+	header.Set("Content-Type", cloudevents.ApplicationCloudEventsJSON)
 
 	body, err := codec.JsonEncodeV01(e)
 	if err != nil {
@@ -155,9 +155,13 @@ func (v CodecV01) fromHeaders(h http.Header) (cloudevents.EventContextV01, error
 		ec.Source = *source
 	}
 	ec.EventTime = types.ParseTimestamp(h.Get("CE-EventTime"))
-	ec.EventTypeVersion = h.Get("CE-EventTypeVersion")
+	etv := h.Get("CE-EventTypeVersion")
+	if etv != "" {
+		ec.EventTypeVersion = &etv
+	}
 	ec.SchemaURL = types.ParseURLRef(h.Get("CE-SchemaURL"))
-	ec.ContentType = h.Get("Content-Type")
+	et := h.Get("Content-Type")
+	ec.ContentType = &et
 
 	extensions := make(map[string]interface{})
 	for k, v := range h {
@@ -196,13 +200,13 @@ func (v CodecV01) inspectEncoding(msg transport.Message) Encoding {
 		return Unknown
 	}
 	contentType := m.Header.Get("Content-Type")
-	if contentType == "application/json" {
+	if contentType == cloudevents.ApplicationJSON {
 		return BinaryV01
 	}
-	if contentType == "application/xml" {
+	if contentType == cloudevents.ApplicationXML {
 		return BinaryV01
 	}
-	if contentType == "application/cloudevents+json" {
+	if contentType == cloudevents.ApplicationCloudEventsJSON {
 		return StructuredV01
 	}
 	return Unknown

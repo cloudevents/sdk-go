@@ -49,7 +49,7 @@ func (v CodecV02) encodeBinary(e cloudevents.Event) (transport.Message, error) {
 		return nil, err
 	}
 
-	body, err := marshalEventData(e.Context.GetDataContentType(), e.Data)
+	body, err := marshalEventData(e.Context.GetDataMediaType(), e.Data)
 	if err != nil {
 		return nil, err
 	}
@@ -74,13 +74,13 @@ func (v CodecV02) toHeaders(ec cloudevents.EventContextV02) (http.Header, error)
 	if ec.SchemaURL != nil {
 		h.Set("ce-schemaurl", ec.SchemaURL.String())
 	}
-	if ec.ContentType != "" {
-		h.Set("Content-Type", ec.ContentType)
+	if ec.ContentType != nil {
+		h.Set("Content-Type", *ec.ContentType)
 	} else if v.Encoding == Default || v.Encoding == BinaryV02 {
 		// in binary v0.2, the Content-Type header is tied to ec.ContentType
 		// This was later found to be an issue with the spec, but yolo.
 		// TODO: not sure what the default should be?
-		h.Set("Content-Type", "application/json")
+		h.Set("Content-Type", cloudevents.ApplicationJSON)
 	}
 	for k, v := range ec.Extensions {
 		// Per spec, map-valued extensions are converted to a list of headers as:
@@ -175,7 +175,10 @@ func (v CodecV02) fromHeaders(h http.Header) (cloudevents.EventContextV02, error
 	ec.SchemaURL = types.ParseURLRef(h.Get("ce-schemaurl"))
 	h.Del("ce-schemaurl")
 
-	ec.ContentType = h.Get("Content-Type")
+	contentType := h.Get("Content-Type")
+	if contentType != "" {
+		ec.ContentType = &contentType
+	}
 	h.Del("Content-Type")
 
 	// At this point, we have deleted all the known headers.
@@ -256,13 +259,13 @@ func (v CodecV02) inspectEncoding(msg transport.Message) Encoding {
 		return Unknown
 	}
 	contentType := m.Header.Get("Content-Type")
-	if contentType == "application/json" {
+	if contentType == cloudevents.ApplicationJSON {
 		return BinaryV02
 	}
-	if contentType == "application/xml" {
+	if contentType == cloudevents.ApplicationXML {
 		return BinaryV02
 	}
-	if contentType == "application/cloudevents+json" {
+	if contentType == cloudevents.ApplicationCloudEventsJSON {
 		return StructuredV02
 	}
 	return Unknown

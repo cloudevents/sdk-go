@@ -1,6 +1,7 @@
 package cloudevents
 
 import (
+	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec"
 	"strings"
 )
@@ -12,7 +13,7 @@ type Event struct {
 }
 
 func (e Event) DataAs(data interface{}) error {
-	return datacodec.Decode(e.Context.GetDataContentType(), e.Data, data)
+	return datacodec.Decode(e.Context.GetDataMediaType(), e.Data, data)
 }
 
 func (e Event) SpecVersion() string {
@@ -25,6 +26,20 @@ func (e Event) Type() string {
 
 func (e Event) DataContentType() string {
 	return e.Context.GetDataContentType()
+}
+
+func (e Event) Validate() error {
+	if e.Context == nil {
+		return fmt.Errorf("every event conforming to the CloudEvents specification MUST include a context")
+	}
+
+	if err := e.Context.Validate(); err != nil {
+		return err
+	}
+
+	// TODO: validate data.
+
+	return nil
 }
 
 func (e Event) String() string {

@@ -12,6 +12,10 @@ import (
 	"time"
 )
 
+func strptr(s string) *string {
+	return &s
+}
+
 func TestCodecEncode(t *testing.T) {
 	sourceUrl, _ := url.Parse("http://example.com/source")
 	source := &types.URLRef{URL: *sourceUrl}
@@ -211,7 +215,7 @@ func TestCodecDecode(t *testing.T) {
 					EventType:          "com.example.test",
 					Source:             *source,
 					EventID:            "ABC-123",
-					ContentType:        "application/json",
+					ContentType:        cloudevents.StringOfApplicationJSON(),
 				},
 			},
 		},
@@ -257,7 +261,7 @@ func TestCodecDecode(t *testing.T) {
 					Type:        "com.example.test",
 					Source:      *source,
 					ID:          "ABC-123",
-					ContentType: "application/json",
+					ContentType: cloudevents.StringOfApplicationJSON(),
 				},
 			},
 		},
@@ -304,7 +308,7 @@ func TestCodecDecode(t *testing.T) {
 					Type:            "com.example.test",
 					Source:          *source,
 					ID:              "ABC-123",
-					DataContentType: "application/json",
+					DataContentType: cloudevents.StringOfApplicationJSON(),
 				},
 			},
 		},
@@ -353,7 +357,7 @@ func TestCodecDecode(t *testing.T) {
 					Type:        "com.example.test",
 					Source:      *source,
 					ID:          "ABC-123",
-					ContentType: "application/json",
+					ContentType: cloudevents.StringOfApplicationJSON(),
 				},
 			},
 		},
@@ -399,7 +403,7 @@ func TestCodecDecode(t *testing.T) {
 					EventType:          "com.example.test",
 					Source:             *source,
 					EventID:            "ABC-123",
-					ContentType:        "application/json",
+					ContentType:        cloudevents.StringOfApplicationJSON(),
 				},
 			},
 		},
@@ -488,7 +492,7 @@ func TestCodecRoundTrip(t *testing.T) {
 						EventType:          "com.example.test",
 						Source:             *source,
 						EventID:            "ABC-123",
-						ContentType:        "application/json",
+						ContentType:        cloudevents.StringOfApplicationJSON(),
 					},
 					Data: map[string]interface{}{
 						"a": "apple",
@@ -515,7 +519,7 @@ func TestCodecRoundTrip(t *testing.T) {
 						EventType:          "com.example.test",
 						Source:             *source,
 						EventID:            "ABC-123",
-						ContentType:        "application/json",
+						ContentType:        cloudevents.StringOfApplicationJSON(),
 					},
 					Data: &DataExample{
 						AnInt:   42,
@@ -628,7 +632,7 @@ func TestCodecAsMiddleware(t *testing.T) {
 							EventType:   "com.example.test",
 							Source:      *source,
 							EventID:     "ABC-123",
-							ContentType: contentType,
+							ContentType: strptr(contentType),
 						},
 						Data: DataExample{
 							AnInt:   42,
@@ -641,7 +645,7 @@ func TestCodecAsMiddleware(t *testing.T) {
 							EventType:          "com.example.test",
 							Source:             *source,
 							EventID:            "ABC-123",
-							ContentType:        contentType,
+							ContentType:        strptr(contentType),
 						},
 						Data: &DataExample{
 							AnInt:   42,

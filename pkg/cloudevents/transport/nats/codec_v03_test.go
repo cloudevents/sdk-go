@@ -54,7 +54,7 @@ func TestCodecV03_Encode(t *testing.T) {
 					Time:            &now,
 					Type:            "com.example.test",
 					SchemaURL:       schema,
-					DataContentType: "application/json",
+					DataContentType: cloudevents.StringOfApplicationJSON(),
 					Source:          *source,
 					Extensions: map[string]interface{}{
 						"test": "extended",
@@ -115,7 +115,7 @@ func TestCodecV03_Encode(t *testing.T) {
 					Time:            &now,
 					Type:            "com.example.test",
 					SchemaURL:       schema,
-					DataContentType: "application/json",
+					DataContentType: cloudevents.StringOfApplicationJSON(),
 					Source:          *source,
 					Extensions: map[string]interface{}{
 						"test": "extended",
@@ -238,7 +238,7 @@ func TestCodecV03_Decode(t *testing.T) {
 					Time:            &now,
 					Type:            "com.example.test",
 					SchemaURL:       schema,
-					DataContentType: "application/json",
+					DataContentType: cloudevents.StringOfApplicationJSON(),
 					Source:          *source,
 					Extensions: map[string]interface{}{
 						"test": "extended",

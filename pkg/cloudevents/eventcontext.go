@@ -16,9 +16,12 @@ type EventContext interface {
 	// from extensions as necessary.
 	AsV03() EventContextV03
 
-	// GetDataContentType returns the MIME content type for encoding data, which is
-	// needed by both encoding and decoding.
+	// GetDataContentType returns content type on the context.
 	GetDataContentType() string
+
+	// GetDataMediaType returns the MIME media type for encoded data, which is
+	// needed by both encoding and decoding.
+	GetDataMediaType() string
 
 	// GetSpecVersion returns the native CloudEvents Spec version of the event
 	// context.
@@ -26,4 +29,6 @@ type EventContext interface {
 
 	// GetType returns the CloudEvents type from the context.
 	GetType() string
+
+	Validate() error
 }

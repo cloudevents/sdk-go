@@ -1,7 +1,10 @@
 package cloudevents
 
 import (
+	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"log"
+	"mime"
 	"strings"
 )
 
@@ -27,7 +30,7 @@ type EventContextV02 struct {
 	SchemaURL *types.URLRef `json:"schemaurl,omitempty"`
 	// A MIME (RFC2046) string describing the media type of `data`.
 	// TODO: Should an empty string assume `application/json`, `application/octet-stream`, or auto-detect the content?
-	ContentType string `json:"contenttype,omitempty"`
+	ContentType *string `json:"contenttype,omitempty"`
 	// Additional extension metadata beyond the base spec.
 	Extensions map[string]interface{} `json:"-,omitempty"` // TODO: decide how we want extensions to be inserted
 }
@@ -42,7 +45,22 @@ func (ec EventContextV02) GetSpecVersion() string {
 }
 
 func (ec EventContextV02) GetDataContentType() string {
-	return ec.ContentType
+	if ec.ContentType != nil {
+		return *ec.ContentType
+	}
+	return ""
+}
+
+func (ec EventContextV02) GetDataMediaType() string {
+	if ec.ContentType != nil {
+		mediaType, _, err := mime.ParseMediaType(*ec.ContentType)
+		if err != nil {
+			log.Printf("failed to parse media type from ContentType: %s", err)
+			return ""
+		}
+		return mediaType
+	}
+	return ""
 }
 
 func (ec EventContextV02) GetType() string {
@@ -56,16 +74,17 @@ func (ec EventContextV02) AsV01() EventContextV01 {
 		EventTime:          ec.Time,
 		EventType:          ec.Type,
 		SchemaURL:          ec.SchemaURL,
-		ContentType:        ec.ContentType,
 		Source:             ec.Source,
+		ContentType:        ec.ContentType,
 		Extensions:         make(map[string]interface{}),
 	}
+
 	for k, v := range ec.Extensions {
 		// eventTypeVersion was retired in v0.2
 		if strings.EqualFold(k, "eventTypeVersion") {
 			etv, ok := v.(string)
-			if ok {
-				ret.EventTypeVersion = etv
+			if ok && etv != "" {
+				ret.EventTypeVersion = &etv
 			}
 			continue
 		}
@@ -94,4 +113,91 @@ func (ec EventContextV02) AsV03() EventContextV03 {
 		Extensions:      ec.Extensions,
 	}
 	return ret
+}
+
+// Validate returns errors based on requirements from the CloudEvents spec.
+// For more details, see https://github.com/cloudevents/spec/blob/v0.2/spec.md
+func (ec EventContextV02) Validate() error {
+	errors := []string(nil)
+
+	// type
+	// Type: String
+	// Constraints:
+	//  REQUIRED
+	//  MUST be a non-empty string
+	//  SHOULD be prefixed with a reverse-DNS name. The prefixed domain dictates the organization which defines the semantics of this event type.
+	eventType := strings.TrimSpace(ec.Type)
+	if eventType == "" {
+		errors = append(errors, "type: MUST be a non-empty string")
+	}
+
+	// specversion
+	// Type: String
+	// Constraints:
+	//  REQUIRED
+	//  MUST be a non-empty string
+	specVersion := strings.TrimSpace(ec.SpecVersion)
+	if specVersion == "" {
+		errors = append(errors, "specversion: MUST be a non-empty string")
+	}
+
+	// source
+	// Type: URI-reference
+	// Constraints:
+	//  REQUIRED
+	source := strings.TrimSpace(ec.Source.String())
+	if source == "" {
+		errors = append(errors, "source: REQUIRED")
+	}
+
+	// id
+	// Type: String
+	// Constraints:
+	//  REQUIRED
+	//  MUST be a non-empty string
+	//  MUST be unique within the scope of the producer
+	id := strings.TrimSpace(ec.ID)
+	if id == "" {
+		errors = append(errors, "id: MUST be a non-empty string")
+
+		// no way to test "MUST be unique within the scope of the producer"
+	}
+
+	// time
+	// Type: Timestamp
+	// Constraints:
+	//  OPTIONAL
+	//  If present, MUST adhere to the format specified in RFC 3339
+	// --> no need to test this, no way to set the time without it being valid.
+
+	// schemaurl
+	// Type: URI
+	// Constraints:
+	//  OPTIONAL
+	//  If present, MUST adhere to the format specified in RFC 3986
+	if ec.SchemaURL != nil {
+		schemaURL := strings.TrimSpace(ec.SchemaURL.String())
+		// empty string is not RFC 3986 compatible.
+		if schemaURL == "" {
+			errors = append(errors, "schemaurl: if present, MUST adhere to the format specified in RFC 3986")
+		}
+	}
+
+	// contenttype
+	// Type: String per RFC 2046
+	// Constraints:
+	//  OPTIONAL
+	//  If present, MUST adhere to the format specified in RFC 2046
+	if ec.ContentType != nil {
+		contentType := strings.TrimSpace(*ec.ContentType)
+		if contentType == "" {
+			// TODO: need to test for RFC 2046
+			errors = append(errors, "contenttype: if present, MUST adhere to the format specified in RFC 2046")
+		}
+	}
+
+	if len(errors) > 0 {
+		return fmt.Errorf(strings.Join(errors, "\n"))
+	}
+	return nil
 }
