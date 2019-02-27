@@ -1,6 +1,8 @@
 package client
 
 import (
+	"fmt"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/nats"
 	"github.com/google/go-cmp/cmp"
@@ -354,6 +356,219 @@ func TestWithHTTPEncoding(t *testing.T) {
 			if diff := cmp.Diff(tc.want.transport, got.transport,
 				cmpopts.IgnoreUnexported(http.Transport{})); diff != "" {
 				t.Errorf("unexpected (-want, +got) = %v", diff)
+			}
+		})
+	}
+}
+
+func TestWithHTTPDefaultEncodingSelector(t *testing.T) {
+
+	fn := func(e cloudevents.Event) http.Encoding {
+		return http.Default
+	}
+
+	testCases := map[string]struct {
+		c       *ceClient
+		fn      http.EncodingSelector
+		want    *ceClient
+		wantErr string
+	}{
+		"valid fn": {
+			c: &ceClient{
+				transport: &http.Transport{},
+			},
+			fn: fn,
+			want: &ceClient{transport: &http.Transport{
+				DefaultEncodingSelectionFn: fn,
+			}},
+		},
+		"invalid fn": {
+			c: &ceClient{
+				transport: &http.Transport{},
+			},
+			fn:      nil,
+			wantErr: "fn for DefaultEncodingSelector was nil",
+		},
+		"empty transport": {
+			c:       &ceClient{},
+			wantErr: `invalid HTTP default encoding selector client option received for transport type`,
+		},
+		"wrong transport": {
+			c:       &ceClient{transport: &nats.Transport{}},
+			wantErr: `invalid HTTP default encoding selector client option received for transport type`,
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+
+			err := tc.c.applyOptions(WithHTTPDefaultEncodingSelector(tc.fn))
+
+			if tc.wantErr != "" || err != nil {
+				var gotErr string
+				if err != nil {
+					gotErr = err.Error()
+				}
+				if diff := cmp.Diff(tc.wantErr, gotErr); diff != "" {
+					t.Errorf("unexpected error (-want, +got) = %v", diff)
+				}
+				return
+			}
+
+			got := tc.c
+
+			if diff := cmp.Diff(tc.want.transport, got.transport,
+				cmpopts.IgnoreUnexported(http.Transport{}),
+				cmpopts.IgnoreFields(http.Transport{}, "DefaultEncodingSelectionFn")); diff != "" {
+				t.Errorf("unexpected (-want, +got) = %v", diff)
+			}
+			if tt, ok := got.transport.(*http.Transport); ok {
+				if tc.fn == nil {
+					if tt.DefaultEncodingSelectionFn != nil {
+						t.Errorf("expected nil DefaultEncodingSelectionFn")
+					}
+				} else {
+					want := fmt.Sprintf("%v", tc.fn)
+					got := fmt.Sprintf("%v", tt.DefaultEncodingSelectionFn)
+					if got != want {
+						t.Errorf("unexpected DefaultEncodingSelectionFn; want: %v; got: %v", want, got)
+					}
+				}
+			}
+		})
+	}
+}
+
+func TestWithHTTPBinaryEncoding(t *testing.T) {
+
+	fn := http.DefaultBinaryEncodingSelectionStrategy
+
+	testCases := map[string]struct {
+		c       *ceClient
+		fn      http.EncodingSelector
+		want    *ceClient
+		wantErr string
+	}{
+		"valid": {
+			c: &ceClient{
+				transport: &http.Transport{},
+			},
+			fn: fn,
+			want: &ceClient{transport: &http.Transport{
+				DefaultEncodingSelectionFn: fn,
+			}},
+		},
+		"empty transport": {
+			c:       &ceClient{},
+			wantErr: `invalid HTTP binary encoding client option received for transport type`,
+		},
+		"wrong transport": {
+			c:       &ceClient{transport: &nats.Transport{}},
+			wantErr: `invalid HTTP binary encoding client option received for transport type`,
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+
+			err := tc.c.applyOptions(WithHTTPBinaryEncoding())
+
+			if tc.wantErr != "" || err != nil {
+				var gotErr string
+				if err != nil {
+					gotErr = err.Error()
+				}
+				if diff := cmp.Diff(tc.wantErr, gotErr); diff != "" {
+					t.Errorf("unexpected error (-want, +got) = %v", diff)
+				}
+				return
+			}
+
+			got := tc.c
+
+			if diff := cmp.Diff(tc.want.transport, got.transport,
+				cmpopts.IgnoreUnexported(http.Transport{}),
+				cmpopts.IgnoreFields(http.Transport{}, "DefaultEncodingSelectionFn")); diff != "" {
+				t.Errorf("unexpected (-want, +got) = %v", diff)
+			}
+			if tt, ok := got.transport.(*http.Transport); ok {
+				if tc.fn == nil {
+					if tt.DefaultEncodingSelectionFn != nil {
+						t.Errorf("expected nil DefaultEncodingSelectionFn")
+					}
+				} else {
+					want := fmt.Sprintf("%v", tc.fn)
+					got := fmt.Sprintf("%v", tt.DefaultEncodingSelectionFn)
+					if got != want {
+						t.Errorf("unexpected DefaultEncodingSelectionFn; want: %v; got: %v", want, got)
+					}
+				}
+			}
+		})
+	}
+}
+
+func TestWithHTTPStructuredEncoding(t *testing.T) {
+
+	fn := http.DefaultStructuredEncodingSelectionStrategy
+
+	testCases := map[string]struct {
+		c       *ceClient
+		fn      http.EncodingSelector
+		want    *ceClient
+		wantErr string
+	}{
+		"valid": {
+			c: &ceClient{
+				transport: &http.Transport{},
+			},
+			fn: fn,
+			want: &ceClient{transport: &http.Transport{
+				DefaultEncodingSelectionFn: fn,
+			}},
+		},
+		"empty transport": {
+			c:       &ceClient{},
+			wantErr: `invalid HTTP structured encoding client option received for transport type`,
+		},
+		"wrong transport": {
+			c:       &ceClient{transport: &nats.Transport{}},
+			wantErr: `invalid HTTP structured encoding client option received for transport type`,
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+
+			err := tc.c.applyOptions(WithHTTPStructuredEncoding())
+
+			if tc.wantErr != "" || err != nil {
+				var gotErr string
+				if err != nil {
+					gotErr = err.Error()
+				}
+				if diff := cmp.Diff(tc.wantErr, gotErr); diff != "" {
+					t.Errorf("unexpected error (-want, +got) = %v", diff)
+				}
+				return
+			}
+
+			got := tc.c
+
+			if diff := cmp.Diff(tc.want.transport, got.transport,
+				cmpopts.IgnoreUnexported(http.Transport{}),
+				cmpopts.IgnoreFields(http.Transport{}, "DefaultEncodingSelectionFn")); diff != "" {
+				t.Errorf("unexpected (-want, +got) = %v", diff)
+			}
+			if tt, ok := got.transport.(*http.Transport); ok {
+				if tc.fn == nil {
+					if tt.DefaultEncodingSelectionFn != nil {
+						t.Errorf("expected nil DefaultEncodingSelectionFn")
+					}
+				} else {
+					want := fmt.Sprintf("%v", tc.fn)
+					got := fmt.Sprintf("%v", tt.DefaultEncodingSelectionFn)
+					if got != want {
+						t.Errorf("unexpected DefaultEncodingSelectionFn; want: %v; got: %v", want, got)
+					}
+				}
 			}
 		})
 	}

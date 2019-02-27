@@ -14,10 +14,6 @@ const (
 	Unknown
 )
 
-const (
-	CloudEventsStructuredMediaType string = "application/cloudevents+json"
-)
-
 func (e Encoding) String() string {
 	switch e {
 	case Default:
@@ -50,6 +46,8 @@ func (e Encoding) String() string {
 
 func (e Encoding) Version() string {
 	switch e {
+	case Default:
+		return "Default"
 
 	// Version 0.1
 	case BinaryV01:
@@ -58,8 +56,6 @@ func (e Encoding) Version() string {
 		return "v0.1"
 
 	// Version 0.2
-	case Default: // <-- Move when a new default is wanted.
-		fallthrough
 	case BinaryV02:
 		fallthrough
 	case StructuredV02:

@@ -31,9 +31,8 @@ func WithTarget(targetUrl string) Option {
 				}
 				t.Req.URL = target
 				return nil
-			} else {
-				return fmt.Errorf("target option was empty string")
 			}
+			return fmt.Errorf("target option was empty string")
 		}
 		return fmt.Errorf("invalid target client option received for transport type")
 	}
@@ -50,9 +49,8 @@ func WithHTTPMethod(method string) Option {
 				}
 				t.Req.Method = method
 				return nil
-			} else {
-				return fmt.Errorf("method option was empty string")
 			}
+			return fmt.Errorf("method option was empty string")
 		}
 		return fmt.Errorf("invalid HTTP method client option received for transport type")
 	}
@@ -66,6 +64,47 @@ func WithHTTPEncoding(encoding http.Encoding) Option {
 			return nil
 		}
 		return fmt.Errorf("invalid HTTP encoding client option received for transport type")
+	}
+}
+
+// WithHTTPDefaultEncodingSelector sets the encoding selection strategy for
+// default encoding selections based on Event.
+func WithHTTPDefaultEncodingSelector(fn http.EncodingSelector) Option {
+	return func(c *ceClient) error {
+		if t, ok := c.transport.(*http.Transport); ok {
+			if fn != nil {
+				t.DefaultEncodingSelectionFn = fn
+				return nil
+			}
+			return fmt.Errorf("fn for DefaultEncodingSelector was nil")
+		}
+		return fmt.Errorf("invalid HTTP default encoding selector client option received for transport type")
+	}
+}
+
+// WithHTTPBinaryEncodingSelector sets the encoding selection strategy for
+// default encoding selections based on Event, the encoded event will be the
+// given version in Binary form.
+func WithHTTPBinaryEncoding() Option {
+	return func(c *ceClient) error {
+		if t, ok := c.transport.(*http.Transport); ok {
+			t.DefaultEncodingSelectionFn = http.DefaultBinaryEncodingSelectionStrategy
+			return nil
+		}
+		return fmt.Errorf("invalid HTTP binary encoding client option received for transport type")
+	}
+}
+
+// WithHTTPStructuredEncodingSelector sets the encoding selection strategy for
+// default encoding selections based on Event, the encoded event will be the
+//// given version in Structured form.
+func WithHTTPStructuredEncoding() Option {
+	return func(c *ceClient) error {
+		if t, ok := c.transport.(*http.Transport); ok {
+			t.DefaultEncodingSelectionFn = http.DefaultStructuredEncodingSelectionStrategy
+			return nil
+		}
+		return fmt.Errorf("invalid HTTP structured encoding client option received for transport type")
 	}
 }
 
