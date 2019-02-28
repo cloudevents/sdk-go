@@ -26,17 +26,21 @@ type ceClient struct {
 }
 
 func (c *ceClient) Send(ctx context.Context, event cloudevents.Event) error {
+	// Confirm we have a transport set.
 	if c.transport == nil {
 		return fmt.Errorf("client not ready, transport not initalized")
 	}
-	if err := event.Validate(); err != nil {
-		return err
-	}
+	// Apply the defaulter chain to the incoming event.
 	if len(c.eventDefaulterFns) > 0 {
 		for _, fn := range c.eventDefaulterFns {
 			event = fn(event)
 		}
 	}
+	// Validate the event conforms to the CloudEvents Spec.
+	if err := event.Validate(); err != nil {
+		return err
+	}
+	// Send the event over the transport.
 	return c.transport.Send(ctx, event)
 }
 
