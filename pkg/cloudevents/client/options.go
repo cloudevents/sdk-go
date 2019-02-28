@@ -146,3 +146,14 @@ func WithNATSEncoding(encoding nats.Encoding) Option {
 		return fmt.Errorf("invalid NATS encoding client option received for transport type")
 	}
 }
+
+// WithEventDefaulter adds an event default to the end of the defaulter chain.
+func WithEventDefaulter(fn EventDefaulter) Option {
+	return func(c *ceClient) error {
+		if fn == nil {
+			return fmt.Errorf("client option was given an nil event defaulter")
+		}
+		c.eventDefaulterFns = append(c.eventDefaulterFns, fn)
+		return nil
+	}
+}

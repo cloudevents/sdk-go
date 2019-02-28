@@ -21,6 +21,8 @@ type Client interface {
 type ceClient struct {
 	transport transport.Sender
 	receiver  Receiver
+
+	eventDefaulterFns []EventDefaulter
 }
 
 func (c *ceClient) Send(ctx context.Context, event cloudevents.Event) error {
@@ -29,6 +31,11 @@ func (c *ceClient) Send(ctx context.Context, event cloudevents.Event) error {
 	}
 	if err := event.Validate(); err != nil {
 		return err
+	}
+	if len(c.eventDefaulterFns) > 0 {
+		for _, fn := range c.eventDefaulterFns {
+			event = fn(event)
+		}
 	}
 	return c.transport.Send(ctx, event)
 }
