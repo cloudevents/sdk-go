@@ -8,7 +8,6 @@ import (
 	cloudeventshttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 	cloudeventsnats "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/nats"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
-	"github.com/google/uuid"
 	"github.com/kelseyhightower/envconfig"
 	"log"
 	"net/url"
@@ -77,11 +76,8 @@ func (d *Demo) Send() error {
 }
 
 func (d *Demo) context() cloudevents.EventContext {
-	now := time.Now()
 	ctx := cloudevents.EventContextV01{
-		EventID:     uuid.New().String(),
 		EventType:   d.EventType,
-		EventTime:   &types.Timestamp{Time: now},
 		Source:      types.URLRef{URL: d.Source},
 		ContentType: &d.ContentType,
 	}.AsV01()
@@ -99,7 +95,12 @@ func _main(args []string, env envConfig) int {
 		// HTTP
 		for _, encoding := range []cloudeventshttp.Encoding{cloudeventshttp.Default, cloudeventshttp.BinaryV01, cloudeventshttp.StructuredV01, cloudeventshttp.BinaryV02, cloudeventshttp.StructuredV02, cloudeventshttp.BinaryV03, cloudeventshttp.StructuredV03} {
 
-			c, err := client.NewHTTPClient(client.WithTarget(env.HTTPTarget), client.WithHTTPEncoding(encoding))
+			c, err := client.NewHTTPClient(
+				client.WithTarget(env.HTTPTarget),
+				client.WithHTTPEncoding(encoding),
+				client.WithUUIDs(),
+				client.WithTimeNow(),
+			)
 			if err != nil {
 				log.Printf("failed to create client, %v", err)
 				return 1
@@ -119,7 +120,11 @@ func _main(args []string, env envConfig) int {
 
 		// NATS
 		for _, encoding := range []cloudeventsnats.Encoding{cloudeventsnats.Default, cloudeventsnats.StructuredV02, cloudeventsnats.StructuredV03} {
-			c, err := client.NewNATSClient(env.NATSServer, env.Subject, client.WithNATSEncoding(encoding))
+			c, err := client.NewNATSClient(env.NATSServer, env.Subject,
+				client.WithNATSEncoding(encoding),
+				client.WithUUIDs(),
+				client.WithTimeNow(),
+			)
 			if err != nil {
 				log.Printf("failed to create client, %v", err)
 				return 1
