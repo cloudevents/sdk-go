@@ -11,5 +11,4 @@ require (
 	github.com/nats-io/nuid v1.0.0 // indirect
 	golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4 // indirect
 	golang.org/x/sys v0.0.0-20190219203350-90b0e4468f99 // indirect
-	k8s.io/apimachinery v0.0.0-20190228224630-317ad695e4db // indirect
 )
