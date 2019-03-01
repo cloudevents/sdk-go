@@ -200,14 +200,8 @@ func (v CodecV01) inspectEncoding(msg transport.Message) Encoding {
 		return Unknown
 	}
 	contentType := m.Header.Get("Content-Type")
-	if contentType == cloudevents.ApplicationJSON {
-		return BinaryV01
-	}
-	if contentType == cloudevents.ApplicationXML {
-		return BinaryV01
-	}
 	if contentType == cloudevents.ApplicationCloudEventsJSON {
 		return StructuredV01
 	}
-	return Unknown
+	return BinaryV01
 }
