@@ -277,17 +277,75 @@ func TestWithPort(t *testing.T) {
 		},
 		"empty transport": {
 			c:       &ceClient{},
-			wantErr: `invalid HTTP port client option received for transport type`,
+			wantErr: `port: invalid client option received for non-HTTP transport type`,
 		},
 		"wrong transport": {
 			c:       &ceClient{transport: &nats.Transport{}},
-			wantErr: `invalid HTTP port client option received for transport type`,
+			wantErr: `port: invalid client option received for non-HTTP transport type`,
 		},
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 
 			err := tc.c.applyOptions(WithHTTPPort(tc.port))
+
+			if tc.wantErr != "" || err != nil {
+				var gotErr string
+				if err != nil {
+					gotErr = err.Error()
+				}
+				if diff := cmp.Diff(tc.wantErr, gotErr); diff != "" {
+					t.Errorf("unexpected error (-want, +got) = %v", diff)
+				}
+				return
+			}
+
+			got := tc.c
+
+			if diff := cmp.Diff(tc.want.transport, got.transport,
+				cmpopts.IgnoreUnexported(http.Transport{}), cmpopts.IgnoreUnexported(nethttp.Request{})); diff != "" {
+				t.Errorf("unexpected (-want, +got) = %v", diff)
+			}
+		})
+	}
+}
+
+func TestWithPath(t *testing.T) {
+	testCases := map[string]struct {
+		c       *ceClient
+		path    string
+		want    *ceClient
+		wantErr string
+	}{
+		"valid path": {
+			c: &ceClient{
+				transport: &http.Transport{},
+			},
+			path: "/test",
+			want: &ceClient{transport: &http.Transport{
+				Path: "/test",
+			}},
+		},
+		"invalid path": {
+			c: &ceClient{
+				transport: &http.Transport{},
+			},
+			path:    "",
+			wantErr: `client option was given an invalid path: ""`,
+		},
+		"empty transport": {
+			c:       &ceClient{},
+			wantErr: `path: invalid client option received for non-HTTP transport type`,
+		},
+		"wrong transport": {
+			c:       &ceClient{transport: &nats.Transport{}},
+			wantErr: `path: invalid client option received for non-HTTP transport type`,
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+
+			err := tc.c.applyOptions(WithHTTPPath(tc.path))
 
 			if tc.wantErr != "" || err != nil {
 				var gotErr string
