@@ -11,7 +11,7 @@ import (
 )
 
 func TestCodecV03_Encode(t *testing.T) {
-	now := types.Timestamp{Time: time.Now()}
+	now := types.Timestamp{Time: time.Now().UTC()}
 	sourceUrl, _ := url.Parse("http://example.com/source")
 	source := &types.URLRef{URL: *sourceUrl}
 
