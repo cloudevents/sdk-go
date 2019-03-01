@@ -11,7 +11,7 @@ import (
 )
 
 func TestCodecV01_Encode(t *testing.T) {
-	now := types.Timestamp{Time: time.Now()}
+	now := types.Timestamp{Time: time.Now().UTC()}
 	sourceUrl, _ := url.Parse("http://example.com/source")
 	source := &types.URLRef{URL: *sourceUrl}
 
@@ -67,7 +67,7 @@ func TestCodecV01_Encode(t *testing.T) {
 				Header: map[string][]string{
 					"CE-CloudEventsVersion": {"0.1"},
 					"CE-EventID":            {"ABC-123"},
-					"CE-EventTime":          {now.Format(time.RFC3339Nano)},
+					"CE-EventTime":          {now.UTC().Format(time.RFC3339Nano)},
 					"CE-EventType":          {"com.example.full"},
 					"CE-EventTypeVersion":   {"v1alpha1"},
 					"CE-Source":             {"http://example.com/source"},
@@ -120,7 +120,7 @@ func TestCodecV01_Encode(t *testing.T) {
 				Header: map[string][]string{
 					"CE-CloudEventsVersion": {"0.1"},
 					"CE-EventID":            {"ABC-123"},
-					"CE-EventTime":          {now.Format(time.RFC3339Nano)},
+					"CE-EventTime":          {now.UTC().Format(time.RFC3339Nano)},
 					"CE-EventType":          {"com.example.full"},
 					"CE-EventTypeVersion":   {"v1alpha1"},
 					"CE-Source":             {"http://example.com/source"},
@@ -271,7 +271,7 @@ func TestCodecV01_Decode(t *testing.T) {
 				Header: map[string][]string{
 					"CE-CloudEventsVersion": {"0.1"},
 					"CE-EventID":            {"ABC-123"},
-					"CE-EventTime":          {now.Format(time.RFC3339Nano)},
+					"CE-EventTime":          {now.UTC().Format(time.RFC3339Nano)},
 					"CE-EventType":          {"com.example.full"},
 					"CE-EventTypeVersion":   {"v1alpha1"},
 					"CE-Source":             {"http://example.com/source"},

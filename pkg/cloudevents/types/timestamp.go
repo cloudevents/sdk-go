@@ -26,7 +26,7 @@ func (t *Timestamp) MarshalJSON() ([]byte, error) {
 	if t == nil || t.IsZero() {
 		return []byte(`""`), nil
 	}
-	rfc3339 := fmt.Sprintf("%q", t.Format(time.RFC3339Nano))
+	rfc3339 := fmt.Sprintf("%q", t.UTC().Format(time.RFC3339Nano))
 	return []byte(rfc3339), nil
 }
 
@@ -44,8 +44,8 @@ func (t *Timestamp) UnmarshalJSON(b []byte) error {
 
 func (t *Timestamp) String() string {
 	if t == nil {
-		return time.Time{}.Format(time.RFC3339Nano)
+		return time.Time{}.UTC().Format(time.RFC3339Nano)
 	}
 
-	return t.Format(time.RFC3339Nano)
+	return t.UTC().Format(time.RFC3339Nano)
 }
