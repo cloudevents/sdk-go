@@ -46,8 +46,11 @@ func (c *ceClient) startHTTPReceiver(ctx context.Context, t *cloudeventshttp.Tra
 	c.receiver = fn
 	t.Receiver = c
 
+	// Handle cloudevents receive on a path, normally "/"
+	http.HandleFunc(t.GetPath(), t.ServeHTTP)
+
 	go func() {
-		log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", t.GetPort()), t))
+		log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", t.GetPort()), nil))
 	}()
 
 	return nil

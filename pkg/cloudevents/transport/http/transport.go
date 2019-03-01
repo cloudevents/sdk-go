@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 )
 
 type EncodingSelector func(e cloudevents.Event) Encoding
@@ -26,7 +27,8 @@ type Transport struct {
 	Req    *http.Request
 
 	// Receiving
-	Port     int
+	Port     int    // default 8080
+	Path     string // default "/"
 	Receiver transport.Receiver
 
 	codec transport.Codec
@@ -161,4 +163,12 @@ func (t *Transport) GetPort() int {
 		return t.Port
 	}
 	return 8080 // default
+}
+
+func (t *Transport) GetPath() string {
+	path := strings.TrimSpace(t.Path)
+	if len(path) > 0 {
+		return path
+	}
+	return "/" // default
 }

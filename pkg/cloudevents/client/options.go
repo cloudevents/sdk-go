@@ -118,7 +118,22 @@ func WithHTTPPort(port int) Option {
 			t.Port = port
 			return nil
 		}
-		return fmt.Errorf("invalid HTTP port client option received for transport type")
+		return fmt.Errorf("port: invalid client option received for non-HTTP transport type")
+	}
+}
+
+// WithHTTPPath sets the path to receive cloudevents on for clients with HTTP transports.
+func WithHTTPPath(path string) Option {
+	return func(c *ceClient) error {
+		if t, ok := c.transport.(*http.Transport); ok {
+			path = strings.TrimSpace(path)
+			if len(path) == 0 {
+				return fmt.Errorf("client option was given an invalid path: %q", path)
+			}
+			t.Path = path
+			return nil
+		}
+		return fmt.Errorf("path: invalid client option received for non-HTTP transport type")
 	}
 }
 
