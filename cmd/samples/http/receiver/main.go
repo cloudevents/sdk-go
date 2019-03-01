@@ -12,7 +12,8 @@ import (
 
 type envConfig struct {
 	// Port on which to listen for cloudevents
-	Port int `envconfig:"PORT" default:"8080"`
+	Port int    `envconfig:"RCV_PORT" default:"8080"`
+	Path string `envconfig:"RCV_PATH" default:"/"`
 }
 
 func main() {
@@ -42,12 +43,15 @@ func gotEvent(event cloudevents.Event) {
 func _main(args []string, env envConfig) int {
 	ctx := context.Background()
 
-	_, err := client.StartHTTPReceiver(ctx, gotEvent, client.WithHTTPPort(env.Port))
+	_, err := client.StartHTTPReceiver(ctx, gotEvent,
+		client.WithHTTPPort(env.Port),
+		client.WithHTTPPath(env.Path),
+	)
 	if err != nil {
 		log.Fatalf("failed to start receiver: %s", err.Error())
 	}
 
-	log.Printf("listening on port %d\n", env.Port)
+	log.Printf("listening on :%d%s\n", env.Port, env.Path)
 	<-ctx.Done()
 
 	return 0
