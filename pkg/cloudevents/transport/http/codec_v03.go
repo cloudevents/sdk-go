@@ -191,7 +191,7 @@ func (v CodecV03) fromHeaders(h http.Header) (cloudevents.EventContextV03, error
 
 	extensions := make(map[string]interface{})
 	for k, v := range h {
-		if strings.EqualFold(k[:len("ce-")], "ce-") {
+		if len(k) > len("ce-") && strings.EqualFold(k[:len("ce-")], "ce-") {
 			ak := strings.ToLower(k[len("ce-"):])
 			if i := strings.Index(ak, "-"); i > 0 {
 				// attrib-key

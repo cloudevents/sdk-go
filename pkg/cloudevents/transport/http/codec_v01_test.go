@@ -366,6 +366,28 @@ func TestCodecV01_Decode(t *testing.T) {
 				}),
 			},
 		},
+		"simple v0.1 binary with short header": {
+			codec: http.CodecV01{},
+			msg: &http.Message{
+				Header: map[string][]string{
+					"CE-CloudEventsVersion": {"0.1"},
+					"CE-EventID":            {"ABC-123"},
+					"CE-EventType":          {"com.example.test"},
+					"CE-Source":             {"http://example.com/source"},
+					"Content-Type":          {"application/json"},
+					"X":                     {"Notice how short the header's name is"},
+				},
+			},
+			want: &cloudevents.Event{
+				Context: cloudevents.EventContextV01{
+					CloudEventsVersion: cloudevents.CloudEventsVersionV01,
+					EventType:          "com.example.test",
+					Source:             *source,
+					EventID:            "ABC-123",
+					ContentType:        cloudevents.StringOfApplicationJSON(),
+				},
+			},
+		},
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {

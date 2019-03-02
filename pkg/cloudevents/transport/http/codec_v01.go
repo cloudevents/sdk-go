@@ -165,7 +165,7 @@ func (v CodecV01) fromHeaders(h http.Header) (cloudevents.EventContextV01, error
 
 	extensions := make(map[string]interface{})
 	for k, v := range h {
-		if strings.EqualFold(k[:len("CE-X-")], "CE-X-") {
+		if len(k) > len("CE-X-") && strings.EqualFold(k[:len("CE-X-")], "CE-X-") {
 			key := k[len("CE-X-"):]
 			var tmp interface{}
 			if err := json.Unmarshal([]byte(v[0]), &tmp); err == nil {
