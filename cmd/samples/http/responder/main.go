@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/google/uuid"
 	"github.com/kelseyhightower/envconfig"
 	"log"
 	"os"
+	"time"
 )
 
 type envConfig struct {
@@ -38,6 +41,23 @@ func gotEvent(event cloudevents.Event) (*cloudevents.Event, error) {
 	}
 	fmt.Printf("Got Data: %+v\n", data)
 	fmt.Printf("----------------------------\n")
+
+	if data.Message == "ping" {
+		resp := cloudevents.Event{
+			Context: cloudevents.EventContextV02{
+				Source: *types.ParseURLRef("/pong"),
+				Time:   &types.Timestamp{Time: time.Now()},
+				Type:   "samples.http.pong",
+				ID:     uuid.New().String(),
+			}.AsV02(),
+			Data: Example{
+				Sequence: data.Sequence,
+				Message:  "pong",
+			},
+		}
+		return &resp, nil
+	}
+
 	return nil, nil
 }
 

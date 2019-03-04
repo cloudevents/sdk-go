@@ -50,7 +50,7 @@ func (c *ceClient) startHTTPReceiver(ctx context.Context, t *cloudeventshttp.Tra
 	http.HandleFunc(t.GetPath(), t.ServeHTTP)
 
 	go func() {
-		log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", t.GetPort()), nil))
+		log.Panic(http.ListenAndServe(fmt.Sprintf(":%d", t.GetPort()), nil))
 	}()
 
 	return nil

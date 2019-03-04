@@ -7,11 +7,11 @@ import (
 
 // Transport is the interface for transport sender to send the converted Message
 // over the underlying transport.
-type Sender interface {
-	Send(context.Context, cloudevents.Event) error
+type Transport interface {
+	Send(context.Context, cloudevents.Event) (*cloudevents.Event, error)
 }
 
 // Receiver TODO not sure yet.
 type Receiver interface {
-	Receive(cloudevents.Event)
+	Receive(event cloudevents.Event) (*cloudevents.Event, error)
 }

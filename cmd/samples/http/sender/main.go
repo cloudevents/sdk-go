@@ -50,7 +50,7 @@ type Example struct {
 	Message  string `json:"message"`
 }
 
-func (d *Demo) Send(eventContext cloudevents.EventContext, i int) error {
+func (d *Demo) Send(eventContext cloudevents.EventContext, i int) (*cloudevents.Event, error) {
 	event := cloudevents.Event{
 		Context: eventContext,
 		Data: &Example{
@@ -80,8 +80,9 @@ func _main(args []string, env envConfig) int {
 
 			d := &Demo{
 				Message: fmt.Sprintf("Hello, %s!", encoding),
-				Source:  *source,
-				Client:  c,
+				//Message: "ping",
+				Source: *source,
+				Client: c,
 			}
 
 			for i := 0; i < count; i++ {
@@ -93,9 +94,17 @@ func _main(args []string, env envConfig) int {
 					Source:      types.URLRef{URL: d.Source},
 					ContentType: &contentType,
 				}.AsV01()
-				if err := d.Send(ctx, seq); err != nil {
+				if event, err := d.Send(ctx, seq); err != nil {
 					log.Printf("failed to send: %v", err)
 					return 1
+				} else if event != nil {
+					fmt.Printf("Got Event Context: %+v\n", event.Context)
+					data := &Example{}
+					if err := event.DataAs(data); err != nil {
+						fmt.Printf("Got Data Error: %s\n", err.Error())
+					}
+					fmt.Printf("Got Data: %+v\n", data)
+					fmt.Printf("----------------------------\n")
 				}
 				seq++
 				time.Sleep(100 * time.Millisecond)

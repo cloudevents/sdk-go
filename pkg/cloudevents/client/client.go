@@ -9,26 +9,24 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/nats"
 )
 
-type Receiver func(event cloudevents.Event)
+type Receiver func(event cloudevents.Event) (*cloudevents.Event, error)
 
 type Client interface {
-	Send(ctx context.Context, event cloudevents.Event) error
+	Send(ctx context.Context, event cloudevents.Event) (*cloudevents.Event, error)
 	StartReceiver(ctx context.Context, fn Receiver) error
-
-	Receive(event cloudevents.Event)
 }
 
 type ceClient struct {
-	transport transport.Sender
+	transport transport.Transport
 	receiver  Receiver
 
 	eventDefaulterFns []EventDefaulter
 }
 
-func (c *ceClient) Send(ctx context.Context, event cloudevents.Event) error {
+func (c *ceClient) Send(ctx context.Context, event cloudevents.Event) (*cloudevents.Event, error) {
 	// Confirm we have a transport set.
 	if c.transport == nil {
-		return fmt.Errorf("client not ready, transport not initialized")
+		return nil, fmt.Errorf("client not ready, transport not initialized")
 	}
 	// Apply the defaulter chain to the incoming event.
 	if len(c.eventDefaulterFns) > 0 {
@@ -38,16 +36,17 @@ func (c *ceClient) Send(ctx context.Context, event cloudevents.Event) error {
 	}
 	// Validate the event conforms to the CloudEvents Spec.
 	if err := event.Validate(); err != nil {
-		return err
+		return nil, err
 	}
 	// Send the event over the transport.
 	return c.transport.Send(ctx, event)
 }
 
-func (c *ceClient) Receive(event cloudevents.Event) {
+func (c *ceClient) Receive(event cloudevents.Event) (*cloudevents.Event, error) {
 	if c.receiver != nil {
-		c.receiver(event)
+		return c.receiver(event)
 	}
+	return nil, nil
 }
 
 func (c *ceClient) StartReceiver(ctx context.Context, fn Receiver) error {

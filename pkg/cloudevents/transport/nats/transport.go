@@ -10,7 +10,7 @@ import (
 )
 
 // type check that this transport message impl matches the contract
-var _ transport.Sender = (*Transport)(nil)
+var _ transport.Transport = (*Transport)(nil)
 
 // Transport acts as both a http client and a http handler.
 type Transport struct {
@@ -41,21 +41,21 @@ func (t *Transport) loadCodec() bool {
 	return true
 }
 
-func (t *Transport) Send(ctx context.Context, event cloudevents.Event) error {
+func (t *Transport) Send(ctx context.Context, event cloudevents.Event) (*cloudevents.Event, error) {
 	if ok := t.loadCodec(); !ok {
-		return fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
+		return nil, fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
 	}
 
 	msg, err := t.codec.Encode(event)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if m, ok := msg.(*Message); ok {
-		return t.Conn.Publish(t.Subject, m.Body)
+		return nil, t.Conn.Publish(t.Subject, m.Body)
 	}
 
-	return fmt.Errorf("failed to encode Event into a Message")
+	return nil, fmt.Errorf("failed to encode Event into a Message")
 }
 
 func (t *Transport) Listen(ctx context.Context) error {

@@ -39,7 +39,7 @@ type Example struct {
 	Message  string `json:"message"`
 }
 
-func (r *Receiver) Receive(event cloudevents.Event) {
+func (r *Receiver) Receive(event cloudevents.Event) (*cloudevents.Event, error) {
 	fmt.Printf("Got Event Context: %+v\n", event.Context)
 
 	data := &Example{}
@@ -55,6 +55,7 @@ func (r *Receiver) Receive(event cloudevents.Event) {
 	}
 
 	fmt.Printf("----------------------------\n")
+	return nil, nil
 }
 
 func _main(args []string, env envConfig) int {
