@@ -28,7 +28,7 @@ type ceClient struct {
 func (c *ceClient) Send(ctx context.Context, event cloudevents.Event) error {
 	// Confirm we have a transport set.
 	if c.transport == nil {
-		return fmt.Errorf("client not ready, transport not initalized")
+		return fmt.Errorf("client not ready, transport not initialized")
 	}
 	// Apply the defaulter chain to the incoming event.
 	if len(c.eventDefaulterFns) > 0 {
@@ -52,7 +52,7 @@ func (c *ceClient) Receive(event cloudevents.Event) {
 
 func (c *ceClient) StartReceiver(ctx context.Context, fn Receiver) error {
 	if c.transport == nil {
-		return fmt.Errorf("client not ready, transport not initalized")
+		return fmt.Errorf("client not ready, transport not initialized")
 	}
 
 	if t, ok := c.transport.(*http.Transport); ok {
