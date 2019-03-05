@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 )
 
 type EncodingSelector func(e cloudevents.Event) Encoding
@@ -60,7 +61,7 @@ func (t *Transport) Send(ctx context.Context, event cloudevents.Event) (*cloudev
 	}
 
 	// Override the default request with target from context.
-	if target := client.TargetFromContext(ctx); target != nil {
+	if target := cecontext.TargetFromContext(ctx); target != nil {
 		req.URL = target
 	}
 
@@ -116,12 +117,28 @@ type eventError struct {
 	err   error
 }
 
+// TODO: finalize
+type TransportContext struct {
+	URI    string
+	Host   string
+	Method string
+}
+
 func httpDo(ctx context.Context, req *http.Request, f func(*http.Response, error) (*cloudevents.Event, error)) (*cloudevents.Event, error) {
 	// Run the HTTP request in a goroutine and pass the response to f.
 	c := make(chan eventError, 1)
 	req = req.WithContext(ctx)
 	go func() {
 		event, err := f(http.DefaultClient.Do(req))
+
+		if event != nil {
+			event.TransportContext = &TransportContext{
+				URI:    req.RequestURI,
+				Host:   req.Host,
+				Method: req.Method,
+			}
+		}
+
 		c <- eventError{event: event, err: err}
 	}()
 	select {

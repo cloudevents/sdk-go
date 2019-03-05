@@ -231,7 +231,7 @@ func TestClientSend(t *testing.T) {
 
 			c := tc.c(server.URL)
 
-			err := c.Send(context.TODO(), tc.event)
+			_, err := c.Send(context.TODO(), tc.event) // TODO: update test with new returned event
 			if tc.wantErr != "" {
 				if err == nil {
 					t.Fatalf("failed to return expected error, got nil")

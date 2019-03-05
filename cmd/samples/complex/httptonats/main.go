@@ -50,7 +50,7 @@ func (r *Receiver) Receive(event cloudevents.Event) (*cloudevents.Event, error) 
 
 	fmt.Printf("forwarding...")
 
-	if err := r.Client.Send(context.Background(), event); err != nil {
+	if _, err := r.Client.Send(context.Background(), event); err != nil {
 		fmt.Printf("forwarding failed: %s", err.Error())
 	}
 
