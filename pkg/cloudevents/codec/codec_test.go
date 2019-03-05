@@ -5,6 +5,5 @@ import (
 )
 
 func TestCodec(t *testing.T) {
-  // TODO: add a test. This makes coverage count this dir.
+	// TODO: add a test. This makes coverage count this dir.
 }
-
