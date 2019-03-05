@@ -30,6 +30,9 @@ type Transport struct {
 	Port     int    // default 8080
 	Path     string // default "/"
 	Receiver transport.Receiver
+	server   *http.Server
+
+	handlerRegistered bool
 
 	codec transport.Codec
 }
@@ -86,6 +89,39 @@ func (t *Transport) Send(ctx context.Context, event cloudevents.Event) error {
 	}
 
 	return fmt.Errorf("failed to encode Event into a Message")
+}
+
+// This is blocking until the http server returns.
+func (t *Transport) StartReceiver(ctx context.Context) error {
+	if t.server == nil {
+		// TODO: we can avoid doing this by using the non-default handler.
+		// but then other consumers can not add to the serving server.
+		if !t.handlerRegistered {
+			http.HandleFunc(t.GetPath(), t.ServeHTTP)
+			t.handlerRegistered = true
+		}
+
+		addr := fmt.Sprintf(":%d", t.GetPort())
+		t.server = &http.Server{Addr: addr, Handler: nil}
+		go func() {
+			log.Print(t.server.ListenAndServe()) // TODO: panic?
+			t.server = nil
+		}()
+		return nil
+	}
+	return fmt.Errorf("http server already started")
+}
+
+// This blocks until all active connections are closed.
+func (t *Transport) StopReceiver(ctx context.Context) error {
+	if t.server != nil {
+		err := t.server.Close()
+		t.server = nil
+		if err != nil {
+			return fmt.Errorf("failed to close http server, %s", err.Error())
+		}
+	}
+	return nil
 }
 
 func httpDo(ctx context.Context, req *http.Request, f func(*http.Response, error) error) error {
