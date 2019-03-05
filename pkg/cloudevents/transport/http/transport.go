@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	"io/ioutil"
 	"log"
@@ -47,13 +48,6 @@ func (t *Transport) loadCodec() bool {
 	return true
 }
 
-func (t *Transport) Codec() (transport.Codec, error) {
-	if t.loadCodec() {
-		return t.codec, nil
-	}
-	return nil, fmt.Errorf("failed to load codec for encoding %s", t.Encoding)
-}
-
 func (t *Transport) Send(ctx context.Context, event cloudevents.Event) (*cloudevents.Event, error) {
 	if t.Client == nil {
 		t.Client = &http.Client{}
@@ -63,6 +57,11 @@ func (t *Transport) Send(ctx context.Context, event cloudevents.Event) (*cloudev
 	if t.Req != nil {
 		req.Method = t.Req.Method
 		req.URL = t.Req.URL
+	}
+
+	// Override the default request with target from context.
+	if target := client.TargetFromContext(ctx); target != nil {
+		req.URL = target
 	}
 
 	if ok := t.loadCodec(); !ok {
