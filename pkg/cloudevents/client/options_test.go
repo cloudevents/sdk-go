@@ -272,8 +272,8 @@ func TestWithPort(t *testing.T) {
 			c: &ceClient{
 				transport: &http.Transport{},
 			},
-			port:    0,
-			wantErr: `client option was given an invalid port: 0`,
+			port:    -1,
+			wantErr: `client option was given an invalid port: -1`,
 		},
 		"empty transport": {
 			c:       &ceClient{},

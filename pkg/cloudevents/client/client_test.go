@@ -255,6 +255,270 @@ func TestClientSend(t *testing.T) {
 	}
 }
 
+func simpleBinaryServer(port int) client.Client {
+	c, _ := client.NewHTTPClient(
+		client.WithHTTPPort(port),
+		client.WithHTTPBinaryEncoding(),
+	)
+	return c
+}
+
+func TestClientReceive(t *testing.T) {
+	now := time.Now()
+
+	testCases := map[string]struct {
+		c       func(port int) client.Client
+		want    cloudevents.Event
+		resp    *http.Response
+		req     *requestValidation
+		wantErr string
+	}{
+		"binary simple v0.1": {
+			c: simpleBinaryServer,
+			want: cloudevents.Event{
+				Context: cloudevents.EventContextV01{
+					EventType:   "unit.test.client",
+					ContentType: cloudevents.StringOfApplicationJSON(),
+					Source:      *types.ParseURLRef("/unit/test/client"),
+					EventTime:   &types.Timestamp{Time: now},
+					EventID:     "AABBCCDDEE",
+				}.AsV01(),
+				Data: &map[string]string{
+					"sq":  "42",
+					"msg": "hello",
+				},
+			},
+			resp: &http.Response{
+				StatusCode: http.StatusAccepted,
+			},
+			req: &requestValidation{
+				Headers: map[string][]string{
+					"ce-cloudeventsversion": {"0.1"},
+					"ce-eventid":            {"AABBCCDDEE"},
+					"ce-eventtime":          {now.UTC().Format(time.RFC3339Nano)},
+					"ce-eventtype":          {"unit.test.client"},
+					"ce-source":             {"/unit/test/client"},
+					"content-type":          {"application/json"},
+				},
+				Body: `{"msg":"hello","sq":"42"}`,
+			},
+		},
+		//"binary simple v0.2": {
+		//	c: simpleBinaryClient,
+		//	event: cloudevents.Event{
+		//		Context: cloudevents.EventContextV02{
+		//			Type:   "unit.test.client",
+		//			Source: *types.ParseURLRef("/unit/test/client"),
+		//			Time:   &types.Timestamp{Time: now},
+		//			ID:     "AABBCCDDEE",
+		//		}.AsV02(),
+		//		Data: &map[string]interface{}{
+		//			"sq":  42,
+		//			"msg": "hello",
+		//		},
+		//	},
+		//	resp: &http.Response{
+		//		StatusCode: http.StatusAccepted,
+		//	},
+		//	want: &requestValidation{
+		//		Headers: map[string][]string{
+		//			"ce-specversion": {"0.2"},
+		//			"ce-id":          {"AABBCCDDEE"},
+		//			"ce-time":        {now.UTC().Format(time.RFC3339Nano)},
+		//			"ce-type":        {"unit.test.client"},
+		//			"ce-source":      {"/unit/test/client"},
+		//			"content-type":   {"application/json"},
+		//		},
+		//		Body: `{"msg":"hello","sq":42}`,
+		//	},
+		//},
+		//"binary simple v0.3": {
+		//	c: simpleBinaryClient,
+		//	event: cloudevents.Event{
+		//		Context: cloudevents.EventContextV03{
+		//			Type:   "unit.test.client",
+		//			Source: *types.ParseURLRef("/unit/test/client"),
+		//			Time:   &types.Timestamp{Time: now},
+		//			ID:     "AABBCCDDEE",
+		//		}.AsV03(),
+		//		Data: &map[string]interface{}{
+		//			"sq":  42,
+		//			"msg": "hello",
+		//		},
+		//	},
+		//	resp: &http.Response{
+		//		StatusCode: http.StatusAccepted,
+		//	},
+		//	want: &requestValidation{
+		//		Headers: map[string][]string{
+		//			"ce-specversion": {"0.3"},
+		//			"ce-id":          {"AABBCCDDEE"},
+		//			"ce-time":        {now.UTC().Format(time.RFC3339Nano)},
+		//			"ce-type":        {"unit.test.client"},
+		//			"ce-source":      {"/unit/test/client"},
+		//			"content-type":   {"application/json"},
+		//		},
+		//		Body: `{"msg":"hello","sq":42}`,
+		//	},
+		//},
+		//"structured simple v0.1": {
+		//	c: simpleStructuredClient,
+		//	event: cloudevents.Event{
+		//		Context: cloudevents.EventContextV01{
+		//			EventType: "unit.test.client",
+		//			Source:    *types.ParseURLRef("/unit/test/client"),
+		//			EventTime: &types.Timestamp{Time: now},
+		//			EventID:   "AABBCCDDEE",
+		//		}.AsV01(),
+		//		Data: &map[string]interface{}{
+		//			"sq":  42,
+		//			"msg": "hello",
+		//		},
+		//	},
+		//	resp: &http.Response{
+		//		StatusCode: http.StatusAccepted,
+		//	},
+		//	want: &requestValidation{
+		//		Headers: map[string][]string{
+		//			"content-type": {"application/cloudevents+json"},
+		//		},
+		//		Body: fmt.Sprintf(`{"cloudEventsVersion":"0.1","contentType":"application/json","data":{"msg":"hello","sq":42},"eventID":"AABBCCDDEE","eventTime":%q,"eventType":"unit.test.client","source":"/unit/test/client"}`,
+		//			now.UTC().Format(time.RFC3339Nano),
+		//		),
+		//	},
+		//},
+		//"structured simple v0.2": {
+		//	c: simpleStructuredClient,
+		//	event: cloudevents.Event{
+		//		Context: cloudevents.EventContextV02{
+		//			Type:   "unit.test.client",
+		//			Source: *types.ParseURLRef("/unit/test/client"),
+		//			Time:   &types.Timestamp{Time: now},
+		//			ID:     "AABBCCDDEE",
+		//		}.AsV02(),
+		//		Data: &map[string]interface{}{
+		//			"sq":  42,
+		//			"msg": "hello",
+		//		},
+		//	},
+		//	resp: &http.Response{
+		//		StatusCode: http.StatusAccepted,
+		//	},
+		//	want: &requestValidation{
+		//		Headers: map[string][]string{
+		//			"content-type": {"application/cloudevents+json"},
+		//		},
+		//		Body: fmt.Sprintf(`{"contenttype":"application/json","data":{"msg":"hello","sq":42},"id":"AABBCCDDEE","source":"/unit/test/client","specversion":"0.2","time":%q,"type":"unit.test.client"}`,
+		//			now.UTC().Format(time.RFC3339Nano),
+		//		),
+		//	},
+		//},
+		//"structured simple v0.3": {
+		//	c: simpleStructuredClient,
+		//	event: cloudevents.Event{
+		//		Context: cloudevents.EventContextV03{
+		//			Type:   "unit.test.client",
+		//			Source: *types.ParseURLRef("/unit/test/client"),
+		//			Time:   &types.Timestamp{Time: now},
+		//			ID:     "AABBCCDDEE",
+		//		}.AsV03(),
+		//		Data: &map[string]interface{}{
+		//			"sq":  42,
+		//			"msg": "hello",
+		//		},
+		//	},
+		//	resp: &http.Response{
+		//		StatusCode: http.StatusAccepted,
+		//	},
+		//	want: &requestValidation{
+		//		Headers: map[string][]string{
+		//			"content-type": {"application/cloudevents+json"},
+		//		},
+		//		Body: fmt.Sprintf(`{"data":{"msg":"hello","sq":42},"datacontenttype":"application/json","id":"AABBCCDDEE","source":"/unit/test/client","specversion":"0.3","time":%q,"type":"unit.test.client"}`,
+		//			now.UTC().Format(time.RFC3339Nano),
+		//		),
+		//	},
+		//},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+			handler := &fakeHandler{
+				t:        t,
+				response: tc.resp,
+				requests: make([]requestValidation, 0),
+			}
+			server := httptest.NewServer(handler)
+			defer server.Close()
+
+			server.Client()
+
+			c := tc.c(8383)
+
+			s, _ := url.Parse("http://localhost:8383/")
+
+			events := make(chan cloudevents.Event)
+
+			err := c.StartReceiver(context.TODO(), func(event cloudevents.Event) {
+				events <- event
+			})
+
+			if tc.wantErr != "" {
+				if err == nil {
+					t.Fatalf("failed to return expected error, got nil")
+				}
+				want := tc.wantErr
+				got := err.Error()
+				if !strings.Contains(got, want) {
+					t.Fatalf("failed to return expected error, got %q, want %q", err, want)
+				}
+				return
+			} else {
+				if err != nil {
+					t.Fatalf("failed to send event %s", err)
+				}
+			}
+
+			req := &http.Request{
+				Method:        "POST",
+				URL:           s,
+				Header:        tc.req.Headers,
+				Body:          ioutil.NopCloser(strings.NewReader(tc.req.Body)),
+				ContentLength: int64(len([]byte(tc.req.Body))),
+			}
+
+			_, err = http.DefaultClient.Do(req)
+
+			//// Make a copy of the request.
+			//body, err := ioutil.ReadAll(resp.Body)
+			//if err != nil {
+			//	t.Error("failed to read the request body")
+			//}
+			//gotResp := requestValidation{
+			//	Headers: resp.Header,
+			//	Body:    string(body),
+			//}
+			//
+			//_ = gotResp // TODO: check response
+
+			got := <-events
+
+			if diff := cmp.Diff(tc.want.Context, got.Context); diff != "" {
+				t.Errorf("unexpected events.Context (-want, +got) = %v", diff)
+			}
+
+			data := &map[string]string{}
+			err = got.DataAs(data)
+			if err != nil {
+				t.Fatalf("return unexpected error, got %s", err.Error())
+			}
+
+			if diff := cmp.Diff(tc.want.Data, data); diff != "" {
+				t.Errorf("unexpected events.Data (-want, +got) = %v", diff)
+			}
+		})
+	}
+}
+
 type requestValidation struct {
 	Host    string
 	Headers http.Header
