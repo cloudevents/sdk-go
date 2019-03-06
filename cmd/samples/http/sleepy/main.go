@@ -8,14 +8,13 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"log"
 	"os"
+	"time"
 )
 
 type envConfig struct {
-	// NATSServer URL to connect to the nats server.
-	NATSServer string `envconfig:"NATS_SERVER" default:"http://localhost:4222" required:"true"`
-
-	// Subject is the nats subject to subscribe for cloudevents on.
-	Subject string `envconfig:"SUBJECT" default:"sample" required:"true"`
+	// Port on which to listen for cloudevents
+	Port int    `envconfig:"RCV_PORT" default:"8080"`
+	Path string `envconfig:"RCV_PATH" default:"/"`
 }
 
 func main() {
@@ -32,31 +31,42 @@ type Example struct {
 	Message  string `json:"message"`
 }
 
-func receive(event cloudevents.Event) (*cloudevents.Event, error) {
+func gotEvent(event cloudevents.Event) (*cloudevents.Event, error) {
 	fmt.Printf("Got Event Context: %+v\n", event.Context)
-
 	data := &Example{}
 	if err := event.DataAs(data); err != nil {
 		fmt.Printf("Got Data Error: %s\n", err.Error())
 	}
 	fmt.Printf("Got Data: %+v\n", data)
-
 	fmt.Printf("----------------------------\n")
 	return nil, nil
 }
 
 func _main(args []string, env envConfig) int {
 	ctx := context.Background()
-	c, err := client.NewNATSClient(env.NATSServer, env.Subject)
+
+	_, c, err := client.StartHTTPReceiver(ctx, gotEvent,
+		client.WithHTTPPort(env.Port),
+		client.WithHTTPPath(env.Path),
+	)
+
 	if err != nil {
-		log.Fatalf("failed to create nats client, %s", err.Error())
+		log.Fatalf("failed to start receiver: %s", err.Error())
 	}
 
-	if _, err := c.StartReceiver(ctx, receive); err != nil {
-		log.Fatalf("failed to start nats receiver, %s", err.Error())
-	}
+	log.Printf("listening on :%d%s\n", env.Port, env.Path)
 
-	// Wait until done.
-	<-ctx.Done()
-	return 0
+	for {
+		time.Sleep(5 * time.Second)
+		if err := c.StopReceiver(ctx); err != nil {
+			log.Fatalf("failed to stop receiver: %s", err.Error())
+		}
+		log.Printf("stopped @ %s", time.Now())
+
+		time.Sleep(5 * time.Second)
+		if _, err := c.StartReceiver(ctx, gotEvent); err != nil {
+			log.Fatalf("failed to start receiver: %s", err.Error())
+		}
+		log.Printf("started @ %s", time.Now())
+	}
 }

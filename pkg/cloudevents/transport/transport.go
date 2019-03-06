@@ -9,6 +9,9 @@ import (
 // over the underlying transport.
 type Transport interface {
 	Send(context.Context, cloudevents.Event) (*cloudevents.Event, error)
+
+	StartReceiver(context.Context) (context.Context, error)
+	StopReceiver(context.Context) error
 }
 
 // Receiver TODO not sure yet.

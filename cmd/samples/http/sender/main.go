@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	count = 1
+	count = 100
 )
 
 type envConfig struct {
@@ -96,18 +96,19 @@ func _main(args []string, env envConfig) int {
 				}.AsV01()
 				if event, err := d.Send(ctx, seq); err != nil {
 					log.Printf("failed to send: %v", err)
-					return 1
 				} else if event != nil {
-					fmt.Printf("Got Event Context: %+v\n", event.Context)
+					fmt.Printf("Got Event Response Context: %+v\n", event.Context)
 					data := &Example{}
 					if err := event.DataAs(data); err != nil {
 						fmt.Printf("Got Data Error: %s\n", err.Error())
 					}
-					fmt.Printf("Got Data: %+v\n", data)
+					fmt.Printf("Got Response Data: %+v\n", data)
 					fmt.Printf("----------------------------\n")
+				} else {
+					log.Printf("event sent at %s", time.Now())
 				}
 				seq++
-				time.Sleep(100 * time.Millisecond)
+				time.Sleep(500 * time.Millisecond)
 			}
 		}
 	}

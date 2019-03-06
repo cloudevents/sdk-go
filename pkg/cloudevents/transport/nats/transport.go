@@ -58,20 +58,22 @@ func (t *Transport) Send(ctx context.Context, event cloudevents.Event) (*cloudev
 	return nil, fmt.Errorf("failed to encode Event into a Message")
 }
 
-func (t *Transport) Listen(ctx context.Context) error {
-	if t.sub != nil {
-		return fmt.Errorf("already subscribed")
+func (t *Transport) StartReceiver(ctx context.Context) (context.Context, error) {
+	if t.Conn == nil {
+		return ctx, fmt.Errorf("no active nats connection")
 	}
-
+	if t.sub != nil {
+		return ctx, fmt.Errorf("already subscribed")
+	}
 	if ok := t.loadCodec(); !ok {
-		return fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
+		return ctx, fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
 	}
 
 	// TODO: there could be more than one subscription. Might have to do a map
 	// of subject to subscription.
 
 	if t.Subject == "" {
-		return fmt.Errorf("subject required for nats listen")
+		return ctx, fmt.Errorf("subject required for nats listen")
 	}
 
 	var err error
@@ -87,5 +89,14 @@ func (t *Transport) Listen(ctx context.Context) error {
 		}
 		t.Receiver.Receive(*event)
 	})
-	return err
+	return ctx, err
+}
+
+func (t *Transport) StopReceiver(ctx context.Context) error {
+	if t.sub != nil {
+		err := t.sub.Unsubscribe()
+		t.sub = nil
+		return err
+	}
+	return nil
 }

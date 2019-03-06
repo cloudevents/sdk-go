@@ -69,7 +69,7 @@ func _main(args []string, env envConfig) int {
 
 	r := &Receiver{Client: nc}
 
-	_, err = client.StartHTTPReceiver(ctx, r.Receive, client.WithHTTPPort(env.Port))
+	_, _, err = client.StartHTTPReceiver(ctx, r.Receive, client.WithHTTPPort(env.Port))
 	if err != nil {
 		log.Printf("failed to StartHTTPReceiver, %v", err)
 	}

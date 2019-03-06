@@ -4,14 +4,14 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
-	"log"
-	"net/http"
-	"strings"
-
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
+	"io/ioutil"
+	"log"
+	"net"
+	"net/http"
+	"strings"
 )
 
 type EncodingSelector func(e cloudevents.Event) Encoding
@@ -29,9 +29,14 @@ type Transport struct {
 	Req    *http.Request
 
 	// Receiving
-	Port     int    // default 8080
-	Path     string // default "/"
 	Receiver transport.Receiver
+	Port     *int   // if nil, default 8080
+	Path     string // if "", default "/"
+	realPort int
+	server   *http.Server
+	// handler this allows for injecting of a handler from the user <- unit test only for now
+	handler           *http.ServeMux
+	handlerRegistered bool
 
 	codec transport.Codec
 }
@@ -122,6 +127,52 @@ type TransportContext struct {
 	URI    string
 	Host   string
 	Method string
+}
+
+func (t *Transport) StartReceiver(ctx context.Context) (context.Context, error) {
+	if t.server == nil {
+		if t.handler == nil {
+			t.handler = http.NewServeMux()
+		}
+		if !t.handlerRegistered {
+			// handler.Handle might panic if the user tries to use the same path as the sdk.
+			t.handler.Handle(t.GetPath(), t)
+			t.handlerRegistered = true
+		}
+
+		addr := fmt.Sprintf(":%d", t.GetPort())
+		t.server = &http.Server{
+			Addr:    addr,
+			Handler: t.handler,
+		}
+
+		listener, err := net.Listen("tcp", addr)
+		if err != nil {
+			return ctx, err
+		}
+		t.realPort = listener.Addr().(*net.TCPAddr).Port
+		ctx = cecontext.ContextWithPort(ctx, t.realPort) // TODO: may not need realPort?
+
+		go func() {
+			log.Print(t.server.Serve(listener))
+			t.server = nil
+			t.realPort = 0
+		}()
+		return ctx, nil
+	}
+	return ctx, fmt.Errorf("http server already started")
+}
+
+// This blocks until all active connections are closed.
+func (t *Transport) StopReceiver(ctx context.Context) error {
+	if t.server != nil {
+		err := t.server.Close()
+		t.server = nil
+		if err != nil {
+			return fmt.Errorf("failed to close http server, %s", err.Error())
+		}
+	}
+	return nil
 }
 
 func httpDo(ctx context.Context, req *http.Request, f func(*http.Response, error) (*cloudevents.Event, error)) (*cloudevents.Event, error) {
@@ -248,8 +299,12 @@ func (t *Transport) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (t *Transport) GetPort() int {
-	if t.Port > 0 {
-		return t.Port
+	if t.Port != nil && *t.Port == 0 && t.realPort != 0 {
+		return t.realPort
+	}
+
+	if t.Port != nil && *t.Port >= 0 { // 0 means next open port
+		return *t.Port
 	}
 	return 8080 // default
 }

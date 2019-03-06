@@ -252,6 +252,10 @@ func TestWithHTTPClient(t *testing.T) {
 	}
 }
 
+func intptr(i int) *int {
+	return &i
+}
+
 func TestWithPort(t *testing.T) {
 	testCases := map[string]struct {
 		c       *ceClient
@@ -265,15 +269,15 @@ func TestWithPort(t *testing.T) {
 			},
 			port: 8181,
 			want: &ceClient{transport: &http.Transport{
-				Port: 8181,
+				Port: intptr(8181),
 			}},
 		},
 		"invalid port": {
 			c: &ceClient{
 				transport: &http.Transport{},
 			},
-			port:    0,
-			wantErr: `client option was given an invalid port: 0`,
+			port:    -1,
+			wantErr: `client option was given an invalid port: -1`,
 		},
 		"empty transport": {
 			c:       &ceClient{},
