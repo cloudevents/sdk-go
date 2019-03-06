@@ -112,10 +112,10 @@ func WithHTTPStructuredEncoding() Option {
 func WithHTTPPort(port int) Option {
 	return func(c *ceClient) error {
 		if t, ok := c.transport.(*http.Transport); ok {
-			if port == 0 {
+			if port < 0 {
 				return fmt.Errorf("client option was given an invalid port: %d", port)
 			}
-			t.Port = port
+			t.Port = &port
 			return nil
 		}
 		return fmt.Errorf("port: invalid client option received for non-HTTP transport type")

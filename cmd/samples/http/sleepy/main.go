@@ -8,6 +8,7 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"log"
 	"os"
+	"time"
 )
 
 type envConfig struct {
@@ -43,16 +44,28 @@ func gotEvent(event cloudevents.Event) {
 func _main(args []string, env envConfig) int {
 	ctx := context.Background()
 
-	_, _, err := client.StartHTTPReceiver(ctx, gotEvent,
+	_, c, err := client.StartHTTPReceiver(ctx, gotEvent,
 		client.WithHTTPPort(env.Port),
 		client.WithHTTPPath(env.Path),
 	)
+
 	if err != nil {
 		log.Fatalf("failed to start receiver: %s", err.Error())
 	}
 
 	log.Printf("listening on :%d%s\n", env.Port, env.Path)
-	<-ctx.Done()
 
-	return 0
+	for {
+		time.Sleep(5 * time.Second)
+		if err := c.StopReceiver(ctx); err != nil {
+			log.Fatalf("failed to stop receiver: %s", err.Error())
+		}
+		log.Printf("stopped @ %s", time.Now())
+
+		time.Sleep(5 * time.Second)
+		if _, err := c.StartReceiver(ctx, gotEvent); err != nil {
+			log.Fatalf("failed to start receiver: %s", err.Error())
+		}
+		log.Printf("started @ %s", time.Now())
+	}
 }

@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/nats"
 )
 
 type Receiver func(event cloudevents.Event)
 
 type Client interface {
 	Send(ctx context.Context, event cloudevents.Event) error
-	StartReceiver(ctx context.Context, fn Receiver) error
+
+	StartReceiver(ctx context.Context, fn Receiver) (context.Context, error)
+	StopReceiver(ctx context.Context) error
 
 	Receive(event cloudevents.Event)
 }
@@ -50,20 +50,27 @@ func (c *ceClient) Receive(event cloudevents.Event) {
 	}
 }
 
-func (c *ceClient) StartReceiver(ctx context.Context, fn Receiver) error {
+func (c *ceClient) StartReceiver(ctx context.Context, fn Receiver) (context.Context, error) {
+	if c.transport == nil {
+		return ctx, fmt.Errorf("client not ready, transport not initialized")
+	}
+	if c.receiver != nil {
+		return ctx, fmt.Errorf("client already has a receiver")
+	}
+
+	c.receiver = fn
+
+	return c.transport.StartReceiver(ctx)
+}
+
+func (c *ceClient) StopReceiver(ctx context.Context) error {
 	if c.transport == nil {
 		return fmt.Errorf("client not ready, transport not initialized")
 	}
 
-	if t, ok := c.transport.(*http.Transport); ok {
-		return c.startHTTPReceiver(ctx, t, fn)
-	}
-
-	if t, ok := c.transport.(*nats.Transport); ok {
-		return c.startNATSReceiver(ctx, t, fn)
-	}
-
-	return fmt.Errorf("unknown transport type: %T", c.transport)
+	err := c.transport.StopReceiver(ctx)
+	c.receiver = nil
+	return err
 }
 
 func (c *ceClient) applyOptions(opts ...Option) error {

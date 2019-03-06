@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"io/ioutil"
 	"net/http"
@@ -252,6 +253,300 @@ func TestClientSend(t *testing.T) {
 
 			assertEquality(t, server.URL, *tc.want, rv)
 		})
+	}
+}
+
+func simpleBinaryOptions(port int, path string) []client.Option {
+	opts := []client.Option{
+		client.WithHTTPPort(port),
+		client.WithHTTPBinaryEncoding(),
+	}
+	if len(path) > 0 {
+		opts = append(opts, client.WithHTTPPath(path))
+	}
+	return opts
+}
+
+func simpleStructuredOptions(port int, path string) []client.Option {
+	opts := []client.Option{
+		client.WithHTTPPort(port),
+		client.WithHTTPStructuredEncoding(),
+	}
+	if len(path) > 0 {
+		opts = append(opts, client.WithHTTPPath(path))
+	}
+	return opts
+}
+
+func TestClientReceive(t *testing.T) {
+	now := time.Now()
+
+	testCases := map[string]struct {
+		optsFn  func(port int, path string) []client.Option
+		req     *requestValidation
+		want    cloudevents.Event
+		wantErr string
+	}{
+		"binary simple v0.1": {
+			optsFn: simpleBinaryOptions,
+			req: &requestValidation{
+				Headers: map[string][]string{
+					"ce-cloudeventsversion": {"0.1"},
+					"ce-eventid":            {"AABBCCDDEE"},
+					"ce-eventtime":          {now.UTC().Format(time.RFC3339Nano)},
+					"ce-eventtype":          {"unit.test.client"},
+					"ce-source":             {"/unit/test/client"},
+					"content-type":          {"application/json"},
+				},
+				Body: `{"msg":"hello","sq":"42"}`,
+			},
+			want: cloudevents.Event{
+				Context: cloudevents.EventContextV01{
+					EventType:   "unit.test.client",
+					ContentType: cloudevents.StringOfApplicationJSON(),
+					Source:      *types.ParseURLRef("/unit/test/client"),
+					EventTime:   &types.Timestamp{Time: now},
+					EventID:     "AABBCCDDEE",
+				}.AsV01(),
+				Data: &map[string]string{
+					"sq":  "42",
+					"msg": "hello",
+				},
+			},
+		},
+		"binary simple v0.2": {
+			optsFn: simpleBinaryOptions,
+			req: &requestValidation{
+				Headers: map[string][]string{
+					"ce-specversion": {"0.2"},
+					"ce-id":          {"AABBCCDDEE"},
+					"ce-time":        {now.UTC().Format(time.RFC3339Nano)},
+					"ce-type":        {"unit.test.client"},
+					"ce-source":      {"/unit/test/client"},
+					"content-type":   {"application/json"},
+				},
+				Body: `{"msg":"hello","sq":"42"}`,
+			},
+			want: cloudevents.Event{
+				Context: cloudevents.EventContextV02{
+					Type:        "unit.test.client",
+					ContentType: cloudevents.StringOfApplicationJSON(),
+					Source:      *types.ParseURLRef("/unit/test/client"),
+					Time:        &types.Timestamp{Time: now},
+					ID:          "AABBCCDDEE",
+				}.AsV02(),
+				Data: &map[string]string{
+					"sq":  "42",
+					"msg": "hello",
+				},
+			},
+		},
+		"binary simple v0.3": {
+			optsFn: simpleBinaryOptions,
+			req: &requestValidation{
+				Headers: map[string][]string{
+					"ce-specversion": {"0.3"},
+					"ce-id":          {"AABBCCDDEE"},
+					"ce-time":        {now.UTC().Format(time.RFC3339Nano)},
+					"ce-type":        {"unit.test.client"},
+					"ce-source":      {"/unit/test/client"},
+					"content-type":   {"application/json"},
+				},
+				Body: `{"msg":"hello","sq":"42"}`,
+			},
+			want: cloudevents.Event{
+				Context: cloudevents.EventContextV03{
+					Type:            "unit.test.client",
+					DataContentType: cloudevents.StringOfApplicationJSON(),
+					Source:          *types.ParseURLRef("/unit/test/client"),
+					Time:            &types.Timestamp{Time: now},
+					ID:              "AABBCCDDEE",
+				}.AsV03(),
+				Data: &map[string]string{
+					"sq":  "42",
+					"msg": "hello",
+				},
+			},
+		},
+		"structured simple v0.1": {
+			optsFn: simpleStructuredOptions,
+			req: &requestValidation{
+				Headers: map[string][]string{
+					"content-type": {"application/cloudevents+json"},
+				},
+				Body: fmt.Sprintf(`{"cloudEventsVersion":"0.1","contentType":"application/json","data":{"msg":"hello","sq":"42"},"eventID":"AABBCCDDEE","eventTime":%q,"eventType":"unit.test.client","source":"/unit/test/client"}`,
+					now.UTC().Format(time.RFC3339Nano),
+				),
+			},
+			want: cloudevents.Event{
+				Context: cloudevents.EventContextV01{
+					EventType:   "unit.test.client",
+					ContentType: cloudevents.StringOfApplicationJSON(),
+					Source:      *types.ParseURLRef("/unit/test/client"),
+					EventTime:   &types.Timestamp{Time: now},
+					EventID:     "AABBCCDDEE",
+				}.AsV01(),
+				Data: &map[string]string{
+					"sq":  "42",
+					"msg": "hello",
+				},
+			},
+		},
+		"structured simple v0.2": {
+			optsFn: simpleStructuredOptions,
+			req: &requestValidation{
+				Headers: map[string][]string{
+					"content-type": {"application/cloudevents+json"},
+				},
+				Body: fmt.Sprintf(`{"contenttype":"application/json","data":{"msg":"hello","sq":"42"},"id":"AABBCCDDEE","source":"/unit/test/client","specversion":"0.2","time":%q,"type":"unit.test.client"}`,
+					now.UTC().Format(time.RFC3339Nano),
+				),
+			},
+			want: cloudevents.Event{
+				Context: cloudevents.EventContextV02{
+					Type:        "unit.test.client",
+					ContentType: cloudevents.StringOfApplicationJSON(),
+					Source:      *types.ParseURLRef("/unit/test/client"),
+					Time:        &types.Timestamp{Time: now},
+					ID:          "AABBCCDDEE",
+				}.AsV02(),
+				Data: &map[string]string{
+					"sq":  "42",
+					"msg": "hello",
+				},
+			},
+		},
+		"structured simple v0.3": {
+			optsFn: simpleStructuredOptions,
+			req: &requestValidation{
+				Headers: map[string][]string{
+					"content-type": {"application/cloudevents+json"},
+				},
+				Body: fmt.Sprintf(`{"data":{"msg":"hello","sq":"42"},"datacontenttype":"application/json","id":"AABBCCDDEE","source":"/unit/test/client","specversion":"0.3","time":%q,"type":"unit.test.client"}`,
+					now.UTC().Format(time.RFC3339Nano),
+				),
+			},
+			want: cloudevents.Event{
+				Context: cloudevents.EventContextV03{
+					Type:            "unit.test.client",
+					DataContentType: cloudevents.StringOfApplicationJSON(),
+					Source:          *types.ParseURLRef("/unit/test/client"),
+					Time:            &types.Timestamp{Time: now},
+					ID:              "AABBCCDDEE",
+				}.AsV03(),
+				Data: &map[string]string{
+					"sq":  "42",
+					"msg": "hello",
+				},
+			},
+		},
+	}
+
+	type startFn func(events chan cloudevents.Event, opts ...client.Option) (context.Context, client.Client, error)
+
+	manualStart := func(events chan cloudevents.Event, opts ...client.Option) (context.Context, client.Client, error) {
+		c, err := client.NewHTTPClient(opts...)
+		if err != nil {
+			return context.Background(), c, err
+		}
+
+		ctx, err := c.StartReceiver(context.TODO(), func(event cloudevents.Event) {
+			events <- event
+		})
+		return ctx, c, err
+	}
+
+	autoStart := func(events chan cloudevents.Event, opts ...client.Option) (context.Context, client.Client, error) {
+		return client.StartHTTPReceiver(context.TODO(), func(event cloudevents.Event) {
+			events <- event
+		}, opts...)
+	}
+
+	for n, tc := range testCases {
+		for method, fn := range map[string]startFn{"manual": manualStart, "auto": autoStart} {
+			for _, path := range []string{"", "/", "/unittest/"} {
+				t.Run(n+" at path "+path+" started with "+method, func(t *testing.T) {
+
+					events := make(chan cloudevents.Event)
+
+					ctx, c, err := fn(events, tc.optsFn(0, path)...)
+
+					// to construct the target, we need to default the empty string to "/"
+					if path == "" {
+						path = "/"
+					}
+
+					target, _ := url.Parse(fmt.Sprintf("http://localhost:%d%s", cecontext.PortFromContext(ctx), path))
+
+					if tc.wantErr != "" {
+						if err == nil {
+							t.Fatalf("failed to return expected error, got nil")
+						}
+						want := tc.wantErr
+						got := err.Error()
+						if !strings.Contains(got, want) {
+							t.Fatalf("failed to return expected error, got %q, want %q", err, want)
+						}
+						return
+					} else {
+						if err != nil {
+							t.Fatalf("failed to send event %s", err)
+						}
+					}
+
+					req := &http.Request{
+						Method:        "POST",
+						URL:           target,
+						Header:        tc.req.Headers,
+						Body:          ioutil.NopCloser(strings.NewReader(tc.req.Body)),
+						ContentLength: int64(len([]byte(tc.req.Body))),
+					}
+
+					_, err = http.DefaultClient.Do(req)
+
+					//// Make a copy of the request.
+					//body, err := ioutil.ReadAll(resp.Body)
+					//if err != nil {
+					//	t.Error("failed to read the request body")
+					//}
+					//gotResp := requestValidation{
+					//	Headers: resp.Header,
+					//	Body:    string(body),
+					//}
+					//
+					//_ = gotResp // TODO: check response
+
+					got := <-events
+
+					if diff := cmp.Diff(tc.want.Context, got.Context); diff != "" {
+						t.Errorf("unexpected events.Context (-want, +got) = %v", diff)
+					}
+
+					data := &map[string]string{}
+					err = got.DataAs(data)
+					if err != nil {
+						t.Fatalf("returned unexpected error, got %s", err.Error())
+					}
+
+					if diff := cmp.Diff(tc.want.Data, data); diff != "" {
+						t.Errorf("unexpected events.Data (-want, +got) = %v", diff)
+					}
+
+					// Now stop the client
+
+					if err := c.StopReceiver(ctx); err != nil {
+						t.Fatalf("returned unexpected error, got %s", err.Error())
+					}
+
+					// try the request again, expecting an error:
+
+					if _, err = http.DefaultClient.Do(req); err == nil {
+						t.Fatalf("expected error to when sending request to stopped client")
+					}
+
+				})
+			}
+		}
 	}
 }
 
