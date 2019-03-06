@@ -43,7 +43,7 @@ func gotEvent(event cloudevents.Event) {
 func _main(args []string, env envConfig) int {
 	ctx := context.Background()
 
-	_, err := client.StartHTTPReceiver(ctx, gotEvent,
+	_, _, err := client.StartHTTPReceiver(ctx, gotEvent,
 		client.WithHTTPPort(env.Port),
 		client.WithHTTPPath(env.Path),
 	)

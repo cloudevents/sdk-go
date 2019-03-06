@@ -51,7 +51,7 @@ func _main(args []string, env envConfig) int {
 		log.Fatalf("failed to create nats client, %s", err.Error())
 	}
 
-	if err := c.StartReceiver(ctx, receive); err != nil {
+	if _, err := c.StartReceiver(ctx, receive); err != nil {
 		log.Fatalf("failed to start nats receiver, %s", err.Error())
 	}
 

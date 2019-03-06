@@ -19,7 +19,7 @@ func Receive(event cloudevents.Event) {
 
 func main() {
 	ctx := context.Background()
-	_, err := client.StartHTTPReceiver(ctx, Receive)
+	_, _, err := client.StartHTTPReceiver(ctx, Receive)
 	if err != nil {
 		log.Fatal(err)
 	}

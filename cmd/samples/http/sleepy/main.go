@@ -44,7 +44,7 @@ func gotEvent(event cloudevents.Event) {
 func _main(args []string, env envConfig) int {
 	ctx := context.Background()
 
-	c, err := client.StartHTTPReceiver(ctx, gotEvent,
+	_, c, err := client.StartHTTPReceiver(ctx, gotEvent,
 		client.WithHTTPPort(env.Port),
 		client.WithHTTPPath(env.Path),
 	)
@@ -63,7 +63,7 @@ func _main(args []string, env envConfig) int {
 		log.Printf("stopped @ %s", time.Now())
 
 		time.Sleep(5 * time.Second)
-		if err := c.StartReceiver(ctx, gotEvent); err != nil {
+		if _, err := c.StartReceiver(ctx, gotEvent); err != nil {
 			log.Fatalf("failed to start receiver: %s", err.Error())
 		}
 		log.Printf("started @ %s", time.Now())
