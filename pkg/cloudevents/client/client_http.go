@@ -22,6 +22,7 @@ func NewHTTPClient(opts ...Option) (Client, error) {
 	return c, nil
 }
 
+// TODO: It is very easy to start the client now. It might make sense to remove this method.
 func StartHTTPReceiver(ctx context.Context, fn Receiver, opts ...Option) (context.Context, Client, error) {
 	c, err := NewHTTPClient(opts...)
 	if err != nil {
@@ -30,6 +31,7 @@ func StartHTTPReceiver(ctx context.Context, fn Receiver, opts ...Option) (contex
 
 	if ctx, err := c.StartReceiver(ctx, fn); err != nil {
 		return ctx, nil, err
+	} else {
+		return ctx, c, nil
 	}
-	return ctx, c, nil
 }

@@ -14,9 +14,9 @@ func ContextWithPort(ctx context.Context, port int) context.Context {
 }
 
 func PortFromContext(ctx context.Context) int {
-	c := ctx.Value(portKey)
-	if c != nil {
-		if port, ok := c.(int); ok {
+	v := ctx.Value(portKey)
+	if v != nil {
+		if port, ok := v.(int); ok {
 			return port
 		}
 	}

@@ -256,33 +256,39 @@ func TestClientSend(t *testing.T) {
 	}
 }
 
-func simpleBinaryServer(port int) client.Client {
-	c, _ := client.NewHTTPClient(
+func simpleBinaryOptions(port int, path string) []client.Option {
+	opts := []client.Option{
 		client.WithHTTPPort(port),
 		client.WithHTTPBinaryEncoding(),
-	)
-	return c
+	}
+	if len(path) > 0 {
+		opts = append(opts, client.WithHTTPPath(path))
+	}
+	return opts
 }
 
-func simpleStructuredServer(port int) client.Client {
-	c, _ := client.NewHTTPClient(
+func simpleStructuredOptions(port int, path string) []client.Option {
+	opts := []client.Option{
 		client.WithHTTPPort(port),
 		client.WithHTTPStructuredEncoding(),
-	)
-	return c
+	}
+	if len(path) > 0 {
+		opts = append(opts, client.WithHTTPPath(path))
+	}
+	return opts
 }
 
 func TestClientReceive(t *testing.T) {
 	now := time.Now()
 
 	testCases := map[string]struct {
-		c       func(port int) client.Client
+		optsFn  func(port int, path string) []client.Option
 		req     *requestValidation
 		want    cloudevents.Event
 		wantErr string
 	}{
 		"binary simple v0.1": {
-			c: simpleBinaryServer,
+			optsFn: simpleBinaryOptions,
 			req: &requestValidation{
 				Headers: map[string][]string{
 					"ce-cloudeventsversion": {"0.1"},
@@ -309,7 +315,7 @@ func TestClientReceive(t *testing.T) {
 			},
 		},
 		"binary simple v0.2": {
-			c: simpleBinaryServer,
+			optsFn: simpleBinaryOptions,
 			req: &requestValidation{
 				Headers: map[string][]string{
 					"ce-specversion": {"0.2"},
@@ -336,7 +342,7 @@ func TestClientReceive(t *testing.T) {
 			},
 		},
 		"binary simple v0.3": {
-			c: simpleBinaryServer,
+			optsFn: simpleBinaryOptions,
 			req: &requestValidation{
 				Headers: map[string][]string{
 					"ce-specversion": {"0.3"},
@@ -363,7 +369,7 @@ func TestClientReceive(t *testing.T) {
 			},
 		},
 		"structured simple v0.1": {
-			c: simpleStructuredServer,
+			optsFn: simpleStructuredOptions,
 			req: &requestValidation{
 				Headers: map[string][]string{
 					"content-type": {"application/cloudevents+json"},
@@ -387,7 +393,7 @@ func TestClientReceive(t *testing.T) {
 			},
 		},
 		"structured simple v0.2": {
-			c: simpleStructuredServer,
+			optsFn: simpleStructuredOptions,
 			req: &requestValidation{
 				Headers: map[string][]string{
 					"content-type": {"application/cloudevents+json"},
@@ -411,7 +417,7 @@ func TestClientReceive(t *testing.T) {
 			},
 		},
 		"structured simple v0.3": {
-			c: simpleStructuredServer,
+			optsFn: simpleStructuredOptions,
 			req: &requestValidation{
 				Headers: map[string][]string{
 					"content-type": {"application/cloudevents+json"},
@@ -435,71 +441,112 @@ func TestClientReceive(t *testing.T) {
 			},
 		},
 	}
-	for n, tc := range testCases {
-		t.Run(n, func(t *testing.T) {
-			c := tc.c(0) // next port
 
-			events := make(chan cloudevents.Event)
-			ctx, err := c.StartReceiver(context.TODO(), func(event cloudevents.Event) {
-				events <- event
-			})
+	type startFn func(events chan cloudevents.Event, opts ...client.Option) (context.Context, client.Client, error)
 
-			host, _ := url.Parse(fmt.Sprintf("http://localhost:%d/", cecontext.PortFromContext(ctx)))
+	manualStart := func(events chan cloudevents.Event, opts ...client.Option) (context.Context, client.Client, error) {
+		c, err := client.NewHTTPClient(opts...)
+		if err != nil {
+			return context.Background(), c, err
+		}
 
-			if tc.wantErr != "" {
-				if err == nil {
-					t.Fatalf("failed to return expected error, got nil")
-				}
-				want := tc.wantErr
-				got := err.Error()
-				if !strings.Contains(got, want) {
-					t.Fatalf("failed to return expected error, got %q, want %q", err, want)
-				}
-				return
-			} else {
-				if err != nil {
-					t.Fatalf("failed to send event %s", err)
-				}
-			}
-
-			req := &http.Request{
-				Method:        "POST",
-				URL:           host,
-				Header:        tc.req.Headers,
-				Body:          ioutil.NopCloser(strings.NewReader(tc.req.Body)),
-				ContentLength: int64(len([]byte(tc.req.Body))),
-			}
-
-			_, err = http.DefaultClient.Do(req)
-
-			//// Make a copy of the request.
-			//body, err := ioutil.ReadAll(resp.Body)
-			//if err != nil {
-			//	t.Error("failed to read the request body")
-			//}
-			//gotResp := requestValidation{
-			//	Headers: resp.Header,
-			//	Body:    string(body),
-			//}
-			//
-			//_ = gotResp // TODO: check response
-
-			got := <-events
-
-			if diff := cmp.Diff(tc.want.Context, got.Context); diff != "" {
-				t.Errorf("unexpected events.Context (-want, +got) = %v", diff)
-			}
-
-			data := &map[string]string{}
-			err = got.DataAs(data)
-			if err != nil {
-				t.Fatalf("return unexpected error, got %s", err.Error())
-			}
-
-			if diff := cmp.Diff(tc.want.Data, data); diff != "" {
-				t.Errorf("unexpected events.Data (-want, +got) = %v", diff)
-			}
+		ctx, err := c.StartReceiver(context.TODO(), func(event cloudevents.Event) {
+			events <- event
 		})
+		return ctx, c, err
+	}
+
+	autoStart := func(events chan cloudevents.Event, opts ...client.Option) (context.Context, client.Client, error) {
+		return client.StartHTTPReceiver(context.TODO(), func(event cloudevents.Event) {
+			events <- event
+		}, opts...)
+	}
+
+	for n, tc := range testCases {
+		for method, fn := range map[string]startFn{"manual": manualStart, "auto": autoStart} {
+			for _, path := range []string{"", "/", "/unittest/"} {
+				t.Run(n+" at path "+path+" started with "+method, func(t *testing.T) {
+
+					events := make(chan cloudevents.Event)
+
+					ctx, c, err := fn(events, tc.optsFn(0, path)...)
+
+					// to construct the target, we need to default the empty string to "/"
+					if path == "" {
+						path = "/"
+					}
+
+					target, _ := url.Parse(fmt.Sprintf("http://localhost:%d%s", cecontext.PortFromContext(ctx), path))
+
+					if tc.wantErr != "" {
+						if err == nil {
+							t.Fatalf("failed to return expected error, got nil")
+						}
+						want := tc.wantErr
+						got := err.Error()
+						if !strings.Contains(got, want) {
+							t.Fatalf("failed to return expected error, got %q, want %q", err, want)
+						}
+						return
+					} else {
+						if err != nil {
+							t.Fatalf("failed to send event %s", err)
+						}
+					}
+
+					req := &http.Request{
+						Method:        "POST",
+						URL:           target,
+						Header:        tc.req.Headers,
+						Body:          ioutil.NopCloser(strings.NewReader(tc.req.Body)),
+						ContentLength: int64(len([]byte(tc.req.Body))),
+					}
+
+					_, err = http.DefaultClient.Do(req)
+
+					//// Make a copy of the request.
+					//body, err := ioutil.ReadAll(resp.Body)
+					//if err != nil {
+					//	t.Error("failed to read the request body")
+					//}
+					//gotResp := requestValidation{
+					//	Headers: resp.Header,
+					//	Body:    string(body),
+					//}
+					//
+					//_ = gotResp // TODO: check response
+
+					got := <-events
+
+					if diff := cmp.Diff(tc.want.Context, got.Context); diff != "" {
+						t.Errorf("unexpected events.Context (-want, +got) = %v", diff)
+					}
+
+					data := &map[string]string{}
+					err = got.DataAs(data)
+					if err != nil {
+						t.Fatalf("returned unexpected error, got %s", err.Error())
+					}
+
+					if diff := cmp.Diff(tc.want.Data, data); diff != "" {
+						t.Errorf("unexpected events.Data (-want, +got) = %v", diff)
+					}
+
+					// Now stop the client
+
+					if err := c.StopReceiver(ctx); err != nil {
+						t.Fatalf("returned unexpected error, got %s", err.Error())
+					}
+
+					// try the request again, expecting an error:
+
+					if _, err = http.DefaultClient.Do(req); err == nil {
+						t.Fatalf("expected error to when sending request to stopped client")
+					}
+
+				})
+			}
+		}
 	}
 }
 

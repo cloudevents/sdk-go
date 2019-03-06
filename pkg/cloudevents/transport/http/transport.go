@@ -95,7 +95,6 @@ func (t *Transport) Send(ctx context.Context, event cloudevents.Event) error {
 	return fmt.Errorf("failed to encode Event into a Message")
 }
 
-// This is blocking until the http server returns.
 func (t *Transport) StartReceiver(ctx context.Context) (context.Context, error) {
 	if t.server == nil {
 		if t.handler == nil {
@@ -208,7 +207,6 @@ func (t *Transport) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		go t.Receiver.Receive(*event)
 	}
 
-	// TODO: respond correctly based on decode.
 	w.WriteHeader(http.StatusNoContent)
 }
 
