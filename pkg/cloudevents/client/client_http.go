@@ -22,14 +22,14 @@ func NewHTTPClient(opts ...Option) (Client, error) {
 	return c, nil
 }
 
-func StartHTTPReceiver(ctx context.Context, fn Receiver, opts ...Option) (Client, error) {
+func StartHTTPReceiver(ctx context.Context, fn Receiver, opts ...Option) (context.Context, Client, error) {
 	c, err := NewHTTPClient(opts...)
 	if err != nil {
-		return nil, err
+		return ctx, nil, err
 	}
 
-	if err := c.StartReceiver(ctx, fn); err != nil {
-		return nil, err
+	if ctx, err := c.StartReceiver(ctx, fn); err != nil {
+		return ctx, nil, err
 	}
-	return c, nil
+	return ctx, c, nil
 }

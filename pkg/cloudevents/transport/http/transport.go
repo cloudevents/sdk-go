@@ -5,9 +5,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
 	"strings"
 )
@@ -27,11 +29,13 @@ type Transport struct {
 	Req    *http.Request
 
 	// Receiving
-	Port     int    // default 8080
-	Path     string // default "/"
 	Receiver transport.Receiver
+	Port     *int   // if nil, default 8080
+	Path     string // if "", default "/"
+	realPort int
 	server   *http.Server
-
+	// handler this allows for injecting of a handler from the user <- unit test only for now
+	handler           *http.ServeMux
 	handlerRegistered bool
 
 	codec transport.Codec
@@ -92,24 +96,38 @@ func (t *Transport) Send(ctx context.Context, event cloudevents.Event) error {
 }
 
 // This is blocking until the http server returns.
-func (t *Transport) StartReceiver(ctx context.Context) error {
+func (t *Transport) StartReceiver(ctx context.Context) (context.Context, error) {
 	if t.server == nil {
-		// TODO: we can avoid doing this by using the non-default handler.
-		// but then other consumers can not add to the serving server.
+		if t.handler == nil {
+			t.handler = http.NewServeMux()
+		}
 		if !t.handlerRegistered {
-			http.HandleFunc(t.GetPath(), t.ServeHTTP)
+			// handler.Handle might panic if the user tries to use the same path as the sdk.
+			t.handler.Handle(t.GetPath(), t)
 			t.handlerRegistered = true
 		}
 
 		addr := fmt.Sprintf(":%d", t.GetPort())
-		t.server = &http.Server{Addr: addr, Handler: nil}
+		t.server = &http.Server{
+			Addr:    addr,
+			Handler: t.handler,
+		}
+
+		listener, err := net.Listen("tcp", addr)
+		if err != nil {
+			return ctx, err
+		}
+		t.realPort = listener.Addr().(*net.TCPAddr).Port
+		ctx = cecontext.ContextWithPort(ctx, t.realPort) // TODO: may not need realPort?
+
 		go func() {
-			log.Print(t.server.ListenAndServe()) // TODO: panic?
+			log.Print(t.server.Serve(listener))
 			t.server = nil
+			t.realPort = 0
 		}()
-		return nil
+		return ctx, nil
 	}
-	return fmt.Errorf("http server already started")
+	return ctx, fmt.Errorf("http server already started")
 }
 
 // This blocks until all active connections are closed.
@@ -195,8 +213,12 @@ func (t *Transport) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (t *Transport) GetPort() int {
-	if t.Port > 0 {
-		return t.Port
+	if t.Port != nil && *t.Port == 0 && t.realPort != 0 {
+		return t.realPort
+	}
+
+	if t.Port != nil && *t.Port >= 0 { // 0 means next open port
+		return *t.Port
 	}
 	return 8080 // default
 }

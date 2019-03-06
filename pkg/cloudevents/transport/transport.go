@@ -10,7 +10,7 @@ import (
 type Sender interface {
 	Send(context.Context, cloudevents.Event) error
 
-	StartReceiver(context.Context) error
+	StartReceiver(context.Context) (context.Context, error)
 	StopReceiver(context.Context) error
 }
 
