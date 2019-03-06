@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+	cloudeventsnats "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/nats"
 	"github.com/kelseyhightower/envconfig"
 	"log"
 	"os"
@@ -46,12 +47,17 @@ func receive(event cloudevents.Event) {
 
 func _main(args []string, env envConfig) int {
 	ctx := context.Background()
-	c, err := client.NewNATSClient(env.NATSServer, env.Subject)
+
+	t, err := cloudeventsnats.New(env.NATSServer, env.Subject)
 	if err != nil {
-		log.Fatalf("failed to create nats client, %s", err.Error())
+		log.Fatalf("failed to create nats transport, %s", err.Error())
+	}
+	c, err := client.New(t)
+	if err != nil {
+		log.Fatalf("failed to create client, %s", err.Error())
 	}
 
-	if _, err := c.StartReceiver(ctx, receive); err != nil {
+	if err := c.StartReceiver(ctx, receive); err != nil {
 		log.Fatalf("failed to start nats receiver, %s", err.Error())
 	}
 
