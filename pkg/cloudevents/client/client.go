@@ -12,17 +12,26 @@ type Receiver func(event cloudevents.Event)
 type Client interface {
 	Send(ctx context.Context, event cloudevents.Event) error
 
-	StartReceiver(ctx context.Context, fn Receiver) (context.Context, error)
+	StartReceiver(ctx context.Context, fn Receiver) error
 	StopReceiver(ctx context.Context) error
-
-	Receive(event cloudevents.Event)
 }
 
 type ceClient struct {
-	transport transport.Sender
+	transport transport.Transport
 	receiver  Receiver
 
 	eventDefaulterFns []EventDefaulter
+}
+
+func New(t transport.Transport, opts ...Option) (Client, error) {
+	c := &ceClient{
+		transport: t,
+	}
+	if err := c.applyOptions(opts...); err != nil {
+		return nil, err
+	}
+	t.SetReceiver(c)
+	return c, nil
 }
 
 func (c *ceClient) Send(ctx context.Context, event cloudevents.Event) error {
@@ -50,12 +59,12 @@ func (c *ceClient) Receive(event cloudevents.Event) {
 	}
 }
 
-func (c *ceClient) StartReceiver(ctx context.Context, fn Receiver) (context.Context, error) {
+func (c *ceClient) StartReceiver(ctx context.Context, fn Receiver) error {
 	if c.transport == nil {
-		return ctx, fmt.Errorf("client not ready, transport not initialized")
+		return fmt.Errorf("client not ready, transport not initialized")
 	}
 	if c.receiver != nil {
-		return ctx, fmt.Errorf("client already has a receiver")
+		return fmt.Errorf("client already has a receiver")
 	}
 
 	c.receiver = fn

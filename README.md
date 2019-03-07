@@ -14,15 +14,25 @@ CloudEvents specification: https://github.com/cloudevents/spec.
 Receiving a cloudevents.Event via the HTTP Transport:
 
 ```go
+// import "github.com/cloudevents/sdk-go/pkg/cloudevents/client/http"
+
 func Receive(event cloudevents.Event) {
 	// do something with event.Context and event.Data (via event.DataAs(foo)
 }
 
 func main() {
 	ctx := context.Background()
-	_, _, err := client.StartHTTPReceiver(ctx, Receive)
-	if err != nil {
-		log.Fatal(err)
+	
+	c, err := http.New(
+		http.WithTarget("http://localhost:8080/"),
+		http.WithEncoding(cloudeventshttp.BinaryV02),
+		)
+		if err != nil {
+			panic("unable to create cloudevent client: " + err.Error())
+		}
+	
+	if err := c.StartReceiver(ctx, Receive); err != nil {
+		panic("unable to start the cloudevent receiver: " + err.Error())
 	}
 	<-ctx.Done()
 }
@@ -32,20 +42,22 @@ Creating a minimal CloudEvent in version 0.2:
 
 ```go
 event := cloudevents.Event{
-    Context: cloudevents.EventContextV02{
-        ID:     uuid.New().String(),
-        Type:   "com.cloudevents.readme.sent",
-        Source: types.ParseURLRef("http://localhost:8080/"),
-    }.AsV02(),
+	Context: cloudevents.EventContextV02{
+		ID:     uuid.New().String(),
+		Type:   "com.cloudevents.readme.sent",
+		Source: types.ParseURLRef("http://localhost:8080/"),
+	}.AsV02(),
 }
 ```
 
 Sending a cloudevents.Event via the HTTP Transport with Binary v0.2 encoding:
 
 ```go
-c, err := client.NewHTTPClient(
-	client.WithTarget("http://localhost:8080/"),
-	client.WithHTTPEncoding(cloudeventshttp.BinaryV02),
+// import "github.com/cloudevents/sdk-go/pkg/cloudevents/client/http"
+
+c, err := http.New(
+	http.WithTarget("http://localhost:8080/"),
+	http.WithEncoding(cloudeventshttp.BinaryV02),
 )
 if err != nil {
 	panic("unable to create cloudevent client: " + err.Error())
@@ -60,10 +72,28 @@ not change the provided event version, here the client is set to output
 structured encoding:
 
 ```go
-c, err := client.NewHTTPClient(
-	client.WithTarget("http://localhost:8080/"),
-	client.WithHTTPStructuredEncoding(),
+// import "github.com/cloudevents/sdk-go/pkg/cloudevents/client/http"
+
+c, err := http.New(
+	http.WithTarget("http://localhost:8080/"),
+	http.WithStructuredEncoding(),
 )
+```
+
+If you are using advanced transport features or have implemented your own
+transport integration, provide it to a client so your integration does not
+change:
+
+```go
+// import (
+//   "github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+//   transporthttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+// )
+
+t, err := transporthttp.New(cloudeventshttp.WithPort(8080))
+// or a custom transport: t := &custom.MyTransport{Cool:opts}
+
+c, err := client.New(t, opts...)
 ```
 
 Checkout the sample [sender](./cmd/samples/http/sender) and

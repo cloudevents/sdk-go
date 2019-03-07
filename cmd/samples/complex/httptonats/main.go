@@ -3,11 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	"github.com/kelseyhightower/envconfig"
 	"log"
 	"os"
+
+	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+	cloudeventshttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+	cloudeventsnats "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/nats"
+	"github.com/kelseyhightower/envconfig"
 )
 
 type envConfig struct {
@@ -60,7 +63,11 @@ func (r *Receiver) Receive(event cloudevents.Event) {
 func _main(args []string, env envConfig) int {
 	ctx := context.Background()
 
-	nc, err := client.NewNATSClient(env.NATSServer, env.Subject)
+	nt, err := cloudeventsnats.New(env.NATSServer, env.Subject)
+	if err != nil {
+		log.Fatalf("failed to create nats transport, %s", err.Error())
+	}
+	nc, err := client.New(nt)
 	if err != nil {
 		log.Printf("failed to create client, %v", err)
 		return 1
@@ -68,7 +75,20 @@ func _main(args []string, env envConfig) int {
 
 	r := &Receiver{Client: nc}
 
-	_, _, err = client.StartHTTPReceiver(ctx, r.Receive, client.WithHTTPPort(env.Port))
+	t, err := cloudeventshttp.New(
+		cloudeventshttp.WithPort(env.Port),
+	)
+	if err != nil {
+		log.Printf("failed to create transport, %v", err)
+		return 1
+	}
+	c, err := client.New(t)
+	if err != nil {
+		log.Printf("failed to create client, %v", err)
+		return 1
+	}
+	err = c.StartReceiver(ctx, r.Receive)
+
 	if err != nil {
 		log.Printf("failed to StartHTTPReceiver, %v", err)
 	}

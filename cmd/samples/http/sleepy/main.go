@@ -3,12 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	"github.com/kelseyhightower/envconfig"
 	"log"
 	"os"
 	"time"
+
+	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+	cloudeventshttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+	"github.com/kelseyhightower/envconfig"
 )
 
 type envConfig struct {
@@ -44,10 +46,19 @@ func gotEvent(event cloudevents.Event) {
 func _main(args []string, env envConfig) int {
 	ctx := context.Background()
 
-	_, c, err := client.StartHTTPReceiver(ctx, gotEvent,
-		client.WithHTTPPort(env.Port),
-		client.WithHTTPPath(env.Path),
+	t, err := cloudeventshttp.New(
+		cloudeventshttp.WithPort(env.Port),
+		cloudeventshttp.WithPath(env.Path),
 	)
+	if err != nil {
+		log.Printf("failed to create transport, %v", err)
+		return 1
+	}
+	c, err := client.New(t)
+	if err != nil {
+		log.Printf("failed to create client, %v", err)
+		return 1
+	}
 
 	if err != nil {
 		log.Fatalf("failed to start receiver: %s", err.Error())
@@ -63,7 +74,7 @@ func _main(args []string, env envConfig) int {
 		log.Printf("stopped @ %s", time.Now())
 
 		time.Sleep(5 * time.Second)
-		if _, err := c.StartReceiver(ctx, gotEvent); err != nil {
+		if err := c.StartReceiver(ctx, gotEvent); err != nil {
 			log.Fatalf("failed to start receiver: %s", err.Error())
 		}
 		log.Printf("started @ %s", time.Now())
