@@ -1,6 +1,7 @@
 # Go SDK for [CloudEvents](https://github.com/cloudevents/spec)
 
 [![go-doc](https://godoc.org/github.com/cloudevents/sdk-go?status.svg)](https://godoc.org/github.com/cloudevents/sdk-go)
+[![CircleCI](https://circleci.com/gh/cloudevents/sdk-go.svg?style=svg)](https://circleci.com/gh/cloudevents/sdk-go)
 
 **NOTE: This SDK is still considered work in progress, things might (and will)
 break with every update.**
@@ -13,15 +14,25 @@ CloudEvents specification: https://github.com/cloudevents/spec.
 Receiving a cloudevents.Event via the HTTP Transport:
 
 ```go
+// import "github.com/cloudevents/sdk-go/pkg/cloudevents/client/http"
+
 func Receive(event cloudevents.Event) {
 	// do something with event.Context and event.Data (via event.DataAs(foo)
 }
 
 func main() {
 	ctx := context.Background()
-	_, _, err := client.StartHTTPReceiver(ctx, Receive)
-	if err != nil {
-		log.Fatal(err)
+	
+	c, err := http.New(
+		http.WithTarget("http://localhost:8080/"),
+		http.WithEncoding(cloudeventshttp.BinaryV02),
+		)
+		if err != nil {
+			panic("unable to create cloudevent client: " + err.Error())
+		}
+	
+	if err := c.StartReceiver(ctx, Receive); err != nil {
+		panic("unable to start the cloudevent receiver: " + err.Error())
 	}
 	<-ctx.Done()
 }
@@ -31,20 +42,22 @@ Creating a minimal CloudEvent in version 0.2:
 
 ```go
 event := cloudevents.Event{
-    Context: cloudevents.EventContextV02{
-        ID:     uuid.New().String(),
-        Type:   "com.cloudevents.readme.sent",
-        Source: types.ParseURLRef("http://localhost:8080/"),
-    }.AsV02(),
+	Context: cloudevents.EventContextV02{
+		ID:     uuid.New().String(),
+		Type:   "com.cloudevents.readme.sent",
+		Source: types.ParseURLRef("http://localhost:8080/"),
+	}.AsV02(),
 }
 ```
 
 Sending a cloudevents.Event via the HTTP Transport with Binary v0.2 encoding:
 
 ```go
-c, err := client.NewHTTPClient(
-	client.WithTarget("http://localhost:8080/"),
-	client.WithHTTPEncoding(cloudeventshttp.BinaryV02),
+// import "github.com/cloudevents/sdk-go/pkg/cloudevents/client/http"
+
+c, err := http.New(
+	http.WithTarget("http://localhost:8080/"),
+	http.WithEncoding(cloudeventshttp.BinaryV02),
 )
 if err != nil {
 	panic("unable to create cloudevent client: " + err.Error())
@@ -59,60 +72,29 @@ not change the provided event version, here the client is set to output
 structured encoding:
 
 ```go
-c, err := client.NewHTTPClient(
-	client.WithTarget("http://localhost:8080/"),
-	client.WithHTTPStructuredEncoding(),
+// import "github.com/cloudevents/sdk-go/pkg/cloudevents/client/http"
+
+c, err := http.New(
+	http.WithTarget("http://localhost:8080/"),
+	http.WithStructuredEncoding(),
 )
+```
+
+If you are using advanced transport features or have implemented your own
+transport integration, provide it to a client so your integration does not
+change:
+
+```go
+// import (
+//   "github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+//   transporthttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+// )
+
+t, err := transporthttp.New(cloudeventshttp.WithPort(8080))
+// or a custom transport: t := &custom.MyTransport{Cool:opts}
+
+c, err := client.New(t, opts...)
 ```
 
 Checkout the sample [sender](./cmd/samples/http/sender) and
 [receiver](./cmd/samples/http/receiver) applications for working demo.
-
-## TODO list
-
-### General
-
-- [ ] Add details to what the samples are showing.
-- [ ] Add a sample to show how to use the transport without the client.
-- [ ] increase `./pkg` code coverage to > 90%. (70% as of Feb 19, 2019)
-- [ ] Most tests are happy path, add sad path tests (edge cases).
-- [x] Use contexts to override internal defaults.
-- [ ] Fill in Event.Context defaults with values (like ID and time) if
-      nil/empty.
-- [x] Might be nice to have the client have a Receive hook.
-- [ ] Might be an issue with zero body length requests.
-- [ ] Need a change to the client to make making events easier
-- [x] Implement String() for event context
-
-### Webhook
-
-- [ ] Implement Auth in webhook
-- [ ] Implement Callback in webhook
-- [ ] Implement Allowed Origin
-- [ ] Implement Allowed Rate
-
-### JSON
-
-- [ ] Support json value as body.
-
-### HTTP
-
-- [x] Support overrides for method.
-- [ ] Merge headers from context on send.
-
-### NATS
-
-- [ ] Plumb in auth for the nats server.
-- [ ] v0.2 and v0.3 are very similar. Combine decode logic?
-
-### For v0.3
-
-- [ ] Support batch json
-
-## Existing Go for CloudEvents
-
-Existing projects that added support for CloudEvents in Go are listed below.
-It's our goal to identify existing patterns of using CloudEvents in Go-based
-project and design the SDK to support these patterns (where it makes sense).
-
-- https://github.com/serverless/event-gateway/tree/master/event

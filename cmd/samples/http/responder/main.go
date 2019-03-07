@@ -4,7 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/client/http"
+	cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"github.com/google/uuid"
 	"github.com/kelseyhightower/envconfig"
@@ -64,11 +65,15 @@ func gotEvent(event cloudevents.Event) (*cloudevents.Event, error) {
 func _main(args []string, env envConfig) int {
 	ctx := context.Background()
 
-	_, _, err := client.StartHTTPReceiver(ctx, gotEvent,
-		client.WithHTTPPort(env.Port),
-		client.WithHTTPPath(env.Path),
+	c, err := http.New(
+		cehttp.WithPort(env.Port),
+		cehttp.WithPath(env.Path),
 	)
 	if err != nil {
+		log.Fatalf("failed to create client: %s", err.Error())
+	}
+
+	if err := c.StartReceiver(ctx, gotEvent); err != nil {
 		log.Fatalf("failed to start receiver: %s", err.Error())
 	}
 

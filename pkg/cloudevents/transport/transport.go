@@ -10,7 +10,8 @@ import (
 type Transport interface {
 	Send(context.Context, cloudevents.Event) (*cloudevents.Event, error)
 
-	StartReceiver(context.Context) (context.Context, error)
+	SetReceiver(Receiver)
+	StartReceiver(context.Context) error
 	StopReceiver(context.Context) error
 }
 

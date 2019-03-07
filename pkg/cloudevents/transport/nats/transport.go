@@ -25,6 +25,31 @@ type Transport struct {
 	codec transport.Codec
 }
 
+func New(natsServer, subject string, opts ...Option) (*Transport, error) {
+	conn, err := nats.Connect(natsServer)
+	if err != nil {
+		return nil, err
+	}
+	t := &Transport{
+		Conn:    conn,
+		Subject: subject,
+	}
+	if err := t.applyOptions(opts...); err != nil {
+		return nil, err
+	}
+
+	return t, nil
+}
+
+func (t *Transport) applyOptions(opts ...Option) error {
+	for _, fn := range opts {
+		if err := fn(t); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (t *Transport) loadCodec() bool {
 	if t.codec == nil {
 		switch t.Encoding {
@@ -58,22 +83,26 @@ func (t *Transport) Send(ctx context.Context, event cloudevents.Event) (*cloudev
 	return nil, fmt.Errorf("failed to encode Event into a Message")
 }
 
-func (t *Transport) StartReceiver(ctx context.Context) (context.Context, error) {
+func (t *Transport) SetReceiver(r transport.Receiver) {
+	t.Receiver = r
+}
+
+func (t *Transport) StartReceiver(ctx context.Context) error {
 	if t.Conn == nil {
-		return ctx, fmt.Errorf("no active nats connection")
+		return fmt.Errorf("no active nats connection")
 	}
 	if t.sub != nil {
-		return ctx, fmt.Errorf("already subscribed")
+		return fmt.Errorf("already subscribed")
 	}
 	if ok := t.loadCodec(); !ok {
-		return ctx, fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
+		return fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
 	}
 
 	// TODO: there could be more than one subscription. Might have to do a map
 	// of subject to subscription.
 
 	if t.Subject == "" {
-		return ctx, fmt.Errorf("subject required for nats listen")
+		return fmt.Errorf("subject required for nats listen")
 	}
 
 	var err error
@@ -89,7 +118,7 @@ func (t *Transport) StartReceiver(ctx context.Context) (context.Context, error) 
 		}
 		t.Receiver.Receive(*event)
 	})
-	return ctx, err
+	return err
 }
 
 func (t *Transport) StopReceiver(ctx context.Context) error {

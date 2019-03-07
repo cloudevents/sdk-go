@@ -5,15 +5,14 @@ import (
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+	cloudeventsnats "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/nats"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/google/uuid"
+	"github.com/kelseyhightower/envconfig"
 	"log"
 	"net/url"
 	"os"
 	"time"
-
-	"github.com/google/uuid"
-
-	"github.com/kelseyhightower/envconfig"
 )
 
 const (
@@ -72,9 +71,14 @@ func _main(args []string, env envConfig) int {
 
 	seq := 0
 	for _, contentType := range []string{"application/json", "application/xml"} {
-		c, err := client.NewNATSClient(env.NATSServer, env.Subject)
+		t, err := cloudeventsnats.New(env.NATSServer, env.Subject)
 		if err != nil {
-			log.Printf("failed to create client, %v", err)
+			log.Printf("failed to create nats transport, %s", err.Error())
+			return 1
+		}
+		c, err := client.New(t)
+		if err != nil {
+			log.Printf("failed to create client, %s", err.Error())
 			return 1
 		}
 

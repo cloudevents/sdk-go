@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
+	cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"io/ioutil"
 	"net/http"
@@ -29,18 +29,34 @@ var (
 )
 
 func simpleBinaryClient(target string) client.Client {
-	c, _ := client.NewHTTPClient(
-		client.WithTarget(target),
-		client.WithHTTPBinaryEncoding(),
+	t, err := cehttp.New(
+		cehttp.WithTarget(target),
+		cehttp.WithBinaryEncoding(),
 	)
+	if err != nil {
+		return nil
+	}
+
+	c, err := client.New(t)
+	if err != nil {
+		return nil
+	}
 	return c
 }
 
 func simpleStructuredClient(target string) client.Client {
-	c, _ := client.NewHTTPClient(
-		client.WithTarget(target),
-		client.WithHTTPStructuredEncoding(),
+	t, err := cehttp.New(
+		cehttp.WithTarget(target),
+		cehttp.WithStructuredEncoding(),
 	)
+	if err != nil {
+		return nil
+	}
+
+	c, err := client.New(t)
+	if err != nil {
+		return nil
+	}
 	return c
 }
 
@@ -256,24 +272,24 @@ func TestClientSend(t *testing.T) {
 	}
 }
 
-func simpleBinaryOptions(port int, path string) []client.Option {
-	opts := []client.Option{
-		client.WithHTTPPort(port),
-		client.WithHTTPBinaryEncoding(),
+func simpleBinaryOptions(port int, path string) []cehttp.Option {
+	opts := []cehttp.Option{
+		cehttp.WithPort(port),
+		cehttp.WithBinaryEncoding(),
 	}
 	if len(path) > 0 {
-		opts = append(opts, client.WithHTTPPath(path))
+		opts = append(opts, cehttp.WithPath(path))
 	}
 	return opts
 }
 
-func simpleStructuredOptions(port int, path string) []client.Option {
-	opts := []client.Option{
-		client.WithHTTPPort(port),
-		client.WithHTTPStructuredEncoding(),
+func simpleStructuredOptions(port int, path string) []cehttp.Option {
+	opts := []cehttp.Option{
+		cehttp.WithPort(port),
+		cehttp.WithStructuredEncoding(),
 	}
 	if len(path) > 0 {
-		opts = append(opts, client.WithHTTPPath(path))
+		opts = append(opts, cehttp.WithPath(path))
 	}
 	return opts
 }
@@ -282,7 +298,7 @@ func TestClientReceive(t *testing.T) {
 	now := time.Now()
 
 	testCases := map[string]struct {
-		optsFn  func(port int, path string) []client.Option
+		optsFn  func(port int, path string) []cehttp.Option
 		req     *requestValidation
 		want    cloudevents.Event
 		wantErr string
@@ -444,116 +460,101 @@ func TestClientReceive(t *testing.T) {
 
 	type startFn func(events chan cloudevents.Event, opts ...client.Option) (context.Context, client.Client, error)
 
-	manualStart := func(events chan cloudevents.Event, opts ...client.Option) (context.Context, client.Client, error) {
-		c, err := client.NewHTTPClient(opts...)
-		if err != nil {
-			return context.Background(), c, err
-		}
-
-		ctx, err := c.StartReceiver(context.TODO(), func(event cloudevents.Event) (*cloudevents.Event, error) {
-			// don't block the request.
-			go func() {
-				events <- event
-			}()
-			return nil, nil
-		})
-		return ctx, c, err
-	}
-
-	autoStart := func(events chan cloudevents.Event, opts ...client.Option) (context.Context, client.Client, error) {
-		return client.StartHTTPReceiver(context.TODO(), func(event cloudevents.Event) (*cloudevents.Event, error) {
-			// don't block the request.
-			go func() {
-				events <- event
-			}()
-			return nil, nil
-		}, opts...)
-	}
-
 	for n, tc := range testCases {
-		for method, fn := range map[string]startFn{"manual": manualStart, "auto": autoStart} {
-			for _, path := range []string{"", "/", "/unittest/"} {
-				t.Run(n+" at path "+path+" started with "+method, func(t *testing.T) {
+		for _, path := range []string{"", "/", "/unittest/"} {
+			t.Run(n+" at path "+path, func(t *testing.T) {
 
-					events := make(chan cloudevents.Event)
+				events := make(chan cloudevents.Event)
 
-					ctx, c, err := fn(events, tc.optsFn(0, path)...)
+				tp, err := cehttp.New(tc.optsFn(0, path)...)
+				if err != nil {
+					t.Errorf("failed to make http transport %s", err.Error())
+				}
 
-					// to construct the target, we need to default the empty string to "/"
-					if path == "" {
-						path = "/"
-					}
+				c, err := client.New(tp)
+				if err != nil {
+					t.Errorf("failed to make client %s", err.Error())
+				}
 
-					target, _ := url.Parse(fmt.Sprintf("http://localhost:%d%s", cecontext.PortFromContext(ctx), path))
-
-					if tc.wantErr != "" {
-						if err == nil {
-							t.Fatalf("failed to return expected error, got nil")
-						}
-						want := tc.wantErr
-						got := err.Error()
-						if !strings.Contains(got, want) {
-							t.Fatalf("failed to return expected error, got %q, want %q", err, want)
-						}
-						return
-					} else {
-						if err != nil {
-							t.Fatalf("failed to send event %s", err)
-						}
-					}
-
-					req := &http.Request{
-						Method:        "POST",
-						URL:           target,
-						Header:        tc.req.Headers,
-						Body:          ioutil.NopCloser(strings.NewReader(tc.req.Body)),
-						ContentLength: int64(len([]byte(tc.req.Body))),
-					}
-
-					_, err = http.DefaultClient.Do(req)
-
-					//// Make a copy of the request.
-					//body, err := ioutil.ReadAll(resp.Body)
-					//if err != nil {
-					//	t.Error("failed to read the request body")
-					//}
-					//gotResp := requestValidation{
-					//	Headers: resp.Header,
-					//	Body:    string(body),
-					//}
-					//
-					//_ = gotResp // TODO: check response
-
-					got := <-events
-
-					if diff := cmp.Diff(tc.want.Context, got.Context); diff != "" {
-						t.Errorf("unexpected events.Context (-want, +got) = %v", diff)
-					}
-
-					data := &map[string]string{}
-					err = got.DataAs(data)
-					if err != nil {
-						t.Fatalf("returned unexpected error, got %s", err.Error())
-					}
-
-					if diff := cmp.Diff(tc.want.Data, data); diff != "" {
-						t.Errorf("unexpected events.Data (-want, +got) = %v", diff)
-					}
-
-					// Now stop the client
-
-					if err := c.StopReceiver(ctx); err != nil {
-						t.Fatalf("returned unexpected error, got %s", err.Error())
-					}
-
-					// try the request again, expecting an error:
-
-					if _, err = http.DefaultClient.Do(req); err == nil {
-						t.Fatalf("expected error to when sending request to stopped client")
-					}
-
+				err = c.StartReceiver(context.TODO(), func(event cloudevents.Event) (*cloudevents.Event, error) {
+					go func() {
+						events <- event
+					}()
+					return nil, nil
 				})
-			}
+				if err != nil {
+					t.Errorf("failed to start receiver %s", err.Error())
+				}
+
+				target, _ := url.Parse(fmt.Sprintf("http://localhost:%d%s", tp.GetPort(), tp.GetPath()))
+
+				if tc.wantErr != "" {
+					if err == nil {
+						t.Fatalf("failed to return expected error, got nil")
+					}
+					want := tc.wantErr
+					got := err.Error()
+					if !strings.Contains(got, want) {
+						t.Fatalf("failed to return expected error, got %q, want %q", err, want)
+					}
+					return
+				} else {
+					if err != nil {
+						t.Fatalf("failed to send event %s", err)
+					}
+				}
+
+				req := &http.Request{
+					Method:        "POST",
+					URL:           target,
+					Header:        tc.req.Headers,
+					Body:          ioutil.NopCloser(strings.NewReader(tc.req.Body)),
+					ContentLength: int64(len([]byte(tc.req.Body))),
+				}
+
+				_, err = http.DefaultClient.Do(req)
+
+				//// Make a copy of the request.
+				//body, err := ioutil.ReadAll(resp.Body)
+				//if err != nil {
+				//	t.Error("failed to read the request body")
+				//}
+				//gotResp := requestValidation{
+				//	Headers: resp.Header,
+				//	Body:    string(body),
+				//}
+				//
+				//_ = gotResp // TODO: check response
+
+				got := <-events
+
+				if diff := cmp.Diff(tc.want.Context, got.Context); diff != "" {
+					t.Errorf("unexpected events.Context (-want, +got) = %v", diff)
+				}
+
+				data := &map[string]string{}
+				err = got.DataAs(data)
+				if err != nil {
+					t.Fatalf("returned unexpected error, got %s", err.Error())
+				}
+
+				if diff := cmp.Diff(tc.want.Data, data); diff != "" {
+					t.Errorf("unexpected events.Data (-want, +got) = %v", diff)
+				}
+
+				// Now stop the client
+
+				if err := c.StopReceiver(context.TODO()); err != nil {
+					t.Fatalf("returned unexpected error, got %s", err.Error())
+				}
+
+				// try the request again, expecting an error:
+
+				if _, err = http.DefaultClient.Do(req); err == nil {
+					t.Fatalf("expected error to when sending request to stopped client")
+				}
+
+			})
 		}
 	}
 }

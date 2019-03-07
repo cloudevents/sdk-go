@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	cloudeventshttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 	cloudeventsnats "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/nats"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
@@ -95,11 +96,14 @@ func _main(args []string, env envConfig) int {
 		// HTTP
 		for _, encoding := range []cloudeventshttp.Encoding{cloudeventshttp.Default, cloudeventshttp.BinaryV01, cloudeventshttp.StructuredV01, cloudeventshttp.BinaryV02, cloudeventshttp.StructuredV02, cloudeventshttp.BinaryV03, cloudeventshttp.StructuredV03} {
 
-			c, err := client.NewHTTPClient(
-				client.WithTarget(env.HTTPTarget),
-				client.WithHTTPEncoding(encoding),
-				client.WithUUIDs(),
-				client.WithTimeNow(),
+			if err != nil {
+				log.Printf("failed to create client, %v", err)
+				return 1
+			}
+
+			t, err := cloudeventshttp.New(
+				cloudeventshttp.WithTarget(env.HTTPTarget),
+				cloudeventshttp.WithEncoding(encoding),
 			)
 			if err != nil {
 				log.Printf("failed to create client, %v", err)
@@ -107,7 +111,7 @@ func _main(args []string, env envConfig) int {
 			}
 
 			if err := doDemo(
-				c,
+				t,
 				"com.cloudevents.sample.http.sent",
 				fmt.Sprintf("Hello, %s using %s!", encoding, contentType),
 				contentType,
@@ -120,17 +124,18 @@ func _main(args []string, env envConfig) int {
 
 		// NATS
 		for _, encoding := range []cloudeventsnats.Encoding{cloudeventsnats.Default, cloudeventsnats.StructuredV02, cloudeventsnats.StructuredV03} {
-			c, err := client.NewNATSClient(env.NATSServer, env.Subject,
-				client.WithNATSEncoding(encoding),
-				client.WithUUIDs(),
-				client.WithTimeNow(),
+
+			t, err := cloudeventsnats.New(
+				env.NATSServer,
+				env.Subject,
+				cloudeventsnats.WithEncoding(encoding),
 			)
 			if err != nil {
 				log.Printf("failed to create client, %v", err)
 				return 1
 			}
 			if err := doDemo(
-				c,
+				t,
 				"com.cloudevents.sample.nats.sent",
 				fmt.Sprintf("Hello, %s using %s!", encoding, contentType),
 				contentType,
@@ -145,7 +150,16 @@ func _main(args []string, env envConfig) int {
 	return 0
 }
 
-func doDemo(c client.Client, eventType, message, contentType string, source url.URL) error {
+func doDemo(t transport.Transport, eventType, message, contentType string, source url.URL) error {
+
+	c, err := client.New(t,
+		client.WithUUIDs(),
+		client.WithTimeNow(),
+	)
+	if err != nil {
+		return err
+	}
+
 	d := &Demo{
 		Message:     message,
 		Client:      c,

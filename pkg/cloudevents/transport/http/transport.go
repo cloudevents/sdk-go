@@ -4,14 +4,15 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
 	"strings"
+
+	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 )
 
 type EncodingSelector func(e cloudevents.Event) Encoding
@@ -32,13 +33,33 @@ type Transport struct {
 	Receiver transport.Receiver
 	Port     *int   // if nil, default 8080
 	Path     string // if "", default "/"
-	realPort int
-	server   *http.Server
-	// handler this allows for injecting of a handler from the user <- unit test only for now
-	handler           *http.ServeMux
-	handlerRegistered bool
+	Handler  *http.ServeMux
 
-	codec transport.Codec
+	realPort          int
+	server            *http.Server
+	handlerRegistered bool
+	codec             transport.Codec
+}
+
+func New(opts ...Option) (*Transport, error) {
+	t := &Transport{
+		Req: &http.Request{
+			Method: http.MethodPost,
+		},
+	}
+	if err := t.applyOptions(opts...); err != nil {
+		return nil, err
+	}
+	return t, nil
+}
+
+func (t *Transport) applyOptions(opts ...Option) error {
+	for _, fn := range opts {
+		if err := fn(t); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (t *Transport) loadCodec() bool {
@@ -66,7 +87,7 @@ func (t *Transport) Send(ctx context.Context, event cloudevents.Event) (*cloudev
 	}
 
 	// Override the default request with target from context.
-	if target := cecontext.TargetFromContext(ctx); target != nil {
+	if target := cecontext.TargetFromContext(ctx); target != nil { // TODO: this is bad. don't pass this kind of instruction in the context. shame. boooo
 		req.URL = target
 	}
 
@@ -113,54 +134,44 @@ func (t *Transport) Send(ctx context.Context, event cloudevents.Event) (*cloudev
 			return respEvent, fmt.Errorf("error sending cloudevent: %s", status(resp))
 		})
 	}
-
 	return nil, fmt.Errorf("failed to encode Event into a Message")
 }
 
-type eventError struct {
-	event *cloudevents.Event
-	err   error
+func (t *Transport) SetReceiver(r transport.Receiver) {
+	t.Receiver = r
 }
 
-// TODO: finalize
-type TransportContext struct {
-	URI    string
-	Host   string
-	Method string
-}
-
-func (t *Transport) StartReceiver(ctx context.Context) (context.Context, error) {
+func (t *Transport) StartReceiver(ctx context.Context) error {
 	if t.server == nil {
-		if t.handler == nil {
-			t.handler = http.NewServeMux()
+		if t.Handler == nil {
+			t.Handler = http.NewServeMux()
 		}
 		if !t.handlerRegistered {
 			// handler.Handle might panic if the user tries to use the same path as the sdk.
-			t.handler.Handle(t.GetPath(), t)
+			t.Handler.Handle(t.GetPath(), t)
 			t.handlerRegistered = true
 		}
 
 		addr := fmt.Sprintf(":%d", t.GetPort())
 		t.server = &http.Server{
 			Addr:    addr,
-			Handler: t.handler,
+			Handler: t.Handler,
 		}
 
 		listener, err := net.Listen("tcp", addr)
 		if err != nil {
-			return ctx, err
+			return err
 		}
 		t.realPort = listener.Addr().(*net.TCPAddr).Port
-		ctx = cecontext.ContextWithPort(ctx, t.realPort) // TODO: may not need realPort?
 
 		go func() {
 			log.Print(t.server.Serve(listener))
 			t.server = nil
 			t.realPort = 0
 		}()
-		return ctx, nil
+		return nil
 	}
-	return ctx, fmt.Errorf("http server already started")
+	return fmt.Errorf("http server already started")
 }
 
 // This blocks until all active connections are closed.
@@ -173,6 +184,18 @@ func (t *Transport) StopReceiver(ctx context.Context) error {
 		}
 	}
 	return nil
+}
+
+type eventError struct {
+	event *cloudevents.Event
+	err   error
+}
+
+// TODO: finalize
+type TransportContext struct {
+	URI    string
+	Host   string
+	Method string
 }
 
 func httpDo(ctx context.Context, req *http.Request, f func(*http.Response, error) (*cloudevents.Event, error)) (*cloudevents.Event, error) {
