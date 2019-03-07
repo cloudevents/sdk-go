@@ -72,10 +72,28 @@ not change the provided event version, here the client is set to output
 structured encoding:
 
 ```go
-c, err := client.NewHTTPClient(
-	client.WithTarget("http://localhost:8080/"),
-	client.WithHTTPStructuredEncoding(),
+// import "github.com/cloudevents/sdk-go/pkg/cloudevents/client/http"
+
+c, err := http.New(
+	http.WithTarget("http://localhost:8080/"),
+	http.WithStructuredEncoding(),
 )
+```
+
+If you are using advanced transport features or have implemented your own
+transport integration, provide it to a client so your integration does not
+change:
+
+```go
+// import (
+//   "github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+//   transporthttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+// )
+
+t, err := transporthttp.New(cloudeventshttp.WithPort(8080))
+// or a custom transport: t := &custom.MyTransport{Cool:opts}
+
+c, err := client.New(t, opts...)
 ```
 
 Checkout the sample [sender](./cmd/samples/http/sender) and
