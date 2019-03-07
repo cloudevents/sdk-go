@@ -7,18 +7,19 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 )
 
-type Receiver func(event cloudevents.Event) (*cloudevents.Event, error)
+//type Receiver func(event cloudevents.Event) (*cloudevents.Event, error)
+type Receive func(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error
 
 type Client interface {
 	Send(ctx context.Context, event cloudevents.Event) (*cloudevents.Event, error)
 
-	StartReceiver(ctx context.Context, fn Receiver) error
+	StartReceiver(ctx context.Context, fn Receive) error
 	StopReceiver(ctx context.Context) error
 }
 
 type ceClient struct {
 	transport transport.Transport
-	receiver  Receiver
+	receive   Receive
 
 	eventDefaulterFns []EventDefaulter
 }
@@ -53,22 +54,22 @@ func (c *ceClient) Send(ctx context.Context, event cloudevents.Event) (*cloudeve
 	return c.transport.Send(ctx, event)
 }
 
-func (c *ceClient) Receive(event cloudevents.Event) (*cloudevents.Event, error) {
-	if c.receiver != nil {
-		return c.receiver(event)
+func (c *ceClient) Receive(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error {
+	if c.receive != nil {
+		return c.receive(ctx, event, resp)
 	}
-	return nil, nil
+	return nil
 }
 
-func (c *ceClient) StartReceiver(ctx context.Context, fn Receiver) error {
+func (c *ceClient) StartReceiver(ctx context.Context, fn Receive) error {
 	if c.transport == nil {
 		return fmt.Errorf("client not ready, transport not initialized")
 	}
-	if c.receiver != nil {
+	if c.receive != nil {
 		return fmt.Errorf("client already has a receiver")
 	}
 
-	c.receiver = fn
+	c.receive = fn
 
 	return c.transport.StartReceiver(ctx)
 }
@@ -79,7 +80,7 @@ func (c *ceClient) StopReceiver(ctx context.Context) error {
 	}
 
 	err := c.transport.StopReceiver(ctx)
-	c.receiver = nil
+	c.receive = nil
 	return err
 }
 

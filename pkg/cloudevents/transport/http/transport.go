@@ -87,7 +87,7 @@ func (t *Transport) Send(ctx context.Context, event cloudevents.Event) (*cloudev
 	}
 
 	// Override the default request with target from context.
-	if target := cecontext.TargetFromContext(ctx); target != nil { // TODO: this is bad. don't pass this kind of instruction in the context. shame. boooo
+	if target := cecontext.TargetFromContext(ctx); target != nil {
 		req.URL = target
 	}
 
@@ -198,12 +198,12 @@ type TransportContext struct {
 	Method string
 }
 
-func httpDo(ctx context.Context, req *http.Request, f func(*http.Response, error) (*cloudevents.Event, error)) (*cloudevents.Event, error) {
-	// Run the HTTP request in a goroutine and pass the response to f.
+func httpDo(ctx context.Context, req *http.Request, fn func(*http.Response, error) (*cloudevents.Event, error)) (*cloudevents.Event, error) {
+	// Run the HTTP request in a goroutine and pass the response to fn.
 	c := make(chan eventError, 1)
 	req = req.WithContext(ctx)
 	go func() {
-		event, err := f(http.DefaultClient.Do(req))
+		event, err := fn(http.DefaultClient.Do(req))
 
 		if event != nil {
 			event.TransportContext = &TransportContext{
@@ -245,21 +245,37 @@ func status(resp *http.Response) string {
 
 func (t *Transport) invokeReceiver(event cloudevents.Event) (*Response, error) {
 	if t.Receiver != nil {
-		respEvent, err := t.Receiver.Receive(event)
+
+		// Note: http does not use eventResp.Reason
+		eventResp := cloudevents.EventResponse{}
 		resp := Response{}
-		if respEvent != nil && t.loadCodec() {
-			m, err2 := t.codec.Encode(*respEvent)
-			if err2 != nil {
-				log.Printf("failed to encode response from receiver fn: %s", err2.Error())
-			} else if msg, ok := m.(*Message); ok {
-				resp.Header = msg.Header
-				resp.Body = msg.Body
+
+		err := t.Receiver.Receive(context.TODO(), event, &eventResp)
+		if err != nil {
+			log.Printf("got an error from receiver fn: %s", err.Error())
+			resp.StatusCode = http.StatusInternalServerError
+			return &resp, err
+		}
+
+		if eventResp.Event != nil {
+			if t.loadCodec() {
+				if m, err := t.codec.Encode(*eventResp.Event); err != nil {
+					log.Printf("failed to encode response from receiver fn: %s", err.Error())
+				} else if msg, ok := m.(*Message); ok {
+					resp.Header = msg.Header
+					resp.Body = msg.Body
+				}
+			} else {
+				log.Printf("failed to load codec")
+				resp.StatusCode = http.StatusInternalServerError
+				return &resp, err
 			}
 		}
-		if err != nil {
-			resp.StatusCode = http.StatusBadRequest
+
+		if eventResp.Status != 0 {
+			resp.StatusCode = eventResp.Status
 		} else {
-			resp.StatusCode = http.StatusAccepted
+			resp.StatusCode = http.StatusAccepted // default is 202 - Accepted
 		}
 		return &resp, err
 	}

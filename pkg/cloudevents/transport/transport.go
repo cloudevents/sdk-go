@@ -15,7 +15,6 @@ type Transport interface {
 	StopReceiver(context.Context) error
 }
 
-// Receiver TODO not sure yet.
 type Receiver interface {
-	Receive(event cloudevents.Event) (*cloudevents.Event, error)
+	Receive(context.Context, cloudevents.Event, *cloudevents.EventResponse) error
 }

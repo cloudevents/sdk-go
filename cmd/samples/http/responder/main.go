@@ -34,7 +34,7 @@ type Example struct {
 	Message  string `json:"message"`
 }
 
-func gotEvent(event cloudevents.Event) (*cloudevents.Event, error) {
+func gotEvent(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error {
 	fmt.Printf("Got Event Context: %+v\n", event.Context)
 	data := &Example{}
 	if err := event.DataAs(data); err != nil {
@@ -44,7 +44,7 @@ func gotEvent(event cloudevents.Event) (*cloudevents.Event, error) {
 	fmt.Printf("----------------------------\n")
 
 	if data.Message == "ping" {
-		resp := cloudevents.Event{
+		r := cloudevents.Event{
 			Context: cloudevents.EventContextV02{
 				Source: *types.ParseURLRef("/pong"),
 				Time:   &types.Timestamp{Time: time.Now()},
@@ -56,10 +56,11 @@ func gotEvent(event cloudevents.Event) (*cloudevents.Event, error) {
 				Message:  "pong",
 			},
 		}
-		return &resp, nil
+		resp.Event = &r
+		return nil
 	}
 
-	return nil, nil
+	return nil
 }
 
 func _main(args []string, env envConfig) int {

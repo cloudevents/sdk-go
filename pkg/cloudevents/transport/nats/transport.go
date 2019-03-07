@@ -116,7 +116,11 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 			log.Printf("failed to decode message: %s", err)
 			return
 		}
-		t.Receiver.Receive(*event)
+		// TODO: I do not know enough about NATS to implement reply.
+		// For now, NATS does not support reply.
+		if err := t.Receiver.Receive(context.TODO(), *event, nil); err != nil {
+			log.Printf("nats receiver return err: %s", err)
+		}
 	})
 	return err
 }
