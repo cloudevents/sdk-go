@@ -4,14 +4,13 @@ import (
 	"context"
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client/http"
 	cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
-	"github.com/google/uuid"
 	"github.com/kelseyhightower/envconfig"
 	"log"
 	"os"
-	"time"
 )
 
 type envConfig struct {
@@ -43,17 +42,15 @@ func gotEvent(ctx context.Context, event cloudevents.Event, resp *cloudevents.Ev
 	fmt.Printf("Got Data: %+v\n", data)
 	fmt.Printf("----------------------------\n")
 
-	if data.Message == "ping" {
+	if data.Sequence%3 == 0 {
 		r := cloudevents.Event{
 			Context: cloudevents.EventContextV02{
-				Source: *types.ParseURLRef("/pong"),
-				Time:   &types.Timestamp{Time: time.Now()},
-				Type:   "samples.http.pong",
-				ID:     uuid.New().String(),
+				Source: *types.ParseURLRef("/mod3"),
+				Type:   "samples.http.mod3",
 			}.AsV02(),
 			Data: Example{
 				Sequence: data.Sequence,
-				Message:  "pong",
+				Message:  "mod 3!",
 			},
 		}
 		resp.Event = &r
@@ -69,6 +66,8 @@ func _main(args []string, env envConfig) int {
 	c, err := http.New(
 		cehttp.WithPort(env.Port),
 		cehttp.WithPath(env.Path),
+		client.WithUUIDs(),
+		client.WithTimeNow(),
 	)
 	if err != nil {
 		log.Fatalf("failed to create client: %s", err.Error())

@@ -7,7 +7,9 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 )
 
-//type Receiver func(event cloudevents.Event) (*cloudevents.Event, error)
+// Receive is the signature of a fn to be invoked for incoming cloudevents.
+// If fn returns an error, EventResponse will not be considered by the client or
+// or transport.
 type Receive func(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error
 
 type Client interface {
@@ -54,9 +56,21 @@ func (c *ceClient) Send(ctx context.Context, event cloudevents.Event) (*cloudeve
 	return c.transport.Send(ctx, event)
 }
 
+// Receive is called from from the transport on event delivery.
 func (c *ceClient) Receive(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error {
 	if c.receive != nil {
-		return c.receive(ctx, event, resp)
+		err := c.receive(ctx, event, resp)
+		// Apply the defaulter chain to the outgoing event.
+		if err == nil && resp != nil && resp.Event != nil && len(c.eventDefaulterFns) > 0 {
+			for _, fn := range c.eventDefaulterFns {
+				*resp.Event = fn(*resp.Event)
+			}
+			// Validate the event conforms to the CloudEvents Spec.
+			if err := resp.Event.Validate(); err != nil {
+				return fmt.Errorf("cloudevent validation failed on response event: %v", err)
+			}
+		}
+		return err
 	}
 	return nil
 }
