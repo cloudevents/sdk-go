@@ -1,0 +1,42 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/golang:1.11.5
+
+    environment:
+      TEST_RESULTS: /tmp/test-results
+
+    steps:
+      - checkout
+      - run: mkdir -p $TEST_RESULTS
+
+      - restore_cache:
+          keys:
+            - gomod-cache-{{ checksum "go.sum" }}
+
+      - run:
+          name: "Enforce Go Formatted Code"
+          command: "! go fmt ./... 2>&1 | read"
+      - run:
+          name: "Run go vet"
+          command: go vet ./...
+      - run:
+          name: "Check modules via go tidy"
+          command: go mod tidy && git diff --exit-code go.{mod,sum}
+      - run:
+          name: Run unit tests
+          command: |
+            ./hack/presubmit-test.sh | tee ${TEST_RESULTS}/go-test.out
+
+      - save_cache:
+          key: gomod-cache-{{ checksum "go.sum" }}
+          paths:
+            - "/go/pkg/mod"
+
+      - store_artifacts:
+          path: /tmp/test-results
+          destination: raw-test-output
+
+      - store_test_results:
+          path: /tmp/test-results

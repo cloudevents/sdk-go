@@ -88,6 +88,7 @@ func _main(args []string, env envConfig) int {
 		return 1
 	}
 	err = c.StartReceiver(ctx, r.Receive)
+
 	if err != nil {
 		log.Printf("failed to StartHTTPReceiver, %v", err)
 	}
