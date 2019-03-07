@@ -1,7 +1,9 @@
 package http
 
 import (
+	"context"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 )
 
@@ -32,4 +34,17 @@ func New(opts ...interface{}) (client.Client, error) {
 		return nil, err
 	}
 	return c, nil
+}
+
+func TransportContextFrom(ctx context.Context) http.TransportContext {
+	tctx := cecontext.TransportContextFrom(ctx)
+	if tctx != nil {
+		if tx, ok := tctx.(http.TransportContext); ok {
+			return tx
+		}
+		if tx, ok := tctx.(*http.TransportContext); ok {
+			return *tx
+		}
+	}
+	return http.TransportContext{}
 }

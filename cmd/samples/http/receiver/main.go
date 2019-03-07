@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/client/http"
 	"log"
 	"os"
 
@@ -39,6 +40,9 @@ func gotEvent(ctx context.Context, event cloudevents.Event, resp *cloudevents.Ev
 		fmt.Printf("Got Data Error: %s\n", err.Error())
 	}
 	fmt.Printf("Got Data: %+v\n", data)
+
+	fmt.Printf("Got Transport Context: %+v\n", http.TransportContextFrom(ctx))
+
 	fmt.Printf("----------------------------\n")
 	return nil
 }

@@ -41,6 +41,13 @@ type Transport struct {
 	codec             transport.Codec
 }
 
+// TransportContext allows a Receiver to understand the context of a request.
+type TransportContext struct {
+	URI    string
+	Host   string
+	Method string
+}
+
 func New(opts ...Option) (*Transport, error) {
 	t := &Transport{
 		Req: &http.Request{
@@ -87,7 +94,7 @@ func (t *Transport) Send(ctx context.Context, event cloudevents.Event) (*cloudev
 	}
 
 	// Override the default request with target from context.
-	if target := cecontext.TargetFromContext(ctx); target != nil {
+	if target := cecontext.TargetFrom(ctx); target != nil {
 		req.URL = target
 	}
 
@@ -191,28 +198,12 @@ type eventError struct {
 	err   error
 }
 
-// TODO: finalize
-type TransportContext struct {
-	URI    string
-	Host   string
-	Method string
-}
-
 func httpDo(ctx context.Context, req *http.Request, fn func(*http.Response, error) (*cloudevents.Event, error)) (*cloudevents.Event, error) {
 	// Run the HTTP request in a goroutine and pass the response to fn.
 	c := make(chan eventError, 1)
 	req = req.WithContext(ctx)
 	go func() {
 		event, err := fn(http.DefaultClient.Do(req))
-
-		if event != nil {
-			event.TransportContext = &TransportContext{
-				URI:    req.RequestURI,
-				Host:   req.Host,
-				Method: req.Method,
-			}
-		}
-
 		c <- eventError{event: event, err: err}
 	}()
 	select {
@@ -243,14 +234,14 @@ func status(resp *http.Response) string {
 	return fmt.Sprintf("Status[%s] %s", status, body)
 }
 
-func (t *Transport) invokeReceiver(event cloudevents.Event) (*Response, error) {
+func (t *Transport) invokeReceiver(ctx context.Context, event cloudevents.Event) (*Response, error) {
 	if t.Receiver != nil {
 
 		// Note: http does not use eventResp.Reason
 		eventResp := cloudevents.EventResponse{}
 		resp := Response{}
 
-		err := t.Receiver.Receive(context.TODO(), event, &eventResp)
+		err := t.Receiver.Receive(ctx, event, &eventResp)
 		if err != nil {
 			log.Printf("got an error from receiver fn: %s", err.Error())
 			resp.StatusCode = http.StatusInternalServerError
@@ -283,16 +274,16 @@ func (t *Transport) invokeReceiver(event cloudevents.Event) (*Response, error) {
 }
 
 // ServeHTTP implements http.Handler
-func (t *Transport) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	body, err := ioutil.ReadAll(r.Body)
+func (t *Transport) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
-		log.Printf("failed to handle request: %s %v", err, r)
+		log.Printf("failed to handle request: %s %v", err, req)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(`{"error":"Invalid request"}`))
 		return
 	}
 	msg := &Message{
-		Header: r.Header,
+		Header: req.Header,
 		Body:   body,
 	}
 
@@ -305,13 +296,23 @@ func (t *Transport) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	event, err := t.codec.Decode(msg)
 	if err != nil {
-		log.Printf("failed to decode message: %s %v", err, r)
+		log.Printf("failed to decode message: %s %v", err, req)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf(`{"error":%q}`, err.Error())))
 		return
 	}
 
-	resp, err := t.invokeReceiver(*event)
+	ctx := req.Context()
+
+	if req != nil {
+		ctx = cecontext.WithTransportContext(ctx, TransportContext{
+			URI:    req.RequestURI,
+			Host:   req.Host,
+			Method: req.Method,
+		})
+	}
+
+	resp, err := t.invokeReceiver(ctx, *event)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf(`{"error":%q}`, err.Error())))

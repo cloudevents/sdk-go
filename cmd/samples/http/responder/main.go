@@ -40,6 +40,7 @@ func gotEvent(ctx context.Context, event cloudevents.Event, resp *cloudevents.Ev
 		fmt.Printf("Got Data Error: %s\n", err.Error())
 	}
 	fmt.Printf("Got Data: %+v\n", data)
+	fmt.Printf("Got Transport Context: %+v\n", http.TransportContextFrom(ctx))
 	fmt.Printf("----------------------------\n")
 
 	if data.Sequence%3 == 0 {
@@ -53,7 +54,7 @@ func gotEvent(ctx context.Context, event cloudevents.Event, resp *cloudevents.Ev
 				Message:  "mod 3!",
 			},
 		}
-		resp.Event = &r
+		resp.RespondWith(200, &r)
 		return nil
 	}
 
