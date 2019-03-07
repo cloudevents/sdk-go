@@ -24,12 +24,12 @@ func main() {
 	ctx := context.Background()
 	
 	c, err := http.New(
-    	http.WithTarget("http://localhost:8080/"),
-    	http.WithEncoding(cloudeventshttp.BinaryV02),
-    )
-    if err != nil {
-    	panic("unable to create cloudevent client: " + err.Error())
-    }
+		http.WithTarget("http://localhost:8080/"),
+		http.WithEncoding(cloudeventshttp.BinaryV02),
+		)
+		if err != nil {
+			panic("unable to create cloudevent client: " + err.Error())
+		}
 	
 	if err := c.StartReceiver(ctx, Receive); err != nil {
 		panic("unable to start the cloudevent receiver: " + err.Error())
@@ -42,11 +42,11 @@ Creating a minimal CloudEvent in version 0.2:
 
 ```go
 event := cloudevents.Event{
-    Context: cloudevents.EventContextV02{
-        ID:     uuid.New().String(),
-        Type:   "com.cloudevents.readme.sent",
-        Source: types.ParseURLRef("http://localhost:8080/"),
-    }.AsV02(),
+	Context: cloudevents.EventContextV02{
+		ID:     uuid.New().String(),
+		Type:   "com.cloudevents.readme.sent",
+		Source: types.ParseURLRef("http://localhost:8080/"),
+	}.AsV02(),
 }
 ```
 
