@@ -14,15 +14,25 @@ CloudEvents specification: https://github.com/cloudevents/spec.
 Receiving a cloudevents.Event via the HTTP Transport:
 
 ```go
+// import "github.com/cloudevents/sdk-go/pkg/cloudevents/client/http"
+
 func Receive(event cloudevents.Event) {
 	// do something with event.Context and event.Data (via event.DataAs(foo)
 }
 
 func main() {
 	ctx := context.Background()
-	_, _, err := client.StartHTTPReceiver(ctx, Receive)
-	if err != nil {
-		log.Fatal(err)
+	
+	c, err := http.New(
+    	http.WithTarget("http://localhost:8080/"),
+    	http.WithEncoding(cloudeventshttp.BinaryV02),
+    )
+    if err != nil {
+    	panic("unable to create cloudevent client: " + err.Error())
+    }
+	
+	if err := c.StartReceiver(ctx, Receive); err != nil {
+		panic("unable to start the cloudevent receiver: " + err.Error())
 	}
 	<-ctx.Done()
 }
@@ -43,9 +53,11 @@ event := cloudevents.Event{
 Sending a cloudevents.Event via the HTTP Transport with Binary v0.2 encoding:
 
 ```go
-c, err := client.NewHTTPClient(
-	client.WithTarget("http://localhost:8080/"),
-	client.WithHTTPEncoding(cloudeventshttp.BinaryV02),
+// import "github.com/cloudevents/sdk-go/pkg/cloudevents/client/http"
+
+c, err := http.New(
+	http.WithTarget("http://localhost:8080/"),
+	http.WithEncoding(cloudeventshttp.BinaryV02),
 )
 if err != nil {
 	panic("unable to create cloudevent client: " + err.Error())
