@@ -42,7 +42,7 @@ type Example struct {
 	Message  string `json:"message"`
 }
 
-func (r *Receiver) Receive(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error {
+func (r *Receiver) Receive(event cloudevents.Event) error {
 	fmt.Printf("Got Event Context: %+v\n", event.Context)
 
 	data := &Example{}
