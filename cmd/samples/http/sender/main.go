@@ -3,18 +3,17 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	clienthttp "github.com/cloudevents/sdk-go/pkg/cloudevents/client/http"
-	cloudeventshttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"log"
 	"net/url"
 	"os"
 	"time"
 
+	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+	clienthttp "github.com/cloudevents/sdk-go/pkg/cloudevents/client/http"
+	cloudeventshttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"github.com/google/uuid"
-
 	"github.com/kelseyhightower/envconfig"
 )
 
@@ -78,11 +77,21 @@ func _main(args []string, env envConfig) int {
 						Message:  message,
 					},
 				}
-				if err := c.Send(context.Background(), event); err != nil {
+
+				if event, err := c.Send(context.Background(), event); err != nil {
 					log.Printf("failed to send: %v", err)
+				} else if event != nil {
+					fmt.Printf("Got Event Response Context: %+v\n", event.Context)
+					data := &Example{}
+					if err := event.DataAs(data); err != nil {
+						fmt.Printf("Got Data Error: %s\n", err.Error())
+					}
+					fmt.Printf("Got Response Data: %+v\n", data)
+					fmt.Printf("----------------------------\n")
 				} else {
 					log.Printf("event sent at %s", time.Now())
 				}
+
 				seq++
 				time.Sleep(500 * time.Millisecond)
 			}

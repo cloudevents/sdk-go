@@ -66,21 +66,21 @@ func (t *Transport) loadCodec() bool {
 	return true
 }
 
-func (t *Transport) Send(ctx context.Context, event cloudevents.Event) error {
+func (t *Transport) Send(ctx context.Context, event cloudevents.Event) (*cloudevents.Event, error) {
 	if ok := t.loadCodec(); !ok {
-		return fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
+		return nil, fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
 	}
 
 	msg, err := t.codec.Encode(event)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if m, ok := msg.(*Message); ok {
-		return t.Conn.Publish(t.Subject, m.Body)
+		return nil, t.Conn.Publish(t.Subject, m.Body)
 	}
 
-	return fmt.Errorf("failed to encode Event into a Message")
+	return nil, fmt.Errorf("failed to encode Event into a Message")
 }
 
 func (t *Transport) SetReceiver(r transport.Receiver) {
@@ -116,7 +116,11 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 			log.Printf("failed to decode message: %s", err)
 			return
 		}
-		t.Receiver.Receive(*event)
+		// TODO: I do not know enough about NATS to implement reply.
+		// For now, NATS does not support reply.
+		if err := t.Receiver.Receive(context.TODO(), *event, nil); err != nil {
+			log.Printf("nats receiver return err: %s", err)
+		}
 	})
 	return err
 }

@@ -3,14 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client/http"
-	"log"
-	"os"
-
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	cloudeventshttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/client/http"
+	cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"github.com/kelseyhightower/envconfig"
+	"log"
+	"os"
 )
 
 type envConfig struct {
@@ -40,32 +40,41 @@ func gotEvent(ctx context.Context, event cloudevents.Event, resp *cloudevents.Ev
 		fmt.Printf("Got Data Error: %s\n", err.Error())
 	}
 	fmt.Printf("Got Data: %+v\n", data)
-
 	fmt.Printf("Got Transport Context: %+v\n", http.TransportContextFrom(ctx))
-
 	fmt.Printf("----------------------------\n")
+
+	if data.Sequence%3 == 0 {
+		r := cloudevents.Event{
+			Context: cloudevents.EventContextV02{
+				Source: *types.ParseURLRef("/mod3"),
+				Type:   "samples.http.mod3",
+			}.AsV02(),
+			Data: Example{
+				Sequence: data.Sequence,
+				Message:  "mod 3!",
+			},
+		}
+		resp.RespondWith(200, &r)
+		return nil
+	}
+
 	return nil
 }
 
 func _main(args []string, env envConfig) int {
 	ctx := context.Background()
 
-	t, err := cloudeventshttp.New(
-		cloudeventshttp.WithPort(env.Port),
-		cloudeventshttp.WithPath(env.Path),
+	c, err := http.New(
+		cehttp.WithPort(env.Port),
+		cehttp.WithPath(env.Path),
+		client.WithUUIDs(),
+		client.WithTimeNow(),
 	)
 	if err != nil {
-		log.Printf("failed to create transport, %v", err)
-		return 1
-	}
-	c, err := client.New(t)
-	if err != nil {
-		log.Printf("failed to create client, %v", err)
-		return 1
+		log.Fatalf("failed to create client: %s", err.Error())
 	}
 
-	err = c.StartReceiver(ctx, gotEvent)
-	if err != nil {
+	if err := c.StartReceiver(ctx, gotEvent); err != nil {
 		log.Fatalf("failed to start receiver: %s", err.Error())
 	}
 

@@ -248,7 +248,7 @@ func TestClientSend(t *testing.T) {
 
 			c := tc.c(server.URL)
 
-			err := c.Send(context.TODO(), tc.event)
+			_, err := c.Send(context.TODO(), tc.event) // TODO: update test with new returned event
 			if tc.wantErr != "" {
 				if err == nil {
 					t.Fatalf("failed to return expected error, got nil")
@@ -476,8 +476,11 @@ func TestClientReceive(t *testing.T) {
 					t.Errorf("failed to make client %s", err.Error())
 				}
 
-				err = c.StartReceiver(context.TODO(), func(event cloudevents.Event) {
-					events <- event
+				err = c.StartReceiver(context.TODO(), func(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error {
+					go func() {
+						events <- event
+					}()
+					return nil
 				})
 				if err != nil {
 					t.Errorf("failed to start receiver %s", err.Error())

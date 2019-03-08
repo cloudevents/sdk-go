@@ -42,7 +42,7 @@ type Example struct {
 	Message  string `json:"message"`
 }
 
-func (r *Receiver) Receive(event cloudevents.Event) {
+func (r *Receiver) Receive(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error {
 	fmt.Printf("Got Event Context: %+v\n", event.Context)
 
 	data := &Example{}
@@ -53,11 +53,12 @@ func (r *Receiver) Receive(event cloudevents.Event) {
 
 	fmt.Printf("forwarding...")
 
-	if err := r.Client.Send(context.Background(), event); err != nil {
+	if _, err := r.Client.Send(context.Background(), event); err != nil {
 		fmt.Printf("forwarding failed: %s", err.Error())
 	}
 
 	fmt.Printf("----------------------------\n")
+	return nil
 }
 
 func _main(args []string, env envConfig) int {

@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 )
 
@@ -38,6 +39,13 @@ type Transport struct {
 	server            *http.Server
 	handlerRegistered bool
 	codec             transport.Codec
+}
+
+// TransportContext allows a Receiver to understand the context of a request.
+type TransportContext struct {
+	URI    string
+	Host   string
+	Method string
 }
 
 func New(opts ...Option) (*Transport, error) {
@@ -74,7 +82,7 @@ func (t *Transport) loadCodec() bool {
 	return true
 }
 
-func (t *Transport) Send(ctx context.Context, event cloudevents.Event) error {
+func (t *Transport) Send(ctx context.Context, event cloudevents.Event) (*cloudevents.Event, error) {
 	if t.Client == nil {
 		t.Client = &http.Client{}
 	}
@@ -85,13 +93,18 @@ func (t *Transport) Send(ctx context.Context, event cloudevents.Event) error {
 		req.URL = t.Req.URL
 	}
 
+	// Override the default request with target from context.
+	if target := cecontext.TargetFrom(ctx); target != nil {
+		req.URL = target
+	}
+
 	if ok := t.loadCodec(); !ok {
-		return fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
+		return nil, fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
 	}
 
 	msg, err := t.codec.Encode(event)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// TODO: merge the incoming request with msg, for now just replace.
@@ -99,19 +112,36 @@ func (t *Transport) Send(ctx context.Context, event cloudevents.Event) error {
 		req.Header = m.Header
 		req.Body = ioutil.NopCloser(bytes.NewBuffer(m.Body))
 		req.ContentLength = int64(len(m.Body))
-		return httpDo(ctx, &req, func(resp *http.Response, err error) error {
+		return httpDo(ctx, &req, func(resp *http.Response, err error) (*cloudevents.Event, error) {
 			if err != nil {
-				return err
+				return nil, err
 			}
 			defer resp.Body.Close()
 
-			if accepted(resp) {
-				return nil
+			body, _ := ioutil.ReadAll(resp.Body)
+			msg := &Message{
+				Header: resp.Header,
+				Body:   body,
 			}
-			return fmt.Errorf("error sending cloudevent: %s", status(resp))
+
+			var respEvent *cloudevents.Event
+			if msg.CloudEventsVersion() != "" {
+				if ok := t.loadCodec(); !ok {
+					err := fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
+					log.Printf("failed to load codec: %s", err)
+				}
+				if respEvent, err = t.codec.Decode(msg); err != nil {
+					log.Printf("failed to decode message: %s %v", err, resp)
+				}
+			}
+
+			if accepted(resp) {
+				return respEvent, nil
+			}
+			return respEvent, fmt.Errorf("error sending cloudevent: %s", status(resp))
 		})
 	}
-	return fmt.Errorf("failed to encode Event into a Message")
+	return nil, fmt.Errorf("failed to encode Event into a Message")
 }
 
 func (t *Transport) SetReceiver(r transport.Receiver) {
@@ -163,17 +193,25 @@ func (t *Transport) StopReceiver(ctx context.Context) error {
 	return nil
 }
 
-func httpDo(ctx context.Context, req *http.Request, f func(*http.Response, error) error) error {
-	// Run the HTTP request in a goroutine and pass the response to f.
-	c := make(chan error, 1)
+type eventError struct {
+	event *cloudevents.Event
+	err   error
+}
+
+func httpDo(ctx context.Context, req *http.Request, fn func(*http.Response, error) (*cloudevents.Event, error)) (*cloudevents.Event, error) {
+	// Run the HTTP request in a goroutine and pass the response to fn.
+	c := make(chan eventError, 1)
 	req = req.WithContext(ctx)
-	go func() { c <- f(http.DefaultClient.Do(req)) }()
+	go func() {
+		event, err := fn(http.DefaultClient.Do(req))
+		c <- eventError{event: event, err: err}
+	}()
 	select {
 	case <-ctx.Done():
 		<-c // Wait for f to return.
-		return ctx.Err()
-	case err := <-c:
-		return err
+		return nil, ctx.Err()
+	case ee := <-c:
+		return ee.event, ee.err
 	}
 }
 
@@ -196,17 +234,56 @@ func status(resp *http.Response) string {
 	return fmt.Sprintf("Status[%s] %s", status, body)
 }
 
+func (t *Transport) invokeReceiver(ctx context.Context, event cloudevents.Event) (*Response, error) {
+	if t.Receiver != nil {
+
+		// Note: http does not use eventResp.Reason
+		eventResp := cloudevents.EventResponse{}
+		resp := Response{}
+
+		err := t.Receiver.Receive(ctx, event, &eventResp)
+		if err != nil {
+			log.Printf("got an error from receiver fn: %s", err.Error())
+			resp.StatusCode = http.StatusInternalServerError
+			return &resp, err
+		}
+
+		if eventResp.Event != nil {
+			if t.loadCodec() {
+				if m, err := t.codec.Encode(*eventResp.Event); err != nil {
+					log.Printf("failed to encode response from receiver fn: %s", err.Error())
+				} else if msg, ok := m.(*Message); ok {
+					resp.Header = msg.Header
+					resp.Body = msg.Body
+				}
+			} else {
+				log.Printf("failed to load codec")
+				resp.StatusCode = http.StatusInternalServerError
+				return &resp, err
+			}
+		}
+
+		if eventResp.Status != 0 {
+			resp.StatusCode = eventResp.Status
+		} else {
+			resp.StatusCode = http.StatusAccepted // default is 202 - Accepted
+		}
+		return &resp, err
+	}
+	return nil, nil
+}
+
 // ServeHTTP implements http.Handler
-func (t *Transport) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	body, err := ioutil.ReadAll(r.Body)
+func (t *Transport) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
-		log.Printf("failed to handle request: %s %v", err, r)
+		log.Printf("failed to handle request: %s %v", err, req)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(`{"error":"Invalid request"}`))
 		return
 	}
 	msg := &Message{
-		Header: r.Header,
+		Header: req.Header,
 		Body:   body,
 	}
 
@@ -219,14 +296,43 @@ func (t *Transport) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	event, err := t.codec.Decode(msg)
 	if err != nil {
-		log.Printf("failed to decode message: %s %v", err, r)
+		log.Printf("failed to decode message: %s %v", err, req)
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`{"error":"Decoding Error"}`))
+		w.Write([]byte(fmt.Sprintf(`{"error":%q}`, err.Error())))
 		return
 	}
 
-	if t.Receiver != nil {
-		go t.Receiver.Receive(*event)
+	ctx := req.Context()
+
+	if req != nil {
+		ctx = cecontext.WithTransportContext(ctx, TransportContext{
+			URI:    req.RequestURI,
+			Host:   req.Host,
+			Method: req.Method,
+		})
+	}
+
+	resp, err := t.invokeReceiver(ctx, *event)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(fmt.Sprintf(`{"error":%q}`, err.Error())))
+		return
+	}
+	if resp != nil {
+		if len(resp.Header) > 0 {
+			for k, vs := range resp.Header {
+				for _, v := range vs {
+					w.Header().Set(k, v)
+				}
+			}
+		}
+		if resp.StatusCode >= 200 && resp.StatusCode < 600 {
+			w.WriteHeader(resp.StatusCode)
+		}
+		if len(resp.Body) > 0 {
+			w.Write(resp.Body)
+		}
+		return
 	}
 
 	w.WriteHeader(http.StatusNoContent)
