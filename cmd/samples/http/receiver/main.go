@@ -33,7 +33,7 @@ type Example struct {
 	Message  string `json:"message"`
 }
 
-func gotEvent(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error {
+func gotEvent(ctx context.Context, event cloudevents.Event) error {
 	fmt.Printf("Got Event Context: %+v\n", event.Context)
 	data := &Example{}
 	if err := event.DataAs(data); err != nil {
