@@ -3,6 +3,7 @@ package cloudevents_test
 import (
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/google/go-cmp/cmp"
 	"net/url"
 	"strings"
 	"testing"
@@ -143,6 +144,47 @@ func TestValidateV02(t *testing.T) {
 				if !strings.Contains(gotErr, want) {
 					t.Errorf("unexpected error, expected to contain %q, got: %q ", want, gotErr)
 				}
+			}
+		})
+	}
+}
+
+func TestGetMediaTypeV02(t *testing.T) {
+	testCases := map[string]struct {
+		t    string
+		want string
+	}{
+		"nil": {
+			want: "",
+		},
+		"just encoding": {
+			t:    "charset=utf-8",
+			want: "",
+		},
+		"text/html with encoding": {
+			t:    "text/html; charset=utf-8",
+			want: "text/html",
+		},
+		"application/json with encoding": {
+			t:    "application/json; charset=utf-8",
+			want: "application/json",
+		},
+		"application/json": {
+			t:    "application/json",
+			want: "application/json",
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+
+			ec := ce.EventContextV02{}
+			if tc.t != "" {
+				ec.ContentType = &tc.t
+			}
+			got := ec.GetDataMediaType()
+
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("unexpected  (-want, +got) = %v", diff)
 			}
 		})
 	}
