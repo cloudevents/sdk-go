@@ -123,16 +123,12 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 			log.Printf("nats receiver return err: %s", err)
 		}
 	})
-	defer t.StopReceiver(ctx)
+	defer func() {
+		if t.sub != nil {
+			t.sub.Unsubscribe()
+			t.sub = nil
+		}
+	}()
 	<-ctx.Done()
 	return err
-}
-
-func (t *Transport) StopReceiver(ctx context.Context) error {
-	if t.sub != nil {
-		err := t.sub.Unsubscribe()
-		t.sub = nil
-		return err
-	}
-	return nil
 }
