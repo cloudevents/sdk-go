@@ -154,50 +154,47 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 	t.reMu.Lock()
 	defer t.reMu.Unlock()
 
-	if t.server == nil {
-		if t.Handler == nil {
-			t.Handler = http.NewServeMux()
-		}
-		if !t.handlerRegistered {
-			// handler.Handle might panic if the user tries to use the same path as the sdk.
-			t.Handler.Handle(t.GetPath(), t)
-			t.handlerRegistered = true
-		}
-
-		addr := fmt.Sprintf(":%d", t.GetPort())
-		t.server = &http.Server{
-			Addr:    addr,
-			Handler: t.Handler,
-		}
-
-		listener, err := net.Listen("tcp", addr)
-		if err != nil {
-			return err
-		}
-		t.realPort = listener.Addr().(*net.TCPAddr).Port
-
-		// Shutdown
-		defer func() {
-			t.realPort = 0
-			t.server.Close()
-			t.server = nil
-		}()
-
-		errChan := make(chan error, 1)
-		go func() {
-			errChan <- t.server.Serve(listener)
-		}()
-
-		// wait for the server to return or ctx.Done().
-		select {
-		case <-ctx.Done():
-			return nil
-		case err := <-errChan:
-			return err
-		}
-
+	if t.Handler == nil {
+		t.Handler = http.NewServeMux()
 	}
-	return fmt.Errorf("http server already started")
+	if !t.handlerRegistered {
+		// handler.Handle might panic if the user tries to use the same path as the sdk.
+		t.Handler.Handle(t.GetPath(), t)
+		t.handlerRegistered = true
+	}
+
+	addr := fmt.Sprintf(":%d", t.GetPort())
+	t.server = &http.Server{
+		Addr:    addr,
+		Handler: t.Handler,
+	}
+
+	listener, err := net.Listen("tcp", addr)
+	if err != nil {
+		return err
+	}
+	t.realPort = listener.Addr().(*net.TCPAddr).Port
+
+	// Shutdown
+	defer func() {
+		t.realPort = 0
+		t.server.Close()
+		t.server = nil
+	}()
+
+	errChan := make(chan error, 1)
+	go func() {
+		errChan <- t.server.Serve(listener)
+	}()
+
+	// wait for the server to return or ctx.Done().
+	select {
+	case <-ctx.Done():
+		// Try a gracefully shutdown.
+		return t.server.Shutdown(context.Background())
+	case err := <-errChan:
+		return err
+	}
 }
 
 type eventError struct {
