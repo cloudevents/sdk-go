@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 )
 
 type Client interface {
@@ -14,6 +15,7 @@ type Client interface {
 	// StartReceiver will register the provided function for callback on receipt
 	// of a cloudevent. It will also start the underlying transport as it has
 	// been configured.
+	// This call is blocking.
 	// Valid fn signatures are:
 	// * func()
 	// * func() error
@@ -44,6 +46,20 @@ func New(t transport.Transport, opts ...Option) (Client, error) {
 		return nil, err
 	}
 	t.SetReceiver(c)
+	return c, nil
+}
+
+// NewDefault provides the good defaults for the common case using an HTTP
+// Transport client.
+func NewDefault() (Client, error) {
+	t, err := http.New(http.WithBinaryEncoding())
+	if err != nil {
+		return nil, err
+	}
+	c, err := New(t, WithTimeNow(), WithUUIDs())
+	if err != nil {
+		return nil, err
+	}
 	return c, nil
 }
 
@@ -92,6 +108,7 @@ func (c *ceClient) Receive(ctx context.Context, event cloudevents.Event, resp *c
 	return nil
 }
 
+// Blocking Call
 func (c *ceClient) StartReceiver(ctx context.Context, fn interface{}) error {
 	if c.transport == nil {
 		return fmt.Errorf("client not ready, transport not initialized")
