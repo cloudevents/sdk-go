@@ -23,16 +23,3 @@ func TargetFrom(ctx context.Context) *url.URL {
 	}
 	return nil
 }
-
-// Opaque key type used to store TransportContext
-type transportContextKeyType struct{}
-
-var transportContextKey = transportContextKeyType{}
-
-func WithTransportContext(ctx context.Context, tcxt interface{}) context.Context {
-	return context.WithValue(ctx, transportContextKey, tcxt)
-}
-
-func TransportContextFrom(ctx context.Context) interface{} {
-	return ctx.Value(transportContextKey)
-}

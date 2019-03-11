@@ -87,6 +87,7 @@ func (t *Transport) SetReceiver(r transport.Receiver) {
 	t.Receiver = r
 }
 
+// Blocking
 func (t *Transport) StartReceiver(ctx context.Context) error {
 	if t.Conn == nil {
 		return fmt.Errorf("no active nats connection")
@@ -122,6 +123,8 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 			log.Printf("nats receiver return err: %s", err)
 		}
 	})
+	defer t.StopReceiver(ctx)
+	<-ctx.Done()
 	return err
 }
 

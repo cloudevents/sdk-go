@@ -10,7 +10,6 @@ import (
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	clienthttp "github.com/cloudevents/sdk-go/pkg/cloudevents/client/http"
 	cloudeventshttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"github.com/google/uuid"
@@ -52,9 +51,15 @@ func _main(args []string, env envConfig) int {
 	for _, contentType := range []string{"application/json", "application/xml"} {
 		for _, encoding := range []cloudeventshttp.Encoding{cloudeventshttp.BinaryV01, cloudeventshttp.StructuredV01, cloudeventshttp.BinaryV02, cloudeventshttp.StructuredV02} {
 
-			c, err := clienthttp.New(
+			t, err := cloudeventshttp.New(
 				cloudeventshttp.WithTarget(env.Target),
 				cloudeventshttp.WithEncoding(encoding),
+			)
+			if err != nil {
+				log.Printf("failed to create transport, %v", err)
+				return 1
+			}
+			c, err := client.New(t,
 				client.WithTimeNow(),
 			)
 			if err != nil {
