@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client/http"
 	"log"
 	"os"
 
@@ -41,7 +40,7 @@ func gotEvent(ctx context.Context, event cloudevents.Event) error {
 	}
 	fmt.Printf("Got Data: %+v\n", data)
 
-	fmt.Printf("Got Transport Context: %+v\n", http.TransportContextFrom(ctx))
+	fmt.Printf("Got Transport Context: %+v\n", cloudeventshttp.TransportContextFrom(ctx))
 
 	fmt.Printf("----------------------------\n")
 	return nil
@@ -64,13 +63,8 @@ func _main(args []string, env envConfig) int {
 		return 1
 	}
 
-	err = c.StartReceiver(ctx, gotEvent)
-	if err != nil {
-		log.Fatalf("failed to start receiver: %s", err.Error())
-	}
-
-	log.Printf("listening on :%d%s\n", env.Port, env.Path)
-	<-ctx.Done()
+	log.Printf("will listen on :%d%s\n", env.Port, env.Path)
+	log.Fatalf("failed to start receiver: %s", c.StartReceiver(ctx, gotEvent))
 
 	return 0
 }

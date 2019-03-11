@@ -41,13 +41,6 @@ type Transport struct {
 	codec             transport.Codec
 }
 
-// TransportContext allows a Receiver to understand the context of a request.
-type TransportContext struct {
-	URI    string
-	Host   string
-	Method string
-}
-
 func New(opts ...Option) (*Transport, error) {
 	t := &Transport{
 		Req: &http.Request{
@@ -171,12 +164,11 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 		}
 		t.realPort = listener.Addr().(*net.TCPAddr).Port
 
-		go func() {
-			log.Print(t.server.Serve(listener))
+		defer func() {
 			t.server = nil
 			t.realPort = 0
 		}()
-		return nil
+		return t.server.Serve(listener)
 	}
 	return fmt.Errorf("http server already started")
 }
@@ -208,7 +200,6 @@ func httpDo(ctx context.Context, req *http.Request, fn func(*http.Response, erro
 	}()
 	select {
 	case <-ctx.Done():
-		<-c // Wait for f to return.
 		return nil, ctx.Err()
 	case ee := <-c:
 		return ee.event, ee.err
@@ -305,7 +296,7 @@ func (t *Transport) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 
 	if req != nil {
-		ctx = cecontext.WithTransportContext(ctx, TransportContext{
+		ctx = WithTransportContext(ctx, TransportContext{
 			URI:    req.RequestURI,
 			Host:   req.Host,
 			Method: req.Method,
