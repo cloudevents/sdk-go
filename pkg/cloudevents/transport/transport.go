@@ -12,7 +12,6 @@ type Transport interface {
 
 	SetReceiver(Receiver)
 	StartReceiver(context.Context) error
-	StopReceiver(context.Context) error
 }
 
 type Receiver interface {
