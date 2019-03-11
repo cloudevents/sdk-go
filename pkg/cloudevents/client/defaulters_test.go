@@ -121,10 +121,10 @@ func TestDefaultTimeToNowIfNotSet(t *testing.T) {
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 
-			got := DefaultIDToUUIDIfNotSet(tc.event)
+			got := DefaultTimeToNowIfNotSet(tc.event)
 
-			if got.Context != nil && got.Context.AsV02().ID == "" {
-				t.Errorf("failed to generate an id for event")
+			if got.Context != nil && got.Context.AsV02().Time.IsZero() {
+				t.Errorf("failed to generate time for event")
 			}
 		})
 	}
@@ -148,6 +148,6 @@ func TestDefaultTimeToNowIfNotSetImmutable(t *testing.T) {
 	}
 
 	if got.Context.AsV01().EventTime.IsZero() {
-		t.Errorf("failed to generate an id for event")
+		t.Errorf("failed to generate a time for event")
 	}
 }
