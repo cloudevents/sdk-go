@@ -20,6 +20,10 @@ func (e *EventResponse) RespondWith(status int, event *Event) {
 }
 
 func (e *EventResponse) Error(status int, reason string) {
+	if e == nil {
+		// if nil, response not supported
+		return
+	}
 	e.Status = status
 	e.Reason = reason
 }
