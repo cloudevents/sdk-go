@@ -45,8 +45,6 @@ func gotEvent(event cloudevents.Event) error {
 }
 
 func _main(args []string, env envConfig) int {
-	ctx := context.Background()
-
 	t, err := cloudeventshttp.New(
 		cloudeventshttp.WithPort(env.Port),
 		cloudeventshttp.WithPath(env.Path),
@@ -68,16 +66,18 @@ func _main(args []string, env envConfig) int {
 	log.Printf("listening on :%d%s\n", env.Port, env.Path)
 
 	for {
-		time.Sleep(5 * time.Second)
-		if err := c.StopReceiver(ctx); err != nil {
-			log.Fatalf("failed to stop receiver: %s", err.Error())
-		}
-		log.Printf("stopped @ %s", time.Now())
+		ctx, cancel := context.WithCancel(context.TODO())
 
-		time.Sleep(5 * time.Second)
+		go func() {
+			time.Sleep(5 * time.Second)
+			cancel()
+		}()
+
+		log.Printf("starting @ %s", time.Now())
 		if err := c.StartReceiver(ctx, gotEvent); err != nil {
 			log.Fatalf("failed to start receiver: %s", err.Error())
 		}
-		log.Printf("started @ %s", time.Now())
+		log.Printf("stopped @ %s", time.Now())
+		time.Sleep(5 * time.Second)
 	}
 }
