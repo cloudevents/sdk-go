@@ -476,15 +476,19 @@ func TestClientReceive(t *testing.T) {
 					t.Errorf("failed to make client %s", err.Error())
 				}
 
-				err = c.StartReceiver(context.TODO(), func(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error {
-					go func() {
-						events <- event
-					}()
-					return nil
-				})
-				if err != nil {
-					t.Errorf("failed to start receiver %s", err.Error())
-				}
+				ctx, cancel := context.WithCancel(context.TODO())
+				go func() {
+					err = c.StartReceiver(ctx, func(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error {
+						go func() {
+							events <- event
+						}()
+						return nil
+					})
+					if err != nil {
+						t.Errorf("failed to start receiver %s", err.Error())
+					}
+				}()
+				time.Sleep(5 * time.Millisecond) // let the server start
 
 				target, _ := url.Parse(fmt.Sprintf("http://localhost:%d%s", tp.GetPort(), tp.GetPath()))
 
@@ -543,17 +547,13 @@ func TestClientReceive(t *testing.T) {
 				}
 
 				// Now stop the client
-
-				if err := c.StopReceiver(context.TODO()); err != nil {
-					t.Fatalf("returned unexpected error, got %s", err.Error())
-				}
+				cancel()
 
 				// try the request again, expecting an error:
 
 				if _, err = http.DefaultClient.Do(req); err == nil {
 					t.Fatalf("expected error to when sending request to stopped client")
 				}
-
 			})
 		}
 	}

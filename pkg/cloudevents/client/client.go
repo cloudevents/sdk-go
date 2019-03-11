@@ -6,6 +6,7 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+	"sync"
 )
 
 type Client interface {
@@ -32,10 +33,6 @@ type Client interface {
 	// Note: if fn returns an error, it is treated as a critical and
 	// EventResponse will not be processed.
 	StartReceiver(ctx context.Context, fn interface{}) error
-
-	// StopReceiver will stop the underlying transport and deregister the
-	// previously provided receiver fn.
-	StopReceiver(ctx context.Context) error
 }
 
 func New(t transport.Transport, opts ...Option) (Client, error) {
@@ -67,6 +64,7 @@ type ceClient struct {
 	transport transport.Transport
 	fn        *receiverFn
 
+	receiverMu        sync.Mutex
 	eventDefaulterFns []EventDefaulter
 }
 
@@ -110,6 +108,9 @@ func (c *ceClient) Receive(ctx context.Context, event cloudevents.Event, resp *c
 
 // Blocking Call
 func (c *ceClient) StartReceiver(ctx context.Context, fn interface{}) error {
+	c.receiverMu.Lock()
+	defer c.receiverMu.Unlock()
+
 	if c.transport == nil {
 		return fmt.Errorf("client not ready, transport not initialized")
 	}
@@ -123,17 +124,11 @@ func (c *ceClient) StartReceiver(ctx context.Context, fn interface{}) error {
 		c.fn = fn
 	}
 
+	defer func() {
+		c.fn = nil
+	}()
+
 	return c.transport.StartReceiver(ctx)
-}
-
-func (c *ceClient) StopReceiver(ctx context.Context) error {
-	if c.transport == nil {
-		return fmt.Errorf("client not ready, transport not initialized")
-	}
-
-	err := c.transport.StopReceiver(ctx)
-	c.fn = nil
-	return err
 }
 
 func (c *ceClient) applyOptions(opts ...Option) error {

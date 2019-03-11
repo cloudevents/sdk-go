@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"strings"
+	"sync"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
@@ -39,6 +40,10 @@ type Transport struct {
 	server            *http.Server
 	handlerRegistered bool
 	codec             transport.Codec
+	// Create Mutex
+	crMu sync.Mutex
+	// Receive Mutex
+	reMu sync.Mutex
 }
 
 func New(opts ...Option) (*Transport, error) {
@@ -64,6 +69,7 @@ func (t *Transport) applyOptions(opts ...Option) error {
 
 func (t *Transport) loadCodec() bool {
 	if t.codec == nil {
+		t.crMu.Lock()
 		if t.DefaultEncodingSelectionFn != nil && t.Encoding != Default {
 			log.Printf("[warn] Transport has a DefaultEncodingSelectionFn set but Encoding is not Default. DefaultEncodingSelectionFn will be ignored.")
 		}
@@ -71,13 +77,16 @@ func (t *Transport) loadCodec() bool {
 			Encoding:                   t.Encoding,
 			DefaultEncodingSelectionFn: t.DefaultEncodingSelectionFn,
 		}
+		t.crMu.Unlock()
 	}
 	return true
 }
 
 func (t *Transport) Send(ctx context.Context, event cloudevents.Event) (*cloudevents.Event, error) {
 	if t.Client == nil {
+		t.crMu.Lock()
 		t.Client = &http.Client{}
+		t.crMu.Unlock()
 	}
 
 	var req http.Request
@@ -142,6 +151,9 @@ func (t *Transport) SetReceiver(r transport.Receiver) {
 }
 
 func (t *Transport) StartReceiver(ctx context.Context) error {
+	t.reMu.Lock()
+	defer t.reMu.Unlock()
+
 	if t.server == nil {
 		if t.Handler == nil {
 			t.Handler = http.NewServeMux()
@@ -164,25 +176,28 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 		}
 		t.realPort = listener.Addr().(*net.TCPAddr).Port
 
+		// Shutdown
 		defer func() {
-			t.server = nil
 			t.realPort = 0
+			t.server.Close()
+			t.server = nil
 		}()
-		return t.server.Serve(listener)
+
+		errChan := make(chan error, 1)
+		go func() {
+			errChan <- t.server.Serve(listener)
+		}()
+
+		// wait for the server to return or ctx.Done().
+		select {
+		case <-ctx.Done():
+			return nil
+		case err := <-errChan:
+			return err
+		}
+
 	}
 	return fmt.Errorf("http server already started")
-}
-
-// This blocks until all active connections are closed.
-func (t *Transport) StopReceiver(ctx context.Context) error {
-	if t.server != nil {
-		err := t.server.Close()
-		t.server = nil
-		if err != nil {
-			return fmt.Errorf("failed to close http server, %s", err.Error())
-		}
-	}
-	return nil
 }
 
 type eventError struct {
@@ -227,7 +242,6 @@ func status(resp *http.Response) string {
 
 func (t *Transport) invokeReceiver(ctx context.Context, event cloudevents.Event) (*Response, error) {
 	if t.Receiver != nil {
-
 		// Note: http does not use eventResp.Reason
 		eventResp := cloudevents.EventResponse{}
 		resp := Response{}
