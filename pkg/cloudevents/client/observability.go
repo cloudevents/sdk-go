@@ -7,13 +7,13 @@ import (
 )
 
 var (
-	ClientLatencyMs = stats.Float64("client/latency", "The latency in milliseconds for the CloudEvents client methods.", "ms")
+	LatencyMs = stats.Float64("client/latency", "The latency in milliseconds for the CloudEvents client methods.", "ms")
 )
 
 var (
-	ClientLatencyView = &view.View{
+	LatencyView = &view.View{
 		Name:        "client/latency",
-		Measure:     ClientLatencyMs,
+		Measure:     LatencyMs,
 		Description: "The distribution of latency inside of client for CloudEvents.",
 		Aggregation: view.Distribution(0, .01, .1, 1, 10, 100, 1000, 10000),
 		TagKeys:     observability.LatencyTags(),
@@ -55,5 +55,5 @@ func (o Observed) MethodName() string {
 }
 
 func (o Observed) LatencyMs() *stats.Float64Measure {
-	return ClientLatencyMs
+	return LatencyMs
 }

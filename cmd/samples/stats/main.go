@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/codec"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec/json"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec/xml"
 	"go.opencensus.io/examples/exporter"
 	"go.opencensus.io/trace"
 	"go.opencensus.io/zpages"
@@ -115,9 +118,12 @@ func mainMetrics() {
 
 	// Register the views
 	if err := view.Register(
-		client.ClientLatencyView,
-		transporthttp.TransportHttpLatencyView,
-		codec.EncodeJsonLatencyView,
+		client.LatencyView,
+		transporthttp.LatencyView,
+		codec.LatencyView,
+		json.LatencyView,
+		xml.LatencyView,
+		datacodec.LatencyView,
 	); err != nil {
 		log.Fatalf("Failed to register views: %v", err)
 	}

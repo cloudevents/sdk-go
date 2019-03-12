@@ -8,16 +8,16 @@ import (
 )
 
 var (
-	TransportHttpLatencyMs = stats.Float64(
+	LatencyMs = stats.Float64(
 		"transport/http/latency",
 		"The latency in milliseconds for the http transport methods for CloudEvents.",
 		"ms")
 )
 
 var (
-	TransportHttpLatencyView = &view.View{
+	LatencyView = &view.View{
 		Name:        "transport/http/latency",
-		Measure:     TransportHttpLatencyMs,
+		Measure:     LatencyMs,
 		Description: "The distribution of latency inside of http transport for CloudEvents.",
 		Aggregation: view.Distribution(0, .01, .1, 1, 10, 100, 1000, 10000),
 		TagKeys:     observability.LatencyTags(),
@@ -69,7 +69,7 @@ func (o Observed) MethodName() string {
 }
 
 func (o Observed) LatencyMs() *stats.Float64Measure {
-	return TransportHttpLatencyMs
+	return LatencyMs
 }
 
 // CodecObserved is a wrapper to append version to Observed.
