@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 	"sync"
@@ -68,29 +69,69 @@ type ceClient struct {
 	eventDefaulterFns []EventDefaulter
 }
 
-func (c *ceClient) Send(ctx context.Context, event cloudevents.Event) (*cloudevents.Event, error) {
-	// Confirm we have a transport set.
-	if c.transport == nil {
-		return nil, fmt.Errorf("client not ready, transport not initialized")
-	}
-	// Apply the defaulter chain to the incoming event.
-	if len(c.eventDefaulterFns) > 0 {
-		for _, fn := range c.eventDefaulterFns {
-			event = fn(event)
+func (c *ceClient) send(ctx context.Context, event cloudevents.Event) (*cloudevents.Event, error) {
+	ctx, r := observability.NewReporter(ctx, ReportSend)
+
+	resp, err := func() (*cloudevents.Event, error) {
+		// Confirm we have a transport set.
+		if c.transport == nil {
+			return nil, fmt.Errorf("client not ready, transport not initialized")
 		}
+		// Apply the defaulter chain to the incoming event.
+		if len(c.eventDefaulterFns) > 0 {
+			for _, fn := range c.eventDefaulterFns {
+				event = fn(event)
+			}
+		}
+		// Validate the event conforms to the CloudEvents Spec.
+		if err := event.Validate(); err != nil {
+			return nil, err
+		}
+		// Send the event over the transport.
+		return c.transport.Send(ctx, event)
+	}()
+	if err != nil {
+		r.Error()
+	} else {
+		r.OK()
 	}
-	// Validate the event conforms to the CloudEvents Spec.
-	if err := event.Validate(); err != nil {
-		return nil, err
+	return resp, err
+}
+
+func (c *ceClient) Send(ctx context.Context, event cloudevents.Event) (*cloudevents.Event, error) {
+	ctx, r := observability.NewReporter(ctx, ReportSend)
+	resp, err := c.send(ctx, event)
+	if err != nil {
+		r.Error()
+	} else {
+		r.OK()
 	}
-	// Send the event over the transport.
-	return c.transport.Send(ctx, event)
+	return resp, err
 }
 
 // Receive is called from from the transport on event delivery.
 func (c *ceClient) Receive(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error {
+	ctx, r := observability.NewReporter(ctx, ReportReceive)
+	err := c.receive(ctx, event, resp)
+	if err != nil {
+		r.Error()
+	} else {
+		r.OK()
+	}
+	return err
+
+}
+
+func (c *ceClient) receive(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error {
 	if c.fn != nil {
+		ctx, rFn := observability.NewReporter(ctx, ReportReceiveFn)
 		err := c.fn.invoke(ctx, event, resp)
+		if err != nil {
+			rFn.Error()
+		} else {
+			rFn.OK()
+		}
+
 		// Apply the defaulter chain to the outgoing event.
 		if err == nil && resp != nil && resp.Event != nil && len(c.eventDefaulterFns) > 0 {
 			for _, fn := range c.eventDefaulterFns {
@@ -98,7 +139,7 @@ func (c *ceClient) Receive(ctx context.Context, event cloudevents.Event, resp *c
 			}
 			// Validate the event conforms to the CloudEvents Spec.
 			if err := resp.Event.Validate(); err != nil {
-				return fmt.Errorf("cloudevent validation failed on response event: %v", err)
+				return err
 			}
 		}
 		return err
