@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"time"
 )
@@ -35,8 +36,26 @@ func (t *Timestamp) UnmarshalJSON(b []byte) error {
 	if err := json.Unmarshal(b, &timestamp); err != nil {
 		return err
 	}
-	pt := ParseTimestamp(timestamp)
-	if pt != nil {
+	if pt := ParseTimestamp(timestamp); pt != nil {
+		*t = *pt
+	}
+	return nil
+}
+
+func (t *Timestamp) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	if t == nil || t.IsZero() {
+		return e.EncodeElement(nil, start)
+	}
+	v := t.UTC().Format(time.RFC3339Nano)
+	return e.EncodeElement(v, start)
+}
+
+func (t *Timestamp) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+	var timestamp string
+	if err := d.DecodeElement(&timestamp, &start); err != nil {
+		return err
+	}
+	if pt := ParseTimestamp(timestamp); pt != nil {
 		*t = *pt
 	}
 	return nil
