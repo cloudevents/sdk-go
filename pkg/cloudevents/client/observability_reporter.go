@@ -4,11 +4,10 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
-	"go.opencensus.io/tag"
 )
 
 var (
-	ClientLatencyMs = stats.Float64("client/latency", "The latency in milliseconds per REPL loop", "ms")
+	ClientLatencyMs = stats.Float64("client/latency", "The latency in milliseconds for the client methods.", "ms")
 )
 
 var (
@@ -17,7 +16,8 @@ var (
 		Measure:     ClientLatencyMs,
 		Description: "The distribution of latency inside of client.",
 		Aggregation: view.Distribution(0, .01, .1, 1, 10, 100, 1000, 10000),
-		TagKeys:     []tag.Key{observability.KeyMethod, observability.KeyResult}}
+		TagKeys:     observability.LatencyTags(),
+	}
 )
 
 type Observed int32
@@ -48,7 +48,7 @@ func (o Observed) MethodName() string {
 	case ReportReceive:
 		return "receive"
 	case ReportReceiveFn:
-		return "fn"
+		return "receive/fn"
 	default:
 		return "unknown"
 	}

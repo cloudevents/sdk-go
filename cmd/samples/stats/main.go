@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go.opencensus.io/examples/exporter"
 	"go.opencensus.io/trace"
+	"go.opencensus.io/zpages"
 	"log"
 	"math/rand"
 	"net/http"
@@ -16,7 +17,6 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"go.opencensus.io/exporter/prometheus"
 	"go.opencensus.io/stats/view"
-	"go.opencensus.io/zpages"
 )
 
 func main() {
@@ -89,7 +89,6 @@ func mainSender() {
 }
 
 func mainMetrics() {
-	zpages.Handle(nil, "/debug")
 
 	printExporter := &exporter.PrintExporter{}
 
@@ -101,6 +100,7 @@ func mainMetrics() {
 	h := http.NewServeMux()
 
 	h.Handle("/metrics", exporter)
+	zpages.Handle(h, "/debug")
 
 	// Register the stats exporter
 	view.RegisterExporter(exporter)
