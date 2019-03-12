@@ -71,7 +71,7 @@ type ceClient struct {
 
 func (c *ceClient) Send(ctx context.Context, event cloudevents.Event) (*cloudevents.Event, error) {
 	ctx, r := observability.NewReporter(ctx, ReportSend)
-	resp, err := c.send(ctx, event)
+	resp, err := c.obsSend(ctx, event)
 	if err != nil {
 		r.Error()
 	} else {
@@ -80,7 +80,7 @@ func (c *ceClient) Send(ctx context.Context, event cloudevents.Event) (*cloudeve
 	return resp, err
 }
 
-func (c *ceClient) send(ctx context.Context, event cloudevents.Event) (*cloudevents.Event, error) {
+func (c *ceClient) obsSend(ctx context.Context, event cloudevents.Event) (*cloudevents.Event, error) {
 	// Confirm we have a transport set.
 	if c.transport == nil {
 		return nil, fmt.Errorf("client not ready, transport not initialized")
@@ -102,7 +102,7 @@ func (c *ceClient) send(ctx context.Context, event cloudevents.Event) (*cloudeve
 // Receive is called from from the transport on event delivery.
 func (c *ceClient) Receive(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error {
 	ctx, r := observability.NewReporter(ctx, ReportReceive)
-	err := c.receive(ctx, event, resp)
+	err := c.obsReceive(ctx, event, resp)
 	if err != nil {
 		r.Error()
 	} else {
@@ -111,7 +111,7 @@ func (c *ceClient) Receive(ctx context.Context, event cloudevents.Event, resp *c
 	return err
 }
 
-func (c *ceClient) receive(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error {
+func (c *ceClient) obsReceive(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error {
 	if c.fn != nil {
 		ctx, rFn := observability.NewReporter(ctx, ReportReceiveFn)
 		err := c.fn.invoke(ctx, event, resp)

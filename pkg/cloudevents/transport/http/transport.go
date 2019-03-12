@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
 	"io/ioutil"
 	"log"
 	"net"
@@ -83,6 +84,17 @@ func (t *Transport) loadCodec() bool {
 }
 
 func (t *Transport) Send(ctx context.Context, event cloudevents.Event) (*cloudevents.Event, error) {
+	ctx, r := observability.NewReporter(ctx, ReportSend)
+	resp, err := t.obsSend(ctx, event)
+	if err != nil {
+		r.Error()
+	} else {
+		r.OK()
+	}
+	return resp, err
+}
+
+func (t *Transport) obsSend(ctx context.Context, event cloudevents.Event) (*cloudevents.Event, error) {
 	if t.Client == nil {
 		t.crMu.Lock()
 		t.Client = &http.Client{}
@@ -238,6 +250,17 @@ func status(resp *http.Response) string {
 }
 
 func (t *Transport) invokeReceiver(ctx context.Context, event cloudevents.Event) (*Response, error) {
+	ctx, r := observability.NewReporter(ctx, ReportReceive)
+	resp, err := t.obsInvokeReceiver(ctx, event)
+	if err != nil {
+		r.Error()
+	} else {
+		r.OK()
+	}
+	return resp, err
+}
+
+func (t *Transport) obsInvokeReceiver(ctx context.Context, event cloudevents.Event) (*Response, error) {
 	if t.Receiver != nil {
 		// Note: http does not use eventResp.Reason
 		eventResp := cloudevents.EventResponse{}
@@ -277,11 +300,14 @@ func (t *Transport) invokeReceiver(ctx context.Context, event cloudevents.Event)
 
 // ServeHTTP implements http.Handler
 func (t *Transport) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	ctx, r := observability.NewReporter(req.Context(), ReportServeHTTP)
+
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		log.Printf("failed to handle request: %s %v", err, req)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(`{"error":"Invalid request"}`))
+		r.Error()
 		return
 	}
 	msg := &Message{
@@ -294,6 +320,7 @@ func (t *Transport) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		log.Printf("failed to load codec: %s", err)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf(`{"error":%q}`, err.Error())))
+		r.Error()
 		return
 	}
 	event, err := t.codec.Decode(msg)
@@ -301,10 +328,9 @@ func (t *Transport) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		log.Printf("failed to decode message: %s %v", err, req)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf(`{"error":%q}`, err.Error())))
+		r.Error()
 		return
 	}
-
-	ctx := req.Context()
 
 	if req != nil {
 		ctx = WithTransportContext(ctx, TransportContext{
@@ -318,6 +344,7 @@ func (t *Transport) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf(`{"error":%q}`, err.Error())))
+		r.Error()
 		return
 	}
 	if resp != nil {
@@ -328,16 +355,24 @@ func (t *Transport) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 				}
 			}
 		}
+		status := http.StatusAccepted
 		if resp.StatusCode >= 200 && resp.StatusCode < 600 {
-			w.WriteHeader(resp.StatusCode)
+			status = resp.StatusCode
 		}
+		w.WriteHeader(status)
 		if len(resp.Body) > 0 {
-			w.Write(resp.Body)
+			if _, err := w.Write(resp.Body); err != nil {
+				r.Error()
+				return
+			}
 		}
+
+		r.OK()
 		return
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+	r.OK()
 }
 
 func (t *Transport) GetPort() int {
