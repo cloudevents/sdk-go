@@ -1,6 +1,7 @@
 package http
 
 import (
+	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
@@ -29,6 +30,8 @@ const (
 	ReportSend Observed = iota
 	ReportReceive
 	ReportServeHTTP
+	ReportEncode
+	ReportDecode
 )
 
 func (o Observed) TraceName() string {
@@ -39,6 +42,10 @@ func (o Observed) TraceName() string {
 		return "transport/http/receive"
 	case ReportServeHTTP:
 		return "transport/http/servehttp"
+	case ReportEncode:
+		return "transport/http/encode"
+	case ReportDecode:
+		return "transport/http/decode"
 	default:
 		return "transport/http/unknown"
 	}
@@ -52,6 +59,10 @@ func (o Observed) MethodName() string {
 		return "receive"
 	case ReportServeHTTP:
 		return "servehttp"
+	case ReportEncode:
+		return "encode"
+	case ReportDecode:
+		return "decode"
 	default:
 		return "unknown"
 	}
@@ -59,4 +70,24 @@ func (o Observed) MethodName() string {
 
 func (o Observed) LatencyMs() *stats.Float64Measure {
 	return TransportHttpLatencyMs
+}
+
+// CodecObserved is a wrapper to append version to Observed.
+type CodecObserved struct {
+	// Method
+	o Observed
+	// Codec
+	c string
+}
+
+func (c CodecObserved) TraceName() string {
+	return fmt.Sprintf("%s/%s", c.o.TraceName(), c.c)
+}
+
+func (c CodecObserved) MethodName() string {
+	return fmt.Sprintf("%s/%s", c.o.MethodName(), c.c)
+}
+
+func (c CodecObserved) LatencyMs() *stats.Float64Measure {
+	return c.o.LatencyMs()
 }
