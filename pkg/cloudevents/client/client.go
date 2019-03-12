@@ -69,35 +69,6 @@ type ceClient struct {
 	eventDefaulterFns []EventDefaulter
 }
 
-func (c *ceClient) send(ctx context.Context, event cloudevents.Event) (*cloudevents.Event, error) {
-	ctx, r := observability.NewReporter(ctx, ReportSend)
-
-	resp, err := func() (*cloudevents.Event, error) {
-		// Confirm we have a transport set.
-		if c.transport == nil {
-			return nil, fmt.Errorf("client not ready, transport not initialized")
-		}
-		// Apply the defaulter chain to the incoming event.
-		if len(c.eventDefaulterFns) > 0 {
-			for _, fn := range c.eventDefaulterFns {
-				event = fn(event)
-			}
-		}
-		// Validate the event conforms to the CloudEvents Spec.
-		if err := event.Validate(); err != nil {
-			return nil, err
-		}
-		// Send the event over the transport.
-		return c.transport.Send(ctx, event)
-	}()
-	if err != nil {
-		r.Error()
-	} else {
-		r.OK()
-	}
-	return resp, err
-}
-
 func (c *ceClient) Send(ctx context.Context, event cloudevents.Event) (*cloudevents.Event, error) {
 	ctx, r := observability.NewReporter(ctx, ReportSend)
 	resp, err := c.send(ctx, event)
@@ -107,6 +78,25 @@ func (c *ceClient) Send(ctx context.Context, event cloudevents.Event) (*cloudeve
 		r.OK()
 	}
 	return resp, err
+}
+
+func (c *ceClient) send(ctx context.Context, event cloudevents.Event) (*cloudevents.Event, error) {
+	// Confirm we have a transport set.
+	if c.transport == nil {
+		return nil, fmt.Errorf("client not ready, transport not initialized")
+	}
+	// Apply the defaulter chain to the incoming event.
+	if len(c.eventDefaulterFns) > 0 {
+		for _, fn := range c.eventDefaulterFns {
+			event = fn(event)
+		}
+	}
+	// Validate the event conforms to the CloudEvents Spec.
+	if err := event.Validate(); err != nil {
+		return nil, err
+	}
+	// Send the event over the transport.
+	return c.transport.Send(ctx, event)
 }
 
 // Receive is called from from the transport on event delivery.
@@ -119,7 +109,6 @@ func (c *ceClient) Receive(ctx context.Context, event cloudevents.Event, resp *c
 		r.OK()
 	}
 	return err
-
 }
 
 func (c *ceClient) receive(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error {
