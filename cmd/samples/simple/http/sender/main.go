@@ -26,7 +26,7 @@ func main() {
 		log.Fatalf("failed to create client, %v", err)
 	}
 
-	for i := 0; i < 10; i++ {
+	for i := 0; true; i++ {
 		data := &Example{
 			Sequence: i,
 			Message:  "Hello, World!",
