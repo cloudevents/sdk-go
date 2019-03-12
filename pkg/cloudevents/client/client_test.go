@@ -501,6 +501,7 @@ func TestClientReceive(t *testing.T) {
 					if !strings.Contains(got, want) {
 						t.Fatalf("failed to return expected error, got %q, want %q", err, want)
 					}
+					cancel()
 					return
 				} else {
 					if err != nil {
