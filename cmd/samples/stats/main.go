@@ -14,6 +14,7 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
+	transporthttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"go.opencensus.io/exporter/prometheus"
 	"go.opencensus.io/stats/view"
@@ -112,7 +113,10 @@ func mainMetrics() {
 	trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
 
 	// Register the views
-	if err := view.Register(client.ClientLatencyView); err != nil {
+	if err := view.Register(
+		client.ClientLatencyView,
+		transporthttp.TransportHttpLatencyView,
+	); err != nil {
 		log.Fatalf("Failed to register views: %v", err)
 	}
 
