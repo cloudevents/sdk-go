@@ -8,10 +8,6 @@ import (
 	"testing"
 )
 
-func TestContext(t *testing.T) {
-	// TODO: add a test. This makes coverage count this dir.
-}
-
 func TestTargetContext(t *testing.T) {
 	exampleDotCom, _ := url.Parse("http://example.com")
 
@@ -46,45 +42,6 @@ func TestTargetContext(t *testing.T) {
 			ctx := cecontext.WithTarget(tc.ctx, tc.target)
 
 			got := cecontext.TargetFrom(ctx)
-
-			if diff := cmp.Diff(tc.want, got); diff != "" {
-				t.Errorf("unexpected (-want, +got) = %v", diff)
-			}
-		})
-	}
-}
-
-func TestTransportContext(t *testing.T) {
-	testCases := map[string]struct {
-		transport interface{}
-		ctx       context.Context
-		want      interface{}
-	}{
-		"nil context": {},
-		"nil context, set transport context": {
-			transport: map[string]string{"hi": "unit test"},
-			want:      map[string]string{"hi": "unit test"},
-		},
-		"todo context, set transport context": {
-			ctx:       context.TODO(),
-			transport: map[string]string{"hi": "unit test"},
-			want:      map[string]string{"hi": "unit test"},
-		},
-		"bad transport context": {
-			ctx: context.TODO(),
-		},
-		"already set transport context": {
-			ctx:       cecontext.WithTransportContext(context.TODO(), map[string]string{"bye": "unit test"}),
-			transport: map[string]string{"hi": "unit test"},
-			want:      map[string]string{"hi": "unit test"},
-		},
-	}
-	for n, tc := range testCases {
-		t.Run(n, func(t *testing.T) {
-
-			ctx := cecontext.WithTransportContext(tc.ctx, tc.transport)
-
-			got := cecontext.TransportContextFrom(ctx)
 
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("unexpected (-want, +got) = %v", diff)
