@@ -35,7 +35,7 @@ func main() {
 			Context: cloudevents.EventContextV02{
 				Type:   "com.cloudevents.sample.sent",
 				Source: *source,
-			}.AsV02(),
+			}.AsV01(),
 			Data: data,
 		}
 
