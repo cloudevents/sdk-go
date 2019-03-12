@@ -8,13 +8,13 @@ import (
 )
 
 var (
-	EncodeJsonLatencyMs = stats.Float64("codec/json/latency", "The latency in milliseconds for the CloudEvents json codec methods.", "ms")
+	LatencyMs = stats.Float64("codec/json/latency", "The latency in milliseconds for the CloudEvents json codec methods.", "ms")
 )
 
 var (
-	EncodeJsonLatencyView = &view.View{
+	LatencyView = &view.View{
 		Name:        "codec/json/latency",
-		Measure:     EncodeJsonLatencyMs,
+		Measure:     LatencyMs,
 		Description: "The distribution of latency inside of the json codec for CloudEvents.",
 		Aggregation: view.Distribution(0, .01, .1, 1, 10, 100, 1000, 10000),
 		TagKeys:     observability.LatencyTags(),
@@ -51,7 +51,7 @@ func (o Observed) MethodName() string {
 }
 
 func (o Observed) LatencyMs() *stats.Float64Measure {
-	return EncodeJsonLatencyMs
+	return LatencyMs
 }
 
 // CodecObserved is a wrapper to append version to Observed.

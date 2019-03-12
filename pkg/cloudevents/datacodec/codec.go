@@ -1,9 +1,11 @@
 package datacodec
 
 import (
+	"context"
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec/json"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec/xml"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
 )
 
 type Decoder func(in, out interface{}) error
@@ -34,6 +36,18 @@ func AddEncoder(contentType string, fn Encoder) {
 }
 
 func Decode(contentType string, in, out interface{}) error {
+	// TODO: wire in context.
+	_, r := observability.NewReporter(context.Background(), ReportDecode)
+	err := obsDecode(contentType, in, out)
+	if err != nil {
+		r.Error()
+	} else {
+		r.OK()
+	}
+	return err
+}
+
+func obsDecode(contentType string, in, out interface{}) error {
 	if fn, ok := decoder[contentType]; ok {
 		return fn(in, out)
 	}
@@ -41,6 +55,18 @@ func Decode(contentType string, in, out interface{}) error {
 }
 
 func Encode(contentType string, in interface{}) ([]byte, error) {
+	// TODO: wire in context.
+	_, r := observability.NewReporter(context.Background(), ReportEncode)
+	b, err := obsEncode(contentType, in)
+	if err != nil {
+		r.Error()
+	} else {
+		r.OK()
+	}
+	return b, err
+}
+
+func obsEncode(contentType string, in interface{}) ([]byte, error) {
 	if fn, ok := encoder[contentType]; ok {
 		return fn(in)
 	}

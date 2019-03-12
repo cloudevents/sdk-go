@@ -128,7 +128,7 @@ func (c *ceClient) obsReceive(ctx context.Context, event cloudevents.Event, resp
 			}
 			// Validate the event conforms to the CloudEvents Spec.
 			if err := resp.Event.Validate(); err != nil {
-				return err
+				return fmt.Errorf("cloudevent validation failed on response event: %v", err)
 			}
 		}
 		return err
