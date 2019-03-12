@@ -16,6 +16,10 @@ type DataExample struct {
 }
 
 func TestAllocate(t *testing.T) {
+
+	emptyString := ""
+	exampleString := "howdy"
+
 	testCases := map[string]struct {
 		obj  interface{}
 		want interface{}
@@ -38,8 +42,12 @@ func TestAllocate(t *testing.T) {
 			want: []string{},
 		},
 		"string": {
-			obj:  "test",
+			obj:  "hello",
 			want: "",
+		},
+		"string ptr": {
+			obj:  &exampleString,
+			want: &emptyString,
 		},
 		"struct": {
 			obj: DataExample{
