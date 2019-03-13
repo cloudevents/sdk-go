@@ -114,6 +114,8 @@ func (t *Transport) Send(ctx context.Context, event cloudevents.Event) (*cloudev
 		req.Header = m.Header
 		req.Body = ioutil.NopCloser(bytes.NewBuffer(m.Body))
 		req.ContentLength = int64(len(m.Body))
+		req.Close = true
+		req.Header.Set("Connection", "close")
 		return httpDo(ctx, &req, func(resp *http.Response, err error) (*cloudevents.Event, error) {
 			if err != nil {
 				return nil, err
