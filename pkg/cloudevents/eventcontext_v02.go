@@ -67,6 +67,22 @@ func (ec EventContextV02) GetType() string {
 	return ec.Type
 }
 
+func (ec EventContextV02) GetExtensionAsString(name string) string {
+	if value, ok := ec.Extensions[name]; ok {
+		if valueAsString, ok := value.(string); ok {
+			return valueAsString
+		}
+	}
+	return ""
+}
+
+func (ec EventContextV02) Extension(name string, value interface{}) {
+	if ec.Extensions == nil {
+		ec.Extensions = make(map[string]interface{})
+	}
+	ec.Extensions[name] = value
+}
+
 func (ec EventContextV02) AsV01() EventContextV01 {
 	ret := EventContextV01{
 		CloudEventsVersion: CloudEventsVersionV01,
