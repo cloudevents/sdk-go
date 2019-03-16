@@ -24,6 +24,10 @@ func (e Event) Type() string {
 	return e.Context.GetType()
 }
 
+func (e Event) ExtensionAsString(name string) interface{} {
+	return e.Context.GetExtensionAsString(name)
+}
+
 func (e Event) DataContentType() string {
 	return e.Context.GetDataContentType()
 }

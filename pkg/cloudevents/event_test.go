@@ -345,10 +345,7 @@ func FullEventContextV01(now types.Timestamp) ce.EventContextV01 {
 	schemaUrl, _ := url.Parse("http://example.com/schema")
 	schema := &types.URLRef{URL: *schemaUrl}
 
-	extensions := make(map[string]interface{})
-	extensions["test"] = "extended"
-
-	return ce.EventContextV01{
+	eventContextV01 := ce.EventContextV01{
 		EventID:          "ABC-123",
 		EventTime:        &now,
 		EventType:        "com.example.simple",
@@ -356,8 +353,9 @@ func FullEventContextV01(now types.Timestamp) ce.EventContextV01 {
 		SchemaURL:        schema,
 		ContentType:      ce.StringOfApplicationJSON(),
 		Source:           *source,
-		Extensions:       extensions,
 	}.AsV01()
+	eventContextV01.Extension("test", "extended")
+	return eventContextV01
 }
 
 func FullEventContextV02(now types.Timestamp) ce.EventContextV02 {
@@ -369,9 +367,8 @@ func FullEventContextV02(now types.Timestamp) ce.EventContextV02 {
 
 	extensions := make(map[string]interface{})
 	extensions["test"] = "extended"
-	extensions["eventTypeVersion"] = "v1alpha1"
 
-	return ce.EventContextV02{
+	eventContextV02 := ce.EventContextV02{
 		ID:          "ABC-123",
 		Time:        &now,
 		Type:        "com.example.simple",
@@ -380,6 +377,8 @@ func FullEventContextV02(now types.Timestamp) ce.EventContextV02 {
 		Source:      *source,
 		Extensions:  extensions,
 	}.AsV02()
+	eventContextV02.Extension("eventTypeVersion", "v1alpha1")
+	return eventContextV02
 }
 
 func FullEventContextV03(now types.Timestamp) ce.EventContextV03 {
@@ -389,17 +388,15 @@ func FullEventContextV03(now types.Timestamp) ce.EventContextV03 {
 	schemaUrl, _ := url.Parse("http://example.com/schema")
 	schema := &types.URLRef{URL: *schemaUrl}
 
-	extensions := make(map[string]interface{})
-	extensions["test"] = "extended"
-	extensions["eventTypeVersion"] = "v1alpha1"
-
-	return ce.EventContextV03{
+	eventContextV03 := ce.EventContextV03{
 		ID:              "ABC-123",
 		Time:            &now,
 		Type:            "com.example.simple",
 		SchemaURL:       schema,
 		DataContentType: ce.StringOfApplicationJSON(),
 		Source:          *source,
-		Extensions:      extensions,
 	}.AsV03()
+	eventContextV03.Extension("test", "extended")
+	eventContextV03.Extension("evenTypeVersion", "v1alpha1")
+	return eventContextV03
 }
