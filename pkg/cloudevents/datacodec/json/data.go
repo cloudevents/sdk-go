@@ -1,13 +1,27 @@
 package json
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
 	"reflect"
 	"strconv"
 )
 
 func Decode(in, out interface{}) error {
+	// TODO: wire in context.
+	_, r := observability.NewReporter(context.Background(), ReportDecode)
+	err := obsDecode(in, out)
+	if err != nil {
+		r.Error()
+	} else {
+		r.OK()
+	}
+	return err
+}
+
+func obsDecode(in, out interface{}) error {
 	if in == nil {
 		return nil
 	}
@@ -43,6 +57,18 @@ func Decode(in, out interface{}) error {
 }
 
 func Encode(in interface{}) ([]byte, error) {
+	// TODO: wire in context.
+	_, r := observability.NewReporter(context.Background(), ReportEncode)
+	b, err := obsEncode(in)
+	if err != nil {
+		r.Error()
+	} else {
+		r.OK()
+	}
+	return b, err
+}
+
+func obsEncode(in interface{}) ([]byte, error) {
 	if in == nil {
 		return nil, nil
 	}

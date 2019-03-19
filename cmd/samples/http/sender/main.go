@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	count = 100
+	count = 1000
 )
 
 type envConfig struct {
