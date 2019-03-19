@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"strings"
 )
 
 // TransportContext allows a Receiver to understand the context of a request.
@@ -9,6 +10,17 @@ type TransportContext struct {
 	URI    string
 	Host   string
 	Method string
+}
+
+func (tx TransportContext) String() string {
+	b := strings.Builder{}
+
+	b.WriteString("Transport Context,\n")
+	b.WriteString("  URI: " + tx.URI + "\n")
+	b.WriteString("  Host: " + tx.Host + "\n")
+	b.WriteString("  Method: " + tx.Method + "\n")
+
+	return b.String()
 }
 
 // Opaque key type used to store TransportContext

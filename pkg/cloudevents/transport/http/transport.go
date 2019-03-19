@@ -82,6 +82,17 @@ func (t *Transport) loadCodec() bool {
 	return true
 }
 
+func copyHeaders(from, to http.Header) {
+	if from == nil || to == nil {
+		return
+	}
+	for header, values := range from {
+		for _, value := range values {
+			to.Add(header, value)
+		}
+	}
+}
+
 func (t *Transport) Send(ctx context.Context, event cloudevents.Event) (*cloudevents.Event, error) {
 	if t.Client == nil {
 		t.crMu.Lock()
@@ -89,17 +100,13 @@ func (t *Transport) Send(ctx context.Context, event cloudevents.Event) (*cloudev
 		t.crMu.Unlock()
 	}
 
-	var req http.Request
+	req := http.Request{
+		Header: http.Header{},
+	}
 	if t.Req != nil {
 		req.Method = t.Req.Method
 		req.URL = t.Req.URL
-		if t.Req.Header != nil && len(t.Req.Header) > 0 {
-			for header, values := range t.Req.Header {
-				for _, value := range values {
-					req.Header.Add(header, value)
-				}
-			}
-		}
+		copyHeaders(t.Req.Header, req.Header)
 	}
 
 	// Override the default request with target from context.
@@ -116,11 +123,11 @@ func (t *Transport) Send(ctx context.Context, event cloudevents.Event) (*cloudev
 		return nil, err
 	}
 
-	// TODO: merge the incoming request with msg, for now just replace.
 	if m, ok := msg.(*Message); ok {
-		req.Header = m.Header
+		copyHeaders(m.Header, req.Header)
 		req.Body = ioutil.NopCloser(bytes.NewBuffer(m.Body))
 		req.ContentLength = int64(len(m.Body))
+		req.Close = true
 		return httpDo(ctx, &req, func(resp *http.Response, err error) (*cloudevents.Event, error) {
 			if err != nil {
 				return nil, err
