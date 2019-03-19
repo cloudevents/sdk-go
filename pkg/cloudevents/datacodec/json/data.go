@@ -7,6 +7,9 @@ import (
 	"strconv"
 )
 
+// Decode takes `in` as []byte, or base64 string, normalizes in to unquoted and
+// base64 decoded []byte if required, and then attempts to use json.Unmarshal
+// to convert those bytes to `out`. Returns and error if this process fails.
 func Decode(in, out interface{}) error {
 	if in == nil {
 		return nil
@@ -42,6 +45,9 @@ func Decode(in, out interface{}) error {
 	return nil
 }
 
+// Encode attempts to json.Marshal `in` into bytes. Encode will inspect `in`
+// and returns `in` unmodified if it is detected that `in` is already a []byte;
+// Or json.Marshal errors.
 func Encode(in interface{}) ([]byte, error) {
 	if in == nil {
 		return nil, nil
