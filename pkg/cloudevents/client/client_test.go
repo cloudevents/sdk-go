@@ -25,6 +25,7 @@ var (
 		"accept-encoding",
 		"content-length",
 		"user-agent",
+		"connection",
 	}
 )
 
