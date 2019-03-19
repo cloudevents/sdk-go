@@ -9,6 +9,9 @@ import (
 	"strconv"
 )
 
+// Decode takes `in` as []byte, or base64 string, normalizes in to unquoted and
+// base64 decoded []byte if required, and then attempts to use xml.Unmarshal
+// to convert those bytes to `out`. Returns and error if this process fails.
 func Decode(in, out interface{}) error {
 	// TODO: wire in context.
 	_, r := observability.NewReporter(context.Background(), ReportDecode)
@@ -61,6 +64,9 @@ func obsDecode(in, out interface{}) error {
 	return nil
 }
 
+// Encode attempts to xml.Marshal `in` into bytes. Encode will inspect `in`
+// and returns `in` unmodified if it is detected that `in` is already a []byte;
+// Or xml.Marshal errors.
 func Encode(in interface{}) ([]byte, error) {
 	// TODO: wire in context.
 	_, r := observability.NewReporter(context.Background(), ReportEncode)
