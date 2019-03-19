@@ -8,6 +8,8 @@ import (
 	"strconv"
 )
 
+// JsonEncodeV01 takes in a cloudevent.Event and outputs the byte representation of that event using CloudEvents
+// version 0.1 structured json formatting rules.
 func JsonEncodeV01(e cloudevents.Event) ([]byte, error) {
 	ctx := e.Context.AsV01()
 	if ctx.ContentType == nil {
@@ -16,6 +18,8 @@ func JsonEncodeV01(e cloudevents.Event) ([]byte, error) {
 	return jsonEncode(ctx, e.Data)
 }
 
+// JsonEncodeV02 takes in a cloudevent.Event and outputs the byte representation of that event using CloudEvents
+// version 0.2 structured json formatting rules.
 func JsonEncodeV02(e cloudevents.Event) ([]byte, error) {
 	ctx := e.Context.AsV02()
 	if ctx.ContentType == nil {
@@ -24,6 +28,8 @@ func JsonEncodeV02(e cloudevents.Event) ([]byte, error) {
 	return jsonEncode(ctx, e.Data)
 }
 
+// JsonEncodeV03 takes in a cloudevent.Event and outputs the byte representation of that event using CloudEvents
+// version 0.3 structured json formatting rules.
 func JsonEncodeV03(e cloudevents.Event) ([]byte, error) {
 	ctx := e.Context.AsV03()
 	if ctx.DataContentType == nil {
@@ -69,6 +75,8 @@ func jsonEncode(ctx cloudevents.EventContext, data interface{}) ([]byte, error) 
 	return body, nil
 }
 
+// JsonDecodeV01 takes in the byte representation of a version 0.1 structured json CloudEvent and returns a
+// cloudevent.Event or an error if there are parsing errors.
 func JsonDecodeV01(body []byte) (*cloudevents.Event, error) {
 	ec := cloudevents.EventContextV01{}
 	if err := json.Unmarshal(body, &ec); err != nil {
@@ -91,6 +99,8 @@ func JsonDecodeV01(body []byte) (*cloudevents.Event, error) {
 	}, nil
 }
 
+// JsonDecodeV02 takes in the byte representation of a version 0.2 structured json CloudEvent and returns a
+// cloudevent.Event or an error if there are parsing errors.
 func JsonDecodeV02(body []byte) (*cloudevents.Event, error) {
 	ec := cloudevents.EventContextV02{}
 	if err := json.Unmarshal(body, &ec); err != nil {
@@ -113,6 +123,8 @@ func JsonDecodeV02(body []byte) (*cloudevents.Event, error) {
 	}, nil
 }
 
+// JsonDecodeV03 takes in the byte representation of a version 0.3 structured json CloudEvent and returns a
+// cloudevent.Event or an error if there are parsing errors.
 func JsonDecodeV03(body []byte) (*cloudevents.Event, error) {
 	ec := cloudevents.EventContextV03{}
 	if err := json.Unmarshal(body, &ec); err != nil {
