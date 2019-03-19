@@ -105,6 +105,13 @@ func (t *Transport) obsSend(ctx context.Context, event cloudevents.Event) (*clou
 	if t.Req != nil {
 		req.Method = t.Req.Method
 		req.URL = t.Req.URL
+		if t.Req.Header != nil && len(t.Req.Header) > 0 {
+			for header, values := range t.Req.Header {
+				for _, value := range values {
+					req.Header.Add(header, value)
+				}
+			}
+		}
 	}
 
 	// Override the default request with target from context.
