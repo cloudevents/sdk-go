@@ -14,27 +14,16 @@ CloudEvents specification: https://github.com/cloudevents/spec.
 Receiving a cloudevents.Event via the HTTP Transport:
 
 ```go
-// import "github.com/cloudevents/sdk-go/pkg/cloudevents/client/http"
-
 func Receive(event cloudevents.Event) {
 	// do something with event.Context and event.Data (via event.DataAs(foo)
 }
 
 func main() {
-	ctx := context.Background()
-	
-	c, err := http.New(
-		http.WithTarget("http://localhost:8080/"),
-		http.WithEncoding(cloudeventshttp.BinaryV02),
-		)
-		if err != nil {
-			panic("unable to create cloudevent client: " + err.Error())
-		}
-	
-	if err := c.StartReceiver(ctx, Receive); err != nil {
-		panic("unable to start the cloudevent receiver: " + err.Error())
+	c, err := client.NewDefault()
+	if err != nil {
+		log.Fatalf("failed to create client, %v", err)
 	}
-	<-ctx.Done()
+	log.Fatal(c.StartReceiver(context.Background(), Receive));
 }
 ```
 
@@ -53,12 +42,17 @@ event := cloudevents.Event{
 Sending a cloudevents.Event via the HTTP Transport with Binary v0.2 encoding:
 
 ```go
-// import "github.com/cloudevents/sdk-go/pkg/cloudevents/client/http"
+// import cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 
-c, err := http.New(
-	http.WithTarget("http://localhost:8080/"),
-	http.WithEncoding(cloudeventshttp.BinaryV02),
+t, err := cloudeventshttp.New(
+	cehttp.WithTarget("http://localhost:8080/"),
+	cehttp.WithEncoding(cehttp.BinaryV02),
 )
+if err != nil {
+	panic("failed to create transport, " + err.Error())
+}
+
+c, err := client.New(t)
 if err != nil {
 	panic("unable to create cloudevent client: " + err.Error())
 }
@@ -67,16 +61,16 @@ if err := c.Send(ctx, event); err != nil {
 }
 ```
 
-Or, the client can be set to produce CloudEvents using the selected encoding but
-not change the provided event version, here the client is set to output
+Or, the transport can be set to produce CloudEvents using the selected encoding
+but not change the provided event version, here the client is set to output
 structured encoding:
 
 ```go
-// import "github.com/cloudevents/sdk-go/pkg/cloudevents/client/http"
+// import cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 
-c, err := http.New(
-	http.WithTarget("http://localhost:8080/"),
-	http.WithStructuredEncoding(),
+t, err := cloudeventshttp.New(
+	cehttp.WithTarget("http://localhost:8080/"),
+	cehttp.WithStructuredEncoding(),
 )
 ```
 
@@ -87,10 +81,10 @@ change:
 ```go
 // import (
 //   "github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-//   transporthttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+//   cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 // )
 
-t, err := transporthttp.New(cloudeventshttp.WithPort(8080))
+t, err := transporthttp.New(cehttp.WithPort(8181), cehttp.WithPath("/events/"))
 // or a custom transport: t := &custom.MyTransport{Cool:opts}
 
 c, err := client.New(t, opts...)
