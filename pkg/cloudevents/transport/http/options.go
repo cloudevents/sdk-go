@@ -5,6 +5,7 @@ import (
 	nethttp "net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
 type Option func(*Transport) error
@@ -53,6 +54,17 @@ func WithMethod(method string) Option {
 			return nil
 		}
 		return fmt.Errorf("http method option was empty string")
+	}
+}
+
+// WithShutdownTimeout sets the shutdown timeout when the http server is being shutdown.
+func WithShutdownTimeout(timeout time.Duration) Option {
+	return func(t *Transport) error {
+		if t == nil {
+			return fmt.Errorf("http shutdown timeout option can not set nil transport")
+		}
+		t.ShutdownTimeout = &timeout
+		return nil
 	}
 }
 

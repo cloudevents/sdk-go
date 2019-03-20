@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"testing"
+	"time"
 )
 
 func TestWithTarget(t *testing.T) {
@@ -166,6 +167,52 @@ func TestWithMethod(t *testing.T) {
 	}
 }
 
+func TestWithShutdownTimeout(t *testing.T) {
+	testCases := map[string]struct {
+		t       *Transport
+		timeout time.Duration
+		want    *Transport
+		wantErr string
+	}{
+		"valid timeout": {
+			t:       &Transport{},
+			timeout: time.Minute * 4,
+			want: &Transport{
+				ShutdownTimeout: durationptr(time.Minute * 4),
+			},
+		},
+		"nil transport": {
+			wantErr: `http shutdown timeout option can not set nil transport`,
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+
+			err := tc.t.applyOptions(WithShutdownTimeout(tc.timeout))
+
+			if tc.wantErr != "" || err != nil {
+				var gotErr string
+				if err != nil {
+					gotErr = err.Error()
+				}
+				if diff := cmp.Diff(tc.wantErr, gotErr); diff != "" {
+					t.Errorf("unexpected error (-want, +got) = %v", diff)
+				}
+				return
+			}
+
+			got := tc.t
+
+			if diff := cmp.Diff(tc.want, got,
+				cmpopts.IgnoreUnexported(Transport{})); diff != "" {
+				t.Errorf("unexpected (-want, +got) = %v", diff)
+			}
+		})
+	}
+}
+func durationptr(duration time.Duration) *time.Duration {
+	return &duration
+}
 func intptr(i int) *int {
 	return &i
 }
