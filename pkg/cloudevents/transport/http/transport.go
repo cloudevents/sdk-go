@@ -404,6 +404,9 @@ func (t *Transport) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	r.OK()
 }
 
+// GetPort returns the port the transport is active on.
+// .Port can be set to 0, which means the transport selects a port, GetPort
+// allows the transport to report back the selected port.
 func (t *Transport) GetPort() int {
 	if t.Port != nil && *t.Port == 0 && t.realPort != 0 {
 		return t.realPort
@@ -415,6 +418,10 @@ func (t *Transport) GetPort() int {
 	return 8080 // default
 }
 
+// GetPath returns the path the transport is hosted on. If the path is '/',
+// the transport will handle requests on any URI. To discover the true path
+// a request was received on, inspect the context from Receive(cxt, ...) with
+// TransportContextFrom(ctx).
 func (t *Transport) GetPath() string {
 	path := strings.TrimSpace(t.Path)
 	if len(path) > 0 {
