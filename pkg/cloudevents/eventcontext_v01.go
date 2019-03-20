@@ -70,16 +70,26 @@ func (ec EventContextV01) GetType() string {
 	return ec.EventType
 }
 
-func (ec EventContextV01) GetExtensionAsString(name string) string {
-	if value, ok := ec.Extensions[name]; ok {
-		if valueAsString, ok := value.(string); ok {
-			return valueAsString
-		}
+func (ec EventContextV01) ExtensionAs(name string, obj interface{}) error {
+	value, ok := ec.Extensions[name]
+	if !ok {
+		return fmt.Errorf("extension %q does not exist", name)
 	}
-	return ""
+	// Only support *string for now.
+	switch v := obj.(type) {
+	case *string:
+		if valueAsString, ok := value.(string); ok {
+			*v = valueAsString
+			return nil
+		} else {
+			return fmt.Errorf("invalid type for extension %q", name)
+		}
+	default:
+		return fmt.Errorf("unkown extension type %T", obj)
+	}
 }
 
-func (ec EventContextV01) Extension(name string, value interface{}) {
+func (ec *EventContextV01) SetExtension(name string, value interface{}) {
 	if ec.Extensions == nil {
 		ec.Extensions = make(map[string]interface{})
 	}
