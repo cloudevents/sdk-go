@@ -45,7 +45,7 @@ func main() {
 		if resp, err := c.Send(ctx, event); err != nil {
 			log.Printf("failed to send: %v", err)
 		} else if resp != nil {
-			fmt.Printf("got back a response event of type %s", resp.Context.GetType())
+			fmt.Printf("got back a response: \n%s", resp)
 		} else {
 			log.Printf("%s: %d - %s", event.Context.GetType(), data.Sequence, data.Message)
 		}
