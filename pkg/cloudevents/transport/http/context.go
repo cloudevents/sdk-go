@@ -35,6 +35,12 @@ func NewTransportContext(req *http.Request) TransportContext {
 	return *tx
 }
 
+// TransportResponseContext allows a Receiver response with http transport specific fields.
+type TransportResponseContext struct {
+	// Header will be merged with the response headers.
+	Header http.Header
+}
+
 // AttendToHeaders returns the list of headers that exist in the TransportContext that are not currently in
 // tx.IgnoreHeaderPrefix.
 func (tx TransportContext) AttendToHeaders() []string {

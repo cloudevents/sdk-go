@@ -6,6 +6,10 @@ type EventResponse struct {
 	Status int
 	Event  *Event
 	Reason string
+	// Context is transport specific struct to allow for controlling transport
+	// response details.
+	// For example, see http.TransportResponseContext.
+	Context interface{}
 }
 
 // RespondWith sets up the instance of EventResponse to be set with status and
