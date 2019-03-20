@@ -20,7 +20,7 @@ import (
 
 type EncodingSelector func(e cloudevents.Event) Encoding
 
-// type check that this transport message impl matches the contract
+// Transport adheres to transport.Transport.
 var _ transport.Transport = (*Transport)(nil)
 
 const (
@@ -119,6 +119,7 @@ func copyHeaders(from, to http.Header) {
 	}
 }
 
+// Send implements Transport.Send
 func (t *Transport) Send(ctx context.Context, event cloudevents.Event) (*cloudevents.Event, error) {
 	ctx, r := observability.NewReporter(ctx, reportSend)
 	resp, err := t.obsSend(ctx, event)
@@ -197,10 +198,13 @@ func (t *Transport) obsSend(ctx context.Context, event cloudevents.Event) (*clou
 	return nil, fmt.Errorf("failed to encode Event into a Message")
 }
 
+// SetReceiver implements Transport.SetReceiver
 func (t *Transport) SetReceiver(r transport.Receiver) {
 	t.Receiver = r
 }
 
+// StartReceiver implements Transport.StartReceiver
+// NOTE: This is a blocking call.
 func (t *Transport) StartReceiver(ctx context.Context) error {
 	t.reMu.Lock()
 	defer t.reMu.Unlock()

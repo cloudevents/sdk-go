@@ -14,6 +14,7 @@ type Codec struct {
 	// selecting a codec.
 	Encoding Encoding
 
+	// DefaultEncodingSelectionFn allows for encoding selection strategies to be injected.
 	DefaultEncodingSelectionFn EncodingSelector
 
 	v01 *CodecV01
@@ -21,6 +22,7 @@ type Codec struct {
 	v03 *CodecV03
 }
 
+// Adheres to Codec
 var _ transport.Codec = (*Codec)(nil)
 
 // DefaultBinaryEncodingSelectionStrategy implements a selection process for

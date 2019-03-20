@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-// CodevV03 represents a http transport codec that uses CloudEvents spec v0.3
+// CodecV01 represents a http transport codec that uses CloudEvents spec v0.3
 type CodecV01 struct {
 	Encoding Encoding
 }

@@ -1,4 +1,4 @@
 /*
-Package transport/nats implements the CloudEvent transport implementation using NATS.
+Package nats implements the CloudEvent transport implementation using NATS.
 */
 package nats
