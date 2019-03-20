@@ -19,6 +19,8 @@ type Codec struct {
 
 var _ transport.Codec = (*Codec)(nil)
 
+// DefaultBinaryEncodingSelectionStrategy implements a selection process for
+// which binary encoding to use based on spec version of the event.
 func DefaultBinaryEncodingSelectionStrategy(e cloudevents.Event) Encoding {
 	switch e.SpecVersion() {
 	case cloudevents.CloudEventsVersionV01:
@@ -32,6 +34,8 @@ func DefaultBinaryEncodingSelectionStrategy(e cloudevents.Event) Encoding {
 	return Default
 }
 
+// DefaultStructuredEncodingSelectionStrategy implements a selection process
+// for which structured encoding to use based on spec version of the event.
 func DefaultStructuredEncodingSelectionStrategy(e cloudevents.Event) Encoding {
 	switch e.SpecVersion() {
 	case cloudevents.CloudEventsVersionV01:
@@ -45,6 +49,7 @@ func DefaultStructuredEncodingSelectionStrategy(e cloudevents.Event) Encoding {
 	return Default
 }
 
+// Encode encodes the provided event into a transport message.
 func (c *Codec) Encode(e cloudevents.Event) (transport.Message, error) {
 	encoding := c.Encoding
 
@@ -81,6 +86,7 @@ func (c *Codec) Encode(e cloudevents.Event) (transport.Message, error) {
 	}
 }
 
+// Decode converts a provided transport message into an Event, or error.
 func (c *Codec) Decode(msg transport.Message) (*cloudevents.Event, error) {
 	switch c.inspectEncoding(msg) {
 	case BinaryV01:

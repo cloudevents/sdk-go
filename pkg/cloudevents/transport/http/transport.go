@@ -95,7 +95,7 @@ func copyHeaders(from, to http.Header) {
 }
 
 func (t *Transport) Send(ctx context.Context, event cloudevents.Event) (*cloudevents.Event, error) {
-	ctx, r := observability.NewReporter(ctx, ReportSend)
+	ctx, r := observability.NewReporter(ctx, reportSend)
 	resp, err := t.obsSend(ctx, event)
 	if err != nil {
 		r.Error()
@@ -264,7 +264,7 @@ func status(resp *http.Response) string {
 }
 
 func (t *Transport) invokeReceiver(ctx context.Context, event cloudevents.Event) (*Response, error) {
-	ctx, r := observability.NewReporter(ctx, ReportReceive)
+	ctx, r := observability.NewReporter(ctx, reportReceive)
 	resp, err := t.obsInvokeReceiver(ctx, event)
 	if err != nil {
 		r.Error()
@@ -314,7 +314,7 @@ func (t *Transport) obsInvokeReceiver(ctx context.Context, event cloudevents.Eve
 
 // ServeHTTP implements http.Handler
 func (t *Transport) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	ctx, r := observability.NewReporter(req.Context(), ReportServeHTTP)
+	ctx, r := observability.NewReporter(req.Context(), reportServeHTTP)
 
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
