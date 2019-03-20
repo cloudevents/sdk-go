@@ -38,8 +38,10 @@ type EventContextV01 struct {
 	Extensions map[string]interface{} `json:"extensions,omitempty"`
 }
 
+// Adhere to EventContext
 var _ EventContext = (*EventContextV01)(nil)
 
+// GetSpecVersion implements EventContext.GetSpecVersion
 func (ec EventContextV01) GetSpecVersion() string {
 	if ec.CloudEventsVersion != "" {
 		return ec.CloudEventsVersion
@@ -47,6 +49,7 @@ func (ec EventContextV01) GetSpecVersion() string {
 	return CloudEventsVersionV01
 }
 
+// GetDataContentType implements EventContext.GetDataContentType
 func (ec EventContextV01) GetDataContentType() string {
 	if ec.ContentType != nil {
 		return *ec.ContentType
@@ -54,6 +57,7 @@ func (ec EventContextV01) GetDataContentType() string {
 	return ""
 }
 
+// GetDataMediaType implements EventContext.GetDataMediaType
 func (ec EventContextV01) GetDataMediaType() string {
 	if ec.ContentType != nil {
 		mediaType, _, err := mime.ParseMediaType(*ec.ContentType)
@@ -66,15 +70,18 @@ func (ec EventContextV01) GetDataMediaType() string {
 	return ""
 }
 
+// GetType implements EventContext.GetType
 func (ec EventContextV01) GetType() string {
 	return ec.EventType
 }
 
+// AsV01 implements EventContext.AsV01
 func (ec EventContextV01) AsV01() EventContextV01 {
 	ec.CloudEventsVersion = CloudEventsVersionV01
 	return ec
 }
 
+// AsV02 implements EventContext.AsV02
 func (ec EventContextV01) AsV02() EventContextV02 {
 	ret := EventContextV02{
 		SpecVersion: CloudEventsVersionV02,
@@ -102,6 +109,7 @@ func (ec EventContextV01) AsV02() EventContextV02 {
 	return ret
 }
 
+// AsV03 implements EventContext.AsV03
 func (ec EventContextV01) AsV03() EventContextV03 {
 	ecv2 := ec.AsV02()
 	return ecv2.AsV03()
