@@ -14,7 +14,8 @@ type TransportContext struct {
 	Method string
 	Header http.Header
 
-	// This is e
+	// IgnoreHeaderPrefixes controls what comes back from AttendToHeaders.
+	// AttendToHeaders controls what is output for .String()
 	IgnoreHeaderPrefixes []string
 }
 
@@ -58,6 +59,7 @@ func (tx TransportContext) shouldIgnoreHeader(h string) bool {
 	return false
 }
 
+// String generates a pretty-printed version of the resource as a string.
 func (tx TransportContext) String() string {
 	b := strings.Builder{}
 
