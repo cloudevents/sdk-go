@@ -123,7 +123,7 @@ func (t *Transport) obsSend(ctx context.Context, event cloudevents.Event) (*clou
 	}
 
 	req := http.Request{
-		Header: http.Header{},
+		Header: HeaderFrom(ctx),
 	}
 	if t.Req != nil {
 		req.Method = t.Req.Method
@@ -363,11 +363,7 @@ func (t *Transport) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 
 	if req != nil {
-		ctx = WithTransportContext(ctx, TransportContext{
-			URI:    req.RequestURI,
-			Host:   req.Host,
-			Method: req.Method,
-		})
+		ctx = WithTransportContext(ctx, NewTransportContext(req))
 	}
 
 	resp, err := t.invokeReceiver(ctx, *event)
