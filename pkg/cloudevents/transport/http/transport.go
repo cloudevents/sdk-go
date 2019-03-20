@@ -24,18 +24,33 @@ var _ transport.Transport = (*Transport)(nil)
 
 // Transport acts as both a http client and a http handler.
 type Transport struct {
-	Encoding                   Encoding
+	// The encoding used to select the codec for outbound events.
+	Encoding Encoding
+	// DefaultEncodingSelectionFn allows for other encoding selection strategies to be injected.
 	DefaultEncodingSelectionFn EncodingSelector
 
 	// Sending
+
+	// Client is the http client that will be used to send requests.
+	// If nil, the Transport will create a one.
 	Client *http.Client
-	Req    *http.Request
+	// Req is the base http request that is used for http.Do.
+	// Only .Method, .URL, and .Header is considered.
+	// If not set, Req.Method defaults to POST.
+	// Req.URL or context.WithTarget(url) are required for sending.
+	Req *http.Request
 
 	// Receiving
+
+	// Receiver is invoked target for incoming events.
 	Receiver transport.Receiver
-	Port     *int   // if nil, default 8080
-	Path     string // if "", default "/"
-	Handler  *http.ServeMux
+	// Port is the port to bind the receiver to. Defaults to 8080.
+	Port *int
+	// Path is the path to bind the receiver to. Defaults to "/".
+	Path string
+	// Handler is the handler the http Server will use. Use this to reuse the
+	// http server. If nil, the Transport will create a one.
+	Handler *http.ServeMux
 
 	realPort          int
 	server            *http.Server
