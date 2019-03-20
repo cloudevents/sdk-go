@@ -15,7 +15,7 @@ var (
 )
 
 var (
-	// LatencyView is a OpenCensus view that shows http transport method latency.
+	// LatencyView is an OpenCensus view that shows http transport method latency.
 	LatencyView = &view.View{
 		Name:        "transport/http/latency",
 		Measure:     latencyMs,

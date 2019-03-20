@@ -55,7 +55,7 @@ func New(t transport.Transport, opts ...Option) (Client, error) {
 // transport option applied to it. The client will always send Binary
 // encoding but will inspect the outbound event context and match the version.
 // The WithtimeNow and WithUUIDs client options are also applied to the client,
-// all outbound events will have a time and id set if not set.
+// all outbound events will have a time and id set if not already present.
 func NewDefault() (Client, error) {
 	t, err := http.New(http.WithBinaryEncoding())
 	if err != nil {

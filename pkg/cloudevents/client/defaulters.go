@@ -11,7 +11,7 @@ import (
 // to perform event defaulting.
 type EventDefaulter func(event cloudevents.Event) cloudevents.Event
 
-// DefaultIDToUUIDIfNotSet will inspect provided event and assign a UUID to
+// DefaultIDToUUIDIfNotSet will inspect the provided event and assign a UUID to
 // context.ID if it is found to be empty.
 func DefaultIDToUUIDIfNotSet(event cloudevents.Event) cloudevents.Event {
 	if event.Context != nil {

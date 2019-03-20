@@ -11,7 +11,7 @@ var (
 )
 
 var (
-	// LatencyView is a OpenCensus view that shows client method latency.
+	// LatencyView is an OpenCensus view that shows client method latency.
 	LatencyView = &view.View{
 		Name:        "client/latency",
 		Measure:     latencyMs,

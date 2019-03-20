@@ -11,7 +11,7 @@ var (
 )
 
 var (
-	// LatencyView is a OpenCensus view that shows data codec method latency.
+	// LatencyView is an OpenCensus view that shows data codec method latency.
 	LatencyView = &view.View{
 		Name:        "datacodec/latency",
 		Measure:     latencyMs,
