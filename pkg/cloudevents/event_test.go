@@ -335,6 +335,7 @@ Context Attributes,
   schemaURL: http://example.com/schema
   contentType: application/json
 Extensions,
+  another-test: 1
   test: extended
 Data,
   {
@@ -358,6 +359,7 @@ Context Attributes,
   schemaurl: http://example.com/schema
   contenttype: application/json
 Extensions,
+  another-test: 1
   eventTypeVersion: v1alpha1
   test: extended
 Data,
@@ -382,6 +384,7 @@ Context Attributes,
   schemaurl: http://example.com/schema
   datacontenttype: application/json
 Extensions,
+  another-test: 1
   eventTypeVersion: v1alpha1
   test: extended
 Data,
@@ -607,6 +610,6 @@ func FullEventContextV03(now types.Timestamp) ce.EventContextV03 {
 	}
 	eventContextV03.SetExtension("test", "extended")
 	eventContextV03.SetExtension("another-test", 1)
-	eventContextV03.SetExtension("evenTypeVersion", "v1alpha1")
+	eventContextV03.SetExtension("eventTypeVersion", "v1alpha1")
 	return eventContextV03.AsV03()
 }
