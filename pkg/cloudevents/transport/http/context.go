@@ -62,15 +62,29 @@ func (tx TransportContext) String() string {
 	b := strings.Builder{}
 
 	b.WriteString("Transport Context,\n")
-	b.WriteString("  URI: " + tx.URI + "\n")
-	b.WriteString("  Host: " + tx.Host + "\n")
-	b.WriteString("  Method: " + tx.Method + "\n")
+
+	empty := b.Len()
+
+	if tx.URI != "" {
+		b.WriteString("  URI: " + tx.URI + "\n")
+	}
+	if tx.Host != "" {
+		b.WriteString("  Host: " + tx.Host + "\n")
+	}
+
+	if tx.Method != "" {
+		b.WriteString("  Method: " + tx.Method + "\n")
+	}
 
 	if tx.Header != nil && len(tx.Header) > 0 {
 		b.WriteString("  Header:\n")
 		for _, k := range tx.AttendToHeaders() {
 			b.WriteString(fmt.Sprintf("    %s: %s\n", k, tx.Header.Get(k)))
 		}
+	}
+
+	if b.Len() == empty {
+		b.WriteString("  nil\n")
 	}
 
 	return b.String()
