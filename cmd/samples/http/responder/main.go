@@ -9,6 +9,7 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"github.com/kelseyhightower/envconfig"
 	"log"
+	"net/http"
 	"os"
 )
 
@@ -54,6 +55,14 @@ func gotEvent(ctx context.Context, event cloudevents.Event, resp *cloudevents.Ev
 			},
 		}
 		resp.RespondWith(200, &r)
+		resp.Context = &cehttp.TransportResponseContext{
+			Header: func() http.Header {
+				h := http.Header{}
+				h.Set("sample", "magic header")
+				h.Set("mod", "3")
+				return h
+			}(),
+		}
 		return nil
 	}
 

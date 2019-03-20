@@ -316,6 +316,19 @@ func (t *Transport) obsInvokeReceiver(ctx context.Context, event cloudevents.Eve
 				resp.StatusCode = http.StatusInternalServerError
 				return &resp, err
 			}
+			// Look for a transport response context
+			var trx *TransportResponseContext
+			if ptrTrx, ok := eventResp.Context.(*TransportResponseContext); ok {
+				// found a *TransportResponseContext, use it.
+				trx = ptrTrx
+			} else if realTrx, ok := eventResp.Context.(TransportResponseContext); ok {
+				// found a TransportResponseContext, make it a pointer.
+				trx = &realTrx
+			}
+			// If we found a TransportResponseContext, use it.
+			if trx != nil && trx.Header != nil && len(trx.Header) > 0 {
+				copyHeaders(trx.Header, resp.Header)
+			}
 		}
 
 		if eventResp.Status != 0 {
@@ -374,12 +387,11 @@ func (t *Transport) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	if resp != nil {
+		if t.Req != nil {
+			copyHeaders(t.Req.Header, w.Header())
+		}
 		if len(resp.Header) > 0 {
-			for k, vs := range resp.Header {
-				for _, v := range vs {
-					w.Header().Set(k, v)
-				}
-			}
+			copyHeaders(resp.Header, w.Header())
 		}
 		status := http.StatusAccepted
 		if resp.StatusCode >= 200 && resp.StatusCode < 600 {

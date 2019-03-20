@@ -6,6 +6,9 @@ type EventResponse struct {
 	Status int
 	Event  *Event
 	Reason string
+	// Context is transport specific struct to allow for controlling transport
+	// response details.
+	Context interface{}
 }
 
 func (e *EventResponse) RespondWith(status int, event *Event) {
