@@ -8,6 +8,7 @@ type EventResponse struct {
 	Reason string
 	// Context is transport specific struct to allow for controlling transport
 	// response details.
+	// For example, see http.TransportResponseContext.
 	Context interface{}
 }
 
