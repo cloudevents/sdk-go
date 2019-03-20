@@ -33,5 +33,5 @@ func gotEvent(event cloudevents.Event) {
 		return
 	}
 
-	fmt.Printf("%s: %d - %q\n", event.Context.GetType(), data.Sequence, data.Message)
+	fmt.Printf("%s", event)
 }

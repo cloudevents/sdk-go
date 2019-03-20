@@ -68,6 +68,28 @@ func WithShutdownTimeout(timeout time.Duration) Option {
 	}
 }
 
+// WithHeader sets an additional default outbound header for all cloudevents
+// when using an HTTP request.
+func WithHeader(key, value string) Option {
+	return func(t *Transport) error {
+		if t == nil {
+			return fmt.Errorf("http header option can not set nil transport")
+		}
+		key = strings.TrimSpace(key)
+		if key != "" {
+			if t.Req == nil {
+				t.Req = &nethttp.Request{}
+			}
+			if t.Req.Header == nil {
+				t.Req.Header = nethttp.Header{}
+			}
+			t.Req.Header.Add(key, value)
+			return nil
+		}
+		return fmt.Errorf("http header option was empty string")
+	}
+}
+
 // WithEncoding sets the encoding for clients with HTTP transports.
 func WithEncoding(encoding Encoding) Option {
 	return func(t *Transport) error {

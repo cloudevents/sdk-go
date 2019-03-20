@@ -26,7 +26,7 @@ func main() {
 		log.Fatalf("failed to create client, %v", err)
 	}
 
-	for i := 0; i < 10; i++ {
+	for i := 0; true; i++ {
 		data := &Example{
 			Sequence: i,
 			Message:  "Hello, World!",
@@ -35,7 +35,7 @@ func main() {
 			Context: cloudevents.EventContextV02{
 				Type:   "com.cloudevents.sample.sent",
 				Source: *source,
-			}.AsV02(),
+			}.AsV01(),
 			Data: data,
 		}
 

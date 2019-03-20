@@ -167,6 +167,89 @@ func TestWithMethod(t *testing.T) {
 	}
 }
 
+func TestWithHeader(t *testing.T) {
+	testCases := map[string]struct {
+		t       *Transport
+		key     string
+		value   string
+		want    *Transport
+		wantErr string
+	}{
+		"valid header": {
+			t: &Transport{
+				Req: &http.Request{},
+			},
+			key:   "unit",
+			value: "test",
+			want: &Transport{
+				Req: &http.Request{
+					Header: http.Header{
+						"Unit": {
+							"test",
+						},
+					},
+				},
+			},
+		},
+		"valid header, unset req": {
+			t:     &Transport{},
+			key:   "unit",
+			value: "test",
+			want: &Transport{
+				Req: &http.Request{
+					Header: http.Header{
+						"Unit": {
+							"test",
+						},
+					},
+				},
+			},
+		},
+		"empty header key": {
+			t: &Transport{
+				Req: &http.Request{},
+			},
+			value:   "test",
+			wantErr: `http header option was empty string`,
+		},
+		"whitespace key": {
+			t: &Transport{
+				Req: &http.Request{},
+			},
+			key:     " \t\n",
+			value:   "test",
+			wantErr: `http header option was empty string`,
+		},
+		"nil transport": {
+			wantErr: `http header option can not set nil transport`,
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+
+			err := tc.t.applyOptions(WithHeader(tc.key, tc.value))
+
+			if tc.wantErr != "" || err != nil {
+				var gotErr string
+				if err != nil {
+					gotErr = err.Error()
+				}
+				if diff := cmp.Diff(tc.wantErr, gotErr); diff != "" {
+					t.Errorf("unexpected error (-want, +got) = %v", diff)
+				}
+				return
+			}
+
+			got := tc.t
+
+			if diff := cmp.Diff(tc.want, got,
+				cmpopts.IgnoreUnexported(Transport{}), cmpopts.IgnoreUnexported(http.Request{})); diff != "" {
+				t.Errorf("unexpected (-want, +got) = %v", diff)
+			}
+		})
+	}
+}
+
 func TestWithShutdownTimeout(t *testing.T) {
 	testCases := map[string]struct {
 		t       *Transport
@@ -185,6 +268,7 @@ func TestWithShutdownTimeout(t *testing.T) {
 			wantErr: `http shutdown timeout option can not set nil transport`,
 		},
 	}
+
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 
@@ -213,6 +297,7 @@ func TestWithShutdownTimeout(t *testing.T) {
 func durationptr(duration time.Duration) *time.Duration {
 	return &duration
 }
+
 func intptr(i int) *int {
 	return &i
 }
