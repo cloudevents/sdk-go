@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
@@ -22,10 +23,19 @@ type EncodingSelector func(e cloudevents.Event) Encoding
 // type check that this transport message impl matches the contract
 var _ transport.Transport = (*Transport)(nil)
 
+const (
+	// DefaultShutdownTimeout defines the default timeout given to the http.Server when calling Shutdown.
+	DefaultShutdownTimeout = time.Minute * 1
+)
+
 // Transport acts as both a http client and a http handler.
 type Transport struct {
 	Encoding                   Encoding
 	DefaultEncodingSelectionFn EncodingSelector
+
+	// ShutdownTimeout defines the timeout given to the http.Server when calling Shutdown.
+	// If nil, DefaultShutdownTimeout is used.
+	ShutdownTimeout *time.Duration
 
 	// Sending
 	Client *http.Client
@@ -217,7 +227,13 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 	select {
 	case <-ctx.Done():
 		// Try a gracefully shutdown.
-		return t.server.Shutdown(context.Background())
+		timeout := DefaultShutdownTimeout
+		if t.ShutdownTimeout != nil {
+			timeout = *t.ShutdownTimeout
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+		return t.server.Shutdown(ctx)
 	case err := <-errChan:
 		return err
 	}
