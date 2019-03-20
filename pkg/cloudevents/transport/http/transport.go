@@ -231,7 +231,8 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 		if t.ShutdownTimeout != nil {
 			timeout = *t.ShutdownTimeout
 		}
-		ctx, _ := context.WithTimeout(context.Background(), timeout)
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
 		return t.server.Shutdown(ctx)
 	case err := <-errChan:
 		return err
