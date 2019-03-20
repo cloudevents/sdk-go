@@ -15,22 +15,29 @@ type Event struct {
 	Data    interface{}
 }
 
+// DataAs attempts to populate the provided data object with the event payload.
+// data should be a pointer type.
 func (e Event) DataAs(data interface{}) error {
 	return datacodec.Decode(e.Context.GetDataMediaType(), e.Data, data)
 }
 
+// SpecVersion returns Context.GetSpecVersion()
 func (e Event) SpecVersion() string {
 	return e.Context.GetSpecVersion()
 }
 
+// Type returns Context.GetType()
 func (e Event) Type() string {
 	return e.Context.GetType()
 }
 
+// DataContentType returns Context.getDataContentType()
 func (e Event) DataContentType() string {
 	return e.Context.GetDataContentType()
 }
 
+// Validate performs a spec based validation on this event.
+// Validation is dependent on the spec version specified in the event context.
 func (e Event) Validate() error {
 	if e.Context == nil {
 		return fmt.Errorf("every event conforming to the CloudEvents specification MUST include a context")
@@ -45,6 +52,7 @@ func (e Event) Validate() error {
 	return nil
 }
 
+// String returns a pretty-printed representation of the Event.
 func (e Event) String() string {
 	b := strings.Builder{}
 
@@ -63,6 +71,8 @@ func (e Event) String() string {
 	b.WriteString("Context Attributes,\n")
 
 	var extensions map[string]interface{}
+
+	// TODO: This impl detail should be pushed into the impl structs.
 
 	switch e.SpecVersion() {
 	case CloudEventsVersionV01:
