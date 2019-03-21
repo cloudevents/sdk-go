@@ -126,6 +126,64 @@ func TestSource(t *testing.T) {
 	}
 }
 
+func TestSchema(t *testing.T) {
+	now := types.Timestamp{Time: time.Now()}
+
+	schema := "http://example.com/schema"
+
+	testCases := map[string]struct {
+		event ce.Event
+		want  string
+	}{
+		"min v01, empty schema": {
+			event: ce.Event{
+				Context: MinEventContextV01(),
+			},
+			want: "",
+		},
+		"full v01, schema": {
+			event: ce.Event{
+				Context: FullEventContextV01(now),
+			},
+			want: schema,
+		},
+		"min v02, empty schema": {
+			event: ce.Event{
+				Context: MinEventContextV02(),
+			},
+			want: "",
+		},
+		"full v02, schema": {
+			event: ce.Event{
+				Context: FullEventContextV02(now),
+			},
+			want: schema,
+		},
+		"min v03, empty schema": {
+			event: ce.Event{
+				Context: MinEventContextV03(),
+			},
+			want: "",
+		},
+		"full v03, schema": {
+			event: ce.Event{
+				Context: FullEventContextV03(now),
+			},
+			want: schema,
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+
+			got := tc.event.Schema()
+
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("unexpected (-want, +got) = %v", diff)
+			}
+		})
+	}
+}
+
 type DataExample struct {
 	AnInt   int                       `json:"a,omitempty"`
 	AString string                    `json:"b,omitempty"`

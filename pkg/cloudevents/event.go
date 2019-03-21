@@ -36,6 +36,11 @@ func (e Event) Source() string {
 	return e.Context.GetSource()
 }
 
+// Schema returns Context.GetSchema()
+func (e Event) Schema() string {
+	return e.Context.GetSchema()
+}
+
 // ExtensionAs returns Context.ExtensionAs(name, obj)
 func (e Event) ExtensionAs(name string, obj interface{}) error {
 	return e.Context.ExtensionAs(name, obj)

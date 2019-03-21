@@ -79,6 +79,14 @@ func (ec EventContextV03) GetSource() string {
 	return ec.Source.String()
 }
 
+// GetSchema implements EventContext.GetSchema
+func (ec EventContextV03) GetSchema() string {
+	if ec.SchemaURL != nil {
+		return ec.SchemaURL.String()
+	}
+	return ""
+}
+
 // ExtensionAs implements EventContext.ExtensionAs
 func (ec EventContextV03) ExtensionAs(name string, obj interface{}) error {
 	value, ok := ec.Extensions[name]
