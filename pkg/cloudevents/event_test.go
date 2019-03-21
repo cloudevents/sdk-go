@@ -335,6 +335,7 @@ Context Attributes,
   schemaURL: http://example.com/schema
   contentType: application/json
 Extensions,
+  another-test: 1
   test: extended
 Data,
   {
@@ -358,6 +359,7 @@ Context Attributes,
   schemaurl: http://example.com/schema
   contenttype: application/json
 Extensions,
+  another-test: 1
   eventTypeVersion: v1alpha1
   test: extended
 Data,
@@ -382,6 +384,7 @@ Context Attributes,
   schemaurl: http://example.com/schema
   datacontenttype: application/json
 Extensions,
+  another-test: 1
   eventTypeVersion: v1alpha1
   test: extended
 Data,
@@ -400,6 +403,109 @@ Data,
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Log(got)
 				t.Errorf("unexpected string (-want, +got) = %v", diff)
+			}
+		})
+	}
+}
+
+func TestExtensionAs(t *testing.T) {
+	now := types.Timestamp{Time: time.Now()}
+
+	testCases := map[string]struct {
+		event        ce.Event
+		extension    string
+		want         string
+		wantError    bool
+		wantErrorMsg string
+	}{
+		"min v01, no extension": {
+			event: ce.Event{
+				Context: MinEventContextV01(),
+			},
+			extension:    "test",
+			wantError:    true,
+			wantErrorMsg: `extension "test" does not exist`,
+		},
+		"full v01, test extension": {
+			event: ce.Event{
+				Context: FullEventContextV01(now),
+			},
+			extension: "test",
+			want:      "extended",
+		},
+		"full v01, another-test extension invalid type": {
+			event: ce.Event{
+				Context: FullEventContextV01(now),
+			},
+			extension:    "another-test",
+			wantError:    true,
+			wantErrorMsg: `invalid type for extension "another-test"`,
+		},
+		"min v02, no extension": {
+			event: ce.Event{
+				Context: MinEventContextV02(),
+			},
+			extension:    "test",
+			wantError:    true,
+			wantErrorMsg: `extension "test" does not exist`,
+		},
+		"full v02, test extension": {
+			event: ce.Event{
+				Context: FullEventContextV02(now),
+			},
+			extension: "test",
+			want:      "extended",
+		},
+		"full v02, another-test extension invalid type": {
+			event: ce.Event{
+				Context: FullEventContextV02(now),
+			},
+			extension:    "another-test",
+			wantError:    true,
+			wantErrorMsg: `invalid type for extension "another-test"`,
+		},
+		"min v03, no extension": {
+			event: ce.Event{
+				Context: MinEventContextV03(),
+			},
+			extension:    "test",
+			wantError:    true,
+			wantErrorMsg: `extension "test" does not exist`,
+		},
+		"full v03, test extension": {
+			event: ce.Event{
+				Context: FullEventContextV03(now),
+			},
+			extension: "test",
+			want:      "extended",
+		},
+		"full v03, another-test extension invalid type": {
+			event: ce.Event{
+				Context: FullEventContextV03(now),
+			},
+			extension:    "another-test",
+			wantError:    true,
+			wantErrorMsg: `invalid type for extension "another-test"`,
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+
+			var got string
+			err := tc.event.Context.ExtensionAs(tc.extension, &got)
+
+			if tc.wantError {
+				if err == nil {
+					t.Errorf("expected error %q, got nil", tc.wantErrorMsg)
+				} else {
+					if diff := cmp.Diff(tc.wantErrorMsg, err.Error()); diff != "" {
+						t.Errorf("unexpected (-want, +got) = %v", diff)
+					}
+				}
+			} else {
+				if diff := cmp.Diff(tc.want, got); diff != "" {
+					t.Errorf("unexpected (-want, +got) = %v", diff)
+				}
 			}
 		})
 	}
@@ -449,10 +555,7 @@ func FullEventContextV01(now types.Timestamp) ce.EventContextV01 {
 	schemaUrl, _ := url.Parse("http://example.com/schema")
 	schema := &types.URLRef{URL: *schemaUrl}
 
-	extensions := make(map[string]interface{})
-	extensions["test"] = "extended"
-
-	return ce.EventContextV01{
+	eventContextV01 := ce.EventContextV01{
 		EventID:          "ABC-123",
 		EventTime:        &now,
 		EventType:        "com.example.simple",
@@ -460,8 +563,10 @@ func FullEventContextV01(now types.Timestamp) ce.EventContextV01 {
 		SchemaURL:        schema,
 		ContentType:      ce.StringOfApplicationJSON(),
 		Source:           *source,
-		Extensions:       extensions,
-	}.AsV01()
+	}
+	eventContextV01.SetExtension("test", "extended")
+	eventContextV01.SetExtension("another-test", 1)
+	return eventContextV01.AsV01()
 }
 
 func FullEventContextV02(now types.Timestamp) ce.EventContextV02 {
@@ -473,9 +578,9 @@ func FullEventContextV02(now types.Timestamp) ce.EventContextV02 {
 
 	extensions := make(map[string]interface{})
 	extensions["test"] = "extended"
-	extensions["eventTypeVersion"] = "v1alpha1"
+	extensions["another-test"] = 1
 
-	return ce.EventContextV02{
+	eventContextV02 := ce.EventContextV02{
 		ID:          "ABC-123",
 		Time:        &now,
 		Type:        "com.example.simple",
@@ -483,7 +588,9 @@ func FullEventContextV02(now types.Timestamp) ce.EventContextV02 {
 		ContentType: ce.StringOfApplicationJSON(),
 		Source:      *source,
 		Extensions:  extensions,
-	}.AsV02()
+	}
+	eventContextV02.SetExtension("eventTypeVersion", "v1alpha1")
+	return eventContextV02.AsV02()
 }
 
 func FullEventContextV03(now types.Timestamp) ce.EventContextV03 {
@@ -493,17 +600,16 @@ func FullEventContextV03(now types.Timestamp) ce.EventContextV03 {
 	schemaUrl, _ := url.Parse("http://example.com/schema")
 	schema := &types.URLRef{URL: *schemaUrl}
 
-	extensions := make(map[string]interface{})
-	extensions["test"] = "extended"
-	extensions["eventTypeVersion"] = "v1alpha1"
-
-	return ce.EventContextV03{
+	eventContextV03 := ce.EventContextV03{
 		ID:              "ABC-123",
 		Time:            &now,
 		Type:            "com.example.simple",
 		SchemaURL:       schema,
 		DataContentType: ce.StringOfApplicationJSON(),
 		Source:          *source,
-		Extensions:      extensions,
-	}.AsV03()
+	}
+	eventContextV03.SetExtension("test", "extended")
+	eventContextV03.SetExtension("another-test", 1)
+	eventContextV03.SetExtension("eventTypeVersion", "v1alpha1")
+	return eventContextV03.AsV03()
 }
