@@ -1,4 +1,4 @@
-package client
+package receiver
 
 import (
 	"context"
@@ -28,7 +28,7 @@ func TestReceiverFnValidTypes(t *testing.T) {
 		"Event, EventResponse in, error out":      func(cloudevents.Event, *cloudevents.EventResponse) error { return nil },
 	} {
 		t.Run(name, func(t *testing.T) {
-			if _, err := receiver(fn); err != nil {
+			if _, err := NewDynamicReceiver(fn); err != nil {
 				t.Errorf("%q failed: %v", name, err)
 			}
 		})
@@ -55,7 +55,7 @@ func TestReceiverFnInvalidTypes(t *testing.T) {
 		"not a function":               map[string]string(nil),
 	} {
 		t.Run(name, func(t *testing.T) {
-			if _, err := receiver(fn); err == nil {
+			if _, err := NewDynamicReceiver(fn); err == nil {
 				t.Errorf("%q failed to catch the issue", name)
 			}
 		})
@@ -73,7 +73,7 @@ func TestReceiverFnInvoke_1(t *testing.T) {
 	}
 	wantResp := &cloudevents.EventResponse{Reason: "UNIT TEST"}
 
-	fn, err := receiver(func(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error {
+	fn, err := NewDynamicReceiver(func(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error {
 		if diff := cmp.Diff(wantCtx.Value(key), ctx.Value(key)); diff != "" {
 			t.Errorf("unexpected context (-want, +got) = %v", diff)
 		}
@@ -91,7 +91,7 @@ func TestReceiverFnInvoke_1(t *testing.T) {
 		t.Errorf("unexpected error, wanted nil got = %v", err)
 	}
 
-	err = fn.invoke(wantCtx, wantEvent, wantResp)
+	err = fn.Invoke(wantCtx, wantEvent, wantResp)
 
 	if diff := cmp.Diff(wantErr.Error(), err.Error()); diff != "" {
 		t.Errorf("unexpected error (-want, +got) = %v", diff)
@@ -109,7 +109,7 @@ func TestReceiverFnInvoke_2(t *testing.T) {
 	}
 	wantResp := &cloudevents.EventResponse{Reason: "UNIT TEST"}
 
-	fn, err := receiver(func(event cloudevents.Event, resp *cloudevents.EventResponse) error {
+	fn, err := NewDynamicReceiver(func(event cloudevents.Event, resp *cloudevents.EventResponse) error {
 		if diff := cmp.Diff(wantEvent, event); diff != "" {
 			t.Errorf("unexpected event (-want, +got) = %v", diff)
 		}
@@ -123,7 +123,7 @@ func TestReceiverFnInvoke_2(t *testing.T) {
 		t.Errorf("unexpected error, wanted nil got = %v", err)
 	}
 
-	err = fn.invoke(ctx, wantEvent, wantResp)
+	err = fn.Invoke(ctx, wantEvent, wantResp)
 
 	if diff := cmp.Diff(wantErr.Error(), err.Error()); diff != "" {
 		t.Errorf("unexpected error (-want, +got) = %v", diff)
@@ -140,7 +140,7 @@ func TestReceiverFnInvoke_3(t *testing.T) {
 	}
 	wantResp := &cloudevents.EventResponse{Reason: "UNIT TEST"}
 
-	fn, err := receiver(func(event cloudevents.Event, resp *cloudevents.EventResponse) {
+	fn, err := NewDynamicReceiver(func(event cloudevents.Event, resp *cloudevents.EventResponse) {
 		if diff := cmp.Diff(wantEvent, event); diff != "" {
 			t.Errorf("unexpected event (-want, +got) = %v", diff)
 		}
@@ -153,7 +153,7 @@ func TestReceiverFnInvoke_3(t *testing.T) {
 		t.Errorf("unexpected error, wanted nil got = %v", err)
 	}
 
-	err = fn.invoke(ctx, wantEvent, wantResp)
+	err = fn.Invoke(ctx, wantEvent, wantResp)
 
 	if err != nil {
 		t.Errorf("unexpected error, want nil got got = %v", err.Error())
@@ -171,7 +171,7 @@ func TestReceiverFnInvoke_4(t *testing.T) {
 	}
 	wantResp := &cloudevents.EventResponse{Reason: "UNIT TEST"}
 
-	fn, err := receiver(func(resp *cloudevents.EventResponse) error {
+	fn, err := NewDynamicReceiver(func(resp *cloudevents.EventResponse) error {
 		if diff := cmp.Diff(wantResp, resp); diff != "" {
 			t.Errorf("unexpected response (-want, +got) = %v", diff)
 		}
@@ -181,7 +181,7 @@ func TestReceiverFnInvoke_4(t *testing.T) {
 		t.Errorf("unexpected error, wanted nil got = %v", err)
 	}
 
-	err = fn.invoke(ctx, event, wantResp)
+	err = fn.Invoke(ctx, event, wantResp)
 
 	if diff := cmp.Diff(wantErr.Error(), err.Error()); diff != "" {
 		t.Errorf("unexpected error (-want, +got) = %v", diff)
@@ -199,14 +199,14 @@ func TestReceiverFnInvoke_5(t *testing.T) {
 	}
 	resp := &cloudevents.EventResponse{Reason: "UNIT TEST"}
 
-	fn, err := receiver(func() error {
+	fn, err := NewDynamicReceiver(func() error {
 		return wantErr
 	})
 	if err != nil {
 		t.Errorf("unexpected error, wanted nil got = %v", err)
 	}
 
-	err = fn.invoke(ctx, event, resp)
+	err = fn.Invoke(ctx, event, resp)
 
 	if diff := cmp.Diff(wantErr.Error(), err.Error()); diff != "" {
 		t.Errorf("unexpected error (-want, +got) = %v", diff)
@@ -223,12 +223,12 @@ func TestReceiverFnInvoke_6(t *testing.T) {
 	}
 	resp := &cloudevents.EventResponse{Reason: "UNIT TEST"}
 
-	fn, err := receiver(func() {})
+	fn, err := NewDynamicReceiver(func() {})
 	if err != nil {
 		t.Errorf("unexpected error, wanted nil got = %v", err)
 	}
 
-	err = fn.invoke(ctx, event, resp)
+	err = fn.Invoke(ctx, event, resp)
 
 	if err != nil {
 		t.Errorf("unexpected error, want nil got got = %v", err.Error())

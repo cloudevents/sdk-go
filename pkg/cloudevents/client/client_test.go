@@ -486,7 +486,7 @@ func TestClientReceive(t *testing.T) {
 						return nil
 					})
 					if err != nil {
-						t.Errorf("failed to start receiver %s", err.Error())
+						t.Errorf("failed to start NewDynamicReceiver %s", err.Error())
 					}
 				}()
 				time.Sleep(5 * time.Millisecond) // let the server start

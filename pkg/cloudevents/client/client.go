@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/client/receiver"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
@@ -70,7 +71,7 @@ func NewDefault() (Client, error) {
 
 type ceClient struct {
 	transport transport.Transport
-	fn        *receiverFn
+	fn        receiver.DynamicReceiver
 
 	receiverMu        sync.Mutex
 	eventDefaulterFns []EventDefaulter
@@ -125,7 +126,7 @@ func (c *ceClient) Receive(ctx context.Context, event cloudevents.Event, resp *c
 func (c *ceClient) obsReceive(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error {
 	if c.fn != nil {
 		ctx, rFn := observability.NewReporter(ctx, reportReceiveFn)
-		err := c.fn.invoke(ctx, event, resp)
+		err := c.fn.Invoke(ctx, event, resp)
 		if err != nil {
 			rFn.Error()
 		} else {
@@ -160,7 +161,7 @@ func (c *ceClient) StartReceiver(ctx context.Context, fn interface{}) error {
 		return fmt.Errorf("client already has a receiver")
 	}
 
-	if fn, err := receiver(fn); err != nil {
+	if fn, err := receiver.NewDynamicReceiver(fn); err != nil {
 		return err
 	} else {
 		c.fn = fn

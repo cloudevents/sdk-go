@@ -1,4 +1,4 @@
-package client
+package receiver
 
 import (
 	"context"
@@ -13,6 +13,13 @@ import (
 // or transport.
 // This is just an FYI:
 type ReceiveFull func(context.Context, cloudevents.Event, *cloudevents.EventResponse) error
+
+type DynamicReceiver interface {
+	Invoke(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error
+}
+
+// receiverFn adheres to DynamicReceiver.
+var _ DynamicReceiver = (*receiverFn)(nil)
 
 type receiverFn struct {
 	numIn   int
@@ -37,8 +44,8 @@ var (
 	errorType         = reflect.TypeOf((*error)(nil)).Elem()
 )
 
-// receiver creates a receiverFn wrapper class that is used by the client to
-// validate and invoke the provided function.
+// NewDynamicReceiver creates a receiverFn wrapper class that is used by the client to
+// validate and Invoke the provided function.
 // Valid fn signatures are:
 // * func()
 // * func() error
@@ -52,8 +59,7 @@ var (
 // * func(cloudevents.Event, *cloudevents.EventResponse) error
 // * func(context.Context, cloudevents.Event, *cloudevents.EventResponse)
 // * func(context.Context, cloudevents.Event, *cloudevents.EventResponse) error
-//
-func receiver(fn interface{}) (*receiverFn, error) {
+func NewDynamicReceiver(fn interface{}) (*receiverFn, error) {
 	fnType := reflect.TypeOf(fn)
 	if fnType.Kind() != reflect.Func {
 		return nil, errors.New("must pass a function to handle events")
@@ -70,7 +76,7 @@ func receiver(fn interface{}) (*receiverFn, error) {
 	return r, nil
 }
 
-func (r *receiverFn) invoke(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error {
+func (r receiverFn) Invoke(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error {
 	args := make([]reflect.Value, 0, r.numIn)
 
 	if r.numIn > 0 {
