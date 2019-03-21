@@ -36,7 +36,7 @@ func (e Event) Source() string {
 	return e.Context.GetSource()
 }
 
-// Schema returns Context.GetSchemaURL()
+// SchemaURL returns Context.GetSchemaURL()
 func (e Event) SchemaURL() string {
 	return e.Context.GetSchemaURL()
 }
