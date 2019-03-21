@@ -77,8 +77,8 @@ func (ec EventContextV02) GetSource() string {
 	return ec.Source.String()
 }
 
-// GetSchema implements EventContext.GetSchema
-func (ec EventContextV02) GetSchema() string {
+// GetSchemaURL implements EventContext.GetSchemaURL
+func (ec EventContextV02) GetSchemaURL() string {
 	if ec.SchemaURL != nil {
 		return ec.SchemaURL.String()
 	}

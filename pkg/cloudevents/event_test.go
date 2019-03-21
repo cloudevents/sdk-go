@@ -126,7 +126,7 @@ func TestSource(t *testing.T) {
 	}
 }
 
-func TestSchema(t *testing.T) {
+func TestSchemaURL(t *testing.T) {
 	now := types.Timestamp{Time: time.Now()}
 
 	schema := "http://example.com/schema"
@@ -175,7 +175,7 @@ func TestSchema(t *testing.T) {
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 
-			got := tc.event.Schema()
+			got := tc.event.SchemaURL()
 
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("unexpected (-want, +got) = %v", diff)

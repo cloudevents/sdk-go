@@ -36,9 +36,9 @@ func (e Event) Source() string {
 	return e.Context.GetSource()
 }
 
-// Schema returns Context.GetSchema()
-func (e Event) Schema() string {
-	return e.Context.GetSchema()
+// Schema returns Context.GetSchemaURL()
+func (e Event) SchemaURL() string {
+	return e.Context.GetSchemaURL()
 }
 
 // ExtensionAs returns Context.ExtensionAs(name, obj)
