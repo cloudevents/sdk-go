@@ -72,6 +72,12 @@ func (ec EventContextV02) GetType() string {
 	return ec.Type
 }
 
+// GetSource implements EventContext.GetSource
+func (ec EventContextV02) GetSource() string {
+	return ec.Source.String()
+}
+
+
 // ExtensionAs implements EventContext.ExtensionAs
 func (ec EventContextV02) ExtensionAs(name string, obj interface{}) error {
 	value, ok := ec.Extensions[name]

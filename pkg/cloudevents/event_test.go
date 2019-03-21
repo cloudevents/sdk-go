@@ -68,6 +68,64 @@ func TestGetDataContentType(t *testing.T) {
 	}
 }
 
+func TestSource(t *testing.T) {
+	now := types.Timestamp{Time: time.Now()}
+
+	source := "http://example.com/source"
+
+	testCases := map[string]struct {
+		event ce.Event
+		want  string
+	}{
+		"min v01": {
+			event: ce.Event{
+				Context: MinEventContextV01(),
+			},
+			want: source,
+		},
+		"full v01": {
+			event: ce.Event{
+				Context: FullEventContextV01(now),
+			},
+			want: source,
+		},
+		"min v02": {
+			event: ce.Event{
+				Context: MinEventContextV02(),
+			},
+			want: source,
+		},
+		"full v02": {
+			event: ce.Event{
+				Context: FullEventContextV02(now),
+			},
+			want: source,
+		},
+		"min v03": {
+			event: ce.Event{
+				Context: MinEventContextV03(),
+			},
+			want: source,
+		},
+		"full v03": {
+			event: ce.Event{
+				Context: FullEventContextV03(now),
+			},
+			want: source,
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+
+			got := tc.event.Source()
+
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("unexpected (-want, +got) = %v", diff)
+			}
+		})
+	}
+}
+
 type DataExample struct {
 	AnInt   int                       `json:"a,omitempty"`
 	AString string                    `json:"b,omitempty"`
