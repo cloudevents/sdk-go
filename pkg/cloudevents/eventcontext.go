@@ -35,5 +35,7 @@ type EventContext interface {
 	// does not match the 'obj' type, or if the 'obj' type is not a supported.
 	ExtensionAs(name string, obj interface{}) error
 
+	// Validate the event based on the specifics of the CloudEvents spec version
+	// represented by this event context.
 	Validate() error
 }

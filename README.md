@@ -1,6 +1,7 @@
 # Go SDK for [CloudEvents](https://github.com/cloudevents/spec)
 
 [![go-doc](https://godoc.org/github.com/cloudevents/sdk-go?status.svg)](https://godoc.org/github.com/cloudevents/sdk-go)
+[![Go Report Card](https://goreportcard.com/badge/github.com/cloudevents/sdk-go)](https://goreportcard.com/report/github.com/cloudevents/sdk-go)
 [![CircleCI](https://circleci.com/gh/cloudevents/sdk-go.svg?style=svg)](https://circleci.com/gh/cloudevents/sdk-go)
 
 **NOTE: This SDK is still considered work in progress, things might (and will)

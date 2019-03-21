@@ -35,8 +35,10 @@ type EventContextV02 struct {
 	Extensions map[string]interface{} `json:"-,omitempty"` // TODO: decide how we want extensions to be inserted
 }
 
+// Adhere to EventContext
 var _ EventContext = (*EventContextV02)(nil)
 
+// GetSpecVersion implements EventContext.GetSpecVersion
 func (ec EventContextV02) GetSpecVersion() string {
 	if ec.SpecVersion != "" {
 		return ec.SpecVersion
@@ -44,6 +46,7 @@ func (ec EventContextV02) GetSpecVersion() string {
 	return CloudEventsVersionV02
 }
 
+// GetDataContentType implements EventContext.GetDataContentType
 func (ec EventContextV02) GetDataContentType() string {
 	if ec.ContentType != nil {
 		return *ec.ContentType
@@ -51,6 +54,7 @@ func (ec EventContextV02) GetDataContentType() string {
 	return ""
 }
 
+// GetDataMediaType implements EventContext.GetDataMediaType
 func (ec EventContextV02) GetDataMediaType() string {
 	if ec.ContentType != nil {
 		mediaType, _, err := mime.ParseMediaType(*ec.ContentType)
@@ -63,10 +67,12 @@ func (ec EventContextV02) GetDataMediaType() string {
 	return ""
 }
 
+// GetType implements EventContext.GetType
 func (ec EventContextV02) GetType() string {
 	return ec.Type
 }
 
+// ExtensionAs implements EventContext.ExtensionAs
 func (ec EventContextV02) ExtensionAs(name string, obj interface{}) error {
 	value, ok := ec.Extensions[name]
 	if !ok {
@@ -94,6 +100,7 @@ func (ec *EventContextV02) SetExtension(name string, value interface{}) {
 	ec.Extensions[name] = value
 }
 
+// AsV01 implements EventContext.AsV01
 func (ec EventContextV02) AsV01() EventContextV01 {
 	ret := EventContextV01{
 		CloudEventsVersion: CloudEventsVersionV01,
@@ -123,11 +130,13 @@ func (ec EventContextV02) AsV01() EventContextV01 {
 	return ret
 }
 
+// AsV02 implements EventContext.AsV02
 func (ec EventContextV02) AsV02() EventContextV02 {
 	ec.SpecVersion = CloudEventsVersionV02
 	return ec
 }
 
+// AsV03 implements EventContext.AsV03
 func (ec EventContextV02) AsV03() EventContextV03 {
 	ret := EventContextV03{
 		SpecVersion:     CloudEventsVersionV03,
