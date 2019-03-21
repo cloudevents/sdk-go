@@ -31,6 +31,11 @@ func (e Event) Type() string {
 	return e.Context.GetType()
 }
 
+// ExtensionAs returns Context.ExtensionAs(name, obj)
+func (e Event) ExtensionAs(name string, obj interface{}) error {
+	return e.Context.ExtensionAs(name, obj)
+}
+
 // DataContentType returns Context.getDataContentType()
 func (e Event) DataContentType() string {
 	return e.Context.GetDataContentType()
