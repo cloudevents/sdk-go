@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
@@ -166,7 +167,7 @@ func (t *Transport) obsSend(ctx context.Context, event cloudevents.Event) (*clou
 		req.Body = ioutil.NopCloser(bytes.NewBuffer(m.Body))
 		req.ContentLength = int64(len(m.Body))
 		req.Close = true
-		return httpDo(ctx, &req, func(resp *http.Response, err error) (*cloudevents.Event, error) {
+		return httpDo(ctx, t.Client, &req, func(resp *http.Response, err error) (*cloudevents.Event, error) {
 			if err != nil {
 				return nil, err
 			}
@@ -263,12 +264,12 @@ type eventError struct {
 	err   error
 }
 
-func httpDo(ctx context.Context, req *http.Request, fn func(*http.Response, error) (*cloudevents.Event, error)) (*cloudevents.Event, error) {
+func httpDo(ctx context.Context, client *http.Client, req *http.Request, fn func(*http.Response, error) (*cloudevents.Event, error)) (*cloudevents.Event, error) {
 	// Run the HTTP request in a goroutine and pass the response to fn.
 	c := make(chan eventError, 1)
 	req = req.WithContext(ctx)
 	go func() {
-		event, err := fn(http.DefaultClient.Do(req))
+		event, err := fn(client.Do(req))
 		c <- eventError{event: event, err: err}
 	}()
 	select {
