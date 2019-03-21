@@ -2,6 +2,7 @@ package cloudevents_test
 
 import (
 	"encoding/json"
+	"fmt"
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"github.com/google/go-cmp/cmp"
@@ -235,58 +236,163 @@ func TestString(t *testing.T) {
 			event: ce.Event{
 				Context: ce.EventContextV01{},
 			},
-			want: "SpecVersion: 0.1",
+			want: `Validation: invalid
+Validation Error: 
+eventType: MUST be a non-empty string
+cloudEventsVersion: MUST be a non-empty string
+source: REQUIRED
+eventID: MUST be a non-empty string
+Context Attributes,
+  cloudEventsVersion: 
+  eventType: 
+  source: 
+  eventID: 
+`,
 		},
 		"empty v0.2": {
 			event: ce.Event{
 				Context: ce.EventContextV02{},
 			},
-			want: "SpecVersion: 0.2",
+			want: `Validation: invalid
+Validation Error: 
+type: MUST be a non-empty string
+specversion: MUST be a non-empty string
+source: REQUIRED
+id: MUST be a non-empty string
+Context Attributes,
+  specversion: 
+  type: 
+  source: 
+  id: 
+`,
 		},
 		"empty v0.3": {
 			event: ce.Event{
 				Context: ce.EventContextV03{},
 			},
-			want: "SpecVersion: 0.3",
+			want: `Validation: invalid
+Validation Error: 
+type: MUST be a non-empty string
+specversion: MUST be a non-empty string
+source: REQUIRED
+id: MUST be a non-empty string
+Context Attributes,
+  specversion: 
+  type: 
+  source: 
+  id: 
+`,
 		},
 		"min v0.1": {
 			event: ce.Event{
 				Context: MinEventContextV01(),
 			},
-			want: "SpecVersion: 0.1\nType: com.example.simple",
+			want: `Validation: valid
+Context Attributes,
+  cloudEventsVersion: 0.1
+  eventType: com.example.simple
+  source: http://example.com/source
+  eventID: ABC-123
+`,
 		},
 		"min v0.2": {
 			event: ce.Event{
 				Context: MinEventContextV02(),
 			},
-			want: "SpecVersion: 0.2\nType: com.example.simple",
+			want: `Validation: valid
+Context Attributes,
+  specversion: 0.2
+  type: com.example.simple
+  source: http://example.com/source
+  id: ABC-123
+`,
 		},
 		"min v0.3": {
 			event: ce.Event{
 				Context: MinEventContextV03(),
 			},
-			want: "SpecVersion: 0.3\nType: com.example.simple",
+			want: `Validation: valid
+Context Attributes,
+  specversion: 0.3
+  type: com.example.simple
+  source: http://example.com/source
+  id: ABC-123
+`,
 		},
 		"json simple, v0.1": {
 			event: ce.Event{
 				Context: FullEventContextV01(now),
 				Data:    []byte(`{"a":"apple","b":"banana"}`),
 			},
-			want: "SpecVersion: 0.1\nType: com.example.simple\nDataContentType: application/json",
+			want: fmt.Sprintf(`Validation: valid
+Context Attributes,
+  cloudEventsVersion: 0.1
+  eventType: com.example.simple
+  eventTypeVersion: v1alpha1
+  source: http://example.com/source
+  eventID: ABC-123
+  eventTime: %s
+  schemaURL: http://example.com/schema
+  contentType: application/json
+Extensions,
+  another-test: 1
+  test: extended
+Data,
+  {
+    "a": "apple",
+    "b": "banana"
+  }
+`, now.String()),
 		},
 		"json simple, v0.2": {
 			event: ce.Event{
 				Context: FullEventContextV02(now),
 				Data:    []byte(`{"a":"apple","b":"banana"}`),
 			},
-			want: "SpecVersion: 0.2\nType: com.example.simple\nDataContentType: application/json",
+			want: fmt.Sprintf(`Validation: valid
+Context Attributes,
+  specversion: 0.2
+  type: com.example.simple
+  source: http://example.com/source
+  id: ABC-123
+  time: %s
+  schemaurl: http://example.com/schema
+  contenttype: application/json
+Extensions,
+  another-test: 1
+  eventTypeVersion: v1alpha1
+  test: extended
+Data,
+  {
+    "a": "apple",
+    "b": "banana"
+  }
+`, now.String()),
 		},
 		"json simple, v0.3": {
 			event: ce.Event{
 				Context: FullEventContextV03(now),
 				Data:    []byte(`{"a":"apple","b":"banana"}`),
 			},
-			want: "SpecVersion: 0.3\nType: com.example.simple\nDataContentType: application/json",
+			want: fmt.Sprintf(`Validation: valid
+Context Attributes,
+  specversion: 0.3
+  type: com.example.simple
+  source: http://example.com/source
+  id: ABC-123
+  time: %s
+  schemaurl: http://example.com/schema
+  datacontenttype: application/json
+Extensions,
+  another-test: 1
+  eventTypeVersion: v1alpha1
+  test: extended
+Data,
+  {
+    "a": "apple",
+    "b": "banana"
+  }
+`, now.String()),
 		},
 	}
 	for n, tc := range testCases {
@@ -295,7 +401,111 @@ func TestString(t *testing.T) {
 			got := tc.event.String()
 
 			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Log(got)
 				t.Errorf("unexpected string (-want, +got) = %v", diff)
+			}
+		})
+	}
+}
+
+func TestExtensionAs(t *testing.T) {
+	now := types.Timestamp{Time: time.Now()}
+
+	testCases := map[string]struct {
+		event        ce.Event
+		extension    string
+		want         string
+		wantError    bool
+		wantErrorMsg string
+	}{
+		"min v01, no extension": {
+			event: ce.Event{
+				Context: MinEventContextV01(),
+			},
+			extension:    "test",
+			wantError:    true,
+			wantErrorMsg: `extension "test" does not exist`,
+		},
+		"full v01, test extension": {
+			event: ce.Event{
+				Context: FullEventContextV01(now),
+			},
+			extension: "test",
+			want:      "extended",
+		},
+		"full v01, another-test extension invalid type": {
+			event: ce.Event{
+				Context: FullEventContextV01(now),
+			},
+			extension:    "another-test",
+			wantError:    true,
+			wantErrorMsg: `invalid type for extension "another-test"`,
+		},
+		"min v02, no extension": {
+			event: ce.Event{
+				Context: MinEventContextV02(),
+			},
+			extension:    "test",
+			wantError:    true,
+			wantErrorMsg: `extension "test" does not exist`,
+		},
+		"full v02, test extension": {
+			event: ce.Event{
+				Context: FullEventContextV02(now),
+			},
+			extension: "test",
+			want:      "extended",
+		},
+		"full v02, another-test extension invalid type": {
+			event: ce.Event{
+				Context: FullEventContextV02(now),
+			},
+			extension:    "another-test",
+			wantError:    true,
+			wantErrorMsg: `invalid type for extension "another-test"`,
+		},
+		"min v03, no extension": {
+			event: ce.Event{
+				Context: MinEventContextV03(),
+			},
+			extension:    "test",
+			wantError:    true,
+			wantErrorMsg: `extension "test" does not exist`,
+		},
+		"full v03, test extension": {
+			event: ce.Event{
+				Context: FullEventContextV03(now),
+			},
+			extension: "test",
+			want:      "extended",
+		},
+		"full v03, another-test extension invalid type": {
+			event: ce.Event{
+				Context: FullEventContextV03(now),
+			},
+			extension:    "another-test",
+			wantError:    true,
+			wantErrorMsg: `invalid type for extension "another-test"`,
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+
+			var got string
+			err := tc.event.Context.ExtensionAs(tc.extension, &got)
+
+			if tc.wantError {
+				if err == nil {
+					t.Errorf("expected error %q, got nil", tc.wantErrorMsg)
+				} else {
+					if diff := cmp.Diff(tc.wantErrorMsg, err.Error()); diff != "" {
+						t.Errorf("unexpected (-want, +got) = %v", diff)
+					}
+				}
+			} else {
+				if diff := cmp.Diff(tc.want, got); diff != "" {
+					t.Errorf("unexpected (-want, +got) = %v", diff)
+				}
 			}
 		})
 	}
@@ -353,9 +563,10 @@ func FullEventContextV01(now types.Timestamp) ce.EventContextV01 {
 		SchemaURL:        schema,
 		ContentType:      ce.StringOfApplicationJSON(),
 		Source:           *source,
-	}.AsV01()
-	eventContextV01.Extension("test", "extended")
-	return eventContextV01
+	}
+	eventContextV01.SetExtension("test", "extended")
+	eventContextV01.SetExtension("another-test", 1)
+	return eventContextV01.AsV01()
 }
 
 func FullEventContextV02(now types.Timestamp) ce.EventContextV02 {
@@ -367,6 +578,7 @@ func FullEventContextV02(now types.Timestamp) ce.EventContextV02 {
 
 	extensions := make(map[string]interface{})
 	extensions["test"] = "extended"
+	extensions["another-test"] = 1
 
 	eventContextV02 := ce.EventContextV02{
 		ID:          "ABC-123",
@@ -376,9 +588,9 @@ func FullEventContextV02(now types.Timestamp) ce.EventContextV02 {
 		ContentType: ce.StringOfApplicationJSON(),
 		Source:      *source,
 		Extensions:  extensions,
-	}.AsV02()
-	eventContextV02.Extension("eventTypeVersion", "v1alpha1")
-	return eventContextV02
+	}
+	eventContextV02.SetExtension("eventTypeVersion", "v1alpha1")
+	return eventContextV02.AsV02()
 }
 
 func FullEventContextV03(now types.Timestamp) ce.EventContextV03 {
@@ -395,8 +607,9 @@ func FullEventContextV03(now types.Timestamp) ce.EventContextV03 {
 		SchemaURL:       schema,
 		DataContentType: ce.StringOfApplicationJSON(),
 		Source:          *source,
-	}.AsV03()
-	eventContextV03.Extension("test", "extended")
-	eventContextV03.Extension("evenTypeVersion", "v1alpha1")
-	return eventContextV03
+	}
+	eventContextV03.SetExtension("test", "extended")
+	eventContextV03.SetExtension("another-test", 1)
+	eventContextV03.SetExtension("eventTypeVersion", "v1alpha1")
+	return eventContextV03.AsV03()
 }

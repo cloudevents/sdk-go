@@ -30,11 +30,10 @@ type EventContext interface {
 	// GetType returns the CloudEvents type from the context.
 	GetType() string
 
-	// GetExtension returns a string CloudEvents extension from the context.
-	GetExtensionAsString(string) string
-
-	// Extension sets a CloudEvents extension to the context.
-	Extension(string, interface{})
+	// ExtensionAs populates 'obj' with the CloudEvents extension 'name' from the context.
+	// It returns an error if the extension 'name' does not exist, the extension's type
+	// does not match the 'obj' type, or if the 'obj' type is not a supported.
+	ExtensionAs(name string, obj interface{}) error
 
 	Validate() error
 }

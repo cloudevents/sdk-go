@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	count = 100
+	count = 1000
 )
 
 type envConfig struct {
@@ -59,6 +59,7 @@ func _main(args []string, env envConfig) int {
 				log.Printf("failed to create transport, %v", err)
 				return 1
 			}
+
 			c, err := client.New(t,
 				client.WithTimeNow(),
 			)
