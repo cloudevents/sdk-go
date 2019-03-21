@@ -84,12 +84,13 @@ func _main(args []string, env envConfig) int {
 					},
 				}
 
-				if event, err := c.Send(context.Background(), event); err != nil {
+				if resp, err := c.Send(context.Background(), event); err != nil {
 					log.Printf("failed to send: %v", err)
-				} else if event != nil {
-					fmt.Printf("Got Event Response Context: %+v\n", event.Context)
+				} else if resp != nil {
+					fmt.Printf("Response:\n%s\n", resp)
+					fmt.Printf("Got Event Response Context: %+v\n", resp.Context)
 					data := &Example{}
-					if err := event.DataAs(data); err != nil {
+					if err := resp.DataAs(data); err != nil {
 						fmt.Printf("Got Data Error: %s\n", err.Error())
 					}
 					fmt.Printf("Got Response Data: %+v\n", data)

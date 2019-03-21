@@ -9,7 +9,7 @@ import (
 	"log"
 )
 
-// type check that this transport message impl matches the contract
+// Transport adheres to transport.Transport.
 var _ transport.Transport = (*Transport)(nil)
 
 // Transport acts as both a http client and a http handler.
@@ -25,6 +25,7 @@ type Transport struct {
 	codec transport.Codec
 }
 
+// New creates a new NATS transport.
 func New(natsServer, subject string, opts ...Option) (*Transport, error) {
 	conn, err := nats.Connect(natsServer)
 	if err != nil {
@@ -66,6 +67,7 @@ func (t *Transport) loadCodec() bool {
 	return true
 }
 
+// Send implements Transport.Send
 func (t *Transport) Send(ctx context.Context, event cloudevents.Event) (*cloudevents.Event, error) {
 	if ok := t.loadCodec(); !ok {
 		return nil, fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
@@ -83,11 +85,13 @@ func (t *Transport) Send(ctx context.Context, event cloudevents.Event) (*cloudev
 	return nil, fmt.Errorf("failed to encode Event into a Message")
 }
 
+// SetReceiver implements Transport.SetReceiver
 func (t *Transport) SetReceiver(r transport.Receiver) {
 	t.Receiver = r
 }
 
-// Blocking
+// StartReceiver implements Transport.StartReceiver
+// NOTE: This is a blocking call.
 func (t *Transport) StartReceiver(ctx context.Context) error {
 	if t.Conn == nil {
 		return fmt.Errorf("no active nats connection")

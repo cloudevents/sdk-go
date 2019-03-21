@@ -37,8 +37,10 @@ type EventContextV03 struct {
 	Extensions map[string]interface{} `json:"-,omitempty"` // TODO: decide how we want extensions to be inserted
 }
 
+// Adhere to EventContext
 var _ EventContext = (*EventContextV03)(nil)
 
+// GetSpecVersion implements EventContext.GetSpecVersion
 func (ec EventContextV03) GetSpecVersion() string {
 	if ec.SpecVersion != "" {
 		return ec.SpecVersion
@@ -46,6 +48,7 @@ func (ec EventContextV03) GetSpecVersion() string {
 	return CloudEventsVersionV03
 }
 
+// GetDataContentType implements EventContext.GetDataContentType
 func (ec EventContextV03) GetDataContentType() string {
 	if ec.DataContentType != nil {
 		return *ec.DataContentType
@@ -53,6 +56,7 @@ func (ec EventContextV03) GetDataContentType() string {
 	return ""
 }
 
+// GetDataMediaType implements EventContext.GetDataMediaType
 func (ec EventContextV03) GetDataMediaType() string {
 	if ec.DataContentType != nil {
 		mediaType, _, err := mime.ParseMediaType(*ec.DataContentType)
@@ -64,10 +68,13 @@ func (ec EventContextV03) GetDataMediaType() string {
 	}
 	return ""
 }
+
+// GetType implements EventContext.GetType
 func (ec EventContextV03) GetType() string {
 	return ec.Type
 }
 
+// ExtensionAs implements EventContext.ExtensionAs
 func (ec EventContextV03) ExtensionAs(name string, obj interface{}) error {
 	value, ok := ec.Extensions[name]
 	if !ok {
@@ -87,6 +94,7 @@ func (ec EventContextV03) ExtensionAs(name string, obj interface{}) error {
 	}
 }
 
+// SetExtension adds the extension 'name' with value 'value' to the CloudEvents context.
 func (ec *EventContextV03) SetExtension(name string, value interface{}) {
 	if ec.Extensions == nil {
 		ec.Extensions = make(map[string]interface{})
@@ -94,11 +102,13 @@ func (ec *EventContextV03) SetExtension(name string, value interface{}) {
 	ec.Extensions[name] = value
 }
 
+// AsV01 implements EventContext.AsV01
 func (ec EventContextV03) AsV01() EventContextV01 {
 	ecv2 := ec.AsV02()
 	return ecv2.AsV01()
 }
 
+// AsV02 implements EventContext.AsV02
 func (ec EventContextV03) AsV02() EventContextV02 {
 	ret := EventContextV02{
 		SpecVersion: CloudEventsVersionV02,
@@ -113,6 +123,7 @@ func (ec EventContextV03) AsV02() EventContextV02 {
 	return ret
 }
 
+// AsV03 implements EventContext.AsV03
 func (ec EventContextV03) AsV03() EventContextV03 {
 	ec.SpecVersion = CloudEventsVersionV03
 	return ec
