@@ -1,5 +1,6 @@
 package cloudevents
 
+// EventContext is conical interface for a CloudEvents Context.
 type EventContext interface {
 	// AsV01 provides a translation from whatever the "native" encoding of the
 	// CloudEvent was to the equivalent in v0.1 field names, moving fields to or

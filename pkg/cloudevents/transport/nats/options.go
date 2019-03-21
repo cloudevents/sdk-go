@@ -1,5 +1,6 @@
 package nats
 
+// Option is the function signature required to be considered an nats.Option.
 type Option func(*Transport) error
 
 // WithEncoding sets the encoding for NATS transport.

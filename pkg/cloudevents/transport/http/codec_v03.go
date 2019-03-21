@@ -15,12 +15,15 @@ import (
 	"strings"
 )
 
+// CodecV03 represents a http transport codec that uses CloudEvents spec v0.3
 type CodecV03 struct {
 	Encoding Encoding
 }
 
+// Adheres to Codec
 var _ transport.Codec = (*CodecV03)(nil)
 
+// Encode implements Codec.Encode
 func (v CodecV03) Encode(e cloudevents.Event) (transport.Message, error) {
 	// TODO: wire context
 	_, r := observability.NewReporter(context.Background(), CodecObserved{o: reportEncode, c: v.Encoding.Codec()})
@@ -48,6 +51,7 @@ func (v CodecV03) obsEncode(e cloudevents.Event) (transport.Message, error) {
 	}
 }
 
+// Decode implements Codec.Decode
 func (v CodecV03) Decode(msg transport.Message) (*cloudevents.Event, error) {
 	// TODO: wire context
 	_, r := observability.NewReporter(context.Background(), CodecObserved{o: reportDecode, c: v.inspectEncoding(msg).Codec()}) // TODO: inspectEncoding is not free.

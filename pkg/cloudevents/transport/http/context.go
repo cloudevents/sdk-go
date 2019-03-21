@@ -19,6 +19,7 @@ type TransportContext struct {
 	IgnoreHeaderPrefixes []string
 }
 
+// NewTransportContext creates a new TransportContext from a http.Request.
 func NewTransportContext(req *http.Request) TransportContext {
 	var tx *TransportContext
 	if req != nil {
@@ -116,6 +117,8 @@ func WithTransportContext(ctx context.Context, tcxt TransportContext) context.Co
 	return context.WithValue(ctx, transportContextKey, tcxt)
 }
 
+// TransportContextFrom pulls a TransportContext out of a context. Always
+// returns a non-nil object.
 func TransportContextFrom(ctx context.Context) TransportContext {
 	tctx := ctx.Value(transportContextKey)
 	if tctx != nil {

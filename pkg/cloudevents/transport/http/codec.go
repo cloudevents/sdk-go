@@ -7,9 +7,14 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 )
 
+// Codec is the wrapper for all versions of codecs supported by the http
+// transport.
 type Codec struct {
+	// Encoding is the setting to inform the DefaultEncodingSelectionFn for
+	// selecting a codec.
 	Encoding Encoding
 
+	// DefaultEncodingSelectionFn allows for encoding selection strategies to be injected.
 	DefaultEncodingSelectionFn EncodingSelector
 
 	v01 *CodecV01
@@ -17,6 +22,7 @@ type Codec struct {
 	v03 *CodecV03
 }
 
+// Adheres to Codec
 var _ transport.Codec = (*Codec)(nil)
 
 // DefaultBinaryEncodingSelectionStrategy implements a selection process for
