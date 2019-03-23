@@ -38,7 +38,7 @@ func (r *TypedReceiver) Remove(eventType string) {
 }
 
 // Receive implements
-func (r TypedReceiver) Receive(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error {
+func (r *TypedReceiver) Receive(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error {
 	if fn, ok := r.trigger[event.Type()]; ok {
 		return fn.Invoke(ctx, event, resp)
 	}
