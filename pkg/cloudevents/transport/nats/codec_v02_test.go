@@ -1,13 +1,14 @@
 package nats_test
 
 import (
+	"net/url"
+	"testing"
+	"time"
+
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/nats"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"github.com/google/go-cmp/cmp"
-	"net/url"
-	"testing"
-	"time"
 )
 
 func TestCodecV02_Encode(t *testing.T) {
@@ -75,7 +76,7 @@ func TestCodecV02_Encode(t *testing.T) {
 						"id":   "ABC-123",
 						"time": now,
 						"type": "com.example.test",
-						"-": map[string]interface{}{ // TODO: this could be an issue.
+						"extensions": map[string]interface{}{
 							"test": "extended",
 						},
 						"schemaurl": "http://example.com/schema",
@@ -136,7 +137,7 @@ func TestCodecV02_Encode(t *testing.T) {
 						"id":   "ABC-123",
 						"time": now,
 						"type": "com.example.test",
-						"-": map[string]interface{}{ // TODO: this could be an issue.
+						"extensions": map[string]interface{}{
 							"test": "extended",
 						},
 						"schemaurl": "http://example.com/schema",
@@ -224,7 +225,7 @@ func TestCodecV02_Decode(t *testing.T) {
 					"id":   "ABC-123",
 					"time": now,
 					"type": "com.example.test",
-					"-": map[string]interface{}{ // TODO: revisit this
+					"extensions": map[string]interface{}{
 						"test": "extended",
 					},
 					"schemaurl": "http://example.com/schema",
