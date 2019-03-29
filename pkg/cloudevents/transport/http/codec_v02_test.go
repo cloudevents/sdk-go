@@ -353,7 +353,7 @@ func TestCodecV02_Decode(t *testing.T) {
 					"id":   "ABC-123",
 					"time": now,
 					"type": "com.example.test",
-					"-": map[string]interface{}{ // TODO: revisit this
+					"extensions": map[string]interface{}{
 						"test": "extended",
 					},
 					"schemaurl": "http://example.com/schema",

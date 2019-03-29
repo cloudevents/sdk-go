@@ -195,7 +195,7 @@ func TestCodecV03_Encode(t *testing.T) {
 						"id":   "ABC-123",
 						"time": now,
 						"type": "com.example.test",
-						"-": map[string]interface{}{ // TODO: this could be an issue.
+						"extensions": map[string]interface{}{
 							"test": "extended",
 						},
 						"schemaurl": "http://example.com/schema",
