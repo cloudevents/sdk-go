@@ -2,10 +2,11 @@ package cloudevents
 
 import (
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"log"
 	"mime"
 	"strings"
+
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 )
 
 // WIP: AS OF FEB 19, 2019
@@ -34,7 +35,7 @@ type EventContextV03 struct {
 	// TODO: Should an empty string assume `application/json`, `application/octet-stream`, or auto-detect the content?
 	DataContentType *string `json:"datacontenttype,omitempty"`
 	// Extensions - Additional extension metadata beyond the base spec.
-	Extensions map[string]interface{} `json:"-,omitempty"` // TODO: decide how we want extensions to be inserted
+	Extensions map[string]interface{} `json:"extensions,omitempty"` // TODO: decide how we want extensions to be inserted
 }
 
 // Adhere to EventContext
