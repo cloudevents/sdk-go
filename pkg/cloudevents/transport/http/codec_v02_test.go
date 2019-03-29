@@ -1,13 +1,14 @@
 package http_test
 
 import (
+	"net/url"
+	"testing"
+	"time"
+
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"github.com/google/go-cmp/cmp"
-	"net/url"
-	"testing"
-	"time"
 )
 
 func TestCodecV02_Encode(t *testing.T) {
@@ -194,7 +195,7 @@ func TestCodecV02_Encode(t *testing.T) {
 						"id":   "ABC-123",
 						"time": now,
 						"type": "com.example.test",
-						"-": map[string]interface{}{ // TODO: this could be an issue.
+						"extensions": map[string]interface{}{
 							"test": "extended",
 						},
 						"schemaurl": "http://example.com/schema",
