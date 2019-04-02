@@ -3,15 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
-	cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"log"
+
+	"github.com/cloudevents/sdk-go"
 )
 
-var source = types.ParseURLRef("https://github.com/cloudevents/sdk-go/cmd/samples/sender")
+var source = cloudevents.ParseURLRef("https://github.com/cloudevents/sdk-go/cmd/samples/sender")
 
 // Basic data struct.
 type Example struct {
@@ -20,11 +17,11 @@ type Example struct {
 }
 
 func main() {
-	ctx := cecontext.WithTarget(context.Background(), "http://localhost:8080/")
+	ctx := cloudevents.ContextWithTarget(context.Background(), "http://localhost:8080/")
 
-	ctx = cehttp.ContextWithHeader(ctx, "demo", "header value")
+	ctx = cloudevents.ContextWithHeader(ctx, "demo", "header value")
 
-	c, err := client.NewDefault()
+	c, err := cloudevents.NewDefaultClient()
 	if err != nil {
 		log.Fatalf("failed to create client, %v", err)
 	}
