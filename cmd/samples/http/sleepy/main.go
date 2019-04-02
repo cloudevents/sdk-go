@@ -7,9 +7,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	cloudeventshttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+	"github.com/cloudevents/sdk-go"
 	"github.com/kelseyhightower/envconfig"
 )
 
@@ -45,15 +43,15 @@ func gotEvent(event cloudevents.Event) error {
 }
 
 func _main(args []string, env envConfig) int {
-	t, err := cloudeventshttp.New(
-		cloudeventshttp.WithPort(env.Port),
-		cloudeventshttp.WithPath(env.Path),
+	t, err := cloudevents.NewHTTPTransport(
+		cloudevents.WithPort(env.Port),
+		cloudevents.WithPath(env.Path),
 	)
 	if err != nil {
 		log.Printf("failed to create transport, %v", err)
 		return 1
 	}
-	c, err := client.New(t)
+	c, err := cloudevents.NewClient(t)
 	if err != nil {
 		log.Printf("failed to create client, %v", err)
 		return 1

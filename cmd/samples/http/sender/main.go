@@ -8,10 +8,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	cloudeventshttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/cloudevents/sdk-go"
 	"github.com/google/uuid"
 	"github.com/kelseyhightower/envconfig"
 )
@@ -49,19 +46,19 @@ func _main(args []string, env envConfig) int {
 
 	seq := 0
 	for _, contentType := range []string{"application/json", "application/xml"} {
-		for _, encoding := range []cloudeventshttp.Encoding{cloudeventshttp.BinaryV01, cloudeventshttp.StructuredV01, cloudeventshttp.BinaryV02, cloudeventshttp.StructuredV02} {
+		for _, encoding := range []cloudevents.HTTPEncoding{cloudevents.HTTPBinaryV01, cloudevents.HTTPStructuredV01, cloudevents.HTTPBinaryV02, cloudevents.HTTPStructuredV02} {
 
-			t, err := cloudeventshttp.New(
-				cloudeventshttp.WithTarget(env.Target),
-				cloudeventshttp.WithEncoding(encoding),
+			t, err := cloudevents.NewHTTPTransport(
+				cloudevents.WithTarget(env.Target),
+				cloudevents.WithEncoding(encoding),
 			)
 			if err != nil {
 				log.Printf("failed to create transport, %v", err)
 				return 1
 			}
 
-			c, err := client.New(t,
-				client.WithTimeNow(),
+			c, err := cloudevents.NewClient(t,
+				cloudevents.WithTimeNow(),
 			)
 			if err != nil {
 				log.Printf("failed to create client, %v", err)
@@ -75,7 +72,7 @@ func _main(args []string, env envConfig) int {
 					Context: cloudevents.EventContextV01{
 						EventID:     uuid.New().String(),
 						EventType:   "com.cloudevents.sample.sent",
-						Source:      types.URLRef{URL: *source},
+						Source:      cloudevents.URLRef{URL: *source},
 						ContentType: &contentType,
 					}.AsV01(),
 					Data: &Example{
