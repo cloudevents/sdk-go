@@ -25,7 +25,7 @@ type EventResponse = cloudevents.EventResponse
 type EventContext = cloudevents.EventContext
 type EventContextV01 = cloudevents.EventContextV01
 type EventContextV02 = cloudevents.EventContextV02
-type EventContextV3 = cloudevents.EventContextV03
+type EventContextV03 = cloudevents.EventContextV03
 
 // Custom Types
 
@@ -40,6 +40,13 @@ type HTTPTransportResponseContext = http.TransportResponseContext
 type HTTPEncoding = http.Encoding
 
 var (
+	// ContentType Helpers
+
+	StringOfApplicationJSON                 = cloudevents.StringOfApplicationJSON
+	StringOfApplicationXML                  = cloudevents.StringOfApplicationXML
+	StringOfApplicationCloudEventsJSON      = cloudevents.StringOfApplicationCloudEventsJSON
+	StringOfApplicationCloudEventsBatchJSON = cloudevents.StringOfApplicationCloudEventsBatchJSON
+
 	// Client Creation
 
 	NewClient        = client.New

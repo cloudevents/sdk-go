@@ -131,6 +131,35 @@ func WithBinaryEncoding() Option {
 	}
 }
 
+// WithQuotingHeaderMode sets the HTTP binary mode outbound value quote mode.
+func WithQuotingHeaderMode(mode Quoting) Option {
+	return func(t *Transport) error {
+		if t == nil {
+			return fmt.Errorf("http quoting header mode option can not set nil transport")
+		}
+
+		t.Quoting = mode
+		return nil
+	}
+}
+
+// WithUnquotedHeaderValues sets outbound header string quote mode to Unquoted.
+func WithUnquotedHeaderValues() Option {
+	return WithQuotingHeaderMode(Unquoted)
+}
+
+// WithUnquotedHeaderValues sets outbound header string quote mode to
+// SingleQuoted.
+func WithSingleQuoteHeaderValues() Option {
+	return WithQuotingHeaderMode(SingleQuoted)
+}
+
+// WithUnquotedHeaderValues sets outbound header string quote mode to
+// DoubleQuoted.
+func WithDoubleQuoteHeaderValues() Option {
+	return WithQuotingHeaderMode(DoubleQuoted)
+}
+
 // WithStructuredEncoding sets the encoding selection strategy for
 // default encoding selections based on Event, the encoded event will be the
 // given version in Structured form.
