@@ -24,6 +24,17 @@ const (
 	Unknown
 )
 
+type Quoting int32
+
+const (
+	// Unquoted does not use a wrapping for string header values
+	Unquoted Quoting = iota
+	// SingleQuoted uses ' for wrapping string header values
+	SingleQuoted
+	// DoubleQuoted uses " for wrapping string header values
+	DoubleQuoted
+)
+
 // String pretty-prints the encoding as a string.
 func (e Encoding) String() string {
 	switch e {
