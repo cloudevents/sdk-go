@@ -7,4 +7,7 @@ const (
 
 	// EventTypeVersionKey is the key to EventTypeVersion for versions that do not support event type version directly.
 	EventTypeVersionKey = "eventTypeVersion"
+
+	// SubjectKey is the key to Subject for versions that do not support subject directly.
+	SubjectKey = "subject"
 )

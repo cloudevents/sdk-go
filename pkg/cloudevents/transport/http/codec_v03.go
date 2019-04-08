@@ -108,6 +108,9 @@ func (v CodecV03) toHeaders(ec cloudevents.EventContextV03) (http.Header, error)
 	h.Set("ce-specversion", ec.SpecVersion)
 	h.Set("ce-type", ec.Type)
 	h.Set("ce-source", ec.Source.String())
+	if ec.Subject != nil {
+		h.Set("ce-subject", *ec.Subject)
+	}
 	h.Set("ce-id", ec.ID)
 	if ec.Time != nil && !ec.Time.IsZero() {
 		h.Set("ce-time", ec.Time.String())
@@ -115,7 +118,6 @@ func (v CodecV03) toHeaders(ec cloudevents.EventContextV03) (http.Header, error)
 	if ec.SchemaURL != nil {
 		h.Set("ce-schemaurl", ec.SchemaURL.String())
 	}
-
 	if ec.DataContentType != nil {
 		h.Set("Content-Type", *ec.DataContentType)
 	} else if v.Encoding == Default || v.Encoding == BinaryV03 {
@@ -124,7 +126,6 @@ func (v CodecV03) toHeaders(ec cloudevents.EventContextV03) (http.Header, error)
 		// TODO: not sure what the default should be?
 		h.Set("Content-Type", cloudevents.ApplicationJSON)
 	}
-
 	if ec.DataContentEncoding != nil {
 		h.Set("ce-datacontentencoding", *ec.DataContentEncoding)
 	}
@@ -224,6 +225,12 @@ func (v CodecV03) fromHeaders(h http.Header) (cloudevents.EventContextV03, error
 		ec.Source = *source
 	}
 	h.Del("ce-source")
+
+	subject := h.Get("ce-subject")
+	if subject != "" {
+		ec.Subject = &subject
+	}
+	h.Del("ce-subject")
 
 	ec.Time = types.ParseTimestamp(h.Get("ce-time"))
 	h.Del("ce-time")

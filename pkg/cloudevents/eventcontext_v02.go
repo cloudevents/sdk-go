@@ -86,6 +86,15 @@ func (ec EventContextV02) GetSource() string {
 	return ec.Source.String()
 }
 
+// GetSubject implements EventContext.GetSubject
+func (ec EventContextV02) GetSubject() string {
+	var sub string
+	if err := ec.ExtensionAs(SubjectKey, &sub); err != nil {
+		return ""
+	}
+	return sub
+}
+
 // GetSchemaURL implements EventContext.GetSchemaURL
 func (ec EventContextV02) GetSchemaURL() string {
 	if ec.SchemaURL != nil {
@@ -172,6 +181,14 @@ func (ec EventContextV02) AsV03() EventContextV03 {
 	}
 
 	for k, v := range ec.Extensions {
+		// Subject was introduced in 0.3
+		if strings.EqualFold(k, SubjectKey) {
+			sub, ok := v.(string)
+			if ok && sub != "" {
+				ret.Subject = &sub
+			}
+			continue
+		}
 		// DataContentEncoding was introduced in 0.3
 		if strings.EqualFold(k, DataContentEncodingKey) {
 			etv, ok := v.(string)

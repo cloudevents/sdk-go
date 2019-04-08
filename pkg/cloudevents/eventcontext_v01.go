@@ -80,6 +80,15 @@ func (ec EventContextV01) GetSource() string {
 	return ec.Source.String()
 }
 
+// GetSubject implements EventContext.GetSubject
+func (ec EventContextV01) GetSubject() string {
+	var sub string
+	if err := ec.ExtensionAs(SubjectKey, &sub); err != nil {
+		return ""
+	}
+	return sub
+}
+
 // GetSchemaURL implements EventContext.GetSchemaURL
 func (ec EventContextV01) GetSchemaURL() string {
 	if ec.SchemaURL != nil {

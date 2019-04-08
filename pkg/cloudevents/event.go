@@ -134,6 +134,9 @@ func (e Event) String() string {
 			b.WriteString("  specversion: " + ec.SpecVersion + "\n")
 			b.WriteString("  type: " + ec.Type + "\n")
 			b.WriteString("  source: " + ec.Source.String() + "\n")
+			if ec.Subject != nil {
+				b.WriteString("  subject: " + *ec.Subject + "\n")
+			}
 			b.WriteString("  id: " + ec.ID + "\n")
 			if ec.Time != nil {
 				b.WriteString("  time: " + ec.Time.String() + "\n")

@@ -11,13 +11,14 @@ func TestClientLoopback_binary_v03tov01(t *testing.T) {
 	now := time.Now()
 
 	testCases := TapTestCases{
-		"Loopback v0.2 -> v0.1": {
+		"Loopback v0.3 -> v0.1": {
 			now: now,
 			event: &cloudevents.Event{
-				Context: cloudevents.EventContextV02{
-					ID:     "ABC-123",
-					Type:   "unit.test.client.sent",
-					Source: *cloudevents.ParseURLRef("/unit/test/client"),
+				Context: cloudevents.EventContextV03{
+					ID:      "ABC-123",
+					Type:    "unit.test.client.sent",
+					Source:  *cloudevents.ParseURLRef("/unit/test/client"),
+					Subject: strptr("resource"),
 				}.AsV03(),
 				Data: map[string]string{"hello": "unittest"},
 			},
@@ -48,6 +49,7 @@ func TestClientLoopback_binary_v03tov01(t *testing.T) {
 					"ce-time":        {now.UTC().Format(time.RFC3339Nano)},
 					"ce-type":        {"unit.test.client.sent"},
 					"ce-source":      {"/unit/test/client"},
+					"ce-subject":     {"resource"},
 					"content-type":   {"application/json"},
 				},
 				Body:          `{"hello":"unittest"}`,
@@ -80,13 +82,14 @@ func TestClientLoopback_binary_v03tov02(t *testing.T) {
 	now := time.Now()
 
 	testCases := TapTestCases{
-		"Loopback v0.2 -> v0.2": {
+		"Loopback v0.3 -> v0.2": {
 			now: now,
 			event: &cloudevents.Event{
-				Context: cloudevents.EventContextV02{
-					ID:     "ABC-123",
-					Type:   "unit.test.client.sent",
-					Source: *cloudevents.ParseURLRef("/unit/test/client"),
+				Context: cloudevents.EventContextV03{
+					ID:      "ABC-123",
+					Type:    "unit.test.client.sent",
+					Source:  *cloudevents.ParseURLRef("/unit/test/client"),
+					Subject: strptr("resource"),
 				}.AsV03(),
 				Data: map[string]string{"hello": "unittest"},
 			},
@@ -117,6 +120,7 @@ func TestClientLoopback_binary_v03tov02(t *testing.T) {
 					"ce-time":        {now.UTC().Format(time.RFC3339Nano)},
 					"ce-type":        {"unit.test.client.sent"},
 					"ce-source":      {"/unit/test/client"},
+					"ce-subject":     {"resource"},
 					"content-type":   {"application/json"},
 				},
 				Body:          `{"hello":"unittest"}`,
@@ -152,10 +156,11 @@ func TestClientLoopback_binary_v03tov03(t *testing.T) {
 		"Loopback v0.3 -> v0.3": {
 			now: now,
 			event: &cloudevents.Event{
-				Context: cloudevents.EventContextV02{
-					ID:     "ABC-123",
-					Type:   "unit.test.client.sent",
-					Source: *cloudevents.ParseURLRef("/unit/test/client"),
+				Context: cloudevents.EventContextV03{
+					ID:      "ABC-123",
+					Type:    "unit.test.client.sent",
+					Source:  *cloudevents.ParseURLRef("/unit/test/client"),
+					Subject: strptr("resource"),
 				}.AsV03(),
 				Data: map[string]string{"hello": "unittest"},
 			},
@@ -186,6 +191,7 @@ func TestClientLoopback_binary_v03tov03(t *testing.T) {
 					"ce-time":        {now.UTC().Format(time.RFC3339Nano)},
 					"ce-type":        {"unit.test.client.sent"},
 					"ce-source":      {"/unit/test/client"},
+					"ce-subject":     {"resource"},
 					"content-type":   {"application/json"},
 				},
 				Body:          `{"hello":"unittest"}`,
@@ -225,6 +231,7 @@ func TestClientLoopback_binary_base64_v03tov03(t *testing.T) {
 					ID:                  "ABC-123",
 					Type:                "unit.test.client.sent",
 					Source:              *cloudevents.ParseURLRef("/unit/test/client"),
+					Subject:             strptr("resource"),
 					DataContentEncoding: cloudevents.StringOfBase64(),
 				}.AsV03(),
 				Data: map[string]string{"hello": "unittest"},
@@ -258,6 +265,7 @@ func TestClientLoopback_binary_base64_v03tov03(t *testing.T) {
 					"ce-time":                {now.UTC().Format(time.RFC3339Nano)},
 					"ce-type":                {"unit.test.client.sent"},
 					"ce-source":              {"/unit/test/client"},
+					"ce-subject":             {"resource"},
 					"ce-datacontentencoding": {"base64"},
 					"content-type":           {"application/json"},
 				},
