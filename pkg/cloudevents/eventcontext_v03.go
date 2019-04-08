@@ -33,6 +33,8 @@ type EventContextV03 struct {
 	// GetDataMediaType - A MIME (RFC2046) string describing the media type of `data`.
 	// TODO: Should an empty string assume `application/json`, `application/octet-stream`, or auto-detect the content?
 	DataContentType *string `json:"datacontenttype,omitempty"`
+	// DataContentEncoding describes the content encoding for the `data` attribute. Valid: nil, `Base64`.
+	DataContentEncoding *string `json:"datacontentencoding,omitempty"`
 	// Extensions - Additional extension metadata beyond the base spec.
 	Extensions map[string]interface{} `json:"-,omitempty"` // TODO: decide how we want extensions to be inserted
 }
@@ -87,6 +89,14 @@ func (ec EventContextV03) GetSchemaURL() string {
 	return ""
 }
 
+// GetDataContentEncoding implements EventContext.GetDataContentEncoding
+func (ec EventContextV03) GetDataContentEncoding() string {
+	if ec.DataContentEncoding != nil {
+		return *ec.DataContentEncoding
+	}
+	return ""
+}
+
 // ExtensionAs implements EventContext.ExtensionAs
 func (ec EventContextV03) ExtensionAs(name string, obj interface{}) error {
 	value, ok := ec.Extensions[name]
@@ -131,7 +141,19 @@ func (ec EventContextV03) AsV02() EventContextV02 {
 		SchemaURL:   ec.SchemaURL,
 		ContentType: ec.DataContentType,
 		Source:      ec.Source,
-		Extensions:  ec.Extensions,
+		Extensions:  make(map[string]interface{}),
+	}
+	// DataContentEncoding was introduced in 0.3, so put it in an extension.
+	if ec.DataContentEncoding != nil {
+		ret.SetExtension(DataContentEncodingKey, *ec.DataContentEncoding)
+	}
+	if ec.Extensions != nil {
+		for k, v := range ec.Extensions {
+			ret.Extensions[k] = v
+		}
+	}
+	if len(ret.Extensions) == 0 {
+		ret.Extensions = nil
 	}
 	return ret
 }
@@ -222,6 +244,22 @@ func (ec EventContextV03) Validate() error {
 			// TODO: need to test for RFC 2046
 			errors = append(errors, "datacontenttype: if present, MUST adhere to the format specified in RFC 2046")
 		}
+	}
+
+	// datacontentencoding
+	// Type: String per RFC 2045 Section 6.1
+	// Constraints:
+	//  The attribute MUST be set if the data attribute contains string-encoded binary data.
+	//    Otherwise the attribute MUST NOT be set.
+	//  If present, MUST adhere to RFC 2045 Section 6.1
+	if ec.DataContentEncoding != nil {
+		dataContentEncoding := strings.ToLower(strings.TrimSpace(*ec.DataContentEncoding))
+		if dataContentEncoding != Base64 {
+			// TODO: need to test for RFC 2046
+			errors = append(errors, "datacontentencoding: if present, MUST adhere to RFC 2045 Section 6.1")
+		}
+		// TODO: need to test that the payload is in-fact base64 encoded. This is tricky because it is only that way on
+		// the way out, and at rest the payload might be a struct that will become base64 encoded.
 	}
 
 	if len(errors) > 0 {
