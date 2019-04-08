@@ -13,7 +13,7 @@ import (
 // Client interface defines the runtime contract the CloudEvents client supports.
 type Client interface {
 	// Send will transmit the given event over the client's configured transport.
-	Send(ctx context.Context, event cloudevents.Event) (*cloudevents.Event, error)
+	Send(ctx context.Context, event ...cloudevents.Event) (*cloudevents.Event, error)
 
 	// StartReceiver will register the provided function for callback on receipt
 	// of a cloudevent. It will also start the underlying transport as it has
@@ -80,9 +80,9 @@ type ceClient struct {
 // Send returns a response event if there is a response or an error if there
 // was an an issue validating the outbound event or the transport returns an
 // error.
-func (c *ceClient) Send(ctx context.Context, event cloudevents.Event) (*cloudevents.Event, error) {
+func (c *ceClient) Send(ctx context.Context, event ...cloudevents.Event) (*cloudevents.Event, error) {
 	ctx, r := observability.NewReporter(ctx, reportSend)
-	resp, err := c.obsSend(ctx, event)
+	resp, err := c.obsSend(ctx, event...)
 	if err != nil {
 		r.Error()
 	} else {
@@ -91,23 +91,32 @@ func (c *ceClient) Send(ctx context.Context, event cloudevents.Event) (*cloudeve
 	return resp, err
 }
 
-func (c *ceClient) obsSend(ctx context.Context, event cloudevents.Event) (*cloudevents.Event, error) {
+func (c *ceClient) obsSend(ctx context.Context, events ...cloudevents.Event) (*cloudevents.Event, error) {
 	// Confirm we have a transport set.
 	if c.transport == nil {
 		return nil, fmt.Errorf("client not ready, transport not initialized")
 	}
-	// Apply the defaulter chain to the incoming event.
-	if len(c.eventDefaulterFns) > 0 {
-		for _, fn := range c.eventDefaulterFns {
-			event = fn(event)
+	if len(events) == 0 {
+		return nil, fmt.Errorf("send requires at least one event to send")
+	}
+
+	outbound := []cloudevents.Event(nil)
+	for _, event := range events {
+		// Apply the defaulter chain to the incoming events.
+		if len(c.eventDefaulterFns) > 0 {
+			for _, fn := range c.eventDefaulterFns {
+				event = fn(event)
+			}
 		}
+		// Validate the event conforms to the CloudEvents Spec.
+		if err := event.Validate(); err != nil {
+			return nil, err
+		}
+		outbound = append(outbound, event)
 	}
-	// Validate the event conforms to the CloudEvents Spec.
-	if err := event.Validate(); err != nil {
-		return nil, err
-	}
-	// Send the event over the transport.
-	return c.transport.Send(ctx, event)
+
+	// Send the events over the transport.
+	return c.transport.Send(ctx, outbound...)
 }
 
 // Receive is called from from the transport on event delivery.
