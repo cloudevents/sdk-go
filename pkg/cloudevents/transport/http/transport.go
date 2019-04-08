@@ -34,8 +34,6 @@ type Transport struct {
 	// The encoding used to select the codec for outbound events.
 	Encoding Encoding
 
-	Quoting Quoting
-
 	// DefaultEncodingSelectionFn allows for other encoding selection strategies to be injected.
 	DefaultEncodingSelectionFn EncodingSelector
 
