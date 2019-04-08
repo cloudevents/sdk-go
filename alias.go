@@ -46,6 +46,7 @@ var (
 	StringOfApplicationXML                  = cloudevents.StringOfApplicationXML
 	StringOfApplicationCloudEventsJSON      = cloudevents.StringOfApplicationCloudEventsJSON
 	StringOfApplicationCloudEventsBatchJSON = cloudevents.StringOfApplicationCloudEventsBatchJSON
+	StringOfBase64                          = cloudevents.StringOfBase64
 
 	// Client Creation
 

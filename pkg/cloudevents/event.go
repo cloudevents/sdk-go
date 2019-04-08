@@ -144,6 +144,9 @@ func (e Event) String() string {
 			if ec.DataContentType != nil {
 				b.WriteString("  datacontenttype: " + *ec.DataContentType + "\n")
 			}
+			if ec.DataContentEncoding != nil {
+				b.WriteString("  datacontentencoding: " + *ec.DataContentEncoding + "\n")
+			}
 			extensions = ec.Extensions
 		}
 	default:

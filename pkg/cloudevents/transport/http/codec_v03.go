@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
@@ -88,6 +89,12 @@ func (v CodecV03) encodeBinary(e cloudevents.Event) (transport.Message, error) {
 		return nil, err
 	}
 
+	if e.Context.GetDataContentEncoding() == cloudevents.Base64 {
+		buf := make([]byte, base64.StdEncoding.EncodedLen(len(body)))
+		base64.StdEncoding.Encode(buf, body)
+		body = buf
+	}
+
 	msg := &Message{
 		Header: header,
 		Body:   body,
@@ -117,6 +124,11 @@ func (v CodecV03) toHeaders(ec cloudevents.EventContextV03) (http.Header, error)
 		// TODO: not sure what the default should be?
 		h.Set("Content-Type", cloudevents.ApplicationJSON)
 	}
+
+	if ec.DataContentEncoding != nil {
+		h.Set("ce-datacontentencoding", *ec.DataContentEncoding)
+	}
+
 	for k, v := range ec.Extensions {
 		// Per spec, map-valued extensions are converted to a list of headers as:
 		// CE-attrib-key
@@ -168,7 +180,16 @@ func (v CodecV03) decodeBinary(msg transport.Message) (*cloudevents.Event, error
 	}
 	var body interface{}
 	if len(m.Body) > 0 {
-		body = m.Body
+		if ctx.DataContentEncoding != nil && *ctx.DataContentEncoding == cloudevents.Base64 {
+			buf := make([]byte, base64.StdEncoding.DecodedLen(len(m.Body)))
+			if n, err := base64.StdEncoding.Decode(buf, m.Body); err != nil {
+				return nil, fmt.Errorf("failed to decode data from base64: %s", err.Error())
+			} else {
+				body = string(buf[:n])
+			}
+		} else {
+			body = m.Body
+		}
 	}
 	return &cloudevents.Event{
 		Context: ctx,
@@ -215,6 +236,12 @@ func (v CodecV03) fromHeaders(h http.Header) (cloudevents.EventContextV03, error
 		ec.DataContentType = &contentType
 	}
 	h.Del("Content-Type")
+
+	dataContentEncoding := h.Get("ce-datacontentencoding")
+	if dataContentEncoding != "" {
+		ec.DataContentEncoding = &dataContentEncoding
+	}
+	h.Del("ce-datacontentencoding")
 
 	// At this point, we have deleted all the known headers.
 	// Everything left is assumed to be an extension.
@@ -275,7 +302,21 @@ func (v CodecV03) decodeStructured(msg transport.Message) (*cloudevents.Event, e
 	}
 	var data interface{}
 	if d, ok := raw["data"]; ok {
-		data = []byte(d)
+
+		if ec.DataContentEncoding != nil && *ec.DataContentEncoding == cloudevents.Base64 {
+			var ds string
+			if err := json.Unmarshal(d, &ds); err != nil {
+				return nil, err
+			}
+			buf := make([]byte, base64.StdEncoding.DecodedLen(len(ds)))
+			if n, err := base64.StdEncoding.Decode(buf, []byte(ds)); err != nil {
+				return nil, fmt.Errorf("failed to decode data from base64: %s", err.Error())
+			} else {
+				data = string(buf[:n])
+			}
+		} else {
+			data = []byte(d)
+		}
 	}
 
 	return &cloudevents.Event{

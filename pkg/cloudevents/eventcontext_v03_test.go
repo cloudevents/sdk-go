@@ -36,14 +36,15 @@ func TestValidateV03(t *testing.T) {
 		},
 		"full valid": {
 			ctx: ce.EventContextV03{
-				SpecVersion:     ce.CloudEventsVersionV02,
-				ID:              "ABC-123",
-				Time:            &now,
-				Type:            "com.example.simple",
-				SchemaURL:       schema,
-				DataContentType: ce.StringOfApplicationJSON(),
-				Source:          *source,
-				Extensions:      extensions,
+				SpecVersion:         ce.CloudEventsVersionV02,
+				ID:                  "ABC-123",
+				Time:                &now,
+				Type:                "com.example.simple",
+				SchemaURL:           schema,
+				DataContentType:     ce.StringOfApplicationJSON(),
+				DataContentEncoding: ce.StringOfBase64(),
+				Source:              *source,
+				Extensions:          extensions,
 			},
 		},
 		"no Type": {
@@ -98,8 +99,29 @@ func TestValidateV03(t *testing.T) {
 				Source:          *source,
 				DataContentType: strptr(""),
 			},
-			want: []string{"contenttype:"},
+			want: []string{"datacontenttype:"},
 		},
+		"non-empty dataContentEncoding": {
+			ctx: ce.EventContextV03{
+				SpecVersion:         ce.CloudEventsVersionV02,
+				ID:                  "ABC-123",
+				Type:                "com.example.simple",
+				Source:              *source,
+				DataContentEncoding: strptr(""),
+			},
+			want: []string{"datacontentencoding:"},
+		},
+		"invalid dataContentEncoding": {
+			ctx: ce.EventContextV03{
+				SpecVersion:         ce.CloudEventsVersionV02,
+				ID:                  "ABC-123",
+				Type:                "com.example.simple",
+				Source:              *source,
+				DataContentEncoding: strptr("binary"),
+			},
+			want: []string{"datacontentencoding:"},
+		},
+
 		//"empty extensions": {
 		//	ctx: ce.EventContextV03{
 		//		SpecVersion: ce.CloudEventsVersionV02,

@@ -88,6 +88,15 @@ func (ec EventContextV01) GetSchemaURL() string {
 	return ""
 }
 
+// GetDataContentEncoding implements EventContext.GetDataContentEncoding
+func (ec EventContextV01) GetDataContentEncoding() string {
+	var enc string
+	if err := ec.ExtensionAs(DataContentEncodingKey, &enc); err != nil {
+		return ""
+	}
+	return enc
+}
+
 // ExtensionAs implements EventContext.ExtensionAs
 func (ec EventContextV01) ExtensionAs(name string, obj interface{}) error {
 	value, ok := ec.Extensions[name]
@@ -137,7 +146,7 @@ func (ec EventContextV01) AsV02() EventContextV02 {
 
 	// eventTypeVersion was retired in v0.2, so put it in an extension.
 	if ec.EventTypeVersion != nil {
-		ret.Extensions["eventTypeVersion"] = *ec.EventTypeVersion
+		ret.SetExtension(EventTypeVersionKey, *ec.EventTypeVersion)
 	}
 	if ec.Extensions != nil {
 		for k, v := range ec.Extensions {

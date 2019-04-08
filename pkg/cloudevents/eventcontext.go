@@ -20,6 +20,9 @@ type EventContext interface {
 	// GetDataContentType returns content type on the context.
 	GetDataContentType() string
 
+	// GetDataContentEncoding returns content encoding on the context.
+	GetDataContentEncoding() string
+
 	// GetDataMediaType returns the MIME media type for encoded data, which is
 	// needed by both encoding and decoding.
 	GetDataMediaType() string

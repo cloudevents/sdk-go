@@ -452,6 +452,7 @@ Context Attributes,
   contentType: application/json
 Extensions,
   another-test: 1
+  datacontentencoding: base64
   test: extended
 Data,
   {
@@ -476,6 +477,7 @@ Context Attributes,
   contenttype: application/json
 Extensions,
   another-test: 1
+  datacontentencoding: base64
   eventTypeVersion: v1alpha1
   test: extended
 Data,
@@ -499,6 +501,7 @@ Context Attributes,
   time: %s
   schemaurl: http://example.com/schema
   datacontenttype: application/json
+  datacontentencoding: base64
 Extensions,
   another-test: 1
   eventTypeVersion: v1alpha1
@@ -680,6 +683,7 @@ func FullEventContextV01(now types.Timestamp) ce.EventContextV01 {
 		ContentType:      ce.StringOfApplicationJSON(),
 		Source:           *source,
 	}
+	eventContextV01.SetExtension(ce.DataContentEncodingKey, ce.Base64)
 	eventContextV01.SetExtension("test", "extended")
 	eventContextV01.SetExtension("another-test", 1)
 	return eventContextV01.AsV01()
@@ -705,7 +709,8 @@ func FullEventContextV02(now types.Timestamp) ce.EventContextV02 {
 		Source:      *source,
 		Extensions:  extensions,
 	}
-	eventContextV02.SetExtension("eventTypeVersion", "v1alpha1")
+	eventContextV02.SetExtension(ce.DataContentEncodingKey, ce.Base64)
+	eventContextV02.SetExtension(ce.EventTypeVersionKey, "v1alpha1")
 	return eventContextV02.AsV02()
 }
 
@@ -717,15 +722,16 @@ func FullEventContextV03(now types.Timestamp) ce.EventContextV03 {
 	schema := &types.URLRef{URL: *schemaUrl}
 
 	eventContextV03 := ce.EventContextV03{
-		ID:              "ABC-123",
-		Time:            &now,
-		Type:            "com.example.simple",
-		SchemaURL:       schema,
-		DataContentType: ce.StringOfApplicationJSON(),
-		Source:          *source,
+		ID:                  "ABC-123",
+		Time:                &now,
+		Type:                "com.example.simple",
+		SchemaURL:           schema,
+		DataContentType:     ce.StringOfApplicationJSON(),
+		DataContentEncoding: ce.StringOfBase64(),
+		Source:              *source,
 	}
 	eventContextV03.SetExtension("test", "extended")
 	eventContextV03.SetExtension("another-test", 1)
-	eventContextV03.SetExtension("eventTypeVersion", "v1alpha1")
+	eventContextV03.SetExtension(ce.EventTypeVersionKey, "v1alpha1")
 	return eventContextV03.AsV03()
 }
