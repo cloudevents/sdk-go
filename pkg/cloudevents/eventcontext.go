@@ -37,6 +37,9 @@ type EventContext interface {
 	// GetSource returns the CloudEvents source from the context.
 	GetSource() string
 
+	// GetSubject returns the CloudEvents subject from the context.
+	GetSubject() string
+
 	// GetSchemaURL returns the CloudEvents schema URL (if any) from the context.
 	GetSchemaURL() string
 

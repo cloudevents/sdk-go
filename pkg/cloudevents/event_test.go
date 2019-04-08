@@ -453,6 +453,7 @@ Context Attributes,
 Extensions,
   another-test: 1
   datacontentencoding: base64
+  subject: topic
   test: extended
 Data,
   {
@@ -479,6 +480,7 @@ Extensions,
   another-test: 1
   datacontentencoding: base64
   eventTypeVersion: v1alpha1
+  subject: topic
   test: extended
 Data,
   {
@@ -497,6 +499,7 @@ Context Attributes,
   specversion: 0.3
   type: com.example.simple
   source: http://example.com/source
+  subject: topic
   id: ABC-123
   time: %s
   schemaurl: http://example.com/schema
@@ -683,6 +686,7 @@ func FullEventContextV01(now types.Timestamp) ce.EventContextV01 {
 		ContentType:      ce.StringOfApplicationJSON(),
 		Source:           *source,
 	}
+	eventContextV01.SetExtension(ce.SubjectKey, "topic")
 	eventContextV01.SetExtension(ce.DataContentEncodingKey, ce.Base64)
 	eventContextV01.SetExtension("test", "extended")
 	eventContextV01.SetExtension("another-test", 1)
@@ -709,6 +713,7 @@ func FullEventContextV02(now types.Timestamp) ce.EventContextV02 {
 		Source:      *source,
 		Extensions:  extensions,
 	}
+	eventContextV02.SetExtension(ce.SubjectKey, "topic")
 	eventContextV02.SetExtension(ce.DataContentEncodingKey, ce.Base64)
 	eventContextV02.SetExtension(ce.EventTypeVersionKey, "v1alpha1")
 	return eventContextV02.AsV02()
@@ -729,6 +734,7 @@ func FullEventContextV03(now types.Timestamp) ce.EventContextV03 {
 		DataContentType:     ce.StringOfApplicationJSON(),
 		DataContentEncoding: ce.StringOfBase64(),
 		Source:              *source,
+		Subject:             strptr("topic"),
 	}
 	eventContextV03.SetExtension("test", "extended")
 	eventContextV03.SetExtension("another-test", 1)

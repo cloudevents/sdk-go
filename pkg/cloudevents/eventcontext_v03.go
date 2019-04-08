@@ -24,6 +24,9 @@ type EventContextV03 struct {
 	Type string `json:"type"`
 	// Source - A URI describing the event producer.
 	Source types.URLRef `json:"source"`
+	// Subject - The subject of the event in the context of the event producer
+	// (identified by `source`).
+	Subject *string `json:"subject,omitempty"`
 	// ID of the event; must be non-empty and unique within the scope of the producer.
 	ID string `json:"id"`
 	// Time - A Timestamp when the event happened.
@@ -79,6 +82,14 @@ func (ec EventContextV03) GetType() string {
 // GetSource implements EventContext.GetSource
 func (ec EventContextV03) GetSource() string {
 	return ec.Source.String()
+}
+
+// GetSubject implements EventContext.GetSubject
+func (ec EventContextV03) GetSubject() string {
+	if ec.Subject != nil {
+		return *ec.Subject
+	}
+	return ""
 }
 
 // GetSchemaURL implements EventContext.GetSchemaURL
@@ -143,7 +154,11 @@ func (ec EventContextV03) AsV02() EventContextV02 {
 		Source:      ec.Source,
 		Extensions:  make(map[string]interface{}),
 	}
-	// DataContentEncoding was introduced in 0.3, so put it in an extension.
+	// Subject was introduced in 0.3, so put it in an extension for 0.2.
+	if ec.Subject != nil {
+		ret.SetExtension(SubjectKey, *ec.Subject)
+	}
+	// DataContentEncoding was introduced in 0.3, so put it in an extension for 0.2.
 	if ec.DataContentEncoding != nil {
 		ret.SetExtension(DataContentEncodingKey, *ec.DataContentEncoding)
 	}
@@ -167,6 +182,8 @@ func (ec EventContextV03) AsV03() EventContextV03 {
 // Validate returns errors based on requirements from the CloudEvents spec.
 // For more details, see https://github.com/cloudevents/spec/blob/master/spec.md
 // As of Feb 26, 2019, commit 17c32ea26baf7714ad027d9917d03d2fff79fc7e
+// + https://github.com/cloudevents/spec/pull/387 -> datacontentencoding
+// + https://github.com/cloudevents/spec/pull/406 -> subject
 func (ec EventContextV03) Validate() error {
 	errors := []string(nil)
 
@@ -198,6 +215,18 @@ func (ec EventContextV03) Validate() error {
 	source := strings.TrimSpace(ec.Source.String())
 	if source == "" {
 		errors = append(errors, "source: REQUIRED")
+	}
+
+	// subject
+	// Type: String
+	// Constraints:
+	//  OPTIONAL
+	//  MUST be a non-empty string
+	if ec.Subject != nil {
+		subject := strings.TrimSpace(*ec.Subject)
+		if subject == "" {
+			errors = append(errors, "subject: if present, MUST be a non-empty string")
+		}
 	}
 
 	// id
