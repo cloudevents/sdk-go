@@ -166,7 +166,16 @@ func (e Event) String() string {
 		b.WriteString("Data,\n  ")
 		if strings.HasPrefix(e.DataContentType(), "application/json") {
 			var prettyJSON bytes.Buffer
-			err := json.Indent(&prettyJSON, e.Data.([]byte), "  ", "  ")
+
+			data, ok := e.Data.([]byte)
+			if !ok {
+				var err error
+				data, err = json.Marshal(e.Data)
+				if err != nil {
+					data = []byte(err.Error())
+				}
+			}
+			err := json.Indent(&prettyJSON, data, "  ", "  ")
 			if err != nil {
 				b.Write(e.Data.([]byte))
 			} else {

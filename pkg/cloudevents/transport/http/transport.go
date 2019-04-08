@@ -9,6 +9,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -32,6 +33,7 @@ const (
 type Transport struct {
 	// The encoding used to select the codec for outbound events.
 	Encoding Encoding
+
 	// DefaultEncodingSelectionFn allows for other encoding selection strategies to be injected.
 	DefaultEncodingSelectionFn EncodingSelector
 
@@ -407,6 +409,7 @@ func (t *Transport) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		r.Error()
 		return
 	}
+
 	if resp != nil {
 		if t.Req != nil {
 			copyHeaders(t.Req.Header, w.Header())
@@ -414,17 +417,18 @@ func (t *Transport) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		if len(resp.Header) > 0 {
 			copyHeaders(resp.Header, w.Header())
 		}
-		status := http.StatusAccepted
-		if resp.StatusCode >= 200 && resp.StatusCode < 600 {
-			status = resp.StatusCode
-		}
-		w.WriteHeader(status)
+		w.Header().Add("Content-Length", strconv.Itoa(len(resp.Body)))
 		if len(resp.Body) > 0 {
 			if _, err := w.Write(resp.Body); err != nil {
 				r.Error()
 				return
 			}
 		}
+		status := http.StatusAccepted
+		if resp.StatusCode >= 200 && resp.StatusCode < 600 {
+			status = resp.StatusCode
+		}
+		w.WriteHeader(status)
 
 		r.OK()
 		return
