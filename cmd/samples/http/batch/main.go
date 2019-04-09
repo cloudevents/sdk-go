@@ -1,4 +1,4 @@
-package batch
+package main
 
 import (
 	"context"
@@ -46,7 +46,26 @@ func main() {
 	} else if resp != nil {
 		fmt.Printf("got back a response: \n%s", resp)
 	} else {
-		log.Printf("%s: %d - %s", event.Context.GetType(), data.Sequence, data.Message)
+		//log.Printf("%s: %d - %s", event.Context.GetType(), data.Sequence, data.Message)
 	}
 
 }
+
+/*
+
+Producer -A-> MW -B-> Consumer
+
+
+Producer Sends: E1, resp: 200 ack.
+Producer Sends: E2, resp: 200 ack.
+
+A: MW Accepts and Queues E1, E2
+
+B: MW Sends [E1, E2] to Consumer Batched
+
+Consumer Client accepts [E1, E2], resp is batch: [], or [En', Em', ...], or 400,500 error
+
+Internally Consumer Client SDK delivers 1 event at a time with a resp.
+
+
+*/

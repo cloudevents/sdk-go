@@ -7,4 +7,7 @@ import "github.com/cloudevents/sdk-go/pkg/cloudevents"
 type Codec interface {
 	Encode(cloudevents.Event) (Message, error)
 	Decode(Message) (*cloudevents.Event, error)
+
+	BatchEncode([]cloudevents.Event) (Message, error)
+	BatchDecode(Message) ([]cloudevents.Event, error)
 }

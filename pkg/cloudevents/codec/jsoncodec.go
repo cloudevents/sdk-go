@@ -75,6 +75,28 @@ func obsJsonEncodeV03(e cloudevents.Event) ([]byte, error) {
 	return jsonEncode(ctx, e.Data)
 }
 
+// JsonEncodeBatchV03 takes in a []cloudevent.Event and outputs the byte representation of that event using CloudEvents
+// version 0.3 batch json formatting rules.
+func JsonEncodeBatchV03(e cloudevents.Event) ([]byte, error) {
+	_, r := observability.NewReporter(context.Background(), codecObserved{o: reportEncode, v: "v0.3"})
+	b, err := obsJsonEncodeBatchV03(e)
+	if err != nil {
+		r.Error()
+	} else {
+		r.OK()
+	}
+	return b, err
+}
+
+func obsJsonEncodeBatchV03(es []cloudevents.Event) ([]byte, error) {
+	ctx := e.Context.AsV03()
+	if ctx.DataContentType == nil {
+		ctx.DataContentType = cloudevents.StringOfApplicationJSON()
+	}
+
+	return jsonEncode(ctx, e.Data)
+}
+
 func jsonEncode(ctx cloudevents.EventContext, data interface{}) ([]byte, error) {
 	ctxb, err := marshalEvent(ctx)
 	if err != nil {
