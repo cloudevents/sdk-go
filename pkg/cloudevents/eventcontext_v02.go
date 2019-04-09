@@ -67,6 +67,15 @@ func (ec EventContextV02) GetDataMediaType() string {
 	return ""
 }
 
+// GetDataContentEncoding implements EventContext.GetDataContentEncoding
+func (ec EventContextV02) GetDataContentEncoding() string {
+	var enc string
+	if err := ec.ExtensionAs(DataContentEncodingKey, &enc); err != nil {
+		return ""
+	}
+	return enc
+}
+
 // GetType implements EventContext.GetType
 func (ec EventContextV02) GetType() string {
 	return ec.Type
@@ -75,6 +84,15 @@ func (ec EventContextV02) GetType() string {
 // GetSource implements EventContext.GetSource
 func (ec EventContextV02) GetSource() string {
 	return ec.Source.String()
+}
+
+// GetSubject implements EventContext.GetSubject
+func (ec EventContextV02) GetSubject() string {
+	var sub string
+	if err := ec.ExtensionAs(SubjectKey, &sub); err != nil {
+		return ""
+	}
+	return sub
 }
 
 // GetSchemaURL implements EventContext.GetSchemaURL
@@ -128,7 +146,7 @@ func (ec EventContextV02) AsV01() EventContextV01 {
 
 	for k, v := range ec.Extensions {
 		// eventTypeVersion was retired in v0.2
-		if strings.EqualFold(k, "eventTypeVersion") {
+		if strings.EqualFold(k, EventTypeVersionKey) {
 			etv, ok := v.(string)
 			if ok && etv != "" {
 				ret.EventTypeVersion = &etv
@@ -159,8 +177,32 @@ func (ec EventContextV02) AsV03() EventContextV03 {
 		SchemaURL:       ec.SchemaURL,
 		DataContentType: ec.ContentType,
 		Source:          ec.Source,
-		Extensions:      ec.Extensions,
+		Extensions:      make(map[string]interface{}),
 	}
+
+	for k, v := range ec.Extensions {
+		// Subject was introduced in 0.3
+		if strings.EqualFold(k, SubjectKey) {
+			sub, ok := v.(string)
+			if ok && sub != "" {
+				ret.Subject = &sub
+			}
+			continue
+		}
+		// DataContentEncoding was introduced in 0.3
+		if strings.EqualFold(k, DataContentEncodingKey) {
+			etv, ok := v.(string)
+			if ok && etv != "" {
+				ret.DataContentEncoding = &etv
+			}
+			continue
+		}
+		ret.Extensions[k] = v
+	}
+	if len(ret.Extensions) == 0 {
+		ret.Extensions = nil
+	}
+
 	return ret
 }
 

@@ -134,6 +134,9 @@ func (e Event) String() string {
 			b.WriteString("  specversion: " + ec.SpecVersion + "\n")
 			b.WriteString("  type: " + ec.Type + "\n")
 			b.WriteString("  source: " + ec.Source.String() + "\n")
+			if ec.Subject != nil {
+				b.WriteString("  subject: " + *ec.Subject + "\n")
+			}
 			b.WriteString("  id: " + ec.ID + "\n")
 			if ec.Time != nil {
 				b.WriteString("  time: " + ec.Time.String() + "\n")
@@ -143,6 +146,9 @@ func (e Event) String() string {
 			}
 			if ec.DataContentType != nil {
 				b.WriteString("  datacontenttype: " + *ec.DataContentType + "\n")
+			}
+			if ec.DataContentEncoding != nil {
+				b.WriteString("  datacontentencoding: " + *ec.DataContentEncoding + "\n")
 			}
 			extensions = ec.Extensions
 		}

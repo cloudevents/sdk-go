@@ -66,3 +66,7 @@ func isImportantHeader(h string) bool {
 	}
 	return true
 }
+
+func strptr(s string) *string {
+	return &s
+}

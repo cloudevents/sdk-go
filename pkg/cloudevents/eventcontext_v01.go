@@ -80,12 +80,30 @@ func (ec EventContextV01) GetSource() string {
 	return ec.Source.String()
 }
 
+// GetSubject implements EventContext.GetSubject
+func (ec EventContextV01) GetSubject() string {
+	var sub string
+	if err := ec.ExtensionAs(SubjectKey, &sub); err != nil {
+		return ""
+	}
+	return sub
+}
+
 // GetSchemaURL implements EventContext.GetSchemaURL
 func (ec EventContextV01) GetSchemaURL() string {
 	if ec.SchemaURL != nil {
 		return ec.SchemaURL.String()
 	}
 	return ""
+}
+
+// GetDataContentEncoding implements EventContext.GetDataContentEncoding
+func (ec EventContextV01) GetDataContentEncoding() string {
+	var enc string
+	if err := ec.ExtensionAs(DataContentEncodingKey, &enc); err != nil {
+		return ""
+	}
+	return enc
 }
 
 // ExtensionAs implements EventContext.ExtensionAs
@@ -137,7 +155,7 @@ func (ec EventContextV01) AsV02() EventContextV02 {
 
 	// eventTypeVersion was retired in v0.2, so put it in an extension.
 	if ec.EventTypeVersion != nil {
-		ret.Extensions["eventTypeVersion"] = *ec.EventTypeVersion
+		ret.SetExtension(EventTypeVersionKey, *ec.EventTypeVersion)
 	}
 	if ec.Extensions != nil {
 		for k, v := range ec.Extensions {
