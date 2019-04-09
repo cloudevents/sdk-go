@@ -2,6 +2,7 @@ package codec
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec"
@@ -70,6 +71,7 @@ func obsJsonEncodeV03(e cloudevents.Event) ([]byte, error) {
 	if ctx.DataContentType == nil {
 		ctx.DataContentType = cloudevents.StringOfApplicationJSON()
 	}
+
 	return jsonEncode(ctx, e.Data)
 }
 
@@ -92,7 +94,11 @@ func jsonEncode(ctx cloudevents.EventContext, data interface{}) ([]byte, error) 
 		return nil, err
 	}
 	if data != nil {
-		if mediaType == "" || mediaType == cloudevents.ApplicationJSON {
+		if ctx.GetDataContentEncoding() == cloudevents.Base64 {
+			buf := make([]byte, base64.StdEncoding.EncodedLen(len(datab)))
+			base64.StdEncoding.Encode(buf, datab)
+			b["data"] = []byte(strconv.QuoteToASCII(string(buf)))
+		} else if mediaType == "" || mediaType == cloudevents.ApplicationJSON {
 			b["data"] = datab
 		} else if datab[0] != byte('"') {
 			b["data"] = []byte(strconv.QuoteToASCII(string(datab)))

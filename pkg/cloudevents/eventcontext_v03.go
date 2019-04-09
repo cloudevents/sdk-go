@@ -24,6 +24,9 @@ type EventContextV03 struct {
 	Type string `json:"type"`
 	// Source - A URI describing the event producer.
 	Source types.URLRef `json:"source"`
+	// Subject - The subject of the event in the context of the event producer
+	// (identified by `source`).
+	Subject *string `json:"subject,omitempty"`
 	// ID of the event; must be non-empty and unique within the scope of the producer.
 	ID string `json:"id"`
 	// Time - A Timestamp when the event happened.
@@ -33,6 +36,8 @@ type EventContextV03 struct {
 	// GetDataMediaType - A MIME (RFC2046) string describing the media type of `data`.
 	// TODO: Should an empty string assume `application/json`, `application/octet-stream`, or auto-detect the content?
 	DataContentType *string `json:"datacontenttype,omitempty"`
+	// DataContentEncoding describes the content encoding for the `data` attribute. Valid: nil, `Base64`.
+	DataContentEncoding *string `json:"datacontentencoding,omitempty"`
 	// Extensions - Additional extension metadata beyond the base spec.
 	Extensions map[string]interface{} `json:"-,omitempty"` // TODO: decide how we want extensions to be inserted
 }
@@ -79,10 +84,26 @@ func (ec EventContextV03) GetSource() string {
 	return ec.Source.String()
 }
 
+// GetSubject implements EventContext.GetSubject
+func (ec EventContextV03) GetSubject() string {
+	if ec.Subject != nil {
+		return *ec.Subject
+	}
+	return ""
+}
+
 // GetSchemaURL implements EventContext.GetSchemaURL
 func (ec EventContextV03) GetSchemaURL() string {
 	if ec.SchemaURL != nil {
 		return ec.SchemaURL.String()
+	}
+	return ""
+}
+
+// GetDataContentEncoding implements EventContext.GetDataContentEncoding
+func (ec EventContextV03) GetDataContentEncoding() string {
+	if ec.DataContentEncoding != nil {
+		return *ec.DataContentEncoding
 	}
 	return ""
 }
@@ -131,7 +152,23 @@ func (ec EventContextV03) AsV02() EventContextV02 {
 		SchemaURL:   ec.SchemaURL,
 		ContentType: ec.DataContentType,
 		Source:      ec.Source,
-		Extensions:  ec.Extensions,
+		Extensions:  make(map[string]interface{}),
+	}
+	// Subject was introduced in 0.3, so put it in an extension for 0.2.
+	if ec.Subject != nil {
+		ret.SetExtension(SubjectKey, *ec.Subject)
+	}
+	// DataContentEncoding was introduced in 0.3, so put it in an extension for 0.2.
+	if ec.DataContentEncoding != nil {
+		ret.SetExtension(DataContentEncodingKey, *ec.DataContentEncoding)
+	}
+	if ec.Extensions != nil {
+		for k, v := range ec.Extensions {
+			ret.Extensions[k] = v
+		}
+	}
+	if len(ret.Extensions) == 0 {
+		ret.Extensions = nil
 	}
 	return ret
 }
@@ -145,6 +182,8 @@ func (ec EventContextV03) AsV03() EventContextV03 {
 // Validate returns errors based on requirements from the CloudEvents spec.
 // For more details, see https://github.com/cloudevents/spec/blob/master/spec.md
 // As of Feb 26, 2019, commit 17c32ea26baf7714ad027d9917d03d2fff79fc7e
+// + https://github.com/cloudevents/spec/pull/387 -> datacontentencoding
+// + https://github.com/cloudevents/spec/pull/406 -> subject
 func (ec EventContextV03) Validate() error {
 	errors := []string(nil)
 
@@ -176,6 +215,18 @@ func (ec EventContextV03) Validate() error {
 	source := strings.TrimSpace(ec.Source.String())
 	if source == "" {
 		errors = append(errors, "source: REQUIRED")
+	}
+
+	// subject
+	// Type: String
+	// Constraints:
+	//  OPTIONAL
+	//  MUST be a non-empty string
+	if ec.Subject != nil {
+		subject := strings.TrimSpace(*ec.Subject)
+		if subject == "" {
+			errors = append(errors, "subject: if present, MUST be a non-empty string")
+		}
 	}
 
 	// id
@@ -222,6 +273,22 @@ func (ec EventContextV03) Validate() error {
 			// TODO: need to test for RFC 2046
 			errors = append(errors, "datacontenttype: if present, MUST adhere to the format specified in RFC 2046")
 		}
+	}
+
+	// datacontentencoding
+	// Type: String per RFC 2045 Section 6.1
+	// Constraints:
+	//  The attribute MUST be set if the data attribute contains string-encoded binary data.
+	//    Otherwise the attribute MUST NOT be set.
+	//  If present, MUST adhere to RFC 2045 Section 6.1
+	if ec.DataContentEncoding != nil {
+		dataContentEncoding := strings.ToLower(strings.TrimSpace(*ec.DataContentEncoding))
+		if dataContentEncoding != Base64 {
+			// TODO: need to test for RFC 2046
+			errors = append(errors, "datacontentencoding: if present, MUST adhere to RFC 2045 Section 6.1")
+		}
+		// TODO: need to test that the payload is in-fact base64 encoded. This is tricky because it is only that way on
+		// the way out, and at rest the payload might be a struct that will become base64 encoded.
 	}
 
 	if len(errors) > 0 {
