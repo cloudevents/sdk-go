@@ -103,7 +103,7 @@ func (v CodecV03) encodeBinary(e cloudevents.Event) (transport.Message, error) {
 	return msg, nil
 }
 
-func (v CodecV03) toHeaders(ec cloudevents.EventContextV03) (http.Header, error) {
+func (v CodecV03) toHeaders(ec *cloudevents.EventContextV03) (http.Header, error) {
 	h := http.Header{}
 	h.Set("ce-specversion", ec.SpecVersion)
 	h.Set("ce-type", ec.Type)
@@ -193,7 +193,7 @@ func (v CodecV03) decodeBinary(msg transport.Message) (*cloudevents.Event, error
 		}
 	}
 	return &cloudevents.Event{
-		Context: ctx,
+		Context: &ctx,
 		Data:    body,
 	}, nil
 }
@@ -327,7 +327,7 @@ func (v CodecV03) decodeStructured(msg transport.Message) (*cloudevents.Event, e
 	}
 
 	return &cloudevents.Event{
-		Context: ec,
+		Context: &ec,
 		Data:    data,
 	}, nil
 }

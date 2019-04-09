@@ -92,7 +92,7 @@ func (v CodecV01) encodeBinary(e cloudevents.Event) (transport.Message, error) {
 	return msg, nil
 }
 
-func (v CodecV01) toHeaders(ec cloudevents.EventContextV01) (http.Header, error) {
+func (v CodecV01) toHeaders(ec *cloudevents.EventContextV01) (http.Header, error) {
 	// Preserve case in v0.1, even though HTTP headers are case-insensitive.
 	h := http.Header{}
 	h["CE-CloudEventsVersion"] = []string{ec.CloudEventsVersion}
@@ -161,7 +161,7 @@ func (v CodecV01) decodeBinary(msg transport.Message) (*cloudevents.Event, error
 		body = m.Body
 	}
 	return &cloudevents.Event{
-		Context: ctx,
+		Context: &ctx,
 		Data:    body,
 	}, nil
 }

@@ -350,7 +350,7 @@ func TestString(t *testing.T) {
 	}{
 		"empty v0.1": {
 			event: ce.Event{
-				Context: ce.EventContextV01{},
+				Context: &ce.EventContextV01{},
 			},
 			want: `Validation: invalid
 Validation Error: 
@@ -367,7 +367,7 @@ Context Attributes,
 		},
 		"empty v0.2": {
 			event: ce.Event{
-				Context: ce.EventContextV02{},
+				Context: &ce.EventContextV02{},
 			},
 			want: `Validation: invalid
 Validation Error: 
@@ -384,7 +384,7 @@ Context Attributes,
 		},
 		"empty v0.3": {
 			event: ce.Event{
-				Context: ce.EventContextV03{},
+				Context: &ce.EventContextV03{},
 			},
 			want: `Validation: invalid
 Validation Error: 
@@ -637,7 +637,7 @@ func strptr(s string) *string {
 	return &s
 }
 
-func MinEventContextV01() ce.EventContextV01 {
+func MinEventContextV01() *ce.EventContextV01 {
 	sourceUrl, _ := url.Parse("http://example.com/source")
 	source := &types.URLRef{URL: *sourceUrl}
 
@@ -648,7 +648,7 @@ func MinEventContextV01() ce.EventContextV01 {
 	}.AsV01()
 }
 
-func MinEventContextV02() ce.EventContextV02 {
+func MinEventContextV02() *ce.EventContextV02 {
 	sourceUrl, _ := url.Parse("http://example.com/source")
 	source := &types.URLRef{URL: *sourceUrl}
 
@@ -659,7 +659,7 @@ func MinEventContextV02() ce.EventContextV02 {
 	}.AsV02()
 }
 
-func MinEventContextV03() ce.EventContextV03 {
+func MinEventContextV03() *ce.EventContextV03 {
 	sourceUrl, _ := url.Parse("http://example.com/source")
 	source := &types.URLRef{URL: *sourceUrl}
 
@@ -670,7 +670,7 @@ func MinEventContextV03() ce.EventContextV03 {
 	}.AsV03()
 }
 
-func FullEventContextV01(now types.Timestamp) ce.EventContextV01 {
+func FullEventContextV01(now types.Timestamp) *ce.EventContextV01 {
 	sourceUrl, _ := url.Parse("http://example.com/source")
 	source := &types.URLRef{URL: *sourceUrl}
 
@@ -693,7 +693,7 @@ func FullEventContextV01(now types.Timestamp) ce.EventContextV01 {
 	return eventContextV01.AsV01()
 }
 
-func FullEventContextV02(now types.Timestamp) ce.EventContextV02 {
+func FullEventContextV02(now types.Timestamp) *ce.EventContextV02 {
 	sourceUrl, _ := url.Parse("http://example.com/source")
 	source := &types.URLRef{URL: *sourceUrl}
 
@@ -719,7 +719,7 @@ func FullEventContextV02(now types.Timestamp) ce.EventContextV02 {
 	return eventContextV02.AsV02()
 }
 
-func FullEventContextV03(now types.Timestamp) ce.EventContextV03 {
+func FullEventContextV03(now types.Timestamp) *ce.EventContextV03 {
 	sourceUrl, _ := url.Parse("http://example.com/source")
 	source := &types.URLRef{URL: *sourceUrl}
 

@@ -27,7 +27,7 @@ func TestCodecV02_Encode(t *testing.T) {
 		"simple v0.2 default": {
 			codec: http.CodecV02{},
 			event: cloudevents.Event{
-				Context: cloudevents.EventContextV02{
+				Context: &cloudevents.EventContextV02{
 					Type:   "com.example.test",
 					Source: *source,
 					ID:     "ABC-123",
@@ -46,7 +46,7 @@ func TestCodecV02_Encode(t *testing.T) {
 		"full v0.2 default": {
 			codec: http.CodecV02{},
 			event: cloudevents.Event{
-				Context: cloudevents.EventContextV02{
+				Context: &cloudevents.EventContextV02{
 					ID:          "ABC-123",
 					Time:        &now,
 					Type:        "com.example.test",
@@ -78,7 +78,7 @@ func TestCodecV02_Encode(t *testing.T) {
 		"simple v0.2 binary": {
 			codec: http.CodecV02{Encoding: http.BinaryV02},
 			event: cloudevents.Event{
-				Context: cloudevents.EventContextV02{
+				Context: &cloudevents.EventContextV02{
 					Type:   "com.example.test",
 					Source: *source,
 					ID:     "ABC-123",
@@ -97,7 +97,7 @@ func TestCodecV02_Encode(t *testing.T) {
 		"full v0.2 binary": {
 			codec: http.CodecV02{Encoding: http.BinaryV02},
 			event: cloudevents.Event{
-				Context: cloudevents.EventContextV02{
+				Context: &cloudevents.EventContextV02{
 					ID:          "ABC-123",
 					Time:        &now,
 					Type:        "com.example.test",
@@ -140,7 +140,7 @@ func TestCodecV02_Encode(t *testing.T) {
 		"simple v0.2 structured": {
 			codec: http.CodecV02{Encoding: http.StructuredV02},
 			event: cloudevents.Event{
-				Context: cloudevents.EventContextV02{
+				Context: &cloudevents.EventContextV02{
 					Type:   "com.example.test",
 					Source: *source,
 					ID:     "ABC-123",
@@ -165,7 +165,7 @@ func TestCodecV02_Encode(t *testing.T) {
 		"full v0.2 structured": {
 			codec: http.CodecV02{Encoding: http.StructuredV02},
 			event: cloudevents.Event{
-				Context: cloudevents.EventContextV02{
+				Context: &cloudevents.EventContextV02{
 					ID:          "ABC-123",
 					Time:        &now,
 					Type:        "com.example.test",
@@ -263,7 +263,7 @@ func TestCodecV02_Decode(t *testing.T) {
 				},
 			},
 			want: &cloudevents.Event{
-				Context: cloudevents.EventContextV02{
+				Context: &cloudevents.EventContextV02{
 					SpecVersion: cloudevents.CloudEventsVersionV02,
 					ContentType: cloudevents.StringOfApplicationJSON(),
 					Type:        "com.example.test",
@@ -293,7 +293,7 @@ func TestCodecV02_Decode(t *testing.T) {
 				}),
 			},
 			want: &cloudevents.Event{
-				Context: cloudevents.EventContextV02{
+				Context: &cloudevents.EventContextV02{
 					SpecVersion: cloudevents.CloudEventsVersionV02,
 					ID:          "ABC-123",
 					Time:        &now,
@@ -329,7 +329,7 @@ func TestCodecV02_Decode(t *testing.T) {
 				}),
 			},
 			want: &cloudevents.Event{
-				Context: cloudevents.EventContextV02{
+				Context: &cloudevents.EventContextV02{
 					SpecVersion: cloudevents.CloudEventsVersionV02,
 					Type:        "com.example.test",
 					Source:      *source,
@@ -360,7 +360,7 @@ func TestCodecV02_Decode(t *testing.T) {
 				}),
 			},
 			want: &cloudevents.Event{
-				Context: cloudevents.EventContextV02{
+				Context: &cloudevents.EventContextV02{
 					SpecVersion: cloudevents.CloudEventsVersionV02,
 					ID:          "ABC-123",
 					Time:        &now,
@@ -390,7 +390,7 @@ func TestCodecV02_Decode(t *testing.T) {
 				},
 			},
 			want: &cloudevents.Event{
-				Context: cloudevents.EventContextV02{
+				Context: &cloudevents.EventContextV02{
 					SpecVersion: cloudevents.CloudEventsVersionV02,
 					ContentType: cloudevents.StringOfApplicationJSON(),
 					Type:        "com.example.test",

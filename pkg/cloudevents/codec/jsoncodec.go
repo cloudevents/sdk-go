@@ -75,7 +75,7 @@ func obsJsonEncodeV03(e cloudevents.Event) ([]byte, error) {
 	return jsonEncode(ctx, e.Data)
 }
 
-func jsonEncode(ctx cloudevents.EventContext, data interface{}) ([]byte, error) {
+func jsonEncode(ctx cloudevents.EventContextReader, data interface{}) ([]byte, error) {
 	ctxb, err := marshalEvent(ctx)
 	if err != nil {
 		return nil, err
@@ -146,7 +146,7 @@ func obsJsonDecodeV01(body []byte) (*cloudevents.Event, error) {
 	}
 
 	return &cloudevents.Event{
-		Context: ec,
+		Context: &ec,
 		Data:    data,
 	}, nil
 }
@@ -181,7 +181,7 @@ func obsJsonDecodeV02(body []byte) (*cloudevents.Event, error) {
 	}
 
 	return &cloudevents.Event{
-		Context: ec,
+		Context: &ec,
 		Data:    data,
 	}, nil
 }
@@ -216,7 +216,7 @@ func obsJsonDecodeV03(body []byte) (*cloudevents.Event, error) {
 	}
 
 	return &cloudevents.Event{
-		Context: ec,
+		Context: &ec,
 		Data:    data,
 	}, nil
 }

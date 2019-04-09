@@ -27,7 +27,7 @@ func TestCodecV03_Encode(t *testing.T) {
 		"simple v0.3 default": {
 			codec: nats.CodecV03{},
 			event: cloudevents.Event{
-				Context: cloudevents.EventContextV03{
+				Context: &cloudevents.EventContextV03{
 					Type:   "com.example.test",
 					Source: *source,
 					ID:     "ABC-123",
@@ -49,7 +49,7 @@ func TestCodecV03_Encode(t *testing.T) {
 		"full v0.3 default": {
 			codec: nats.CodecV03{},
 			event: cloudevents.Event{
-				Context: cloudevents.EventContextV03{
+				Context: &cloudevents.EventContextV03{
 					ID:              "ABC-123",
 					Time:            &now,
 					Type:            "com.example.test",
@@ -88,7 +88,7 @@ func TestCodecV03_Encode(t *testing.T) {
 		"simple v0.3 structured": {
 			codec: nats.CodecV03{Encoding: nats.StructuredV03},
 			event: cloudevents.Event{
-				Context: cloudevents.EventContextV03{
+				Context: &cloudevents.EventContextV03{
 					Type:   "com.example.test",
 					Source: *source,
 					ID:     "ABC-123",
@@ -110,7 +110,7 @@ func TestCodecV03_Encode(t *testing.T) {
 		"full v0.3 structured": {
 			codec: nats.CodecV03{Encoding: nats.StructuredV03},
 			event: cloudevents.Event{
-				Context: cloudevents.EventContextV03{
+				Context: &cloudevents.EventContextV03{
 					ID:              "ABC-123",
 					Time:            &now,
 					Type:            "com.example.test",
@@ -204,7 +204,7 @@ func TestCodecV03_Decode(t *testing.T) {
 				}),
 			},
 			want: &cloudevents.Event{
-				Context: cloudevents.EventContextV03{
+				Context: &cloudevents.EventContextV03{
 					SpecVersion: cloudevents.CloudEventsVersionV03,
 					Type:        "com.example.test",
 					Source:      *source,
@@ -232,7 +232,7 @@ func TestCodecV03_Decode(t *testing.T) {
 				}),
 			},
 			want: &cloudevents.Event{
-				Context: cloudevents.EventContextV03{
+				Context: &cloudevents.EventContextV03{
 					SpecVersion:     cloudevents.CloudEventsVersionV03,
 					ID:              "ABC-123",
 					Time:            &now,

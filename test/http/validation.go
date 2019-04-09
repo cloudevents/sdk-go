@@ -23,6 +23,9 @@ func assertEventEquality(t *testing.T, ctx string, expected, actual *cloudevents
 	if diff := cmp.Diff(expected, actual, cmpopts.IgnoreFields(cloudevents.Event{}, "Data")); diff != "" {
 		t.Errorf("Unexpected difference in %s (-want, +got): %v", ctx, diff)
 	}
+	if expected == nil || actual == nil {
+		return
+	}
 	data := make(map[string]string, 0)
 	err := actual.DataAs(&data)
 	if err != nil {
