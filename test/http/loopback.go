@@ -61,6 +61,7 @@ func ClientLoopback(t *testing.T, tc TapTest, topts ...cehttp.Option) {
 		topts = append(topts, cloudevents.WithBinaryEncoding())
 	}
 	topts = append(topts, cloudevents.WithTarget(server.URL))
+	topts = append(topts, cloudevents.WithPort(0)) // random port
 	transport, err := cloudevents.NewHTTPTransport(
 		topts...,
 	)
@@ -84,17 +85,18 @@ func ClientLoopback(t *testing.T, tc TapTest, topts ...cehttp.Option) {
 	recvCtx, recvCancel := context.WithCancel(context.Background())
 
 	go func() {
-		_ = ce.StartReceiver(recvCtx, func(resp *cloudevents.EventResponse) {
+		t.Log(ce.StartReceiver(recvCtx, func(resp *cloudevents.EventResponse) {
 			if tc.resp != nil {
 				resp.RespondWith(200, tc.resp)
 			}
-		})
+		}))
 	}()
 
 	got, err := ce.Send(ctx, *tc.event)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	recvCancel()
 
 	assertEventEquality(t, "response event", tc.want, got)

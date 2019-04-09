@@ -17,17 +17,17 @@ func TestDefaultIDToUUIDIfNotSet(t *testing.T) {
 		},
 		"v0.1 empty": {
 			event: cloudevents.Event{
-				Context: cloudevents.EventContextV01{},
+				Context: &cloudevents.EventContextV01{},
 			},
 		},
 		"v0.2 empty": {
 			event: cloudevents.Event{
-				Context: cloudevents.EventContextV02{},
+				Context: &cloudevents.EventContextV02{},
 			},
 		},
 		"v0.3 empty": {
 			event: cloudevents.Event{
-				Context: cloudevents.EventContextV03{},
+				Context: &cloudevents.EventContextV03{},
 			},
 		},
 		"v0.1 no change": {
@@ -60,7 +60,7 @@ func TestDefaultIDToUUIDIfNotSet(t *testing.T) {
 
 func TestDefaultIDToUUIDIfNotSetImmutable(t *testing.T) {
 	event := cloudevents.Event{
-		Context: cloudevents.EventContextV01{},
+		Context: &cloudevents.EventContextV01{},
 	}
 
 	got := DefaultIDToUUIDIfNotSet(event)
@@ -89,17 +89,17 @@ func TestDefaultTimeToNowIfNotSet(t *testing.T) {
 		},
 		"v0.1 empty": {
 			event: cloudevents.Event{
-				Context: cloudevents.EventContextV01{},
+				Context: &cloudevents.EventContextV01{},
 			},
 		},
 		"v0.2 empty": {
 			event: cloudevents.Event{
-				Context: cloudevents.EventContextV02{},
+				Context: &cloudevents.EventContextV02{},
 			},
 		},
 		"v0.3 empty": {
 			event: cloudevents.Event{
-				Context: cloudevents.EventContextV03{},
+				Context: &cloudevents.EventContextV03{},
 			},
 		},
 		"v0.1 no change": {
@@ -132,7 +132,7 @@ func TestDefaultTimeToNowIfNotSet(t *testing.T) {
 
 func TestDefaultTimeToNowIfNotSetImmutable(t *testing.T) {
 	event := cloudevents.Event{
-		Context: cloudevents.EventContextV01{},
+		Context: &cloudevents.EventContextV01{},
 	}
 
 	got := DefaultTimeToNowIfNotSet(event)

@@ -3,8 +3,7 @@ package cloudevents
 import (
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
-	"log"
-	"mime"
+	"sort"
 	"strings"
 )
 
@@ -45,69 +44,6 @@ type EventContextV03 struct {
 // Adhere to EventContext
 var _ EventContext = (*EventContextV03)(nil)
 
-// GetSpecVersion implements EventContext.GetSpecVersion
-func (ec EventContextV03) GetSpecVersion() string {
-	if ec.SpecVersion != "" {
-		return ec.SpecVersion
-	}
-	return CloudEventsVersionV03
-}
-
-// GetDataContentType implements EventContext.GetDataContentType
-func (ec EventContextV03) GetDataContentType() string {
-	if ec.DataContentType != nil {
-		return *ec.DataContentType
-	}
-	return ""
-}
-
-// GetDataMediaType implements EventContext.GetDataMediaType
-func (ec EventContextV03) GetDataMediaType() string {
-	if ec.DataContentType != nil {
-		mediaType, _, err := mime.ParseMediaType(*ec.DataContentType)
-		if err != nil {
-			log.Printf("failed to parse media type from DataContentType: %s", err)
-			return ""
-		}
-		return mediaType
-	}
-	return ""
-}
-
-// GetType implements EventContext.GetType
-func (ec EventContextV03) GetType() string {
-	return ec.Type
-}
-
-// GetSource implements EventContext.GetSource
-func (ec EventContextV03) GetSource() string {
-	return ec.Source.String()
-}
-
-// GetSubject implements EventContext.GetSubject
-func (ec EventContextV03) GetSubject() string {
-	if ec.Subject != nil {
-		return *ec.Subject
-	}
-	return ""
-}
-
-// GetSchemaURL implements EventContext.GetSchemaURL
-func (ec EventContextV03) GetSchemaURL() string {
-	if ec.SchemaURL != nil {
-		return ec.SchemaURL.String()
-	}
-	return ""
-}
-
-// GetDataContentEncoding implements EventContext.GetDataContentEncoding
-func (ec EventContextV03) GetDataContentEncoding() string {
-	if ec.DataContentEncoding != nil {
-		return *ec.DataContentEncoding
-	}
-	return ""
-}
-
 // ExtensionAs implements EventContext.ExtensionAs
 func (ec EventContextV03) ExtensionAs(name string, obj interface{}) error {
 	value, ok := ec.Extensions[name]
@@ -129,21 +65,31 @@ func (ec EventContextV03) ExtensionAs(name string, obj interface{}) error {
 }
 
 // SetExtension adds the extension 'name' with value 'value' to the CloudEvents context.
-func (ec *EventContextV03) SetExtension(name string, value interface{}) {
+func (ec *EventContextV03) SetExtension(name string, value interface{}) error {
 	if ec.Extensions == nil {
 		ec.Extensions = make(map[string]interface{})
 	}
-	ec.Extensions[name] = value
+	if value == nil {
+		delete(ec.Extensions, name)
+	} else {
+		ec.Extensions[name] = value
+	}
+	return nil
 }
 
-// AsV01 implements EventContext.AsV01
-func (ec EventContextV03) AsV01() EventContextV01 {
+// Clone implements EventContextConverter.Clone
+func (ec EventContextV03) Clone() EventContext {
+	return ec.AsV03()
+}
+
+// AsV01 implements EventContextConverter.AsV01
+func (ec EventContextV03) AsV01() *EventContextV01 {
 	ecv2 := ec.AsV02()
 	return ecv2.AsV01()
 }
 
-// AsV02 implements EventContext.AsV02
-func (ec EventContextV03) AsV02() EventContextV02 {
+// AsV02 implements EventContextConverter.AsV02
+func (ec EventContextV03) AsV02() *EventContextV02 {
 	ret := EventContextV02{
 		SpecVersion: CloudEventsVersionV02,
 		ID:          ec.ID,
@@ -170,13 +116,13 @@ func (ec EventContextV03) AsV02() EventContextV02 {
 	if len(ret.Extensions) == 0 {
 		ret.Extensions = nil
 	}
-	return ret
+	return &ret
 }
 
-// AsV03 implements EventContext.AsV03
-func (ec EventContextV03) AsV03() EventContextV03 {
+// AsV03 implements EventContextConverter.AsV03
+func (ec EventContextV03) AsV03() *EventContextV03 {
 	ec.SpecVersion = CloudEventsVersionV03
-	return ec
+	return &ec
 }
 
 // Validate returns errors based on requirements from the CloudEvents spec.
@@ -295,4 +241,45 @@ func (ec EventContextV03) Validate() error {
 		return fmt.Errorf(strings.Join(errors, "\n"))
 	}
 	return nil
+}
+
+// String returns a pretty-printed representation of the EventContext.
+func (ec EventContextV03) String() string {
+	b := strings.Builder{}
+
+	b.WriteString("Context Attributes,\n")
+
+	b.WriteString("  specversion: " + ec.SpecVersion + "\n")
+	b.WriteString("  type: " + ec.Type + "\n")
+	b.WriteString("  source: " + ec.Source.String() + "\n")
+	if ec.Subject != nil {
+		b.WriteString("  subject: " + *ec.Subject + "\n")
+	}
+	b.WriteString("  id: " + ec.ID + "\n")
+	if ec.Time != nil {
+		b.WriteString("  time: " + ec.Time.String() + "\n")
+	}
+	if ec.SchemaURL != nil {
+		b.WriteString("  schemaurl: " + ec.SchemaURL.String() + "\n")
+	}
+	if ec.DataContentType != nil {
+		b.WriteString("  datacontenttype: " + *ec.DataContentType + "\n")
+	}
+	if ec.DataContentEncoding != nil {
+		b.WriteString("  datacontentencoding: " + *ec.DataContentEncoding + "\n")
+	}
+
+	if ec.Extensions != nil && len(ec.Extensions) > 0 {
+		b.WriteString("Extensions,\n")
+		keys := make([]string, 0, len(ec.Extensions))
+		for k := range ec.Extensions {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, key := range keys {
+			b.WriteString(fmt.Sprintf("  %s: %v\n", key, ec.Extensions[key]))
+		}
+	}
+
+	return b.String()
 }
