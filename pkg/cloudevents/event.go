@@ -15,9 +15,19 @@ type Event struct {
 	Data    interface{}
 }
 
-func New(specVersion string) Event {
+const (
+	defaultEventVersion = CloudEventsVersionV02
+)
+
+// New returns a new Event, an optional version can be passed to change the
+// default spec version from 0.2 to the provided version.
+func New(version ...string) Event {
+	specVersion := defaultEventVersion // TODO: should there be a default? or set a default?
+	if len(version) >= 1 {
+		specVersion = version[0]
+	}
 	e := &Event{}
-	_ = e.SetSpecVersion(specVersion)
+	e.SetSpecVersion(specVersion)
 	return *e
 }
 

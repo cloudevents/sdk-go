@@ -59,6 +59,13 @@ var (
 	WithUUIDs          = client.WithUUIDs
 	WithTimeNow        = client.WithTimeNow
 
+	// Event Creation
+
+	NewEvent   = cloudevents.New
+	VersionV01 = cloudevents.CloudEventsVersionV01
+	VersionV02 = cloudevents.CloudEventsVersionV02
+	VersionV03 = cloudevents.CloudEventsVersionV03
+
 	// Context
 
 	ContextWithTarget = context.WithTarget
