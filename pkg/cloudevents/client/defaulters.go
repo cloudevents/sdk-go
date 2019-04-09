@@ -16,7 +16,7 @@ func DefaultIDToUUIDIfNotSet(event cloudevents.Event) cloudevents.Event {
 	if event.Context != nil {
 		if event.ID() == "" {
 			event.Context = event.Context.Clone()
-			_ = event.SetID(uuid.New().String())
+			event.SetID(uuid.New().String())
 		}
 	}
 	return event
@@ -28,7 +28,7 @@ func DefaultTimeToNowIfNotSet(event cloudevents.Event) cloudevents.Event {
 	if event.Context != nil {
 		if event.Time().IsZero() {
 			event.Context = event.Context.Clone()
-			_ = event.SetTime(time.Now())
+			event.SetTime(time.Now())
 		}
 	}
 	return event

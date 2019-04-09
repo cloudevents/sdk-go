@@ -18,19 +18,19 @@ type ReadWriteTest struct {
 func TestEventRW_SpecVersion(t *testing.T) {
 	testCases := map[string]ReadWriteTest{
 		"empty v01": {
-			event: ce.New(""),
-			set:   "0.1",
-			want:  "0.1",
+			event:   ce.New(),
+			set:     "0.1",
+			wantErr: "invalid version",
 		},
 		"empty v02": {
-			event: ce.New(""),
+			event: ce.New(),
 			set:   "0.2",
 			want:  "0.2",
 		},
 		"empty v03": {
-			event: ce.New(""),
-			set:   "0.3",
-			want:  "0.3",
+			event:   ce.New(),
+			set:     "0.3",
+			wantErr: "invalid version",
 		},
 		"v01": {
 			event: ce.New("0.1"),
@@ -50,29 +50,34 @@ func TestEventRW_SpecVersion(t *testing.T) {
 		"invalid v01": {
 			event:   ce.New("0.1"),
 			set:     "1.1",
-			want:    "0.1",
 			wantErr: "invalid version",
 		},
 		"invalid v02": {
 			event:   ce.New("0.2"),
 			set:     "1.2",
-			want:    "0.2",
 			wantErr: "invalid version",
 		},
 		"invalid v03": {
 			event:   ce.New("0.3"),
 			set:     "1.3",
-			want:    "0.3",
 			wantErr: "invalid version",
 		},
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 
-			err := tc.event.SetSpecVersion(tc.set)
-			got := tc.event.SpecVersion()
+			var got interface{}
+			defer func() {
+				var err error
+				r := recover()
+				if r != nil {
+					err = r.(error)
+				}
+				validateReaderWriter(t, tc, got, err)
+			}()
 
-			validateReaderWriter(t, tc, got, err)
+			tc.event.SetSpecVersion(tc.set)
+			got = tc.event.SpecVersion()
 		})
 	}
 }
@@ -112,11 +117,18 @@ func TestEventRW_Type(t *testing.T) {
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
+			var got interface{}
+			defer func() {
+				var err error
+				r := recover()
+				if r != nil {
+					err = r.(error)
+				}
+				validateReaderWriter(t, tc, got, err)
+			}()
 
-			err := tc.event.SetType(tc.set)
-			got := tc.event.Type()
-
-			validateReaderWriter(t, tc, got, err)
+			tc.event.SetType(tc.set)
+			got = tc.event.Type()
 		})
 	}
 }
@@ -156,11 +168,18 @@ func TestEventRW_ID(t *testing.T) {
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
+			var got interface{}
+			defer func() {
+				var err error
+				r := recover()
+				if r != nil {
+					err = r.(error)
+				}
+				validateReaderWriter(t, tc, got, err)
+			}()
 
-			err := tc.event.SetID(tc.set)
-			got := tc.event.ID()
-
-			validateReaderWriter(t, tc, got, err)
+			tc.event.SetID(tc.set)
+			got = tc.event.ID()
 		})
 	}
 }
@@ -185,29 +204,33 @@ func TestEventRW_Source(t *testing.T) {
 		"invalid v01": {
 			event:   ce.New("0.1"),
 			set:     "%",
-			want:    "",
 			wantErr: "invalid URL escape",
 		},
 		"invalid v02": {
 			event:   ce.New("0.2"),
 			set:     "%",
-			want:    "",
 			wantErr: "invalid URL escape",
 		},
 		"invalid v03": {
 			event:   ce.New("0.3"),
 			set:     "%",
-			want:    "",
 			wantErr: "invalid URL escape",
 		},
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
+			var got interface{}
+			defer func() {
+				var err error
+				r := recover()
+				if r != nil {
+					err = r.(error)
+				}
+				validateReaderWriter(t, tc, got, err)
+			}()
 
-			err := tc.event.SetSource(tc.set)
-			got := tc.event.Source()
-
-			validateReaderWriter(t, tc, got, err)
+			tc.event.SetSource(tc.set)
+			got = tc.event.Source()
 		})
 	}
 }
@@ -247,7 +270,7 @@ func TestEventRW_Subject(t *testing.T) {
 		"nilled v01": {
 			event: func() ce.Event {
 				e := ce.New("0.1")
-				_ = e.SetSource("should nil")
+				e.SetSource("should nil")
 				return e
 			}(),
 			want: "",
@@ -255,7 +278,7 @@ func TestEventRW_Subject(t *testing.T) {
 		"nilled v02": {
 			event: func() ce.Event {
 				e := ce.New("0.2")
-				_ = e.SetSource("should nil")
+				e.SetSource("should nil")
 				return e
 			}(),
 			want: "",
@@ -263,7 +286,7 @@ func TestEventRW_Subject(t *testing.T) {
 		"nilled v03": {
 			event: func() ce.Event {
 				e := ce.New("0.3")
-				_ = e.SetSource("should nil")
+				e.SetSource("should nil")
 				return e
 			}(),
 			want: "",
@@ -271,11 +294,18 @@ func TestEventRW_Subject(t *testing.T) {
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
+			var got interface{}
+			defer func() {
+				var err error
+				r := recover()
+				if r != nil {
+					err = r.(error)
+				}
+				validateReaderWriter(t, tc, got, err)
+			}()
 
-			err := tc.event.SetSubject(tc.set)
-			got := tc.event.Subject()
-
-			validateReaderWriter(t, tc, got, err)
+			tc.event.SetSubject(tc.set)
+			got = tc.event.Subject()
 		})
 	}
 }
@@ -302,7 +332,7 @@ func TestEventRW_Time(t *testing.T) {
 		"nilled v01": {
 			event: func() ce.Event {
 				e := ce.New("0.1")
-				_ = e.SetTime(now)
+				e.SetTime(now)
 				return e
 			}(),
 			want: time.Time{},
@@ -310,7 +340,7 @@ func TestEventRW_Time(t *testing.T) {
 		"nilled v02": {
 			event: func() ce.Event {
 				e := ce.New("0.2")
-				_ = e.SetTime(now)
+				e.SetTime(now)
 				return e
 			}(),
 			want: time.Time{},
@@ -318,7 +348,7 @@ func TestEventRW_Time(t *testing.T) {
 		"nilled v03": {
 			event: func() ce.Event {
 				e := ce.New("0.3")
-				_ = e.SetTime(now)
+				e.SetTime(now)
 				return e
 			}(),
 			want: time.Time{},
@@ -326,16 +356,22 @@ func TestEventRW_Time(t *testing.T) {
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
+			var got interface{}
+			defer func() {
+				var err error
+				r := recover()
+				if r != nil {
+					err = r.(error)
+				}
+				validateReaderWriter(t, tc, got, err)
+			}()
 
-			var err error
 			if tc.set == "now" {
-				err = tc.event.SetTime(now) // pull now from outer test.
+				tc.event.SetTime(now) // pull now from outer test.
 			} else {
-				err = tc.event.SetTime(time.Time{}) // pull now from outer test.
+				tc.event.SetTime(time.Time{}) // pull now from outer test.
 			}
-			got := tc.event.Time()
-
-			validateReaderWriter(t, tc, got, err)
+			got = tc.event.Time()
 		})
 	}
 }
@@ -360,25 +396,22 @@ func TestEventRW_SchemaURL(t *testing.T) {
 		"invalid v01": {
 			event:   ce.New("0.1"),
 			set:     "%",
-			want:    "",
 			wantErr: "invalid URL escape",
 		},
 		"invalid v02": {
 			event:   ce.New("0.2"),
 			set:     "%",
-			want:    "",
 			wantErr: "invalid URL escape",
 		},
 		"invalid v03": {
 			event:   ce.New("0.3"),
 			set:     "%",
-			want:    "",
 			wantErr: "invalid URL escape",
 		},
 		"nilled v01": {
 			event: func() ce.Event {
 				e := ce.New("0.1")
-				_ = e.SetSchemaURL("should nil")
+				e.SetSchemaURL("should nil")
 				return e
 			}(),
 			want: "",
@@ -386,7 +419,7 @@ func TestEventRW_SchemaURL(t *testing.T) {
 		"nilled v02": {
 			event: func() ce.Event {
 				e := ce.New("0.2")
-				_ = e.SetSchemaURL("should nil")
+				e.SetSchemaURL("should nil")
 				return e
 			}(),
 			want: "",
@@ -394,7 +427,7 @@ func TestEventRW_SchemaURL(t *testing.T) {
 		"nilled v03": {
 			event: func() ce.Event {
 				e := ce.New("0.3")
-				_ = e.SetSchemaURL("should nil")
+				e.SetSchemaURL("should nil")
 				return e
 			}(),
 			want: "",
@@ -402,11 +435,18 @@ func TestEventRW_SchemaURL(t *testing.T) {
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
+			var got interface{}
+			defer func() {
+				var err error
+				r := recover()
+				if r != nil {
+					err = r.(error)
+				}
+				validateReaderWriter(t, tc, got, err)
+			}()
 
-			err := tc.event.SetSchemaURL(tc.set)
-			got := tc.event.SchemaURL()
-
-			validateReaderWriter(t, tc, got, err)
+			tc.event.SetSchemaURL(tc.set)
+			got = tc.event.SchemaURL()
 		})
 	}
 }
@@ -446,7 +486,7 @@ func TestEventRW_DataContentType(t *testing.T) {
 		"nilled v01": {
 			event: func() ce.Event {
 				e := ce.New("0.1")
-				_ = e.SetDataContentType("application/json")
+				e.SetDataContentType("application/json")
 				return e
 			}(),
 			want: "",
@@ -454,7 +494,7 @@ func TestEventRW_DataContentType(t *testing.T) {
 		"nilled v02": {
 			event: func() ce.Event {
 				e := ce.New("0.2")
-				_ = e.SetDataContentType("application/json")
+				e.SetDataContentType("application/json")
 				return e
 			}(),
 			want: "",
@@ -462,7 +502,7 @@ func TestEventRW_DataContentType(t *testing.T) {
 		"nilled v03": {
 			event: func() ce.Event {
 				e := ce.New("0.3")
-				_ = e.SetDataContentType("application/json")
+				e.SetDataContentType("application/json")
 				return e
 			}(),
 			want: "",
@@ -470,11 +510,18 @@ func TestEventRW_DataContentType(t *testing.T) {
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
+			var got interface{}
+			defer func() {
+				var err error
+				r := recover()
+				if r != nil {
+					err = r.(error)
+				}
+				validateReaderWriter(t, tc, got, err)
+			}()
 
-			err := tc.event.SetDataContentType(tc.set)
-			got := tc.event.DataContentType()
-
-			validateReaderWriter(t, tc, got, err)
+			tc.event.SetDataContentType(tc.set)
+			got = tc.event.DataContentType()
 		})
 	}
 }
@@ -529,7 +576,7 @@ func TestEventRW_DataContentEncoding(t *testing.T) {
 		"nilled v01": {
 			event: func() ce.Event {
 				e := ce.New("0.1")
-				_ = e.SetDataContentEncoding("base64")
+				e.SetDataContentEncoding("base64")
 				return e
 			}(),
 			want: "",
@@ -537,7 +584,7 @@ func TestEventRW_DataContentEncoding(t *testing.T) {
 		"nilled v02": {
 			event: func() ce.Event {
 				e := ce.New("0.2")
-				_ = e.SetDataContentEncoding("base64")
+				e.SetDataContentEncoding("base64")
 				return e
 			}(),
 			want: "",
@@ -545,7 +592,7 @@ func TestEventRW_DataContentEncoding(t *testing.T) {
 		"nilled v03": {
 			event: func() ce.Event {
 				e := ce.New("0.3")
-				_ = e.SetDataContentEncoding("base64")
+				e.SetDataContentEncoding("base64")
 				return e
 			}(),
 			want: "",
@@ -553,11 +600,18 @@ func TestEventRW_DataContentEncoding(t *testing.T) {
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
+			var got interface{}
+			defer func() {
+				var err error
+				r := recover()
+				if r != nil {
+					err = r.(error)
+				}
+				validateReaderWriter(t, tc, got, err)
+			}()
 
-			err := tc.event.SetDataContentEncoding(tc.set)
-			got := tc.event.DataContentEncoding()
-
-			validateReaderWriter(t, tc, got, err)
+			tc.event.SetDataContentEncoding(tc.set)
+			got = tc.event.DataContentEncoding()
 		})
 	}
 }

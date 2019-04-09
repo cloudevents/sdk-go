@@ -4,6 +4,7 @@ import (
 	"time"
 )
 
+// EventWriter is the interface for reading through an event from attributes.
 type EventReader interface {
 	// SpecVersion returns event.Context.GetSpecVersion().
 	SpecVersion() string
@@ -37,35 +38,32 @@ type EventReader interface {
 	DataAs(interface{}) error
 }
 
+// EventWriter is the interface for writing through an event onto attributes.
+// If an error is thrown by a sub-component, EventWriter panics.
 type EventWriter interface {
 	// Context Attributes
 
 	// SetSpecVersion performs event.Context.SetSpecVersion.
-	SetSpecVersion(string) error
+	SetSpecVersion(string)
 	// SetType performs event.Context.SetType.
-	SetType(string) error
+	SetType(string)
 	// SetSource performs event.Context.SetSource.
-	SetSource(string) error
+	SetSource(string)
 	// SetSubject( performs event.Context.SetSubject.
-	SetSubject(string) error
+	SetSubject(string)
 	// SetID performs event.Context.SetID.
-	SetID(string) error
+	SetID(string)
 	// SetTime performs event.Context.SetTime.
-	SetTime(time.Time) error
+	SetTime(time.Time)
 	// SetSchemaURL performs event.Context.SetSchemaURL.
-	SetSchemaURL(string) error
+	SetSchemaURL(string)
 	// SetDataContentType performs event.Context.SetDataContentType.
-	SetDataContentType(string) error
+	SetDataContentType(string)
 	// SetDataContentEncoding performs event.Context.SetDataContentEncoding.
-	SetDataContentEncoding(string) error
+	SetDataContentEncoding(string)
 
 	// Extension Attributes
 
 	// SetExtension performs event.Context.SetExtension.
-	SetExtension(string, interface{}) error
-
-	// Data Attribute
-
-	// SetData sets the data attribute.
-	SetData(interface{}) error
+	SetExtension(string, interface{})
 }
