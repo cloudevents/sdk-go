@@ -9,7 +9,6 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
-	"log"
 	"net/http"
 	"net/textproto"
 	"strings"
@@ -79,7 +78,11 @@ func (v CodecV01) encodeBinary(e cloudevents.Event) (transport.Message, error) {
 		return nil, err
 	}
 
-	body, err := marshalEventData(e.Context.GetDataMediaType(), e.Data)
+	mediaType, err := e.Context.GetDataMediaType()
+	if err != nil {
+		return nil, err
+	}
+	body, err := marshalEventData(mediaType, e.Data)
 	if err != nil {
 		return nil, err
 	}
@@ -171,7 +174,6 @@ func (v CodecV01) fromHeaders(h http.Header) (cloudevents.EventContextV01, error
 	for k, v := range h {
 		ck := textproto.CanonicalMIMEHeaderKey(k)
 		if k != ck {
-			log.Printf("[warn] received header with non-canonical form; canonical: %q, got %q", ck, k)
 			h[ck] = v
 		}
 	}

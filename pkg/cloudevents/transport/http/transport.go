@@ -4,9 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
 	"io/ioutil"
-	"log"
 	"net"
 	"net/http"
 	"strconv"
@@ -14,8 +12,11 @@ import (
 	"sync"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 )
 
@@ -95,15 +96,21 @@ func (t *Transport) applyOptions(opts ...Option) error {
 	return nil
 }
 
-func (t *Transport) loadCodec() bool {
+func (t *Transport) loadCodec(ctx context.Context) bool {
 	if t.codec == nil {
 		t.crMu.Lock()
 		if t.DefaultEncodingSelectionFn != nil && t.Encoding != Default {
-			log.Printf("[warn] Transport has a DefaultEncodingSelectionFn set but Encoding is not Default. DefaultEncodingSelectionFn will be ignored.")
-		}
-		t.codec = &Codec{
-			Encoding:                   t.Encoding,
-			DefaultEncodingSelectionFn: t.DefaultEncodingSelectionFn,
+			logger := cecontext.LoggerFrom(ctx)
+			logger.Warn("transport has a DefaultEncodingSelectionFn set but Encoding is not Default. DefaultEncodingSelectionFn will be ignored.")
+
+			t.codec = &Codec{
+				Encoding: t.Encoding,
+			}
+		} else {
+			t.codec = &Codec{
+				Encoding:                   t.Encoding,
+				DefaultEncodingSelectionFn: t.DefaultEncodingSelectionFn,
+			}
 		}
 		t.crMu.Unlock()
 	}
@@ -154,7 +161,7 @@ func (t *Transport) obsSend(ctx context.Context, event cloudevents.Event) (*clou
 		req.URL = target
 	}
 
-	if ok := t.loadCodec(); !ok {
+	if ok := t.loadCodec(ctx); !ok {
 		return nil, fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
 	}
 
@@ -171,6 +178,7 @@ func (t *Transport) obsSend(ctx context.Context, event cloudevents.Event) (*clou
 		req.Close = true
 
 		return httpDo(ctx, t.Client, &req, func(resp *http.Response, err error) (*cloudevents.Event, error) {
+			logger := cecontext.LoggerFrom(ctx)
 			if err != nil {
 				return nil, err
 			}
@@ -184,19 +192,19 @@ func (t *Transport) obsSend(ctx context.Context, event cloudevents.Event) (*clou
 
 			var respEvent *cloudevents.Event
 			if msg.CloudEventsVersion() != "" {
-				if ok := t.loadCodec(); !ok {
+				if ok := t.loadCodec(ctx); !ok {
 					err := fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
-					log.Printf("failed to load codec: %s", err)
+					logger.Error("failed to load codec", zap.Error(err))
 				}
 				if respEvent, err = t.codec.Decode(msg); err != nil {
-					log.Printf("failed to decode message: %s", err)
+					logger.Error("failed to decode message", zap.Error(err))
 				}
 			}
 
 			if accepted(resp) {
 				return respEvent, nil
 			}
-			return respEvent, fmt.Errorf("error sending cloudevent: %s", status(resp))
+			return respEvent, fmt.Errorf("error sending cloudevent: %s", resp.Status)
 		})
 	}
 	return nil, fmt.Errorf("failed to encode Event into a Message")
@@ -292,16 +300,6 @@ func accepted(resp *http.Response) bool {
 	return false
 }
 
-// status is a helper method to read the response of the target.
-func status(resp *http.Response) string {
-	status := resp.Status
-	_, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return fmt.Sprintf("Status[%s] error reading response body", status)
-	}
-	return fmt.Sprintf("Status[%s]", status)
-}
-
 func (t *Transport) invokeReceiver(ctx context.Context, event cloudevents.Event) (*Response, error) {
 	ctx, r := observability.NewReporter(ctx, reportReceive)
 	resp, err := t.obsInvokeReceiver(ctx, event)
@@ -314,6 +312,7 @@ func (t *Transport) invokeReceiver(ctx context.Context, event cloudevents.Event)
 }
 
 func (t *Transport) obsInvokeReceiver(ctx context.Context, event cloudevents.Event) (*Response, error) {
+	logger := cecontext.LoggerFrom(ctx)
 	if t.Receiver != nil {
 		// Note: http does not use eventResp.Reason
 		eventResp := cloudevents.EventResponse{}
@@ -321,21 +320,21 @@ func (t *Transport) obsInvokeReceiver(ctx context.Context, event cloudevents.Eve
 
 		err := t.Receiver.Receive(ctx, event, &eventResp)
 		if err != nil {
-			log.Printf("got an error from receiver fn: %s", err.Error())
+			logger.Warnw("got an error from receiver fn: %s", zap.Error(err))
 			resp.StatusCode = http.StatusInternalServerError
 			return &resp, err
 		}
 
 		if eventResp.Event != nil {
-			if t.loadCodec() {
+			if t.loadCodec(ctx) {
 				if m, err := t.codec.Encode(*eventResp.Event); err != nil {
-					log.Printf("failed to encode response from receiver fn: %s", err.Error())
+					logger.Errorw("failed to encode response from receiver fn", zap.Error(err))
 				} else if msg, ok := m.(*Message); ok {
 					resp.Header = msg.Header
 					resp.Body = msg.Body
 				}
 			} else {
-				log.Printf("failed to load codec")
+				logger.Error("failed to load codec")
 				resp.StatusCode = http.StatusInternalServerError
 				return &resp, err
 			}
@@ -367,10 +366,11 @@ func (t *Transport) obsInvokeReceiver(ctx context.Context, event cloudevents.Eve
 // ServeHTTP implements http.Handler
 func (t *Transport) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	ctx, r := observability.NewReporter(req.Context(), reportServeHTTP)
+	logger := cecontext.LoggerFrom(ctx)
 
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
-		log.Printf("failed to handle request: %s", err)
+		logger.Errorw("failed to handle request", zap.Error(err))
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(`{"error":"Invalid request"}`))
 		r.Error()
@@ -381,9 +381,9 @@ func (t *Transport) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		Body:   body,
 	}
 
-	if ok := t.loadCodec(); !ok {
+	if ok := t.loadCodec(ctx); !ok {
 		err := fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
-		log.Printf("failed to load codec: %s", err)
+		logger.Errorw("failed to load codec", zap.Error(err))
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf(`{"error":%q}`, err.Error())))
 		r.Error()
@@ -391,7 +391,7 @@ func (t *Transport) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 	event, err := t.codec.Decode(msg)
 	if err != nil {
-		log.Printf("failed to decode message: %s", err)
+		logger.Errorw("failed to decode message", zap.Error(err))
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf(`{"error":%q}`, err.Error())))
 		r.Error()
@@ -404,6 +404,7 @@ func (t *Transport) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	resp, err := t.invokeReceiver(ctx, *event)
 	if err != nil {
+		logger.Warnw("error returned from invokeReceiver", zap.Error(err))
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf(`{"error":%q}`, err.Error())))
 		r.Error()

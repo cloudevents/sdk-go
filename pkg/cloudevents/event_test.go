@@ -59,7 +59,7 @@ func TestGetDataContentType(t *testing.T) {
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 
-			got := tc.event.Context.GetDataMediaType()
+			got, _ := tc.event.Context.GetDataMediaType()
 
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("unexpected (-want, +got) = %v", diff)

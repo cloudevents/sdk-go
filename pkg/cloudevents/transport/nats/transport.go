@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	context2 "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	"github.com/nats-io/go-nats"
-	"log"
+	"go.uber.org/zap"
 )
 
 // Transport adheres to transport.Transport.
@@ -113,23 +114,24 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 	var err error
 	// Simple Async Subscriber
 	t.sub, err = t.Conn.Subscribe(t.Subject, func(m *nats.Msg) {
+		logger := context2.LoggerFrom(ctx)
 		msg := &Message{
 			Body: m.Data,
 		}
 		event, err := t.codec.Decode(msg)
 		if err != nil {
-			log.Printf("failed to decode message: %s", err)
+			logger.Errorw("failed to decode message", zap.Error(err)) // TODO: create an error channel to pass this up
 			return
 		}
 		// TODO: I do not know enough about NATS to implement reply.
 		// For now, NATS does not support reply.
 		if err := t.Receiver.Receive(context.TODO(), *event, nil); err != nil {
-			log.Printf("nats receiver return err: %s", err)
+			logger.Warnw("nats receiver return err", zap.Error(err))
 		}
 	})
 	defer func() {
 		if t.sub != nil {
-			t.sub.Unsubscribe()
+			t.sub.Unsubscribe() // TODO: create an error channel to pass this up
 			t.sub = nil
 		}
 	}()

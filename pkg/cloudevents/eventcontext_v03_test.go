@@ -216,7 +216,7 @@ func TestGetMediaTypeV03(t *testing.T) {
 			if tc.t != "" {
 				ec.DataContentType = &tc.t
 			}
-			got := ec.GetDataMediaType()
+			got, _ := ec.GetDataMediaType()
 
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("unexpected  (-want, +got) = %v", diff)
