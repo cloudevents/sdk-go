@@ -189,7 +189,7 @@ func (t *Transport) obsSend(ctx context.Context, event cloudevents.Event) (*clou
 					log.Printf("failed to load codec: %s", err)
 				}
 				if respEvent, err = t.codec.Decode(msg); err != nil {
-					log.Printf("failed to decode message: %s %v", err, resp)
+					log.Printf("failed to decode message: %s", err)
 				}
 			}
 
@@ -295,11 +295,11 @@ func accepted(resp *http.Response) bool {
 // status is a helper method to read the response of the target.
 func status(resp *http.Response) string {
 	status := resp.Status
-	body, err := ioutil.ReadAll(resp.Body)
+	_, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Sprintf("Status[%s] error reading response body: %v", status, err)
+		return fmt.Sprintf("Status[%s] error reading response body", status)
 	}
-	return fmt.Sprintf("Status[%s] %s", status, body)
+	return fmt.Sprintf("Status[%s]", status)
 }
 
 func (t *Transport) invokeReceiver(ctx context.Context, event cloudevents.Event) (*Response, error) {
@@ -370,7 +370,7 @@ func (t *Transport) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
-		log.Printf("failed to handle request: %s %v", err, req)
+		log.Printf("failed to handle request: %s", err)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(`{"error":"Invalid request"}`))
 		r.Error()
@@ -391,7 +391,7 @@ func (t *Transport) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 	event, err := t.codec.Decode(msg)
 	if err != nil {
-		log.Printf("failed to decode message: %s %v", err, req)
+		log.Printf("failed to decode message: %s", err)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf(`{"error":%q}`, err.Error())))
 		r.Error()
