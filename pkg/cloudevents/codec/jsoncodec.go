@@ -7,7 +7,6 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
-	"log"
 	"strconv"
 )
 
@@ -88,7 +87,10 @@ func jsonEncode(ctx cloudevents.EventContextReader, data interface{}) ([]byte, e
 		return nil, err
 	}
 
-	mediaType := ctx.GetDataMediaType()
+	mediaType, err := ctx.GetDataMediaType()
+	if err != nil {
+		return nil, err
+	}
 	datab, err := marshalEventData(mediaType, data)
 	if err != nil {
 		return nil, err
@@ -222,10 +224,6 @@ func obsJsonDecodeV03(body []byte) (*cloudevents.Event, error) {
 }
 
 func marshalEvent(event interface{}) ([]byte, error) {
-	if b, ok := event.([]byte); ok {
-		log.Printf("json.marshalEvent asked to encode bytes... wrong? %s", string(b))
-	}
-
 	b, err := json.Marshal(event)
 	if err != nil {
 		return nil, err

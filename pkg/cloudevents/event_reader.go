@@ -48,7 +48,8 @@ func (e Event) DataContentType() string {
 
 // DataMediaType implements EventReader.DataMediaType
 func (e Event) DataMediaType() string {
-	return e.Context.GetDataMediaType()
+	mediaType, _ := e.Context.GetDataMediaType()
+	return mediaType
 }
 
 // DataContentEncoding implements EventReader.DataContentEncoding

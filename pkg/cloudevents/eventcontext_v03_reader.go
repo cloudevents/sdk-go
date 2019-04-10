@@ -1,7 +1,6 @@
 package cloudevents
 
 import (
-	"log"
 	"mime"
 	"time"
 )
@@ -23,16 +22,15 @@ func (ec EventContextV03) GetDataContentType() string {
 }
 
 // GetDataMediaType implements EventContextReader.GetDataMediaType
-func (ec EventContextV03) GetDataMediaType() string {
+func (ec EventContextV03) GetDataMediaType() (string, error) {
 	if ec.DataContentType != nil {
 		mediaType, _, err := mime.ParseMediaType(*ec.DataContentType)
 		if err != nil {
-			log.Printf("failed to parse media type from DataContentType: %s", err)
-			return ""
+			return "", err
 		}
-		return mediaType
+		return mediaType, nil
 	}
-	return ""
+	return "", nil
 }
 
 // GetType implements EventContextReader.GetType

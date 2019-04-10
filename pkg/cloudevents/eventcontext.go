@@ -23,11 +23,13 @@ type EventContextReader interface {
 	GetSchemaURL() string
 	// GetDataContentType returns content type on the context.
 	GetDataContentType() string
-	// GetDataMediaType returns the MIME media type for encoded data, which is
-	// needed by both encoding and decoding.
-	GetDataMediaType() string
 	// GetDataContentEncoding returns content encoding on the context.
 	GetDataContentEncoding() string
+
+	// GetDataMediaType returns the MIME media type for encoded data, which is
+	// needed by both encoding and decoding. This is a processed form of
+	// GetDataContentType and it may return an error.
+	GetDataMediaType() (string, error)
 
 	// ExtensionAs populates the given interface with the CloudEvents extension
 	// of the given name from the extension attributes. It returns an error if

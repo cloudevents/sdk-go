@@ -34,7 +34,11 @@ func New(version ...string) Event {
 // DataAs attempts to populate the provided data object with the event payload.
 // data should be a pointer type.
 func (e Event) DataAs(data interface{}) error {
-	return datacodec.Decode(e.Context.GetDataMediaType(), e.Data, data)
+	mediaType, err := e.Context.GetDataMediaType()
+	if err != nil {
+		return err
+	}
+	return datacodec.Decode(mediaType, e.Data, data)
 }
 
 // ExtensionAs returns Context.ExtensionAs(name, obj)

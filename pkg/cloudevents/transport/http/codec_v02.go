@@ -9,7 +9,6 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
-	"log"
 	"net/http"
 	"net/textproto"
 	"strings"
@@ -69,7 +68,7 @@ func (v CodecV02) obsDecode(msg transport.Message) (*cloudevents.Event, error) {
 	case StructuredV02:
 		return v.decodeStructured(msg)
 	default:
-		return nil, fmt.Errorf("unknown encoding for message %v", msg)
+		return nil, fmt.Errorf("unknown encoding")
 	}
 }
 
@@ -79,7 +78,11 @@ func (v CodecV02) encodeBinary(e cloudevents.Event) (transport.Message, error) {
 		return nil, err
 	}
 
-	body, err := marshalEventData(e.Context.GetDataMediaType(), e.Data)
+	mediaType, err := e.Context.GetDataMediaType()
+	if err != nil {
+		return nil, err
+	}
+	body, err := marshalEventData(mediaType, e.Data)
 	if err != nil {
 		return nil, err
 	}
@@ -176,7 +179,6 @@ func (v CodecV02) fromHeaders(h http.Header) (cloudevents.EventContextV02, error
 	for k, v := range h {
 		ck := textproto.CanonicalMIMEHeaderKey(k)
 		if k != ck {
-			log.Printf("[warn] received header with non-canonical form; canonical: %q, got %q", ck, k)
 			delete(h, k)
 			h[ck] = v
 		}
