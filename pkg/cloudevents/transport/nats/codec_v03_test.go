@@ -210,6 +210,7 @@ func TestCodecV03_Decode(t *testing.T) {
 					Source:      *source,
 					ID:          "ABC-123",
 				},
+				DataEncoded: true,
 			},
 		},
 		"full v0.3 structured": {
@@ -247,6 +248,7 @@ func TestCodecV03_Decode(t *testing.T) {
 				Data: toBytes(map[string]interface{}{
 					"hello": "world",
 				}),
+				DataEncoded: true,
 			},
 		},
 	}

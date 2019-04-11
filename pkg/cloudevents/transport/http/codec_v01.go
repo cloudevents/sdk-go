@@ -85,7 +85,7 @@ func (v CodecV01) encodeBinary(e cloudevents.Event) (transport.Message, error) {
 
 	body, err := e.DataBytes()
 	if err != nil {
-		panic("idk")
+		panic("encode")
 	}
 
 	//body, err := marshalEventData(mediaType, e.Data)
@@ -170,8 +170,9 @@ func (v CodecV01) decodeBinary(msg transport.Message) (*cloudevents.Event, error
 		body = m.Body
 	}
 	return &cloudevents.Event{
-		Context: &ctx,
-		Data:    body,
+		Context:     &ctx,
+		Data:        body,
+		DataEncoded: true,
 	}, nil
 }
 

@@ -2,17 +2,17 @@ package http
 
 import (
 	"context"
-	//"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/textproto"
+	"strings"
+
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/codec"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
-	"net/http"
-	"net/textproto"
-	"strings"
 )
 
 // CodecV03 represents a http transport codec that uses CloudEvents spec v0.3
@@ -201,8 +201,9 @@ func (v CodecV03) decodeBinary(msg transport.Message) (*cloudevents.Event, error
 		//}
 	}
 	return &cloudevents.Event{
-		Context: &ctx,
-		Data:    body,
+		Context:     &ctx,
+		Data:        body,
+		DataEncoded: true,
 	}, nil
 }
 
@@ -318,6 +319,8 @@ func (v CodecV03) decodeStructured(msg transport.Message) (*cloudevents.Event, e
 	if d, ok := raw["data"]; ok {
 
 		//if ec.DataContentEncoding != nil && *ec.DataContentEncoding == cloudevents.Base64 {
+		//	s, err := strconv.Unquote(string(d))
+		//}
 		//	var ds string
 		//	if err := json.Unmarshal(d, &ds); err != nil {
 		//		return nil, err
@@ -334,8 +337,9 @@ func (v CodecV03) decodeStructured(msg transport.Message) (*cloudevents.Event, e
 	}
 
 	return &cloudevents.Event{
-		Context: &ec,
-		Data:    data,
+		Context:     &ec,
+		Data:        data,
+		DataEncoded: true,
 	}, nil
 }
 

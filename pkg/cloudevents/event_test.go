@@ -1,6 +1,7 @@
 package cloudevents_test
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
@@ -208,8 +209,9 @@ func TestDataAs(t *testing.T) {
 		},
 		"json simple": {
 			event: ce.Event{
-				Context: FullEventContextV01(now),
-				Data:    []byte(`{"a":"apple","b":"banana"}`),
+				Context:     FullEventContextV01(now),
+				Data:        []byte(`eyJhIjoiYXBwbGUiLCJiIjoiYmFuYW5hIn0K`),
+				DataEncoded: true,
 			},
 			want: &map[string]string{
 				"a": "apple",
@@ -218,8 +220,9 @@ func TestDataAs(t *testing.T) {
 		},
 		"json complex empty": {
 			event: ce.Event{
-				Context: FullEventContextV01(now),
-				Data:    []byte(`{}`),
+				Context:     FullEventContextV01(now),
+				Data:        []byte(`e30K`),
+				DataEncoded: true,
 			},
 			want: &DataExample{},
 		},
@@ -241,8 +244,11 @@ func TestDataAs(t *testing.T) {
 					if err != nil {
 						t.Errorf("failed to marshal test data: %s", err.Error())
 					}
-					return j
+					buf := make([]byte, base64.StdEncoding.EncodedLen(len(j)))
+					base64.StdEncoding.Encode(buf, j)
+					return buf
 				}(),
+				DataEncoded: true,
 			},
 			want: &DataExample{
 				AnInt: 42,

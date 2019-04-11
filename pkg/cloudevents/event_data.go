@@ -51,6 +51,9 @@ const (
 // DataAs attempts to populate the provided data object with the event payload.
 // data should be a pointer type.
 func (e Event) DataAs(data interface{}) error { // TODO: Clean this function up
+	if e.Data == nil {
+		return nil
+	}
 	obj, ok := e.Data.([]byte)
 	if !ok {
 		if s, ok := e.Data.(string); ok {

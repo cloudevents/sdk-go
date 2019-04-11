@@ -263,6 +263,7 @@ func TestCodecV01_Decode(t *testing.T) {
 					EventID:            "ABC-123",
 					ContentType:        cloudevents.StringOfApplicationJSON(),
 				},
+				DataEncoded: true,
 			},
 		},
 		"full v0.1 binary": {
@@ -300,6 +301,7 @@ func TestCodecV01_Decode(t *testing.T) {
 				Data: toBytes(map[string]interface{}{
 					"hello": "world",
 				}),
+				DataEncoded: true,
 			},
 		},
 		"simple v0.1 structured": {
@@ -322,6 +324,7 @@ func TestCodecV01_Decode(t *testing.T) {
 					Source:             *source,
 					EventID:            "ABC-123",
 				},
+				DataEncoded: true,
 			},
 		},
 		"full v0.1 structured": {
@@ -364,6 +367,7 @@ func TestCodecV01_Decode(t *testing.T) {
 				Data: toBytes(map[string]interface{}{
 					"hello": "world",
 				}),
+				DataEncoded: true,
 			},
 		},
 		"simple v0.1 binary with short header": {
@@ -386,6 +390,7 @@ func TestCodecV01_Decode(t *testing.T) {
 					EventID:            "ABC-123",
 					ContentType:        cloudevents.StringOfApplicationJSON(),
 				},
+				DataEncoded: true,
 			},
 		},
 	}

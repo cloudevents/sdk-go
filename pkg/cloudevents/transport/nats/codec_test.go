@@ -107,6 +107,7 @@ func TestCodecDecode(t *testing.T) {
 					Source:      *source,
 					ID:          "ABC-123",
 				},
+				DataEncoded: true,
 			},
 		},
 	}
@@ -174,6 +175,7 @@ func TestCodecRoundTrip(t *testing.T) {
 						"a": "apple",
 						"b": "banana",
 					},
+					DataEncoded: true,
 				},
 			},
 			"struct data": {
@@ -201,6 +203,7 @@ func TestCodecRoundTrip(t *testing.T) {
 						AnInt:   42,
 						AString: "testing",
 					},
+					DataEncoded: true,
 				},
 			},
 		}
@@ -294,6 +297,7 @@ func TestCodecAsMiddleware(t *testing.T) {
 						"a": "apple",
 						"b": "banana",
 					},
+					DataEncoded: true,
 				},
 			},
 			"struct data": {
@@ -321,6 +325,7 @@ func TestCodecAsMiddleware(t *testing.T) {
 						AnInt:   42,
 						AString: "testing",
 					},
+					DataEncoded: true,
 				},
 			},
 		}

@@ -174,8 +174,9 @@ func (v CodecV02) decodeBinary(msg transport.Message) (*cloudevents.Event, error
 		body = m.Body
 	}
 	return &cloudevents.Event{
-		Context: &ctx,
-		Data:    body,
+		Context:     &ctx,
+		Data:        body,
+		DataEncoded: true,
 	}, nil
 }
 
@@ -281,8 +282,9 @@ func (v CodecV02) decodeStructured(msg transport.Message) (*cloudevents.Event, e
 	}
 
 	return &cloudevents.Event{
-		Context: &ec,
-		Data:    data,
+		Context:     &ec,
+		Data:        data,
+		DataEncoded: true,
 	}, nil
 }
 

@@ -169,8 +169,9 @@ func obsJsonDecodeV01(body []byte) (*cloudevents.Event, error) {
 	}
 
 	return &cloudevents.Event{
-		Context: &ec,
-		Data:    data,
+		Context:     &ec,
+		Data:        data,
+		DataEncoded: true,
 	}, nil
 }
 
@@ -204,8 +205,9 @@ func obsJsonDecodeV02(body []byte) (*cloudevents.Event, error) {
 	}
 
 	return &cloudevents.Event{
-		Context: &ec,
-		Data:    data,
+		Context:     &ec,
+		Data:        data,
+		DataEncoded: true,
 	}, nil
 }
 
@@ -239,8 +241,9 @@ func obsJsonDecodeV03(body []byte) (*cloudevents.Event, error) {
 	}
 
 	return &cloudevents.Event{
-		Context: &ec,
-		Data:    data,
+		Context:     &ec,
+		Data:        data,
+		DataEncoded: true,
 	}, nil
 }
 

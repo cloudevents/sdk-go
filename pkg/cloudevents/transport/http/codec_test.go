@@ -449,6 +449,7 @@ func TestCodecDecode(t *testing.T) {
 					EventID:            "ABC-123",
 					ContentType:        cloudevents.StringOfApplicationJSON(),
 				},
+				DataEncoded: true,
 			},
 		},
 		"simple v0.1 structured": {
@@ -474,6 +475,7 @@ func TestCodecDecode(t *testing.T) {
 					Source:             *source,
 					EventID:            "ABC-123",
 				},
+				DataEncoded: true,
 			},
 		},
 		"simple v0.2 binary": {
@@ -495,6 +497,7 @@ func TestCodecDecode(t *testing.T) {
 					ID:          "ABC-123",
 					ContentType: cloudevents.StringOfApplicationJSON(),
 				},
+				DataEncoded: true,
 			},
 		},
 		"simple v0.2 structured": {
@@ -520,6 +523,7 @@ func TestCodecDecode(t *testing.T) {
 					Source:      *source,
 					ID:          "ABC-123",
 				},
+				DataEncoded: true,
 			},
 		},
 
@@ -542,6 +546,7 @@ func TestCodecDecode(t *testing.T) {
 					ID:              "ABC-123",
 					DataContentType: cloudevents.StringOfApplicationJSON(),
 				},
+				DataEncoded: true,
 			},
 		},
 		"simple v0.3 structured": {
@@ -567,6 +572,7 @@ func TestCodecDecode(t *testing.T) {
 					Source:      *source,
 					ID:          "ABC-123",
 				},
+				DataEncoded: true,
 			},
 		},
 
@@ -591,6 +597,7 @@ func TestCodecDecode(t *testing.T) {
 					ID:          "ABC-123",
 					ContentType: cloudevents.StringOfApplicationJSON(),
 				},
+				DataEncoded: true,
 			},
 		},
 		"simple v0.1 structured -> v0.2 structured": {
@@ -616,6 +623,7 @@ func TestCodecDecode(t *testing.T) {
 					Source:      *source,
 					ID:          "ABC-123",
 				},
+				DataEncoded: true,
 			},
 		},
 		"simple v0.2 binary -> v0.1 binary": {
@@ -637,6 +645,7 @@ func TestCodecDecode(t *testing.T) {
 					EventID:            "ABC-123",
 					ContentType:        cloudevents.StringOfApplicationJSON(),
 				},
+				DataEncoded: true,
 			},
 		},
 		"simple v0.2 structured -> v0.1 structured": {
@@ -662,6 +671,7 @@ func TestCodecDecode(t *testing.T) {
 					Source:             *source,
 					EventID:            "ABC-123",
 				},
+				DataEncoded: true,
 			},
 		},
 		// TODO:: add the v0.3 conversion tests. Might want to think of a new way to do this.
@@ -730,6 +740,7 @@ func TestCodecRoundTrip(t *testing.T) {
 						"a": "apple",
 						"b": "banana",
 					},
+					DataEncoded: true,
 				},
 			},
 			"struct data v0.1": {
@@ -757,6 +768,7 @@ func TestCodecRoundTrip(t *testing.T) {
 						AnInt:   42,
 						AString: "testing",
 					},
+					DataEncoded: true,
 				},
 			},
 			// TODO: add tests for other versions. (note not really needed because these is tested internally too)
@@ -883,6 +895,7 @@ func TestCodecAsMiddleware(t *testing.T) {
 							AnInt:   42,
 							AString: "testing",
 						},
+						DataEncoded: true,
 					},
 				},
 			}
