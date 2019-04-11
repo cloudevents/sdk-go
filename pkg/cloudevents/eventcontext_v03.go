@@ -233,8 +233,6 @@ func (ec EventContextV03) Validate() error {
 			// TODO: need to test for RFC 2046
 			errors = append(errors, "datacontentencoding: if present, MUST adhere to RFC 2045 Section 6.1")
 		}
-		// TODO: need to test that the payload is in-fact base64 encoded. This is tricky because it is only that way on
-		// the way out, and at rest the payload might be a struct that will become base64 encoded.
 	}
 
 	if len(errors) > 0 {

@@ -97,31 +97,15 @@ func jsonEncode(ctx cloudevents.EventContextReader, data []byte) ([]byte, error)
 	if err := json.Unmarshal(ctxb, &b); err != nil {
 		return nil, err
 	}
-	//
-	mediaType, err := ctx.GetDataMediaType()
-	if err != nil {
-		return nil, err
-	}
-	encoding := ctx.GetDataContentEncoding()
-	//datab, err := marshalEventData(mediaType, data)
-	//if err != nil {
-	//	return nil, err
-	//}
-	if data != nil {
-		//if ctx.GetDataContentEncoding() == cloudevents.Base64 {
-		//	buf := make([]byte, base64.StdEncoding.EncodedLen(len(datab)))
-		//	base64.StdEncoding.Encode(buf, datab)
-		//	b["data"] = []byte(strconv.QuoteToASCII(string(buf)))
-		//} else
 
-		if encoding == cloudevents.Base64 {
-			if data[0] != byte('"') {
-				b["data"] = []byte(strconv.QuoteToASCII(string(data)))
-			} else {
-				// already quoted
-				b["data"] = data
-			}
-		} else if mediaType == "" || mediaType == cloudevents.ApplicationJSON {
+	if data != nil {
+		mediaType, err := ctx.GetDataMediaType()
+		if err != nil {
+			return nil, err
+		}
+		isBase64 := ctx.GetDataContentEncoding() == cloudevents.Base64
+		isJson := mediaType == "" || mediaType == cloudevents.ApplicationJSON || mediaType == cloudevents.TextJSON
+		if isJson && !isBase64 {
 			b["data"] = data
 		} else if data[0] != byte('"') {
 			b["data"] = []byte(strconv.QuoteToASCII(string(data)))
