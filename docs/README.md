@@ -34,10 +34,8 @@ For this reason there is also a [DataCodec][datacodec.codec] that is responsible
 for converting an encoded data payload into the intended format. These formats
 tend to be `application/xml`, `text/xml`, `application/json`, and `text/json`.
 
-The DataCodec is invoked (as of this writing) when converting Event to Message,
-or when `event.DataAs` is called when receiving.
-
-^ This should be rewritten so that it is invoked only on Data() and SetData()
+The DataCodec is invoked (as of this writing) when `event.SetData` is called, or
+when `event.DataAs` is called when receiving.
 
 [cloudevents.event]: ../pkg/cloudevents/event.go
 [transport.transport]: ../pkg/cloudevents/transport/transport.go
