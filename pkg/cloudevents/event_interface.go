@@ -66,4 +66,7 @@ type EventWriter interface {
 
 	// SetExtension performs event.Context.SetExtension.
 	SetExtension(string, interface{})
+
+	// SetData encodes the given payload with the current encoding settings.
+	SetData(interface{}) error
 }

@@ -48,6 +48,8 @@ var (
 	StringOfApplicationCloudEventsBatchJSON = cloudevents.StringOfApplicationCloudEventsBatchJSON
 	StringOfBase64                          = cloudevents.StringOfBase64
 
+	Base64 = cloudevents.Base64
+
 	// Client Creation
 
 	NewClient        = client.New

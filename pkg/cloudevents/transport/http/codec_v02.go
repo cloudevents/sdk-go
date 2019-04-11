@@ -78,13 +78,18 @@ func (v CodecV02) encodeBinary(e cloudevents.Event) (transport.Message, error) {
 		return nil, err
 	}
 
-	mediaType, err := e.Context.GetDataMediaType()
+	//mediaType, err := e.Context.GetDataMediaType()
+	//if err != nil {
+	//	return nil, err
+	//}
+	//body, err := marshalEventData(mediaType, e.Data)
+	//if err != nil {
+	//	return nil, err
+	//}
+
+	body, err := e.DataBytes()
 	if err != nil {
-		return nil, err
-	}
-	body, err := marshalEventData(mediaType, e.Data)
-	if err != nil {
-		return nil, err
+		panic("idk")
 	}
 
 	msg := &Message{
