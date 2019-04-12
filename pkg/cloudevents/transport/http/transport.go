@@ -48,7 +48,7 @@ type Transport struct {
 	// If nil, the Transport will create a one.
 	Client *http.Client
 	// Req is the base http request that is used for http.Do.
-	// Only .Method, .URL, and .Header is considered.
+	// Only .Method, .URL, .Close, and .Header is considered.
 	// If not set, Req.Method defaults to POST.
 	// Req.URL or context.WithTarget(url) are required for sending.
 	Req *http.Request
@@ -153,6 +153,7 @@ func (t *Transport) obsSend(ctx context.Context, event cloudevents.Event) (*clou
 	if t.Req != nil {
 		req.Method = t.Req.Method
 		req.URL = t.Req.URL
+		req.Close = t.Req.Close
 		copyHeaders(t.Req.Header, req.Header)
 	}
 
@@ -175,7 +176,6 @@ func (t *Transport) obsSend(ctx context.Context, event cloudevents.Event) (*clou
 
 		req.Body = ioutil.NopCloser(bytes.NewBuffer(m.Body))
 		req.ContentLength = int64(len(m.Body))
-		req.Close = true
 
 		return httpDo(ctx, t.Client, &req, func(resp *http.Response, err error) (*cloudevents.Event, error) {
 			logger := cecontext.LoggerFrom(ctx)
