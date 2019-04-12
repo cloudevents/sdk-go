@@ -2,7 +2,6 @@ package codec
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec"
@@ -28,7 +27,11 @@ func obsJsonEncodeV01(e cloudevents.Event) ([]byte, error) {
 	if ctx.ContentType == nil {
 		ctx.ContentType = cloudevents.StringOfApplicationJSON()
 	}
-	return jsonEncode(ctx, e.Data)
+	data, err := e.DataBytes()
+	if err != nil {
+		return nil, err
+	}
+	return jsonEncode(ctx, data)
 }
 
 // JsonEncodeV02 takes in a cloudevent.Event and outputs the byte representation of that event using CloudEvents
@@ -49,7 +52,11 @@ func obsJsonEncodeV02(e cloudevents.Event) ([]byte, error) {
 	if ctx.ContentType == nil {
 		ctx.ContentType = cloudevents.StringOfApplicationJSON()
 	}
-	return jsonEncode(ctx, e.Data)
+	data, err := e.DataBytes()
+	if err != nil {
+		return nil, err
+	}
+	return jsonEncode(ctx, data)
 }
 
 // JsonEncodeV03 takes in a cloudevent.Event and outputs the byte representation of that event using CloudEvents
@@ -71,10 +78,14 @@ func obsJsonEncodeV03(e cloudevents.Event) ([]byte, error) {
 		ctx.DataContentType = cloudevents.StringOfApplicationJSON()
 	}
 
-	return jsonEncode(ctx, e.Data)
+	data, err := e.DataBytes()
+	if err != nil {
+		return nil, err
+	}
+	return jsonEncode(ctx, data)
 }
 
-func jsonEncode(ctx cloudevents.EventContextReader, data interface{}) ([]byte, error) {
+func jsonEncode(ctx cloudevents.EventContextReader, data []byte) ([]byte, error) {
 	ctxb, err := marshalEvent(ctx)
 	if err != nil {
 		return nil, err
@@ -87,26 +98,26 @@ func jsonEncode(ctx cloudevents.EventContextReader, data interface{}) ([]byte, e
 		return nil, err
 	}
 
-	mediaType, err := ctx.GetDataMediaType()
-	if err != nil {
-		return nil, err
-	}
-	datab, err := marshalEventData(mediaType, data)
-	if err != nil {
-		return nil, err
-	}
 	if data != nil {
-		if ctx.GetDataContentEncoding() == cloudevents.Base64 {
-			buf := make([]byte, base64.StdEncoding.EncodedLen(len(datab)))
-			base64.StdEncoding.Encode(buf, datab)
-			b["data"] = []byte(strconv.QuoteToASCII(string(buf)))
-		} else if mediaType == "" || mediaType == cloudevents.ApplicationJSON {
-			b["data"] = datab
-		} else if datab[0] != byte('"') {
-			b["data"] = []byte(strconv.QuoteToASCII(string(datab)))
+		// data is passed in as an encoded []byte. That slice might be any
+		// number of things but for json encoding of the envelope all we care
+		// is if the payload is either a string or a json object. If it is a
+		// json object, it can be inserted into the body without modification.
+		// Otherwise we need to quote it if not already quoted.
+		mediaType, err := ctx.GetDataMediaType()
+		if err != nil {
+			return nil, err
+		}
+		isBase64 := ctx.GetDataContentEncoding() == cloudevents.Base64
+		isJson := mediaType == "" || mediaType == cloudevents.ApplicationJSON || mediaType == cloudevents.TextJSON
+		// TODO(#60): we do not support json values at the moment, only objects and lists.
+		if isJson && !isBase64 {
+			b["data"] = data
+		} else if data[0] != byte('"') {
+			b["data"] = []byte(strconv.QuoteToASCII(string(data)))
 		} else {
 			// already quoted
-			b["data"] = datab
+			b["data"] = data
 		}
 	}
 
@@ -148,8 +159,9 @@ func obsJsonDecodeV01(body []byte) (*cloudevents.Event, error) {
 	}
 
 	return &cloudevents.Event{
-		Context: &ec,
-		Data:    data,
+		Context:     &ec,
+		Data:        data,
+		DataEncoded: true,
 	}, nil
 }
 
@@ -183,8 +195,9 @@ func obsJsonDecodeV02(body []byte) (*cloudevents.Event, error) {
 	}
 
 	return &cloudevents.Event{
-		Context: &ec,
-		Data:    data,
+		Context:     &ec,
+		Data:        data,
+		DataEncoded: true,
 	}, nil
 }
 
@@ -218,8 +231,9 @@ func obsJsonDecodeV03(body []byte) (*cloudevents.Event, error) {
 	}
 
 	return &cloudevents.Event{
-		Context: &ec,
-		Data:    data,
+		Context:     &ec,
+		Data:        data,
+		DataEncoded: true,
 	}, nil
 }
 

@@ -5,14 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec"
 )
 
 // Event represents the canonical representation of a CloudEvent.
 type Event struct {
-	Context EventContext
-	Data    interface{}
+	Context     EventContext
+	Data        interface{}
+	DataEncoded bool
 }
 
 const (
@@ -29,16 +28,6 @@ func New(version ...string) Event {
 	e := &Event{}
 	e.SetSpecVersion(specVersion)
 	return *e
-}
-
-// DataAs attempts to populate the provided data object with the event payload.
-// data should be a pointer type.
-func (e Event) DataAs(data interface{}) error {
-	mediaType, err := e.Context.GetDataMediaType()
-	if err != nil {
-		return err
-	}
-	return datacodec.Decode(mediaType, e.Data, data)
 }
 
 // ExtensionAs returns Context.ExtensionAs(name, obj)

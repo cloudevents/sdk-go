@@ -371,6 +371,7 @@ func TestCodecV03_Decode(t *testing.T) {
 					Source:          *source,
 					ID:              "ABC-123",
 				},
+				DataEncoded: true,
 			},
 		},
 		"full v0.3 binary": {
@@ -416,6 +417,7 @@ func TestCodecV03_Decode(t *testing.T) {
 				Data: toBytes(map[string]interface{}{
 					"hello": "world",
 				}),
+				DataEncoded: true,
 			},
 		},
 		"full v0.3 binary base64": {
@@ -458,7 +460,8 @@ func TestCodecV03_Decode(t *testing.T) {
 						},
 					},
 				},
-				Data: `{"hello":"world"}`,
+				Data:        []byte(`eyJoZWxsbyI6IndvcmxkIn0=`),
+				DataEncoded: true,
 			},
 		},
 		"simple v0.3 structured": {
@@ -481,6 +484,7 @@ func TestCodecV03_Decode(t *testing.T) {
 					Source:      *source,
 					ID:          "ABC-123",
 				},
+				DataEncoded: true,
 			},
 		},
 		"full v0.3 structured": {
@@ -523,6 +527,7 @@ func TestCodecV03_Decode(t *testing.T) {
 				Data: toBytes(map[string]interface{}{
 					"hello": "world",
 				}),
+				DataEncoded: true,
 			},
 		},
 		"full v0.3 structured base64": {
@@ -562,7 +567,8 @@ func TestCodecV03_Decode(t *testing.T) {
 						"test": "extended",
 					},
 				},
-				Data: `{"hello":"world"}`,
+				Data:        []byte(`"eyJoZWxsbyI6IndvcmxkIn0="`), // TODO: structured comes in quoted. Unquote?
+				DataEncoded: true,
 			},
 		},
 		"simple v0.3 binary with short header": {
@@ -585,6 +591,7 @@ func TestCodecV03_Decode(t *testing.T) {
 					Source:          *source,
 					ID:              "ABC-123",
 				},
+				DataEncoded: true,
 			},
 		},
 	}

@@ -270,6 +270,7 @@ func TestCodecV02_Decode(t *testing.T) {
 					Source:      *source,
 					ID:          "ABC-123",
 				},
+				DataEncoded: true,
 			},
 		},
 		"full v0.2 binary": {
@@ -313,6 +314,7 @@ func TestCodecV02_Decode(t *testing.T) {
 				Data: toBytes(map[string]interface{}{
 					"hello": "world",
 				}),
+				DataEncoded: true,
 			},
 		},
 		"simple v0.2 structured": {
@@ -335,6 +337,7 @@ func TestCodecV02_Decode(t *testing.T) {
 					Source:      *source,
 					ID:          "ABC-123",
 				},
+				DataEncoded: true,
 			},
 		},
 		"full v0.2 structured": {
@@ -375,6 +378,7 @@ func TestCodecV02_Decode(t *testing.T) {
 				Data: toBytes(map[string]interface{}{
 					"hello": "world",
 				}),
+				DataEncoded: true,
 			},
 		},
 		"simple v0.2 binary with short header": {
@@ -397,6 +401,7 @@ func TestCodecV02_Decode(t *testing.T) {
 					Source:      *source,
 					ID:          "ABC-123",
 				},
+				DataEncoded: true,
 			},
 		},
 	}
