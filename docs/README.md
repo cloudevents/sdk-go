@@ -5,12 +5,12 @@ This is a collection of topics related to development of the SDK.
 ## Transcoding
 
 One of the goals of this sdk is to decouple the encoding from the transport as
-much as possible. This is done by the integrating interacting with the
-[Event][cloudevents.event] object. The [Transport][transport.transport]
-implementation interacts with a [Message][transport.message]. The
-[Codec][transport.codec] is responsible for converting Event to Message for the
-the transport implementation. And this process works in reverse when a transport
-is used to receive an event.
+much as possible. This is done by the sdk integrator interacting primarily with
+the [Event][cloudevents.event] object. The [Transport][transport.transport]
+implementation interacts with a [Message][transport.message] object. The
+[Codec][transport.codec] is responsible for converting `Event` to `Message` for
+the the transport implementation. And this process works in reverse when a
+transport is used to receive an event.
 
 Sending:
 

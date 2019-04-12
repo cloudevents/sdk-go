@@ -85,7 +85,7 @@ func (v CodecV03) encodeBinary(e cloudevents.Event) (transport.Message, error) {
 
 	body, err := e.DataBytes()
 	if err != nil {
-		panic("idk")
+		return nil, err
 	}
 
 	msg := &Message{

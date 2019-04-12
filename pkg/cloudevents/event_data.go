@@ -2,6 +2,7 @@ package cloudevents
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec"
 	"strconv"
@@ -38,7 +39,7 @@ func (e *Event) DataBytes() ([]byte, error) {
 		if s, ok := e.Data.(string); ok {
 			b = []byte(s)
 		} else {
-			panic("idk")
+			return nil, errors.New("data was not a byte slice or string")
 		}
 	}
 	return b, nil
@@ -59,7 +60,7 @@ func (e Event) DataAs(data interface{}) error { // TODO: Clean this function up
 		if s, ok := e.Data.(string); ok {
 			obj = []byte(s)
 		} else {
-			panic("idk")
+			return errors.New("data was not a byte slice or string")
 		}
 	}
 	if len(obj) == 0 {

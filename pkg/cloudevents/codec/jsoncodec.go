@@ -99,12 +99,18 @@ func jsonEncode(ctx cloudevents.EventContextReader, data []byte) ([]byte, error)
 	}
 
 	if data != nil {
+		// data is passed in as an encoded []byte. That slice might be any
+		// number of things but for json encoding of the envelope all we care
+		// is if the payload is either a string or a json object. If it is a
+		// json object, it can be inserted into the body without modification.
+		// Otherwise we need to quote it if not already quoted.
 		mediaType, err := ctx.GetDataMediaType()
 		if err != nil {
 			return nil, err
 		}
 		isBase64 := ctx.GetDataContentEncoding() == cloudevents.Base64
 		isJson := mediaType == "" || mediaType == cloudevents.ApplicationJSON || mediaType == cloudevents.TextJSON
+		// TODO(#60): we do not support json values at the moment, only objects and lists.
 		if isJson && !isBase64 {
 			b["data"] = data
 		} else if data[0] != byte('"') {
