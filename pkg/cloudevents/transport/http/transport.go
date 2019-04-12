@@ -175,7 +175,6 @@ func (t *Transport) obsSend(ctx context.Context, event cloudevents.Event) (*clou
 
 		req.Body = ioutil.NopCloser(bytes.NewBuffer(m.Body))
 		req.ContentLength = int64(len(m.Body))
-		req.Close = true
 
 		return httpDo(ctx, t.Client, &req, func(resp *http.Response, err error) (*cloudevents.Event, error) {
 			logger := cecontext.LoggerFrom(ctx)
