@@ -1,6 +1,7 @@
 package cloudevents_test
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
@@ -59,7 +60,7 @@ func TestGetDataContentType(t *testing.T) {
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 
-			got := tc.event.Context.GetDataMediaType()
+			got, _ := tc.event.Context.GetDataMediaType()
 
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("unexpected (-want, +got) = %v", diff)
@@ -208,8 +209,9 @@ func TestDataAs(t *testing.T) {
 		},
 		"json simple": {
 			event: ce.Event{
-				Context: FullEventContextV01(now),
-				Data:    []byte(`{"a":"apple","b":"banana"}`),
+				Context:     FullEventContextV01(now),
+				Data:        []byte(`eyJhIjoiYXBwbGUiLCJiIjoiYmFuYW5hIn0K`),
+				DataEncoded: true,
 			},
 			want: &map[string]string{
 				"a": "apple",
@@ -218,8 +220,9 @@ func TestDataAs(t *testing.T) {
 		},
 		"json complex empty": {
 			event: ce.Event{
-				Context: FullEventContextV01(now),
-				Data:    []byte(`{}`),
+				Context:     FullEventContextV01(now),
+				Data:        []byte(`e30K`),
+				DataEncoded: true,
 			},
 			want: &DataExample{},
 		},
@@ -241,8 +244,11 @@ func TestDataAs(t *testing.T) {
 					if err != nil {
 						t.Errorf("failed to marshal test data: %s", err.Error())
 					}
-					return j
+					buf := make([]byte, base64.StdEncoding.EncodedLen(len(j)))
+					base64.StdEncoding.Encode(buf, j)
+					return buf
 				}(),
+				DataEncoded: true,
 			},
 			want: &DataExample{
 				AnInt: 42,
@@ -350,7 +356,7 @@ func TestString(t *testing.T) {
 	}{
 		"empty v0.1": {
 			event: ce.Event{
-				Context: ce.EventContextV01{},
+				Context: &ce.EventContextV01{},
 			},
 			want: `Validation: invalid
 Validation Error: 
@@ -367,7 +373,7 @@ Context Attributes,
 		},
 		"empty v0.2": {
 			event: ce.Event{
-				Context: ce.EventContextV02{},
+				Context: &ce.EventContextV02{},
 			},
 			want: `Validation: invalid
 Validation Error: 
@@ -384,7 +390,7 @@ Context Attributes,
 		},
 		"empty v0.3": {
 			event: ce.Event{
-				Context: ce.EventContextV03{},
+				Context: &ce.EventContextV03{},
 			},
 			want: `Validation: invalid
 Validation Error: 
@@ -452,6 +458,8 @@ Context Attributes,
   contentType: application/json
 Extensions,
   another-test: 1
+  datacontentencoding: base64
+  subject: topic
   test: extended
 Data,
   {
@@ -476,7 +484,9 @@ Context Attributes,
   contenttype: application/json
 Extensions,
   another-test: 1
+  datacontentencoding: base64
   eventTypeVersion: v1alpha1
+  subject: topic
   test: extended
 Data,
   {
@@ -495,10 +505,12 @@ Context Attributes,
   specversion: 0.3
   type: com.example.simple
   source: http://example.com/source
+  subject: topic
   id: ABC-123
   time: %s
   schemaurl: http://example.com/schema
   datacontenttype: application/json
+  datacontentencoding: base64
 Extensions,
   another-test: 1
   eventTypeVersion: v1alpha1
@@ -631,7 +643,7 @@ func strptr(s string) *string {
 	return &s
 }
 
-func MinEventContextV01() ce.EventContextV01 {
+func MinEventContextV01() *ce.EventContextV01 {
 	sourceUrl, _ := url.Parse("http://example.com/source")
 	source := &types.URLRef{URL: *sourceUrl}
 
@@ -642,7 +654,7 @@ func MinEventContextV01() ce.EventContextV01 {
 	}.AsV01()
 }
 
-func MinEventContextV02() ce.EventContextV02 {
+func MinEventContextV02() *ce.EventContextV02 {
 	sourceUrl, _ := url.Parse("http://example.com/source")
 	source := &types.URLRef{URL: *sourceUrl}
 
@@ -653,7 +665,7 @@ func MinEventContextV02() ce.EventContextV02 {
 	}.AsV02()
 }
 
-func MinEventContextV03() ce.EventContextV03 {
+func MinEventContextV03() *ce.EventContextV03 {
 	sourceUrl, _ := url.Parse("http://example.com/source")
 	source := &types.URLRef{URL: *sourceUrl}
 
@@ -664,7 +676,7 @@ func MinEventContextV03() ce.EventContextV03 {
 	}.AsV03()
 }
 
-func FullEventContextV01(now types.Timestamp) ce.EventContextV01 {
+func FullEventContextV01(now types.Timestamp) *ce.EventContextV01 {
 	sourceUrl, _ := url.Parse("http://example.com/source")
 	source := &types.URLRef{URL: *sourceUrl}
 
@@ -680,12 +692,14 @@ func FullEventContextV01(now types.Timestamp) ce.EventContextV01 {
 		ContentType:      ce.StringOfApplicationJSON(),
 		Source:           *source,
 	}
+	eventContextV01.SetExtension(ce.SubjectKey, "topic")
+	eventContextV01.SetExtension(ce.DataContentEncodingKey, ce.Base64)
 	eventContextV01.SetExtension("test", "extended")
 	eventContextV01.SetExtension("another-test", 1)
 	return eventContextV01.AsV01()
 }
 
-func FullEventContextV02(now types.Timestamp) ce.EventContextV02 {
+func FullEventContextV02(now types.Timestamp) *ce.EventContextV02 {
 	sourceUrl, _ := url.Parse("http://example.com/source")
 	source := &types.URLRef{URL: *sourceUrl}
 
@@ -705,11 +719,13 @@ func FullEventContextV02(now types.Timestamp) ce.EventContextV02 {
 		Source:      *source,
 		Extensions:  extensions,
 	}
-	eventContextV02.SetExtension("eventTypeVersion", "v1alpha1")
+	eventContextV02.SetExtension(ce.SubjectKey, "topic")
+	eventContextV02.SetExtension(ce.DataContentEncodingKey, ce.Base64)
+	eventContextV02.SetExtension(ce.EventTypeVersionKey, "v1alpha1")
 	return eventContextV02.AsV02()
 }
 
-func FullEventContextV03(now types.Timestamp) ce.EventContextV03 {
+func FullEventContextV03(now types.Timestamp) *ce.EventContextV03 {
 	sourceUrl, _ := url.Parse("http://example.com/source")
 	source := &types.URLRef{URL: *sourceUrl}
 
@@ -717,15 +733,17 @@ func FullEventContextV03(now types.Timestamp) ce.EventContextV03 {
 	schema := &types.URLRef{URL: *schemaUrl}
 
 	eventContextV03 := ce.EventContextV03{
-		ID:              "ABC-123",
-		Time:            &now,
-		Type:            "com.example.simple",
-		SchemaURL:       schema,
-		DataContentType: ce.StringOfApplicationJSON(),
-		Source:          *source,
+		ID:                  "ABC-123",
+		Time:                &now,
+		Type:                "com.example.simple",
+		SchemaURL:           schema,
+		DataContentType:     ce.StringOfApplicationJSON(),
+		DataContentEncoding: ce.StringOfBase64(),
+		Source:              *source,
+		Subject:             strptr("topic"),
 	}
 	eventContextV03.SetExtension("test", "extended")
 	eventContextV03.SetExtension("another-test", 1)
-	eventContextV03.SetExtension("eventTypeVersion", "v1alpha1")
+	eventContextV03.SetExtension(ce.EventTypeVersionKey, "v1alpha1")
 	return eventContextV03.AsV03()
 }

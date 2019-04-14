@@ -27,7 +27,7 @@ func TestCodecV01_Encode(t *testing.T) {
 		"simple v0.1 default": {
 			codec: http.CodecV01{},
 			event: cloudevents.Event{
-				Context: cloudevents.EventContextV01{
+				Context: &cloudevents.EventContextV01{
 					CloudEventsVersion: "TestIfDefaulted",
 					EventType:          "com.example.test",
 					Source:             *source,
@@ -47,7 +47,7 @@ func TestCodecV01_Encode(t *testing.T) {
 		"full v0.1 default": {
 			codec: http.CodecV01{},
 			event: cloudevents.Event{
-				Context: cloudevents.EventContextV01{
+				Context: &cloudevents.EventContextV01{
 					EventID:          "ABC-123",
 					EventTime:        &now,
 					EventType:        "com.example.full",
@@ -81,7 +81,7 @@ func TestCodecV01_Encode(t *testing.T) {
 		"simple v0.1 binary": {
 			codec: http.CodecV01{Encoding: http.BinaryV01},
 			event: cloudevents.Event{
-				Context: cloudevents.EventContextV01{
+				Context: &cloudevents.EventContextV01{
 					EventType: "com.example.test",
 					Source:    *source,
 					EventID:   "ABC-123",
@@ -100,7 +100,7 @@ func TestCodecV01_Encode(t *testing.T) {
 		"full v0.1 binary": {
 			codec: http.CodecV01{Encoding: http.BinaryV01},
 			event: cloudevents.Event{
-				Context: cloudevents.EventContextV01{
+				Context: &cloudevents.EventContextV01{
 					EventID:          "ABC-123",
 					EventTime:        &now,
 					EventType:        "com.example.full",
@@ -134,7 +134,7 @@ func TestCodecV01_Encode(t *testing.T) {
 		"simple v0.1 structured": {
 			codec: http.CodecV01{Encoding: http.StructuredV01},
 			event: cloudevents.Event{
-				Context: cloudevents.EventContextV01{
+				Context: &cloudevents.EventContextV01{
 					EventType: "com.example.test",
 					Source:    *source,
 					EventID:   "ABC-123",
@@ -159,7 +159,7 @@ func TestCodecV01_Encode(t *testing.T) {
 		"full v0.1 structured": {
 			codec: http.CodecV01{Encoding: http.StructuredV01},
 			event: cloudevents.Event{
-				Context: cloudevents.EventContextV01{
+				Context: &cloudevents.EventContextV01{
 					EventID:          "ABC-123",
 					EventTime:        &now,
 					EventType:        "com.example.full",
@@ -256,13 +256,14 @@ func TestCodecV01_Decode(t *testing.T) {
 				},
 			},
 			want: &cloudevents.Event{
-				Context: cloudevents.EventContextV01{
+				Context: &cloudevents.EventContextV01{
 					CloudEventsVersion: cloudevents.CloudEventsVersionV01,
 					EventType:          "com.example.test",
 					Source:             *source,
 					EventID:            "ABC-123",
 					ContentType:        cloudevents.StringOfApplicationJSON(),
 				},
+				DataEncoded: true,
 			},
 		},
 		"full v0.1 binary": {
@@ -284,7 +285,7 @@ func TestCodecV01_Decode(t *testing.T) {
 				}),
 			},
 			want: &cloudevents.Event{
-				Context: cloudevents.EventContextV01{
+				Context: &cloudevents.EventContextV01{
 					CloudEventsVersion: cloudevents.CloudEventsVersionV01,
 					EventID:            "ABC-123",
 					EventTime:          &now,
@@ -300,6 +301,7 @@ func TestCodecV01_Decode(t *testing.T) {
 				Data: toBytes(map[string]interface{}{
 					"hello": "world",
 				}),
+				DataEncoded: true,
 			},
 		},
 		"simple v0.1 structured": {
@@ -316,12 +318,13 @@ func TestCodecV01_Decode(t *testing.T) {
 				}),
 			},
 			want: &cloudevents.Event{
-				Context: cloudevents.EventContextV01{
+				Context: &cloudevents.EventContextV01{
 					CloudEventsVersion: cloudevents.CloudEventsVersionV01,
 					EventType:          "com.example.test",
 					Source:             *source,
 					EventID:            "ABC-123",
 				},
+				DataEncoded: true,
 			},
 		},
 		"full v0.1 structured": {
@@ -348,7 +351,7 @@ func TestCodecV01_Decode(t *testing.T) {
 				}),
 			},
 			want: &cloudevents.Event{
-				Context: cloudevents.EventContextV01{
+				Context: &cloudevents.EventContextV01{
 					CloudEventsVersion: cloudevents.CloudEventsVersionV01,
 					EventID:            "ABC-123",
 					EventTime:          &now,
@@ -364,6 +367,7 @@ func TestCodecV01_Decode(t *testing.T) {
 				Data: toBytes(map[string]interface{}{
 					"hello": "world",
 				}),
+				DataEncoded: true,
 			},
 		},
 		"simple v0.1 binary with short header": {
@@ -379,13 +383,14 @@ func TestCodecV01_Decode(t *testing.T) {
 				},
 			},
 			want: &cloudevents.Event{
-				Context: cloudevents.EventContextV01{
+				Context: &cloudevents.EventContextV01{
 					CloudEventsVersion: cloudevents.CloudEventsVersionV01,
 					EventType:          "com.example.test",
 					Source:             *source,
 					EventID:            "ABC-123",
 					ContentType:        cloudevents.StringOfApplicationJSON(),
 				},
+				DataEncoded: true,
 			},
 		},
 	}

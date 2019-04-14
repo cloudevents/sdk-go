@@ -16,6 +16,8 @@ func TestValidateV03(t *testing.T) {
 	sourceUrl, _ := url.Parse("http://example.com/source")
 	source := &types.URLRef{URL: *sourceUrl}
 
+	subject := "a subject"
+
 	schemaUrl, _ := url.Parse("http://example.com/schema")
 	schema := &types.URLRef{URL: *schemaUrl}
 
@@ -28,7 +30,7 @@ func TestValidateV03(t *testing.T) {
 	}{
 		"min valid": {
 			ctx: ce.EventContextV03{
-				SpecVersion: ce.CloudEventsVersionV02,
+				SpecVersion: ce.CloudEventsVersionV03,
 				ID:          "ABC-123",
 				Type:        "com.example.simple",
 				Source:      *source,
@@ -36,19 +38,21 @@ func TestValidateV03(t *testing.T) {
 		},
 		"full valid": {
 			ctx: ce.EventContextV03{
-				SpecVersion:     ce.CloudEventsVersionV02,
-				ID:              "ABC-123",
-				Time:            &now,
-				Type:            "com.example.simple",
-				SchemaURL:       schema,
-				DataContentType: ce.StringOfApplicationJSON(),
-				Source:          *source,
-				Extensions:      extensions,
+				SpecVersion:         ce.CloudEventsVersionV03,
+				ID:                  "ABC-123",
+				Time:                &now,
+				Type:                "com.example.simple",
+				SchemaURL:           schema,
+				DataContentType:     ce.StringOfApplicationJSON(),
+				DataContentEncoding: ce.StringOfBase64(),
+				Source:              *source,
+				Subject:             &subject,
+				Extensions:          extensions,
 			},
 		},
 		"no Type": {
 			ctx: ce.EventContextV03{
-				SpecVersion: ce.CloudEventsVersionV02,
+				SpecVersion: ce.CloudEventsVersionV03,
 				ID:          "ABC-123",
 				Source:      *source,
 			},
@@ -65,15 +69,25 @@ func TestValidateV03(t *testing.T) {
 		},
 		"missing source": {
 			ctx: ce.EventContextV03{
-				SpecVersion: ce.CloudEventsVersionV02,
+				SpecVersion: ce.CloudEventsVersionV03,
 				ID:          "ABC-123",
 				Type:        "com.example.simple",
 			},
 			want: []string{"source:"},
 		},
+		"non-empty subject": {
+			ctx: ce.EventContextV03{
+				SpecVersion: ce.CloudEventsVersionV03,
+				ID:          "",
+				Type:        "com.example.simple",
+				Source:      *source,
+				Subject:     strptr("  "),
+			},
+			want: []string{"subject:"},
+		},
 		"non-empty ID": {
 			ctx: ce.EventContextV03{
-				SpecVersion: ce.CloudEventsVersionV02,
+				SpecVersion: ce.CloudEventsVersionV03,
 				ID:          "",
 				Type:        "com.example.simple",
 				Source:      *source,
@@ -82,7 +96,7 @@ func TestValidateV03(t *testing.T) {
 		},
 		"empty schemaURL": {
 			ctx: ce.EventContextV03{
-				SpecVersion: ce.CloudEventsVersionV02,
+				SpecVersion: ce.CloudEventsVersionV03,
 				ID:          "ABC-123",
 				Type:        "com.example.simple",
 				SchemaURL:   &types.URLRef{},
@@ -92,17 +106,38 @@ func TestValidateV03(t *testing.T) {
 		},
 		"non-empty contentType": {
 			ctx: ce.EventContextV03{
-				SpecVersion:     ce.CloudEventsVersionV02,
+				SpecVersion:     ce.CloudEventsVersionV03,
 				ID:              "ABC-123",
 				Type:            "com.example.simple",
 				Source:          *source,
 				DataContentType: strptr(""),
 			},
-			want: []string{"contenttype:"},
+			want: []string{"datacontenttype:"},
 		},
+		"non-empty dataContentEncoding": {
+			ctx: ce.EventContextV03{
+				SpecVersion:         ce.CloudEventsVersionV03,
+				ID:                  "ABC-123",
+				Type:                "com.example.simple",
+				Source:              *source,
+				DataContentEncoding: strptr(""),
+			},
+			want: []string{"datacontentencoding:"},
+		},
+		"invalid dataContentEncoding": {
+			ctx: ce.EventContextV03{
+				SpecVersion:         ce.CloudEventsVersionV03,
+				ID:                  "ABC-123",
+				Type:                "com.example.simple",
+				Source:              *source,
+				DataContentEncoding: strptr("binary"),
+			},
+			want: []string{"datacontentencoding:"},
+		},
+
 		//"empty extensions": {
 		//	ctx: ce.EventContextV03{
-		//		SpecVersion: ce.CloudEventsVersionV02,
+		//		SpecVersion: ce.CloudEventsVersionV03,
 		//		ID:            "ABC-123",
 		//		Type:          "com.example.simple",
 		//		Source:             *source,
@@ -181,7 +216,7 @@ func TestGetMediaTypeV03(t *testing.T) {
 			if tc.t != "" {
 				ec.DataContentType = &tc.t
 			}
-			got := ec.GetDataMediaType()
+			got, _ := ec.GetDataMediaType()
 
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("unexpected  (-want, +got) = %v", diff)

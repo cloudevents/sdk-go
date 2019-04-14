@@ -27,7 +27,7 @@ func TestCodecV02_Encode(t *testing.T) {
 		"simple v2 default": {
 			codec: nats.CodecV02{},
 			event: cloudevents.Event{
-				Context: cloudevents.EventContextV02{
+				Context: &cloudevents.EventContextV02{
 					Type:   "com.example.test",
 					Source: *source,
 					ID:     "ABC-123",
@@ -49,7 +49,7 @@ func TestCodecV02_Encode(t *testing.T) {
 		"full v2 default": {
 			codec: nats.CodecV02{},
 			event: cloudevents.Event{
-				Context: cloudevents.EventContextV02{
+				Context: &cloudevents.EventContextV02{
 					ID:          "ABC-123",
 					Time:        &now,
 					Type:        "com.example.test",
@@ -88,7 +88,7 @@ func TestCodecV02_Encode(t *testing.T) {
 		"simple v2 structured": {
 			codec: nats.CodecV02{Encoding: nats.StructuredV02},
 			event: cloudevents.Event{
-				Context: cloudevents.EventContextV02{
+				Context: &cloudevents.EventContextV02{
 					Type:   "com.example.test",
 					Source: *source,
 					ID:     "ABC-123",
@@ -110,7 +110,7 @@ func TestCodecV02_Encode(t *testing.T) {
 		"full v2 structured": {
 			codec: nats.CodecV02{Encoding: nats.StructuredV02},
 			event: cloudevents.Event{
-				Context: cloudevents.EventContextV02{
+				Context: &cloudevents.EventContextV02{
 					ID:          "ABC-123",
 					Time:        &now,
 					Type:        "com.example.test",
@@ -204,12 +204,13 @@ func TestCodecV02_Decode(t *testing.T) {
 				}),
 			},
 			want: &cloudevents.Event{
-				Context: cloudevents.EventContextV02{
+				Context: &cloudevents.EventContextV02{
 					SpecVersion: cloudevents.CloudEventsVersionV02,
 					Type:        "com.example.test",
 					Source:      *source,
 					ID:          "ABC-123",
 				},
+				DataEncoded: true,
 			},
 		},
 		"full v2 structured": {
@@ -232,7 +233,7 @@ func TestCodecV02_Decode(t *testing.T) {
 				}),
 			},
 			want: &cloudevents.Event{
-				Context: cloudevents.EventContextV02{
+				Context: &cloudevents.EventContextV02{
 					SpecVersion: cloudevents.CloudEventsVersionV02,
 					ID:          "ABC-123",
 					Time:        &now,
@@ -247,6 +248,7 @@ func TestCodecV02_Decode(t *testing.T) {
 				Data: toBytes(map[string]interface{}{
 					"hello": "world",
 				}),
+				DataEncoded: true,
 			},
 		},
 	}

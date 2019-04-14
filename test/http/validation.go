@@ -20,8 +20,11 @@ var (
 )
 
 func assertEventEquality(t *testing.T, ctx string, expected, actual *cloudevents.Event) {
-	if diff := cmp.Diff(expected, actual, cmpopts.IgnoreFields(cloudevents.Event{}, "Data")); diff != "" {
+	if diff := cmp.Diff(expected, actual, cmpopts.IgnoreFields(cloudevents.Event{}, "Data", "DataEncoded")); diff != "" {
 		t.Errorf("Unexpected difference in %s (-want, +got): %v", ctx, diff)
+	}
+	if expected == nil || actual == nil {
+		return
 	}
 	data := make(map[string]string, 0)
 	err := actual.DataAs(&data)
@@ -65,4 +68,8 @@ func isImportantHeader(h string) bool {
 		}
 	}
 	return true
+}
+
+func strptr(s string) *string {
+	return &s
 }

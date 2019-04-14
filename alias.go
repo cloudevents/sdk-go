@@ -46,6 +46,9 @@ var (
 	StringOfApplicationXML                  = cloudevents.StringOfApplicationXML
 	StringOfApplicationCloudEventsJSON      = cloudevents.StringOfApplicationCloudEventsJSON
 	StringOfApplicationCloudEventsBatchJSON = cloudevents.StringOfApplicationCloudEventsBatchJSON
+	StringOfBase64                          = cloudevents.StringOfBase64
+
+	Base64 = cloudevents.Base64
 
 	// Client Creation
 
@@ -57,6 +60,13 @@ var (
 	WithEventDefaulter = client.WithEventDefaulter
 	WithUUIDs          = client.WithUUIDs
 	WithTimeNow        = client.WithTimeNow
+
+	// Event Creation
+
+	NewEvent   = cloudevents.New
+	VersionV01 = cloudevents.CloudEventsVersionV01
+	VersionV02 = cloudevents.CloudEventsVersionV02
+	VersionV03 = cloudevents.CloudEventsVersionV03
 
 	// Context
 
