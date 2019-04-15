@@ -107,13 +107,15 @@ func TestStableConnectionsToSingleHost(t *testing.T) {
 	}
 
 	ctx := context.TODO()
-	concurrency := 200
+	concurrency := 64
 	duration := 1 * time.Second
+	var sent uint64
 	err = doConcurrently(concurrency, duration, func() error {
 		_, err := ceClient.Send(ctx, event)
 		if err != nil {
 			return fmt.Errorf("unexpected error sending CloudEvent %v", err.Error())
 		}
+		atomic.AddUint64(&sent, 1)
 		return nil
 	})
 	if err != nil {
@@ -125,4 +127,5 @@ func TestStableConnectionsToSingleHost(t *testing.T) {
 	if newConnectionCount > uint64(concurrency*2) {
 		t.Errorf("too many new connections opened: expected %d, got %d", concurrency, newConnectionCount)
 	}
+	t.Log("sent ", sent)
 }
