@@ -15,6 +15,10 @@ import (
 
 type Client = client.Client
 
+// Option
+
+type Option = http.Option
+
 // Event
 
 type Event = cloudevents.Event
