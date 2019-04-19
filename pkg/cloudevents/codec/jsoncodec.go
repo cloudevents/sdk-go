@@ -184,7 +184,7 @@ func obsJsonDecodeV02(body []byte) (*cloudevents.Event, error) {
 		return nil, err
 	}
 
-	raw := make(map[string]json.RawMessage)
+	raw := make(map[string]json.RawMessage, 0)
 
 	if err := json.Unmarshal(body, &raw); err != nil {
 		return nil, err
