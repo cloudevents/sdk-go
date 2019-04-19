@@ -1,6 +1,7 @@
 package http_test
 
 import (
+	"encoding/json"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
@@ -191,12 +192,10 @@ func TestCodecV02_Encode(t *testing.T) {
 						"data": map[string]interface{}{
 							"hello": "world",
 						},
-						"id":   "ABC-123",
-						"time": now,
-						"type": "com.example.test",
-						"-": map[string]interface{}{ // TODO: this could be an issue.
-							"test": "extended",
-						},
+						"id":        "ABC-123",
+						"time":      now,
+						"type":      "com.example.test",
+						"test":      "extended",
 						"schemaurl": "http://example.com/schema",
 						"source":    "http://example.com/source",
 					}
@@ -352,12 +351,10 @@ func TestCodecV02_Decode(t *testing.T) {
 					"data": map[string]interface{}{
 						"hello": "world",
 					},
-					"id":   "ABC-123",
-					"time": now,
-					"type": "com.example.test",
-					"-": map[string]interface{}{ // TODO: revisit this
-						"test": "extended",
-					},
+					"id":        "ABC-123",
+					"time":      now,
+					"type":      "com.example.test",
+					"test":      "extended",
 					"schemaurl": "http://example.com/schema",
 					"source":    "http://example.com/source",
 				}),
@@ -372,7 +369,7 @@ func TestCodecV02_Decode(t *testing.T) {
 					ContentType: cloudevents.StringOfApplicationJSON(),
 					Source:      *source,
 					Extensions: map[string]interface{}{
-						"test": "extended",
+						"test": json.RawMessage(`"extended"`),
 					},
 				},
 				Data: toBytes(map[string]interface{}{

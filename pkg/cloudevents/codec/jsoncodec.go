@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
 	"strconv"
 )
@@ -314,16 +313,4 @@ func marshalEvent(event interface{}, extensions map[string]interface{}) (map[str
 	}
 
 	return brm, nil
-}
-
-// TODO: not sure about this location for eventdata.
-func marshalEventData(encoding string, data interface{}) ([]byte, error) {
-	if data == nil {
-		return []byte(nil), nil
-	}
-	// already encoded?
-	if b, ok := data.([]byte); ok {
-		return b, nil
-	}
-	return datacodec.Encode(encoding, data)
 }
