@@ -8,6 +8,7 @@ require (
 	github.com/nats-io/go-nats v1.7.0
 	github.com/nats-io/nkeys v0.0.2 // indirect
 	github.com/nats-io/nuid v1.0.0 // indirect
+	github.com/streadway/amqp v0.0.0-20190404075320-75d898a42a94
 	go.opencensus.io v0.19.1
 	go.uber.org/atomic v1.3.2 // indirect
 	go.uber.org/multierr v1.1.0 // indirect
