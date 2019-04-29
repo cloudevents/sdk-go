@@ -1,6 +1,7 @@
 package http
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/cloudevents/sdk-go"
 	"testing"
@@ -374,7 +375,7 @@ func TestClientLoopback_setters_structured_json_base64(t *testing.T) {
 						Source:      *cloudevents.ParseURLRef("/unit/test/client"),
 						ContentType: cloudevents.StringOfApplicationJSON(),
 						Extensions: map[string]interface{}{
-							"datacontentencoding": "base64",
+							"datacontentencoding": json.RawMessage(`"base64"`),
 						},
 					}.AsV02(),
 					Data: map[string]string{"unittest": "response"},
@@ -406,7 +407,7 @@ func TestClientLoopback_setters_structured_json_base64(t *testing.T) {
 					Header: map[string][]string{
 						"content-type": {"application/cloudevents+json"},
 					},
-					Body: fmt.Sprintf(`{"-":{"datacontentencoding":"base64"},"contenttype":"application/json","data":"eyJoZWxsbyI6InVuaXR0ZXN0In0=","id":"ABC-123","source":"/unit/test/client","specversion":"0.2","time":%q,"type":"unit.test.client.sent"}`, now.UTC().Format(time.RFC3339Nano)),
+					Body: fmt.Sprintf(`{"contenttype":"application/json","data":"eyJoZWxsbyI6InVuaXR0ZXN0In0=","datacontentencoding":"base64","id":"ABC-123","source":"/unit/test/client","specversion":"0.2","time":%q,"type":"unit.test.client.sent"}`, now.UTC().Format(time.RFC3339Nano)),
 				},
 				cloudevents.VersionV03: {
 					Method: "POST",
@@ -429,7 +430,7 @@ func TestClientLoopback_setters_structured_json_base64(t *testing.T) {
 					Header: map[string][]string{
 						"content-type": {"application/cloudevents+json"},
 					},
-					Body:   fmt.Sprintf(`{"-":{"datacontentencoding":"base64"},"contenttype":"application/json","data":"eyJ1bml0dGVzdCI6InJlc3BvbnNlIn0=","id":"321-CBA","source":"/unit/test/client","specversion":"0.2","time":%q,"type":"unit.test.client.response"}`, now.UTC().Format(time.RFC3339Nano)),
+					Body:   fmt.Sprintf(`{"contenttype":"application/json","data":"eyJ1bml0dGVzdCI6InJlc3BvbnNlIn0=","datacontentencoding":"base64","id":"321-CBA","source":"/unit/test/client","specversion":"0.2","time":%q,"type":"unit.test.client.response"}`, now.UTC().Format(time.RFC3339Nano)),
 					Status: "200 OK",
 				},
 				cloudevents.VersionV03: {

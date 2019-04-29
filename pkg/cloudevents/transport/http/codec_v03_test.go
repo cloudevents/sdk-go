@@ -1,6 +1,7 @@
 package http_test
 
 import (
+	"encoding/json"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
@@ -245,12 +246,10 @@ func TestCodecV03_Encode(t *testing.T) {
 						"data": map[string]interface{}{
 							"hello": "world",
 						},
-						"id":   "ABC-123",
-						"time": now,
-						"type": "com.example.test",
-						"-": map[string]interface{}{ // TODO: this could be an issue.
-							"test": "extended",
-						},
+						"id":        "ABC-123",
+						"time":      now,
+						"type":      "com.example.test",
+						"test":      "extended",
 						"schemaurl": "http://example.com/schema",
 						"source":    "http://example.com/source",
 						"subject":   "resource",
@@ -292,12 +291,10 @@ func TestCodecV03_Encode(t *testing.T) {
 						"id":                  "ABC-123",
 						"time":                now,
 						"type":                "com.example.test",
-						"-": map[string]interface{}{ // TODO: this could be an issue.
-							"test": "extended",
-						},
-						"schemaurl": "http://example.com/schema",
-						"source":    "http://example.com/source",
-						"subject":   "resource",
+						"test":                "extended",
+						"schemaurl":           "http://example.com/schema",
+						"source":              "http://example.com/source",
+						"subject":             "resource",
 					}
 					return toBytes(body)
 				}(),
@@ -499,12 +496,10 @@ func TestCodecV03_Decode(t *testing.T) {
 					"data": map[string]interface{}{
 						"hello": "world",
 					},
-					"id":   "ABC-123",
-					"time": now,
-					"type": "com.example.test",
-					"-": map[string]interface{}{ // TODO: revisit this
-						"test": "extended",
-					},
+					"id":        "ABC-123",
+					"time":      now,
+					"type":      "com.example.test",
+					"test":      "extended",
 					"schemaurl": "http://example.com/schema",
 					"source":    "http://example.com/source",
 					"subject":   "resource",
@@ -521,7 +516,7 @@ func TestCodecV03_Decode(t *testing.T) {
 					Source:          *source,
 					Subject:         &subject,
 					Extensions: map[string]interface{}{
-						"test": "extended",
+						"test": json.RawMessage(`"extended"`),
 					},
 				},
 				Data: toBytes(map[string]interface{}{
@@ -544,12 +539,10 @@ func TestCodecV03_Decode(t *testing.T) {
 					"id":                  "ABC-123",
 					"time":                now,
 					"type":                "com.example.test",
-					"-": map[string]interface{}{ // TODO: revisit this
-						"test": "extended",
-					},
-					"schemaurl": "http://example.com/schema",
-					"source":    "http://example.com/source",
-					"subject":   "resource",
+					"test":                "extended",
+					"schemaurl":           "http://example.com/schema",
+					"source":              "http://example.com/source",
+					"subject":             "resource",
 				}),
 			},
 			want: &cloudevents.Event{
@@ -564,7 +557,7 @@ func TestCodecV03_Decode(t *testing.T) {
 					Source:              *source,
 					Subject:             &subject,
 					Extensions: map[string]interface{}{
-						"test": "extended",
+						"test": json.RawMessage(`"extended"`),
 					},
 				},
 				Data:        []byte(`"eyJoZWxsbyI6IndvcmxkIn0="`), // TODO: structured comes in quoted. Unquote?
