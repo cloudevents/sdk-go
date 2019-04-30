@@ -74,8 +74,8 @@ func (c Codec) encodeBinary(e cloudevents.Event) (transport.Message, error) {
 	}
 
 	msg := &Message{
-		Headers: headers,
-		Body:    body,
+		ApplicationProperties: headers,
+		Body:                  body,
 	}
 
 	if e.DataContentType() != "" {
@@ -129,7 +129,7 @@ func (c Codec) decodeBinary(msg transport.Message, event *cloudevents.Event) (*c
 	if !ok {
 		return nil, fmt.Errorf("failed to convert transport.Message to amqp.Message")
 	}
-	err := c.fromHeaders(m.Headers, event)
+	err := c.fromHeaders(m.ApplicationProperties, event)
 	if err != nil {
 		return nil, err
 	}

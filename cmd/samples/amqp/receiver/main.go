@@ -3,26 +3,25 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
+	"os"
+
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/amqp"
 	"github.com/kelseyhightower/envconfig"
-	"log"
-	"os"
+	qp "pack.ag/amqp"
 )
 
 type envConfig struct {
 	// AMQPServer URL to connect to the amqp server.
-	AMQPServer string `envconfig:"AMQP_SERVER" default:"amqp://guest:guest@localhost:5672/" required:"true"`
+	AMQPServer string `envconfig:"AMQP_SERVER" default:"amqp://localhost:5672/" required:"true"`
 
-	// Key is the amqp channel name to publish cloudevents on.
-	Channel string `envconfig:"AMQP_CHANNEL" default:""`
+	// Queue is the amqp queue name to publish cloudevents on.
+	Queue string `envconfig:"AMQP_QUEUE" default:"default"`
 
-	// Key is the amqp routing key to publish cloudevents on.
-	Key string `envconfig:"AMQP_ROUTING_KEY" default:""`
-
-	// Exchange is the amqp exchange to publish cloudevents on.
-	Exchange string `envconfig:"AMQP_EXCHANGE" default:""`
+	AccessKeyName string `envconfig:"AMQP_ACCESS_KEY_NAME" default:"guest"`
+	AccessKey     string `envconfig:"AMQP_ACCESS_KEY" default:"password"`
 }
 
 func main() {
@@ -48,7 +47,9 @@ func receive(ctx context.Context, event cloudevents.Event, resp *cloudevents.Eve
 func _main(args []string, env envConfig) int {
 	ctx := context.Background()
 
-	t, err := amqp.New(env.AMQPServer, env.Exchange, env.Channel, env.Key)
+	t, err := amqp.New(env.AMQPServer, env.Queue,
+		amqp.WithConnOpt(qp.ConnSASLPlain(env.AccessKeyName, env.AccessKey)),
+	)
 	if err != nil {
 		log.Fatalf("failed to create amqp transport, %s", err.Error())
 	}

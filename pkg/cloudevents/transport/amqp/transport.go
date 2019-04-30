@@ -3,12 +3,11 @@ package amqp
 import (
 	"context"
 	"fmt"
-
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
-	"github.com/streadway/amqp"
 	"go.uber.org/zap"
+	"pack.ag/amqp"
 )
 
 // Transport adheres to transport.Transport.
@@ -16,52 +15,62 @@ var _ transport.Transport = (*Transport)(nil)
 
 // Transport acts as both a http client and a http handler.
 type Transport struct {
+	connOpts         []amqp.ConnOption
+	sessionOpts      []amqp.SessionOption
+	senderLinkOpts   []amqp.LinkOption
+	receiverLinkOpts []amqp.LinkOption
+
+	// Encoding
 	Encoding Encoding
-	Conn     *amqp.Connection
-	Exchange string
-	Ch       *amqp.Channel
-	Queue    amqp.Queue
-	Key      string
+	codec    transport.Codec
 
+	// AMQP
+	Client  *amqp.Client
+	Session *amqp.Session
+	Sender  *amqp.Sender
+	Queue   string
+
+	// Receiver
 	Receiver transport.Receiver
-
-	codec transport.Codec
 }
 
 // New creates a new amqp transport.
-func New(server, exchange, queueName, routingKey string, opts ...Option) (*Transport, error) {
-	conn, err := amqp.Dial(server)
-	if err != nil {
-		return nil, err
-	}
-
-	ch, err := conn.Channel()
-	if err != nil {
-		return nil, err
-	}
-
-	queue, err := ch.QueueDeclare(
-		queueName, // name
-		false,     // durable
-		false,     // delete when unused
-		false,     // exclusive
-		false,     // no-wait
-		nil,       // arguments
-	)
-	if err != nil {
-		return nil, err
-	}
-
+func New(server, queue string, opts ...Option) (*Transport, error) {
 	t := &Transport{
-		Conn:     conn,
-		Ch:       ch,
-		Queue:    queue,
-		Exchange: exchange,
-		Key:      routingKey,
+		Queue:            queue,
+		connOpts:         []amqp.ConnOption(nil),
+		sessionOpts:      []amqp.SessionOption(nil),
+		senderLinkOpts:   []amqp.LinkOption(nil),
+		receiverLinkOpts: []amqp.LinkOption(nil),
 	}
 	if err := t.applyOptions(opts...); err != nil {
 		return nil, err
 	}
+
+	client, err := amqp.Dial(server, t.connOpts...)
+	if err != nil {
+		return nil, err
+	}
+	t.Client = client
+
+	// Open a session
+	session, err := client.NewSession(t.sessionOpts...)
+	if err != nil {
+		_ = client.Close()
+		return nil, err
+	}
+	t.Session = session
+
+	t.senderLinkOpts = append(t.senderLinkOpts, amqp.LinkTargetAddress(queue))
+
+	// Create a sender
+	sender, err := session.NewSender(t.senderLinkOpts...)
+	if err != nil {
+		_ = client.Close()
+		_ = session.Close(context.Background())
+		return nil, err
+	}
+	t.Sender = sender // TODO: in the future we might have more than one sender.
 
 	return t, nil
 }
@@ -103,16 +112,14 @@ func (t *Transport) Send(ctx context.Context, event cloudevents.Event) (*cloudev
 	}
 
 	if m, ok := msg.(*Message); ok {
-		return nil, t.Ch.Publish(
-			t.Exchange,
-			t.Key,
-			false, // mandatory
-			false, // immediate
-			amqp.Publishing{
-				Headers:     m.Headers,
+		// TODO: no response?
+		return nil, t.Sender.Send(ctx, &amqp.Message{
+			Properties: &amqp.MessageProperties{
 				ContentType: m.ContentType,
-				Body:        m.Body,
-			})
+			},
+			ApplicationProperties: m.ApplicationProperties,
+			Data:                  [][]byte{m.Body},
+		})
 	}
 
 	return nil, fmt.Errorf("failed to encode Event into a Message")
@@ -126,22 +133,13 @@ func (t *Transport) SetReceiver(r transport.Receiver) {
 // StartReceiver implements Transport.StartReceiver
 // NOTE: This is a blocking call.
 func (t *Transport) StartReceiver(ctx context.Context) error {
-	if t.Conn == nil {
-		return fmt.Errorf("no active amqp connection")
+	t.receiverLinkOpts = append(t.receiverLinkOpts, amqp.LinkSourceAddress(t.Queue))
+	receiver, err := t.Session.NewReceiver(t.receiverLinkOpts...)
+	if err != nil {
+		return err
 	}
 
-	msgs, err := t.Ch.Consume(
-		t.Queue.Name, // queue
-		"",           // consumer
-		true,         // auto-ack
-		false,        // exclusive
-		false,        // no-local
-		false,        // no-wait
-		nil,          // args
-	)
-	if err != nil {
-		return fmt.Errorf("failed to start consume, %e", err)
-	}
+	ctx, cancel := context.WithCancel(ctx)
 
 	if ok := t.loadCodec(); !ok {
 		return fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
@@ -150,13 +148,20 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 	logger := cecontext.LoggerFrom(ctx)
 
 	go func() {
-		for d := range msgs {
-			msg := &Message{
-				Body:        d.Body,
-				ContentType: d.ContentType,
-				Headers:     d.Headers,
+		for {
+			// Receive next message
+			msg, err := receiver.Receive(ctx)
+			if err != nil {
+				logger.Errorw("Failed reading message from AMQP.", zap.Error(err))
+				panic(err) // TODO: panic?
 			}
-			event, err := t.codec.Decode(msg)
+
+			m := &Message{
+				Body:                  msg.Data[0], // TODO: omg why is it a list of lists?
+				ContentType:           msg.Properties.ContentType,
+				ApplicationProperties: msg.ApplicationProperties,
+			}
+			event, err := t.codec.Decode(m)
 			if err != nil {
 				logger.Errorw("failed to decode message", zap.Error(err)) // TODO: create an error channel to pass this up
 			} else {
@@ -164,11 +169,18 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 				// For now, amqp does not support reply.
 				if err := t.Receiver.Receive(context.TODO(), *event, nil); err != nil {
 					logger.Warnw("amqp receiver return err", zap.Error(err))
+				} else {
+					if err := msg.Accept(); err != nil {
+						logger.Warnw("amqp accept return err", zap.Error(err))
+					}
 				}
 			}
 		}
 	}()
 
 	<-ctx.Done()
-	return err
+
+	_ = receiver.Close(ctx)
+	cancel()
+	return nil
 }
