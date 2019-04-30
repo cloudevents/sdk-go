@@ -16,6 +16,8 @@ func strptr(s string) *string {
 	return &s
 }
 
+// TODO: Test Binary Mode
+
 func TestCodecEncode(t *testing.T) {
 	sourceUrl, _ := url.Parse("http://example.com/source")
 	source := &types.URLRef{URL: *sourceUrl}
@@ -26,7 +28,7 @@ func TestCodecEncode(t *testing.T) {
 		want    *amqp.Message
 		wantErr error
 	}{
-		"simple v02 structured binary": {
+		"simple v02 structured": {
 			codec: amqp.Codec{Encoding: amqp.StructuredV02},
 			event: cloudevents.Event{
 				Context: &cloudevents.EventContextV02{
@@ -36,6 +38,7 @@ func TestCodecEncode(t *testing.T) {
 				},
 			},
 			want: &amqp.Message{
+				ContentType: "application/cloudevents+json",
 				Body: func() []byte {
 					body := map[string]interface{}{
 						"contenttype": "application/json",

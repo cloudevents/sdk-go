@@ -35,6 +35,7 @@ func TestCodecV02_Encode(t *testing.T) {
 				},
 			},
 			want: &amqp.Message{
+				ContentType: "application/cloudevents+json",
 				Body: func() []byte {
 					body := map[string]interface{}{
 						"contenttype": "application/json",
@@ -66,6 +67,7 @@ func TestCodecV02_Encode(t *testing.T) {
 				},
 			},
 			want: &amqp.Message{
+				ContentType: "application/cloudevents+json",
 				Body: func() []byte {
 					body := map[string]interface{}{
 						"specversion": "0.2",
@@ -94,6 +96,7 @@ func TestCodecV02_Encode(t *testing.T) {
 				},
 			},
 			want: &amqp.Message{
+				ContentType: "application/cloudevents+json",
 				Body: func() []byte {
 					body := map[string]interface{}{
 						"contenttype": "application/json",
@@ -125,6 +128,7 @@ func TestCodecV02_Encode(t *testing.T) {
 				},
 			},
 			want: &amqp.Message{
+				ContentType: "application/cloudevents+json",
 				Body: func() []byte {
 					body := map[string]interface{}{
 						"specversion": "0.2",
