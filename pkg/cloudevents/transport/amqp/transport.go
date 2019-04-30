@@ -21,6 +21,7 @@ type Transport struct {
 	Exchange string
 	Ch       *amqp.Channel
 	Queue    amqp.Queue
+	Key      string
 
 	Receiver transport.Receiver
 
@@ -28,7 +29,7 @@ type Transport struct {
 }
 
 // New creates a new amqp transport.
-func New(server, exchange, key string, opts ...Option) (*Transport, error) {
+func New(server, exchange, queueName, routingKey string, opts ...Option) (*Transport, error) {
 	conn, err := amqp.Dial(server)
 	if err != nil {
 		return nil, err
@@ -40,21 +41,23 @@ func New(server, exchange, key string, opts ...Option) (*Transport, error) {
 	}
 
 	queue, err := ch.QueueDeclare(
-		key,   // name
-		false, // durable
-		false, // delete when unused
-		false, // exclusive
-		false, // no-wait
-		nil,   // arguments
+		queueName, // name
+		false,     // durable
+		false,     // delete when unused
+		false,     // exclusive
+		false,     // no-wait
+		nil,       // arguments
 	)
 	if err != nil {
 		return nil, err
 	}
 
 	t := &Transport{
-		Conn:  conn,
-		Ch:    ch,
-		Queue: queue,
+		Conn:     conn,
+		Ch:       ch,
+		Queue:    queue,
+		Exchange: exchange,
+		Key:      routingKey,
 	}
 	if err := t.applyOptions(opts...); err != nil {
 		return nil, err
@@ -102,7 +105,7 @@ func (t *Transport) Send(ctx context.Context, event cloudevents.Event) (*cloudev
 	if m, ok := msg.(*Message); ok {
 		return nil, t.Ch.Publish(
 			t.Exchange,
-			t.Queue.Name,
+			t.Key,
 			false, // mandatory
 			false, // immediate
 			amqp.Publishing{

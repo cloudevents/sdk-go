@@ -23,8 +23,11 @@ type envConfig struct {
 	// AMQPServer URL to connect to the amqp server.
 	AMQPServer string `envconfig:"AMQP_SERVER" default:"amqp://guest:guest@localhost:5672/" required:"true"`
 
-	// Key is the amqp channel key to publish cloudevents on.
-	Key string `envconfig:"AMQP_KEY" default:"sample" required:"true"`
+	// Key is the amqp channel name to publish cloudevents on.
+	Channel string `envconfig:"AMQP_CHANNEL" default:""`
+
+	// Key is the amqp routing key to publish cloudevents on.
+	Key string `envconfig:"AMQP_ROUTING_KEY" default:""`
 
 	// Exchange is the amqp exchange to publish cloudevents on.
 	Exchange string `envconfig:"AMQP_EXCHANGE" default:""`
@@ -74,7 +77,7 @@ func _main(args []string, env envConfig) int {
 
 	seq := 0
 	contentType := "application/json"
-	t, err := amqp.New(env.AMQPServer, env.Exchange, env.Key)
+	t, err := amqp.New(env.AMQPServer, env.Exchange, env.Channel, env.Key)
 	if err != nil {
 		log.Printf("failed to create amqp transport, %s", err.Error())
 		return 1
