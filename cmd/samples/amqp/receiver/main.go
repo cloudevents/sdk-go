@@ -37,15 +37,8 @@ type Example struct {
 }
 
 func receive(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error {
-	fmt.Printf("Got Event Context: %+v\n", event.Context)
-
-	data := &Example{}
-	if err := event.DataAs(data); err != nil {
-		fmt.Printf("Got Data Error: %s\n", err.Error())
-	}
-	fmt.Printf("Got Data: %+v\n", data)
-
-	fmt.Printf("----------------------------\n")
+	fmt.Printf("Got CloudEvent,\n%+v\n", event)
+	fmt.Println("----------------------------")
 	return nil
 }
 
