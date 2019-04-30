@@ -93,6 +93,7 @@ func TestCodecDecode(t *testing.T) {
 		"simple v2 structured": {
 			codec: amqp.Codec{Encoding: amqp.StructuredV02},
 			msg: &amqp.Message{
+				ContentType: cloudevents.ApplicationCloudEventsJSON,
 				Body: func() []byte {
 					body := map[string]interface{}{
 						"specversion": "0.2",
