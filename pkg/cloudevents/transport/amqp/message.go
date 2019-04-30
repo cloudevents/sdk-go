@@ -21,7 +21,17 @@ func (m Message) CloudEventsVersion() string {
 		return ""
 	}
 
-	// v0.2
+	// Try headers first.
+	if m.Headers != nil {
+		// Binary v0.2, v0.3:
+		if v := m.Headers["cloudEvents:specversion"]; v != nil {
+			if s, ok := v.(string); ok {
+				return s
+			}
+		}
+	}
+
+	// structured v0.2, v0.3
 	if v, ok := raw["specversion"]; ok {
 		var version string
 		if err := json.Unmarshal(v, &version); err != nil {

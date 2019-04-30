@@ -156,11 +156,12 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 			event, err := t.codec.Decode(msg)
 			if err != nil {
 				logger.Errorw("failed to decode message", zap.Error(err)) // TODO: create an error channel to pass this up
-			}
-			// TODO: I do not know enough about amqp to implement reply.
-			// For now, amqp does not support reply.
-			if err := t.Receiver.Receive(context.TODO(), *event, nil); err != nil {
-				logger.Warnw("amqp receiver return err", zap.Error(err))
+			} else {
+				// TODO: I do not know enough about amqp to implement reply.
+				// For now, amqp does not support reply.
+				if err := t.Receiver.Receive(context.TODO(), *event, nil); err != nil {
+					logger.Warnw("amqp receiver return err", zap.Error(err))
+				}
 			}
 		}
 	}()

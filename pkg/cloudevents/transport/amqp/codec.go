@@ -39,11 +39,15 @@ func (c *Codec) Encode(e cloudevents.Event) (transport.Message, error) {
 }
 
 func (c *Codec) Decode(msg transport.Message) (*cloudevents.Event, error) {
-	switch c.Encoding {
+	switch c.inspectEncoding(msg) {
 	case Default:
 		fallthrough
-	case BinaryV02, BinaryV03:
-		return c.decodeBinary(msg)
+	case BinaryV02:
+		event := cloudevents.New(cloudevents.CloudEventsVersionV02)
+		return c.decodeBinary(msg, &event)
+	case BinaryV03:
+		event := cloudevents.New(cloudevents.CloudEventsVersionV03)
+		return c.decodeBinary(msg, &event)
 	case StructuredV02:
 		if c.v02 == nil {
 			c.v02 = &CodecV02{Encoding: c.Encoding}
@@ -120,12 +124,12 @@ func (c Codec) toHeaders(e cloudevents.Event) (map[string]interface{}, error) {
 	return h, nil
 }
 
-func (c Codec) decodeBinary(msg transport.Message) (*cloudevents.Event, error) {
+func (c Codec) decodeBinary(msg transport.Message, event *cloudevents.Event) (*cloudevents.Event, error) {
 	m, ok := msg.(*Message)
 	if !ok {
 		return nil, fmt.Errorf("failed to convert transport.Message to amqp.Message")
 	}
-	ctx, err := c.fromHeaders(m.Headers)
+	err := c.fromHeaders(m.Headers, event)
 	if err != nil {
 		return nil, err
 	}
@@ -133,14 +137,12 @@ func (c Codec) decodeBinary(msg transport.Message) (*cloudevents.Event, error) {
 	if len(m.Body) > 0 {
 		body = m.Body
 	}
-	return &cloudevents.Event{
-		Context:     ctx,
-		Data:        body,
-		DataEncoded: true,
-	}, nil
+	event.Data = body
+	event.DataEncoded = true
+	return event, nil
 }
 
-func (c Codec) fromHeaders(h map[string]interface{}) (cloudevents.EventContext, error) {
+func (c Codec) fromHeaders(h map[string]interface{}, event *cloudevents.Event) error {
 	// Normalize headers.
 	for k, v := range h {
 		ck := textproto.CanonicalMIMEHeaderKey(k)
@@ -150,32 +152,32 @@ func (c Codec) fromHeaders(h map[string]interface{}) (cloudevents.EventContext, 
 		}
 	}
 
-	ec := cloudevents.EventContextV02{}
+	ec := event.Context
 
 	if sv, ok := h["cloudEvents:specversion"].(string); ok {
 		if err := ec.SetSpecVersion(sv); err != nil {
-			return nil, err
+			return err
 		}
 	}
 	delete(h, "cloudEvents:specversion")
 
 	if id, ok := h["cloudEvents:id"].(string); ok {
 		if err := ec.SetID(id); err != nil {
-			return nil, err
+			return err
 		}
 	}
 	delete(h, "cloudEvents:id")
 
 	if t, ok := h["cloudEvents:type"].(string); ok {
 		if err := ec.SetType(t); err != nil {
-			return nil, err
+			return err
 		}
 	}
 	delete(h, "cloudEvents:type")
 
 	if s, ok := h["cloudEvents:source"].(string); ok {
 		if err := ec.SetSource(s); err != nil {
-			return nil, err
+			return err
 		}
 	}
 	delete(h, "cloudEvents:source")
@@ -183,7 +185,7 @@ func (c Codec) fromHeaders(h map[string]interface{}) (cloudevents.EventContext, 
 	if t, ok := h["cloudEvents:time"].(string); ok { // TODO: time can be empty
 		timestamp := types.ParseTimestamp(t)
 		if err := ec.SetTime(timestamp.Time); err != nil {
-			return nil, err
+			return err
 		}
 	}
 	delete(h, "cloudEvents:time")
@@ -191,7 +193,7 @@ func (c Codec) fromHeaders(h map[string]interface{}) (cloudevents.EventContext, 
 	if t, ok := h["cloudEvents:schemaurl"].(string); ok {
 		timestamp := types.ParseTimestamp(t)
 		if err := ec.SetTime(timestamp.Time); err != nil {
-			return nil, err
+			return err
 		}
 	}
 	delete(h, "cloudEvents:schemaurl")
@@ -235,5 +237,29 @@ func (c Codec) fromHeaders(h map[string]interface{}) (cloudevents.EventContext, 
 	//if len(extensions) > 0 {
 	//	ec.Extensions = extensions
 	//}
-	return &ec, nil
+	event.Context = ec
+	return nil
+}
+
+func (c *Codec) inspectEncoding(msg transport.Message) Encoding {
+	if c.v02 == nil {
+		c.v02 = &CodecV02{Encoding: c.Encoding}
+	}
+	// Try v0.2.
+	encoding := c.v02.inspectEncoding(msg)
+	if encoding != Unknown {
+		return encoding
+	}
+
+	if c.v03 == nil {
+		c.v03 = &CodecV03{Encoding: c.Encoding}
+	}
+	// Try v0.3.
+	encoding = c.v03.inspectEncoding(msg)
+	if encoding != Unknown {
+		return encoding
+	}
+
+	// We do not understand the message encoding.
+	return Unknown
 }

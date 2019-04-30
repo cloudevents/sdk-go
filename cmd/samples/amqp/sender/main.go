@@ -79,7 +79,7 @@ func _main(args []string, env envConfig) int {
 		log.Printf("failed to create amqp transport, %s", err.Error())
 		return 1
 	}
-	t.Encoding = amqp.BinaryV02
+	t.Encoding = amqp.BinaryV03
 	//t.Encoding = amqp.StructuredV02
 	c, err := client.New(t)
 	if err != nil {
@@ -95,13 +95,13 @@ func _main(args []string, env envConfig) int {
 
 	for i := 0; i < count; i++ {
 		now := time.Now()
-		ctx := cloudevents.EventContextV02{
-			ID:          uuid.New().String(),
-			Type:        "com.cloudevents.sample.sent",
-			Time:        &types.Timestamp{Time: now},
-			Source:      types.URLRef{URL: d.Source},
-			ContentType: &contentType,
-		}.AsV02()
+		ctx := cloudevents.EventContextV03{
+			ID:              uuid.New().String(),
+			Type:            "com.cloudevents.sample.sent",
+			Time:            &types.Timestamp{Time: now},
+			Source:          types.URLRef{URL: d.Source},
+			DataContentType: &contentType,
+		}.AsV03()
 		if _, err := d.Send(ctx, seq); err != nil {
 			log.Printf("failed to send: %v", err)
 			return 1
