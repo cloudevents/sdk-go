@@ -130,6 +130,10 @@ func (t *Transport) SetReceiver(r transport.Receiver) {
 // StartReceiver implements Transport.StartReceiver
 // NOTE: This is a blocking call.
 func (t *Transport) StartReceiver(ctx context.Context) error {
+	logger := cecontext.LoggerFrom(ctx)
+
+	logger.Info("StartReceiver on ", t.Queue)
+
 	t.receiverLinkOpts = append(t.receiverLinkOpts, amqp.LinkSourceAddress(t.Queue))
 	receiver, err := t.Session.NewReceiver(t.receiverLinkOpts...)
 	if err != nil {
@@ -141,8 +145,6 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 	if ok := t.loadCodec(); !ok {
 		return fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
 	}
-
-	logger := cecontext.LoggerFrom(ctx)
 
 	go func() {
 		for {

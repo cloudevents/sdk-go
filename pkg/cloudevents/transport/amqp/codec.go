@@ -40,8 +40,6 @@ func (c *Codec) Encode(e cloudevents.Event) (transport.Message, error) {
 
 func (c *Codec) Decode(msg transport.Message) (*cloudevents.Event, error) {
 	switch c.inspectEncoding(msg) {
-	case Default:
-		fallthrough
 	case BinaryV02:
 		event := cloudevents.New(cloudevents.CloudEventsVersionV02)
 		return c.decodeBinary(msg, &event)
@@ -50,16 +48,16 @@ func (c *Codec) Decode(msg transport.Message) (*cloudevents.Event, error) {
 		return c.decodeBinary(msg, &event)
 	case StructuredV02:
 		if c.v02 == nil {
-			c.v02 = &CodecV02{Encoding: c.Encoding}
+			c.v02 = &CodecV02{Encoding: StructuredV02}
 		}
 		return c.v02.Decode(msg)
 	case StructuredV03:
 		if c.v03 == nil {
-			c.v03 = &CodecV03{Encoding: c.Encoding}
+			c.v03 = &CodecV03{Encoding: StructuredV03}
 		}
 		return c.v03.Decode(msg)
 	default:
-		return nil, fmt.Errorf("unknown encoding: %d", c.Encoding)
+		return nil, fmt.Errorf("unknown encoding: %s", c.Encoding)
 	}
 }
 
