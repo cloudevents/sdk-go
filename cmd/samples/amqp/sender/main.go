@@ -25,8 +25,8 @@ type envConfig struct {
 	// AMQPServer URL to connect to the amqp server.
 	AMQPServer string `envconfig:"AMQP_SERVER" default:"amqp://localhost:5672/" required:"true"`
 
-	// Queue is the amqp queue name to publish cloudevents on.
-	Queue string `envconfig:"AMQP_QUEUE" default:"default"`
+	// Queue is the amqp queue name to interact with.
+	Queue string `envconfig:"AMQP_QUEUE"`
 
 	AccessKeyName string `envconfig:"AMQP_ACCESS_KEY_NAME" default:"guest"`
 	AccessKey     string `envconfig:"AMQP_ACCESS_KEY" default:"password"`

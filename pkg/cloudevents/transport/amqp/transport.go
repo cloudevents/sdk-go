@@ -28,7 +28,8 @@ type Transport struct {
 	Client  *amqp.Client
 	Session *amqp.Session
 	Sender  *amqp.Sender
-	Queue   string
+
+	Queue string
 
 	// Receiver
 	Receiver transport.Receiver
@@ -89,10 +90,6 @@ func (t *Transport) loadCodec() bool {
 		switch t.Encoding {
 		case Default, BinaryV02, StructuredV02, BinaryV03, StructuredV03:
 			t.codec = &Codec{Encoding: t.Encoding}
-		//case BinaryV02, StructuredV02:
-		//	t.codec = &CodecV02{Encoding: t.Encoding}
-		//case BinaryV03, StructuredV03:
-		//	t.codec = &CodecV03{Encoding: t.Encoding}
 		default:
 			return false
 		}
