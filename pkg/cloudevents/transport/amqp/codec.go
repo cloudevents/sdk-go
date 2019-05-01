@@ -101,7 +101,8 @@ func (c Codec) toHeaders(e cloudevents.Event) (map[string]interface{}, error) {
 	h[prefix+"source"] = e.Source()
 	h[prefix+"id"] = e.ID()
 	if !e.Time().IsZero() {
-		h[prefix+"time"] = e.Time()
+		t := types.Timestamp{Time: e.Time()} // TODO: change e.Time() to return string so I don't have to do this.
+		h[prefix+"time"] = t.String()
 	}
 	if e.SchemaURL() != "" {
 		h[prefix+"schemaurl"] = e.SchemaURL()
