@@ -1,11 +1,13 @@
 package amqp
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"net/textproto"
+	"strings"
 )
 
 type Codec struct {
@@ -14,6 +16,10 @@ type Codec struct {
 	v02 *CodecV02
 	v03 *CodecV03
 }
+
+const (
+	prefix = "cloudEvents:"
+)
 
 var _ transport.Codec = (*Codec)(nil)
 
@@ -90,37 +96,34 @@ func (c Codec) encodeBinary(e cloudevents.Event) (transport.Message, error) {
 
 func (c Codec) toHeaders(e cloudevents.Event) (map[string]interface{}, error) {
 	h := make(map[string]interface{})
-	h["cloudEvents:specversion"] = e.SpecVersion()
-	h["cloudEvents:type"] = e.Type()
-	h["cloudEvents:source"] = e.Source()
-	h["cloudEvents:id"] = e.ID()
+	h[prefix+"specversion"] = e.SpecVersion()
+	h[prefix+"type"] = e.Type()
+	h[prefix+"source"] = e.Source()
+	h[prefix+"id"] = e.ID()
 	if !e.Time().IsZero() {
-		h["cloudEvents:time"] = e.Time()
+		h[prefix+"time"] = e.Time()
 	}
 	if e.SchemaURL() != "" {
-		h["cloudEvents:schemaurl"] = e.SchemaURL()
+		h[prefix+"schemaurl"] = e.SchemaURL()
 	}
 
-	// TODO
-	//for k, v := range ec.Extensions {
-	//	// Per spec, map-valued extensions are converted to a list of headers as:
-	//	// CE-attrib-key
-	//	if mapVal, ok := v.(map[string]interface{}); ok {
-	//		for subkey, subval := range mapVal {
-	//			encoded, err := json.Marshal(subval)
-	//			if err != nil {
-	//				return nil, err
-	//			}
-	//			h.Set("ce-"+k+"-"+subkey, string(encoded))
-	//		}
-	//		continue
-	//	}
-	//	encoded, err := json.Marshal(v)
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//	h.Set("ce-"+k, string(encoded))
-	//}
+	for k, v := range e.Extensions() {
+		if mapVal, ok := v.(map[string]interface{}); ok {
+			for subkey, subval := range mapVal {
+				encoded, err := json.Marshal(subval)
+				if err != nil {
+					return nil, err
+				}
+				h[prefix+k+"-"+subkey] = string(encoded)
+			}
+			continue
+		}
+		encoded, err := json.Marshal(v)
+		if err != nil {
+			return nil, err
+		}
+		h[prefix+k] = string(encoded)
+	}
 
 	return h, nil
 }
@@ -155,90 +158,98 @@ func (c Codec) fromHeaders(h map[string]interface{}, event *cloudevents.Event) e
 
 	ec := event.Context
 
-	if sv, ok := h["cloudEvents:specversion"].(string); ok {
+	if sv, ok := h[prefix+"specversion"].(string); ok {
 		if err := ec.SetSpecVersion(sv); err != nil {
 			return err
 		}
 	}
-	delete(h, "cloudEvents:specversion")
+	delete(h, prefix+"specversion")
 
-	if id, ok := h["cloudEvents:id"].(string); ok {
+	if id, ok := h[prefix+"id"].(string); ok {
 		if err := ec.SetID(id); err != nil {
 			return err
 		}
 	}
-	delete(h, "cloudEvents:id")
+	delete(h, prefix+"id")
 
-	if t, ok := h["cloudEvents:type"].(string); ok {
+	if t, ok := h[prefix+"type"].(string); ok {
 		if err := ec.SetType(t); err != nil {
 			return err
 		}
 	}
-	delete(h, "cloudEvents:type")
+	delete(h, prefix+"type")
 
-	if s, ok := h["cloudEvents:source"].(string); ok {
+	if s, ok := h[prefix+"source"].(string); ok {
 		if err := ec.SetSource(s); err != nil {
 			return err
 		}
 	}
-	delete(h, "cloudEvents:source")
+	delete(h, prefix+"source")
 
-	if t, ok := h["cloudEvents:time"].(string); ok { // TODO: time can be empty
+	if t, ok := h[prefix+"time"].(string); ok { // TODO: time can be empty
 		timestamp := types.ParseTimestamp(t)
 		if err := ec.SetTime(timestamp.Time); err != nil {
 			return err
 		}
 	}
-	delete(h, "cloudEvents:time")
+	delete(h, prefix+"time")
 
-	if t, ok := h["cloudEvents:schemaurl"].(string); ok {
+	if t, ok := h[prefix+"schemaurl"].(string); ok {
 		timestamp := types.ParseTimestamp(t)
 		if err := ec.SetTime(timestamp.Time); err != nil {
 			return err
 		}
 	}
-	delete(h, "cloudEvents:schemaurl")
+	delete(h, prefix+"schemaurl")
+
+	if s, ok := h[prefix+"subject"].(string); ok {
+		if err := ec.SetSubject(s); err != nil {
+			return err
+		}
+	}
+	delete(h, prefix+"subject")
 
 	// At this point, we have deleted all the known headers.
 	// Everything left is assumed to be an extension.
 
-	// TODO
-	//extensions := make(map[string]interface{})
-	//for k, v := range h {
-	//	if len(k) > len("ce-") && strings.EqualFold(k[:len("ce-")], "ce-") {
-	//		ak := strings.ToLower(k[len("ce-"):])
-	//		if i := strings.Index(ak, "-"); i > 0 {
-	//			// attrib-key
-	//			attrib := ak[:i]
-	//			key := ak[(i + 1):]
-	//			if xv, ok := extensions[attrib]; ok {
-	//				if m, ok := xv.(map[string]interface{}); ok {
-	//					m[key] = v
-	//					continue
-	//				}
-	//				// TODO: revisit how we want to bubble errors up.
-	//				return ec, fmt.Errorf("failed to process map type extension")
-	//			} else {
-	//				m := make(map[string]interface{})
-	//				m[key] = v
-	//				extensions[attrib] = m
-	//			}
-	//		} else {
-	//			// key
-	//			var tmp interface{}
-	//			if err := json.Unmarshal([]byte(v[0]), &tmp); err == nil {
-	//				extensions[ak] = tmp
-	//			} else {
-	//				// If we can't unmarshal the data, treat it as a string.
-	//				extensions[ak] = v[0]
-	//			}
-	//		}
-	//	}
-	//}
-	//if len(extensions) > 0 {
-	//	ec.Extensions = extensions
-	//}
+	extensions := make(map[string]interface{})
+	for k, v := range h {
+		if len(k) > len(prefix) && strings.EqualFold(k[:len(prefix)], prefix) {
+			ak := strings.ToLower(k[len(prefix):])
+			if i := strings.Index(ak, "-"); i > 0 {
+				// attrib-key
+				attrib := ak[:i]
+				key := ak[(i + 1):]
+				if xv, ok := extensions[attrib]; ok {
+					if m, ok := xv.(map[string]interface{}); ok {
+						m[key] = v
+						continue
+					}
+					// TODO: revisit how we want to bubble errors up.
+					return fmt.Errorf("failed to process map type extension")
+				} else {
+					m := make(map[string]interface{})
+					m[key] = v
+					extensions[attrib] = m
+				}
+			} else {
+				// key
+				var tmp interface{}
+				if err := json.Unmarshal([]byte(v.(string)), &tmp); err == nil {
+					extensions[ak] = tmp
+				} else {
+					// If we can't unmarshal the data, treat it as a string.
+					extensions[ak] = v
+				}
+			}
+		}
+	}
 	event.Context = ec
+	if len(extensions) > 0 {
+		for k, v := range extensions {
+			event.SetExtension(k, v)
+		}
+	}
 	return nil
 }
 
