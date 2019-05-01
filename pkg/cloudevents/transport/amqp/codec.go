@@ -118,6 +118,10 @@ func (c Codec) toHeaders(e cloudevents.Event) (map[string]interface{}, error) {
 			}
 			continue
 		}
+		if s, ok := v.(string); ok {
+			h[prefix+k] = s
+			continue
+		}
 		encoded, err := json.Marshal(v)
 		if err != nil {
 			return nil, err
