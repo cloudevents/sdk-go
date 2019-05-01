@@ -16,12 +16,7 @@ type Message struct {
 
 // TODO: update this to work with AMQP
 func (m Message) CloudEventsVersion() string {
-	raw := make(map[string]json.RawMessage)
-	if err := json.Unmarshal(m.Body, &raw); err != nil {
-		return ""
-	}
-
-	// Try headers first.
+	// Check as Binary encoding first.
 	if m.ApplicationProperties != nil {
 		// Binary v0.2, v0.3:
 		if v := m.ApplicationProperties["cloudEvents:specversion"]; v != nil {
@@ -29,6 +24,12 @@ func (m Message) CloudEventsVersion() string {
 				return s
 			}
 		}
+	}
+
+	// Now check as Structured encoding.
+	raw := make(map[string]json.RawMessage)
+	if err := json.Unmarshal(m.Body, &raw); err != nil {
+		return ""
 	}
 
 	// structured v0.2, v0.3
