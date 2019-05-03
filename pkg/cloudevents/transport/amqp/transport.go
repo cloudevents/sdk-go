@@ -140,12 +140,11 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 		return err
 	}
 
-	ctx, cancel := context.WithCancel(ctx)
-
 	if ok := t.loadCodec(); !ok {
 		return fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
 	}
 
+	ctx, cancel := context.WithCancel(ctx)
 	go func() {
 		for {
 			// Receive next message
