@@ -1,10 +1,13 @@
 package http_test
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"net/http"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -128,4 +131,94 @@ func TestStableConnectionsToSingleHost(t *testing.T) {
 		t.Errorf("too many new connections opened: expected %d, got %d", concurrency, newConnectionCount)
 	}
 	t.Log("sent ", sent)
+}
+
+func TestMiddleware(t *testing.T) {
+	testCases := map[string]struct {
+		middleware []string
+		want string
+	} {
+		"none": {},
+		"one": {
+			middleware: []string{ "Foo" },
+		},
+		"nested": {
+			middleware: []string{ "Foo", "Bar", "Qux" },
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+			m := make([]cehttp.Option, 0, len(tc.middleware) + 2)
+			m = append(m, cehttp.WithPort(0), cehttp.WithShutdownTimeout(time.Nanosecond))
+			for _, ms := range tc.middleware {
+				ms := ms
+				m = append(m, cehttp.WithMiddleware(func(next http.Handler) http.Handler {
+					return &namedHandler{
+						name: ms,
+						next: next,
+					}
+				}))
+			}
+			tr, err := cehttp.New(m...)
+			if err != nil {
+				t.Fatalf("Unable to create transport, %v", err)
+			}
+			innermostResponse := "Original"
+			origResponse := makeRequestToServer(t, tr, innermostResponse)
+
+			// Verify that the response is all the middlewares run in the correct order (as a stack).
+			response := string(origResponse)
+			for i := len(tc.middleware) - 1; i >= 0; i-- {
+				expected := tc.middleware[i]
+				if !strings.HasPrefix(response, expected) {
+					t.Fatalf("Incorrect prefix at offset %d. Expected %s. Actual %s", i, tc.middleware[i], string(origResponse))
+				}
+				response = strings.TrimPrefix(response, expected)
+			}
+			if response != innermostResponse {
+				t.Fatalf("Incorrect prefix at last offset. Expected '%s'. Actual %s", innermostResponse, string(origResponse))
+			}
+		})
+	}
+}
+
+// makeRequestToServer starts the transport and makes a request to it, pointing at a custom path that will return
+// responseText.
+func makeRequestToServer(t *testing.T, tr *cehttp.Transport, responseText string) string {
+	// Create a custom path that will be used to respond with responseText.
+	tr.Handler = http.NewServeMux()
+	path := "/123"
+	tr.Handler.HandleFunc(path, func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(responseText))
+	})
+
+	// Start the server.
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go tr.StartReceiver(ctx)
+
+	// Give some time for the receiver to start. One second was chosen arbitrarily.
+	time.Sleep(time.Second)
+
+	// Make the request.
+	port := tr.GetPort()
+	r, err := http.Post(fmt.Sprintf("http://localhost:%d%s", port, path), "text", &bytes.Buffer{})
+	if err != nil {
+		t.Fatalf("Error posting: %v", err)
+	}
+	rb, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		t.Fatalf("Error reading: %v", err)
+	}
+	return string(rb)
+}
+
+type namedHandler struct {
+	name string
+	next http.Handler
+}
+
+func (h *namedHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	_, _ = w.Write([]byte(h.name))
+	h.next.ServeHTTP(w, r)
 }
