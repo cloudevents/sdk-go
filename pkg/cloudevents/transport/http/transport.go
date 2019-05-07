@@ -73,6 +73,8 @@ type Transport struct {
 	crMu sync.Mutex
 	// Receive Mutex
 	reMu sync.Mutex
+
+	middleware []Middleware
 }
 
 func New(opts ...Option) (*Transport, error) {
@@ -233,7 +235,7 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 	addr := fmt.Sprintf(":%d", t.GetPort())
 	t.server = &http.Server{
 		Addr:    addr,
-		Handler: t.Handler,
+		Handler: attachMiddleware(t.Handler, t.middleware),
 	}
 
 	listener, err := net.Listen("tcp", addr)
@@ -268,6 +270,14 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 	case err := <-errChan:
 		return err
 	}
+}
+
+// attachMiddleware attaches the HTTP middleware to the specified handler.
+func attachMiddleware(h http.Handler, middleware []Middleware) http.Handler {
+	for _, m := range middleware {
+		h = m(h)
+	}
+	return h
 }
 
 type eventError struct {
