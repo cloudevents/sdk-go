@@ -21,6 +21,12 @@ func TestEventSetData_Json(t *testing.T) {
 	versions := []string{ce.CloudEventsVersionV01, ce.CloudEventsVersionV02, ce.CloudEventsVersionV03}
 
 	testCases := map[string]DataTest{
+		"empty": {
+			event: func(version string) ce.Event {
+				return ce.New(version)
+			},
+			want: nil,
+		},
 		"defaults": {
 			event: func(version string) ce.Event {
 				return ce.New(version)
@@ -71,7 +77,11 @@ func TestEventSetData_Json(t *testing.T) {
 				// Make a versioned event.
 				event := tc.event(version)
 
-				event.SetData(tc.set)
+				if tc.set != nil {
+					if err := event.SetData(tc.set); err != nil {
+						t.Errorf("unexpected error, %v", err)
+					}
+				}
 				got := event.Data
 
 				as, _ := types.Allocate(tc.set)
@@ -95,6 +105,14 @@ func TestEventSetData_xml(t *testing.T) {
 	versions := []string{ce.CloudEventsVersionV01, ce.CloudEventsVersionV02, ce.CloudEventsVersionV03}
 
 	testCases := map[string]DataTest{
+		"empty": {
+			event: func(version string) ce.Event {
+				e := ce.New(version)
+				e.SetDataContentType("application/xml")
+				return e
+			},
+			want: nil,
+		},
 		"text/xml": {
 			event: func(version string) ce.Event {
 				e := ce.New(version)
@@ -142,7 +160,11 @@ func TestEventSetData_xml(t *testing.T) {
 				// Make a versioned event.
 				event := tc.event(version)
 
-				event.SetData(tc.set)
+				if tc.set != nil {
+					if err := event.SetData(tc.set); err != nil {
+						t.Errorf("unexpected error, %v", err)
+					}
+				}
 				got := event.Data
 
 				as, _ := types.Allocate(tc.set)

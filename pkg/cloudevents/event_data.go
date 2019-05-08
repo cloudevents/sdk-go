@@ -65,7 +65,7 @@ func (e Event) DataAs(data interface{}) error { // TODO: Clean this function up
 		}
 	}
 	if len(obj) == 0 {
-		// no data.
+		// No data.
 		return nil
 	}
 	if e.Context.GetDataContentEncoding() == Base64 {
