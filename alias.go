@@ -95,6 +95,7 @@ var (
 	WithStructuredEncoding = http.WithStructuredEncoding
 	WithPort               = http.WithPort
 	WithPath               = http.WithPath
+	WithMiddleware         = http.WithMiddleware
 
 	// HTTP Context
 
