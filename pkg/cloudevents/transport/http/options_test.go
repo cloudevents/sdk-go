@@ -629,3 +629,31 @@ func TestWithStructuredEncoding(t *testing.T) {
 		})
 	}
 }
+
+func TestWithMiddleware(t *testing.T) {
+	testCases := map[string]struct{
+		t *Transport
+		wantErr string
+	}{
+		"nil transport": {
+			wantErr: "http middleware option can not set nil transport",
+		},
+		"non-nil transport": {
+			t: &Transport{},
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+			err := tc.t.applyOptions(WithMiddleware(func(next http.Handler) http.Handler {
+				return next
+			}))
+			if tc.wantErr != "" {
+				if err == nil || err.Error() != tc.wantErr {
+					t.Fatalf("Expected error '%s'. Actual '%v'", tc.wantErr, err)
+				}
+			} else if err != nil {
+				t.Fatalf("Unexpected error: %v", err)
+			}
+		})
+	}
+}
