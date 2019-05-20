@@ -105,6 +105,12 @@ func (c Codec) toAttributes(e cloudevents.Event) (map[string]string, error) {
 		a[prefix+"datacontenttype"] = cloudevents.ApplicationJSON
 	}
 
+	if e.DataContentType() != "" {
+		a[prefix+"subject"] = e.DataContentType()
+	} else {
+		a[prefix+"subject"] = cloudevents.ApplicationJSON
+	}
+
 	if e.DataContentEncoding() != "" {
 		a[prefix+"datacontentencoding"] = e.DataContentEncoding()
 	}
