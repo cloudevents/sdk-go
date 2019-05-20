@@ -3,6 +3,7 @@ package pubsub
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"cloud.google.com/go/pubsub"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
@@ -20,21 +21,79 @@ type Transport struct {
 	codec    transport.Codec
 
 	// PubSub
-	Topic        *pubsub.Topic
-	Subscription *pubsub.Subscription
+	client          *pubsub.Client
+	topic           *pubsub.Topic
+	topicWasCreated bool
+	sub             *pubsub.Subscription
+	subWasCreated   bool
 
 	// Receiver
 	Receiver transport.Receiver
 }
 
 // New creates a new pubsub transport.
-func New(topic, subscription string, opts ...Option) (*Transport, error) {
+func New(ctx context.Context, projectID, topicID, subscriptionID string, opts ...Option) (*Transport, error) {
 	t := &Transport{}
 	if err := t.applyOptions(opts...); err != nil {
 		return nil, err
 	}
 
-	// TODO
+	// Auth to pubsub.
+	client, err := pubsub.NewClient(ctx, projectID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Load the topic.
+	topic := client.Topic(topicID)
+	ok, err := topic.Exists(ctx)
+	if err != nil {
+		_ = client.Close() // TODO return the error.
+		return nil, err
+	}
+	// If the topic does not exist, create a new topic with the given name.
+	if !ok {
+		topic, err = client.CreateTopic(ctx, topicID)
+		if err != nil {
+			return nil, err
+		}
+		t.topicWasCreated = true
+	}
+
+	sub := client.Subscription(subscriptionID)
+	ok, err = sub.Exists(ctx)
+	if err != nil {
+		if t.topicWasCreated {
+			_ = topic.Delete(ctx) // TODO return the error.
+		}
+		_ = client.Close() // TODO return the error.
+		return nil, err
+	}
+	// If subscription doesn't exist, create it.
+	if !ok {
+		// Create a new subscription to the previously created topic
+		// with the given name.
+		sub, err = client.CreateSubscription(ctx, subscriptionID, pubsub.SubscriptionConfig{ // TODO: allow for SubscriptionConfig to be an option.
+			Topic:             topic,
+			AckDeadline:       30 * time.Second,
+			RetentionDuration: 25 * time.Hour,
+		})
+		if err != nil {
+			if t.topicWasCreated {
+				_ = topic.Delete(ctx) // TODO return the error.
+			}
+			_ = client.Close() // TODO return the error.
+			return nil, err
+		}
+		t.subWasCreated = true
+	}
+
+	t.client = client
+	t.topic = topic
+	t.sub = sub
+
+	// TODO: call - topic.Stop()
+	// TODO: call - client.Stop()
 
 	return t, nil
 }
@@ -72,8 +131,18 @@ func (t *Transport) Send(ctx context.Context, event cloudevents.Event) (*cloudev
 	}
 
 	if m, ok := msg.(*Message); ok {
-		// TODO
-		_ = m
+
+		r := t.topic.Publish(ctx, &pubsub.Message{
+			Attributes: m.Attributes,
+			Data:       m.Body,
+		})
+
+		id, err := r.Get(ctx)
+		if err != nil {
+			return nil, err
+		}
+		fmt.Printf("Published a message with a message ID: %s\n", id) // TODO: remove
+
 		return nil, nil
 	}
 
