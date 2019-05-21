@@ -64,8 +64,6 @@ func (c *Codec) Decode(msg transport.Message) (*cloudevents.Event, error) {
 		return c.v03.Decode(msg)
 	default:
 
-		fmt.Printf("HACKHACKHACK %+v", msg)
-
 		return nil, fmt.Errorf("unknown encoding: %s", encoding)
 	}
 }
@@ -103,6 +101,12 @@ func (c Codec) toHeaders(e cloudevents.Event) (map[string]interface{}, error) {
 	if !e.Time().IsZero() {
 		t := types.Timestamp{Time: e.Time()} // TODO: change e.Time() to return string so I don't have to do this.
 		h[prefix+"time"] = t.String()
+	}
+	if e.Subject() != "" {
+		h[prefix+"subject"] = e.Subject()
+	}
+	if e.DataContentEncoding() != "" {
+		h[prefix+"datacontentencoding"] = e.DataContentEncoding()
 	}
 	if e.SchemaURL() != "" {
 		h[prefix+"schemaurl"] = e.SchemaURL()
@@ -213,6 +217,13 @@ func (c Codec) fromHeaders(h map[string]interface{}, event *cloudevents.Event) e
 		}
 	}
 	delete(h, prefix+"subject")
+
+	if s, ok := h[prefix+"datacontentencoding"].(string); ok {
+		if err := ec.SetDataContentEncoding(s); err != nil {
+			return err
+		}
+	}
+	delete(h, prefix+"datacontentencoding")
 
 	// At this point, we have deleted all the known headers.
 	// Everything left is assumed to be an extension.
