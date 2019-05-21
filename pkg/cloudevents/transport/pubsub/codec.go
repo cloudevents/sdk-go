@@ -13,7 +13,6 @@ import (
 type Codec struct {
 	Encoding Encoding
 
-	v02 *CodecV02
 	v03 *CodecV03
 }
 
@@ -27,13 +26,8 @@ func (c *Codec) Encode(e cloudevents.Event) (transport.Message, error) {
 	switch c.Encoding {
 	case Default:
 		fallthrough
-	case BinaryV02, BinaryV03:
+	case BinaryV03:
 		return c.encodeBinary(e)
-	case StructuredV02:
-		if c.v02 == nil {
-			c.v02 = &CodecV02{Encoding: c.Encoding}
-		}
-		return c.v02.Encode(e)
 	case StructuredV03:
 		if c.v03 == nil {
 			c.v03 = &CodecV03{Encoding: c.Encoding}
@@ -107,8 +101,6 @@ func (c Codec) toAttributes(e cloudevents.Event) (map[string]string, error) {
 
 	if e.DataContentType() != "" {
 		a[prefix+"subject"] = e.DataContentType()
-	} else {
-		a[prefix+"subject"] = cloudevents.ApplicationJSON
 	}
 
 	if e.DataContentEncoding() != "" {
@@ -220,6 +212,13 @@ func (c Codec) fromAttributes(a map[string]string, event *cloudevents.Event) err
 		}
 	}
 	delete(a, prefix+"subject")
+
+	if s := a[prefix+"datacontentencoding"]; s != "" {
+		if err := ec.SetDataContentEncoding(s); err != nil {
+			return err
+		}
+	}
+	delete(a, prefix+"datacontentencoding")
 
 	// At this point, we have deleted all the known headers.
 	// Everything left is assumed to be an extension.

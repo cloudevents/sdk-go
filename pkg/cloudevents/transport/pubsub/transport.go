@@ -110,7 +110,7 @@ func (t *Transport) applyOptions(opts ...Option) error {
 func (t *Transport) loadCodec() bool {
 	if t.codec == nil {
 		switch t.Encoding {
-		case Default, BinaryV02, StructuredV02, BinaryV03, StructuredV03:
+		case Default, BinaryV03, StructuredV03:
 			t.codec = &Codec{Encoding: t.Encoding}
 		default:
 			return false
