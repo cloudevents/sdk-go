@@ -6,7 +6,6 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
-	"net/textproto"
 	"strings"
 )
 
@@ -143,9 +142,9 @@ func (c Codec) decodeBinary(msg transport.Message, event *cloudevents.Event) (*c
 }
 
 func (c Codec) fromAttributes(a map[string]string, event *cloudevents.Event) error {
-	// Normalize headers.
+	// Normalize attributes.
 	for k, v := range a {
-		ck := textproto.CanonicalMIMEHeaderKey(k)
+		ck := strings.ToLower(k)
 		if k != ck {
 			delete(a, k)
 			a[ck] = v

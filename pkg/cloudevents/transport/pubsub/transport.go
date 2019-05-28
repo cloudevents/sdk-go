@@ -3,6 +3,7 @@ package pubsub
 import (
 	"context"
 	"fmt"
+	"go.uber.org/zap"
 	"time"
 
 	"cloud.google.com/go/pubsub"
@@ -163,13 +164,26 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 		return fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
 	}
 
-	ctx, cancel := context.WithCancel(ctx)
+	err := t.sub.Receive(ctx, func(ctx context.Context, m *pubsub.Message) {
 
-	_ = logger
-	// TODO
+		msg := &Message{
+			Attributes: m.Attributes,
+			Body:       m.Data,
+		}
 
-	<-ctx.Done()
+		event, err := t.codec.Decode(msg)
+		if err != nil {
+			logger.Errorw("failed to decode message", zap.Error(err))
+			m.Nack()
+			return
+		}
+		if err := t.Receiver.Receive(ctx, *event, nil); err != nil {
+			logger.Warnw("nats receiver return err", zap.Error(err))
+			m.Nack()
+			return
+		}
+		m.Ack()
+	})
 
-	cancel()
-	return nil
+	return err
 }

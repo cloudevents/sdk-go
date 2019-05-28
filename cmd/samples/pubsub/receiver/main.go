@@ -1,0 +1,63 @@
+package main
+
+import (
+	"context"
+	"fmt"
+	"github.com/cloudevents/sdk-go"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+	cloudeventspubsub "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/pubsub"
+	"github.com/kelseyhightower/envconfig"
+	"log"
+	"os"
+)
+
+type envConfig struct {
+	ProjectID string `envconfig:"PROJECT"`
+
+	TopicID string `envconfig:"TOPIC" default:"demo_cloudevents" required:"true"`
+
+	SubscriptionID string `envconfig:"SUBSCRIPTION"`
+}
+
+type Example struct {
+	Sequence int    `json:"id"`
+	Message  string `json:"message"`
+}
+
+func receive(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error {
+	fmt.Printf("Got Event Context: %+v\n", event.Context)
+
+	data := &Example{}
+	if err := event.DataAs(data); err != nil {
+		fmt.Printf("Got Data Error: %s\n", err.Error())
+	}
+	fmt.Printf("Got Data: %+v\n", data)
+
+	fmt.Printf("----------------------------\n")
+	return nil
+}
+
+func main() {
+	ctx := context.Background()
+
+	var env envConfig
+	if err := envconfig.Process("", &env); err != nil {
+		log.Printf("[ERROR] Failed to process env var: %s", err)
+		os.Exit(1)
+	}
+
+	t, err := cloudeventspubsub.New(context.Background(), env.ProjectID, env.TopicID, env.SubscriptionID)
+	if err != nil {
+		log.Fatalf("failed to create pubsub transport, %s", err.Error())
+	}
+	c, err := client.New(t)
+	if err != nil {
+		log.Fatalf("failed to create client, %s", err.Error())
+	}
+
+	log.Println("Created client, listening...")
+
+	if err := c.StartReceiver(ctx, receive); err != nil {
+		log.Fatalf("failed to start nats receiver, %s", err.Error())
+	}
+}
