@@ -35,6 +35,9 @@ func TestCodecV03_Encode(t *testing.T) {
 				},
 			},
 			want: &pubsub.Message{
+				Attributes: map[string]string{
+					"Content-Type": cloudevents.ApplicationCloudEventsJSON,
+				},
 				Body: func() []byte {
 					body := map[string]interface{}{
 						"datacontenttype": "application/json",
@@ -66,6 +69,9 @@ func TestCodecV03_Encode(t *testing.T) {
 				},
 			},
 			want: &pubsub.Message{
+				Attributes: map[string]string{
+					"Content-Type": cloudevents.ApplicationCloudEventsJSON,
+				},
 				Body: func() []byte {
 					body := map[string]interface{}{
 						"specversion":     "0.3",
@@ -94,6 +100,9 @@ func TestCodecV03_Encode(t *testing.T) {
 				},
 			},
 			want: &pubsub.Message{
+				Attributes: map[string]string{
+					"Content-Type": cloudevents.ApplicationCloudEventsJSON,
+				},
 				Body: func() []byte {
 					body := map[string]interface{}{
 						"datacontenttype": "application/json",
@@ -125,6 +134,9 @@ func TestCodecV03_Encode(t *testing.T) {
 				},
 			},
 			want: &pubsub.Message{
+				Attributes: map[string]string{
+					"Content-Type": cloudevents.ApplicationCloudEventsJSON,
+				},
 				Body: func() []byte {
 					body := map[string]interface{}{
 						"specversion":     "0.3",

@@ -40,17 +40,9 @@ func (c *Codec) Encode(e cloudevents.Event) (transport.Message, error) {
 
 func (c *Codec) Decode(msg transport.Message) (*cloudevents.Event, error) {
 	switch encoding := c.inspectEncoding(msg); encoding {
-	case BinaryV02:
-		event := cloudevents.New(cloudevents.CloudEventsVersionV02)
-		return c.decodeBinary(msg, &event)
 	case BinaryV03:
 		event := cloudevents.New(cloudevents.CloudEventsVersionV03)
 		return c.decodeBinary(msg, &event)
-	case StructuredV02:
-		if c.v02 == nil {
-			c.v02 = &CodecV02{Encoding: encoding}
-		}
-		return c.v02.Decode(msg)
 	case StructuredV03:
 		if c.v03 == nil {
 			c.v03 = &CodecV03{Encoding: encoding}
@@ -99,8 +91,8 @@ func (c Codec) toAttributes(e cloudevents.Event) (map[string]string, error) {
 		a[prefix+"datacontenttype"] = cloudevents.ApplicationJSON
 	}
 
-	if e.DataContentType() != "" {
-		a[prefix+"subject"] = e.DataContentType()
+	if e.Subject() != "" {
+		a[prefix+"subject"] = e.Subject()
 	}
 
 	if e.DataContentEncoding() != "" {
@@ -265,20 +257,11 @@ func (c Codec) fromAttributes(a map[string]string, event *cloudevents.Event) err
 }
 
 func (c *Codec) inspectEncoding(msg transport.Message) Encoding {
-	if c.v02 == nil {
-		c.v02 = &CodecV02{Encoding: c.Encoding}
-	}
-	// Try v0.2.
-	encoding := c.v02.inspectEncoding(msg)
-	if encoding != Unknown {
-		return encoding
-	}
-
 	if c.v03 == nil {
 		c.v03 = &CodecV03{Encoding: c.Encoding}
 	}
 	// Try v0.3.
-	encoding = c.v03.inspectEncoding(msg)
+	encoding := c.v03.inspectEncoding(msg)
 	if encoding != Unknown {
 		return encoding
 	}

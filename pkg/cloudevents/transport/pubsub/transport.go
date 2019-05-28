@@ -14,7 +14,7 @@ import (
 // Transport adheres to transport.Transport.
 var _ transport.Transport = (*Transport)(nil)
 
-// Transport acts as both a http client and a http handler.
+// Transport acts as both a pubsub topic and a pubsub subscription .
 type Transport struct {
 	// Encoding
 	Encoding Encoding

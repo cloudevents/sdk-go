@@ -37,6 +37,9 @@ func TestCodecEncode(t *testing.T) {
 				},
 			},
 			want: &pubsub.Message{
+				Attributes: map[string]string{
+					"Content-Type": cloudevents.ApplicationCloudEventsJSON,
+				},
 				Body: func() []byte {
 					body := map[string]interface{}{
 						"datacontenttype": "application/json",
@@ -62,11 +65,12 @@ func TestCodecEncode(t *testing.T) {
 			},
 			want: &pubsub.Message{
 				Attributes: map[string]string{
-					"ce-specversion": "0.3",
-					"ce-id":          "ABC-123",
-					"ce-type":        "com.example.test",
-					"ce-source":      "http://example.com/source",
-					"ce-subject":     "a-subject",
+					"ce-specversion":     "0.3",
+					"ce-id":              "ABC-123",
+					"ce-type":            "com.example.test",
+					"ce-source":          "http://example.com/source",
+					"ce-subject":         "a-subject",
+					"ce-datacontenttype": "application/json",
 				},
 			},
 		},
@@ -112,6 +116,9 @@ func TestCodecDecode(t *testing.T) {
 		"simple v3 structured": {
 			codec: pubsub.Codec{Encoding: pubsub.StructuredV03},
 			msg: &pubsub.Message{
+				Attributes: map[string]string{
+					"Content-Type": cloudevents.ApplicationCloudEventsJSON,
+				},
 				Body: func() []byte {
 					body := map[string]interface{}{
 						"specversion": "0.3",
@@ -189,7 +196,7 @@ func TestCodecAsMiddleware(t *testing.T) {
 				},
 				want: cloudevents.Event{
 					Context: &cloudevents.EventContextV03{
-						SpecVersion:     cloudevents.CloudEventsVersionV02,
+						SpecVersion:     cloudevents.CloudEventsVersionV03,
 						Type:            "com.example.test",
 						Source:          *source,
 						ID:              "ABC-123",
@@ -217,7 +224,7 @@ func TestCodecAsMiddleware(t *testing.T) {
 				},
 				want: cloudevents.Event{
 					Context: &cloudevents.EventContextV03{
-						SpecVersion:     cloudevents.CloudEventsVersionV01,
+						SpecVersion:     cloudevents.CloudEventsVersionV03,
 						Type:            "com.example.test",
 						Source:          *source,
 						ID:              "ABC-123",

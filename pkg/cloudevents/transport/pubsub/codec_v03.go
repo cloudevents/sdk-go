@@ -7,6 +7,10 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 )
 
+const (
+	StructuredContentType = "Content-Type"
+)
+
 type CodecV03 struct {
 	Encoding Encoding
 }
@@ -34,15 +38,17 @@ func (v CodecV03) encodeStructured(e cloudevents.Event) (transport.Message, erro
 	if err != nil {
 		return nil, err
 	}
+
 	return &Message{
-		Body: body,
+		Attributes: map[string]string{StructuredContentType: cloudevents.ApplicationCloudEventsJSON},
+		Body:       body,
 	}, nil
 }
 
 func (v CodecV03) decodeStructured(msg transport.Message) (*cloudevents.Event, error) {
 	m, ok := msg.(*Message)
 	if !ok {
-		return nil, fmt.Errorf("failed to convert transport.Message to http.Message")
+		return nil, fmt.Errorf("failed to convert transport.Message to pubsub.Message")
 	}
 	return codec.JsonDecodeV03(m.Body)
 }
@@ -56,7 +62,7 @@ func (v CodecV03) inspectEncoding(msg transport.Message) Encoding {
 	if !ok {
 		return Unknown
 	}
-	if m.Attributes[prefix+"specversion"] == cloudevents.CloudEventsVersionV03 {
+	if m.Attributes[StructuredContentType] == cloudevents.ApplicationCloudEventsJSON {
 		return StructuredV03
 	}
 	return BinaryV03
