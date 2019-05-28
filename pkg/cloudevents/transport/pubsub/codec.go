@@ -204,6 +204,13 @@ func (c Codec) fromAttributes(a map[string]string, event *cloudevents.Event) err
 	}
 	delete(a, prefix+"subject")
 
+	if s := a[prefix+"datacontenttype"]; s != "" {
+		if err := ec.SetDataContentType(s); err != nil {
+			return err
+		}
+	}
+	delete(a, prefix+"datacontenttype")
+
 	if s := a[prefix+"datacontentencoding"]; s != "" {
 		if err := ec.SetDataContentEncoding(s); err != nil {
 			return err

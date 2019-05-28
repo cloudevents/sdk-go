@@ -177,8 +177,11 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 			m.Nack()
 			return
 		}
+
+		ctx = WithTransportContext(ctx, NewTransportContext(t.topic.ID(), "pull", m))
+
 		if err := t.Receiver.Receive(ctx, *event, nil); err != nil {
-			logger.Warnw("nats receiver return err", zap.Error(err))
+			logger.Warnw("pubsub receiver return err", zap.Error(err))
 			m.Nack()
 			return
 		}
