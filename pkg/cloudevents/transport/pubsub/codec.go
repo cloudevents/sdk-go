@@ -33,7 +33,7 @@ func (c *Codec) Encode(e cloudevents.Event) (transport.Message, error) {
 		}
 		return c.v03.Encode(e)
 	default:
-		return nil, fmt.Errorf("unknown encoding: %d", c.Encoding)
+		return nil, transport.NewErrMessageEncodingUnknown("wrapper", TransportName)
 	}
 }
 

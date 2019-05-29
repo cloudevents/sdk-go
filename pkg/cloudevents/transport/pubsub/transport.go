@@ -16,6 +16,10 @@ import (
 // Transport adheres to transport.Transport.
 var _ transport.Transport = (*Transport)(nil)
 
+const (
+	TransportName = "Pub/Sub"
+)
+
 // Transport acts as both a pubsub topic and a pubsub subscription .
 type Transport struct {
 	// Encoding
@@ -40,6 +44,10 @@ type Transport struct {
 
 	// Receiver
 	Receiver transport.Receiver
+
+	// Converter is invoked if the incoming transport receives an undecodable
+	// message.
+	Converter transport.Converter
 }
 
 // New creates a new pubsub transport.
@@ -203,6 +211,16 @@ func (t *Transport) SetReceiver(r transport.Receiver) {
 	t.Receiver = r
 }
 
+// SetConverter implements Transport.SetConverter
+func (t *Transport) SetConverter(c transport.Converter) {
+	t.Converter = c
+}
+
+// HasConverter implements Transport.HasConverter
+func (t *Transport) HasConverter() bool {
+	return t.Converter != nil
+}
+
 // StartReceiver implements Transport.StartReceiver
 // NOTE: This is a blocking call.
 func (t *Transport) StartReceiver(ctx context.Context) error {
@@ -219,13 +237,15 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 	}
 	// Ok, ready to start pulling.
 	err = sub.Receive(ctx, func(ctx context.Context, m *pubsub.Message) {
-
 		msg := &Message{
 			Attributes: m.Attributes,
 			Body:       m.Data,
 		}
-
 		event, err := t.codec.Decode(msg)
+		// If codec returns and error, try with the converter if it is set.
+		if err != nil && t.HasConverter() {
+			event, err = t.Converter.Convert(ctx, msg, err)
+		}
 		if err != nil {
 			logger.Errorw("failed to decode message", zap.Error(err))
 			m.Nack()
@@ -233,7 +253,6 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 		}
 
 		ctx = WithTransportContext(ctx, NewTransportContext(t.topicID, t.subscriptionID, "pull", m))
-
 		if err := t.Receiver.Receive(ctx, *event, nil); err != nil {
 			logger.Warnw("pubsub receiver return err", zap.Error(err))
 			m.Nack()
