@@ -49,6 +49,6 @@ func (c *Codec) Decode(msg transport.Message) (*cloudevents.Event, error) {
 		}
 		return c.v03.Decode(msg)
 	default:
-		return nil, fmt.Errorf("unknown encoding: %d", c.Encoding)
+		return nil, transport.NewErrMessageEncodingUnknown("wrapper", TransportName)
 	}
 }

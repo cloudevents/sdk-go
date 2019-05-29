@@ -68,7 +68,7 @@ func (v CodecV01) obsDecode(msg transport.Message) (*cloudevents.Event, error) {
 	case StructuredV01:
 		return v.decodeStructured(msg)
 	default:
-		return nil, transport.NewErrMessageEncodingUnknown("http")
+		return nil, transport.NewErrMessageEncodingUnknown("v01", TransportName)
 	}
 }
 

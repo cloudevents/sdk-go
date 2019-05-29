@@ -130,7 +130,7 @@ func (c *Codec) Decode(msg transport.Message) (*cloudevents.Event, error) {
 			return c.convertEvent(event), nil
 		}
 	default:
-		return nil, transport.NewErrMessageEncodingUnknown("http")
+		return nil, transport.NewErrMessageEncodingUnknown("wrapper", TransportName)
 	}
 }
 

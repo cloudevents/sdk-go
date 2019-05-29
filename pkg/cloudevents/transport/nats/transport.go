@@ -13,6 +13,11 @@ import (
 // Transport adheres to transport.Transport.
 var _ transport.Transport = (*Transport)(nil)
 
+const (
+	// TransportName is the name of this transport.
+	TransportName = "NATS"
+)
+
 // Transport acts as both a http client and a http handler.
 type Transport struct {
 	Encoding Encoding

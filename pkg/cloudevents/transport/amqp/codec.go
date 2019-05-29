@@ -63,10 +63,7 @@ func (c *Codec) Decode(msg transport.Message) (*cloudevents.Event, error) {
 		}
 		return c.v03.Decode(msg)
 	default:
-
-		fmt.Printf("HACKHACKHACK %+v", msg)
-
-		return nil, fmt.Errorf("unknown encoding: %s", encoding)
+		return nil, transport.NewErrMessageEncodingUnknown("wrapper", TransportName)
 	}
 }
 
@@ -240,7 +237,7 @@ func (c Codec) fromHeaders(h map[string]interface{}, event *cloudevents.Event) e
 			} else {
 				// key
 				var tmp interface{}
-// An attribute set to nil can be ignored
+				// An attribute set to nil can be ignored
 				if v != nil {
 					if err := json.Unmarshal([]byte(v.(string)), &tmp); err == nil {
 						extensions[ak] = tmp

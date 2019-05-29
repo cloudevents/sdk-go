@@ -35,7 +35,7 @@ func TestCodecV02_Encode(t *testing.T) {
 				},
 			},
 			want: &amqp.Message{
-				ContentType: "application/cloudevents+json",
+				ContentType: cloudevents.ApplicationCloudEventsJSON,
 				Body: func() []byte {
 					body := map[string]interface{}{
 						"contenttype": "application/json",
@@ -67,7 +67,7 @@ func TestCodecV02_Encode(t *testing.T) {
 				},
 			},
 			want: &amqp.Message{
-				ContentType: "application/cloudevents+json",
+				ContentType: cloudevents.ApplicationCloudEventsJSON,
 				Body: func() []byte {
 					body := map[string]interface{}{
 						"specversion": "0.2",
@@ -96,7 +96,7 @@ func TestCodecV02_Encode(t *testing.T) {
 				},
 			},
 			want: &amqp.Message{
-				ContentType: "application/cloudevents+json",
+				ContentType: cloudevents.ApplicationCloudEventsJSON,
 				Body: func() []byte {
 					body := map[string]interface{}{
 						"contenttype": "application/json",
@@ -128,7 +128,7 @@ func TestCodecV02_Encode(t *testing.T) {
 				},
 			},
 			want: &amqp.Message{
-				ContentType: "application/cloudevents+json",
+				ContentType: cloudevents.ApplicationCloudEventsJSON,
 				Body: func() []byte {
 					body := map[string]interface{}{
 						"specversion": "0.2",
@@ -197,6 +197,7 @@ func TestCodecV02_Decode(t *testing.T) {
 		"simple v2 structured": {
 			codec: amqp.CodecV02{},
 			msg: &amqp.Message{
+				ContentType: cloudevents.ApplicationCloudEventsJSON,
 				Body: toBytes(map[string]interface{}{
 					"specversion": "0.2",
 					"id":          "ABC-123",
@@ -217,6 +218,7 @@ func TestCodecV02_Decode(t *testing.T) {
 		"full v2 structured": {
 			codec: amqp.CodecV02{},
 			msg: &amqp.Message{
+				ContentType: cloudevents.ApplicationCloudEventsJSON,
 				Body: toBytes(map[string]interface{}{
 					"specversion": "0.2",
 					"contenttype": "application/json",

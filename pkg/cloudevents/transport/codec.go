@@ -20,8 +20,9 @@ type ErrMessageEncodingUnknown struct {
 }
 
 // NewErrMessageEncodingUnknown makes a new ErrMessageEncodingUnknown.
-func NewErrMessageEncodingUnknown(transport string) *ErrMessageEncodingUnknown {
+func NewErrMessageEncodingUnknown(codec, transport string) *ErrMessageEncodingUnknown {
 	return &ErrMessageEncodingUnknown{
+		codec:     codec,
 		transport: transport,
 	}
 }
