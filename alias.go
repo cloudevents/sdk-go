@@ -62,6 +62,7 @@ var (
 	WithEventDefaulter = client.WithEventDefaulter
 	WithUUIDs          = client.WithUUIDs
 	WithTimeNow        = client.WithTimeNow
+	WithConverterFn    = client.WithConverterFn
 
 	// Event Creation
 

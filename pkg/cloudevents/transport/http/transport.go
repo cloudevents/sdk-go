@@ -60,6 +60,9 @@ type Transport struct {
 
 	// Receiver is invoked target for incoming events.
 	Receiver transport.Receiver
+	// Converter is invoked if the incoming transport receives an undecodable
+	// message.
+	Converter transport.Converter
 	// Port is the port to bind the receiver to. Defaults to 8080.
 	Port *int
 	// Path is the path to bind the receiver to. Defaults to "/".
@@ -205,7 +208,12 @@ func (t *Transport) obsSend(ctx context.Context, event cloudevents.Event) (*clou
 					err := fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
 					logger.Error("failed to load codec", zap.Error(err))
 				}
-				if respEvent, err = t.codec.Decode(msg); err != nil {
+				respEvent, err = t.codec.Decode(msg)
+				// If codec returns and error, try with the converter if it is set.
+				if err != nil && t.HasConverter() {
+					respEvent, err = t.Converter.Convert(ctx, msg, err)
+				}
+				if err != nil {
 					logger.Error("failed to decode message", zap.Error(err))
 				}
 			}
@@ -222,6 +230,16 @@ func (t *Transport) obsSend(ctx context.Context, event cloudevents.Event) (*clou
 // SetReceiver implements Transport.SetReceiver
 func (t *Transport) SetReceiver(r transport.Receiver) {
 	t.Receiver = r
+}
+
+// SetConverter implements Transport.SetConverter
+func (t *Transport) SetConverter(c transport.Converter) {
+	t.Converter = c
+}
+
+// HasConverter implements Transport.HasConverter
+func (t *Transport) HasConverter() bool {
+	return t.Converter != nil
 }
 
 // StartReceiver implements Transport.StartReceiver
@@ -383,6 +401,8 @@ func (t *Transport) obsInvokeReceiver(ctx context.Context, event cloudevents.Eve
 // ServeHTTP implements http.Handler
 func (t *Transport) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	ctx, r := observability.NewReporter(req.Context(), reportServeHTTP)
+	// Add the transport context to ctx.
+	ctx = WithTransportContext(ctx, NewTransportContext(req))
 	logger := cecontext.LoggerFrom(ctx)
 
 	body, err := ioutil.ReadAll(req.Body)
@@ -407,16 +427,16 @@ func (t *Transport) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	event, err := t.codec.Decode(msg)
+	// If codec returns and error, try with the converter if it is set.
+	if err != nil && t.HasConverter() {
+		event, err = t.Converter.Convert(ctx, msg, err)
+	}
 	if err != nil {
 		logger.Errorw("failed to decode message", zap.Error(err))
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf(`{"error":%q}`, err.Error())))
 		r.Error()
 		return
-	}
-
-	if req != nil {
-		ctx = WithTransportContext(ctx, NewTransportContext(req))
 	}
 
 	resp, err := t.invokeReceiver(ctx, *event)
