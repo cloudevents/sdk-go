@@ -15,6 +15,7 @@ import (
 
 type ClientOption client.Option
 type Client = client.Client
+type ConvertFn = client.ConvertFn
 
 // Event
 

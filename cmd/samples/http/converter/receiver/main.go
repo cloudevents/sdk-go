@@ -27,14 +27,14 @@ type Example struct {
 }
 
 func gotEvent(ctx context.Context, event cloudevents.Event) error {
-	fmt.Printf("Got Event Context: %+v\n", event.Context)
+	fmt.Printf("CloudEvent.Event: %+v\n", event)
 	data := &Example{}
 	if err := event.DataAs(data); err != nil {
-		fmt.Printf("Got Data Error: %s\n", err.Error())
+		fmt.Printf("Data Error: %s\n", err.Error())
 	}
-	fmt.Printf("Got Data: %+v\n", data)
+	fmt.Printf("Structured Data: %+v\n", data)
 
-	fmt.Printf("Got Transport Context: %+v\n", cloudevents.HTTPTransportContextFrom(ctx))
+	fmt.Printf("Transport Context: %+v\n", cloudevents.HTTPTransportContextFrom(ctx))
 
 	fmt.Printf("----------------------------\n")
 	return nil
@@ -93,3 +93,9 @@ func main() {
 	log.Printf("will listen on :%d%s\n", env.Port, env.Path)
 	log.Fatalf("failed to start receiver: %s", c.StartReceiver(ctx, gotEvent))
 }
+
+/*
+
+curl -X POST -H "Content-Type: application/json"  -d '{"id":123,"message":"hello world"}' http://localhost:8080
+
+*/
