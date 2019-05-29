@@ -16,7 +16,7 @@ type envConfig struct {
 
 	TopicID string `envconfig:"PUBSUB_TOPIC" default:"demo_cloudevents" required:"true"`
 
-	SubscriptionID string `envconfig:"SUBSCRIPTION"`
+	SubscriptionID string `envconfig:"PUBSUB_SUBSCRIPTION"`
 }
 
 type Example struct {
@@ -48,7 +48,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	t, err := cloudeventspubsub.New(context.Background(), env.ProjectID, env.TopicID, cloudeventspubsub.WithSubscriptionID(env.SubscriptionID))
+	t, err := cloudeventspubsub.New(context.Background(),
+		cloudeventspubsub.WithProjectID(env.ProjectID),
+		cloudeventspubsub.WithTopicID(env.TopicID),
+		cloudeventspubsub.WithSubscriptionID(env.SubscriptionID))
 	if err != nil {
 		log.Fatalf("failed to create pubsub transport, %s", err.Error())
 	}

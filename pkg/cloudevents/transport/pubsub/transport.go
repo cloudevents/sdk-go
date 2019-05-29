@@ -24,6 +24,8 @@ type Transport struct {
 
 	// PubSub
 
+	projectID string
+
 	client *pubsub.Client
 
 	topicID         string
@@ -41,19 +43,21 @@ type Transport struct {
 }
 
 // New creates a new pubsub transport.
-func New(ctx context.Context, projectID, topicID string, opts ...Option) (*Transport, error) {
+func New(ctx context.Context, opts ...Option) (*Transport, error) {
 	t := &Transport{}
 	if err := t.applyOptions(opts...); err != nil {
 		return nil, err
 	}
 
-	// Auth to pubsub.
-	client, err := pubsub.NewClient(ctx, projectID)
-	if err != nil {
-		return nil, err
+	if t.client == nil {
+		// Auth to pubsub.
+		client, err := pubsub.NewClient(ctx, t.projectID)
+		if err != nil {
+			return nil, err
+		}
+		// Success.
+		t.client = client
 	}
-
-	t.client = client
 
 	// TODO: call - client.Stop()
 
@@ -134,6 +138,8 @@ func (t *Transport) getOrCreateSubscription(ctx context.Context) (*pubsub.Subscr
 		if !ok { // TODO: add a setting that prevents creation of a subscription.
 			// Create a new subscription to the previously created topic
 			// with the given name.
+			// TODO: allow to use push config.
+			// TODO: allow setting the SubscriptionConfig ?
 			sub, err = t.client.CreateSubscription(ctx, t.subscriptionID, pubsub.SubscriptionConfig{ // TODO: allow for SubscriptionConfig to be an option.
 				Topic:             topic,
 				AckDeadline:       30 * time.Second,

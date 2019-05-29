@@ -14,8 +14,6 @@ type envConfig struct {
 	ProjectID string `envconfig:"GOOGLE_CLOUD_PROJECT" required:"true"`
 
 	TopicID string `envconfig:"PUBSUB_TOPIC" default:"demo_cloudevents" required:"true"`
-
-	SubscriptionID string `envconfig:"SUBSCRIPTION" required:"true"`
 }
 
 // Basic data struct.
@@ -31,7 +29,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	t, err := cloudeventspubsub.New(context.Background(), env.ProjectID, env.TopicID, env.SubscriptionID)
+	t, err := cloudeventspubsub.New(context.Background(),
+		cloudeventspubsub.WithProjectID(env.ProjectID),
+		cloudeventspubsub.WithTopicID(env.TopicID))
 	if err != nil {
 		log.Printf("failed to create pubsub transport, %s", err.Error())
 		os.Exit(1)
@@ -44,7 +44,7 @@ func main() {
 
 	event := cloudevents.NewEvent(cloudevents.VersionV03)
 	event.SetType("com.cloudevents.sample.sent")
-	event.SetSource("TODO")
+	event.SetSource("github.com/cloudevents/sdk-go/cmd/samples/pubsub/sender/")
 	_ = event.SetData(&Example{
 		Sequence: 0,
 		Message:  "HELLO",
