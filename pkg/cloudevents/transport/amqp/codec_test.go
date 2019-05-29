@@ -203,6 +203,44 @@ func TestCodecDecode(t *testing.T) {
 				DataEncoded: true,
 			},
 		},
+		"binary v3 with nil attribute": {
+			codec: amqp.Codec{Encoding: amqp.BinaryV03},
+			msg: &amqp.Message{
+				ContentType: cloudevents.ApplicationJSON,
+				ApplicationProperties: map[string]interface{}{
+					"cloudEvents:specversion": "0.3",
+					"cloudEvents:type":        "com.example.test",
+					"cloudEvents:source":      "http://example.com/source",
+					"cloudEvents:subject":     "mySubject",
+					"cloudEvents:id":          "123myID",
+					"cloudEvents:cause":       nil,
+				},
+				Body: func() []byte {
+					bytes, _ := json.Marshal(DataExample{
+						AnInt:   42,
+						AString: "testing",
+					})
+					return bytes
+				}(),
+			},
+			want: &cloudevents.Event{
+				Context: &cloudevents.EventContextV03{
+					SpecVersion: cloudevents.CloudEventsVersionV03,
+					Type:        "com.example.test",
+					Source:      *source,
+					Subject:     strptr("mySubject"),
+					ID:          "123myID",
+				},
+				Data: func() []byte {
+					bytes, _ := json.Marshal(DataExample{
+						AnInt:   42,
+						AString: "testing",
+					})
+					return bytes
+				}(),
+				DataEncoded: true,
+			},
+		},
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
