@@ -2,11 +2,10 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/pubsub"
 	"github.com/google/uuid"
 	"github.com/kelseyhightower/envconfig"
 	"log"
@@ -41,27 +40,16 @@ func gotEvent(ctx context.Context, event cloudevents.Event) error {
 }
 
 func convert(ctx context.Context, m transport.Message, err error) (*cloudevents.Event, error) {
-	log.Printf("asked to convert, %v", m)
 	log.Printf("trying to recover from %v", err)
 
-	if msg, ok := m.(*http.Message); ok {
-		tx := cloudevents.HTTPTransportContextFrom(ctx)
-
-		data := &Example{}
-		if err := json.Unmarshal(msg.Body, data); err != nil {
-			return nil, err
-		}
-
+	if msg, ok := m.(*pubsub.Message); ok {
+		tx := pubsub.TransportContextFrom(ctx)
 		// Make a new event and convert the message payload.
 		event := cloudevents.NewEvent()
-		event.SetSource("github.com/cloudevents/cmd/samples/http/converter/receiver")
-		event.SetType(fmt.Sprintf("io.cloudevents.converter.http.%s", strings.ToLower(tx.Method)))
+		event.SetSource("github.com/cloudevents/cmd/samples/pubsub/converter/receiver")
+		event.SetType(fmt.Sprintf("io.cloudevents.converter.pubsub.%s", strings.ToLower(tx.Method)))
 		event.SetID(uuid.New().String())
-		event.SetSubject(fmt.Sprintf("%d", data.ID))
-
-		if err := event.SetData(data); err != nil {
-			return nil, err
-		}
+		event.Data = msg.Body
 
 		return &event, nil
 	}
