@@ -72,6 +72,8 @@ type ceClient struct {
 	transport transport.Transport
 	fn        *receiverFn
 
+	convertFn ConvertFn
+
 	receiverMu        sync.Mutex
 	eventDefaulterFns []EventDefaulter
 }
@@ -181,4 +183,12 @@ func (c *ceClient) applyOptions(opts ...Option) error {
 		}
 	}
 	return nil
+}
+
+// Convert implements transport Converter.Convert.
+func (c *ceClient) Convert(ctx context.Context, m transport.Message, err error) (*cloudevents.Event, error) {
+	if c.convertFn != nil {
+		return c.convertFn(ctx, m, err)
+	}
+	return nil, err
 }

@@ -13,6 +13,11 @@ import (
 // Transport adheres to transport.Transport.
 var _ transport.Transport = (*Transport)(nil)
 
+const (
+	// TransportName is the name of this transport.
+	TransportName = "AMQP"
+)
+
 // Transport acts as both a http client and a http handler.
 type Transport struct {
 	connOpts         []amqp.ConnOption
@@ -33,6 +38,9 @@ type Transport struct {
 
 	// Receiver
 	Receiver transport.Receiver
+	// Converter is invoked if the incoming transport receives an undecodable
+	// message.
+	Converter transport.Converter
 }
 
 // New creates a new amqp transport.
@@ -125,6 +133,16 @@ func (t *Transport) Send(ctx context.Context, event cloudevents.Event) (*cloudev
 // SetReceiver implements Transport.SetReceiver
 func (t *Transport) SetReceiver(r transport.Receiver) {
 	t.Receiver = r
+}
+
+// SetConverter implements Transport.SetConverter
+func (t *Transport) SetConverter(c transport.Converter) {
+	t.Converter = c
+}
+
+// HasConverter implements Transport.HasConverter
+func (t *Transport) HasConverter() bool {
+	return t.Converter != nil
 }
 
 // StartReceiver implements Transport.StartReceiver

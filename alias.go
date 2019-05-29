@@ -15,6 +15,7 @@ import (
 
 type ClientOption client.Option
 type Client = client.Client
+type ConvertFn = client.ConvertFn
 
 // Event
 
@@ -62,6 +63,7 @@ var (
 	WithEventDefaulter = client.WithEventDefaulter
 	WithUUIDs          = client.WithUUIDs
 	WithTimeNow        = client.WithTimeNow
+	WithConverterFn    = client.WithConverterFn
 
 	// Event Creation
 

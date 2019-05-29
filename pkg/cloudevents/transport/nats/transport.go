@@ -13,6 +13,11 @@ import (
 // Transport adheres to transport.Transport.
 var _ transport.Transport = (*Transport)(nil)
 
+const (
+	// TransportName is the name of this transport.
+	TransportName = "NATS"
+)
+
 // Transport acts as both a http client and a http handler.
 type Transport struct {
 	Encoding Encoding
@@ -22,6 +27,9 @@ type Transport struct {
 	sub *nats.Subscription
 
 	Receiver transport.Receiver
+	// Converter is invoked if the incoming transport receives an undecodable
+	// message.
+	Converter transport.Converter
 
 	codec transport.Codec
 }
@@ -91,6 +99,16 @@ func (t *Transport) SetReceiver(r transport.Receiver) {
 	t.Receiver = r
 }
 
+// SetConverter implements Transport.SetConverter
+func (t *Transport) SetConverter(c transport.Converter) {
+	t.Converter = c
+}
+
+// HasConverter implements Transport.HasConverter
+func (t *Transport) HasConverter() bool {
+	return t.Converter != nil
+}
+
 // StartReceiver implements Transport.StartReceiver
 // NOTE: This is a blocking call.
 func (t *Transport) StartReceiver(ctx context.Context) error {
@@ -119,6 +137,10 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 			Body: m.Data,
 		}
 		event, err := t.codec.Decode(msg)
+		// If codec returns and error, try with the converter if it is set.
+		if err != nil && t.HasConverter() {
+			event, err = t.Converter.Convert(ctx, msg, err)
+		}
 		if err != nil {
 			logger.Errorw("failed to decode message", zap.Error(err)) // TODO: create an error channel to pass this up
 			return
