@@ -26,7 +26,12 @@ func (v CodecV02) Encode(e cloudevents.Event) (transport.Message, error) {
 
 func (v CodecV02) Decode(msg transport.Message) (*cloudevents.Event, error) {
 	// only structured is supported as of v0.2
-	return v.decodeStructured(msg)
+	switch v.inspectEncoding(msg) {
+	case StructuredV02:
+		return v.decodeStructured(msg)
+	default:
+		return nil, transport.NewErrMessageEncodingUnknown("v02", TransportName)
+	}
 }
 
 func (v CodecV02) encodeStructured(e cloudevents.Event) (transport.Message, error) {
@@ -43,7 +48,7 @@ func (v CodecV02) encodeStructured(e cloudevents.Event) (transport.Message, erro
 func (v CodecV02) decodeStructured(msg transport.Message) (*cloudevents.Event, error) {
 	m, ok := msg.(*Message)
 	if !ok {
-		return nil, fmt.Errorf("failed to convert transport.Message to http.Message")
+		return nil, fmt.Errorf("failed to convert transport.Message to amqp.Message")
 	}
 	return codec.JsonDecodeV02(m.Body)
 }

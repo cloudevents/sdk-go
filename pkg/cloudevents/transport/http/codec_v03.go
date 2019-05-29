@@ -73,7 +73,7 @@ func (v CodecV03) obsDecode(msg transport.Message) (*cloudevents.Event, error) {
 	case BatchedV03:
 		return nil, fmt.Errorf("not implemented")
 	default:
-		return nil, fmt.Errorf("unknown encoding")
+		return nil, transport.NewErrMessageEncodingUnknown("v03", TransportName)
 	}
 }
 

@@ -28,6 +28,9 @@ var _ transport.Transport = (*Transport)(nil)
 const (
 	// DefaultShutdownTimeout defines the default timeout given to the http.Server when calling Shutdown.
 	DefaultShutdownTimeout = time.Minute * 1
+
+	// TransportName is the name of this transport.
+	TransportName = "HTTP"
 )
 
 // Transport acts as both a http client and a http handler.
