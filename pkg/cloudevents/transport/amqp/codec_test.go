@@ -84,6 +84,11 @@ func TestCodecDecode(t *testing.T) {
 	sourceUrl, _ := url.Parse("http://example.com/source")
 	source := &types.URLRef{URL: *sourceUrl}
 
+	rawBody,_ := json.Marshal(DataExample{
+		AnInt:   42,
+		AString: "testing",
+	})
+
 	testCases := map[string]struct {
 		codec   amqp.Codec
 		msg     *amqp.Message
@@ -111,6 +116,33 @@ func TestCodecDecode(t *testing.T) {
 					Source:      *source,
 					ID:          "ABC-123",
 				},
+				DataEncoded: true,
+			},
+		},
+		"binary v3 with nil attribute": {
+
+			codec: amqp.Codec{Encoding: amqp.BinaryV03},
+			msg: &amqp.Message{
+				ContentType: cloudevents.ApplicationJSON,
+				ApplicationProperties: map[string]interface{}{
+					"cloudEvents:specversion": "0.3",
+					"cloudEvents:type":        "com.example.test",
+					"cloudEvents:source":      "http://example.com/source",
+					"cloudEvents:subject":     "mySubject",
+					"cloudEvents:id":          "123myID",
+					"cloudEvents:cause":       nil,
+				},
+				Body: rawBody,
+			},
+			want: &cloudevents.Event{
+				Context: &cloudevents.EventContextV03{
+					SpecVersion: cloudevents.CloudEventsVersionV03,
+					Type:        "com.example.test",
+					Source:      *source,
+					Subject:     strptr("mySubject"),
+					ID:          "123myID",
+				},
+				Data:rawBody,
 				DataEncoded: true,
 			},
 		},
