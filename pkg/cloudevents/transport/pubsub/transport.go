@@ -175,10 +175,7 @@ func (t *Transport) getOrCreateSubscription(ctx context.Context) (*pubsub.Subscr
 				RetentionDuration: 25 * time.Hour,
 			})
 			if err != nil {
-				if t.topicWasCreated {
-					//_ = t.topic.Delete(ctx) // TODO return the error. Do this?
-				}
-				_ = t.client.Close() // TODO return the error.
+				_ = t.client.Close()
 				return
 			}
 			t.subWasCreated = true
