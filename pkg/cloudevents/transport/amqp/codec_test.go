@@ -16,8 +16,6 @@ func strptr(s string) *string {
 	return &s
 }
 
-// TODO: Test Binary Mode
-
 func TestCodecEncode(t *testing.T) {
 	sourceUrl, _ := url.Parse("http://example.com/source")
 	source := &types.URLRef{URL: *sourceUrl}
@@ -49,6 +47,71 @@ func TestCodecEncode(t *testing.T) {
 					}
 					return toBytes(body)
 				}(),
+			},
+		},
+		"simple v03 structured": {
+			codec: amqp.Codec{Encoding: amqp.StructuredV03},
+			event: cloudevents.Event{
+				Context: &cloudevents.EventContextV03{
+					Type:    "com.example.test",
+					Source:  *source,
+					ID:      "ABC-123",
+					Subject: strptr("a-subject"),
+				},
+			},
+			want: &amqp.Message{
+				ContentType: "application/cloudevents+json",
+				Body: func() []byte {
+					body := map[string]interface{}{
+						"datacontenttype": "application/json",
+						"specversion":     "0.3",
+						"id":              "ABC-123",
+						"type":            "com.example.test",
+						"source":          "http://example.com/source",
+						"subject":         "a-subject",
+					}
+					return toBytes(body)
+				}(),
+			},
+		},
+		"simple v02 binary": {
+			codec: amqp.Codec{Encoding: amqp.BinaryV02},
+			event: cloudevents.Event{
+				Context: &cloudevents.EventContextV02{
+					Type:   "com.example.test",
+					Source: *source,
+					ID:     "ABC-123",
+				},
+			},
+			want: &amqp.Message{
+				ContentType: "application/json",
+				ApplicationProperties: map[string]interface{}{
+					"cloudEvents:specversion": "0.2",
+					"cloudEvents:id":          "ABC-123",
+					"cloudEvents:type":        "com.example.test",
+					"cloudEvents:source":      "http://example.com/source",
+				},
+			},
+		},
+		"simple v03 binary": {
+			codec: amqp.Codec{Encoding: amqp.BinaryV03},
+			event: cloudevents.Event{
+				Context: &cloudevents.EventContextV03{
+					Type:    "com.example.test",
+					Source:  *source,
+					ID:      "ABC-123",
+					Subject: strptr("a-subject"),
+				},
+			},
+			want: &amqp.Message{
+				ContentType: "application/json",
+				ApplicationProperties: map[string]interface{}{
+					"cloudEvents:specversion": "0.3",
+					"cloudEvents:id":          "ABC-123",
+					"cloudEvents:type":        "com.example.test",
+					"cloudEvents:source":      "http://example.com/source",
+					"cloudEvents:subject":     "a-subject",
+				},
 			},
 		},
 	}
@@ -84,11 +147,6 @@ func TestCodecDecode(t *testing.T) {
 	sourceUrl, _ := url.Parse("http://example.com/source")
 	source := &types.URLRef{URL: *sourceUrl}
 
-	rawBody,_ := json.Marshal(DataExample{
-		AnInt:   42,
-		AString: "testing",
-	})
-
 	testCases := map[string]struct {
 		codec   amqp.Codec
 		msg     *amqp.Message
@@ -119,8 +177,33 @@ func TestCodecDecode(t *testing.T) {
 				DataEncoded: true,
 			},
 		},
+		"simple v3 structured": {
+			codec: amqp.Codec{Encoding: amqp.StructuredV03},
+			msg: &amqp.Message{
+				ContentType: cloudevents.ApplicationCloudEventsJSON,
+				Body: func() []byte {
+					body := map[string]interface{}{
+						"specversion": "0.3",
+						"id":          "ABC-123",
+						"type":        "com.example.test",
+						"source":      "http://example.com/source",
+						"subject":     "a-subject",
+					}
+					return toBytes(body)
+				}(),
+			},
+			want: &cloudevents.Event{
+				Context: &cloudevents.EventContextV03{
+					SpecVersion: cloudevents.CloudEventsVersionV03,
+					Type:        "com.example.test",
+					Source:      *source,
+					ID:          "ABC-123",
+					Subject:     strptr("a-subject"),
+				},
+				DataEncoded: true,
+			},
+		},
 		"binary v3 with nil attribute": {
-
 			codec: amqp.Codec{Encoding: amqp.BinaryV03},
 			msg: &amqp.Message{
 				ContentType: cloudevents.ApplicationJSON,
@@ -132,7 +215,13 @@ func TestCodecDecode(t *testing.T) {
 					"cloudEvents:id":          "123myID",
 					"cloudEvents:cause":       nil,
 				},
-				Body: rawBody,
+				Body: func() []byte {
+					bytes, _ := json.Marshal(DataExample{
+						AnInt:   42,
+						AString: "testing",
+					})
+					return bytes
+				}(),
 			},
 			want: &cloudevents.Event{
 				Context: &cloudevents.EventContextV03{
@@ -142,7 +231,13 @@ func TestCodecDecode(t *testing.T) {
 					Subject:     strptr("mySubject"),
 					ID:          "123myID",
 				},
-				Data:rawBody,
+				Data: func() []byte {
+					bytes, _ := json.Marshal(DataExample{
+						AnInt:   42,
+						AString: "testing",
+					})
+					return bytes
+				}(),
 				DataEncoded: true,
 			},
 		},
