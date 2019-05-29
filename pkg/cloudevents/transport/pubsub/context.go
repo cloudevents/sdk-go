@@ -9,21 +9,23 @@ import (
 
 // TransportContext allows a Receiver to understand the context of a request.
 type TransportContext struct {
-	ID          string
-	PublishTime time.Time
-	Topic       string
-	Method      string // push or pull
+	ID           string
+	PublishTime  time.Time
+	Topic        string
+	Subscription string
+	Method       string // push or pull
 }
 
 // NewTransportContext creates a new TransportContext from a pubsub.Message.
-func NewTransportContext(topic, method string, msg *pubsub.Message) TransportContext {
+func NewTransportContext(topic, subscription, method string, msg *pubsub.Message) TransportContext {
 	var tx *TransportContext
 	if msg != nil {
 		tx = &TransportContext{
-			ID:          msg.ID,
-			PublishTime: msg.PublishTime,
-			Topic:       topic,
-			Method:      method,
+			ID:           msg.ID,
+			PublishTime:  msg.PublishTime,
+			Topic:        topic,
+			Subscription: subscription,
+			Method:       method,
 		}
 	} else {
 		tx = &TransportContext{}
@@ -46,6 +48,10 @@ func (tx TransportContext) String() string {
 
 	if tx.Topic != "" {
 		b.WriteString("  Topic: " + tx.Topic + "\n")
+	}
+
+	if tx.Subscription != "" {
+		b.WriteString("  Subscription: " + tx.Subscription + "\n")
 	}
 
 	if tx.Method != "" {

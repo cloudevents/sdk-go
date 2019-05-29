@@ -11,9 +11,9 @@ import (
 )
 
 type envConfig struct {
-	ProjectID string `envconfig:"PROJECT" required:"true"`
+	ProjectID string `envconfig:"GOOGLE_CLOUD_PROJECT" required:"true"`
 
-	TopicID string `envconfig:"TOPIC" default:"demo_cloudevents" required:"true"`
+	TopicID string `envconfig:"PUBSUB_TOPIC" default:"demo_cloudevents" required:"true"`
 
 	SubscriptionID string `envconfig:"SUBSCRIPTION" required:"true"`
 }

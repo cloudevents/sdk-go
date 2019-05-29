@@ -12,9 +12,9 @@ import (
 )
 
 type envConfig struct {
-	ProjectID string `envconfig:"PROJECT"`
+	ProjectID string `envconfig:"GOOGLE_CLOUD_PROJECT"`
 
-	TopicID string `envconfig:"TOPIC" default:"demo_cloudevents" required:"true"`
+	TopicID string `envconfig:"PUBSUB_TOPIC" default:"demo_cloudevents" required:"true"`
 
 	SubscriptionID string `envconfig:"SUBSCRIPTION"`
 }
@@ -48,7 +48,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	t, err := cloudeventspubsub.New(context.Background(), env.ProjectID, env.TopicID, env.SubscriptionID)
+	t, err := cloudeventspubsub.New(context.Background(), env.ProjectID, env.TopicID, cloudeventspubsub.WithSubscriptionID(env.SubscriptionID))
 	if err != nil {
 		log.Fatalf("failed to create pubsub transport, %s", err.Error())
 	}

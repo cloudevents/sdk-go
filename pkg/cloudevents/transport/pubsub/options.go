@@ -10,3 +10,11 @@ func WithEncoding(encoding Encoding) Option {
 		return nil
 	}
 }
+
+// WithSubscription sets the subscription for pubsub transport.
+func WithSubscriptionID(subscriptionID string) Option {
+	return func(t *Transport) error {
+		t.subscriptionID = subscriptionID
+		return nil
+	}
+}
