@@ -240,11 +240,14 @@ func (c Codec) fromHeaders(h map[string]interface{}, event *cloudevents.Event) e
 			} else {
 				// key
 				var tmp interface{}
-				if err := json.Unmarshal([]byte(v.(string)), &tmp); err == nil {
-					extensions[ak] = tmp
-				} else {
-					// If we can't unmarshal the data, treat it as a string.
-					extensions[ak] = v
+// An attribute set to nil can be ignored
+				if v != nil {
+					if err := json.Unmarshal([]byte(v.(string)), &tmp); err == nil {
+						extensions[ak] = tmp
+					} else {
+						// If we can't unmarshal the data, treat it as a string.
+						extensions[ak] = v
+					}
 				}
 			}
 		}
