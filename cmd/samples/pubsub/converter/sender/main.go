@@ -71,7 +71,8 @@ func main() {
 
 /*
 
-To see them:
+To view: gcloud pubsub subscriptions pull --auto-ack foo
 
-gcloud pubsub subscriptions pull foo
+To post: gcloud pubsub topics publish demo_cloudevents --message '{"id":123,"message":"hi from the terminal"}'
+
 */

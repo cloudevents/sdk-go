@@ -47,7 +47,7 @@ func WithProjectIDFromEnv(key string) Option {
 	return func(t *Transport) error {
 		v := os.Getenv(key)
 		if v == "" {
-			return fmt.Errorf("unable to load project id, %s environment variable not set", key)
+			return fmt.Errorf("unable to load project id, %q environment variable not set", key)
 		}
 		t.projectID = v
 		return nil
@@ -56,7 +56,7 @@ func WithProjectIDFromEnv(key string) Option {
 
 // WithProjectIDFromDefaultEnv sets the project ID for pubsub transport from
 // the environment variable named 'GOOGLE_CLOUD_PROJECT'.
-func WithProjectIDFromDefaultEnv(key string) Option {
+func WithProjectIDFromDefaultEnv() Option {
 	return WithProjectIDFromEnv(DefaultProjectEnvKey)
 }
 
@@ -74,7 +74,7 @@ func WithTopicIDFromEnv(key string) Option {
 	return func(t *Transport) error {
 		v := os.Getenv(key)
 		if v == "" {
-			return fmt.Errorf("unable to load topic id, %s environment variable not set", key)
+			return fmt.Errorf("unable to load topic id, %q environment variable not set", key)
 		}
 		t.topicID = v
 		return nil
@@ -83,7 +83,7 @@ func WithTopicIDFromEnv(key string) Option {
 
 // WithTopicIDFromDefaultEnv sets the topic ID for pubsub transport from the
 // environment variable named 'PUBSUB_TOPIC'.
-func WithTopicIDFromDefaultEnv(key string) Option {
+func WithTopicIDFromDefaultEnv() Option {
 	return WithTopicIDFromEnv(DefaultTopicEnvKey)
 }
 
@@ -101,7 +101,7 @@ func WithSubscriptionIDFromEnv(key string) Option {
 	return func(t *Transport) error {
 		v := os.Getenv(key)
 		if v == "" {
-			return fmt.Errorf("unable to load subscription id, %s environment variable not set", key)
+			return fmt.Errorf("unable to load subscription id, %q environment variable not set", key)
 		}
 		t.subscriptionID = v
 		return nil
@@ -110,6 +110,24 @@ func WithSubscriptionIDFromEnv(key string) Option {
 
 // WithSubscriptionIDFromDefaultEnv sets the subscription ID for pubsub
 // transport from the environment variable named 'PUBSUB_SUBSCRIPTION'.
-func WithSubscriptionIDFromDefaultEnv(key string) Option {
+func WithSubscriptionIDFromDefaultEnv() Option {
 	return WithSubscriptionIDFromEnv(DefaultSubscriptionEnvKey)
+}
+
+// AllowCreateTopic sets if the transport can create a topic if it does not
+// exist.
+func AllowCreateTopic(allow bool) Option {
+	return func(t *Transport) error {
+		t.AllowCreateTopic = allow
+		return nil
+	}
+}
+
+// AllowCreateSubscription sets if the transport can create a subscription if
+// it does not exist.
+func AllowCreateSubscription(allow bool) Option {
+	return func(t *Transport) error {
+		t.AllowCreateSubscription = allow
+		return nil
+	}
 }

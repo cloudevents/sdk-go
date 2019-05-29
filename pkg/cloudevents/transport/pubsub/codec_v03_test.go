@@ -205,6 +205,9 @@ func TestCodecV03_Decode(t *testing.T) {
 		"simple v0.3 structured": {
 			codec: pubsub.CodecV03{},
 			msg: &pubsub.Message{
+				Attributes: map[string]string{
+					"Content-Type": cloudevents.ApplicationCloudEventsJSON,
+				},
 				Body: toBytes(map[string]interface{}{
 					"specversion": "0.3",
 					"id":          "ABC-123",
@@ -225,6 +228,9 @@ func TestCodecV03_Decode(t *testing.T) {
 		"full v0.3 structured": {
 			codec: pubsub.CodecV03{},
 			msg: &pubsub.Message{
+				Attributes: map[string]string{
+					"Content-Type": cloudevents.ApplicationCloudEventsJSON,
+				},
 				Body: toBytes(map[string]interface{}{
 					"specversion":     "0.3",
 					"datacontenttype": "application/json",

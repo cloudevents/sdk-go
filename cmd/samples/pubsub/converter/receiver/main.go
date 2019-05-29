@@ -15,9 +15,9 @@ import (
 )
 
 type envConfig struct {
-	// Port on which to listen for cloudevents
-	Port int    `envconfig:"RCV_PORT" default:"8080"`
-	Path string `envconfig:"RCV_PATH" default:"/"`
+	ProjectID      string `envconfig:"GOOGLE_CLOUD_PROJECT"`
+	TopicID        string `envconfig:"PUBSUB_TOPIC" default:"demo_cloudevents" required:"true"`
+	SubscriptionID string `envconfig:"PUBSUB_SUBSCRIPTION" default:"foo" requried:"true"`
 }
 
 // Basic data struct.
@@ -76,10 +76,10 @@ func main() {
 	}
 	ctx := context.Background()
 
-	t, err := cloudevents.NewHTTPTransport(
-		cloudevents.WithPort(env.Port),
-		cloudevents.WithPath(env.Path),
-	)
+	t, err := pubsub.New(context.Background(),
+		pubsub.WithProjectID(env.ProjectID),
+		pubsub.WithTopicID(env.TopicID),
+		pubsub.WithSubscriptionID(env.SubscriptionID))
 	if err != nil {
 		log.Printf("failed to create transport, %v", err)
 		os.Exit(1)
@@ -90,7 +90,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	log.Printf("will listen on :%d%s\n", env.Port, env.Path)
+	log.Printf("will listen on %s/%s\n", env.TopicID, env.SubscriptionID)
 	log.Fatalf("failed to start receiver: %s", c.StartReceiver(ctx, gotEvent))
 }
 
