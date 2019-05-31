@@ -39,14 +39,14 @@ func (v CodecV03) Decode(msg transport.Message) (*cloudevents.Event, error) {
 }
 
 func (v CodecV03) encodeStructured(e cloudevents.Event) (transport.Message, error) {
-	body, err := codec.JsonEncodeV03(e)
+	data, err := codec.JsonEncodeV03(e)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Message{
 		Attributes: map[string]string{StructuredContentType: cloudevents.ApplicationCloudEventsJSON},
-		Body:       body,
+		Data:       data,
 	}, nil
 }
 
@@ -55,7 +55,7 @@ func (v CodecV03) decodeStructured(msg transport.Message) (*cloudevents.Event, e
 	if !ok {
 		return nil, fmt.Errorf("failed to convert transport.Message to pubsub.Message")
 	}
-	return codec.JsonDecodeV03(m.Body)
+	return codec.JsonDecodeV03(m.Data)
 }
 
 func (v CodecV03) inspectEncoding(msg transport.Message) Encoding {

@@ -60,14 +60,14 @@ func (c Codec) encodeBinary(e cloudevents.Event) (transport.Message, error) {
 	if err != nil {
 		return nil, err
 	}
-	body, err := e.DataBytes()
+	data, err := e.DataBytes()
 	if err != nil {
 		return nil, err
 	}
 
 	msg := &Message{
 		Attributes: attributes,
-		Body:       body,
+		Data:       data,
 	}
 
 	return msg, nil
@@ -135,11 +135,11 @@ func (c Codec) decodeBinary(msg transport.Message, event *cloudevents.Event) (*c
 	if err != nil {
 		return nil, err
 	}
-	var body interface{}
-	if len(m.Body) > 0 {
-		body = m.Body
+	var data interface{}
+	if len(m.Data) > 0 {
+		data = m.Data
 	}
-	event.Data = body
+	event.Data = data
 	event.DataEncoded = true
 	return event, nil
 }

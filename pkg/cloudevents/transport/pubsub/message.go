@@ -8,9 +8,14 @@ import (
 // type check that this transport message impl matches the contract
 var _ transport.Message = (*Message)(nil)
 
+// Message represents a Pub/Sub message.
 type Message struct {
+	// Data is the actual data in the message.
+	Data []byte
+
+	// Attributes represents the key-value pairs the current message
+	// is labelled with.
 	Attributes map[string]string
-	Body       []byte
 }
 
 func (m Message) CloudEventsVersion() string {
@@ -24,7 +29,7 @@ func (m Message) CloudEventsVersion() string {
 
 	// Now check as Structured encoding.
 	raw := make(map[string]json.RawMessage)
-	if err := json.Unmarshal(m.Body, &raw); err != nil {
+	if err := json.Unmarshal(m.Data, &raw); err != nil {
 		return ""
 	}
 

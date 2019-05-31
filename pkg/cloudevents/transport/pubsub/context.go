@@ -11,18 +11,20 @@ import (
 type TransportContext struct {
 	ID           string
 	PublishTime  time.Time
+	Project      string
 	Topic        string
 	Subscription string
 	Method       string // push or pull
 }
 
 // NewTransportContext creates a new TransportContext from a pubsub.Message.
-func NewTransportContext(topic, subscription, method string, msg *pubsub.Message) TransportContext {
+func NewTransportContext(project, topic, subscription, method string, msg *pubsub.Message) TransportContext {
 	var tx *TransportContext
 	if msg != nil {
 		tx = &TransportContext{
 			ID:           msg.ID,
 			PublishTime:  msg.PublishTime,
+			Project:      project,
 			Topic:        topic,
 			Subscription: subscription,
 			Method:       method,
@@ -44,6 +46,10 @@ func (tx TransportContext) String() string {
 	}
 	if !tx.PublishTime.IsZero() {
 		b.WriteString("  PublishTime: " + tx.PublishTime.String() + "\n")
+	}
+
+	if tx.Project != "" {
+		b.WriteString("  Project: " + tx.Project + "\n")
 	}
 
 	if tx.Topic != "" {

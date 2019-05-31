@@ -40,7 +40,7 @@ func TestCodecEncode(t *testing.T) {
 				Attributes: map[string]string{
 					"Content-Type": cloudevents.ApplicationCloudEventsJSON,
 				},
-				Body: func() []byte {
+				Data: func() []byte {
 					body := map[string]interface{}{
 						"datacontenttype": "application/json",
 						"specversion":     "0.3",
@@ -90,8 +90,8 @@ func TestCodecEncode(t *testing.T) {
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				if msg, ok := got.(*pubsub.Message); ok {
 					// It is hard to read the byte dump
-					want := string(tc.want.Body)
-					got := string(msg.Body)
+					want := string(tc.want.Data)
+					got := string(msg.Data)
 					if diff := cmp.Diff(want, got); diff != "" {
 						t.Errorf("unexpected (-want, +got) = %v", diff)
 						return
@@ -119,7 +119,7 @@ func TestCodecDecode(t *testing.T) {
 				Attributes: map[string]string{
 					"Content-Type": cloudevents.ApplicationCloudEventsJSON,
 				},
-				Body: func() []byte {
+				Data: func() []byte {
 					body := map[string]interface{}{
 						"specversion": "0.3",
 						"id":          "ABC-123",

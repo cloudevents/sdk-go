@@ -49,7 +49,7 @@ func convert(ctx context.Context, m transport.Message, err error) (*cloudevents.
 		event.SetSource("github.com/cloudevents/cmd/samples/pubsub/converter/receiver")
 		event.SetType(fmt.Sprintf("io.cloudevents.converter.pubsub.%s", strings.ToLower(tx.Method)))
 		event.SetID(uuid.New().String())
-		event.Data = msg.Body
+		event.Data = msg.Data
 
 		return &event, nil
 	}

@@ -38,7 +38,7 @@ func TestCodecV03_Encode(t *testing.T) {
 				Attributes: map[string]string{
 					"Content-Type": cloudevents.ApplicationCloudEventsJSON,
 				},
-				Body: func() []byte {
+				Data: func() []byte {
 					body := map[string]interface{}{
 						"datacontenttype": "application/json",
 						"specversion":     "0.3",
@@ -72,7 +72,7 @@ func TestCodecV03_Encode(t *testing.T) {
 				Attributes: map[string]string{
 					"Content-Type": cloudevents.ApplicationCloudEventsJSON,
 				},
-				Body: func() []byte {
+				Data: func() []byte {
 					body := map[string]interface{}{
 						"specversion":     "0.3",
 						"datacontenttype": "application/json",
@@ -103,7 +103,7 @@ func TestCodecV03_Encode(t *testing.T) {
 				Attributes: map[string]string{
 					"Content-Type": cloudevents.ApplicationCloudEventsJSON,
 				},
-				Body: func() []byte {
+				Data: func() []byte {
 					body := map[string]interface{}{
 						"datacontenttype": "application/json",
 						"specversion":     "0.3",
@@ -137,7 +137,7 @@ func TestCodecV03_Encode(t *testing.T) {
 				Attributes: map[string]string{
 					"Content-Type": cloudevents.ApplicationCloudEventsJSON,
 				},
-				Body: func() []byte {
+				Data: func() []byte {
 					body := map[string]interface{}{
 						"specversion":     "0.3",
 						"datacontenttype": "application/json",
@@ -172,8 +172,8 @@ func TestCodecV03_Encode(t *testing.T) {
 
 				if msg, ok := got.(*pubsub.Message); ok {
 					// It is hard to read the byte dump
-					want := string(tc.want.Body)
-					got := string(msg.Body)
+					want := string(tc.want.Data)
+					got := string(msg.Data)
 					if diff := cmp.Diff(want, got); diff != "" {
 						t.Errorf("unexpected message body (-want, +got) = %v", diff)
 						return
@@ -208,7 +208,7 @@ func TestCodecV03_Decode(t *testing.T) {
 				Attributes: map[string]string{
 					"Content-Type": cloudevents.ApplicationCloudEventsJSON,
 				},
-				Body: toBytes(map[string]interface{}{
+				Data: toBytes(map[string]interface{}{
 					"specversion": "0.3",
 					"id":          "ABC-123",
 					"type":        "com.example.test",
@@ -231,7 +231,7 @@ func TestCodecV03_Decode(t *testing.T) {
 				Attributes: map[string]string{
 					"Content-Type": cloudevents.ApplicationCloudEventsJSON,
 				},
-				Body: toBytes(map[string]interface{}{
+				Data: toBytes(map[string]interface{}{
 					"specversion":     "0.3",
 					"datacontenttype": "application/json",
 					"data": map[string]interface{}{

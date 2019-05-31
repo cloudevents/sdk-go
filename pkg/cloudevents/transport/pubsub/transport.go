@@ -236,7 +236,7 @@ func (t *Transport) Send(ctx context.Context, event cloudevents.Event) (*cloudev
 
 		r := topic.Publish(ctx, &pubsub.Message{
 			Attributes: m.Attributes,
-			Data:       m.Body,
+			Data:       m.Data,
 		})
 
 		_, err := r.Get(ctx)
@@ -280,11 +280,11 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 	}
 	// Ok, ready to start pulling.
 	err = sub.Receive(ctx, func(ctx context.Context, m *pubsub.Message) {
-		ctx = WithTransportContext(ctx, NewTransportContext(t.topicID, t.subscriptionID, "pull", m))
+		ctx = WithTransportContext(ctx, NewTransportContext(t.projectID, t.topicID, t.subscriptionID, "pull", m))
 
 		msg := &Message{
 			Attributes: m.Attributes,
-			Body:       m.Data,
+			Data:       m.Data,
 		}
 		event, err := t.codec.Decode(msg)
 		// If codec returns and error, try with the converter if it is set.
