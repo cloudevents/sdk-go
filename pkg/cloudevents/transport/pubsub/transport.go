@@ -25,7 +25,13 @@ const (
 type Transport struct {
 	// Encoding
 	Encoding Encoding
-	codec    transport.Codec
+
+	// DefaultEncodingSelectionFn allows for other encoding selection strategies to be injected.
+	DefaultEncodingSelectionFn EncodingSelector
+
+	codec transport.Codec
+	// Codec Mutex
+	coMu sync.Mutex
 
 	// PubSub
 
@@ -87,14 +93,23 @@ func (t *Transport) applyOptions(opts ...Option) error {
 	return nil
 }
 
-func (t *Transport) loadCodec() bool {
+func (t *Transport) loadCodec(ctx context.Context) bool {
 	if t.codec == nil {
-		switch t.Encoding {
-		case Default, BinaryV03, StructuredV03:
-			t.codec = &Codec{Encoding: t.Encoding}
-		default:
-			return false
+		t.coMu.Lock()
+		if t.DefaultEncodingSelectionFn != nil && t.Encoding != Default {
+			logger := cecontext.LoggerFrom(ctx)
+			logger.Warn("transport has a DefaultEncodingSelectionFn set but Encoding is not Default. DefaultEncodingSelectionFn will be ignored.")
+
+			t.codec = &Codec{
+				Encoding: t.Encoding,
+			}
+		} else {
+			t.codec = &Codec{
+				Encoding:                   t.Encoding,
+				DefaultEncodingSelectionFn: t.DefaultEncodingSelectionFn,
+			}
 		}
+		t.coMu.Unlock()
 	}
 	return true
 }
@@ -203,7 +218,7 @@ func (t *Transport) DeleteSubscription(ctx context.Context) error {
 
 // Send implements Transport.Send
 func (t *Transport) Send(ctx context.Context, event cloudevents.Event) (*cloudevents.Event, error) {
-	if ok := t.loadCodec(); !ok {
+	if ok := t.loadCodec(ctx); !ok {
 		return nil, fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
 	}
 
@@ -255,7 +270,7 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 	logger := cecontext.LoggerFrom(ctx)
 
 	// Load the codec.
-	if ok := t.loadCodec(); !ok {
+	if ok := t.loadCodec(ctx); !ok {
 		return fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
 	}
 

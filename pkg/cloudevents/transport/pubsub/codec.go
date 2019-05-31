@@ -12,6 +12,9 @@ import (
 type Codec struct {
 	Encoding Encoding
 
+	// DefaultEncodingSelectionFn allows for encoding selection strategies to be injected.
+	DefaultEncodingSelectionFn EncodingSelector
+
 	v03 *CodecV03
 }
 

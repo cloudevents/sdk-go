@@ -23,6 +23,49 @@ func WithEncoding(encoding Encoding) Option {
 	}
 }
 
+// WithDefaultEncodingSelector sets the encoding selection strategy for
+// default encoding selections based on Event.
+func WithDefaultEncodingSelector(fn EncodingSelector) Option {
+	return func(t *Transport) error {
+		if t == nil {
+			return fmt.Errorf("http default encoding selector option can not set nil transport")
+		}
+		if fn != nil {
+			t.DefaultEncodingSelectionFn = fn
+			return nil
+		}
+		return fmt.Errorf("pubsub fn for DefaultEncodingSelector was nil")
+	}
+}
+
+// WithBinaryEncoding sets the encoding selection strategy for
+// default encoding selections based on Event, the encoded event will be the
+// given version in Binary form.
+func WithBinaryEncoding() Option {
+	return func(t *Transport) error {
+		if t == nil {
+			return fmt.Errorf("pubsub binary encoding option can not set nil transport")
+		}
+
+		t.DefaultEncodingSelectionFn = DefaultBinaryEncodingSelectionStrategy
+		return nil
+	}
+}
+
+// WithStructuredEncoding sets the encoding selection strategy for
+// default encoding selections based on Event, the encoded event will be the
+// given version in Structured form.
+func WithStructuredEncoding() Option {
+	return func(t *Transport) error {
+		if t == nil {
+			return fmt.Errorf("pubsub structured encoding option can not set nil transport")
+		}
+
+		t.DefaultEncodingSelectionFn = DefaultStructuredEncodingSelectionStrategy
+		return nil
+	}
+}
+
 // WithClient sets the pubsub client for pubsub transport. Use this for explicit
 // auth setup. Otherwise the env var 'GOOGLE_APPLICATION_CREDENTIALS' is used.
 // See https://cloud.google.com/docs/authentication/production for more details.
