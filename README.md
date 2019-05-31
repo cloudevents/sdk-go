@@ -24,7 +24,7 @@ Receiving a cloudevents.Event via the HTTP Transport:
 
 ```go
 func Receive(event cloudevents.Event) {
-	// do something with event.Context and event.Data (via event.DataAs(foo)
+	// do something with event.Context and event.Data (via event.DataAs(foo))
 }
 
 func main() {
@@ -32,7 +32,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to create client, %v", err)
 	}
-	log.Fatal(c.StartReceiver(context.Background(), Receive));
+	log.Fatal(c.StartReceiver(context.Background(), Receive))
 }
 ```
 
@@ -51,7 +51,7 @@ Sending a cloudevents.Event via the HTTP Transport with Binary v0.2 encoding:
 ```go
 t, err := cloudevents.NewHTTPTransport(
 	cloudevents.WithTarget("http://localhost:8080/"),
-	cloudevents.WithEncoding(cloudevents.HTTPBinaryV02),
+	cloudevents.WithEncoding(cloudevents.HTTPBinaryV02)
 )
 if err != nil {
 	panic("failed to create transport, " + err.Error())
@@ -73,7 +73,7 @@ structured encoding:
 ```go
 t, err := cloudevents.NewHTTPTransport(
 	cloudevents.WithTarget("http://localhost:8080/"),
-	cloudevents.WithStructuredEncoding(),
+	cloudevents.WithStructuredEncoding()
 )
 ```
 
