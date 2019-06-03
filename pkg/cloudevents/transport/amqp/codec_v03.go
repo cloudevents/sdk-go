@@ -63,7 +63,7 @@ func (v CodecV03) inspectEncoding(msg transport.Message) Encoding {
 		return Unknown
 	}
 	contentType := m.ContentType
-	if contentType == cloudevents.ApplicationCloudEventsJSON {
+	if cloudevents.ContainsApplicationJSON(contentType) {
 		return StructuredV03
 	}
 	return BinaryV03
