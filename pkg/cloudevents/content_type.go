@@ -1,5 +1,7 @@
 package cloudevents
 
+import "regexp"
+
 const (
 	TextJSON                        = "text/json"
 	ApplicationJSON                 = "application/json"
@@ -32,4 +34,11 @@ func StringOfApplicationCloudEventsJSON() *string {
 func StringOfApplicationCloudEventsBatchJSON() *string {
 	a := ApplicationCloudEventsBatchJSON
 	return &a
+}
+
+// ContainsApplicationJSON checks if the passed contentType value is
+// either "application/json" or any media type with a structured +json suffix
+func ContainsApplicationJSON(contentType string) bool {
+	re := regexp.MustCompile("^(application\\/[a-z0-9.+-]*json[a-z0-9.+-]*)$")
+	return re.MatchString(contentType)
 }
