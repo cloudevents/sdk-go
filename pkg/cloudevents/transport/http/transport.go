@@ -20,8 +20,6 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 )
 
-type EncodingSelector func(e cloudevents.Event) Encoding
-
 // Transport adheres to transport.Transport.
 var _ transport.Transport = (*Transport)(nil)
 

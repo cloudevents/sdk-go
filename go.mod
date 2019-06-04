@@ -1,6 +1,7 @@
 module github.com/cloudevents/sdk-go
 
 require (
+	cloud.google.com/go v0.34.0
 	github.com/Azure/azure-sdk-for-go v28.1.0+incompatible // indirect
 	github.com/Azure/go-autorest/autorest v0.1.0 // indirect
 	github.com/Azure/go-autorest/autorest/to v0.1.0 // indirect
@@ -8,6 +9,7 @@ require (
 	github.com/fortytw2/leaktest v1.3.0 // indirect
 	github.com/google/go-cmp v0.2.0
 	github.com/google/uuid v1.1.0
+	github.com/googleapis/gax-go v2.0.2+incompatible // indirect
 	github.com/kelseyhightower/envconfig v1.3.0
 	github.com/nats-io/gnatsd v1.4.1 // indirect
 	github.com/nats-io/go-nats v1.7.0

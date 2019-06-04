@@ -1,7 +1,11 @@
 package http
 
+import "github.com/cloudevents/sdk-go/pkg/cloudevents"
+
 // Encoding to use for HTTP transport.
 type Encoding int32
+
+type EncodingSelector func(e cloudevents.Event) Encoding
 
 const (
 	// Default
@@ -23,6 +27,36 @@ const (
 	// Unknown is unknown.
 	Unknown
 )
+
+// DefaultBinaryEncodingSelectionStrategy implements a selection process for
+// which binary encoding to use based on spec version of the event.
+func DefaultBinaryEncodingSelectionStrategy(e cloudevents.Event) Encoding {
+	switch e.SpecVersion() {
+	case cloudevents.CloudEventsVersionV01:
+		return BinaryV01
+	case cloudevents.CloudEventsVersionV02:
+		return BinaryV02
+	case cloudevents.CloudEventsVersionV03:
+		return BinaryV03
+	}
+	// Unknown version, return Default.
+	return Default
+}
+
+// DefaultStructuredEncodingSelectionStrategy implements a selection process
+// for which structured encoding to use based on spec version of the event.
+func DefaultStructuredEncodingSelectionStrategy(e cloudevents.Event) Encoding {
+	switch e.SpecVersion() {
+	case cloudevents.CloudEventsVersionV01:
+		return StructuredV01
+	case cloudevents.CloudEventsVersionV02:
+		return StructuredV02
+	case cloudevents.CloudEventsVersionV03:
+		return StructuredV03
+	}
+	// Unknown version, return Default.
+	return Default
+}
 
 // String pretty-prints the encoding as a string.
 func (e Encoding) String() string {
