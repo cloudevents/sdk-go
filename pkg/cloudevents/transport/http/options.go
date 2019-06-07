@@ -182,11 +182,39 @@ type Middleware func(next nethttp.Handler) nethttp.Handler
 // Middleware is applied to everything before it. For example
 // `NewClient(WithMiddleware(foo), WithMiddleware(bar))` would result in `bar(foo(original))`.
 func WithMiddleware(middleware Middleware) Option {
-	return func (t *Transport) error {
+	return func(t *Transport) error {
 		if t == nil {
 			return fmt.Errorf("http middleware option can not set nil transport")
 		}
 		t.middleware = append(t.middleware, middleware)
 		return nil
+	}
+}
+
+// WithLongPollTarget sets the receivers URL to perform long polling after
+// StartReceiver is called.
+func WithLongPollTarget(targetUrl string) Option {
+	return func(t *Transport) error {
+		if t == nil {
+			return fmt.Errorf("http long poll target option can not set nil transport")
+		}
+		targetUrl = strings.TrimSpace(targetUrl)
+		if targetUrl != "" {
+			var err error
+			var target *url.URL
+			target, err = url.Parse(targetUrl)
+			if err != nil {
+				return fmt.Errorf("http long poll target option failed to parse target url: %s", err.Error())
+			}
+
+			if t.LongPollReq == nil {
+				t.LongPollReq = &nethttp.Request{
+					Method: nethttp.MethodGet,
+				}
+			}
+			t.LongPollReq.URL = target
+			return nil
+		}
+		return fmt.Errorf("http long poll target option was empty string")
 	}
 }

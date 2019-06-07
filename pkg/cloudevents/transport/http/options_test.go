@@ -631,8 +631,8 @@ func TestWithStructuredEncoding(t *testing.T) {
 }
 
 func TestWithMiddleware(t *testing.T) {
-	testCases := map[string]struct{
-		t *Transport
+	testCases := map[string]struct {
+		t       *Transport
 		wantErr string
 	}{
 		"nil transport": {
@@ -653,6 +653,91 @@ func TestWithMiddleware(t *testing.T) {
 				}
 			} else if err != nil {
 				t.Fatalf("Unexpected error: %v", err)
+			}
+		})
+	}
+}
+
+func TestWithLongPollTarget(t *testing.T) {
+	testCases := map[string]struct {
+		t       *Transport
+		target  string
+		want    *Transport
+		wantErr string
+	}{
+		"valid url": {
+			t: &Transport{
+				LongPollReq: &http.Request{},
+			},
+			target: "http://localhost:8080/",
+			want: &Transport{
+				LongPollReq: &http.Request{
+					URL: func() *url.URL {
+						u, _ := url.Parse("http://localhost:8080/")
+						return u
+					}(),
+				},
+			},
+		},
+		"valid url, unset req": {
+			t:      &Transport{},
+			target: "http://localhost:8080/",
+			want: &Transport{
+				LongPollReq: &http.Request{
+					Method: http.MethodGet,
+					URL: func() *url.URL {
+						u, _ := url.Parse("http://localhost:8080/")
+						return u
+					}(),
+				},
+			},
+		},
+		"invalid url": {
+			t: &Transport{
+				LongPollReq: &http.Request{},
+			},
+			target:  "%",
+			wantErr: `http long poll target option failed to parse target url: parse %: invalid URL escape "%"`,
+		},
+		"empty target": {
+			t: &Transport{
+				LongPollReq: &http.Request{},
+			},
+			target:  "",
+			wantErr: `http long poll target option was empty string`,
+		},
+		"whitespace target": {
+			t: &Transport{
+				LongPollReq: &http.Request{},
+			},
+			target:  " \t\n",
+			wantErr: `http long poll target option was empty string`,
+		},
+		"nil transport": {
+			wantErr: `http long poll target option can not set nil transport`,
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+
+			err := tc.t.applyOptions(WithLongPollTarget(tc.target))
+
+			if tc.wantErr != "" || err != nil {
+				var gotErr string
+				if err != nil {
+					gotErr = err.Error()
+				}
+				if diff := cmp.Diff(tc.wantErr, gotErr); diff != "" {
+					t.Errorf("unexpected error (-want, +got) = %v", diff)
+				}
+				return
+			}
+
+			got := tc.t
+
+			if diff := cmp.Diff(tc.want, got,
+				cmpopts.IgnoreUnexported(Transport{}), cmpopts.IgnoreUnexported(http.Request{})); diff != "" {
+				t.Errorf("unexpected (-want, +got) = %v", diff)
 			}
 		})
 	}

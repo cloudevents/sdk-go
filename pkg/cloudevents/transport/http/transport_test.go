@@ -81,7 +81,7 @@ func TestStableConnectionsToSingleHost(t *testing.T) {
 	// Start a dummy HTTP server
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		time.Sleep(50 * time.Millisecond)
-		fmt.Fprintf(w, `{"success": true}`)
+		w.WriteHeader(http.StatusAccepted)
 	})
 	sinkServer, err := startTestServer(handler)
 	if err != nil {
@@ -116,7 +116,7 @@ func TestStableConnectionsToSingleHost(t *testing.T) {
 	err = doConcurrently(concurrency, duration, func() error {
 		_, err := ceClient.Send(ctx, event)
 		if err != nil {
-			return fmt.Errorf("unexpected error sending CloudEvent %v", err.Error())
+			return fmt.Errorf("unexpected error sending CloudEvent: %v", err.Error())
 		}
 		atomic.AddUint64(&sent, 1)
 		return nil
@@ -136,19 +136,19 @@ func TestStableConnectionsToSingleHost(t *testing.T) {
 func TestMiddleware(t *testing.T) {
 	testCases := map[string]struct {
 		middleware []string
-		want string
-	} {
+		want       string
+	}{
 		"none": {},
 		"one": {
-			middleware: []string{ "Foo" },
+			middleware: []string{"Foo"},
 		},
 		"nested": {
-			middleware: []string{ "Foo", "Bar", "Qux" },
+			middleware: []string{"Foo", "Bar", "Qux"},
 		},
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
-			m := make([]cehttp.Option, 0, len(tc.middleware) + 2)
+			m := make([]cehttp.Option, 0, len(tc.middleware)+2)
 			m = append(m, cehttp.WithPort(0), cehttp.WithShutdownTimeout(time.Nanosecond))
 			for _, ms := range tc.middleware {
 				ms := ms
