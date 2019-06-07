@@ -135,7 +135,7 @@ func (e Encoding) Codec() string {
 
 	// Version 0.2
 	case BinaryV02:
-		return "binary/v0.3"
+		return "binary/v0.2"
 	case StructuredV02:
 		return "structured/v0.2"
 
