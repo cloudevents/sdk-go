@@ -262,7 +262,7 @@ func TestClientSend(t *testing.T) {
 				return
 			} else {
 				if err != nil {
-					t.Fatalf("failed to send event %s", err)
+					t.Fatalf("failed to send event: %s", err)
 				}
 			}
 

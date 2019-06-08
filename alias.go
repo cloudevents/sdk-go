@@ -46,12 +46,15 @@ var (
 	// ContentType Helpers
 
 	StringOfApplicationJSON                 = cloudevents.StringOfApplicationJSON
+	ApplicationJSON                         = cloudevents.ApplicationJSON
 	StringOfApplicationXML                  = cloudevents.StringOfApplicationXML
+	ApplicationXML                          = cloudevents.ApplicationXML
 	StringOfApplicationCloudEventsJSON      = cloudevents.StringOfApplicationCloudEventsJSON
+	ApplicationCloudEventsJSON              = cloudevents.ApplicationCloudEventsJSON
 	StringOfApplicationCloudEventsBatchJSON = cloudevents.StringOfApplicationCloudEventsBatchJSON
+	ApplicationCloudEventsBatchJSON         = cloudevents.ApplicationCloudEventsBatchJSON
 	StringOfBase64                          = cloudevents.StringOfBase64
-
-	Base64 = cloudevents.Base64
+	Base64                                  = cloudevents.Base64
 
 	// Client Creation
 
@@ -98,6 +101,7 @@ var (
 	WithPort               = http.WithPort
 	WithPath               = http.WithPath
 	WithMiddleware         = http.WithMiddleware
+	WithLongPollTarget     = http.WithLongPollTarget
 
 	// HTTP Context
 
