@@ -78,7 +78,7 @@ type Transport struct {
 	// Only .Method, .URL, .Close, and .Header is considered.
 	// If not set, LongPollReq.Method defaults to GET.
 	// LongPollReq.URL or context.WithLongPollTarget(url) are required to long
-	// pull on StartReceiver.
+	// poll on StartReceiver.
 	LongPollReq *http.Request
 
 	realPort          int
@@ -357,12 +357,12 @@ func (t *Transport) longPollStart(ctx context.Context) error {
 	}
 
 	// Override the default request with target from context.
-	if target := LongPullTargetFrom(ctx); target != nil {
+	if target := LongPollTargetFrom(ctx); target != nil {
 		req.URL = target
 	}
 
 	if req.URL == nil {
-		return errors.New("no long pull target found")
+		return errors.New("no long poll target found")
 	}
 
 	req = req.WithContext(ctx)
@@ -385,7 +385,7 @@ func (t *Transport) longPollStart(ctx context.Context) error {
 			} else if resp.StatusCode == http.StatusOK {
 				body, _ := ioutil.ReadAll(resp.Body)
 				if err := resp.Body.Close(); err != nil {
-					logger.Warnw("error closing long pull response body", zap.Error(err))
+					logger.Warnw("error closing long poll response body", zap.Error(err))
 				}
 				msg := Message{
 					Header: resp.Header,

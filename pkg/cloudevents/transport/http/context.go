@@ -164,15 +164,15 @@ type longPollTargetKeyType struct{}
 var longPollTargetKey = longPollTargetKeyType{}
 
 // WithLongPollTarget returns a new context with the given long poll target.
-// `target` should be a full URL and will be injected into the long pulling
+// `target` should be a full URL and will be injected into the long polling
 // http request within StartReceiver.
 func ContextWithLongPollTarget(ctx context.Context, target string) context.Context {
 	return context.WithValue(ctx, longPollTargetKey, target)
 }
 
-// LongPullTargetFrom looks in the given context and returns `target` as a
+// LongPollTargetFrom looks in the given context and returns `target` as a
 // parsed url if found and valid, otherwise nil.
-func LongPullTargetFrom(ctx context.Context) *url.URL {
+func LongPollTargetFrom(ctx context.Context) *url.URL {
 	c := ctx.Value(longPollTargetKey)
 	if c != nil {
 		if s, ok := c.(string); ok && s != "" {
