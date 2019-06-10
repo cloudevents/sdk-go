@@ -2,13 +2,14 @@ package http_test
 
 import (
 	"encoding/json"
+	"net/url"
+	"testing"
+	"time"
+
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"github.com/google/go-cmp/cmp"
-	"net/url"
-	"testing"
-	"time"
 )
 
 func TestCodecV02_Encode(t *testing.T) {

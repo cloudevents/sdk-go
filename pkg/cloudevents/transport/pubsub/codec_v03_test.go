@@ -2,13 +2,14 @@ package pubsub_test
 
 import (
 	"encoding/json"
+	"net/url"
+	"testing"
+	"time"
+
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/pubsub"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"github.com/google/go-cmp/cmp"
-	"net/url"
-	"testing"
-	"time"
 )
 
 func TestCodecV03_Encode(t *testing.T) {

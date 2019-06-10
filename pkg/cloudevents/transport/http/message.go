@@ -2,8 +2,9 @@ package http
 
 import (
 	"encoding/json"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	"net/http"
+
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 )
 
 // type check that this transport message impl matches the contract

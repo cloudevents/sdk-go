@@ -1,13 +1,14 @@
 package cloudevents_test
 
 import (
-	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
-	"github.com/google/go-cmp/cmp"
 	"net/url"
 	"strings"
 	"testing"
 	"time"
+
+	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestValidateV01(t *testing.T) {

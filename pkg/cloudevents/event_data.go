@@ -4,8 +4,9 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec"
 	"strconv"
+
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec"
 )
 
 // Data is special. Break it out into it's own file.

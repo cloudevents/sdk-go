@@ -3,9 +3,10 @@ package codec
 import (
 	"context"
 	"encoding/json"
+	"strconv"
+
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
-	"strconv"
 )
 
 // JsonEncodeV01 takes in a cloudevent.Event and outputs the byte representation of that event using CloudEvents

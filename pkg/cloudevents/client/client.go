@@ -3,11 +3,12 @@ package client
 import (
 	"context"
 	"fmt"
+	"sync"
+
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
-	"sync"
 )
 
 // Client interface defines the runtime contract the CloudEvents client supports.

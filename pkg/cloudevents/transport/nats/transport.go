@@ -3,10 +3,10 @@ package nats
 import (
 	"context"
 	"fmt"
+
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	context2 "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
-	"github.com/nats-io/go-nats"
 	"go.uber.org/zap"
 )
 

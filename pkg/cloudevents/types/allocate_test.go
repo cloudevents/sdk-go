@@ -1,10 +1,11 @@
 package types_test
 
 import (
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
-	"github.com/google/go-cmp/cmp"
 	"testing"
 	"time"
+
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/google/go-cmp/cmp"
 )
 
 type DataExample struct {

@@ -1,10 +1,11 @@
 package http
 
 import (
-	"github.com/cloudevents/sdk-go"
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/cloudevents/sdk-go"
 )
 
 func TestClientConversion_v02(t *testing.T) {

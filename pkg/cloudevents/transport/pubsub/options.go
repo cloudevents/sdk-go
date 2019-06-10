@@ -1,9 +1,10 @@
 package pubsub
 
 import (
-	"cloud.google.com/go/pubsub"
 	"fmt"
 	"os"
+
+	"cloud.google.com/go/pubsub"
 )
 
 // Option is the function signature required to be considered an pubsub.Option.

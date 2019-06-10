@@ -1,11 +1,12 @@
 package cloudevents_test
 
 import (
+	"strings"
+	"testing"
+
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"github.com/google/go-cmp/cmp"
-	"strings"
-	"testing"
 )
 
 type DataTest struct {

@@ -5,15 +5,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/cloudevents/sdk-go"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
-	cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
-	"github.com/google/uuid"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/cloudevents/sdk-go"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
+	cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+	"github.com/google/uuid"
 )
 
 // Conversion Test:

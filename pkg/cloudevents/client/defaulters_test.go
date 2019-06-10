@@ -1,11 +1,12 @@
 package client
 
 import (
+	"testing"
+	"time"
+
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"github.com/google/go-cmp/cmp"
-	"testing"
-	"time"
 )
 
 func TestDefaultIDToUUIDIfNotSet(t *testing.T) {

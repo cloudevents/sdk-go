@@ -1,9 +1,10 @@
 package pubsub
 
 import (
+	"testing"
+
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"testing"
 )
 
 func TestWithEncoding(t *testing.T) {

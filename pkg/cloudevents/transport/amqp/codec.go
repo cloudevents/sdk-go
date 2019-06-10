@@ -3,11 +3,12 @@ package amqp
 import (
 	"encoding/json"
 	"fmt"
+	"net/textproto"
+	"strings"
+
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
-	"net/textproto"
-	"strings"
 )
 
 type Codec struct {

@@ -5,8 +5,9 @@ import (
 	"encoding/base64"
 	"encoding/xml"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
 	"strconv"
+
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
 )
 
 // Decode takes `in` as []byte, or base64 string, normalizes in to unquoted and
