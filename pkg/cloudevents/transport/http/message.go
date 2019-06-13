@@ -1,7 +1,11 @@
 package http
 
 import (
+	"bytes"
 	"encoding/json"
+
+	"io"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
@@ -19,8 +23,7 @@ type Message struct {
 // Response is an http transport response.
 type Response struct {
 	StatusCode int
-	Header     http.Header
-	Body       []byte
+	Message    Message
 }
 
 // CloudEventsVersion inspects a message and tries to discover and return the
@@ -77,4 +80,33 @@ func (m Message) CloudEventsVersion() string {
 	}
 
 	return ""
+}
+
+func readAllClose(r io.ReadCloser) ([]byte, error) {
+	if r != nil {
+		defer r.Close()
+		return ioutil.ReadAll(r)
+	}
+	return nil, nil
+}
+
+// FromRequest initializes a Message from a http.Request
+func (m *Message) FromRequest(r *http.Request) (err error) {
+	copyHeadersEnsure(r.Header, &m.Header)
+	m.Body, err = readAllClose(r.Body)
+	return err
+}
+
+// ToRequest copies a message to a http.Request.
+// Replaces r.Body, r.ContentLength and r.Method.
+// Updates r.Headers.
+func (m *Message) ToRequest(r *http.Request) {
+	copyHeadersEnsure(m.Header, &r.Header)
+	if m.Body != nil {
+		r.Body = ioutil.NopCloser(bytes.NewBuffer(m.Body))
+	} else {
+		r.Body = nil
+	}
+	r.ContentLength = int64(len(m.Body))
+	r.Method = http.MethodPost
 }

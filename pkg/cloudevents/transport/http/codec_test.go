@@ -3,6 +3,7 @@ package http_test
 import (
 	"encoding/json"
 	"fmt"
+	nethttp "net/http"
 	"net/url"
 	"testing"
 	"time"
@@ -421,6 +422,16 @@ func TestCodecEncode(t *testing.T) {
 	}
 }
 
+// A cmp.Transformer to normalize case of http.Header map keys.
+var normalizeHeaders = cmp.Transformer("NormalizeHeaders",
+	func(in nethttp.Header) nethttp.Header {
+		out := nethttp.Header{}
+		for k, v := range in {
+			out[nethttp.CanonicalHeaderKey(k)] = v
+		}
+		return out
+	})
+
 func TestCodecDecode(t *testing.T) {
 	sourceUrl, _ := url.Parse("http://example.com/source")
 	source := &types.URLRef{URL: *sourceUrl}
@@ -682,6 +693,17 @@ func TestCodecDecode(t *testing.T) {
 
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("unexpected event (-want, +got) = %v", diff)
+			}
+			// Round trip thru a http.Request
+			var req nethttp.Request
+			tc.msg.ToRequest(&req)
+			var gotm http.Message
+			err = gotm.FromRequest(&req)
+			if err != nil {
+				t.Error(err)
+			}
+			if diff := cmp.Diff(*tc.msg, gotm, normalizeHeaders); diff != "" {
+				t.Errorf("unexpected message (-want, +got) = %v", diff)
 			}
 		})
 	}

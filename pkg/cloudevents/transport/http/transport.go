@@ -1,7 +1,6 @@
 package http
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -146,6 +145,16 @@ func copyHeaders(from, to http.Header) {
 	}
 }
 
+// Ensure to is a non-nil map before copying
+func copyHeadersEnsure(from http.Header, to *http.Header) {
+	if len(from) > 0 {
+		if *to == nil {
+			*to = http.Header{}
+		}
+		copyHeaders(from, *to)
+	}
+}
+
 // Send implements Transport.Send
 func (t *Transport) Send(ctx context.Context, event cloudevents.Event) (*cloudevents.Event, error) {
 	ctx, r := observability.NewReporter(ctx, reportSend)
@@ -172,7 +181,7 @@ func (t *Transport) obsSend(ctx context.Context, event cloudevents.Event) (*clou
 		req.Method = t.Req.Method
 		req.URL = t.Req.URL
 		req.Close = t.Req.Close
-		copyHeaders(t.Req.Header, req.Header)
+		copyHeadersEnsure(t.Req.Header, &req.Header)
 	}
 
 	// Override the default request with target from context.
@@ -190,15 +199,7 @@ func (t *Transport) obsSend(ctx context.Context, event cloudevents.Event) (*clou
 	}
 
 	if m, ok := msg.(*Message); ok {
-		copyHeaders(m.Header, req.Header)
-
-		if m.Body != nil {
-			req.Body = ioutil.NopCloser(bytes.NewBuffer(m.Body))
-			req.ContentLength = int64(len(m.Body))
-		} else {
-			req.ContentLength = 0
-		}
-
+		m.ToRequest(&req)
 		return httpDo(ctx, t.Client, &req, func(resp *http.Response, err error) (*cloudevents.Event, error) {
 			if err != nil {
 				return nil, err
@@ -493,8 +494,7 @@ func (t *Transport) obsInvokeReceiver(ctx context.Context, event cloudevents.Eve
 				if m, err := t.codec.Encode(*eventResp.Event); err != nil {
 					logger.Errorw("failed to encode response from receiver fn", zap.Error(err))
 				} else if msg, ok := m.(*Message); ok {
-					resp.Header = msg.Header
-					resp.Body = msg.Body
+					resp.Message = *msg
 				}
 			} else {
 				logger.Error("failed to load codec")
@@ -512,7 +512,7 @@ func (t *Transport) obsInvokeReceiver(ctx context.Context, event cloudevents.Eve
 			}
 			// If we found a TransportResponseContext, use it.
 			if trx != nil && trx.Header != nil && len(trx.Header) > 0 {
-				copyHeaders(trx.Header, resp.Header)
+				copyHeadersEnsure(trx.Header, &resp.Message.Header)
 			}
 		}
 
@@ -575,12 +575,12 @@ func (t *Transport) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		if t.Req != nil {
 			copyHeaders(t.Req.Header, w.Header())
 		}
-		if len(resp.Header) > 0 {
-			copyHeaders(resp.Header, w.Header())
+		if len(resp.Message.Header) > 0 {
+			copyHeaders(resp.Message.Header, w.Header())
 		}
-		w.Header().Add("Content-Length", strconv.Itoa(len(resp.Body)))
-		if len(resp.Body) > 0 {
-			if _, err := w.Write(resp.Body); err != nil {
+		w.Header().Add("Content-Length", strconv.Itoa(len(resp.Message.Body)))
+		if len(resp.Message.Body) > 0 {
+			if _, err := w.Write(resp.Message.Body); err != nil {
 				r.Error()
 				return
 			}
