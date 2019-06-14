@@ -3,7 +3,7 @@ module github.com/cloudevents/sdk-go
 require (
 	cloud.google.com/go v0.40.0
 	contrib.go.opencensus.io/exporter/prometheus v0.1.0
-	github.com/Azure/azure-sdk-for-go v30.0.0+incompatible // indirect
+	github.com/Azure/azure-sdk-for-go v30.1.0+incompatible // indirect
 	github.com/Azure/go-autorest/autorest v0.2.0 // indirect
 	github.com/Azure/go-autorest/autorest/to v0.2.0 // indirect
 	github.com/Azure/go-autorest/autorest/validation v0.1.0 // indirect
