@@ -20,7 +20,7 @@ import (
 	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	transporthttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
-	"go.opencensus.io/exporter/prometheus"
+	"contrib.go.opencensus.io/exporter/prometheus"
 	"go.opencensus.io/stats/view"
 )
 
