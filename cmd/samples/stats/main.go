@@ -16,12 +16,12 @@ import (
 	"go.opencensus.io/trace"
 	"go.opencensus.io/zpages"
 
+	"contrib.go.opencensus.io/exporter/prometheus"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	transporthttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
-	"contrib.go.opencensus.io/exporter/prometheus"
 	"go.opencensus.io/stats/view"
 )
 
