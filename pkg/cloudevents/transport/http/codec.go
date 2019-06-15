@@ -65,9 +65,7 @@ func (c *Codec) Encode(e cloudevents.Event) (transport.Message, error) {
 // Decode converts a provided transport message into an Event, or error.
 func (c *Codec) Decode(msg transport.Message) (*cloudevents.Event, error) {
 	switch c.inspectEncoding(msg) {
-	case BinaryV01:
-		fallthrough
-	case StructuredV01:
+	case BinaryV01, StructuredV01:
 		if c.v01 == nil {
 			c.v01 = &CodecV01{Encoding: c.Encoding}
 		}
@@ -76,9 +74,8 @@ func (c *Codec) Decode(msg transport.Message) (*cloudevents.Event, error) {
 		} else {
 			return c.convertEvent(event), nil
 		}
-	case BinaryV02:
-		fallthrough
-	case StructuredV02:
+
+	case BinaryV02, StructuredV02:
 		if c.v02 == nil {
 			c.v02 = &CodecV02{Encoding: c.Encoding}
 		}
@@ -87,11 +84,8 @@ func (c *Codec) Decode(msg transport.Message) (*cloudevents.Event, error) {
 		} else {
 			return c.convertEvent(event), nil
 		}
-	case BinaryV03:
-		fallthrough
-	case StructuredV03:
-		fallthrough
-	case BatchedV03:
+
+	case BinaryV03, StructuredV03, BatchedV03:
 		if c.v03 == nil {
 			c.v03 = &CodecV03{Encoding: c.Encoding}
 		}

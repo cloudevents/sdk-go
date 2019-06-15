@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/codec"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
@@ -17,6 +16,8 @@ import (
 
 // CodecV01 represents a http transport codec that uses CloudEvents spec v0.3
 type CodecV01 struct {
+	CodecStructured
+
 	Encoding Encoding
 }
 
@@ -67,7 +68,7 @@ func (v CodecV01) obsDecode(msg transport.Message) (*cloudevents.Event, error) {
 	case BinaryV01:
 		return v.decodeBinary(msg)
 	case StructuredV01:
-		return v.decodeStructured(msg)
+		return v.decodeStructured(cloudevents.CloudEventsVersionV01, msg)
 	default:
 		return nil, transport.NewErrMessageEncodingUnknown("v01", TransportName)
 	}
@@ -130,23 +131,6 @@ func (v CodecV01) toHeaders(ec *cloudevents.EventContextV01) (http.Header, error
 	return h, nil
 }
 
-func (v CodecV01) encodeStructured(e cloudevents.Event) (transport.Message, error) {
-	header := http.Header{}
-	header.Set("Content-Type", cloudevents.ApplicationCloudEventsJSON)
-
-	body, err := codec.JsonEncodeV01(e)
-	if err != nil {
-		return nil, err
-	}
-
-	msg := &Message{
-		Header: header,
-		Body:   body,
-	}
-
-	return msg, nil
-}
-
 func (v CodecV01) decodeBinary(msg transport.Message) (*cloudevents.Event, error) {
 	m, ok := msg.(*Message)
 	if !ok {
@@ -163,7 +147,7 @@ func (v CodecV01) decodeBinary(msg transport.Message) (*cloudevents.Event, error
 	return &cloudevents.Event{
 		Context:     &ctx,
 		Data:        body,
-		DataEncoded: true,
+		DataEncoded: body != nil,
 	}, nil
 }
 
@@ -218,14 +202,6 @@ func (v CodecV01) fromHeaders(h http.Header) (cloudevents.EventContextV01, error
 		ec.Extensions = extensions
 	}
 	return ec, nil
-}
-
-func (v CodecV01) decodeStructured(msg transport.Message) (*cloudevents.Event, error) {
-	m, ok := msg.(*Message)
-	if !ok {
-		return nil, fmt.Errorf("failed to convert transport.Message to http.Message")
-	}
-	return codec.JsonDecodeV01(m.Body)
 }
 
 func (v CodecV01) inspectEncoding(msg transport.Message) Encoding {

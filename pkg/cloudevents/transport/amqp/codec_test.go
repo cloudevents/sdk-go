@@ -30,11 +30,11 @@ func TestCodecEncode(t *testing.T) {
 		"simple v02 structured": {
 			codec: amqp.Codec{Encoding: amqp.StructuredV02},
 			event: cloudevents.Event{
-				Context: &cloudevents.EventContextV02{
+				Context: cloudevents.EventContextV02{
 					Type:   "com.example.test",
 					Source: *source,
 					ID:     "ABC-123",
-				},
+				}.AsV02(),
 			},
 			want: &amqp.Message{
 				ContentType: "application/cloudevents+json",
@@ -53,12 +53,12 @@ func TestCodecEncode(t *testing.T) {
 		"simple v03 structured": {
 			codec: amqp.Codec{Encoding: amqp.StructuredV03},
 			event: cloudevents.Event{
-				Context: &cloudevents.EventContextV03{
+				Context: cloudevents.EventContextV03{
 					Type:    "com.example.test",
 					Source:  *source,
 					ID:      "ABC-123",
 					Subject: strptr("a-subject"),
-				},
+				}.AsV03(),
 			},
 			want: &amqp.Message{
 				ContentType: "application/cloudevents+json",
@@ -175,7 +175,6 @@ func TestCodecDecode(t *testing.T) {
 					Source:      *source,
 					ID:          "ABC-123",
 				},
-				DataEncoded: true,
 			},
 		},
 		"simple v3 structured": {
@@ -201,7 +200,6 @@ func TestCodecDecode(t *testing.T) {
 					ID:          "ABC-123",
 					Subject:     strptr("a-subject"),
 				},
-				DataEncoded: true,
 			},
 		},
 		"binary v3 with nil attribute": {
@@ -285,11 +283,11 @@ func TestCodecRoundTrip(t *testing.T) {
 			"simple data": {
 				codec: amqp.Codec{Encoding: encoding},
 				event: cloudevents.Event{
-					Context: &cloudevents.EventContextV01{
+					Context: cloudevents.EventContextV01{
 						EventType: "com.example.test",
 						Source:    *source,
 						EventID:   "ABC-123",
-					},
+					}.AsV02(),
 					Data: map[string]string{
 						"a": "apple",
 						"b": "banana",
@@ -313,11 +311,11 @@ func TestCodecRoundTrip(t *testing.T) {
 			"struct data": {
 				codec: amqp.Codec{Encoding: encoding},
 				event: cloudevents.Event{
-					Context: &cloudevents.EventContextV01{
+					Context: cloudevents.EventContextV01{
 						EventType: "com.example.test",
 						Source:    *source,
 						EventID:   "ABC-123",
-					},
+					}.AsV02(),
 					Data: DataExample{
 						AnInt:   42,
 						AString: "testing",
@@ -407,11 +405,11 @@ func TestCodecAsMiddleware(t *testing.T) {
 			"simple data": {
 				codec: amqp.Codec{Encoding: encoding},
 				event: cloudevents.Event{
-					Context: &cloudevents.EventContextV01{
+					Context: cloudevents.EventContextV01{
 						EventType: "com.example.test",
 						Source:    *source,
 						EventID:   "ABC-123",
-					},
+					}.AsV02(),
 					Data: map[string]string{
 						"a": "apple",
 						"b": "banana",
@@ -435,11 +433,11 @@ func TestCodecAsMiddleware(t *testing.T) {
 			"struct data": {
 				codec: amqp.Codec{Encoding: encoding},
 				event: cloudevents.Event{
-					Context: &cloudevents.EventContextV01{
+					Context: cloudevents.EventContextV01{
 						EventType: "com.example.test",
 						Source:    *source,
 						EventID:   "ABC-123",
-					},
+					}.AsV02(),
 					Data: DataExample{
 						AnInt:   42,
 						AString: "testing",

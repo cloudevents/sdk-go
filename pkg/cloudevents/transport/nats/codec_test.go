@@ -30,11 +30,11 @@ func TestCodecEncode(t *testing.T) {
 		"simple v02 structured binary": {
 			codec: nats.Codec{Encoding: nats.StructuredV02},
 			event: cloudevents.Event{
-				Context: &cloudevents.EventContextV02{
+				Context: cloudevents.EventContextV02{
 					Type:   "com.example.test",
 					Source: *source,
 					ID:     "ABC-123",
-				},
+				}.AsV02(),
 			},
 			want: &nats.Message{
 				Body: func() []byte {
@@ -108,7 +108,6 @@ func TestCodecDecode(t *testing.T) {
 					Source:      *source,
 					ID:          "ABC-123",
 				},
-				DataEncoded: true,
 			},
 		},
 	}
@@ -154,11 +153,11 @@ func TestCodecRoundTrip(t *testing.T) {
 			"simple data": {
 				codec: nats.Codec{Encoding: encoding},
 				event: cloudevents.Event{
-					Context: &cloudevents.EventContextV01{
+					Context: cloudevents.EventContextV01{
 						EventType: "com.example.test",
 						Source:    *source,
 						EventID:   "ABC-123",
-					},
+					}.AsV02(),
 					Data: map[string]string{
 						"a": "apple",
 						"b": "banana",
@@ -182,11 +181,11 @@ func TestCodecRoundTrip(t *testing.T) {
 			"struct data": {
 				codec: nats.Codec{Encoding: encoding},
 				event: cloudevents.Event{
-					Context: &cloudevents.EventContextV01{
+					Context: cloudevents.EventContextV01{
 						EventType: "com.example.test",
 						Source:    *source,
 						EventID:   "ABC-123",
-					},
+					}.AsV02(),
 					Data: DataExample{
 						AnInt:   42,
 						AString: "testing",
@@ -248,7 +247,7 @@ func TestCodecRoundTrip(t *testing.T) {
 					return
 				}
 
-				// fix the context back to v1 to test.
+				// fix the context back to v01 to test.
 				ctxv1 := got.Context.AsV01()
 				got.Context = ctxv1
 
@@ -276,11 +275,11 @@ func TestCodecAsMiddleware(t *testing.T) {
 			"simple data": {
 				codec: nats.Codec{Encoding: encoding},
 				event: cloudevents.Event{
-					Context: &cloudevents.EventContextV01{
+					Context: cloudevents.EventContextV01{
 						EventType: "com.example.test",
 						Source:    *source,
 						EventID:   "ABC-123",
-					},
+					}.AsV02(),
 					Data: map[string]string{
 						"a": "apple",
 						"b": "banana",
@@ -304,11 +303,11 @@ func TestCodecAsMiddleware(t *testing.T) {
 			"struct data": {
 				codec: nats.Codec{Encoding: encoding},
 				event: cloudevents.Event{
-					Context: &cloudevents.EventContextV01{
+					Context: cloudevents.EventContextV01{
 						EventType: "com.example.test",
 						Source:    *source,
 						EventID:   "ABC-123",
-					},
+					}.AsV02(),
 					Data: DataExample{
 						AnInt:   42,
 						AString: "testing",

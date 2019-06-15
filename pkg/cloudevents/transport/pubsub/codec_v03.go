@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/codec"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 )
 
@@ -13,6 +12,8 @@ const (
 )
 
 type CodecV03 struct {
+	CodecStructured
+
 	Encoding Encoding
 }
 
@@ -33,30 +34,10 @@ func (v CodecV03) Decode(msg transport.Message) (*cloudevents.Event, error) {
 	// only structured is supported as of v0.3
 	switch v.inspectEncoding(msg) {
 	case StructuredV03:
-		return v.decodeStructured(msg)
+		return v.decodeStructured(cloudevents.CloudEventsVersionV03, msg)
 	default:
 		return nil, transport.NewErrMessageEncodingUnknown("v03", TransportName)
 	}
-}
-
-func (v CodecV03) encodeStructured(e cloudevents.Event) (transport.Message, error) {
-	data, err := codec.JsonEncodeV03(e)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Message{
-		Attributes: map[string]string{StructuredContentType: cloudevents.ApplicationCloudEventsJSON},
-		Data:       data,
-	}, nil
-}
-
-func (v CodecV03) decodeStructured(msg transport.Message) (*cloudevents.Event, error) {
-	m, ok := msg.(*Message)
-	if !ok {
-		return nil, fmt.Errorf("failed to convert transport.Message to pubsub.Message")
-	}
-	return codec.JsonDecodeV03(m.Data)
 }
 
 func (v CodecV03) inspectEncoding(msg transport.Message) Encoding {
