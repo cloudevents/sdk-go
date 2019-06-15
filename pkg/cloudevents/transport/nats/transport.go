@@ -7,7 +7,7 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	context2 "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
-	"github.com/nats-io/go-nats"
+	"github.com/nats-io/nats.go"
 	"go.uber.org/zap"
 )
 
