@@ -1,12 +1,13 @@
 package main
 
 import (
-	"cloud.google.com/go/pubsub"
 	"context"
 	"encoding/json"
-	"github.com/kelseyhightower/envconfig"
 	"log"
 	"os"
+
+	"cloud.google.com/go/pubsub"
+	"github.com/kelseyhightower/envconfig"
 )
 
 type envConfig struct {

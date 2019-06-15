@@ -3,6 +3,7 @@ package datacodec
 import (
 	"context"
 	"fmt"
+
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec/json"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec/xml"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"

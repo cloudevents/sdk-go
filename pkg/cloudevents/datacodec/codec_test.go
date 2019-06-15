@@ -2,11 +2,12 @@ package datacodec_test
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"github.com/google/go-cmp/cmp"
-	"strings"
-	"testing"
 )
 
 type Example struct {

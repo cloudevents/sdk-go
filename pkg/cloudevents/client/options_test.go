@@ -1,9 +1,10 @@
 package client
 
 import (
+	"testing"
+
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/google/go-cmp/cmp"
-	"testing"
 )
 
 func TestWithEventDefaulter(t *testing.T) {

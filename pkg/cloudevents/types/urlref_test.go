@@ -2,10 +2,11 @@ package types_test
 
 import (
 	"encoding/xml"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
-	"github.com/google/go-cmp/cmp"
 	"net/url"
 	"testing"
+
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestParseURLRef(t *testing.T) {

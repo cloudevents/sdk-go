@@ -3,9 +3,10 @@ package client
 import (
 	"context"
 	"errors"
+	"testing"
+
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/google/go-cmp/cmp"
-	"testing"
 )
 
 func TestReceiverFnValidTypes(t *testing.T) {

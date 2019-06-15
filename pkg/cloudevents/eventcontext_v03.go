@@ -3,9 +3,10 @@ package cloudevents
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"sort"
 	"strings"
+
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 )
 
 // WIP: AS OF FEB 19, 2019

@@ -2,6 +2,7 @@ package amqp
 
 import (
 	"encoding/json"
+
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 )
 

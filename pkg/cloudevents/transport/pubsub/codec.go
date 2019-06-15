@@ -3,10 +3,11 @@ package pubsub
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
+
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
-	"strings"
 )
 
 type Codec struct {

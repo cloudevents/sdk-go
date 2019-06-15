@@ -2,14 +2,15 @@ package http
 
 import (
 	"context"
+	"net/http/httptest"
+	"testing"
+	"time"
+
 	"github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"github.com/google/uuid"
-	"net/http/httptest"
-	"testing"
-	"time"
 )
 
 // Loopback Test:

@@ -3,6 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
+	"math/rand"
+	"net/http"
+	"time"
+
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/codec"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec/json"
@@ -10,10 +15,6 @@ import (
 	"go.opencensus.io/examples/exporter"
 	"go.opencensus.io/trace"
 	"go.opencensus.io/zpages"
-	"log"
-	"math/rand"
-	"net/http"
-	"time"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"

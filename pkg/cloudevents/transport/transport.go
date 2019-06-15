@@ -2,6 +2,7 @@ package transport
 
 import (
 	"context"
+
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 )
 
@@ -24,6 +25,14 @@ type Transport interface {
 // of incoming events.
 type Receiver interface {
 	Receive(context.Context, cloudevents.Event, *cloudevents.EventResponse) error
+}
+
+// ReceiveFunc wraps a function as a Receiver object.
+type ReceiveFunc func(ctx context.Context, e cloudevents.Event, er *cloudevents.EventResponse) error
+
+// Receive implements Receiver.Receive
+func (f ReceiveFunc) Receive(ctx context.Context, e cloudevents.Event, er *cloudevents.EventResponse) error {
+	return f(ctx, e, er)
 }
 
 // Converter is an interface to define how a transport delegate to convert an

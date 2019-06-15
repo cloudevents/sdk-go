@@ -3,10 +3,11 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/kelseyhightower/envconfig"
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/kelseyhightower/envconfig"
 )
 
 type envConfig struct {

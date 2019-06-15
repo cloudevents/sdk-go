@@ -3,11 +3,12 @@ package json_test
 import (
 	"encoding/json"
 	"fmt"
+	"testing"
+	"time"
+
 	cej "github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec/json"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"github.com/google/go-cmp/cmp"
-	"testing"
-	"time"
 )
 
 type DataExample struct {
