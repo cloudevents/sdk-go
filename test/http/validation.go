@@ -1,11 +1,12 @@
 package http
 
 import (
+	"strings"
+	"testing"
+
 	"github.com/cloudevents/sdk-go"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"strings"
-	"testing"
 )
 
 var (

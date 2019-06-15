@@ -3,9 +3,10 @@ package http
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cloudevents/sdk-go"
 	"testing"
 	"time"
+
+	"github.com/cloudevents/sdk-go"
 )
 
 func TestClientLoopback_setters_binary_json(t *testing.T) {

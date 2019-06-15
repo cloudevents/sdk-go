@@ -1,11 +1,12 @@
 package cloudevents_test
 
 import (
+	"testing"
+	"time"
+
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"github.com/google/go-cmp/cmp"
-	"testing"
-	"time"
 )
 
 func TestContextAsV01(t *testing.T) {

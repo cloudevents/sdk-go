@@ -1,9 +1,10 @@
 package http
 
 import (
-	"github.com/cloudevents/sdk-go"
 	"testing"
 	"time"
+
+	"github.com/cloudevents/sdk-go"
 )
 
 func TestClientLoopback_binary_v01tov01(t *testing.T) {

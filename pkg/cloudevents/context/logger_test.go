@@ -2,10 +2,11 @@ package context
 
 import (
 	"context"
+	"testing"
+
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"go.uber.org/zap"
-	"testing"
 )
 
 func TestLoggerContext(t *testing.T) {

@@ -3,14 +3,15 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
+	"os"
+	"strings"
+
 	"github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/pubsub"
 	"github.com/google/uuid"
 	"github.com/kelseyhightower/envconfig"
-	"log"
-	"os"
-	"strings"
 )
 
 type envConfig struct {

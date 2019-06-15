@@ -2,12 +2,13 @@ package http_test
 
 import (
 	"context"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
-	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	nethttp "net/http"
 	"sort"
 	"testing"
+
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 func TestTransportContext(t *testing.T) {

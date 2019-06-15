@@ -4,9 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
 	"reflect"
 	"strconv"
+
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
 )
 
 // Decode takes `in` as []byte, or base64 string, normalizes in to unquoted and

@@ -1,11 +1,12 @@
 package cloudevents_test
 
 import (
-	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/google/go-cmp/cmp"
 	"strings"
 	"testing"
 	"time"
+
+	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/google/go-cmp/cmp"
 )
 
 type ReadWriteTest struct {

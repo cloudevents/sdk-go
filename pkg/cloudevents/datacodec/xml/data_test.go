@@ -3,12 +3,13 @@ package xml_test
 import (
 	"encoding/xml"
 	"fmt"
-	cex "github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec/xml"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
-	"github.com/google/go-cmp/cmp"
 	"strings"
 	"testing"
 	"time"
+
+	cex "github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec/xml"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/google/go-cmp/cmp"
 )
 
 type DataExample struct {

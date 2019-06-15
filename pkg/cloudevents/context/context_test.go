@@ -2,10 +2,11 @@ package context_test
 
 import (
 	"context"
-	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
-	"github.com/google/go-cmp/cmp"
 	"net/url"
 	"testing"
+
+	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestTargetContext(t *testing.T) {

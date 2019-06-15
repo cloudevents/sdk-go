@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
+
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
-	"reflect"
 )
 
 // Receive is the signature of a fn to be invoked for incoming cloudevents.
