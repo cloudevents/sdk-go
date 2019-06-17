@@ -29,11 +29,11 @@ func TestCodecV03_Encode(t *testing.T) {
 		"simple v0.3 default": {
 			codec: nats.CodecV03{},
 			event: cloudevents.Event{
-				Context: &cloudevents.EventContextV03{
+				Context: cloudevents.EventContextV03{
 					Type:   "com.example.test",
 					Source: *source,
 					ID:     "ABC-123",
-				},
+				}.AsV03(),
 			},
 			want: &nats.Message{
 				Body: func() []byte {
@@ -51,7 +51,7 @@ func TestCodecV03_Encode(t *testing.T) {
 		"full v0.3 default": {
 			codec: nats.CodecV03{},
 			event: cloudevents.Event{
-				Context: &cloudevents.EventContextV03{
+				Context: cloudevents.EventContextV03{
 					ID:              "ABC-123",
 					Time:            &now,
 					Type:            "com.example.test",
@@ -61,7 +61,7 @@ func TestCodecV03_Encode(t *testing.T) {
 					Extensions: map[string]interface{}{
 						"test": "extended",
 					},
-				},
+				}.AsV03(),
 				Data: map[string]interface{}{
 					"hello": "world",
 				},
@@ -88,11 +88,11 @@ func TestCodecV03_Encode(t *testing.T) {
 		"simple v0.3 structured": {
 			codec: nats.CodecV03{Encoding: nats.StructuredV03},
 			event: cloudevents.Event{
-				Context: &cloudevents.EventContextV03{
+				Context: cloudevents.EventContextV03{
 					Type:   "com.example.test",
 					Source: *source,
 					ID:     "ABC-123",
-				},
+				}.AsV03(),
 			},
 			want: &nats.Message{
 				Body: func() []byte {
@@ -110,7 +110,7 @@ func TestCodecV03_Encode(t *testing.T) {
 		"full v0.3 structured": {
 			codec: nats.CodecV03{Encoding: nats.StructuredV03},
 			event: cloudevents.Event{
-				Context: &cloudevents.EventContextV03{
+				Context: cloudevents.EventContextV03{
 					ID:              "ABC-123",
 					Time:            &now,
 					Type:            "com.example.test",
@@ -120,7 +120,7 @@ func TestCodecV03_Encode(t *testing.T) {
 					Extensions: map[string]interface{}{
 						"test": "extended",
 					},
-				},
+				}.AsV03(),
 				Data: map[string]interface{}{
 					"hello": "world",
 				},
@@ -208,7 +208,6 @@ func TestCodecV03_Decode(t *testing.T) {
 					Source:      *source,
 					ID:          "ABC-123",
 				},
-				DataEncoded: true,
 			},
 		},
 		"full v0.3 structured": {

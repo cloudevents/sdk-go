@@ -28,12 +28,12 @@ func TestCodecV01_Encode(t *testing.T) {
 		"simple v0.1 default": {
 			codec: http.CodecV01{},
 			event: cloudevents.Event{
-				Context: &cloudevents.EventContextV01{
+				Context: cloudevents.EventContextV01{
 					CloudEventsVersion: "TestIfDefaulted",
 					EventType:          "com.example.test",
 					Source:             *source,
 					EventID:            "ABC-123",
-				},
+				}.AsV01(),
 			},
 			want: &http.Message{
 				Header: map[string][]string{
@@ -48,7 +48,7 @@ func TestCodecV01_Encode(t *testing.T) {
 		"full v0.1 default": {
 			codec: http.CodecV01{},
 			event: cloudevents.Event{
-				Context: &cloudevents.EventContextV01{
+				Context: cloudevents.EventContextV01{
 					EventID:          "ABC-123",
 					EventTime:        &now,
 					EventType:        "com.example.full",
@@ -59,7 +59,7 @@ func TestCodecV01_Encode(t *testing.T) {
 					Extensions: map[string]interface{}{
 						"test": "extended",
 					},
-				},
+				}.AsV01(),
 				Data: map[string]interface{}{
 					"hello": "world",
 				},
@@ -101,7 +101,7 @@ func TestCodecV01_Encode(t *testing.T) {
 		"full v0.1 binary": {
 			codec: http.CodecV01{Encoding: http.BinaryV01},
 			event: cloudevents.Event{
-				Context: &cloudevents.EventContextV01{
+				Context: cloudevents.EventContextV01{
 					EventID:          "ABC-123",
 					EventTime:        &now,
 					EventType:        "com.example.full",
@@ -112,7 +112,7 @@ func TestCodecV01_Encode(t *testing.T) {
 					Extensions: map[string]interface{}{
 						"test": "extended",
 					},
-				},
+				}.AsV01(),
 				Data: map[string]interface{}{
 					"hello": "world",
 				},
@@ -135,11 +135,11 @@ func TestCodecV01_Encode(t *testing.T) {
 		"simple v0.1 structured": {
 			codec: http.CodecV01{Encoding: http.StructuredV01},
 			event: cloudevents.Event{
-				Context: &cloudevents.EventContextV01{
+				Context: cloudevents.EventContextV01{
 					EventType: "com.example.test",
 					Source:    *source,
 					EventID:   "ABC-123",
-				},
+				}.AsV01(),
 			},
 			want: &http.Message{
 				Header: map[string][]string{
@@ -160,7 +160,7 @@ func TestCodecV01_Encode(t *testing.T) {
 		"full v0.1 structured": {
 			codec: http.CodecV01{Encoding: http.StructuredV01},
 			event: cloudevents.Event{
-				Context: &cloudevents.EventContextV01{
+				Context: cloudevents.EventContextV01{
 					EventID:          "ABC-123",
 					EventTime:        &now,
 					EventType:        "com.example.full",
@@ -171,7 +171,7 @@ func TestCodecV01_Encode(t *testing.T) {
 					Extensions: map[string]interface{}{
 						"test": "extended",
 					},
-				},
+				}.AsV01(),
 				Data: map[string]interface{}{
 					"hello": "world",
 				},
@@ -264,7 +264,6 @@ func TestCodecV01_Decode(t *testing.T) {
 					EventID:            "ABC-123",
 					ContentType:        cloudevents.StringOfApplicationJSON(),
 				},
-				DataEncoded: true,
 			},
 		},
 		"full v0.1 binary": {
@@ -325,7 +324,6 @@ func TestCodecV01_Decode(t *testing.T) {
 					Source:             *source,
 					EventID:            "ABC-123",
 				},
-				DataEncoded: true,
 			},
 		},
 		"full v0.1 structured": {
@@ -391,7 +389,6 @@ func TestCodecV01_Decode(t *testing.T) {
 					EventID:            "ABC-123",
 					ContentType:        cloudevents.StringOfApplicationJSON(),
 				},
-				DataEncoded: true,
 			},
 		},
 	}

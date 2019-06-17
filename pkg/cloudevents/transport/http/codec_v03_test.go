@@ -84,11 +84,11 @@ func TestCodecV03_Encode(t *testing.T) {
 		"simple v0.3 binary": {
 			codec: http.CodecV03{Encoding: http.BinaryV03},
 			event: cloudevents.Event{
-				Context: &cloudevents.EventContextV03{
+				Context: cloudevents.EventContextV03{
 					Type:   "com.example.test",
 					Source: *source,
 					ID:     "ABC-123",
-				},
+				}.AsV03(),
 			},
 			want: &http.Message{
 				Header: map[string][]string{
@@ -148,7 +148,7 @@ func TestCodecV03_Encode(t *testing.T) {
 		"full v0.3 binary base64": {
 			codec: http.CodecV03{Encoding: http.BinaryV03},
 			event: cloudevents.Event{
-				Context: &cloudevents.EventContextV03{
+				Context: cloudevents.EventContextV03{
 					ID:                  "ABC-123",
 					Time:                &now,
 					Type:                "com.example.test",
@@ -168,7 +168,7 @@ func TestCodecV03_Encode(t *testing.T) {
 							},
 						},
 					},
-				},
+				}.AsV03(),
 				Data: map[string]interface{}{
 					"hello": "world",
 				},
@@ -195,11 +195,11 @@ func TestCodecV03_Encode(t *testing.T) {
 		"simple v0.3 structured": {
 			codec: http.CodecV03{Encoding: http.StructuredV03},
 			event: cloudevents.Event{
-				Context: &cloudevents.EventContextV03{
+				Context: cloudevents.EventContextV03{
 					Type:   "com.example.test",
 					Source: *source,
 					ID:     "ABC-123",
-				},
+				}.AsV03(),
 			},
 			want: &http.Message{
 				Header: map[string][]string{
@@ -220,7 +220,7 @@ func TestCodecV03_Encode(t *testing.T) {
 		"full v0.3 structured": {
 			codec: http.CodecV03{Encoding: http.StructuredV03},
 			event: cloudevents.Event{
-				Context: &cloudevents.EventContextV03{
+				Context: cloudevents.EventContextV03{
 					ID:              "ABC-123",
 					Time:            &now,
 					Type:            "com.example.test",
@@ -231,7 +231,7 @@ func TestCodecV03_Encode(t *testing.T) {
 					Extensions: map[string]interface{}{
 						"test": "extended",
 					},
-				},
+				}.AsV03(),
 				Data: map[string]interface{}{
 					"hello": "world",
 				},
@@ -262,7 +262,7 @@ func TestCodecV03_Encode(t *testing.T) {
 		"full v0.3 structured base64": {
 			codec: http.CodecV03{Encoding: http.StructuredV03},
 			event: cloudevents.Event{
-				Context: &cloudevents.EventContextV03{
+				Context: cloudevents.EventContextV03{
 					ID:                  "ABC-123",
 					Time:                &now,
 					Type:                "com.example.test",
@@ -274,7 +274,7 @@ func TestCodecV03_Encode(t *testing.T) {
 					Extensions: map[string]interface{}{
 						"test": "extended",
 					},
-				},
+				}.AsV03(),
 				Data: map[string]interface{}{
 					"hello": "world",
 				},
@@ -369,7 +369,6 @@ func TestCodecV03_Decode(t *testing.T) {
 					Source:          *source,
 					ID:              "ABC-123",
 				},
-				DataEncoded: true,
 			},
 		},
 		"full v0.3 binary": {
@@ -482,7 +481,6 @@ func TestCodecV03_Decode(t *testing.T) {
 					Source:      *source,
 					ID:          "ABC-123",
 				},
-				DataEncoded: true,
 			},
 		},
 		"full v0.3 structured": {
@@ -507,7 +505,7 @@ func TestCodecV03_Decode(t *testing.T) {
 				}),
 			},
 			want: &cloudevents.Event{
-				Context: &cloudevents.EventContextV03{
+				Context: cloudevents.EventContextV03{
 					SpecVersion:     cloudevents.CloudEventsVersionV03,
 					ID:              "ABC-123",
 					Time:            &now,
@@ -519,7 +517,7 @@ func TestCodecV03_Decode(t *testing.T) {
 					Extensions: map[string]interface{}{
 						"test": json.RawMessage(`"extended"`),
 					},
-				},
+				}.AsV03(),
 				Data: toBytes(map[string]interface{}{
 					"hello": "world",
 				}),
@@ -547,7 +545,7 @@ func TestCodecV03_Decode(t *testing.T) {
 				}),
 			},
 			want: &cloudevents.Event{
-				Context: &cloudevents.EventContextV03{
+				Context: cloudevents.EventContextV03{
 					SpecVersion:         cloudevents.CloudEventsVersionV03,
 					ID:                  "ABC-123",
 					Time:                &now,
@@ -560,7 +558,7 @@ func TestCodecV03_Decode(t *testing.T) {
 					Extensions: map[string]interface{}{
 						"test": json.RawMessage(`"extended"`),
 					},
-				},
+				}.AsV03(),
 				Data:        []byte(`"eyJoZWxsbyI6IndvcmxkIn0="`), // TODO: structured comes in quoted. Unquote?
 				DataEncoded: true,
 			},
@@ -585,7 +583,6 @@ func TestCodecV03_Decode(t *testing.T) {
 					Source:          *source,
 					ID:              "ABC-123",
 				},
-				DataEncoded: true,
 			},
 		},
 	}

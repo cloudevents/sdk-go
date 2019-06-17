@@ -30,12 +30,12 @@ func TestCodecEncode(t *testing.T) {
 		"simple v03 structured": {
 			codec: pubsub.Codec{Encoding: pubsub.StructuredV03},
 			event: cloudevents.Event{
-				Context: &cloudevents.EventContextV03{
+				Context: cloudevents.EventContextV03{
 					Type:    "com.example.test",
 					Source:  *source,
 					ID:      "ABC-123",
 					Subject: strptr("a-subject"),
-				},
+				}.AsV03(),
 			},
 			want: &pubsub.Message{
 				Attributes: map[string]string{
@@ -139,7 +139,6 @@ func TestCodecDecode(t *testing.T) {
 					ID:          "ABC-123",
 					Subject:     strptr("a-subject"),
 				},
-				DataEncoded: true,
 			},
 		},
 	}
@@ -185,11 +184,11 @@ func TestCodecAsMiddleware(t *testing.T) {
 			"simple data": {
 				codec: pubsub.Codec{Encoding: encoding},
 				event: cloudevents.Event{
-					Context: &cloudevents.EventContextV03{
+					Context: cloudevents.EventContextV03{
 						Type:   "com.example.test",
 						Source: *source,
 						ID:     "ABC-123",
-					},
+					}.AsV03(),
 					Data: map[string]string{
 						"a": "apple",
 						"b": "banana",
@@ -213,11 +212,11 @@ func TestCodecAsMiddleware(t *testing.T) {
 			"struct data": {
 				codec: pubsub.Codec{Encoding: encoding},
 				event: cloudevents.Event{
-					Context: &cloudevents.EventContextV03{
+					Context: cloudevents.EventContextV03{
 						Type:   "com.example.test",
 						Source: *source,
 						ID:     "ABC-123",
-					},
+					}.AsV03(),
 					Data: DataExample{
 						AnInt:   42,
 						AString: "testing",

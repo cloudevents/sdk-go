@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/codec"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec/json"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec/xml"
@@ -121,7 +120,7 @@ func mainMetrics() {
 	if err := view.Register(
 		client.LatencyView,
 		transporthttp.LatencyView,
-		codec.LatencyView,
+		cloudevents.EventMarshalLatencyView,
 		json.LatencyView,
 		xml.LatencyView,
 		datacodec.LatencyView,
