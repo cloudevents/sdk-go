@@ -697,12 +697,11 @@ func TestCodecDecode(t *testing.T) {
 			// Round trip thru a http.Request
 			var req nethttp.Request
 			tc.msg.ToRequest(&req)
-			var gotm http.Message
-			err = gotm.FromRequest(&req)
+			gotm, err := http.NewMessage(req.Header, req.Body)
 			if err != nil {
 				t.Error(err)
 			}
-			if diff := cmp.Diff(*tc.msg, gotm, normalizeHeaders); diff != "" {
+			if diff := cmp.Diff(tc.msg, gotm, normalizeHeaders); diff != "" {
 				t.Errorf("unexpected message (-want, +got) = %v", diff)
 			}
 		})
