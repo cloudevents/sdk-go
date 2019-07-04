@@ -130,7 +130,6 @@ func TestStableConnectionsToSingleHost(t *testing.T) {
 	if newConnectionCount > uint64(concurrency*2) {
 		t.Errorf("too many new connections opened: expected %d, got %d", concurrency, newConnectionCount)
 	}
-	t.Log("sent ", sent)
 }
 
 func TestMiddleware(t *testing.T) {

@@ -1,7 +1,9 @@
 package http
 
 import (
+	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"net/url"
 	"testing"
@@ -349,6 +351,55 @@ func TestWithPort(t *testing.T) {
 				t.Errorf("unexpected (-want, +got) = %v", diff)
 			}
 		})
+	}
+}
+
+// Force a transport to close its server/listener by cancelling StartReceiver
+func forceClose(tr *Transport) {
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() { tr.StartReceiver(ctx) }()
+	cancel()
+}
+
+func TestWithPort0(t *testing.T) {
+	testCases := map[string]func() (*Transport, error){
+		"WithPort0": func() (*Transport, error) { return New(WithPort(0)) },
+		"SetPort0":  func() (*Transport, error) { return &Transport{Port: new(int)}, nil },
+	}
+	for name, f := range testCases {
+		t.Run(name, func(t *testing.T) {
+			tr, err := f()
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer func() { forceClose(tr) }()
+			port := tr.GetPort()
+			if port <= 0 {
+				t.Error("no dynamic port")
+			}
+			if d := cmp.Diff(port, *tr.Port); d != "" {
+				t.Error(d)
+			}
+		})
+	}
+}
+
+func TestWithListener(t *testing.T) {
+	l, err := net.Listen("tcp", ":0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	tr, err := New(WithListener(l))
+	defer func() { forceClose(tr) }()
+	if err != nil {
+		t.Fatal(err)
+	}
+	port := tr.GetPort()
+	if port <= 0 {
+		t.Error("no dynamic port")
+	}
+	if d := cmp.Diff(port, l.Addr().(*net.TCPAddr).Port); d != "" {
+		t.Error(d)
 	}
 }
 
