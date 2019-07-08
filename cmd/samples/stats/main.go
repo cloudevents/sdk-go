@@ -8,19 +8,19 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec/json"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec/xml"
+	"github.com/cloudevents/sdk-go/pkg/datacodec"
+	"github.com/cloudevents/sdk-go/pkg/datacodec/json"
+	"github.com/cloudevents/sdk-go/pkg/datacodec/xml"
 	"go.opencensus.io/examples/exporter"
 	"go.opencensus.io/trace"
 	"go.opencensus.io/zpages"
 
 	"contrib.go.opencensus.io/exporter/prometheus"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
-	transporthttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	cloudevents "github.com/cloudevents/sdk-go"
+	"github.com/cloudevents/sdk-go/pkg/client"
+	cecontext "github.com/cloudevents/sdk-go/pkg/context"
+	cehttp "github.com/cloudevents/sdk-go/pkg/transport/http"
+	"github.com/cloudevents/sdk-go/pkg/types"
 	"go.opencensus.io/stats/view"
 )
 
@@ -119,7 +119,7 @@ func mainMetrics() {
 	// Register the views
 	if err := view.Register(
 		client.LatencyView,
-		transporthttp.LatencyView,
+		cehttp.LatencyView,
 		cloudevents.EventMarshalLatencyView,
 		json.LatencyView,
 		xml.LatencyView,

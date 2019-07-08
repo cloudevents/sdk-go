@@ -11,9 +11,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cloudevents/sdk-go"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
-	cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+	"github.com/cloudevents/sdk-go/pkg/client"
+
+	cloudevents "github.com/cloudevents/sdk-go"
+	"github.com/cloudevents/sdk-go/pkg/transport"
+	cehttp "github.com/cloudevents/sdk-go/pkg/transport/http"
 	"github.com/google/uuid"
 )
 
@@ -26,7 +28,7 @@ import (
 type ConversionTest struct {
 	now       time.Time
 	data      interface{}
-	convertFn cloudevents.ConvertFn
+	convertFn client.ConvertFn
 	asSent    *TapValidation
 	asRecv    *TapValidation
 	want      *cloudevents.Event
@@ -36,7 +38,7 @@ type ConversionTestCases map[string]ConversionTest
 
 func UnitTestConvert(ctx context.Context, m transport.Message, err error) (*cloudevents.Event, error) {
 	if msg, ok := m.(*cehttp.Message); ok {
-		tx := cloudevents.HTTPTransportContextFrom(ctx)
+		tx := cehttp.TransportContextFrom(ctx)
 
 		// Make a new event and convert the message payload.
 		event := cloudevents.NewEvent()
@@ -57,10 +59,10 @@ func ClientConversion(t *testing.T, tc ConversionTest, topts ...cehttp.Option) {
 	defer server.Close()
 
 	if len(topts) == 0 {
-		topts = append(topts, cloudevents.WithBinaryEncoding())
+		topts = append(topts, cehttp.WithBinaryEncoding())
 	}
-	topts = append(topts, cloudevents.WithPort(0)) // random port
-	trans, err := cloudevents.NewHTTPTransport(
+	topts = append(topts, cehttp.WithPort(0)) // random port
+	trans, err := cehttp.New(
 		topts...,
 	)
 	if err != nil {
@@ -69,10 +71,10 @@ func ClientConversion(t *testing.T, tc ConversionTest, topts ...cehttp.Option) {
 
 	tap.handler = trans
 
-	ce, err := cloudevents.NewClient(
+	ce, err := client.New(
 		trans,
-		cloudevents.WithEventDefaulter(AlwaysThen(tc.now)),
-		cloudevents.WithConverterFn(tc.convertFn),
+		client.WithEventDefaulter(AlwaysThen(tc.now)),
+		client.WithConverterFn(tc.convertFn),
 	)
 	if err != nil {
 		t.Fatal(err)

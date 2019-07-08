@@ -7,7 +7,11 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/cloudevents/sdk-go"
+	"github.com/cloudevents/sdk-go/pkg/client"
+	"github.com/cloudevents/sdk-go/pkg/types"
+
+	cloudevents "github.com/cloudevents/sdk-go"
+	cehttp "github.com/cloudevents/sdk-go/pkg/transport/http"
 	"github.com/kelseyhightower/envconfig"
 )
 
@@ -38,13 +42,13 @@ func gotEvent(ctx context.Context, event cloudevents.Event, resp *cloudevents.Ev
 		fmt.Printf("Got Data Error: %s\n", err.Error())
 	}
 	fmt.Printf("Got Data: %+v\n", data)
-	fmt.Printf("Got Transport Context: %+v\n", cloudevents.HTTPTransportContextFrom(ctx))
+	fmt.Printf("Got Transport Context: %+v\n", cehttp.TransportContextFrom(ctx))
 	fmt.Printf("----------------------------\n")
 
 	if data.Sequence%3 == 0 {
 		r := cloudevents.Event{
 			Context: cloudevents.EventContextV02{
-				Source: *cloudevents.ParseURLRef("/mod3"),
+				Source: *types.ParseURLRef("/mod3"),
 				Type:   "samples.http.mod3",
 			}.AsV02(),
 			Data: Example{
@@ -53,7 +57,7 @@ func gotEvent(ctx context.Context, event cloudevents.Event, resp *cloudevents.Ev
 			},
 		}
 		resp.RespondWith(200, &r)
-		resp.Context = &cloudevents.HTTPTransportResponseContext{
+		resp.Context = &cehttp.TransportResponseContext{
 			Header: func() http.Header {
 				h := http.Header{}
 				h.Set("sample", "magic header")
@@ -70,16 +74,16 @@ func gotEvent(ctx context.Context, event cloudevents.Event, resp *cloudevents.Ev
 func _main(args []string, env envConfig) int {
 	ctx := context.Background()
 
-	t, err := cloudevents.NewHTTPTransport(
-		cloudevents.WithPort(env.Port),
-		cloudevents.WithPath(env.Path),
+	t, err := cehttp.New(
+		cehttp.WithPort(env.Port),
+		cehttp.WithPath(env.Path),
 	)
 	if err != nil {
 		log.Fatalf("failed to create transport: %s", err.Error())
 	}
-	c, err := cloudevents.NewClient(t,
-		cloudevents.WithUUIDs(),
-		cloudevents.WithTimeNow(),
+	c, err := client.New(t,
+		client.WithUUIDs(),
+		client.WithTimeNow(),
 	)
 	if err != nil {
 		log.Fatalf("failed to create client: %s", err.Error())

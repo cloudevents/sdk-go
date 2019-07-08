@@ -8,10 +8,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	cloudeventsnats "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/nats"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	cloudevents "github.com/cloudevents/sdk-go"
+	"github.com/cloudevents/sdk-go/pkg/client"
+	cenats "github.com/cloudevents/sdk-go/pkg/transport/nats"
+	"github.com/cloudevents/sdk-go/pkg/types"
 	"github.com/google/uuid"
 	"github.com/kelseyhightower/envconfig"
 )
@@ -72,7 +72,7 @@ func _main(args []string, env envConfig) int {
 
 	seq := 0
 	for _, contentType := range []string{"application/json", "application/xml"} {
-		t, err := cloudeventsnats.New(env.NATSServer, env.Subject)
+		t, err := cenats.New(env.NATSServer, env.Subject)
 		if err != nil {
 			log.Printf("failed to create nats transport, %s", err.Error())
 			return 1

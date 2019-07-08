@@ -6,7 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cloudevents/sdk-go"
+	cehttp "github.com/cloudevents/sdk-go/pkg/transport/http"
+	"github.com/cloudevents/sdk-go/pkg/types"
+
+	cloudevents "github.com/cloudevents/sdk-go"
 )
 
 func TestClientLoopback_setters_binary_json(t *testing.T) {
@@ -47,8 +50,8 @@ func TestClientLoopback_setters_binary_json(t *testing.T) {
 					Context: cloudevents.EventContextV01{
 						EventID:     "321-CBA",
 						EventType:   "unit.test.client.response",
-						EventTime:   &cloudevents.Timestamp{Time: now},
-						Source:      *cloudevents.ParseURLRef("/unit/test/client"),
+						EventTime:   &types.Timestamp{Time: now},
+						Source:      *types.ParseURLRef("/unit/test/client"),
 						ContentType: cloudevents.StringOfApplicationJSON(),
 					}.AsV01(),
 					Data: map[string]string{"unittest": "response"},
@@ -57,8 +60,8 @@ func TestClientLoopback_setters_binary_json(t *testing.T) {
 					Context: cloudevents.EventContextV02{
 						ID:          "321-CBA",
 						Type:        "unit.test.client.response",
-						Time:        &cloudevents.Timestamp{Time: now},
-						Source:      *cloudevents.ParseURLRef("/unit/test/client"),
+						Time:        &types.Timestamp{Time: now},
+						Source:      *types.ParseURLRef("/unit/test/client"),
 						ContentType: cloudevents.StringOfApplicationJSON(),
 					}.AsV02(),
 					Data: map[string]string{"unittest": "response"},
@@ -67,8 +70,8 @@ func TestClientLoopback_setters_binary_json(t *testing.T) {
 					Context: cloudevents.EventContextV03{
 						ID:              "321-CBA",
 						Type:            "unit.test.client.response",
-						Time:            &cloudevents.Timestamp{Time: now},
-						Source:          *cloudevents.ParseURLRef("/unit/test/client"),
+						Time:            &types.Timestamp{Time: now},
+						Source:          *types.ParseURLRef("/unit/test/client"),
 						DataContentType: cloudevents.StringOfApplicationJSON(),
 					}.AsV03(),
 					Data: map[string]string{"unittest": "response"},
@@ -212,8 +215,8 @@ func TestClientLoopback_setters_binary_json_noBody(t *testing.T) {
 					Context: cloudevents.EventContextV01{
 						EventID:     "321-CBA",
 						EventType:   "unit.test.client.response",
-						EventTime:   &cloudevents.Timestamp{Time: now},
-						Source:      *cloudevents.ParseURLRef("/unit/test/client"),
+						EventTime:   &types.Timestamp{Time: now},
+						Source:      *types.ParseURLRef("/unit/test/client"),
 						ContentType: cloudevents.StringOfApplicationJSON(),
 					}.AsV01(),
 					Data: map[string]string{},
@@ -222,8 +225,8 @@ func TestClientLoopback_setters_binary_json_noBody(t *testing.T) {
 					Context: cloudevents.EventContextV02{
 						ID:          "321-CBA",
 						Type:        "unit.test.client.response",
-						Time:        &cloudevents.Timestamp{Time: now},
-						Source:      *cloudevents.ParseURLRef("/unit/test/client"),
+						Time:        &types.Timestamp{Time: now},
+						Source:      *types.ParseURLRef("/unit/test/client"),
 						ContentType: cloudevents.StringOfApplicationJSON(),
 					}.AsV02(),
 					Data: map[string]string{},
@@ -232,8 +235,8 @@ func TestClientLoopback_setters_binary_json_noBody(t *testing.T) {
 					Context: cloudevents.EventContextV03{
 						ID:              "321-CBA",
 						Type:            "unit.test.client.response",
-						Time:            &cloudevents.Timestamp{Time: now},
-						Source:          *cloudevents.ParseURLRef("/unit/test/client"),
+						Time:            &types.Timestamp{Time: now},
+						Source:          *types.ParseURLRef("/unit/test/client"),
 						DataContentType: cloudevents.StringOfApplicationJSON(),
 					}.AsV03(),
 					Data: map[string]string{},
@@ -377,8 +380,8 @@ func TestClientLoopback_setters_structured_json(t *testing.T) {
 					Context: cloudevents.EventContextV01{
 						EventID:     "321-CBA",
 						EventType:   "unit.test.client.response",
-						EventTime:   &cloudevents.Timestamp{Time: now},
-						Source:      *cloudevents.ParseURLRef("/unit/test/client"),
+						EventTime:   &types.Timestamp{Time: now},
+						Source:      *types.ParseURLRef("/unit/test/client"),
 						ContentType: cloudevents.StringOfApplicationJSON(),
 					}.AsV01(),
 					Data: map[string]string{"unittest": "response"},
@@ -387,8 +390,8 @@ func TestClientLoopback_setters_structured_json(t *testing.T) {
 					Context: cloudevents.EventContextV02{
 						ID:          "321-CBA",
 						Type:        "unit.test.client.response",
-						Time:        &cloudevents.Timestamp{Time: now},
-						Source:      *cloudevents.ParseURLRef("/unit/test/client"),
+						Time:        &types.Timestamp{Time: now},
+						Source:      *types.ParseURLRef("/unit/test/client"),
 						ContentType: cloudevents.StringOfApplicationJSON(),
 					}.AsV02(),
 					Data: map[string]string{"unittest": "response"},
@@ -397,8 +400,8 @@ func TestClientLoopback_setters_structured_json(t *testing.T) {
 					Context: cloudevents.EventContextV03{
 						ID:              "321-CBA",
 						Type:            "unit.test.client.response",
-						Time:            &cloudevents.Timestamp{Time: now},
-						Source:          *cloudevents.ParseURLRef("/unit/test/client"),
+						Time:            &types.Timestamp{Time: now},
+						Source:          *types.ParseURLRef("/unit/test/client"),
 						DataContentType: cloudevents.StringOfApplicationJSON(),
 					}.AsV03(),
 					Data: map[string]string{"unittest": "response"},
@@ -472,7 +475,7 @@ func TestClientLoopback_setters_structured_json(t *testing.T) {
 				testcase.asSent.ContentLength = int64(len(testcase.asSent.Body))
 				testcase.asRecv.ContentLength = int64(len(testcase.asRecv.Body))
 
-				ClientLoopback(t, testcase, cloudevents.WithStructuredEncoding())
+				ClientLoopback(t, testcase, cehttp.WithStructuredEncoding())
 			})
 		}
 	}
@@ -518,8 +521,8 @@ func TestClientLoopback_setters_structured_json_base64(t *testing.T) {
 					Context: cloudevents.EventContextV01{
 						EventID:     "321-CBA",
 						EventType:   "unit.test.client.response",
-						EventTime:   &cloudevents.Timestamp{Time: now},
-						Source:      *cloudevents.ParseURLRef("/unit/test/client"),
+						EventTime:   &types.Timestamp{Time: now},
+						Source:      *types.ParseURLRef("/unit/test/client"),
 						ContentType: cloudevents.StringOfApplicationJSON(),
 						Extensions: map[string]interface{}{
 							"datacontentencoding": "base64",
@@ -531,8 +534,8 @@ func TestClientLoopback_setters_structured_json_base64(t *testing.T) {
 					Context: cloudevents.EventContextV02{
 						ID:          "321-CBA",
 						Type:        "unit.test.client.response",
-						Time:        &cloudevents.Timestamp{Time: now},
-						Source:      *cloudevents.ParseURLRef("/unit/test/client"),
+						Time:        &types.Timestamp{Time: now},
+						Source:      *types.ParseURLRef("/unit/test/client"),
 						ContentType: cloudevents.StringOfApplicationJSON(),
 						Extensions: map[string]interface{}{
 							"datacontentencoding": json.RawMessage(`"base64"`),
@@ -544,8 +547,8 @@ func TestClientLoopback_setters_structured_json_base64(t *testing.T) {
 					Context: cloudevents.EventContextV03{
 						ID:                  "321-CBA",
 						Type:                "unit.test.client.response",
-						Time:                &cloudevents.Timestamp{Time: now},
-						Source:              *cloudevents.ParseURLRef("/unit/test/client"),
+						Time:                &types.Timestamp{Time: now},
+						Source:              *types.ParseURLRef("/unit/test/client"),
 						DataContentType:     cloudevents.StringOfApplicationJSON(),
 						DataContentEncoding: cloudevents.StringOfBase64(),
 					}.AsV03(),
@@ -620,7 +623,7 @@ func TestClientLoopback_setters_structured_json_base64(t *testing.T) {
 				testcase.asSent.ContentLength = int64(len(testcase.asSent.Body))
 				testcase.asRecv.ContentLength = int64(len(testcase.asRecv.Body))
 
-				ClientLoopback(t, testcase, cloudevents.WithStructuredEncoding())
+				ClientLoopback(t, testcase, cehttp.WithStructuredEncoding())
 			})
 		}
 	}

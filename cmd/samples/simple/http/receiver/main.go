@@ -5,13 +5,15 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/cloudevents/sdk-go"
+	cloudevents "github.com/cloudevents/sdk-go"
+	"github.com/cloudevents/sdk-go/pkg/client"
+	cehttp "github.com/cloudevents/sdk-go/pkg/transport/http"
 )
 
 func main() {
 	ctx := context.Background()
 
-	c, err := cloudevents.NewDefaultClient()
+	c, err := client.NewDefault()
 	if err != nil {
 		log.Fatalf("failed to create client, %v", err)
 	}
@@ -34,5 +36,5 @@ func gotEvent(ctx context.Context, event cloudevents.Event) {
 	}
 
 	fmt.Printf("%s", event)
-	fmt.Printf("%s\n", cloudevents.HTTPTransportContextFrom(ctx))
+	fmt.Printf("%s\n", cehttp.TransportContextFrom(ctx))
 }

@@ -5,8 +5,10 @@ import (
 	"log"
 	"os"
 
-	"github.com/cloudevents/sdk-go"
-	cloudeventspubsub "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/pubsub"
+	"github.com/cloudevents/sdk-go/pkg/client"
+
+	cloudevents "github.com/cloudevents/sdk-go"
+	cepubsub "github.com/cloudevents/sdk-go/pkg/transport/pubsub"
 	"github.com/kelseyhightower/envconfig"
 )
 
@@ -29,14 +31,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	t, err := cloudeventspubsub.New(context.Background(),
-		cloudeventspubsub.WithProjectID(env.ProjectID),
-		cloudeventspubsub.WithTopicID(env.TopicID))
+	t, err := cepubsub.New(context.Background(),
+		cepubsub.WithProjectID(env.ProjectID),
+		cepubsub.WithTopicID(env.TopicID))
 	if err != nil {
 		log.Printf("failed to create pubsub transport, %s", err.Error())
 		os.Exit(1)
 	}
-	c, err := cloudevents.NewClient(t, cloudevents.WithTimeNow(), cloudevents.WithUUIDs())
+	c, err := client.New(t, client.WithTimeNow(), client.WithUUIDs())
 	if err != nil {
 		log.Printf("failed to create client, %s", err.Error())
 		os.Exit(1)

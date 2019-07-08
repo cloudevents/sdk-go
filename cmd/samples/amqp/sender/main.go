@@ -8,10 +8,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/amqp"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	cloudevents "github.com/cloudevents/sdk-go"
+	"github.com/cloudevents/sdk-go/pkg/client"
+	"github.com/cloudevents/sdk-go/pkg/transport/amqp"
+	"github.com/cloudevents/sdk-go/pkg/types"
+
 	"github.com/google/uuid"
 	"github.com/kelseyhightower/envconfig"
 	qp "pack.ag/amqp"

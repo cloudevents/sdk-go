@@ -6,9 +6,9 @@ import (
 	"log"
 	"os"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	cloudeventsnats "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/nats"
+	cloudevents "github.com/cloudevents/sdk-go"
+	"github.com/cloudevents/sdk-go/pkg/client"
+	cenats "github.com/cloudevents/sdk-go/pkg/transport/nats"
 	"github.com/kelseyhightower/envconfig"
 )
 
@@ -50,7 +50,7 @@ func receive(ctx context.Context, event cloudevents.Event, resp *cloudevents.Eve
 func _main(args []string, env envConfig) int {
 	ctx := context.Background()
 
-	t, err := cloudeventsnats.New(env.NATSServer, env.Subject)
+	t, err := cenats.New(env.NATSServer, env.Subject)
 	if err != nil {
 		log.Fatalf("failed to create nats transport, %s", err.Error())
 	}

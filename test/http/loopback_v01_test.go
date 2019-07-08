@@ -4,7 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cloudevents/sdk-go"
+	cloudevents "github.com/cloudevents/sdk-go"
+	"github.com/cloudevents/sdk-go/pkg/types"
 )
 
 func TestClientLoopback_binary_v01tov01(t *testing.T) {
@@ -17,7 +18,7 @@ func TestClientLoopback_binary_v01tov01(t *testing.T) {
 				Context: cloudevents.EventContextV02{
 					ID:     "ABC-123",
 					Type:   "unit.test.client.sent",
-					Source: *cloudevents.ParseURLRef("/unit/test/client"),
+					Source: *types.ParseURLRef("/unit/test/client"),
 				}.AsV01(),
 				Data: map[string]string{"hello": "unittest"},
 			},
@@ -25,7 +26,7 @@ func TestClientLoopback_binary_v01tov01(t *testing.T) {
 				Context: cloudevents.EventContextV01{
 					EventID:   "321-CBA",
 					EventType: "unit.test.client.response",
-					Source:    *cloudevents.ParseURLRef("/unit/test/client"),
+					Source:    *types.ParseURLRef("/unit/test/client"),
 				}.AsV01(),
 				Data: map[string]string{"unittest": "response"},
 			},
@@ -33,8 +34,8 @@ func TestClientLoopback_binary_v01tov01(t *testing.T) {
 				Context: cloudevents.EventContextV01{
 					EventID:     "321-CBA",
 					EventType:   "unit.test.client.response",
-					EventTime:   &cloudevents.Timestamp{Time: now},
-					Source:      *cloudevents.ParseURLRef("/unit/test/client"),
+					EventTime:   &types.Timestamp{Time: now},
+					Source:      *types.ParseURLRef("/unit/test/client"),
 					ContentType: cloudevents.StringOfApplicationJSON(),
 				}.AsV01(),
 				Data: map[string]string{"unittest": "response"},
@@ -86,7 +87,7 @@ func TestClientLoopback_binary_v01tov02(t *testing.T) {
 				Context: cloudevents.EventContextV02{
 					ID:     "ABC-123",
 					Type:   "unit.test.client.sent",
-					Source: *cloudevents.ParseURLRef("/unit/test/client"),
+					Source: *types.ParseURLRef("/unit/test/client"),
 				}.AsV01(),
 				Data: map[string]string{"hello": "unittest"},
 			},
@@ -94,7 +95,7 @@ func TestClientLoopback_binary_v01tov02(t *testing.T) {
 				Context: cloudevents.EventContextV02{
 					ID:     "321-CBA",
 					Type:   "unit.test.client.response",
-					Source: *cloudevents.ParseURLRef("/unit/test/client"),
+					Source: *types.ParseURLRef("/unit/test/client"),
 				}.AsV02(),
 				Data: map[string]string{"unittest": "response"},
 			},
@@ -102,8 +103,8 @@ func TestClientLoopback_binary_v01tov02(t *testing.T) {
 				Context: cloudevents.EventContextV02{
 					ID:          "321-CBA",
 					Type:        "unit.test.client.response",
-					Time:        &cloudevents.Timestamp{Time: now},
-					Source:      *cloudevents.ParseURLRef("/unit/test/client"),
+					Time:        &types.Timestamp{Time: now},
+					Source:      *types.ParseURLRef("/unit/test/client"),
 					ContentType: cloudevents.StringOfApplicationJSON(),
 				}.AsV02(),
 				Data: map[string]string{"unittest": "response"},
@@ -155,7 +156,7 @@ func TestClientLoopback_binary_v01tov03(t *testing.T) {
 				Context: cloudevents.EventContextV02{
 					ID:     "ABC-123",
 					Type:   "unit.test.client.sent",
-					Source: *cloudevents.ParseURLRef("/unit/test/client"),
+					Source: *types.ParseURLRef("/unit/test/client"),
 				}.AsV01(),
 				Data: map[string]string{"hello": "unittest"},
 			},
@@ -163,7 +164,7 @@ func TestClientLoopback_binary_v01tov03(t *testing.T) {
 				Context: cloudevents.EventContextV03{
 					ID:     "321-CBA",
 					Type:   "unit.test.client.response",
-					Source: *cloudevents.ParseURLRef("/unit/test/client"),
+					Source: *types.ParseURLRef("/unit/test/client"),
 				}.AsV03(),
 				Data: map[string]string{"unittest": "response"},
 			},
@@ -171,8 +172,8 @@ func TestClientLoopback_binary_v01tov03(t *testing.T) {
 				Context: cloudevents.EventContextV03{
 					ID:              "321-CBA",
 					Type:            "unit.test.client.response",
-					Time:            &cloudevents.Timestamp{Time: now},
-					Source:          *cloudevents.ParseURLRef("/unit/test/client"),
+					Time:            &types.Timestamp{Time: now},
+					Source:          *types.ParseURLRef("/unit/test/client"),
 					DataContentType: cloudevents.StringOfApplicationJSON(),
 				}.AsV03(),
 				Data: map[string]string{"unittest": "response"},

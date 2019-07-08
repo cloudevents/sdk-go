@@ -8,12 +8,12 @@ import (
 	"os"
 	"time"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
-	cloudeventshttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
-	cloudeventsnats "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/nats"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	cloudevents "github.com/cloudevents/sdk-go"
+	"github.com/cloudevents/sdk-go/pkg/client"
+	"github.com/cloudevents/sdk-go/pkg/transport"
+	cehttp "github.com/cloudevents/sdk-go/pkg/transport/http"
+	cenats "github.com/cloudevents/sdk-go/pkg/transport/nats"
+	"github.com/cloudevents/sdk-go/pkg/types"
 	"github.com/kelseyhightower/envconfig"
 )
 
@@ -95,16 +95,16 @@ func _main(args []string, env envConfig) int {
 
 	for _, contentType := range []string{"application/json", "application/xml"} {
 		// HTTP
-		for _, encoding := range []cloudeventshttp.Encoding{cloudeventshttp.Default, cloudeventshttp.BinaryV01, cloudeventshttp.StructuredV01, cloudeventshttp.BinaryV02, cloudeventshttp.StructuredV02, cloudeventshttp.BinaryV03, cloudeventshttp.StructuredV03} {
+		for _, encoding := range []cehttp.Encoding{cehttp.Default, cehttp.BinaryV01, cehttp.StructuredV01, cehttp.BinaryV02, cehttp.StructuredV02, cehttp.BinaryV03, cehttp.StructuredV03} {
 
 			if err != nil {
 				log.Printf("failed to create client, %v", err)
 				return 1
 			}
 
-			t, err := cloudeventshttp.New(
-				cloudeventshttp.WithTarget(env.HTTPTarget),
-				cloudeventshttp.WithEncoding(encoding),
+			t, err := cehttp.New(
+				cehttp.WithTarget(env.HTTPTarget),
+				cehttp.WithEncoding(encoding),
 			)
 			if err != nil {
 				log.Printf("failed to create client, %v", err)
@@ -124,12 +124,12 @@ func _main(args []string, env envConfig) int {
 		}
 
 		// NATS
-		for _, encoding := range []cloudeventsnats.Encoding{cloudeventsnats.Default, cloudeventsnats.StructuredV02, cloudeventsnats.StructuredV03} {
+		for _, encoding := range []cenats.Encoding{cenats.Default, cenats.StructuredV02, cenats.StructuredV03} {
 
-			t, err := cloudeventsnats.New(
+			t, err := cenats.New(
 				env.NATSServer,
 				env.Subject,
-				cloudeventsnats.WithEncoding(encoding),
+				cenats.WithEncoding(encoding),
 			)
 			if err != nil {
 				log.Printf("failed to create client, %v", err)

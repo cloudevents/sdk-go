@@ -5,7 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cloudevents/sdk-go"
+	"github.com/cloudevents/sdk-go/pkg/types"
+
+	cloudevents "github.com/cloudevents/sdk-go"
 )
 
 func TestClientConversion_v02(t *testing.T) {
@@ -20,7 +22,7 @@ func TestClientConversion_v02(t *testing.T) {
 				Context: cloudevents.EventContextV02{
 					ID:     "321-CBA",
 					Type:   "io.cloudevents.conversion.http.post",
-					Source: *cloudevents.ParseURLRef("github.com/cloudevents/test/http/conversion"),
+					Source: *types.ParseURLRef("github.com/cloudevents/test/http/conversion"),
 				}.AsV02(),
 				Data: map[string]string{"unittest": "response"},
 			},

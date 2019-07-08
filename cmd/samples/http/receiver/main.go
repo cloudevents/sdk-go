@@ -6,7 +6,10 @@ import (
 	"log"
 	"os"
 
-	"github.com/cloudevents/sdk-go"
+	"github.com/cloudevents/sdk-go/pkg/client"
+
+	cloudevents "github.com/cloudevents/sdk-go"
+	cehttp "github.com/cloudevents/sdk-go/pkg/transport/http"
 	"github.com/kelseyhightower/envconfig"
 )
 
@@ -38,7 +41,7 @@ func gotEvent(ctx context.Context, event cloudevents.Event) error {
 	}
 	fmt.Printf("Got Data: %+v\n", data)
 
-	fmt.Printf("Got Transport Context: %+v\n", cloudevents.HTTPTransportContextFrom(ctx))
+	fmt.Printf("Got Transport Context: %+v\n", cehttp.TransportContextFrom(ctx))
 
 	fmt.Printf("----------------------------\n")
 	return nil
@@ -47,15 +50,15 @@ func gotEvent(ctx context.Context, event cloudevents.Event) error {
 func _main(args []string, env envConfig) int {
 	ctx := context.Background()
 
-	t, err := cloudevents.NewHTTPTransport(
-		cloudevents.WithPort(env.Port),
-		cloudevents.WithPath(env.Path),
+	t, err := cehttp.New(
+		cehttp.WithPort(env.Port),
+		cehttp.WithPath(env.Path),
 	)
 	if err != nil {
 		log.Printf("failed to create transport, %v", err)
 		return 1
 	}
-	c, err := cloudevents.NewClient(t)
+	c, err := client.New(t)
 	if err != nil {
 		log.Printf("failed to create client, %v", err)
 		return 1

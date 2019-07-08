@@ -5,26 +5,28 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/cloudevents/sdk-go"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+	"github.com/cloudevents/sdk-go/pkg/client"
+
+	cloudevents "github.com/cloudevents/sdk-go"
+	"github.com/cloudevents/sdk-go/pkg/transport"
+	cehttp "github.com/cloudevents/sdk-go/pkg/transport/http"
 	"github.com/google/uuid"
 )
 
 func main() {
 	ctx := context.Background()
 
-	t, err := cloudevents.NewHTTPTransport(
-		cloudevents.WithBinaryEncoding(),
-		cloudevents.WithLongPollTarget("http://localhost:8181/"),
+	t, err := cehttp.New(
+		cehttp.WithBinaryEncoding(),
+		cehttp.WithLongPollTarget("http://localhost:8181/"),
 	)
 	if err != nil {
 		log.Fatalf("failed to create transport, %v", err)
 	}
-	c, err := cloudevents.NewClient(t,
-		cloudevents.WithTimeNow(),
-		cloudevents.WithUUIDs(),
-		cloudevents.WithConverterFn(convert),
+	c, err := client.New(t,
+		client.WithTimeNow(),
+		client.WithUUIDs(),
+		client.WithConverterFn(convert),
 	)
 	if err != nil {
 		log.Fatalf("failed to create client, %v", err)
@@ -43,7 +45,7 @@ type Example struct {
 func convert(ctx context.Context, m transport.Message, err error) (*cloudevents.Event, error) {
 	log.Printf("trying to recover from %v", err)
 
-	if msg, ok := m.(*http.Message); ok {
+	if msg, ok := m.(*cehttp.Message); ok {
 		// Make a new event and convert the message payload.
 		event := cloudevents.NewEvent()
 		event.SetSource("github.com/cloudevents/cmd/samples/http/receiver")
@@ -65,5 +67,5 @@ func gotEvent(ctx context.Context, event cloudevents.Event) {
 	}
 
 	fmt.Printf("%s", event)
-	fmt.Printf("%s\n", cloudevents.HTTPTransportContextFrom(ctx))
+	fmt.Printf("%s\n", cehttp.TransportContextFrom(ctx))
 }

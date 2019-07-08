@@ -6,10 +6,10 @@ import (
 	"log"
 	"os"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	cloudeventshttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
-	cloudeventsnats "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/nats"
+	cloudevents "github.com/cloudevents/sdk-go"
+	"github.com/cloudevents/sdk-go/pkg/client"
+	cehttp "github.com/cloudevents/sdk-go/pkg/transport/http"
+	cenats "github.com/cloudevents/sdk-go/pkg/transport/nats"
 	"github.com/kelseyhightower/envconfig"
 )
 
@@ -64,7 +64,7 @@ func (r *Receiver) Receive(event cloudevents.Event) error {
 func _main(args []string, env envConfig) int {
 	ctx := context.Background()
 
-	nt, err := cloudeventsnats.New(env.NATSServer, env.Subject)
+	nt, err := cenats.New(env.NATSServer, env.Subject)
 	if err != nil {
 		log.Fatalf("failed to create nats transport, %s", err.Error())
 	}
@@ -76,8 +76,8 @@ func _main(args []string, env envConfig) int {
 
 	r := &Receiver{Client: nc}
 
-	t, err := cloudeventshttp.New(
-		cloudeventshttp.WithPort(env.Port),
+	t, err := cehttp.New(
+		cehttp.WithPort(env.Port),
 	)
 	if err != nil {
 		log.Printf("failed to create transport, %v", err)

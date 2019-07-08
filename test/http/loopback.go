@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cloudevents/sdk-go"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	cloudevents "github.com/cloudevents/sdk-go"
+	"github.com/cloudevents/sdk-go/pkg/client"
+	cehttp "github.com/cloudevents/sdk-go/pkg/transport/http"
+	"github.com/cloudevents/sdk-go/pkg/types"
 	"github.com/google/uuid"
 )
 
@@ -59,11 +59,11 @@ func ClientLoopback(t *testing.T, tc TapTest, topts ...cehttp.Option) {
 	defer server.Close()
 
 	if len(topts) == 0 {
-		topts = append(topts, cloudevents.WithBinaryEncoding())
+		topts = append(topts, cehttp.WithBinaryEncoding())
 	}
-	topts = append(topts, cloudevents.WithTarget(server.URL))
-	topts = append(topts, cloudevents.WithPort(0)) // random port
-	transport, err := cloudevents.NewHTTPTransport(
+	topts = append(topts, cehttp.WithTarget(server.URL))
+	topts = append(topts, cehttp.WithPort(0)) // random port
+	transport, err := cehttp.New(
 		topts...,
 	)
 	if err != nil {
@@ -72,16 +72,16 @@ func ClientLoopback(t *testing.T, tc TapTest, topts ...cehttp.Option) {
 
 	tap.handler = transport
 
-	ce, err := cloudevents.NewClient(
+	ce, err := client.New(
 		transport,
-		cloudevents.WithEventDefaulter(AlwaysThen(tc.now)),
+		client.WithEventDefaulter(AlwaysThen(tc.now)),
 	)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	testID := uuid.New().String()
-	ctx := cloudevents.ContextWithHeader(context.Background(), unitTestIDKey, testID)
+	ctx := cehttp.ContextWithHeader(context.Background(), unitTestIDKey, testID)
 
 	recvCtx, recvCancel := context.WithCancel(context.Background())
 

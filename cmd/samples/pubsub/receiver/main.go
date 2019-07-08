@@ -6,9 +6,9 @@ import (
 	"log"
 	"os"
 
-	"github.com/cloudevents/sdk-go"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	cloudeventspubsub "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/pubsub"
+	cloudevents "github.com/cloudevents/sdk-go"
+	"github.com/cloudevents/sdk-go/pkg/client"
+	cepubsub "github.com/cloudevents/sdk-go/pkg/transport/pubsub"
 	"github.com/kelseyhightower/envconfig"
 )
 
@@ -28,7 +28,7 @@ type Example struct {
 func receive(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error {
 	fmt.Printf("Event Context: %+v\n", event.Context)
 
-	fmt.Printf("Transport Context: %+v\n", cloudeventspubsub.TransportContextFrom(ctx))
+	fmt.Printf("Transport Context: %+v\n", cepubsub.TransportContextFrom(ctx))
 
 	data := &Example{}
 	if err := event.DataAs(data); err != nil {
@@ -49,10 +49,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	t, err := cloudeventspubsub.New(context.Background(),
-		cloudeventspubsub.WithProjectID(env.ProjectID),
-		cloudeventspubsub.WithTopicID(env.TopicID),
-		cloudeventspubsub.WithSubscriptionID(env.SubscriptionID))
+	t, err := cepubsub.New(context.Background(),
+		cepubsub.WithProjectID(env.ProjectID),
+		cepubsub.WithTopicID(env.TopicID),
+		cepubsub.WithSubscriptionID(env.SubscriptionID))
 	if err != nil {
 		log.Fatalf("failed to create pubsub transport, %s", err.Error())
 	}

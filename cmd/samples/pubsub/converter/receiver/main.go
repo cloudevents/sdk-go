@@ -7,9 +7,12 @@ import (
 	"os"
 	"strings"
 
-	"github.com/cloudevents/sdk-go"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/pubsub"
+	"github.com/cloudevents/sdk-go/pkg/client"
+
+	cloudevents "github.com/cloudevents/sdk-go"
+	"github.com/cloudevents/sdk-go/pkg/transport"
+	cehttp "github.com/cloudevents/sdk-go/pkg/transport/http"
+	"github.com/cloudevents/sdk-go/pkg/transport/pubsub"
 	"github.com/google/uuid"
 	"github.com/kelseyhightower/envconfig"
 )
@@ -34,7 +37,7 @@ func gotEvent(ctx context.Context, event cloudevents.Event) error {
 	}
 	fmt.Printf("Structured Data: %+v\n", data)
 
-	fmt.Printf("Transport Context: %+v\n", cloudevents.HTTPTransportContextFrom(ctx))
+	fmt.Printf("Transport Context: %+v\n", cehttp.TransportContextFrom(ctx))
 
 	fmt.Printf("----------------------------\n")
 	return nil
@@ -73,7 +76,7 @@ func main() {
 		log.Printf("failed to create transport, %v", err)
 		os.Exit(1)
 	}
-	c, err := cloudevents.NewClient(t, cloudevents.WithConverterFn(convert))
+	c, err := client.New(t, client.WithConverterFn(convert))
 	if err != nil {
 		log.Printf("failed to create client, %v", err)
 		os.Exit(1)

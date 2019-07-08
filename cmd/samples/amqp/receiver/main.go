@@ -6,9 +6,10 @@ import (
 	"log"
 	"os"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/amqp"
+	cloudevents "github.com/cloudevents/sdk-go"
+	"github.com/cloudevents/sdk-go/pkg/client"
+	"github.com/cloudevents/sdk-go/pkg/transport/amqp"
+
 	"github.com/kelseyhightower/envconfig"
 	qp "pack.ag/amqp"
 )
