@@ -80,7 +80,7 @@ type Transport struct {
 	// poll on StartReceiver.
 	LongPollReq *http.Request
 
-	realPort          int
+	listener          net.Listener
 	server            *http.Server
 	handlerRegistered bool
 	codec             transport.Codec
@@ -297,28 +297,25 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 		t.handlerRegistered = true
 	}
 
-	addr := fmt.Sprintf(":%d", t.GetPort())
-	t.server = &http.Server{
-		Addr:    addr,
-		Handler: attachMiddleware(t.Handler, t.middleware),
-	}
-
-	listener, err := net.Listen("tcp", addr)
+	addr, err := t.listen()
 	if err != nil {
 		return err
 	}
-	t.realPort = listener.Addr().(*net.TCPAddr).Port
+
+	t.server = &http.Server{
+		Addr:    addr.String(),
+		Handler: attachMiddleware(t.Handler, t.middleware),
+	}
 
 	// Shutdown
 	defer func() {
-		t.realPort = 0
 		t.server.Close()
 		t.server = nil
 	}()
 
 	errChan := make(chan error, 1)
 	go func() {
-		errChan <- t.server.Serve(listener)
+		errChan <- t.server.Serve(t.listener)
 	}()
 
 	// wait for the server to return or ctx.Done().
@@ -331,7 +328,9 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
-		return t.server.Shutdown(ctx)
+		err := t.server.Shutdown(ctx)
+		<-errChan // Wait for server goroutine to exit
+		return err
 	case err := <-errChan:
 		return err
 	}
@@ -599,18 +598,41 @@ func (t *Transport) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	r.OK()
 }
 
-// GetPort returns the port the transport is active on.
-// .Port can be set to 0, which means the transport selects a port, GetPort
-// allows the transport to report back the selected port.
+// GetPort returns the listening port.
+// Returns -1 if there is a listening error.
+// Note this will call net.Listen() if  the listener is not already started.
 func (t *Transport) GetPort() int {
-	if t.Port != nil && *t.Port == 0 && t.realPort != 0 {
-		return t.realPort
-	}
-
-	if t.Port != nil && *t.Port >= 0 { // 0 means next open port
+	// Ensure we have a listener and therefore a port.
+	if _, err := t.listen(); err == nil || t.Port != nil {
 		return *t.Port
 	}
-	return 8080 // default
+	return -1
+}
+
+func (t *Transport) setPort(port int) {
+	if t.Port == nil {
+		t.Port = new(int)
+	}
+	*t.Port = port
+}
+
+// listen if not already listening, update t.Port
+func (t *Transport) listen() (net.Addr, error) {
+	if t.listener == nil {
+		port := 8080
+		if t.Port != nil {
+			port = *t.Port
+		}
+		var err error
+		if t.listener, err = net.Listen("tcp", fmt.Sprintf(":%d", port)); err != nil {
+			return nil, err
+		}
+	}
+	addr := t.listener.Addr()
+	if tcpAddr, ok := addr.(*net.TCPAddr); ok {
+		t.setPort(tcpAddr.Port)
+	}
+	return addr, nil
 }
 
 // GetPath returns the path the transport is hosted on. If the path is '/',

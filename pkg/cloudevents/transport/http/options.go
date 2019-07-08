@@ -2,6 +2,7 @@ package http
 
 import (
 	"fmt"
+	"net"
 	nethttp "net/http"
 	"net/url"
 	"strings"
@@ -145,7 +146,18 @@ func WithStructuredEncoding() Option {
 	}
 }
 
-// WithPort sets the port for for clients with HTTP transports.
+func checkListen(t *Transport, prefix string) error {
+	switch {
+	case t.Port != nil:
+		return fmt.Errorf("%v port already set", prefix)
+	case t.listener != nil:
+		return fmt.Errorf("%v listener already set", prefix)
+	}
+	return nil
+}
+
+// WithPort sets the listening port for StartReceiver.
+// Only one of WithListener  or WithPort is allowed.
 func WithPort(port int) Option {
 	return func(t *Transport) error {
 		if t == nil {
@@ -154,8 +166,27 @@ func WithPort(port int) Option {
 		if port < 0 {
 			return fmt.Errorf("http port option was given an invalid port: %d", port)
 		}
-		t.Port = &port
+		if err := checkListen(t, "http port option"); err != nil {
+			return err
+		}
+		t.setPort(port)
 		return nil
+	}
+}
+
+// WithListener sets the listener for StartReceiver.
+// Only one of WithListener or WithPort is allowed.
+func WithListener(l net.Listener) Option {
+	return func(t *Transport) error {
+		if t == nil {
+			return fmt.Errorf("http listener option can not set nil transport")
+		}
+		if err := checkListen(t, "http port option"); err != nil {
+			return err
+		}
+		t.listener = l
+		_, err := t.listen()
+		return err
 	}
 }
 
