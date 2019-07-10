@@ -32,7 +32,12 @@ const (
 	// Unknown is unknown.
 	Unknown
 
-	Binary     = "binary"
+	// Binary is used for Context Based Encoding Selections to use the
+	// DefaultBinaryEncodingSelectionStrategy
+	Binary = "binary"
+
+	// Structured is used for Context Based Encoding Selections to use the
+	// DefaultStructuredEncodingSelectionStrategy
 	Structured = "structured"
 )
 
