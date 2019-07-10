@@ -285,7 +285,7 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 	defer t.reMu.Unlock()
 
 	if t.LongPollReq != nil {
-		go t.longPollStart(ctx)
+		go func() { _ = t.longPollStart(ctx) }()
 	}
 
 	if t.Handler == nil {
@@ -536,7 +536,7 @@ func (t *Transport) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		logger.Errorw("failed to handle request", zap.Error(err))
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`{"error":"Invalid request"}`))
+		_, _ = w.Write([]byte(`{"error":"Invalid request"}`))
 		r.Error()
 		return
 	}
@@ -565,7 +565,7 @@ func (t *Transport) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		logger.Warnw("error returned from invokeReceiver", zap.Error(err))
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(fmt.Sprintf(`{"error":%q}`, err.Error())))
+		_, _ = w.Write([]byte(fmt.Sprintf(`{"error":%q}`, err.Error())))
 		r.Error()
 		return
 	}

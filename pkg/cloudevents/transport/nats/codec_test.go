@@ -14,10 +14,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func strptr(s string) *string {
-	return &s
-}
-
 func TestCodecEncode(t *testing.T) {
 	sourceUrl, _ := url.Parse("http://example.com/source")
 	source := &types.URLRef{URL: *sourceUrl}

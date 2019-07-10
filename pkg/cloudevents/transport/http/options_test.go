@@ -357,7 +357,7 @@ func TestWithPort(t *testing.T) {
 // Force a transport to close its server/listener by cancelling StartReceiver
 func forceClose(tr *Transport) {
 	ctx, cancel := context.WithCancel(context.Background())
-	go func() { tr.StartReceiver(ctx) }()
+	go func() { _ = tr.StartReceiver(ctx) }()
 	cancel()
 }
 

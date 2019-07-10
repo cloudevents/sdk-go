@@ -31,7 +31,7 @@ func startTestServer(handler http.Handler) (*http.Server, error) {
 		Addr:    listener.Addr().String(),
 		Handler: handler,
 	}
-	go server.Serve(listener)
+	go func() { _ = server.Serve(listener) }()
 	return server, nil
 }
 
@@ -135,7 +135,6 @@ func TestStableConnectionsToSingleHost(t *testing.T) {
 func TestMiddleware(t *testing.T) {
 	testCases := map[string]struct {
 		middleware []string
-		want       string
 	}{
 		"none": {},
 		"one": {
@@ -194,7 +193,7 @@ func makeRequestToServer(t *testing.T, tr *cehttp.Transport, responseText string
 	// Start the server.
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go tr.StartReceiver(ctx)
+	go func() { _ = tr.StartReceiver(ctx) }()
 
 	// Give some time for the receiver to start. One second was chosen arbitrarily.
 	time.Sleep(time.Second)

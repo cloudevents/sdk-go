@@ -51,6 +51,9 @@ func TestToRequest(t *testing.T) {
 	h := http.Header{"a": []string{"b"}, "x": []string{"y"}}
 	b := ioutil.NopCloser(bytes.NewBuffer([]byte("hello")))
 	m, err := cehttp.NewMessage(h, b)
+	if err != nil {
+		t.Error(err)
+	}
 	var req http.Request
 	m.ToRequest(&req)
 	if s := cmp.Diff(m.Header, req.Header); s != "" {
@@ -75,6 +78,9 @@ func TestToResponse(t *testing.T) {
 	h := http.Header{"a": []string{"b"}, "x": []string{"y"}}
 	b := ioutil.NopCloser(bytes.NewBuffer([]byte("hello")))
 	m, err := cehttp.NewResponse(h, b, 42)
+	if err != nil {
+		t.Error(err)
+	}
 	var resp http.Response
 	m.ToResponse(&resp)
 	if s := cmp.Diff(m.Header, resp.Header); s != "" {
