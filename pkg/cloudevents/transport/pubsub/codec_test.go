@@ -1,6 +1,7 @@
 package pubsub_test
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/url"
@@ -79,7 +80,7 @@ func TestCodecEncode(t *testing.T) {
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 
-			got, err := tc.codec.Encode(tc.event)
+			got, err := tc.codec.Encode(context.TODO(), tc.event)
 
 			if tc.wantErr != nil || err != nil {
 				if diff := cmp.Diff(tc.wantErr, err); diff != "" {
@@ -145,7 +146,7 @@ func TestCodecDecode(t *testing.T) {
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 
-			got, err := tc.codec.Decode(tc.msg)
+			got, err := tc.codec.Decode(context.TODO(), tc.msg)
 
 			if tc.wantErr != nil || err != nil {
 				if diff := cmp.Diff(tc.wantErr, err); diff != "" {
@@ -242,7 +243,7 @@ func TestCodecAsMiddleware(t *testing.T) {
 			n = fmt.Sprintf("%s, %s", encoding, n)
 			t.Run(n, func(t *testing.T) {
 
-				msg1, err := tc.codec.Encode(tc.event)
+				msg1, err := tc.codec.Encode(context.TODO(), tc.event)
 				if err != nil {
 					if diff := cmp.Diff(tc.wantErr, err); diff != "" {
 						t.Errorf("unexpected error (-want, +got) = %v", diff)
@@ -250,7 +251,7 @@ func TestCodecAsMiddleware(t *testing.T) {
 					return
 				}
 
-				midEvent, err := tc.codec.Decode(msg1)
+				midEvent, err := tc.codec.Decode(context.TODO(), msg1)
 				if err != nil {
 					if diff := cmp.Diff(tc.wantErr, err); diff != "" {
 						t.Errorf("unexpected error (-want, +got) = %v", diff)
@@ -258,7 +259,7 @@ func TestCodecAsMiddleware(t *testing.T) {
 					return
 				}
 
-				msg2, err := tc.codec.Encode(*midEvent)
+				msg2, err := tc.codec.Encode(context.TODO(), *midEvent)
 				if err != nil {
 					if diff := cmp.Diff(tc.wantErr, err); diff != "" {
 						t.Errorf("unexpected error (-want, +got) = %v", diff)
@@ -266,7 +267,7 @@ func TestCodecAsMiddleware(t *testing.T) {
 					return
 				}
 
-				got, err := tc.codec.Decode(msg2)
+				got, err := tc.codec.Decode(context.TODO(), msg2)
 				if err != nil {
 					if diff := cmp.Diff(tc.wantErr, err); diff != "" {
 						t.Errorf("unexpected error (-want, +got) = %v", diff)

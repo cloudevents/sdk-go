@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
@@ -26,11 +27,11 @@ type Codec struct {
 var _ transport.Codec = (*Codec)(nil)
 
 // Encode encodes the provided event into a transport message.
-func (c *Codec) Encode(e cloudevents.Event) (transport.Message, error) {
+func (c *Codec) Encode(ctx context.Context, e cloudevents.Event) (transport.Message, error) {
 	encoding := c.Encoding
 
 	if encoding == Default && c.DefaultEncodingSelectionFn != nil {
-		encoding = c.DefaultEncodingSelectionFn(e)
+		encoding = c.DefaultEncodingSelectionFn(ctx, e)
 	}
 
 	switch encoding {
@@ -42,34 +43,34 @@ func (c *Codec) Encode(e cloudevents.Event) (transport.Message, error) {
 		if c.v01 == nil {
 			c.v01 = &CodecV01{Encoding: encoding}
 		}
-		return c.v01.Encode(e)
+		return c.v01.Encode(ctx, e)
 	case BinaryV02:
 		fallthrough
 	case StructuredV02:
 		if c.v02 == nil {
 			c.v02 = &CodecV02{Encoding: encoding}
 		}
-		return c.v02.Encode(e)
+		return c.v02.Encode(ctx, e)
 	case BinaryV03:
 		fallthrough
 	case StructuredV03:
 		if c.v03 == nil {
 			c.v03 = &CodecV03{Encoding: encoding}
 		}
-		return c.v03.Encode(e)
+		return c.v03.Encode(ctx, e)
 	default:
 		return nil, fmt.Errorf("unknown encoding: %s", encoding)
 	}
 }
 
 // Decode converts a provided transport message into an Event, or error.
-func (c *Codec) Decode(msg transport.Message) (*cloudevents.Event, error) {
-	switch c.inspectEncoding(msg) {
+func (c *Codec) Decode(ctx context.Context, msg transport.Message) (*cloudevents.Event, error) {
+	switch c.inspectEncoding(ctx, msg) {
 	case BinaryV01, StructuredV01:
 		if c.v01 == nil {
 			c.v01 = &CodecV01{Encoding: c.Encoding}
 		}
-		if event, err := c.v01.Decode(msg); err != nil {
+		if event, err := c.v01.Decode(ctx, msg); err != nil {
 			return nil, err
 		} else {
 			return c.convertEvent(event), nil
@@ -79,7 +80,7 @@ func (c *Codec) Decode(msg transport.Message) (*cloudevents.Event, error) {
 		if c.v02 == nil {
 			c.v02 = &CodecV02{Encoding: c.Encoding}
 		}
-		if event, err := c.v02.Decode(msg); err != nil {
+		if event, err := c.v02.Decode(ctx, msg); err != nil {
 			return nil, err
 		} else {
 			return c.convertEvent(event), nil
@@ -89,7 +90,7 @@ func (c *Codec) Decode(msg transport.Message) (*cloudevents.Event, error) {
 		if c.v03 == nil {
 			c.v03 = &CodecV03{Encoding: c.Encoding}
 		}
-		if event, err := c.v03.Decode(msg); err != nil {
+		if event, err := c.v03.Decode(ctx, msg); err != nil {
 			return nil, err
 		} else {
 			return c.convertEvent(event), nil
@@ -113,8 +114,8 @@ func (c *Codec) convertEvent(event *cloudevents.Event) *cloudevents.Event {
 		if c.v01 == nil {
 			c.v01 = &CodecV01{Encoding: c.Encoding}
 		}
-		ctx := event.Context.AsV01()
-		event.Context = ctx
+		ca := event.Context.AsV01()
+		event.Context = ca
 		return event
 	case BinaryV02:
 		fallthrough
@@ -122,8 +123,8 @@ func (c *Codec) convertEvent(event *cloudevents.Event) *cloudevents.Event {
 		if c.v02 == nil {
 			c.v02 = &CodecV02{Encoding: c.Encoding}
 		}
-		ctx := event.Context.AsV02()
-		event.Context = ctx
+		ca := event.Context.AsV02()
+		event.Context = ca
 		return event
 	case BinaryV03:
 		fallthrough
@@ -133,21 +134,21 @@ func (c *Codec) convertEvent(event *cloudevents.Event) *cloudevents.Event {
 		if c.v03 == nil {
 			c.v03 = &CodecV03{Encoding: c.Encoding}
 		}
-		ctx := event.Context.AsV03()
-		event.Context = ctx
+		ca := event.Context.AsV03()
+		event.Context = ca
 		return event
 	default:
 		return nil
 	}
 }
 
-func (c *Codec) inspectEncoding(msg transport.Message) Encoding {
+func (c *Codec) inspectEncoding(ctx context.Context, msg transport.Message) Encoding {
 	// TODO: there should be a better way to make the version codecs on demand.
 	if c.v01 == nil {
 		c.v01 = &CodecV01{Encoding: c.Encoding}
 	}
 	// Try v0.1 first.
-	encoding := c.v01.inspectEncoding(msg)
+	encoding := c.v01.inspectEncoding(ctx, msg)
 	if encoding != Unknown {
 		return encoding
 	}
@@ -156,7 +157,7 @@ func (c *Codec) inspectEncoding(msg transport.Message) Encoding {
 		c.v02 = &CodecV02{Encoding: c.Encoding}
 	}
 	// Try v0.2.
-	encoding = c.v02.inspectEncoding(msg)
+	encoding = c.v02.inspectEncoding(ctx, msg)
 	if encoding != Unknown {
 		return encoding
 	}
@@ -165,7 +166,7 @@ func (c *Codec) inspectEncoding(msg transport.Message) Encoding {
 		c.v03 = &CodecV03{Encoding: c.Encoding}
 	}
 	// Try v0.3.
-	encoding = c.v03.inspectEncoding(msg)
+	encoding = c.v03.inspectEncoding(ctx, msg)
 	if encoding != Unknown {
 		return encoding
 	}

@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -15,7 +16,7 @@ type CodecStructured struct {
 	Encoding Encoding
 }
 
-func (v CodecStructured) encodeStructured(e cloudevents.Event) (transport.Message, error) {
+func (v CodecStructured) encodeStructured(ctx context.Context, e cloudevents.Event) (transport.Message, error) {
 	header := http.Header{}
 	header.Set("Content-Type", cloudevents.ApplicationCloudEventsJSON)
 
@@ -32,7 +33,7 @@ func (v CodecStructured) encodeStructured(e cloudevents.Event) (transport.Messag
 	return msg, nil
 }
 
-func (v CodecStructured) decodeStructured(version string, msg transport.Message) (*cloudevents.Event, error) {
+func (v CodecStructured) decodeStructured(ctx context.Context, version string, msg transport.Message) (*cloudevents.Event, error) {
 	m, ok := msg.(*Message)
 	if !ok {
 		return nil, fmt.Errorf("failed to convert transport.Message to http.Message")

@@ -112,7 +112,7 @@ func (t *Transport) Send(ctx context.Context, event cloudevents.Event) (*cloudev
 		return nil, fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
 	}
 
-	msg, err := t.codec.Encode(event)
+	msg, err := t.codec.Encode(ctx, event)
 	if err != nil {
 		return nil, err
 	}
@@ -178,7 +178,7 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 				ContentType:           msg.Properties.ContentType,
 				ApplicationProperties: msg.ApplicationProperties,
 			}
-			event, err := t.codec.Decode(m)
+			event, err := t.codec.Decode(ctx, m)
 			if err != nil {
 				logger.Errorw("failed to decode message", zap.Error(err)) // TODO: create an error channel to pass this up
 			} else {

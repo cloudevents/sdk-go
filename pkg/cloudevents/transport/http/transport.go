@@ -193,7 +193,7 @@ func (t *Transport) obsSend(ctx context.Context, event cloudevents.Event) (*clou
 		return nil, fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
 	}
 
-	msg, err := t.codec.Encode(event)
+	msg, err := t.codec.Encode(ctx, event)
 	if err != nil {
 		return nil, err
 	}
@@ -243,7 +243,7 @@ func (t *Transport) MessageToEvent(ctx context.Context, msg *Message) (*cloudeve
 			err = transport.NewErrTransportMessageConversion("http", fmt.Sprintf("unknown encoding set on transport: %d", t.Encoding), true)
 			logger.Error("failed to load codec", zap.Error(err))
 		} else {
-			event, err = t.codec.Decode(msg)
+			event, err = t.codec.Decode(ctx, msg)
 		}
 	} else {
 		err = transport.NewErrTransportMessageConversion("http", "cloudevents version unknown", false)
@@ -490,7 +490,7 @@ func (t *Transport) obsInvokeReceiver(ctx context.Context, event cloudevents.Eve
 
 		if eventResp.Event != nil {
 			if t.loadCodec(ctx) {
-				if m, err := t.codec.Encode(*eventResp.Event); err != nil {
+				if m, err := t.codec.Encode(ctx, *eventResp.Event); err != nil {
 					logger.Errorw("failed to encode response from receiver fn", zap.Error(err))
 				} else if msg, ok := m.(*Message); ok {
 					resp.Message = *msg

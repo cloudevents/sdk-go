@@ -1,6 +1,7 @@
 package nats_test
 
 import (
+	"context"
 	"encoding/json"
 	"net/url"
 	"testing"
@@ -148,7 +149,7 @@ func TestCodecV02_Encode(t *testing.T) {
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 
-			got, err := tc.codec.Encode(tc.event)
+			got, err := tc.codec.Encode(context.TODO(), tc.event)
 
 			if tc.wantErr != nil || err != nil {
 				if diff := cmp.Diff(tc.wantErr, err); diff != "" {
@@ -250,7 +251,7 @@ func TestCodecV02_Decode(t *testing.T) {
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 
-			got, err := tc.codec.Decode(tc.msg)
+			got, err := tc.codec.Decode(context.TODO(), tc.msg)
 
 			if tc.wantErr != nil || err != nil {
 				if diff := cmp.Diff(tc.wantErr, err); diff != "" {
