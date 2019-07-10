@@ -1,6 +1,7 @@
 package pubsub
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -25,38 +26,38 @@ const (
 
 var _ transport.Codec = (*Codec)(nil)
 
-func (c *Codec) Encode(e cloudevents.Event) (transport.Message, error) {
+func (c *Codec) Encode(ctx context.Context, e cloudevents.Event) (transport.Message, error) {
 	switch c.Encoding {
 	case Default:
 		fallthrough
 	case BinaryV03:
-		return c.encodeBinary(e)
+		return c.encodeBinary(ctx, e)
 	case StructuredV03:
 		if c.v03 == nil {
 			c.v03 = &CodecV03{Encoding: c.Encoding}
 		}
-		return c.v03.Encode(e)
+		return c.v03.Encode(ctx, e)
 	default:
 		return nil, transport.NewErrMessageEncodingUnknown("wrapper", TransportName)
 	}
 }
 
-func (c *Codec) Decode(msg transport.Message) (*cloudevents.Event, error) {
-	switch encoding := c.inspectEncoding(msg); encoding {
+func (c *Codec) Decode(ctx context.Context, msg transport.Message) (*cloudevents.Event, error) {
+	switch encoding := c.inspectEncoding(ctx, msg); encoding {
 	case BinaryV03:
 		event := cloudevents.New(cloudevents.CloudEventsVersionV03)
-		return c.decodeBinary(msg, &event)
+		return c.decodeBinary(ctx, msg, &event)
 	case StructuredV03:
 		if c.v03 == nil {
 			c.v03 = &CodecV03{Encoding: encoding}
 		}
-		return c.v03.Decode(msg)
+		return c.v03.Decode(ctx, msg)
 	default:
 		return nil, fmt.Errorf("unknown encoding: %s", encoding)
 	}
 }
 
-func (c Codec) encodeBinary(e cloudevents.Event) (transport.Message, error) {
+func (c Codec) encodeBinary(ctx context.Context, e cloudevents.Event) (transport.Message, error) {
 	attributes, err := c.toAttributes(e)
 	if err != nil {
 		return nil, err
@@ -127,7 +128,7 @@ func (c Codec) toAttributes(e cloudevents.Event) (map[string]string, error) {
 	return a, nil
 }
 
-func (c Codec) decodeBinary(msg transport.Message, event *cloudevents.Event) (*cloudevents.Event, error) {
+func (c Codec) decodeBinary(ctx context.Context, msg transport.Message, event *cloudevents.Event) (*cloudevents.Event, error) {
 	m, ok := msg.(*Message)
 	if !ok {
 		return nil, fmt.Errorf("failed to convert transport.Message to pubsub.Message")
@@ -266,12 +267,12 @@ func (c Codec) fromAttributes(a map[string]string, event *cloudevents.Event) err
 	return nil
 }
 
-func (c *Codec) inspectEncoding(msg transport.Message) Encoding {
+func (c *Codec) inspectEncoding(ctx context.Context, msg transport.Message) Encoding {
 	if c.v03 == nil {
 		c.v03 = &CodecV03{Encoding: c.Encoding}
 	}
 	// Try v0.3.
-	encoding := c.v03.inspectEncoding(msg)
+	encoding := c.v03.inspectEncoding(ctx, msg)
 	if encoding != Unknown {
 		return encoding
 	}

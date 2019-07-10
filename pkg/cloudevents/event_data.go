@@ -1,6 +1,7 @@
 package cloudevents
 
 import (
+	"context"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -13,7 +14,7 @@ import (
 
 // SetData implements EventWriter.SetData
 func (e *Event) SetData(obj interface{}) error {
-	data, err := datacodec.Encode(e.DataMediaType(), obj)
+	data, err := datacodec.Encode(context.Background(), e.DataMediaType(), obj)
 	if err != nil {
 		return err
 	}
@@ -94,5 +95,5 @@ func (e Event) DataAs(data interface{}) error { // TODO: Clean this function up
 	if err != nil {
 		return err
 	}
-	return datacodec.Decode(mediaType, obj, data)
+	return datacodec.Decode(context.Background(), mediaType, obj, data)
 }

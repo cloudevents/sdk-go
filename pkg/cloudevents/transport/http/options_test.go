@@ -498,7 +498,7 @@ func TestWithEncoding(t *testing.T) {
 
 func TestWithDefaultEncodingSelector(t *testing.T) {
 
-	fn := func(e cloudevents.Event) Encoding {
+	fn := func(ctx context.Context, e cloudevents.Event) Encoding {
 		return Default
 	}
 
