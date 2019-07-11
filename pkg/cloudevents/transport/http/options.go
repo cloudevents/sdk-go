@@ -118,6 +118,21 @@ func WithDefaultEncodingSelector(fn EncodingSelector) Option {
 	}
 }
 
+// WithContextBasedEncoding sets the encoding selection strategy for
+// default encoding selections based context and then on Event, the encoded
+// event will be the given version in the encoding specified by the given
+// context, or Binary if not set.
+func WithContextBasedEncoding() Option {
+	return func(t *Transport) error {
+		if t == nil {
+			return fmt.Errorf("http context based encoding option can not set nil transport")
+		}
+
+		t.DefaultEncodingSelectionFn = ContextBasedEncodingSelectionStrategy
+		return nil
+	}
+}
+
 // WithBinaryEncoding sets the encoding selection strategy for
 // default encoding selections based on Event, the encoded event will be the
 // given version in Binary form.

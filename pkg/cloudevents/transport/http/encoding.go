@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 )
 
 // Encoding to use for HTTP transport.
@@ -30,7 +31,26 @@ const (
 	BatchedV03
 	// Unknown is unknown.
 	Unknown
+
+	// Binary is used for Context Based Encoding Selections to use the
+	// DefaultBinaryEncodingSelectionStrategy
+	Binary = "binary"
+
+	// Structured is used for Context Based Encoding Selections to use the
+	// DefaultStructuredEncodingSelectionStrategy
+	Structured = "structured"
 )
+
+func ContextBasedEncodingSelectionStrategy(ctx context.Context, e cloudevents.Event) Encoding {
+	encoding := cecontext.EncodingFrom(ctx)
+	switch encoding {
+	case "", Binary:
+		return DefaultBinaryEncodingSelectionStrategy(ctx, e)
+	case Structured:
+		return DefaultStructuredEncodingSelectionStrategy(ctx, e)
+	}
+	return Default
+}
 
 // DefaultBinaryEncodingSelectionStrategy implements a selection process for
 // which binary encoding to use based on spec version of the event.

@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	count = 1000
+	count = 1
 )
 
 type envConfig struct {
@@ -44,6 +44,8 @@ func _main(args []string, env envConfig) int {
 		return 1
 	}
 
+	ctx := cloudevents.ContextWithEncoding(context.Background(), cloudevents.Structured)
+
 	seq := 0
 	for _, contentType := range []string{"application/json", "application/xml"} {
 		for _, encoding := range []cloudevents.HTTPEncoding{cloudevents.HTTPBinaryV01, cloudevents.HTTPStructuredV01, cloudevents.HTTPBinaryV02, cloudevents.HTTPStructuredV02} {
@@ -51,6 +53,7 @@ func _main(args []string, env envConfig) int {
 			t, err := cloudevents.NewHTTPTransport(
 				cloudevents.WithTarget(env.Target),
 				cloudevents.WithEncoding(encoding),
+				//cloudevents.WithContextBasedEncoding(), // toggle this or WithEncoding to see context based encoding work.
 			)
 			if err != nil {
 				log.Printf("failed to create transport, %v", err)
@@ -81,7 +84,7 @@ func _main(args []string, env envConfig) int {
 					},
 				}
 
-				if resp, err := c.Send(context.Background(), event); err != nil {
+				if resp, err := c.Send(ctx, event); err != nil {
 					log.Printf("failed to send: %v", err)
 				} else if resp != nil {
 					fmt.Printf("Response:\n%s\n", resp)
