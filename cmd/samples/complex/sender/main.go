@@ -53,8 +53,6 @@ type Demo struct {
 
 	// Data
 	Message string
-
-	seq int
 }
 
 var seq int
@@ -96,11 +94,6 @@ func _main(args []string, env envConfig) int {
 	for _, contentType := range []string{"application/json", "application/xml"} {
 		// HTTP
 		for _, encoding := range []cloudeventshttp.Encoding{cloudeventshttp.Default, cloudeventshttp.BinaryV01, cloudeventshttp.StructuredV01, cloudeventshttp.BinaryV02, cloudeventshttp.StructuredV02, cloudeventshttp.BinaryV03, cloudeventshttp.StructuredV03} {
-
-			if err != nil {
-				log.Printf("failed to create client, %v", err)
-				return 1
-			}
 
 			t, err := cloudeventshttp.New(
 				cloudeventshttp.WithTarget(env.HTTPTarget),

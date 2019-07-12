@@ -87,7 +87,7 @@ func (t *tapHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func copyHeaders(from http.Header) http.Header {
 	to := http.Header{}
-	if from == nil || to == nil {
+	if from == nil {
 		return to
 	}
 	for header, values := range from {

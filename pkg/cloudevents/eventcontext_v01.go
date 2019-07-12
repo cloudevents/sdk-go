@@ -100,7 +100,7 @@ func (ec EventContextV01) AsV02() *EventContextV02 {
 
 	// eventTypeVersion was retired in v0.2, so put it in an extension.
 	if ec.EventTypeVersion != nil {
-		ret.SetExtension(EventTypeVersionKey, *ec.EventTypeVersion)
+		_ = ret.SetExtension(EventTypeVersionKey, *ec.EventTypeVersion)
 	}
 	if ec.Extensions != nil {
 		for k, v := range ec.Extensions {

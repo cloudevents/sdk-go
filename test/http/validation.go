@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cloudevents/sdk-go"
+	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 )
@@ -27,7 +27,7 @@ func assertEventEquality(t *testing.T, ctx string, expected, actual *cloudevents
 	if expected == nil || actual == nil {
 		return
 	}
-	data := make(map[string]string, 0)
+	data := make(map[string]string)
 	err := actual.DataAs(&data)
 	if err != nil {
 		t.Error(err)

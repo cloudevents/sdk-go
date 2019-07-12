@@ -33,11 +33,6 @@ func main() {
 	os.Exit(_main(os.Args[1:], env))
 }
 
-type Example struct {
-	Sequence int    `json:"id"`
-	Message  string `json:"message"`
-}
-
 func receive(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error {
 	fmt.Printf("Got CloudEvent,\n%+v\n", event)
 	fmt.Println("----------------------------")

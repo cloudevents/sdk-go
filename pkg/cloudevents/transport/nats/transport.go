@@ -112,7 +112,7 @@ func (t *Transport) HasConverter() bool {
 
 // StartReceiver implements Transport.StartReceiver
 // NOTE: This is a blocking call.
-func (t *Transport) StartReceiver(ctx context.Context) error {
+func (t *Transport) StartReceiver(ctx context.Context) (err error) {
 	if t.Conn == nil {
 		return fmt.Errorf("no active nats connection")
 	}
@@ -130,7 +130,6 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 		return fmt.Errorf("subject required for nats listen")
 	}
 
-	var err error
 	// Simple Async Subscriber
 	t.sub, err = t.Conn.Subscribe(t.Subject, func(m *nats.Msg) {
 		logger := context2.LoggerFrom(ctx)
@@ -154,7 +153,10 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 	})
 	defer func() {
 		if t.sub != nil {
-			t.sub.Unsubscribe() // TODO: create an error channel to pass this up
+			err2 := t.sub.Unsubscribe()
+			if err != nil {
+				err = err2 // Set the returned error if not already set.
+			}
 			t.sub = nil
 		}
 	}()

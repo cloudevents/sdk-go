@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/cloudevents/sdk-go"
+	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/kelseyhightower/envconfig"
 )
 
@@ -55,10 +55,6 @@ func _main(args []string, env envConfig) int {
 	if err != nil {
 		log.Printf("failed to create client, %v", err)
 		return 1
-	}
-
-	if err != nil {
-		log.Fatalf("failed to start receiver: %s", err.Error())
 	}
 
 	log.Printf("listening on :%d%s\n", env.Port, env.Path)
