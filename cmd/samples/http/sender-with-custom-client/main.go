@@ -48,14 +48,16 @@ func _main(args []string, env envConfig) int {
 		return 1
 	}
 
-	// Add path to client certificate and key for HTTPS
-	cert, err := tls.LoadX509KeyPair("generated.crt", "generated.key")
+	// Read certificate and key information from the environment for HTTPS
+	clientCert := os.Getenv("CLIENT_CERT")
+	clientKey := os.Getenv("CLIENT_KEY")
+	cert, err := tls.LoadX509KeyPair(clientCert, clientKey)
 	if err != nil {
-		log.Fatalln("Unable to load cert", err)
+		log.Fatalln("unable to load certs", err)
 	}
-	clientCACert, err := ioutil.ReadFile("generated.crt")
+	clientCACert, err := ioutil.ReadFile(clientCert)
 	if err != nil {
-		log.Fatal("Unable to open cert", err)
+		log.Fatal("unable to open cert", err)
 	}
 
 	clientCertPool := x509.NewCertPool()
@@ -76,7 +78,7 @@ func _main(args []string, env envConfig) int {
 
 	seq := 0
 	for _, dataContentType := range []string{"application/json", "application/xml"} {
-		for _, encoding := range []cloudevents.HTTPEncoding{cloudevents.HTTPBinaryV03, cloudevents.HTTPBatchedV03, cloudevents.HTTPStructuredV03} {
+		for _, encoding := range []cloudevents.HTTPEncoding{cloudevents.HTTPBinaryV03, cloudevents.HTTPStructuredV03} {
 
 			t, err := cloudevents.NewHTTPTransport(
 				cloudevents.WithTarget(env.Target),
