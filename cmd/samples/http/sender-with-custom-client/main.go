@@ -24,6 +24,10 @@ const (
 type envConfig struct {
 	// Target URL where to send cloudevents
 	Target string `envconfig:"TARGET" default:"https://localhost:8080" required:"true"`
+	// Read certificate for HTTPS
+	ClientCert string `envconfig:"CLIENT_CERT" default:"client.crt" required:"true"`
+	// Read key for HTTPS
+	ClientKey string `envconfig:"CLIENT_KEY" default:"client.key" required:"true"`
 }
 
 func main() {
@@ -48,14 +52,11 @@ func _main(args []string, env envConfig) int {
 		return 1
 	}
 
-	// Read certificate and key information from the environment for HTTPS
-	clientCert := os.Getenv("CLIENT_CERT")
-	clientKey := os.Getenv("CLIENT_KEY")
-	cert, err := tls.LoadX509KeyPair(clientCert, clientKey)
+	cert, err := tls.LoadX509KeyPair(env.ClientCert, env.ClientKey)
 	if err != nil {
 		log.Fatalln("unable to load certs", err)
 	}
-	clientCACert, err := ioutil.ReadFile(clientCert)
+	clientCACert, err := ioutil.ReadFile(env.ClientCert)
 	if err != nil {
 		log.Fatal("unable to open cert", err)
 	}
