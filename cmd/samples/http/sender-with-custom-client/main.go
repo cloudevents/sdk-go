@@ -24,9 +24,9 @@ const (
 type envConfig struct {
 	// Target URL where to send cloudevents
 	Target string `envconfig:"TARGET" default:"https://localhost:8080" required:"true"`
-	// Read certificate for HTTPS
+	// Path for the client certificate used to publish to an HTTPS endpoint
 	ClientCert string `envconfig:"CLIENT_CERT" default:"client.crt" required:"true"`
-	// Read key for HTTPS
+	// Path for the client key used to publish to an HTTPS endpoint
 	ClientKey string `envconfig:"CLIENT_KEY" default:"client.key" required:"true"`
 }
 
