@@ -819,7 +819,7 @@ func TestCodecRoundTrip(t *testing.T) {
 					got.Data = data
 				}
 
-				if tc.wantErr != nil || err != nil {
+				if tc.wantErr != nil {
 					if diff := cmp.Diff(tc.wantErr, err); diff != "" {
 						t.Errorf("unexpected error (-want, +got) = %v", diff)
 					}
@@ -961,7 +961,7 @@ func TestCodecAsMiddleware(t *testing.T) {
 						got.Data = data
 					}
 
-					if tc.wantErr != nil || err != nil {
+					if tc.wantErr != nil {
 						if diff := cmp.Diff(tc.wantErr, err); diff != "" {
 							t.Errorf("unexpected error (-want, +got) = %v", diff)
 						}
