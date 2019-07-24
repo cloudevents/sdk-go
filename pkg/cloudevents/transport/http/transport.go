@@ -546,13 +546,11 @@ func (t *Transport) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		Body:   body,
 	})
 	if err != nil {
-		isErr := true
+		isFatal := true
 		if txerr, ok := err.(*transport.ErrTransportMessageConversion); ok {
-			if !txerr.IsFatal() {
-				isErr = false
-			}
+			isFatal = txerr.IsFatal()
 		}
-		if isErr {
+		if isFatal || event == nil {
 			logger.Errorw("failed to convert http message to event", zap.Error(err))
 			w.WriteHeader(http.StatusBadRequest)
 			_, _ = w.Write([]byte(fmt.Sprintf(`{"error":%q}`, err.Error())))

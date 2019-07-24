@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -219,4 +220,45 @@ type namedHandler struct {
 func (h *namedHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write([]byte(h.name))
 	h.next.ServeHTTP(w, r)
+}
+
+func TestServeHTTPSpecVersion(t *testing.T) {
+	tests := []struct {
+		specVersion    string
+		expectedStatus int
+	}{
+		{
+			// Missing specVersion -> HTTP 400
+			specVersion:    "",
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			// Valid request
+			specVersion:    "0.3",
+			expectedStatus: http.StatusNoContent,
+		},
+		{
+			// Future specVersion -> HTTP 400
+			specVersion:    "999999.99",
+			expectedStatus: http.StatusBadRequest,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.specVersion, func(t *testing.T) {
+			transport := &cehttp.Transport{}
+			req := httptest.NewRequest("GET", "/", nil)
+			req.Header.Set("ce-specversion", test.specVersion)
+			w := httptest.NewRecorder()
+
+			transport.ServeHTTP(w, req)
+
+			actualStatus := w.Result().StatusCode
+			if actualStatus != test.expectedStatus {
+				t.Errorf("actual status (%d) != expected status (%d)", actualStatus, test.expectedStatus)
+				t.Errorf("response body: %s", w.Body.String())
+			}
+		})
+	}
+
 }
