@@ -17,7 +17,7 @@ import (
 type envConfig struct {
 	ProjectID      string `envconfig:"GOOGLE_CLOUD_PROJECT"`
 	TopicID        string `envconfig:"PUBSUB_TOPIC" default:"demo_cloudevents" required:"true"`
-	SubscriptionID string `envconfig:"PUBSUB_SUBSCRIPTION" default:"foo" requried:"true"`
+	SubscriptionID string `envconfig:"PUBSUB_SUBSCRIPTION" default:"foo" required:"true"`
 }
 
 // Basic data struct.

@@ -33,7 +33,7 @@ func (e Event) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON implements the json unmarshal method used when this type is
-// unmarshed using json.Unmarshal.
+// unmarshaled using json.Unmarshal.
 func (e *Event) UnmarshalJSON(b []byte) error {
 	raw := make(map[string]json.RawMessage)
 	if err := json.Unmarshal(b, &raw); err != nil {
