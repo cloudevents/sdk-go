@@ -17,7 +17,7 @@ type envConfig struct {
 
 	TopicID string `envconfig:"PUBSUB_TOPIC" default:"demo_cloudevents" required:"true"`
 
-	SubscriptionID string `envconfig:"PUBSUB_SUBSCRIPTION" default:"foo" requried:"true"`
+	SubscriptionID string `envconfig:"PUBSUB_SUBSCRIPTION" default:"foo" required:"true"`
 }
 
 type Example struct {
