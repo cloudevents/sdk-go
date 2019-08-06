@@ -151,3 +151,7 @@ func printTap(t *testing.T, tap *tapHandler, testID string) {
 		}
 	}
 }
+
+// Don't consider printTap as dead code even if not currently in use.
+// We want to keep it for possible future debugging.
+var _ = printTap

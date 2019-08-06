@@ -489,19 +489,6 @@ func TestUnmarshal(t *testing.T) {
 	}
 }
 
-func TestUnmarshal_nilEvent(t *testing.T) {
-	wantErr := "json: Unmarshal(nil)"
-
-	err := json.Unmarshal(toBytes("{}"), nil)
-
-	if err != nil {
-		if diff := cmp.Diff(wantErr, err.Error()); diff != "" {
-			t.Errorf("unexpected error (-want, +got) = %v", diff)
-		}
-		return
-	}
-}
-
 func toBytes(body interface{}) []byte {
 	b, err := json.Marshal(body)
 	if err != nil {

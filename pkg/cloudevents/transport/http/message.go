@@ -35,7 +35,10 @@ func (m Message) CloudEventsVersion() string {
 	if m.Header != nil {
 		// Try headers first.
 		// v0.1, cased from the spec
-		if v := m.Header["CE-CloudEventsVersion"]; len(v) == 1 {
+		// Note: don't pass literal string direct to m.Header[] so that
+		// go vet won't complain about non-canonical case.
+		name := "CE-CloudEventsVersion"
+		if v := m.Header[name]; len(v) == 1 {
 			return v[0]
 		}
 		// v0.2, canonical casing
@@ -44,11 +47,13 @@ func (m Message) CloudEventsVersion() string {
 		}
 
 		// v0.2, cased from the spec
-		if v := m.Header["ce-specversion"]; len(v) == 1 {
+		name = "ce-specversion"
+		if v := m.Header[name]; len(v) == 1 {
 			return v[0]
 		}
 		// v0.2, canonical casing
-		if ver := m.Header.Get("ce-specversion"); ver != "" {
+		name = "ce-specversion"
+		if ver := m.Header.Get(name); ver != "" {
 			return ver
 		}
 	}
