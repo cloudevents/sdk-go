@@ -40,11 +40,14 @@ func LatencyTags() []tag.Key {
 }
 
 var (
-	tracingEnabled = true
+	// Tracing is disabled by default. It is very useful for profiling an
+	// application.
+	tracingEnabled = false
 )
 
 // EnableTracing allows control over if tracing is enabled for the sdk.
-// Default is true. This applies to all of the `github.com/cloudevents/sdk-go/...` package.
+// Default is false. This applies to all of the
+// `github.com/cloudevents/sdk-go/...` package.
 func EnableTracing(enabled bool) {
 	tracingEnabled = enabled
 }

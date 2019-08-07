@@ -15,6 +15,7 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec/json"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec/xml"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
 
 	"contrib.go.opencensus.io/exporter/prometheus"
 	"go.opencensus.io/stats/view"
@@ -35,7 +36,7 @@ func main() {
 	}
 
 	// Uncomment the following to see that tracing can be disabled.
-	// observability.EnableTracing(false)
+	observability.EnableTracing(false)
 
 	go mainSender()
 	go mainMetrics()
