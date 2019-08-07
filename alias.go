@@ -7,6 +7,7 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/context"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 )
@@ -97,6 +98,10 @@ var (
 	// Event Creation
 
 	NewEvent = cloudevents.New
+
+	// Tracing
+
+	EnableTracing = observability.EnableTracing
 
 	// Context
 
