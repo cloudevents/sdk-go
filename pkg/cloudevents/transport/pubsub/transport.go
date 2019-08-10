@@ -2,10 +2,8 @@ package pubsub
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sync"
-	"time"
 
 	"go.uber.org/zap"
 
@@ -13,6 +11,7 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/pubsub/internal"
 )
 
 // Transport adheres to transport.Transport.
@@ -44,19 +43,12 @@ type Transport struct {
 	// subscription if it does not exist.
 	AllowCreateSubscription bool
 
-	projectID string
-
-	client *pubsub.Client
-
-	topicID         string
-	topic           *pubsub.Topic
-	topicWasCreated bool
-	topicOnce       sync.Once
-
+	projectID      string
+	topicID        string
 	subscriptionID string
-	sub            *pubsub.Subscription
-	subWasCreated  bool
-	subOnce        sync.Once
+	client         *pubsub.Client
+
+	connections map[string]*internal.Connection
 
 	// Receiver
 	Receiver transport.Receiver
@@ -81,6 +73,10 @@ func New(ctx context.Context, opts ...Option) (*Transport, error) {
 		}
 		// Success.
 		t.client = client
+	}
+
+	if t.connections == nil {
+		t.connections = make(map[string]*internal.Connection, 0)
 	}
 	return t, nil
 }
@@ -115,106 +111,27 @@ func (t *Transport) loadCodec(ctx context.Context) bool {
 	return true
 }
 
-func (t *Transport) getOrCreateTopic(ctx context.Context) (*pubsub.Topic, error) {
-	var err error
-	t.topicOnce.Do(func() {
-		var ok bool
-		// Load the topic.
-		topic := t.client.Topic(t.topicID)
-		ok, err = topic.Exists(ctx)
-		if err != nil {
-			_ = t.client.Close()
-			return
-		}
-		// If the topic does not exist, create a new topic with the given name.
-		if !ok {
-			if !t.AllowCreateTopic {
-				err = fmt.Errorf("transport not allowed to create topic %q", t.topicID)
-				return
-			}
-			topic, err = t.client.CreateTopic(ctx, t.topicID)
-			if err != nil {
-				return
-			}
-			t.topicWasCreated = true
-		}
-		// Success.
-		t.topic = topic
-	})
-	if t.topic == nil {
-		return nil, fmt.Errorf("unable to create topic %q", t.topicID)
-	}
-	return t.topic, err
+func (t *Transport) getConnectionKey(ctx context.Context, topic, subscription string) string {
+	return fmt.Sprintf("Topic:%s Subscription:%s", topic, subscription)
 }
 
-func (t *Transport) DeleteTopic(ctx context.Context) error {
-	if t.topicWasCreated {
-		if err := t.topic.Delete(ctx); err != nil {
-			return err
-		}
-		t.topic = nil
-		t.topicWasCreated = false
-		t.topicOnce = sync.Once{}
+func (t *Transport) getOrCreateConnection(ctx context.Context, topic, subscription string) *internal.Connection {
+	// Get.
+	key := t.getConnectionKey(ctx, topic, subscription)
+	if conn, ok := t.connections[key]; ok {
+		return conn
 	}
-	return errors.New("topic was not created by pubsub transport")
-}
-
-func (t *Transport) getOrCreateSubscription(ctx context.Context) (*pubsub.Subscription, error) {
-	var err error
-	t.subOnce.Do(func() {
-		// Load the topic.
-		var topic *pubsub.Topic
-		topic, err = t.getOrCreateTopic(ctx)
-		if err != nil {
-			return
-		}
-		// Load the subscription.
-		var ok bool
-		sub := t.client.Subscription(t.subscriptionID)
-		ok, err = sub.Exists(ctx)
-		if err != nil {
-			_ = t.client.Close()
-			return
-		}
-		// If subscription doesn't exist, create it.
-		if !ok {
-			if !t.AllowCreateSubscription {
-				err = fmt.Errorf("transport not allowed to create subscription %q", t.subscriptionID)
-				return
-			}
-			// Create a new subscription to the previously created topic
-			// with the given name.
-			// TODO: allow to use push config + allow setting the SubscriptionConfig.
-			sub, err = t.client.CreateSubscription(ctx, t.subscriptionID, pubsub.SubscriptionConfig{
-				Topic:             topic,
-				AckDeadline:       30 * time.Second,
-				RetentionDuration: 25 * time.Hour,
-			})
-			if err != nil {
-				_ = t.client.Close()
-				return
-			}
-			t.subWasCreated = true
-		}
-		// Success.
-		t.sub = sub
-	})
-	if t.sub == nil {
-		return nil, fmt.Errorf("unable to create sunscription %q", t.subscriptionID)
+	// Create.
+	conn := &internal.Connection{
+		AllowCreateSubscription: t.AllowCreateSubscription,
+		AllowCreateTopic:        t.AllowCreateTopic,
+		Client:                  t.client,
+		ProjectID:               t.projectID,
+		TopicID:                 topic,
+		SubscriptionID:          subscription,
 	}
-	return t.sub, err
-}
-
-func (t *Transport) DeleteSubscription(ctx context.Context) error {
-	if t.subWasCreated {
-		if err := t.sub.Delete(ctx); err != nil {
-			return err
-		}
-		t.sub = nil
-		t.subWasCreated = false
-		t.subOnce = sync.Once{}
-	}
-	return errors.New("subscription was not created by pubsub transport")
+	t.connections[key] = conn
+	return conn
 }
 
 // Send implements Transport.Send
@@ -223,28 +140,18 @@ func (t *Transport) Send(ctx context.Context, event cloudevents.Event) (*cloudev
 		return nil, fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
 	}
 
+	conn := t.getOrCreateConnection(ctx, t.topicID, t.subscriptionID)
+
 	msg, err := t.codec.Encode(ctx, event)
 	if err != nil {
 		return nil, err
 	}
 
-	topic, err := t.getOrCreateTopic(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	if m, ok := msg.(*Message); ok {
-
-		r := topic.Publish(ctx, &pubsub.Message{
+		return conn.Publish(ctx, &pubsub.Message{
 			Attributes: m.Attributes,
 			Data:       m.Data,
 		})
-
-		_, err := r.Get(ctx)
-		if err != nil {
-			return nil, err
-		}
-		return nil, nil
 	}
 
 	return nil, fmt.Errorf("failed to encode Event into a Message")
@@ -275,14 +182,10 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 		return fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
 	}
 
-	sub, err := t.getOrCreateSubscription(ctx)
-	if err != nil {
-		return err
-	}
-	// Ok, ready to start pulling.
-	err = sub.Receive(ctx, func(ctx context.Context, m *pubsub.Message) {
-		ctx = WithTransportContext(ctx, NewTransportContext(t.projectID, t.topicID, t.subscriptionID, "pull", m))
+	conn := t.getOrCreateConnection(ctx, t.topicID, t.subscriptionID)
 
+	// Ok, ready to start pulling.
+	return conn.Receive(ctx, func(ctx context.Context, m *pubsub.Message) {
 		msg := &Message{
 			Attributes: m.Attributes,
 			Data:       m.Data,
@@ -305,6 +208,4 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 		}
 		m.Ack()
 	})
-
-	return err
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/pubsub"
+	pscontext "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/pubsub/context"
 	"github.com/google/uuid"
 	"github.com/kelseyhightower/envconfig"
 )
@@ -44,7 +45,7 @@ func convert(ctx context.Context, m transport.Message, err error) (*cloudevents.
 	log.Printf("trying to recover from %v", err)
 
 	if msg, ok := m.(*pubsub.Message); ok {
-		tx := pubsub.TransportContextFrom(ctx)
+		tx := pscontext.TransportContextFrom(ctx)
 		// Make a new event and convert the message payload.
 		event := cloudevents.NewEvent()
 		event.SetSource("github.com/cloudevents/cmd/samples/pubsub/converter/receiver")
