@@ -132,9 +132,15 @@ func WithTopicIDFromDefaultEnv() Option {
 }
 
 // WithSubscriptionID sets the subscription ID for pubsub transport.
+// This option can be used multiple times.
 func WithSubscriptionID(subscriptionID string) Option {
 	return func(t *Transport) error {
-		t.subscriptionID = subscriptionID
+		if t.subscriptions == nil {
+			t.subscriptions = make([]subscriptionWithTopic, 0)
+		}
+		t.subscriptions = append(t.subscriptions, subscriptionWithTopic{
+			subscriptionID: subscriptionID,
+		})
 		return nil
 	}
 }
@@ -142,6 +148,7 @@ func WithSubscriptionID(subscriptionID string) Option {
 // WithSubscriptionIDFromEnv sets the subscription ID for pubsub transport from
 // a given environment variable name.
 func WithSubscriptionIDFromEnv(key string) Option {
+	// TODO: fix this method.
 	return func(t *Transport) error {
 		v := os.Getenv(key)
 		if v == "" {

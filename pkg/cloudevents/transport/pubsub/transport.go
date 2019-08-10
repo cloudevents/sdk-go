@@ -21,6 +21,11 @@ const (
 	TransportName = "Pub/Sub"
 )
 
+type subscriptionWithTopic struct {
+	topicID        string
+	subscriptionID string
+}
+
 // Transport acts as both a pubsub topic and a pubsub subscription .
 type Transport struct {
 	// Encoding
@@ -46,9 +51,14 @@ type Transport struct {
 	projectID      string
 	topicID        string
 	subscriptionID string
-	client         *pubsub.Client
 
-	connections map[string]*internal.Connection
+	gccMux sync.Mutex
+
+	subscriptions []subscriptionWithTopic
+	client        *pubsub.Client
+
+	connectionsBySubscription map[string]*internal.Connection
+	connectionsByTopic        map[string]*internal.Connection
 
 	// Receiver
 	Receiver transport.Receiver
@@ -75,8 +85,12 @@ func New(ctx context.Context, opts ...Option) (*Transport, error) {
 		t.client = client
 	}
 
-	if t.connections == nil {
-		t.connections = make(map[string]*internal.Connection, 0)
+	if t.connectionsBySubscription == nil {
+		t.connectionsBySubscription = make(map[string]*internal.Connection, 0)
+	}
+
+	if t.connectionsByTopic == nil {
+		t.connectionsByTopic = make(map[string]*internal.Connection, 0)
 	}
 	return t, nil
 }
@@ -111,14 +125,27 @@ func (t *Transport) loadCodec(ctx context.Context) bool {
 	return true
 }
 
-func (t *Transport) getConnectionKey(ctx context.Context, topic, subscription string) string {
-	return fmt.Sprintf("Topic:%s Subscription:%s", topic, subscription)
+func (t *Transport) getConnection(ctx context.Context, topic, subscription string) *internal.Connection {
+	if subscription != "" {
+		if conn, ok := t.connectionsBySubscription[subscription]; ok {
+			return conn
+		}
+	}
+	if topic != "" {
+		if conn, ok := t.connectionsByTopic[topic]; ok {
+			return conn
+		}
+	}
+
+	return nil
 }
 
 func (t *Transport) getOrCreateConnection(ctx context.Context, topic, subscription string) *internal.Connection {
+	t.gccMux.Lock()
+	defer t.gccMux.Unlock()
+
 	// Get.
-	key := t.getConnectionKey(ctx, topic, subscription)
-	if conn, ok := t.connections[key]; ok {
+	if conn := t.getConnection(ctx, topic, subscription); conn != nil {
 		return conn
 	}
 	// Create.
@@ -130,7 +157,14 @@ func (t *Transport) getOrCreateConnection(ctx context.Context, topic, subscripti
 		TopicID:                 topic,
 		SubscriptionID:          subscription,
 	}
-	t.connections[key] = conn
+	// Save for later.
+	if subscription != "" {
+		t.connectionsBySubscription[subscription] = conn
+	}
+	if topic != "" {
+		t.connectionsByTopic[topic] = conn
+	}
+
 	return conn
 }
 
@@ -140,7 +174,12 @@ func (t *Transport) Send(ctx context.Context, event cloudevents.Event) (*cloudev
 		return nil, fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
 	}
 
-	conn := t.getOrCreateConnection(ctx, t.topicID, t.subscriptionID)
+	topic := cecontext.TopicFrom(ctx)
+	if topic == "" {
+		topic = t.topicID
+	}
+
+	conn := t.getOrCreateConnection(ctx, topic, "")
 
 	msg, err := t.codec.Encode(ctx, event)
 	if err != nil {
@@ -182,30 +221,54 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 		return fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
 	}
 
-	conn := t.getOrCreateConnection(ctx, t.topicID, t.subscriptionID)
+	//cctx, cancel := context.WithCancel(ctx)
+	//defer cancel()
+	// TODO: real way is to setup a inner context with cancel and then call cancel
+	// when the parent called done down. but for now, hack hack hack.
 
-	// Ok, ready to start pulling.
-	return conn.Receive(ctx, func(ctx context.Context, m *pubsub.Message) {
-		msg := &Message{
-			Attributes: m.Attributes,
-			Data:       m.Data,
-		}
-		event, err := t.codec.Decode(ctx, msg)
-		// If codec returns and error, try with the converter if it is set.
-		if err != nil && t.HasConverter() {
-			event, err = t.Converter.Convert(ctx, msg, err)
-		}
-		if err != nil {
-			logger.Errorw("failed to decode message", zap.Error(err))
-			m.Nack()
+	// TODO: This is demo code.
+	var err error
+
+	startSubscriber := func(sub subscriptionWithTopic) {
+		logger.Infof("starting subscriber for Topic %q, Subscription %q", sub.topicID, sub.subscriptionID)
+		conn := t.getOrCreateConnection(ctx, sub.topicID, sub.subscriptionID)
+
+		logger.Info("conn is", conn)
+		if conn == nil {
+			err = fmt.Errorf("failed to find connection for Topic: %q, Subscription: %q", sub.topicID, sub.subscriptionID)
 			return
 		}
+		// Ok, ready to start pulling.
+		err = conn.Receive(ctx, func(ctx context.Context, m *pubsub.Message) {
+			logger.Info("got an event!")
+			msg := &Message{
+				Attributes: m.Attributes,
+				Data:       m.Data,
+			}
+			event, err := t.codec.Decode(ctx, msg)
+			// If codec returns and error, try with the converter if it is set.
+			if err != nil && t.HasConverter() {
+				event, err = t.Converter.Convert(ctx, msg, err)
+			}
+			if err != nil {
+				logger.Errorw("failed to decode message", zap.Error(err))
+				m.Nack()
+				return
+			}
 
-		if err := t.Receiver.Receive(ctx, *event, nil); err != nil {
-			logger.Warnw("pubsub receiver return err", zap.Error(err))
-			m.Nack()
-			return
-		}
-		m.Ack()
-	})
+			if err := t.Receiver.Receive(ctx, *event, nil); err != nil {
+				logger.Warnw("pubsub receiver return err", zap.Error(err))
+				m.Nack()
+				return
+			}
+			m.Ack()
+		})
+	}
+
+	for _, sub := range t.subscriptions {
+		go startSubscriber(sub)
+	}
+
+	<-ctx.Done()
+	return err
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"sync"
 	"time"
 
@@ -13,7 +12,7 @@ import (
 	pscontext "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/pubsub/context"
 )
 
-// Transport acts as both a pubsub topic and a pubsub subscription .
+// Connection acts as either a pubsub topic or a pubsub subscription .
 type Connection struct {
 	// AllowCreateTopic controls if the transport can create a topic if it does
 	// not exist.
@@ -36,7 +35,19 @@ type Connection struct {
 	sub            *pubsub.Subscription
 	subWasCreated  bool
 	subOnce        sync.Once
+
+	// AckDeadline is Pub/Sub AckDeadline.
+	// Default is 30 seconds.
+	AckDeadline *time.Duration
+	// RetentionDuration is Pub/Sub RetentionDuration.
+	// Default is 25 hours.
+	RetentionDuration *time.Duration
 }
+
+const (
+	DefaultAckDeadline       = 30 * time.Second
+	DefaultRetentionDuration = 25 * time.Hour
+)
 
 func (c *Connection) getOrCreateTopic(ctx context.Context) (*pubsub.Topic, error) {
 	var err error
@@ -69,6 +80,7 @@ func (c *Connection) getOrCreateTopic(ctx context.Context) (*pubsub.Topic, error
 	return c.topic, err
 }
 
+// DeleteTopic
 func (c *Connection) DeleteTopic(ctx context.Context) error {
 	if c.topicWasCreated {
 		if err := c.topic.Delete(ctx); err != nil {
@@ -84,12 +96,6 @@ func (c *Connection) DeleteTopic(ctx context.Context) error {
 func (c *Connection) getOrCreateSubscription(ctx context.Context) (*pubsub.Subscription, error) {
 	var err error
 	c.subOnce.Do(func() {
-		// Load the topic.
-		var topic *pubsub.Topic
-		topic, err = c.getOrCreateTopic(ctx)
-		if err != nil {
-			return
-		}
 		// Load the subscription.
 		var ok bool
 		sub := c.Client.Subscription(c.SubscriptionID)
@@ -103,13 +109,30 @@ func (c *Connection) getOrCreateSubscription(ctx context.Context) (*pubsub.Subsc
 				err = fmt.Errorf("transport not allowed to create subscription %q", c.SubscriptionID)
 				return
 			}
+
+			// Load the topic.
+			var topic *pubsub.Topic
+			topic, err = c.getOrCreateTopic(ctx)
+			if err != nil {
+				return
+			}
+			// Default the ack deadline and retention duration config.
+			if c.AckDeadline == nil {
+				ackDeadline := DefaultAckDeadline
+				c.AckDeadline = &(ackDeadline)
+			}
+			if c.RetentionDuration == nil {
+				retentionDuration := DefaultRetentionDuration
+				c.RetentionDuration = &retentionDuration
+			}
+
 			// Create a new subscription to the previously created topic
 			// with the given name.
 			// TODO: allow to use push config + allow setting the SubscriptionConfig.
 			sub, err = c.Client.CreateSubscription(ctx, c.SubscriptionID, pubsub.SubscriptionConfig{
 				Topic:             topic,
-				AckDeadline:       30 * time.Second,
-				RetentionDuration: 25 * time.Hour,
+				AckDeadline:       *c.AckDeadline,
+				RetentionDuration: *c.RetentionDuration,
 			})
 			if err != nil {
 				_ = c.Client.Close()
@@ -126,6 +149,7 @@ func (c *Connection) getOrCreateSubscription(ctx context.Context) (*pubsub.Subsc
 	return c.sub, err
 }
 
+// DeleteSubscription
 func (c *Connection) DeleteSubscription(ctx context.Context) error {
 	if c.subWasCreated {
 		if err := c.sub.Delete(ctx); err != nil {
@@ -138,7 +162,7 @@ func (c *Connection) DeleteSubscription(ctx context.Context) error {
 	return errors.New("subscription was not created by pubsub transport")
 }
 
-// Send
+// Publish
 func (c *Connection) Publish(ctx context.Context, msg *pubsub.Message) (*cloudevents.Event, error) {
 	topic, err := c.getOrCreateTopic(ctx)
 	if err != nil {
@@ -159,7 +183,6 @@ func (c *Connection) Receive(ctx context.Context, fn func(context.Context, *pubs
 	}
 	// Ok, ready to start pulling.
 	return sub.Receive(ctx, func(ctx context.Context, m *pubsub.Message) {
-		log.Println("adding internal context.")
 		ctx = pscontext.WithTransportContext(ctx, pscontext.NewTransportContext(c.ProjectID, c.TopicID, c.SubscriptionID, "pull", m))
 		fn(ctx, m)
 	})
