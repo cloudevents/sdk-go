@@ -6,10 +6,11 @@ import (
 	"os"
 	"strings"
 
+	"github.com/kelseyhightower/envconfig"
+
 	"github.com/cloudevents/sdk-go"
 	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	cloudeventspubsub "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/pubsub"
-	"github.com/kelseyhightower/envconfig"
 )
 
 type envConfig struct {
