@@ -148,14 +148,14 @@ func WithSubscriptionID(subscriptionID string) Option {
 // WithSubscriptionIDFromEnv sets the subscription ID for pubsub transport from
 // a given environment variable name.
 func WithSubscriptionIDFromEnv(key string) Option {
-	// TODO: fix this method.
 	return func(t *Transport) error {
 		v := os.Getenv(key)
 		if v == "" {
 			return fmt.Errorf("unable to load subscription id, %q environment variable not set", key)
 		}
-		t.subscriptionID = v
-		return nil
+
+		opt := WithSubscriptionID(v)
+		return opt(t)
 	}
 }
 
