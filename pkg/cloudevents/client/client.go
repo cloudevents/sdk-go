@@ -102,7 +102,7 @@ func (c *ceClient) obsSend(ctx context.Context, event cloudevents.Event) (*cloud
 	// Apply the defaulter chain to the incoming event.
 	if len(c.eventDefaulterFns) > 0 {
 		for _, fn := range c.eventDefaulterFns {
-			event = fn(event)
+			event = fn(ctx, event)
 		}
 	}
 
@@ -139,7 +139,7 @@ func (c *ceClient) obsReceive(ctx context.Context, event cloudevents.Event, resp
 		// Apply the defaulter chain to the outgoing event.
 		if err == nil && resp != nil && resp.Event != nil && len(c.eventDefaulterFns) > 0 {
 			for _, fn := range c.eventDefaulterFns {
-				*resp.Event = fn(*resp.Event)
+				*resp.Event = fn(ctx, *resp.Event)
 			}
 			// Validate the event conforms to the CloudEvents Spec.
 			if err := resp.Event.Validate(); err != nil {

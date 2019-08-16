@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -50,7 +51,7 @@ func TestDefaultIDToUUIDIfNotSet(t *testing.T) {
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 
-			got := DefaultIDToUUIDIfNotSet(tc.event)
+			got := DefaultIDToUUIDIfNotSet(context.TODO(), tc.event)
 
 			if got.Context != nil && got.Context.AsV02().ID == "" {
 				t.Errorf("failed to generate an id for event")
@@ -64,7 +65,7 @@ func TestDefaultIDToUUIDIfNotSetImmutable(t *testing.T) {
 		Context: &cloudevents.EventContextV01{},
 	}
 
-	got := DefaultIDToUUIDIfNotSet(event)
+	got := DefaultIDToUUIDIfNotSet(context.TODO(), event)
 
 	want := "0.1"
 
@@ -122,7 +123,7 @@ func TestDefaultTimeToNowIfNotSet(t *testing.T) {
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 
-			got := DefaultTimeToNowIfNotSet(tc.event)
+			got := DefaultTimeToNowIfNotSet(context.TODO(), tc.event)
 
 			if got.Context != nil && got.Context.AsV02().Time.IsZero() {
 				t.Errorf("failed to generate time for event")
@@ -136,7 +137,7 @@ func TestDefaultTimeToNowIfNotSetImmutable(t *testing.T) {
 		Context: &cloudevents.EventContextV01{},
 	}
 
-	got := DefaultTimeToNowIfNotSet(event)
+	got := DefaultTimeToNowIfNotSet(context.TODO(), event)
 
 	want := "0.1"
 
