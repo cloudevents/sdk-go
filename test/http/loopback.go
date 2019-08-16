@@ -21,7 +21,7 @@ import (
 // Client is a set to binary or
 
 func AlwaysThen(then time.Time) client.EventDefaulter {
-	return func(event cloudevents.Event) cloudevents.Event {
+	return func(ctx context.Context, event cloudevents.Event) cloudevents.Event {
 		if event.Context != nil {
 			switch event.Context.GetSpecVersion() {
 			case "0.1":
