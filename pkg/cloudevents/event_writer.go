@@ -63,8 +63,8 @@ func (e *Event) SetTime(t time.Time) {
 	}
 }
 
-// SetSchemaURL implements EventWriter.SetSchemaURL
-func (e *Event) SetSchemaURL(s string) {
+// SetDataSchema implements EventWriter.SetDataSchema
+func (e *Event) SetDataSchema(s string) {
 	if err := e.Context.SetSchemaURL(s); err != nil {
 		panic(err)
 	}

@@ -115,8 +115,12 @@ func (ec EventContextV01) AsV02() *EventContextV02 {
 
 // AsV03 implements EventContextConverter.AsV03
 func (ec EventContextV01) AsV03() *EventContextV03 {
-	ecv2 := ec.AsV02()
-	return ecv2.AsV03()
+	return ec.AsV02().AsV03()
+}
+
+// AsV04 implements EventContextConverter.AsV04
+func (ec EventContextV01) AsV04() *EventContextV04 {
+	return ec.AsV02().AsV03().AsV04()
 }
 
 // Validate returns errors based on requirements from the CloudEvents spec.

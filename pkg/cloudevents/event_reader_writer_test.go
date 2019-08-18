@@ -412,7 +412,7 @@ func TestEventRW_SchemaURL(t *testing.T) {
 		"nilled v01": {
 			event: func() ce.Event {
 				e := ce.New("0.1")
-				e.SetSchemaURL("should nil")
+				e.SetDataSchema("should nil")
 				return e
 			}(),
 			want: "",
@@ -420,7 +420,7 @@ func TestEventRW_SchemaURL(t *testing.T) {
 		"nilled v02": {
 			event: func() ce.Event {
 				e := ce.New("0.2")
-				e.SetSchemaURL("should nil")
+				e.SetDataSchema("should nil")
 				return e
 			}(),
 			want: "",
@@ -428,7 +428,7 @@ func TestEventRW_SchemaURL(t *testing.T) {
 		"nilled v03": {
 			event: func() ce.Event {
 				e := ce.New("0.3")
-				e.SetSchemaURL("should nil")
+				e.SetDataSchema("should nil")
 				return e
 			}(),
 			want: "",
@@ -446,8 +446,8 @@ func TestEventRW_SchemaURL(t *testing.T) {
 				validateReaderWriter(t, tc, got, err)
 			}()
 
-			tc.event.SetSchemaURL(tc.set)
-			got = tc.event.SchemaURL()
+			tc.event.SetDataSchema(tc.set)
+			got = tc.event.DataSchema()
 		})
 	}
 }

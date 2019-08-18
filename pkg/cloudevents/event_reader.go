@@ -54,8 +54,8 @@ func (e Event) Time() time.Time {
 	return time.Time{}
 }
 
-// SchemaURL implements EventReader.SchemaURL
-func (e Event) SchemaURL() string {
+// DataSchema implements EventReader.DataSchema
+func (e Event) DataSchema() string {
 	if e.Context != nil {
 		return e.Context.GetSchemaURL()
 	}

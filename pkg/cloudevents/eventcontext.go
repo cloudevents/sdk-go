@@ -56,7 +56,7 @@ type EventContextWriter interface {
 	SetID(string) error
 	// SetTime sets the time of the context.
 	SetTime(time time.Time) error
-	// SetSchemaURL sets the schema url of the context.
+	// SetDataSchema sets the schema url of the context.
 	SetSchemaURL(string) error
 	// SetDataContentType sets the data content type of the context.
 	SetDataContentType(string) error
@@ -68,6 +68,8 @@ type EventContextWriter interface {
 	SetExtension(string, interface{}) error
 }
 
+// EventContextConverter are the methods that allow for event version
+// conversion.
 type EventContextConverter interface {
 	// AsV01 provides a translation from whatever the "native" encoding of the
 	// CloudEvent was to the equivalent in v0.1 field names, moving fields to or
@@ -83,6 +85,11 @@ type EventContextConverter interface {
 	// CloudEvent was to the equivalent in v0.3 field names, moving fields to or
 	// from extensions as necessary.
 	AsV03() *EventContextV03
+
+	// AsV04 provides a translation from whatever the "native" encoding of the
+	// CloudEvent was to the equivalent in v0.4 field names, moving fields to or
+	// from extensions as necessary.
+	AsV04() *EventContextV04
 }
 
 // EventContext is conical interface for a CloudEvents Context.

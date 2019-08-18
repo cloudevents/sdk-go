@@ -85,8 +85,8 @@ func (c Codec) toAttributes(e cloudevents.Event) (map[string]string, error) {
 		t := types.Timestamp{Time: e.Time()} // TODO: change e.Time() to return string so I don't have to do this.
 		a[prefix+"time"] = t.String()
 	}
-	if e.SchemaURL() != "" {
-		a[prefix+"schemaurl"] = e.SchemaURL()
+	if e.DataSchema() != "" {
+		a[prefix+"schemaurl"] = e.DataSchema()
 	}
 
 	if e.DataContentType() != "" {

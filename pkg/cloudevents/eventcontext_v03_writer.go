@@ -81,7 +81,7 @@ func (ec *EventContextV03) SetTime(t time.Time) error {
 	return nil
 }
 
-// SetSchemaURL implements EventContextWriter.SetSchemaURL
+// SetDataSchema implements EventContextWriter.SetDataSchema
 func (ec *EventContextV03) SetSchemaURL(u string) error {
 	u = strings.TrimSpace(u)
 	if u == "" {

@@ -109,8 +109,8 @@ func (c Codec) toHeaders(e cloudevents.Event) (map[string]interface{}, error) {
 	if e.DataContentEncoding() != "" {
 		h[prefix+"datacontentencoding"] = e.DataContentEncoding()
 	}
-	if e.SchemaURL() != "" {
-		h[prefix+"schemaurl"] = e.SchemaURL()
+	if e.DataSchema() != "" {
+		h[prefix+"schemaurl"] = e.DataSchema()
 	}
 
 	for k, v := range e.Extensions() {
