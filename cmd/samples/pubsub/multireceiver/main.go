@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
@@ -33,9 +34,7 @@ gcloud pubsub subscriptions pull --auto-ack foo
 type envConfig struct {
 	ProjectID string `envconfig:"GOOGLE_CLOUD_PROJECT"`
 
-	TopicID string `envconfig:"PUBSUB_TOPIC" default:"demo_cloudevents" required:"true"`
-
-	SubscriptionID string `envconfig:"PUBSUB_SUBSCRIPTION" default:"foo" required:"true"`
+	SubscriptionIDs string `envconfig:"PUBSUB_SUBSCRIPTIONS" default:"foo" required:"true"`
 }
 
 type Example struct {
@@ -67,10 +66,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	t, err := cepubsub.New(context.Background(),
-		cepubsub.WithProjectID(env.ProjectID),
-		cepubsub.WithTopicID(env.TopicID),
-		cepubsub.WithSubscriptionID(env.SubscriptionID))
+	var opts []cepubsub.Option
+	opts = append(opts, cepubsub.WithProjectID(env.ProjectID))
+	for _, subscription := range strings.Split(env.SubscriptionIDs, ",") {
+		opts = append(opts, cepubsub.WithSubscriptionID(subscription))
+	}
+
+	t, err := cepubsub.New(context.Background(), opts...)
 	if err != nil {
 		log.Fatalf("failed to create pubsub transport, %s", err.Error())
 	}
