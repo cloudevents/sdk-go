@@ -30,6 +30,28 @@ func TargetFrom(ctx context.Context) *url.URL {
 	return nil
 }
 
+// Opaque key type used to store topic
+type topicKeyType struct{}
+
+var topicKey = topicKeyType{}
+
+// WithTopic returns back a new context with the given topic. Topic is intended to be transport dependent.
+// For pubsub transport, `topic` should be a Pub/Sub Topic ID.
+func WithTopic(ctx context.Context, topic string) context.Context {
+	return context.WithValue(ctx, topicKey, topic)
+}
+
+// TopicFrom looks in the given context and returns `topic` as a string if found and valid, otherwise "".
+func TopicFrom(ctx context.Context) string {
+	c := ctx.Value(topicKey)
+	if c != nil {
+		if s, ok := c.(string); ok {
+			return s
+		}
+	}
+	return ""
+}
+
 // Opaque key type used to store encoding
 type encodingKeyType struct{}
 

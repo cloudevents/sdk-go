@@ -10,9 +10,16 @@ import (
 	"github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/pubsub"
+	pscontext "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/pubsub/context"
 	"github.com/google/uuid"
 	"github.com/kelseyhightower/envconfig"
 )
+
+/*
+
+curl -X POST -H "Content-Type: application/json"  -d '{"id":123,"message":"hello world"}' http://localhost:8080
+
+*/
 
 type envConfig struct {
 	ProjectID      string `envconfig:"GOOGLE_CLOUD_PROJECT"`
@@ -44,7 +51,7 @@ func convert(ctx context.Context, m transport.Message, err error) (*cloudevents.
 	log.Printf("trying to recover from %v", err)
 
 	if msg, ok := m.(*pubsub.Message); ok {
-		tx := pubsub.TransportContextFrom(ctx)
+		tx := pscontext.TransportContextFrom(ctx)
 		// Make a new event and convert the message payload.
 		event := cloudevents.NewEvent()
 		event.SetSource("github.com/cloudevents/cmd/samples/pubsub/converter/receiver")
@@ -82,9 +89,3 @@ func main() {
 	log.Printf("will listen on %s/%s\n", env.TopicID, env.SubscriptionID)
 	log.Fatalf("failed to start receiver: %s", c.StartReceiver(ctx, gotEvent))
 }
-
-/*
-
-curl -X POST -H "Content-Type: application/json"  -d '{"id":123,"message":"hello world"}' http://localhost:8080
-
-*/
