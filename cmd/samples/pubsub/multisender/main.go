@@ -10,8 +10,20 @@ import (
 
 	"github.com/cloudevents/sdk-go"
 	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
-	cloudeventspubsub "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/pubsub"
+	cepubsub "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/pubsub"
 )
+
+/*
+
+gcloud pubsub topics create ce1
+gcloud pubsub topics create ce2
+gcloud pubsub topics create ce3
+
+gcloud pubsub subscriptions create ce1_sub --topic=ce1
+gcloud pubsub subscriptions create ce2_sub --topic=ce2
+gcloud pubsub subscriptions create ce3_sub --topic=ce3
+
+*/
 
 type envConfig struct {
 	ProjectID string `envconfig:"GOOGLE_CLOUD_PROJECT" required:"true"`
@@ -32,8 +44,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	t, err := cloudeventspubsub.New(context.Background(),
-		cloudeventspubsub.WithProjectID(env.ProjectID))
+	t, err := cepubsub.New(context.Background(),
+		cepubsub.WithProjectID(env.ProjectID))
 	if err != nil {
 		log.Printf("failed to create pubsub transport, %s", err.Error())
 		os.Exit(1)
@@ -64,14 +76,3 @@ func main() {
 
 	os.Exit(0)
 }
-
-/*
-gcloud pubsub topics create ce1
-gcloud pubsub topics create ce2
-gcloud pubsub topics create ce3
-
-gcloud pubsub subscriptions create ce1_sub --topic=ce1
-gcloud pubsub subscriptions create ce2_sub --topic=ce2
-gcloud pubsub subscriptions create ce3_sub --topic=ce3
-
-*/

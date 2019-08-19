@@ -13,6 +13,23 @@ import (
 	"github.com/kelseyhightower/envconfig"
 )
 
+/*
+
+To setup:
+
+gcloud pubsub topics create demo_cloudevents
+gcloud pubsub subscriptions create foo --topic=demo_cloudevents
+
+To test:
+
+gcloud pubsub topics publish demo_cloudevents --message='{"Hello": "world"}'
+
+To fix a bad message:
+
+gcloud pubsub subscriptions pull --auto-ack foo
+
+*/
+
 type envConfig struct {
 	ProjectID string `envconfig:"GOOGLE_CLOUD_PROJECT"`
 
@@ -68,20 +85,3 @@ func main() {
 		log.Fatalf("failed to start pubsub receiver, %s", err.Error())
 	}
 }
-
-/*
-
-To setup:
-
-gcloud pubsub topics create demo_cloudevents
-gcloud pubsub subscriptions create foo --topic=demo_cloudevents
-
-To test:
-
-gcloud pubsub topics publish demo_cloudevents --message='{"Hello": "world"}'
-
-To fix a bad message:
-
-gcloud pubsub subscriptions pull --auto-ack foo
-
-*/

@@ -15,6 +15,12 @@ import (
 	"github.com/kelseyhightower/envconfig"
 )
 
+/*
+
+curl -X POST -H "Content-Type: application/json"  -d '{"id":123,"message":"hello world"}' http://localhost:8080
+
+*/
+
 type envConfig struct {
 	ProjectID      string `envconfig:"GOOGLE_CLOUD_PROJECT"`
 	TopicID        string `envconfig:"PUBSUB_TOPIC" default:"demo_cloudevents" required:"true"`
@@ -83,9 +89,3 @@ func main() {
 	log.Printf("will listen on %s/%s\n", env.TopicID, env.SubscriptionID)
 	log.Fatalf("failed to start receiver: %s", c.StartReceiver(ctx, gotEvent))
 }
-
-/*
-
-curl -X POST -H "Content-Type: application/json"  -d '{"id":123,"message":"hello world"}' http://localhost:8080
-
-*/
