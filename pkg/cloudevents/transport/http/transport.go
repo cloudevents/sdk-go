@@ -483,7 +483,7 @@ func (t *Transport) obsInvokeReceiver(ctx context.Context, event cloudevents.Eve
 
 		err := t.Receiver.Receive(ctx, event, &eventResp)
 		if err != nil {
-			logger.Warnw("got an error from receiver fn: %s", zap.Error(err))
+			logger.Warnw("got an error from receiver fn", zap.Error(err))
 			resp.StatusCode = http.StatusInternalServerError
 			return &resp, err
 		}
