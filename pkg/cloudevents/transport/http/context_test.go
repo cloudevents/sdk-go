@@ -212,9 +212,11 @@ func TestNewTransportResponseContext(t *testing.T) {
 		wantStr string
 	}{
 		"nil response": {
-			want: http.TransportResponseContext{},
+			want: http.TransportResponseContext{
+				StatusCode: nethttp.StatusInternalServerError,
+			},
 			wantStr: `Transport Response Context,
-  nil
+  StatusCode: 500
 `,
 		},
 		"full response": {

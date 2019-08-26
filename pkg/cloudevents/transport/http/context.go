@@ -39,18 +39,17 @@ func NewTransportContext(req *http.Request) TransportContext {
 }
 
 // NewTransportResponseContext creates a new TransportResponseContext from a http.Response.
+// If `res` is nil, it returns a context with a http.StatusInternalServerError status code.
 func NewTransportResponseContext(res *http.Response) TransportResponseContext {
 	var tx *TransportResponseContext
 	if res != nil {
 		tx = &TransportResponseContext{
 			Header:     res.Header,
 			StatusCode: res.StatusCode,
-			// TODO add more stuff as needed.
 		}
 	} else {
-		tx = &TransportResponseContext{}
+		tx = &TransportResponseContext{StatusCode: http.StatusInternalServerError}
 	}
-	// TODO ignore header prefixes.
 	return *tx
 }
 
@@ -126,9 +125,8 @@ func (tx TransportResponseContext) String() string {
 
 	empty := b.Len()
 
-	if tx.StatusCode != 0 {
-		b.WriteString("  StatusCode: " + strconv.Itoa(tx.StatusCode) + "\n")
-	}
+	b.WriteString("  StatusCode: " + strconv.Itoa(tx.StatusCode) + "\n")
+
 	if tx.Header != nil && len(tx.Header) > 0 {
 		b.WriteString("  Header:\n")
 		for k := range tx.Header {
