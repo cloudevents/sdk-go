@@ -1,13 +1,15 @@
 package json_test
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"testing"
+	"time"
+
 	cej "github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec/json"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"github.com/google/go-cmp/cmp"
-	"testing"
-	"time"
 )
 
 type DataExample struct {
@@ -124,7 +126,7 @@ func TestCodecDecode(t *testing.T) {
 		t.Run(n, func(t *testing.T) {
 			got, _ := types.Allocate(tc.want)
 
-			err := cej.Decode(tc.in, got)
+			err := cej.Decode(context.TODO(), tc.in, got)
 			if tc.wantErr != "" || err != nil {
 				var gotErr string
 				if err != nil {
@@ -228,7 +230,7 @@ func TestCodecEncode(t *testing.T) {
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
-			got, err := cej.Encode(tc.in)
+			got, err := cej.Encode(context.TODO(), tc.in)
 			if tc.wantErr != "" || err != nil {
 				var gotErr string
 				if err != nil {

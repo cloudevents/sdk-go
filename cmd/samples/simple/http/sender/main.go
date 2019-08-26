@@ -3,15 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
-	cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"log"
-)
 
-var source = types.ParseURLRef("https://github.com/cloudevents/sdk-go/cmd/samples/sender")
+	"github.com/cloudevents/sdk-go"
+)
 
 // Basic data struct.
 type Example struct {
@@ -20,11 +15,11 @@ type Example struct {
 }
 
 func main() {
-	ctx := cecontext.WithTarget(context.Background(), "http://localhost:8080/")
+	ctx := cloudevents.ContextWithTarget(context.Background(), "http://localhost:8080/")
 
-	ctx = cehttp.ContextWithHeader(ctx, "demo", "header value")
+	ctx = cloudevents.ContextWithHeader(ctx, "demo", "header value")
 
-	c, err := client.NewDefault()
+	c, err := cloudevents.NewDefaultClient()
 	if err != nil {
 		log.Fatalf("failed to create client, %v", err)
 	}
@@ -34,13 +29,21 @@ func main() {
 			Sequence: i,
 			Message:  "Hello, World!",
 		}
-		event := cloudevents.Event{
-			Context: cloudevents.EventContextV02{
-				Type:   "com.cloudevents.sample.sent",
-				Source: *source,
-			}.AsV02(),
-			Data: data,
+
+		var version string
+		switch i % 3 {
+		case 0:
+			version = cloudevents.VersionV01
+		case 1:
+			version = cloudevents.VersionV02
+		case 2:
+			version = cloudevents.VersionV03
 		}
+
+		event := cloudevents.NewEvent(version)
+		event.SetType("com.cloudevents.sample.sent")
+		event.SetSource("https://github.com/cloudevents/sdk-go/cmd/samples/sender")
+		event.Data = data
 
 		if resp, err := c.Send(ctx, event); err != nil {
 			log.Printf("failed to send: %v", err)

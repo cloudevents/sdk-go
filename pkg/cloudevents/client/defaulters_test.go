@@ -1,11 +1,13 @@
 package client
 
 import (
+	"context"
+	"testing"
+	"time"
+
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"github.com/google/go-cmp/cmp"
-	"testing"
-	"time"
 )
 
 func TestDefaultIDToUUIDIfNotSet(t *testing.T) {
@@ -17,17 +19,17 @@ func TestDefaultIDToUUIDIfNotSet(t *testing.T) {
 		},
 		"v0.1 empty": {
 			event: cloudevents.Event{
-				Context: cloudevents.EventContextV01{},
+				Context: &cloudevents.EventContextV01{},
 			},
 		},
 		"v0.2 empty": {
 			event: cloudevents.Event{
-				Context: cloudevents.EventContextV02{},
+				Context: &cloudevents.EventContextV02{},
 			},
 		},
 		"v0.3 empty": {
 			event: cloudevents.Event{
-				Context: cloudevents.EventContextV03{},
+				Context: &cloudevents.EventContextV03{},
 			},
 		},
 		"v0.1 no change": {
@@ -49,7 +51,7 @@ func TestDefaultIDToUUIDIfNotSet(t *testing.T) {
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 
-			got := DefaultIDToUUIDIfNotSet(tc.event)
+			got := DefaultIDToUUIDIfNotSet(context.TODO(), tc.event)
 
 			if got.Context != nil && got.Context.AsV02().ID == "" {
 				t.Errorf("failed to generate an id for event")
@@ -60,10 +62,10 @@ func TestDefaultIDToUUIDIfNotSet(t *testing.T) {
 
 func TestDefaultIDToUUIDIfNotSetImmutable(t *testing.T) {
 	event := cloudevents.Event{
-		Context: cloudevents.EventContextV01{},
+		Context: &cloudevents.EventContextV01{},
 	}
 
-	got := DefaultIDToUUIDIfNotSet(event)
+	got := DefaultIDToUUIDIfNotSet(context.TODO(), event)
 
 	want := "0.1"
 
@@ -89,17 +91,17 @@ func TestDefaultTimeToNowIfNotSet(t *testing.T) {
 		},
 		"v0.1 empty": {
 			event: cloudevents.Event{
-				Context: cloudevents.EventContextV01{},
+				Context: &cloudevents.EventContextV01{},
 			},
 		},
 		"v0.2 empty": {
 			event: cloudevents.Event{
-				Context: cloudevents.EventContextV02{},
+				Context: &cloudevents.EventContextV02{},
 			},
 		},
 		"v0.3 empty": {
 			event: cloudevents.Event{
-				Context: cloudevents.EventContextV03{},
+				Context: &cloudevents.EventContextV03{},
 			},
 		},
 		"v0.1 no change": {
@@ -121,7 +123,7 @@ func TestDefaultTimeToNowIfNotSet(t *testing.T) {
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 
-			got := DefaultTimeToNowIfNotSet(tc.event)
+			got := DefaultTimeToNowIfNotSet(context.TODO(), tc.event)
 
 			if got.Context != nil && got.Context.AsV02().Time.IsZero() {
 				t.Errorf("failed to generate time for event")
@@ -132,10 +134,10 @@ func TestDefaultTimeToNowIfNotSet(t *testing.T) {
 
 func TestDefaultTimeToNowIfNotSetImmutable(t *testing.T) {
 	event := cloudevents.Event{
-		Context: cloudevents.EventContextV01{},
+		Context: &cloudevents.EventContextV01{},
 	}
 
-	got := DefaultTimeToNowIfNotSet(event)
+	got := DefaultTimeToNowIfNotSet(context.TODO(), event)
 
 	want := "0.1"
 

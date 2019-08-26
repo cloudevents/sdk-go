@@ -1,12 +1,14 @@
 package datacodec_test
 
 import (
+	"context"
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"github.com/google/go-cmp/cmp"
-	"strings"
-	"testing"
 )
 
 type Example struct {
@@ -45,7 +47,7 @@ func TestCodecDecode(t *testing.T) {
 		"custom content type": {
 			contentType: "unit/testing",
 			in:          []byte("Hello, Testing"),
-			decoder: func(in, out interface{}) error {
+			decoder: func(ctx context.Context, in, out interface{}) error {
 				if b, ok := in.([]byte); ok {
 					if s, k := out.(*map[string]string); k {
 						if (*s) == nil {
@@ -65,7 +67,7 @@ func TestCodecDecode(t *testing.T) {
 		"custom content type error": {
 			contentType: "unit/testing",
 			in:          []byte("Hello, Testing"),
-			decoder: func(in, out interface{}) error {
+			decoder: func(ctx context.Context, in, out interface{}) error {
 				return fmt.Errorf("expecting unit test error")
 			},
 			wantErr: "expecting unit test error",
@@ -80,7 +82,7 @@ func TestCodecDecode(t *testing.T) {
 
 			got, _ := types.Allocate(tc.want)
 
-			err := datacodec.Decode(tc.contentType, tc.in, got)
+			err := datacodec.Decode(context.TODO(), tc.contentType, tc.in, got)
 
 			if tc.wantErr != "" || err != nil {
 				if diff := cmp.Diff(tc.wantErr, err.Error()); diff != "" {
@@ -132,7 +134,7 @@ func TestCodecEncode(t *testing.T) {
 				"Hello,",
 				"Testing",
 			},
-			encoder: func(in interface{}) ([]byte, error) {
+			encoder: func(ctx context.Context, in interface{}) ([]byte, error) {
 				if s, ok := in.([]string); ok {
 					sb := strings.Builder{}
 					for _, v := range s {
@@ -150,7 +152,7 @@ func TestCodecEncode(t *testing.T) {
 		"custom content type error": {
 			contentType: "unit/testing",
 			in:          []byte("Hello, Testing"),
-			encoder: func(in interface{}) ([]byte, error) {
+			encoder: func(ctx context.Context, in interface{}) ([]byte, error) {
 				return nil, fmt.Errorf("expecting unit test error")
 			},
 			wantErr: "expecting unit test error",
@@ -163,7 +165,7 @@ func TestCodecEncode(t *testing.T) {
 				datacodec.AddEncoder(tc.contentType, tc.encoder)
 			}
 
-			got, err := datacodec.Encode(tc.contentType, tc.in)
+			got, err := datacodec.Encode(context.TODO(), tc.contentType, tc.in)
 
 			if tc.wantErr != "" || err != nil {
 				if diff := cmp.Diff(tc.wantErr, err.Error()); diff != "" {

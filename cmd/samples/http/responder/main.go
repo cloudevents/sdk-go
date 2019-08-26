@@ -3,14 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
-	"github.com/kelseyhightower/envconfig"
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/cloudevents/sdk-go"
+	"github.com/kelseyhightower/envconfig"
 )
 
 type envConfig struct {
@@ -40,13 +38,13 @@ func gotEvent(ctx context.Context, event cloudevents.Event, resp *cloudevents.Ev
 		fmt.Printf("Got Data Error: %s\n", err.Error())
 	}
 	fmt.Printf("Got Data: %+v\n", data)
-	fmt.Printf("Got Transport Context: %+v\n", cehttp.TransportContextFrom(ctx))
+	fmt.Printf("Got Transport Context: %+v\n", cloudevents.HTTPTransportContextFrom(ctx))
 	fmt.Printf("----------------------------\n")
 
 	if data.Sequence%3 == 0 {
 		r := cloudevents.Event{
 			Context: cloudevents.EventContextV02{
-				Source: *types.ParseURLRef("/mod3"),
+				Source: *cloudevents.ParseURLRef("/mod3"),
 				Type:   "samples.http.mod3",
 			}.AsV02(),
 			Data: Example{
@@ -55,7 +53,7 @@ func gotEvent(ctx context.Context, event cloudevents.Event, resp *cloudevents.Ev
 			},
 		}
 		resp.RespondWith(200, &r)
-		resp.Context = &cehttp.TransportResponseContext{
+		resp.Context = &cloudevents.HTTPTransportResponseContext{
 			Header: func() http.Header {
 				h := http.Header{}
 				h.Set("sample", "magic header")
@@ -72,16 +70,16 @@ func gotEvent(ctx context.Context, event cloudevents.Event, resp *cloudevents.Ev
 func _main(args []string, env envConfig) int {
 	ctx := context.Background()
 
-	t, err := cehttp.New(
-		cehttp.WithPort(env.Port),
-		cehttp.WithPath(env.Path),
+	t, err := cloudevents.NewHTTPTransport(
+		cloudevents.WithPort(env.Port),
+		cloudevents.WithPath(env.Path),
 	)
 	if err != nil {
 		log.Fatalf("failed to create transport: %s", err.Error())
 	}
-	c, err := client.New(t,
-		client.WithUUIDs(),
-		client.WithTimeNow(),
+	c, err := cloudevents.NewClient(t,
+		cloudevents.WithUUIDs(),
+		cloudevents.WithTimeNow(),
 	)
 	if err != nil {
 		log.Fatalf("failed to create client: %s", err.Error())

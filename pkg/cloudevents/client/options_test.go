@@ -1,24 +1,26 @@
 package client
 
 import (
+	"context"
+	"testing"
+
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/google/go-cmp/cmp"
-	"testing"
 )
 
 func TestWithEventDefaulter(t *testing.T) {
 
-	v1 := func(event cloudevents.Event) cloudevents.Event {
+	v1 := func(ctx context.Context, event cloudevents.Event) cloudevents.Event {
 		event.Context = event.Context.AsV01()
 		return event
 	}
 
-	v2 := func(event cloudevents.Event) cloudevents.Event {
+	v2 := func(ctx context.Context, event cloudevents.Event) cloudevents.Event {
 		event.Context = event.Context.AsV02()
 		return event
 	}
 
-	v3 := func(event cloudevents.Event) cloudevents.Event {
+	v3 := func(ctx context.Context, event cloudevents.Event) cloudevents.Event {
 		event.Context = event.Context.AsV03()
 		return event
 	}

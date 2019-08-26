@@ -1,11 +1,12 @@
 package cloudevents_test
 
 import (
+	"testing"
+	"time"
+
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"github.com/google/go-cmp/cmp"
-	"testing"
-	"time"
 )
 
 func TestContextAsV01(t *testing.T) {
@@ -13,13 +14,13 @@ func TestContextAsV01(t *testing.T) {
 
 	testCases := map[string]struct {
 		event ce.Event
-		want  ce.EventContextV01
+		want  *ce.EventContextV01
 	}{
 		"empty, no conversion": {
 			event: ce.Event{
-				Context: ce.EventContextV01{},
+				Context: &ce.EventContextV01{},
 			},
-			want: ce.EventContextV01{
+			want: &ce.EventContextV01{
 				CloudEventsVersion: "0.1",
 			},
 		},
@@ -77,13 +78,13 @@ func TestContextAsV02(t *testing.T) {
 
 	testCases := map[string]struct {
 		event ce.Event
-		want  ce.EventContextV02
+		want  *ce.EventContextV02
 	}{
 		"empty, no conversion": {
 			event: ce.Event{
-				Context: ce.EventContextV02{},
+				Context: &ce.EventContextV02{},
 			},
-			want: ce.EventContextV02{
+			want: &ce.EventContextV02{
 				SpecVersion: "0.2",
 			},
 		},
@@ -141,13 +142,13 @@ func TestContextAsV03(t *testing.T) {
 
 	testCases := map[string]struct {
 		event ce.Event
-		want  ce.EventContextV03
+		want  *ce.EventContextV03
 	}{
 		"empty, no conversion": {
 			event: ce.Event{
-				Context: ce.EventContextV02{},
+				Context: &ce.EventContextV02{},
 			},
-			want: ce.EventContextV03{
+			want: &ce.EventContextV03{
 				SpecVersion: "0.3",
 			},
 		},

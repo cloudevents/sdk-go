@@ -1,14 +1,16 @@
 package xml_test
 
 import (
+	"context"
 	"encoding/xml"
 	"fmt"
-	cex "github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec/xml"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
-	"github.com/google/go-cmp/cmp"
 	"strings"
 	"testing"
 	"time"
+
+	cex "github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec/xml"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/google/go-cmp/cmp"
 )
 
 type DataExample struct {
@@ -102,7 +104,7 @@ func TestCodecDecode(t *testing.T) {
 
 			got, _ := types.Allocate(tc.want)
 
-			err := cex.Decode(tc.in, got)
+			err := cex.Decode(context.TODO(), tc.in, got)
 
 			if tc.wantErr != "" {
 				if err != nil {

@@ -3,16 +3,17 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
+	"net/url"
+	"os"
+	"time"
+
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	cloudeventsnats "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/nats"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"github.com/google/uuid"
 	"github.com/kelseyhightower/envconfig"
-	"log"
-	"net/url"
-	"os"
-	"time"
 )
 
 const (

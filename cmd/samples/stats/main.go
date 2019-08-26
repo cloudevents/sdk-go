@@ -3,25 +3,28 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/codec"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec/json"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec/xml"
-	"go.opencensus.io/examples/exporter"
-	"go.opencensus.io/trace"
-	"go.opencensus.io/zpages"
 	"log"
 	"math/rand"
 	"net/http"
 	"time"
+
+	"go.opencensus.io/examples/exporter"
+	"go.opencensus.io/trace"
+	"go.opencensus.io/zpages"
+
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec/json"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec/xml"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
+
+	"contrib.go.opencensus.io/exporter/prometheus"
+	"go.opencensus.io/stats/view"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	transporthttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
-	"go.opencensus.io/exporter/prometheus"
-	"go.opencensus.io/stats/view"
 )
 
 func main() {
@@ -31,6 +34,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to create client, %v", err)
 	}
+
+	// Uncomment the following to see that tracing can be disabled.
+	observability.EnableTracing(false)
 
 	go mainSender()
 	go mainMetrics()
@@ -120,7 +126,7 @@ func mainMetrics() {
 	if err := view.Register(
 		client.LatencyView,
 		transporthttp.LatencyView,
-		codec.LatencyView,
+		cloudevents.EventMarshalLatencyView,
 		json.LatencyView,
 		xml.LatencyView,
 		datacodec.LatencyView,
