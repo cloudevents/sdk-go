@@ -87,7 +87,7 @@ func mainSender() {
 				Data: data,
 			}
 
-			if resp, err := c.Send(ctx, event); err != nil {
+			if _, resp, err := c.Send(ctx, event); err != nil {
 				log.Printf("failed to send: %v", err)
 			} else if resp != nil {
 				fmt.Printf("got back a response event of type %s", resp.Context.GetType())

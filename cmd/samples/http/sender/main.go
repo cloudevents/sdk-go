@@ -84,7 +84,7 @@ func _main(args []string, env envConfig) int {
 					},
 				}
 
-				if resp, err := c.Send(ctx, event); err != nil {
+				if _, resp, err := c.Send(ctx, event); err != nil {
 					log.Printf("failed to send: %v", err)
 				} else if resp != nil {
 					fmt.Printf("Response:\n%s\n", resp)

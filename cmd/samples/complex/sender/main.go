@@ -63,7 +63,7 @@ type Example struct {
 	Message  string `json:"message"`
 }
 
-func (d *Demo) Send() (*cloudevents.Event, error) {
+func (d *Demo) Send() (context.Context, *cloudevents.Event, error) {
 	event := cloudevents.Event{
 		Context: d.context(),
 		Data: &Example{
