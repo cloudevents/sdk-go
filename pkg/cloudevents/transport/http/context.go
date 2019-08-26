@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 )
 
@@ -37,10 +38,27 @@ func NewTransportContext(req *http.Request) TransportContext {
 	return *tx
 }
 
+// NewTransportResponseContext creates a new TransportResponseContext from a http.Response.
+func NewTransportResponseContext(res *http.Response) TransportResponseContext {
+	var tx *TransportResponseContext
+	if res != nil {
+		tx = &TransportResponseContext{
+			Header:     res.Header,
+			StatusCode: res.StatusCode,
+			// TODO add more stuff as needed.
+		}
+	} else {
+		tx = &TransportResponseContext{}
+	}
+	// TODO ignore header prefixes.
+	return *tx
+}
+
 // TransportResponseContext allows a Receiver response with http transport specific fields.
 type TransportResponseContext struct {
 	// Header will be merged with the response headers.
-	Header http.Header
+	Header     http.Header
+	StatusCode int
 }
 
 // AttendToHeaders returns the list of headers that exist in the TransportContext that are not currently in
@@ -89,6 +107,31 @@ func (tx TransportContext) String() string {
 	if tx.Header != nil && len(tx.Header) > 0 {
 		b.WriteString("  Header:\n")
 		for _, k := range tx.AttendToHeaders() {
+			b.WriteString(fmt.Sprintf("    %s: %s\n", k, tx.Header.Get(k)))
+		}
+	}
+
+	if b.Len() == empty {
+		b.WriteString("  nil\n")
+	}
+
+	return b.String()
+}
+
+// String generates a pretty-printed version of the resource as a string.
+func (tx TransportResponseContext) String() string {
+	b := strings.Builder{}
+
+	b.WriteString("Transport Response Context,\n")
+
+	empty := b.Len()
+
+	if tx.StatusCode != 0 {
+		b.WriteString("  StatusCode: " + strconv.Itoa(tx.StatusCode) + "\n")
+	}
+	if tx.Header != nil && len(tx.Header) > 0 {
+		b.WriteString("  Header:\n")
+		for k := range tx.Header {
 			b.WriteString(fmt.Sprintf("    %s: %s\n", k, tx.Header.Get(k)))
 		}
 	}
