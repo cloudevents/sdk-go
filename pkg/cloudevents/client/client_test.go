@@ -4,10 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -15,6 +11,11 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+	cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 
 	"github.com/google/go-cmp/cmp"
 )
@@ -262,7 +263,7 @@ func TestClientSend(t *testing.T) {
 				return
 			} else {
 				if err != nil {
-					t.Fatalf("failed to send event %s", err)
+					t.Fatalf("failed to send event: %s", err)
 				}
 			}
 
@@ -458,9 +459,6 @@ func TestClientReceive(t *testing.T) {
 			},
 		},
 	}
-
-	type startFn func(events chan cloudevents.Event, opts ...client.Option) (context.Context, client.Client, error)
-
 	for n, tc := range testCases {
 		for _, path := range []string{"", "/", "/unittest/"} {
 			t.Run(n+" at path "+path, func(t *testing.T) {
@@ -597,12 +595,12 @@ func (f *fakeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(f.response.StatusCode)
 		var buf bytes.Buffer
 		if f.response.ContentLength > 0 {
-			buf.ReadFrom(f.response.Body)
-			w.Write(buf.Bytes())
+			_, _ = buf.ReadFrom(f.response.Body)
+			_, _ = w.Write(buf.Bytes())
 		}
 	} else {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(""))
+		_, _ = w.Write([]byte(""))
 	}
 }
 

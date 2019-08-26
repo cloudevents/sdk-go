@@ -1,13 +1,14 @@
 package cloudevents_test
 
 import (
-	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
-	"github.com/google/go-cmp/cmp"
 	"net/url"
 	"strings"
 	"testing"
 	"time"
+
+	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestValidateV01(t *testing.T) {
@@ -194,7 +195,7 @@ func TestGetMediaTypeV01(t *testing.T) {
 			if tc.t != "" {
 				ec.ContentType = &tc.t
 			}
-			got := ec.GetDataMediaType()
+			got, _ := ec.GetDataMediaType()
 
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("unexpected  (-want, +got) = %v", diff)

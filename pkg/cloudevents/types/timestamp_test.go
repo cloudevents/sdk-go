@@ -2,11 +2,12 @@ package types_test
 
 import (
 	"encoding/xml"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
-	"github.com/google/go-cmp/cmp"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestParseTimestamp(t *testing.T) {

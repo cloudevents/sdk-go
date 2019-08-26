@@ -1,9 +1,10 @@
 package cloudevents_test
 
 import (
+	"testing"
+
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/google/go-cmp/cmp"
-	"testing"
 )
 
 func TestStringOfApplicationJSON(t *testing.T) {

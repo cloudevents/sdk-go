@@ -1,14 +1,17 @@
 package http
 
 import (
+	"context"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
+	"net"
 	"net/http"
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 func TestWithTarget(t *testing.T) {
@@ -351,6 +354,55 @@ func TestWithPort(t *testing.T) {
 	}
 }
 
+// Force a transport to close its server/listener by cancelling StartReceiver
+func forceClose(tr *Transport) {
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() { _ = tr.StartReceiver(ctx) }()
+	cancel()
+}
+
+func TestWithPort0(t *testing.T) {
+	testCases := map[string]func() (*Transport, error){
+		"WithPort0": func() (*Transport, error) { return New(WithPort(0)) },
+		"SetPort0":  func() (*Transport, error) { return &Transport{Port: new(int)}, nil },
+	}
+	for name, f := range testCases {
+		t.Run(name, func(t *testing.T) {
+			tr, err := f()
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer func() { forceClose(tr) }()
+			port := tr.GetPort()
+			if port <= 0 {
+				t.Error("no dynamic port")
+			}
+			if d := cmp.Diff(port, *tr.Port); d != "" {
+				t.Error(d)
+			}
+		})
+	}
+}
+
+func TestWithListener(t *testing.T) {
+	l, err := net.Listen("tcp", ":0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	tr, err := New(WithListener(l))
+	defer func() { forceClose(tr) }()
+	if err != nil {
+		t.Fatal(err)
+	}
+	port := tr.GetPort()
+	if port <= 0 {
+		t.Error("no dynamic port")
+	}
+	if d := cmp.Diff(port, l.Addr().(*net.TCPAddr).Port); d != "" {
+		t.Error(d)
+	}
+}
+
 func TestWithPath(t *testing.T) {
 	testCases := map[string]struct {
 		t       *Transport
@@ -446,7 +498,7 @@ func TestWithEncoding(t *testing.T) {
 
 func TestWithDefaultEncodingSelector(t *testing.T) {
 
-	fn := func(e cloudevents.Event) Encoding {
+	fn := func(ctx context.Context, e cloudevents.Event) Encoding {
 		return Default
 	}
 
@@ -625,6 +677,119 @@ func TestWithStructuredEncoding(t *testing.T) {
 				if got != want {
 					t.Errorf("unexpected DefaultEncodingSelectionFn; want: %v; got: %v", want, got)
 				}
+			}
+		})
+	}
+}
+
+func TestWithMiddleware(t *testing.T) {
+	testCases := map[string]struct {
+		t       *Transport
+		wantErr string
+	}{
+		"nil transport": {
+			wantErr: "http middleware option can not set nil transport",
+		},
+		"non-nil transport": {
+			t: &Transport{},
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+			err := tc.t.applyOptions(WithMiddleware(func(next http.Handler) http.Handler {
+				return next
+			}))
+			if tc.wantErr != "" {
+				if err == nil || err.Error() != tc.wantErr {
+					t.Fatalf("Expected error '%s'. Actual '%v'", tc.wantErr, err)
+				}
+			} else if err != nil {
+				t.Fatalf("Unexpected error: %v", err)
+			}
+		})
+	}
+}
+
+func TestWithLongPollTarget(t *testing.T) {
+	testCases := map[string]struct {
+		t       *Transport
+		target  string
+		want    *Transport
+		wantErr string
+	}{
+		"valid url": {
+			t: &Transport{
+				LongPollReq: &http.Request{},
+			},
+			target: "http://localhost:8080/",
+			want: &Transport{
+				LongPollReq: &http.Request{
+					URL: func() *url.URL {
+						u, _ := url.Parse("http://localhost:8080/")
+						return u
+					}(),
+				},
+			},
+		},
+		"valid url, unset req": {
+			t:      &Transport{},
+			target: "http://localhost:8080/",
+			want: &Transport{
+				LongPollReq: &http.Request{
+					Method: http.MethodGet,
+					URL: func() *url.URL {
+						u, _ := url.Parse("http://localhost:8080/")
+						return u
+					}(),
+				},
+			},
+		},
+		"invalid url": {
+			t: &Transport{
+				LongPollReq: &http.Request{},
+			},
+			target:  "%",
+			wantErr: `http long poll target option failed to parse target url: parse %: invalid URL escape "%"`,
+		},
+		"empty target": {
+			t: &Transport{
+				LongPollReq: &http.Request{},
+			},
+			target:  "",
+			wantErr: `http long poll target option was empty string`,
+		},
+		"whitespace target": {
+			t: &Transport{
+				LongPollReq: &http.Request{},
+			},
+			target:  " \t\n",
+			wantErr: `http long poll target option was empty string`,
+		},
+		"nil transport": {
+			wantErr: `http long poll target option can not set nil transport`,
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+
+			err := tc.t.applyOptions(WithLongPollTarget(tc.target))
+
+			if tc.wantErr != "" || err != nil {
+				var gotErr string
+				if err != nil {
+					gotErr = err.Error()
+				}
+				if diff := cmp.Diff(tc.wantErr, gotErr); diff != "" {
+					t.Errorf("unexpected error (-want, +got) = %v", diff)
+				}
+				return
+			}
+
+			got := tc.t
+
+			if diff := cmp.Diff(tc.want, got,
+				cmpopts.IgnoreUnexported(Transport{}), cmpopts.IgnoreUnexported(http.Request{})); diff != "" {
+				t.Errorf("unexpected (-want, +got) = %v", diff)
 			}
 		})
 	}

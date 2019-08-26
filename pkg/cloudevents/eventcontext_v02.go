@@ -1,11 +1,12 @@
 package cloudevents
 
 import (
+	"encoding/json"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
-	"log"
-	"mime"
+	"sort"
 	"strings"
+
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 )
 
 const (
@@ -32,45 +33,11 @@ type EventContextV02 struct {
 	// TODO: Should an empty string assume `application/json`, `application/octet-stream`, or auto-detect the content?
 	ContentType *string `json:"contenttype,omitempty"`
 	// Additional extension metadata beyond the base spec.
-	Extensions map[string]interface{} `json:"-,omitempty"` // TODO: decide how we want extensions to be inserted
+	Extensions map[string]interface{} `json:"-"`
 }
 
 // Adhere to EventContext
 var _ EventContext = (*EventContextV02)(nil)
-
-// GetSpecVersion implements EventContext.GetSpecVersion
-func (ec EventContextV02) GetSpecVersion() string {
-	if ec.SpecVersion != "" {
-		return ec.SpecVersion
-	}
-	return CloudEventsVersionV02
-}
-
-// GetDataContentType implements EventContext.GetDataContentType
-func (ec EventContextV02) GetDataContentType() string {
-	if ec.ContentType != nil {
-		return *ec.ContentType
-	}
-	return ""
-}
-
-// GetDataMediaType implements EventContext.GetDataMediaType
-func (ec EventContextV02) GetDataMediaType() string {
-	if ec.ContentType != nil {
-		mediaType, _, err := mime.ParseMediaType(*ec.ContentType)
-		if err != nil {
-			log.Printf("failed to parse media type from ContentType: %s", err)
-			return ""
-		}
-		return mediaType
-	}
-	return ""
-}
-
-// GetType implements EventContext.GetType
-func (ec EventContextV02) GetType() string {
-	return ec.Type
-}
 
 // ExtensionAs implements EventContext.ExtensionAs
 func (ec EventContextV02) ExtensionAs(name string, obj interface{}) error {
@@ -78,6 +45,17 @@ func (ec EventContextV02) ExtensionAs(name string, obj interface{}) error {
 	if !ok {
 		return fmt.Errorf("extension %q does not exist", name)
 	}
+
+	// Try to unmarshal extension if we find it as a RawMessage.
+	switch v := value.(type) {
+	case json.RawMessage:
+		if err := json.Unmarshal(v, obj); err == nil {
+			// if that worked, return with obj set.
+			return nil
+		}
+	}
+	// else try as a string ptr.
+
 	// Only support *string for now.
 	switch v := obj.(type) {
 	case *string:
@@ -88,20 +66,30 @@ func (ec EventContextV02) ExtensionAs(name string, obj interface{}) error {
 			return fmt.Errorf("invalid type for extension %q", name)
 		}
 	default:
-		return fmt.Errorf("unkown extension type %T", obj)
+		return fmt.Errorf("unknown extension type %T", obj)
 	}
 }
 
 // SetExtension adds the extension 'name' with value 'value' to the CloudEvents context.
-func (ec *EventContextV02) SetExtension(name string, value interface{}) {
+func (ec *EventContextV02) SetExtension(name string, value interface{}) error {
 	if ec.Extensions == nil {
 		ec.Extensions = make(map[string]interface{})
 	}
-	ec.Extensions[name] = value
+	if value == nil {
+		delete(ec.Extensions, name)
+	} else {
+		ec.Extensions[name] = value
+	}
+	return nil
 }
 
-// AsV01 implements EventContext.AsV01
-func (ec EventContextV02) AsV01() EventContextV01 {
+// Clone implements EventContextConverter.Clone
+func (ec EventContextV02) Clone() EventContext {
+	return ec.AsV02()
+}
+
+// AsV01 implements EventContextConverter.AsV01
+func (ec EventContextV02) AsV01() *EventContextV01 {
 	ret := EventContextV01{
 		CloudEventsVersion: CloudEventsVersionV01,
 		EventID:            ec.ID,
@@ -115,7 +103,7 @@ func (ec EventContextV02) AsV01() EventContextV01 {
 
 	for k, v := range ec.Extensions {
 		// eventTypeVersion was retired in v0.2
-		if strings.EqualFold(k, "eventTypeVersion") {
+		if strings.EqualFold(k, EventTypeVersionKey) {
 			etv, ok := v.(string)
 			if ok && etv != "" {
 				ret.EventTypeVersion = &etv
@@ -127,17 +115,17 @@ func (ec EventContextV02) AsV01() EventContextV01 {
 	if len(ret.Extensions) == 0 {
 		ret.Extensions = nil
 	}
-	return ret
+	return &ret
 }
 
-// AsV02 implements EventContext.AsV02
-func (ec EventContextV02) AsV02() EventContextV02 {
+// AsV02 implements EventContextConverter.AsV02
+func (ec EventContextV02) AsV02() *EventContextV02 {
 	ec.SpecVersion = CloudEventsVersionV02
-	return ec
+	return &ec
 }
 
-// AsV03 implements EventContext.AsV03
-func (ec EventContextV02) AsV03() EventContextV03 {
+// AsV03 implements EventContextConverter.AsV03
+func (ec EventContextV02) AsV03() *EventContextV03 {
 	ret := EventContextV03{
 		SpecVersion:     CloudEventsVersionV03,
 		ID:              ec.ID,
@@ -146,9 +134,33 @@ func (ec EventContextV02) AsV03() EventContextV03 {
 		SchemaURL:       ec.SchemaURL,
 		DataContentType: ec.ContentType,
 		Source:          ec.Source,
-		Extensions:      ec.Extensions,
+		Extensions:      make(map[string]interface{}),
 	}
-	return ret
+
+	for k, v := range ec.Extensions {
+		// Subject was introduced in 0.3
+		if strings.EqualFold(k, SubjectKey) {
+			sub, ok := v.(string)
+			if ok && sub != "" {
+				ret.Subject = &sub
+			}
+			continue
+		}
+		// DataContentEncoding was introduced in 0.3
+		if strings.EqualFold(k, DataContentEncodingKey) {
+			etv, ok := v.(string)
+			if ok && etv != "" {
+				ret.DataContentEncoding = &etv
+			}
+			continue
+		}
+		ret.Extensions[k] = v
+	}
+	if len(ret.Extensions) == 0 {
+		ret.Extensions = nil
+	}
+
+	return &ret
 }
 
 // Validate returns errors based on requirements from the CloudEvents spec.
@@ -236,4 +248,39 @@ func (ec EventContextV02) Validate() error {
 		return fmt.Errorf(strings.Join(errors, "\n"))
 	}
 	return nil
+}
+
+// String returns a pretty-printed representation of the EventContext.
+func (ec EventContextV02) String() string {
+	b := strings.Builder{}
+
+	b.WriteString("Context Attributes,\n")
+
+	b.WriteString("  specversion: " + ec.SpecVersion + "\n")
+	b.WriteString("  type: " + ec.Type + "\n")
+	b.WriteString("  source: " + ec.Source.String() + "\n")
+	b.WriteString("  id: " + ec.ID + "\n")
+	if ec.Time != nil {
+		b.WriteString("  time: " + ec.Time.String() + "\n")
+	}
+	if ec.SchemaURL != nil {
+		b.WriteString("  schemaurl: " + ec.SchemaURL.String() + "\n")
+	}
+	if ec.ContentType != nil {
+		b.WriteString("  contenttype: " + *ec.ContentType + "\n")
+	}
+
+	if ec.Extensions != nil && len(ec.Extensions) > 0 {
+		b.WriteString("Extensions,\n")
+		keys := make([]string, 0, len(ec.Extensions))
+		for k := range ec.Extensions {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, key := range keys {
+			b.WriteString(fmt.Sprintf("  %s: %v\n", key, ec.Extensions[key]))
+		}
+	}
+
+	return b.String()
 }

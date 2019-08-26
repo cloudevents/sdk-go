@@ -2,10 +2,11 @@ package context_test
 
 import (
 	"context"
-	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
-	"github.com/google/go-cmp/cmp"
 	"net/url"
 	"testing"
+
+	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestTargetContext(t *testing.T) {
@@ -42,6 +43,42 @@ func TestTargetContext(t *testing.T) {
 			ctx := cecontext.WithTarget(tc.ctx, tc.target)
 
 			got := cecontext.TargetFrom(ctx)
+
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("unexpected (-want, +got) = %v", diff)
+			}
+		})
+	}
+}
+
+func TestEncodingContext(t *testing.T) {
+	testCases := map[string]struct {
+		encoding string
+		ctx      context.Context
+		want     string
+	}{
+		"nil context": {},
+		"nil context, set encoding": {
+			encoding: "foo",
+			want:     "foo",
+		},
+		"todo context, set encoding": {
+			ctx:      context.TODO(),
+			encoding: "foo",
+			want:     "foo",
+		},
+		"already set encoding": {
+			ctx:      cecontext.WithTarget(context.TODO(), "foo"),
+			encoding: "bar",
+			want:     "bar",
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+
+			ctx := cecontext.WithEncoding(tc.ctx, tc.encoding)
+
+			got := cecontext.EncodingFrom(ctx)
 
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("unexpected (-want, +got) = %v", diff)
