@@ -449,7 +449,7 @@ func httpDo(ctx context.Context, client *http.Client, req *http.Request, fn func
 	}()
 	select {
 	case <-ctx.Done():
-		return context.TODO(), nil, ctx.Err()
+		return ctx, nil, ctx.Err()
 	case ee := <-c:
 		return ee.ctx, ee.event, ee.err
 	}
