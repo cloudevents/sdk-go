@@ -161,6 +161,16 @@ func WithTransportContext(ctx context.Context, tcxt TransportContext) context.Co
 	return context.WithValue(ctx, transportContextKey, tcxt)
 }
 
+// Opaque key type used to store TransportContext
+type transportResponseContextKeyType struct{}
+
+var transportResponseContextKey = transportResponseContextKeyType{}
+
+// WithTransportResponseContext return a context with the given TransportResponseContext into the provided context object.
+func WithTransportResponseContext(ctx context.Context, tcxt TransportResponseContext) context.Context {
+	return context.WithValue(ctx, transportResponseContextKey, tcxt)
+}
+
 // TransportContextFrom pulls a TransportContext out of a context. Always
 // returns a non-nil object.
 func TransportContextFrom(ctx context.Context) TransportContext {
@@ -174,6 +184,21 @@ func TransportContextFrom(ctx context.Context) TransportContext {
 		}
 	}
 	return TransportContext{}
+}
+
+// TransportResponseContextFrom pulls a TransportResponseContext out of a context. Always
+// returns a non-nil object.
+func TransportResponseContextFrom(ctx context.Context) TransportResponseContext {
+	tctx := ctx.Value(transportResponseContextKey)
+	if tctx != nil {
+		if tx, ok := tctx.(TransportResponseContext); ok {
+			return tx
+		}
+		if tx, ok := tctx.(*TransportResponseContext); ok {
+			return *tx
+		}
+	}
+	return TransportResponseContext{}
 }
 
 // Opaque key type used to store Headers

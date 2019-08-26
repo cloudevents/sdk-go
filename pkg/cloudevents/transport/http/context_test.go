@@ -72,6 +72,60 @@ func TestTransportContext(t *testing.T) {
 	}
 }
 
+func TestTransportResponseContext(t *testing.T) {
+	testCases := map[string]struct {
+		t    http.TransportResponseContext
+		ctx  context.Context
+		want http.TransportResponseContext
+	}{
+		"nil context": {},
+		"nil context, set transport response context": {
+			t: http.TransportResponseContext{
+				StatusCode: nethttp.StatusOK,
+			},
+			want: http.TransportResponseContext{
+				StatusCode: nethttp.StatusOK,
+			},
+		},
+		"todo context, set transport response context": {
+			ctx: context.TODO(),
+			t: http.TransportResponseContext{
+				StatusCode: nethttp.StatusOK,
+			},
+			want: http.TransportResponseContext{
+				StatusCode: nethttp.StatusOK,
+			},
+		},
+		"bad transport response context": {
+			ctx: context.TODO(),
+		},
+		"already set transport response context": {
+			ctx: http.WithTransportResponseContext(context.TODO(),
+				http.TransportResponseContext{
+					StatusCode: nethttp.StatusOK,
+				}),
+			t: http.TransportResponseContext{
+				StatusCode: nethttp.StatusOK,
+			},
+			want: http.TransportResponseContext{
+				StatusCode: nethttp.StatusOK,
+			},
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+
+			ctx := http.WithTransportResponseContext(tc.ctx, tc.t)
+
+			got := http.TransportResponseContextFrom(ctx)
+
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("unexpected (-want, +got) = %v", diff)
+			}
+		})
+	}
+}
+
 func TestNewTransportContext(t *testing.T) {
 	testCases := map[string]struct {
 		r       *nethttp.Request
