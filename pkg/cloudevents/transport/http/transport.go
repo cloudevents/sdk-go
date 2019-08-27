@@ -444,8 +444,8 @@ func httpDo(ctx context.Context, client *http.Client, req *http.Request, fn func
 	c := make(chan eventError, 1)
 	req = req.WithContext(ctx)
 	go func() {
-		resCtx, event, err := fn(client.Do(req))
-		c <- eventError{ctx: resCtx, event: event, err: err}
+		rctx, event, err := fn(client.Do(req))
+		c <- eventError{ctx: rctx, event: event, err: err}
 	}()
 	select {
 	case <-ctx.Done():
