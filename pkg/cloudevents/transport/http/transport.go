@@ -190,18 +190,18 @@ func (t *Transport) obsSend(ctx context.Context, event cloudevents.Event) (conte
 	}
 
 	if ok := t.loadCodec(ctx); !ok {
-		return WithTransportResponseContext(ctx, NewTransportResponseContext(nil)), nil, fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
+		return WithTransportContext(ctx, NewTransportContextFromResponse(nil)), nil, fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
 	}
 
 	msg, err := t.codec.Encode(ctx, event)
 	if err != nil {
-		return WithTransportResponseContext(ctx, NewTransportResponseContext(nil)), nil, err
+		return WithTransportContext(ctx, NewTransportContextFromResponse(nil)), nil, err
 	}
 
 	if m, ok := msg.(*Message); ok {
 		m.ToRequest(&req)
 		return httpDo(ctx, t.Client, &req, func(resp *http.Response, err error) (context.Context, *cloudevents.Event, error) {
-			rctx := WithTransportResponseContext(ctx, NewTransportResponseContext(resp))
+			rctx := WithTransportContext(ctx, NewTransportContextFromResponse(resp))
 			if err != nil {
 				return rctx, nil, err
 			}
@@ -229,7 +229,7 @@ func (t *Transport) obsSend(ctx context.Context, event cloudevents.Event) (conte
 			return rctx, respEvent, fmt.Errorf("error sending cloudevent: %s", resp.Status)
 		})
 	}
-	return WithTransportResponseContext(ctx, NewTransportResponseContext(nil)), nil, fmt.Errorf("failed to encode Event into a Message")
+	return WithTransportContext(ctx, NewTransportContextFromResponse(nil)), nil, fmt.Errorf("failed to encode Event into a Message")
 }
 
 func (t *Transport) MessageToEvent(ctx context.Context, msg *Message) (*cloudevents.Event, error) {

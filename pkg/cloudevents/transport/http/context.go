@@ -11,10 +11,11 @@ import (
 
 // TransportContext allows a Receiver to understand the context of a request.
 type TransportContext struct {
-	URI    string
-	Host   string
-	Method string
-	Header http.Header
+	URI        string
+	Host       string
+	Method     string
+	Header     http.Header
+	StatusCode int
 
 	// IgnoreHeaderPrefixes controls what comes back from AttendToHeaders.
 	// AttendToHeaders controls what is output for .String()
@@ -38,26 +39,26 @@ func NewTransportContext(req *http.Request) TransportContext {
 	return *tx
 }
 
-// NewTransportResponseContext creates a new TransportResponseContext from a http.Response.
+// NewTransportContextFromResponse creates a new TransportContext from a http.Response.
 // If `res` is nil, it returns a context with a http.StatusInternalServerError status code.
-func NewTransportResponseContext(res *http.Response) TransportResponseContext {
-	var tx *TransportResponseContext
+func NewTransportContextFromResponse(res *http.Response) TransportContext {
+	var tx *TransportContext
 	if res != nil {
-		tx = &TransportResponseContext{
+		tx = &TransportContext{
 			Header:     res.Header,
 			StatusCode: res.StatusCode,
 		}
 	} else {
-		tx = &TransportResponseContext{StatusCode: http.StatusInternalServerError}
+		tx = &TransportContext{StatusCode: http.StatusInternalServerError}
 	}
+	tx.AddIgnoreHeaderPrefix("accept-encoding", "user-agent", "connection", "content-type")
 	return *tx
 }
 
 // TransportResponseContext allows a Receiver response with http transport specific fields.
 type TransportResponseContext struct {
 	// Header will be merged with the response headers.
-	Header     http.Header
-	StatusCode int
+	Header http.Header
 }
 
 // AttendToHeaders returns the list of headers that exist in the TransportContext that are not currently in
@@ -103,33 +104,13 @@ func (tx TransportContext) String() string {
 		b.WriteString("  Method: " + tx.Method + "\n")
 	}
 
+	if tx.StatusCode != 0 {
+		b.WriteString("  StatusCode: " + strconv.Itoa(tx.StatusCode) + "\n")
+	}
+
 	if tx.Header != nil && len(tx.Header) > 0 {
 		b.WriteString("  Header:\n")
 		for _, k := range tx.AttendToHeaders() {
-			b.WriteString(fmt.Sprintf("    %s: %s\n", k, tx.Header.Get(k)))
-		}
-	}
-
-	if b.Len() == empty {
-		b.WriteString("  nil\n")
-	}
-
-	return b.String()
-}
-
-// String generates a pretty-printed version of the resource as a string.
-func (tx TransportResponseContext) String() string {
-	b := strings.Builder{}
-
-	b.WriteString("Transport Response Context,\n")
-
-	empty := b.Len()
-
-	b.WriteString("  StatusCode: " + strconv.Itoa(tx.StatusCode) + "\n")
-
-	if tx.Header != nil && len(tx.Header) > 0 {
-		b.WriteString("  Header:\n")
-		for k := range tx.Header {
 			b.WriteString(fmt.Sprintf("    %s: %s\n", k, tx.Header.Get(k)))
 		}
 	}
@@ -159,16 +140,6 @@ func WithTransportContext(ctx context.Context, tcxt TransportContext) context.Co
 	return context.WithValue(ctx, transportContextKey, tcxt)
 }
 
-// Opaque key type used to store TransportContext
-type transportResponseContextKeyType struct{}
-
-var transportResponseContextKey = transportResponseContextKeyType{}
-
-// WithTransportResponseContext return a context with the given TransportResponseContext into the provided context object.
-func WithTransportResponseContext(ctx context.Context, tcxt TransportResponseContext) context.Context {
-	return context.WithValue(ctx, transportResponseContextKey, tcxt)
-}
-
 // TransportContextFrom pulls a TransportContext out of a context. Always
 // returns a non-nil object.
 func TransportContextFrom(ctx context.Context) TransportContext {
@@ -182,21 +153,6 @@ func TransportContextFrom(ctx context.Context) TransportContext {
 		}
 	}
 	return TransportContext{}
-}
-
-// TransportResponseContextFrom pulls a TransportResponseContext out of a context. Always
-// returns a non-nil object.
-func TransportResponseContextFrom(ctx context.Context) TransportResponseContext {
-	tctx := ctx.Value(transportResponseContextKey)
-	if tctx != nil {
-		if tx, ok := tctx.(TransportResponseContext); ok {
-			return tx
-		}
-		if tx, ok := tctx.(*TransportResponseContext); ok {
-			return *tx
-		}
-	}
-	return TransportResponseContext{}
 }
 
 // Opaque key type used to store Headers

@@ -136,7 +136,6 @@ var (
 
 	// HTTP Context
 
-	HTTPTransportContextFrom         = http.TransportContextFrom
-	HTTPTransportResponseContextFrom = http.TransportResponseContextFrom
-	ContextWithHeader                = http.ContextWithHeader
+	HTTPTransportContextFrom = http.TransportContextFrom
+	ContextWithHeader        = http.ContextWithHeader
 )

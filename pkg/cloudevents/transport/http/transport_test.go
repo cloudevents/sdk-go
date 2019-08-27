@@ -119,7 +119,7 @@ func TestStableConnectionsToSingleHost(t *testing.T) {
 		if err != nil {
 			return fmt.Errorf("unexpected error sending CloudEvent: %v", err.Error())
 		}
-		trctx := cehttp.TransportResponseContextFrom(rctx)
+		trctx := cehttp.TransportContextFrom(rctx)
 		if trctx.StatusCode != http.StatusAccepted {
 			return fmt.Errorf("unexpected status code: want %d, got %d", http.StatusAccepted, trctx.StatusCode)
 		}
