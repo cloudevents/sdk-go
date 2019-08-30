@@ -151,6 +151,75 @@ func TestNewTransportContext(t *testing.T) {
 	}
 }
 
+func TestNewTransportContextFromResponse(t *testing.T) {
+	testCases := map[string]struct {
+		r       *nethttp.Response
+		want    http.TransportContext
+		wantStr string
+	}{
+		"nil response": {
+			want: http.TransportContext{
+				StatusCode: nethttp.StatusInternalServerError,
+			},
+			wantStr: `Transport Context,
+  StatusCode: 500
+`,
+		},
+		"full response": {
+			r: &nethttp.Response{
+				Header: func() nethttp.Header {
+					h := nethttp.Header{}
+					h.Set("unit", "test header")
+					return h
+				}(),
+				StatusCode: nethttp.StatusOK,
+			},
+			want: http.TransportContext{
+				Header: func() nethttp.Header {
+					h := nethttp.Header{}
+					h.Set("unit", "test header")
+					return h
+				}(),
+				StatusCode: nethttp.StatusOK,
+			},
+			wantStr: `Transport Context,
+  StatusCode: 200
+  Header:
+    Unit: test header
+`,
+		},
+		"no headers response": {
+			r: &nethttp.Response{
+				StatusCode: nethttp.StatusOK,
+			},
+			want: http.TransportContext{
+				StatusCode: nethttp.StatusOK,
+			},
+			wantStr: `Transport Context,
+  StatusCode: 200
+`,
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+
+			got := http.NewTransportContextFromResponse(tc.r)
+
+			if diff := cmp.Diff(tc.want, got, cmpopts.IgnoreFields(http.TransportContext{}, "IgnoreHeaderPrefixes")); diff != "" {
+				t.Errorf("unexpected (-want, +got) = %v", diff)
+			}
+
+			if tc.wantStr != "" {
+				gotStr := got.String()
+
+				if diff := cmp.Diff(tc.wantStr, gotStr); diff != "" {
+					t.Errorf("unexpected (-want, +got) = %v", diff)
+				}
+			}
+		})
+	}
+}
+
 func TestAttendToHeader(t *testing.T) {
 	testCases := map[string]struct {
 		header nethttp.Header

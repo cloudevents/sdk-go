@@ -78,21 +78,22 @@ func (t *Transport) loadCodec() bool {
 }
 
 // Send implements Transport.Send
-func (t *Transport) Send(ctx context.Context, event cloudevents.Event) (*cloudevents.Event, error) {
+func (t *Transport) Send(ctx context.Context, event cloudevents.Event) (context.Context, *cloudevents.Event, error) {
+	// TODO populate response context properly.
 	if ok := t.loadCodec(); !ok {
-		return nil, fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
+		return ctx, nil, fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
 	}
 
 	msg, err := t.codec.Encode(ctx, event)
 	if err != nil {
-		return nil, err
+		return ctx, nil, err
 	}
 
 	if m, ok := msg.(*Message); ok {
-		return nil, t.Conn.Publish(t.Subject, m.Body)
+		return ctx, nil, t.Conn.Publish(t.Subject, m.Body)
 	}
 
-	return nil, fmt.Errorf("failed to encode Event into a Message")
+	return ctx, nil, fmt.Errorf("failed to encode Event into a Message")
 }
 
 // SetReceiver implements Transport.SetReceiver

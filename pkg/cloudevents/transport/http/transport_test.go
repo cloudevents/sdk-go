@@ -115,9 +115,13 @@ func TestStableConnectionsToSingleHost(t *testing.T) {
 	duration := 1 * time.Second
 	var sent uint64
 	err = doConcurrently(concurrency, duration, func() error {
-		_, err := ceClient.Send(ctx, event)
+		rctx, _, err := ceClient.Send(ctx, event)
 		if err != nil {
 			return fmt.Errorf("unexpected error sending CloudEvent: %v", err.Error())
+		}
+		trctx := cehttp.TransportContextFrom(rctx)
+		if trctx.StatusCode != http.StatusAccepted {
+			return fmt.Errorf("unexpected status code: want %d, got %d", http.StatusAccepted, trctx.StatusCode)
 		}
 		atomic.AddUint64(&sent, 1)
 		return nil

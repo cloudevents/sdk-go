@@ -50,7 +50,7 @@ func main() {
 		Message:  "HELLO",
 	})
 
-	_, err = c.Send(context.Background(), event)
+	_, _, err = c.Send(context.Background(), event)
 
 	if err != nil {
 		log.Printf("failed to send: %v", err)
