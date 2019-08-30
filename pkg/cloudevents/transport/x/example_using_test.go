@@ -26,7 +26,7 @@ func runSender(w io.Writer) error {
 		if err := e.SetData(fmt.Sprintf("hello %d", i)); err != nil {
 			return err
 		}
-		if _, err := c.Send(context.TODO(), e); err != nil {
+		if _, _, err := c.Send(context.TODO(), e); err != nil {
 			return err
 		}
 	}

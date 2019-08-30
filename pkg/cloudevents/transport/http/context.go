@@ -5,15 +5,17 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 )
 
 // TransportContext allows a Receiver to understand the context of a request.
 type TransportContext struct {
-	URI    string
-	Host   string
-	Method string
-	Header http.Header
+	URI        string
+	Host       string
+	Method     string
+	Header     http.Header
+	StatusCode int
 
 	// IgnoreHeaderPrefixes controls what comes back from AttendToHeaders.
 	// AttendToHeaders controls what is output for .String()
@@ -32,6 +34,22 @@ func NewTransportContext(req *http.Request) TransportContext {
 		}
 	} else {
 		tx = &TransportContext{}
+	}
+	tx.AddIgnoreHeaderPrefix("accept-encoding", "user-agent", "connection", "content-type")
+	return *tx
+}
+
+// NewTransportContextFromResponse creates a new TransportContext from a http.Response.
+// If `res` is nil, it returns a context with a http.StatusInternalServerError status code.
+func NewTransportContextFromResponse(res *http.Response) TransportContext {
+	var tx *TransportContext
+	if res != nil {
+		tx = &TransportContext{
+			Header:     res.Header,
+			StatusCode: res.StatusCode,
+		}
+	} else {
+		tx = &TransportContext{StatusCode: http.StatusInternalServerError}
 	}
 	tx.AddIgnoreHeaderPrefix("accept-encoding", "user-agent", "connection", "content-type")
 	return *tx
@@ -84,6 +102,10 @@ func (tx TransportContext) String() string {
 
 	if tx.Method != "" {
 		b.WriteString("  Method: " + tx.Method + "\n")
+	}
+
+	if tx.StatusCode != 0 {
+		b.WriteString("  StatusCode: " + strconv.Itoa(tx.StatusCode) + "\n")
 	}
 
 	if tx.Header != nil && len(tx.Header) > 0 {

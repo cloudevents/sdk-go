@@ -101,8 +101,8 @@ func NewTransport(s Sender, r Receiver) *Transport {
 	return &Transport{Sender: s, Receiver: r}
 }
 
-func (t *Transport) Send(ctx context.Context, e cloudevents.Event) (*cloudevents.Event, error) {
-	return nil, t.Sender.Send(ctx, EventMessage(e))
+func (t *Transport) Send(ctx context.Context, e cloudevents.Event) (context.Context, *cloudevents.Event, error) {
+	return ctx, nil, t.Sender.Send(ctx, EventMessage(e))
 }
 
 func (t *Transport) SetReceiver(r transport.Receiver) { t.handler = r }
