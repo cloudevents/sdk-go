@@ -1,9 +1,9 @@
 package kafka_test
 
 import (
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/kafka"
 	"context"
 	"encoding/json"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/kafka"
 	"net/url"
 	"testing"
 	"time"

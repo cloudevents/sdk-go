@@ -9,9 +9,9 @@ import (
 
 // TransportContext allows a Receiver to understand the context of a request.
 type TransportContext struct {
-	PublishTime  time.Time
-	Topic        string
-	Method       string // push or pull
+	PublishTime time.Time
+	Topic       string
+	Method      string // push or pull
 }
 
 // NewTransportContext creates a new TransportContext from a kafka.Message.
@@ -19,9 +19,9 @@ func NewTransportContext(topic, method string, msg *kafka.Message) TransportCont
 	var tx *TransportContext
 	if msg != nil {
 		tx = &TransportContext{
-			PublishTime:  msg.Timestamp,
-			Topic:        topic,
-			Method:       method,
+			PublishTime: msg.Timestamp,
+			Topic:       topic,
+			Method:      method,
 		}
 	} else {
 		tx = &TransportContext{}

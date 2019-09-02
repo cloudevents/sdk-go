@@ -1,9 +1,9 @@
 package kafka_test
 
 import (
-	tkafka "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/kafka"
 	"context"
 	"fmt"
+	tkafka "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/kafka"
 	"testing"
 
 	"gotest.tools/assert"
