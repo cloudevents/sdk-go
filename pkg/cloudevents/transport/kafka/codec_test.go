@@ -1,7 +1,7 @@
 package kafka_test
 
 import (
-	"cloudevents-go/kafka"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/kafka"
 	"context"
 	"encoding/json"
 	"fmt"
