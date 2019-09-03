@@ -9,13 +9,14 @@ import (
 // type check that this transport message impl matches the contract
 var _ transport.Message = (*Message)(nil)
 
-// Message represents a Pub/Sub message.
+// Message represents a Kafka message.
 type Message struct {
 	// Data is the actual data in the message.
 	Data []byte
 
 	// Headers represents the key-value pairs the current message
 	// is labelled with.
+	// TODO(sumit): Use Kafka headers here.
 	Headers map[string]string
 }
 

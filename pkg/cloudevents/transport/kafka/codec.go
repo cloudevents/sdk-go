@@ -58,7 +58,7 @@ func (c *Codec) Decode(ctx context.Context, msg transport.Message) (*cloudevents
 }
 
 func (c Codec) encodeBinary(ctx context.Context, e cloudevents.Event) (transport.Message, error) {
-	attributes, err := c.toAttributes(e)
+	attributes, err := c.toHeaders(e)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func (c Codec) encodeBinary(ctx context.Context, e cloudevents.Event) (transport
 	return msg, nil
 }
 
-func (c Codec) toAttributes(e cloudevents.Event) (map[string]string, error) {
+func (c Codec) toHeaders(e cloudevents.Event) (map[string]string, error) {
 	a := make(map[string]string)
 	a[prefix+"specversion"] = e.SpecVersion()
 	a[prefix+"type"] = e.Type()
@@ -133,7 +133,7 @@ func (c Codec) decodeBinary(ctx context.Context, msg transport.Message, event *c
 	if !ok {
 		return nil, fmt.Errorf("failed to convert transport.Message to kafka.Message")
 	}
-	err := c.fromAttributes(m.Headers, event)
+	err := c.fromHeaders(m.Headers, event)
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +146,7 @@ func (c Codec) decodeBinary(ctx context.Context, msg transport.Message, event *c
 	return event, nil
 }
 
-func (c Codec) fromAttributes(a map[string]string, event *cloudevents.Event) error {
+func (c Codec) fromHeaders(a map[string]string, event *cloudevents.Event) error {
 	// Normalize attributes.
 	for k, v := range a {
 		ck := strings.ToLower(k)
