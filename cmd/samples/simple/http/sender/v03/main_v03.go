@@ -42,7 +42,7 @@ func main() {
 			Data: data,
 		}
 
-		if resp, err := c.Send(ctx, event); err != nil {
+		if _, resp, err := c.Send(ctx, event); err != nil {
 			log.Printf("failed to send: %v", err)
 		} else if resp != nil {
 			fmt.Printf("got back a response: \n%s", resp)

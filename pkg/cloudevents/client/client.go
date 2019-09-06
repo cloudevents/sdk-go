@@ -14,7 +14,7 @@ import (
 // Client interface defines the runtime contract the CloudEvents client supports.
 type Client interface {
 	// Send will transmit the given event over the client's configured transport.
-	Send(ctx context.Context, event cloudevents.Event) (*cloudevents.Event, error)
+	Send(ctx context.Context, event cloudevents.Event) (context.Context, *cloudevents.Event, error)
 
 	// StartReceiver will register the provided function for callback on receipt
 	// of a cloudevent. It will also start the underlying transport as it has
@@ -83,21 +83,21 @@ type ceClient struct {
 // Send returns a response event if there is a response or an error if there
 // was an an issue validating the outbound event or the transport returns an
 // error.
-func (c *ceClient) Send(ctx context.Context, event cloudevents.Event) (*cloudevents.Event, error) {
+func (c *ceClient) Send(ctx context.Context, event cloudevents.Event) (context.Context, *cloudevents.Event, error) {
 	ctx, r := observability.NewReporter(ctx, reportSend)
-	resp, err := c.obsSend(ctx, event)
+	rctx, resp, err := c.obsSend(ctx, event)
 	if err != nil {
 		r.Error()
 	} else {
 		r.OK()
 	}
-	return resp, err
+	return rctx, resp, err
 }
 
-func (c *ceClient) obsSend(ctx context.Context, event cloudevents.Event) (*cloudevents.Event, error) {
+func (c *ceClient) obsSend(ctx context.Context, event cloudevents.Event) (context.Context, *cloudevents.Event, error) {
 	// Confirm we have a transport set.
 	if c.transport == nil {
-		return nil, fmt.Errorf("client not ready, transport not initialized")
+		return ctx, nil, fmt.Errorf("client not ready, transport not initialized")
 	}
 	// Apply the defaulter chain to the incoming event.
 	if len(c.eventDefaulterFns) > 0 {
@@ -108,7 +108,7 @@ func (c *ceClient) obsSend(ctx context.Context, event cloudevents.Event) (*cloud
 
 	// Validate the event conforms to the CloudEvents Spec.
 	if err := event.Validate(); err != nil {
-		return nil, err
+		return ctx, nil, err
 	}
 	// Send the event over the transport.
 	return c.transport.Send(ctx, event)

@@ -63,7 +63,7 @@ type Example struct {
 	Message  string `json:"message"`
 }
 
-func (d *Demo) Send() (*cloudevents.Event, error) {
+func (d *Demo) Send() (context.Context, *cloudevents.Event, error) {
 	event := cloudevents.Event{
 		Context: d.context(),
 		Data: &Example{
@@ -162,7 +162,7 @@ func doDemo(t transport.Transport, eventType, message, contentType string, sourc
 		ContentType: contentType,
 	}
 	for i := 0; i < count; i++ {
-		if _, err := d.Send(); err != nil {
+		if _, _, err := d.Send(); err != nil {
 			return err
 		}
 		time.Sleep(delay)
