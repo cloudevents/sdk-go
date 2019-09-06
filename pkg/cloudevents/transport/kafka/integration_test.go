@@ -8,7 +8,7 @@ import (
 
 	"gotest.tools/assert"
 
-	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
+	"github.com/confluentinc/confluent-kafka-go-dev/kafka"
 
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/docker/docker/client"

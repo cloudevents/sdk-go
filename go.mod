@@ -7,6 +7,7 @@ require (
 	github.com/Azure/go-autorest/autorest v0.2.0 // indirect
 	github.com/Azure/go-autorest/autorest/to v0.2.0 // indirect
 	github.com/Azure/go-autorest/autorest/validation v0.1.0 // indirect
+	github.com/confluentinc/confluent-kafka-go-dev v0.0.0-20190802212433-4315eca36bc9
 	github.com/docker/docker v0.7.3-0.20190506211059-b20a14b54661
 	github.com/fortytw2/leaktest v1.3.0 // indirect
 	github.com/google/go-cmp v0.3.0
@@ -22,7 +23,6 @@ require (
 	go.uber.org/multierr v1.1.0 // indirect
 	go.uber.org/zap v1.10.0
 	golang.org/x/sync v0.0.0-20190423024810-112230192c58
-	gopkg.in/confluentinc/confluent-kafka-go.v1 v1.1.0
 	gotest.tools v0.0.0-20181223230014-1083505acf35
 	pack.ag/amqp v0.11.0
 )

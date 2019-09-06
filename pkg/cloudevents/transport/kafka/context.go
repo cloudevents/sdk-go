@@ -2,7 +2,7 @@ package kafka
 
 import (
 	"context"
-	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
+	"github.com/confluentinc/confluent-kafka-go-dev/kafka"
 	"strings"
 	"time"
 )
