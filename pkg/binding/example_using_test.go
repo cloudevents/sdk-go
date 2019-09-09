@@ -1,4 +1,4 @@
-package x_test
+package binding_test
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 )
 
-var count = 3 // Example ends after this many events.
+const count = 3 // Example ends after this many events.
 
 // The sender uses the cloudevents.Client API, not the transport APIs directly.
 func runSender(w io.Writer) error {
@@ -44,11 +44,11 @@ func runReceiver(r io.Reader) error {
 		}
 		return nil
 	}
-	if c, err := client.New(NewExTransport(r, nil)); err != nil {
+	c, err := client.New(NewExTransport(r, nil))
+	if err != nil {
 		return err
-	} else {
-		return c.StartReceiver(context.TODO(), process)
 	}
+	return c.StartReceiver(context.TODO(), process)
 }
 
 // The intermediary receives events and forwards them to another
@@ -61,6 +61,7 @@ func runReceiver(r io.Reader) error {
 // reliable delivery.
 //
 func runIntermediary(r io.Reader, w io.WriteCloser) error {
+	defer w.Close()
 	for {
 		receiver := NewExReceiver(r)
 		sender := NewExSender(w)
