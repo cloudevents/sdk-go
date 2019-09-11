@@ -263,6 +263,7 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 	}
 
 	cctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 	n := len(t.subscriptions)
 
 	// Make the channels for quit and errors.
@@ -286,6 +287,7 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 		var err error
 		select {
 		case <-ctx.Done(): // Block for parent context to finish.
+			success--
 		case err = <-errc: // Collect errors
 		case <-quit:
 		}
