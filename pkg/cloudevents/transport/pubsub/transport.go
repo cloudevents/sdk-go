@@ -280,22 +280,25 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 		})
 	}
 
-	// Block for parent context to finish.
-	<-ctx.Done()
-	cancel()
-
 	// Collect errors and done calls until we have n of them.
 	errs := []string(nil)
 	for success := 0; success < n; success++ {
 		var err error
 		select {
-		case err = <-errc:
+		case <-ctx.Done(): // Block for parent context to finish.
+		case err = <-errc: // Collect errors
 		case <-quit:
+		}
+		if cancel != nil {
+			// Stop all other subscriptions.
+			cancel()
+			cancel = nil
 		}
 		if err != nil {
 			errs = append(errs, err.Error())
 		}
 	}
+
 	close(quit)
 	close(errc)
 
