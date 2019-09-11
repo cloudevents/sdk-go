@@ -127,21 +127,33 @@ func (v CodecV03) toHeaders(ec *cloudevents.EventContextV03) (http.Header, error
 	for k, v := range ec.Extensions {
 		// Per spec, map-valued extensions are converted to a list of headers as:
 		// CE-attrib-key
-		if mapVal, ok := v.(map[string]interface{}); ok {
+		switch v.(type) {
+		case string:
+			h.Set("ce-"+k, v.(string))
+
+		case map[string]interface{}:
+			mapVal := v.(map[string]interface{})
+
 			for subkey, subval := range mapVal {
+				if subvalstr, ok := v.(string); ok {
+					h.Set("ce-"+k+"-"+subkey, subvalstr)
+					continue
+				}
+
 				encoded, err := json.Marshal(subval)
 				if err != nil {
 					return nil, err
 				}
 				h.Set("ce-"+k+"-"+subkey, string(encoded))
 			}
-			continue
+
+		default:
+			encoded, err := json.Marshal(v)
+			if err != nil {
+				return nil, err
+			}
+			h.Set("ce-"+k, string(encoded))
 		}
-		encoded, err := json.Marshal(v)
-		if err != nil {
-			return nil, err
-		}
-		h.Set("ce-"+k, string(encoded))
 	}
 
 	return h, nil
