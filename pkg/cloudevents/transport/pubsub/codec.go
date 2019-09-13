@@ -187,16 +187,16 @@ func (c Codec) fromAttributes(a map[string]string, event *cloudevents.Event) err
 	delete(a, prefix+"source")
 
 	if t := a[prefix+"time"]; t != "" {
-		timestamp := types.ParseTimestamp(t)
-		if err := ec.SetTime(timestamp.Time); err != nil {
-			return err
+		if timestamp := types.ParseTimestamp(t); timestamp != nil {
+			if err := ec.SetTime(timestamp.Time); err != nil {
+				return err
+			}
 		}
 	}
 	delete(a, prefix+"time")
 
-	if t := a[prefix+"schemaurl"]; t != "" {
-		timestamp := types.ParseTimestamp(t)
-		if err := ec.SetTime(timestamp.Time); err != nil {
+	if s := a[prefix+"schemaurl"]; s != "" {
+		if err := ec.SetSchemaURL(s); err != nil {
 			return err
 		}
 	}
