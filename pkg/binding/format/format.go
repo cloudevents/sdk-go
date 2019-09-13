@@ -9,6 +9,7 @@ package format
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 )
@@ -25,6 +26,9 @@ type Format interface {
 
 // Prefix for event-format media types.
 const Prefix = "application/cloudevents"
+
+// IsFormat returns true if mediaType begins with "application/cloudevents"
+func IsFormat(mediaType string) bool { return strings.HasPrefix(mediaType, Prefix) }
 
 // JSON is the built-in "application/cloudevents+json" format.
 var JSON = jsonFmt{}

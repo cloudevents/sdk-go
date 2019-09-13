@@ -32,7 +32,7 @@ func TestEventMessage(t *testing.T) {
 
 func TestStructMessage(t *testing.T) {
 	assert := assert.New(t)
-	m, err := binding.StructEncoder{format.JSON}.Encode(testEvent)
+	m, err := binding.StructEncoder{Format: format.JSON}.Encode(testEvent)
 	assert.NoError(err)
 	f, b := m.Structured()
 	assert.Equal(ce.ApplicationCloudEventsJSON, f)

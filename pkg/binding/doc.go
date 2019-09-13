@@ -1,35 +1,36 @@
 /*
 
-Package binding provides interfaces for transport bindings.
-Binding implementations are under ../bindings.
+Package binding defines interfaces for protocol bindings.
 
-Intermediary applications that forward events between different
-transport bindings may also need to use these intefaces. Normal
-clients can use the cloudevents/client API.
+NOTE: Most applications that emit or consume events can use the client
+package. This package is for implementing new protocol bindings and
+intermediaries; processes that forward events between protocols, rather than
+emitting or consuming events themselves.
 
-A transport binding implements Message, Sender, Receiver interfaces.
-An intermediary uses those interfaces to transfer event messages.  A
-binding should also provide functions to convert between
-cloudevents.Event and the binding's native message types. There are no
-interfaces as the native message type will vary by binding.
+Protocol Bindings
 
-A Message is an abstract container for a cloudevents.Event.
+A protocol binding implements at least Message, Sender and Receiver, and usually
+Encoder.
 
-A Receiver returns Message implementations based on its native message
-format. A Sender must be able to encode and send any Message, but may
-provide optimized handling for StructMessage, or for its own native
-Message implementations.
+Receiver: receives protocol messages and wraps them to implement the Message interface.
 
-Transports that support reliable delivery can implement and use
-Message.Finish() and ExactlyOnceMessage to forward acknowledgement
-between sender and receiver for QoS level 0, 1 or 2. The effective QoS
-of a sender/receiver pair will be the lower of the two.
+Message: converts to protocol-neutral cloudevents.Event or structured event
+data. It also provides methods to manage acknowledgment for reliable
+delivery across bindings.
 
-FIXME(alanconway) add a generic encoder interface or function signature.  The
-Sender implicitly uses an encoder, so it's not needed for normal use.  It is
-useful for testing and for users with inside knowledge of the implementation,
-they may want to use the encoder but send messages by some other means than the
-Sender.
+Sender: converts arbitrary Message implementations to a protocol-specific form
+and sends them.
+
+Message and ExactlyOnceMessage provide methods to allow acknowledgments to
+propagate when a reliable messages is forwarded from a Receiver to a Sender.
+QoS 0 (unreliable), 1 (at-least-once) and 2 (exactly-once) are supported.
+
+Intermediaries
+
+Intermediaries can forward Messages from a Receiver to a Sender without
+knowledge of the underlying protocols. The Message interface allows structured
+messages to be forwarded without decoding and re-encoding. It also allows any
+Message to be fully decoded and examined if needed.
 
 */
 package binding
