@@ -196,17 +196,17 @@ func (c Codec) fromHeaders(h map[string]interface{}, event *cloudevents.Event) e
 	}
 	delete(h, prefix+"source")
 
-	if t, ok := h[prefix+"time"].(string); ok { // TODO: time can be empty
-		timestamp := types.ParseTimestamp(t)
-		if err := ec.SetTime(timestamp.Time); err != nil {
-			return err
+	if t, ok := h[prefix+"time"].(string); ok {
+		if timestamp := types.ParseTimestamp(t); timestamp != nil {
+			if err := ec.SetTime(timestamp.Time); err != nil {
+				return err
+			}
 		}
 	}
 	delete(h, prefix+"time")
 
-	if t, ok := h[prefix+"schemaurl"].(string); ok {
-		timestamp := types.ParseTimestamp(t)
-		if err := ec.SetTime(timestamp.Time); err != nil {
+	if s, ok := h[prefix+"schemaurl"].(string); ok {
+		if err := ec.SetSchemaURL(s); err != nil {
 			return err
 		}
 	}
