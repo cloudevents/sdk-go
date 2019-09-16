@@ -228,7 +228,6 @@ func (t *Transport) startSubscriber(ctx context.Context, sub subscriptionWithTop
 	}
 	// Ok, ready to start pulling.
 	err := conn.Receive(ctx, func(ctx context.Context, m *pubsub.Message) {
-		logger.Info("got an event!")
 		msg := &Message{
 			Attributes: m.Attributes,
 			Data:       m.Data,
