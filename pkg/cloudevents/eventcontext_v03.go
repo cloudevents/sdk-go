@@ -35,7 +35,7 @@ type EventContextV03 struct {
 	// GetDataMediaType - A MIME (RFC2046) string describing the media type of `data`.
 	// TODO: Should an empty string assume `application/json`, `application/octet-stream`, or auto-detect the content?
 	DataContentType *string `json:"datacontenttype,omitempty"`
-	// DataContentEncoding describes the content encoding for the `data` attribute. Valid: nil, `Base64`.
+	// DeprecatedDataContentEncoding describes the content encoding for the `data` attribute. Valid: nil, `Base64`.
 	DataContentEncoding *string `json:"datacontentencoding,omitempty"`
 	// Extensions - Additional extension metadata beyond the base spec.
 	Extensions map[string]interface{} `json:"-"`
@@ -115,7 +115,7 @@ func (ec EventContextV03) AsV02() *EventContextV02 {
 	if ec.Subject != nil {
 		_ = ret.SetExtension(SubjectKey, *ec.Subject)
 	}
-	// DataContentEncoding was introduced in 0.3, so put it in an extension for 0.2.
+	// DeprecatedDataContentEncoding was introduced in 0.3, so put it in an extension for 0.2.
 	if ec.DataContentEncoding != nil {
 		_ = ret.SetExtension(DataContentEncodingKey, *ec.DataContentEncoding)
 	}
@@ -137,18 +137,18 @@ func (ec EventContextV03) AsV03() *EventContextV03 {
 }
 
 // AsV04 implements EventContextConverter.AsV04
-func (ec EventContextV03) AsV04() *EventContextV04 {
-	ret := EventContextV04{
-		SpecVersion:         CloudEventsVersionV02,
-		ID:                  ec.ID,
-		Time:                ec.Time,
-		Type:                ec.Type,
-		DataSchema:          ec.SchemaURL,
-		DataContentType:     ec.DataContentType,
-		DataContentEncoding: ec.DataContentEncoding,
-		Source:              ec.Source,
-		Subject:             ec.Subject,
-		Extensions:          make(map[string]string),
+func (ec EventContextV03) AsV1() *EventContextV1 {
+	ret := EventContextV1{
+		SpecVersion:     CloudEventsVersionV02,
+		ID:              ec.ID,
+		Time:            ec.Time,
+		Type:            ec.Type,
+		DataSchema:      ec.SchemaURL,
+		DataContentType: ec.DataContentType,
+		// DataContentEncoding: ec.DataContentEncoding, TODO: move this to extensions.
+		Source:     ec.Source,
+		Subject:    ec.Subject,
+		Extensions: make(map[string]string),
 	}
 	if ec.Extensions != nil {
 		for k, v := range ec.Extensions {

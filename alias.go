@@ -54,10 +54,10 @@ const (
 
 	// Event Versions
 
+	VersionV1  = cloudevents.CloudEventsVersionV1
 	VersionV01 = cloudevents.CloudEventsVersionV01
 	VersionV02 = cloudevents.CloudEventsVersionV02
 	VersionV03 = cloudevents.CloudEventsVersionV03
-	VersionV04 = cloudevents.CloudEventsVersionV04
 
 	// HTTP Transport Encodings
 

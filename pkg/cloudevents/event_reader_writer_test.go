@@ -612,7 +612,7 @@ func TestEventRW_DataContentEncoding(t *testing.T) {
 			}()
 
 			tc.event.SetDataContentEncoding(tc.set)
-			got = tc.event.DataContentEncoding()
+			got = tc.event.DeprecatedDataContentEncoding()
 		})
 	}
 }

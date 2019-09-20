@@ -24,8 +24,8 @@ type EventReader interface {
 	DataContentType() string
 	// DataMediaType returns event.Context.GetDataMediaType().
 	DataMediaType() string
-	// DataContentEncoding returns event.Context.GetDataContentEncoding().
-	DataContentEncoding() string
+	// DeprecatedDataContentEncoding returns event.Context.DeprecatedGetDataContentEncoding().
+	DeprecatedDataContentEncoding() string
 
 	// Extension Attributes
 
@@ -62,7 +62,7 @@ type EventWriter interface {
 	SetDataSchema(string)
 	// SetDataContentType performs event.Context.SetDataContentType.
 	SetDataContentType(string)
-	// SetDataContentEncoding performs event.Context.SetDataContentEncoding.
+	// DeprecatedSetDataContentEncoding performs event.Context.DeprecatedSetDataContentEncoding.
 	SetDataContentEncoding(string)
 
 	// Extension Attributes

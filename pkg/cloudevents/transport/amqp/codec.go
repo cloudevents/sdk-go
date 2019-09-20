@@ -106,8 +106,8 @@ func (c Codec) toHeaders(e cloudevents.Event) (map[string]interface{}, error) {
 	if e.Subject() != "" {
 		h[prefix+"subject"] = e.Subject()
 	}
-	if e.DataContentEncoding() != "" {
-		h[prefix+"datacontentencoding"] = e.DataContentEncoding()
+	if e.DeprecatedDataContentEncoding() != "" {
+		h[prefix+"datacontentencoding"] = e.DeprecatedDataContentEncoding()
 	}
 	if e.DataSchema() != "" {
 		h[prefix+"schemaurl"] = e.DataSchema()
@@ -206,7 +206,7 @@ func (c Codec) fromHeaders(h map[string]interface{}, event *cloudevents.Event) e
 	delete(h, prefix+"time")
 
 	if s, ok := h[prefix+"schemaurl"].(string); ok {
-		if err := ec.SetSchemaURL(s); err != nil {
+		if err := ec.SetDataSchema(s); err != nil {
 			return err
 		}
 	}
@@ -220,7 +220,7 @@ func (c Codec) fromHeaders(h map[string]interface{}, event *cloudevents.Event) e
 	delete(h, prefix+"subject")
 
 	if s, ok := h[prefix+"datacontentencoding"].(string); ok {
-		if err := ec.SetDataContentEncoding(s); err != nil {
+		if err := ec.DeprecatedSetDataContentEncoding(s); err != nil {
 			return err
 		}
 	}

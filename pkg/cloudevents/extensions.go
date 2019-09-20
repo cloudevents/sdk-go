@@ -1,7 +1,7 @@
 package cloudevents
 
 const (
-	// DataContentEncodingKey is the key to DataContentEncoding for versions that do not support data content encoding
+	// DataContentEncodingKey is the key to DeprecatedDataContentEncoding for versions that do not support data content encoding
 	// directly.
 	DataContentEncodingKey = "datacontentencoding"
 

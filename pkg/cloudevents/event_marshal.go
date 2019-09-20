@@ -122,7 +122,7 @@ func jsonEncode(ctx EventContextReader, data []byte) ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		isBase64 := ctx.GetDataContentEncoding() == Base64
+		isBase64 := ctx.DeprecatedGetDataContentEncoding() == Base64
 		isJson := mediaType == "" || mediaType == ApplicationJSON || mediaType == TextJSON
 		// TODO(#60): we do not support json values at the moment, only objects and lists.
 		if isJson && !isBase64 {

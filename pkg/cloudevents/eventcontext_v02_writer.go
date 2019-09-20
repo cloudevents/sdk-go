@@ -80,7 +80,7 @@ func (ec *EventContextV02) SetTime(t time.Time) error {
 }
 
 // SetDataSchema implements EventContextWriter.SetDataSchema
-func (ec *EventContextV02) SetSchemaURL(u string) error {
+func (ec *EventContextV02) SetDataSchema(u string) error {
 	u = strings.TrimSpace(u)
 	if u == "" {
 		ec.SchemaURL = nil
@@ -94,8 +94,8 @@ func (ec *EventContextV02) SetSchemaURL(u string) error {
 	return nil
 }
 
-// SetDataContentEncoding implements EventContextWriter.SetDataContentEncoding
-func (ec *EventContextV02) SetDataContentEncoding(e string) error {
+// DeprecatedSetDataContentEncoding implements EventContextWriter.DeprecatedSetDataContentEncoding
+func (ec *EventContextV02) DeprecatedSetDataContentEncoding(e string) error {
 	e = strings.ToLower(strings.TrimSpace(e))
 	if e == "" {
 		return ec.SetExtension(DataContentEncodingKey, nil)

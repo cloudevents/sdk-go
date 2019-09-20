@@ -18,7 +18,7 @@ func (e *Event) SetData(obj interface{}) error {
 	if err != nil {
 		return err
 	}
-	if e.DataContentEncoding() == Base64 {
+	if e.DeprecatedDataContentEncoding() == Base64 {
 		buf := make([]byte, base64.StdEncoding.EncodedLen(len(data)))
 		base64.StdEncoding.Encode(buf, data)
 		e.Data = string(buf)
@@ -70,7 +70,7 @@ func (e Event) DataAs(data interface{}) error { // TODO: Clean this function up
 		// No data.
 		return nil
 	}
-	if e.Context.GetDataContentEncoding() == Base64 {
+	if e.Context.DeprecatedGetDataContentEncoding() == Base64 {
 		var bs []byte
 		// test to see if we need to unquote the data.
 		if obj[0] == quotes[0] || obj[0] == quotes[1] {
