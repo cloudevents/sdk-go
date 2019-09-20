@@ -107,7 +107,7 @@ func (v CodecV01) toHeaders(ec *cloudevents.EventContextV01) (http.Header, error
 		h["CE-EventTypeVersion"] = []string{*ec.EventTypeVersion}
 	}
 	if ec.SchemaURL != nil {
-		h["CE-SchemaURL"] = []string{ec.SchemaURL.String()}
+		h["CE-DataSchema"] = []string{ec.SchemaURL.String()}
 	}
 	if ec.ContentType != nil {
 		h.Set("Content-Type", *ec.ContentType)
@@ -179,8 +179,8 @@ func (v CodecV01) fromHeaders(h http.Header) (cloudevents.EventContextV01, error
 	if etv != "" {
 		ec.EventTypeVersion = &etv
 	}
-	ec.SchemaURL = types.ParseURLRef(h.Get("CE-SchemaURL"))
-	h.Del("CE-SchemaURL")
+	ec.SchemaURL = types.ParseURLRef(h.Get("CE-DataSchema"))
+	h.Del("CE-DataSchema")
 	et := h.Get("Content-Type")
 	ec.ContentType = &et
 

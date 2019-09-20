@@ -18,14 +18,14 @@ type EventReader interface {
 	ID() string
 	// Time returns event.Context.GetTime().
 	Time() time.Time
-	// SchemaURL returns event.Context.GetSchemaURL().
-	SchemaURL() string
+	// DataSchema returns event.Context.GetDataSchema().
+	DataSchema() string
 	// DataContentType returns event.Context.GetDataContentType().
 	DataContentType() string
 	// DataMediaType returns event.Context.GetDataMediaType().
 	DataMediaType() string
-	// DataContentEncoding returns event.Context.GetDataContentEncoding().
-	DataContentEncoding() string
+	// DeprecatedDataContentEncoding returns event.Context.DeprecatedGetDataContentEncoding().
+	DeprecatedDataContentEncoding() string
 
 	// Extension Attributes
 
@@ -58,17 +58,17 @@ type EventWriter interface {
 	SetID(string)
 	// SetTime performs event.Context.SetTime.
 	SetTime(time.Time)
-	// SetSchemaURL performs event.Context.SetSchemaURL.
-	SetSchemaURL(string)
+	// SetDataSchema performs event.Context.SetDataSchema.
+	SetDataSchema(string)
 	// SetDataContentType performs event.Context.SetDataContentType.
 	SetDataContentType(string)
-	// SetDataContentEncoding performs event.Context.SetDataContentEncoding.
+	// DeprecatedSetDataContentEncoding performs event.Context.DeprecatedSetDataContentEncoding.
 	SetDataContentEncoding(string)
 
 	// Extension Attributes
 
 	// SetExtension performs event.Context.SetExtension.
-	SetExtension(string, interface{})
+	SetExtension(string, interface{}) // TODO: this needs to move to just string.
 
 	// SetData encodes the given payload with the current encoding settings.
 	SetData(interface{}) error

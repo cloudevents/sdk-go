@@ -68,16 +68,16 @@ func (ec EventContextV01) GetTime() time.Time {
 	return time.Time{}
 }
 
-// GetSchemaURL implements EventContextReader.GetSchemaURL
-func (ec EventContextV01) GetSchemaURL() string {
+// GetDataSchema implements EventContextReader.GetDataSchema
+func (ec EventContextV01) GetDataSchema() string {
 	if ec.SchemaURL != nil {
 		return ec.SchemaURL.String()
 	}
 	return ""
 }
 
-// GetDataContentEncoding implements EventContextReader.GetDataContentEncoding
-func (ec EventContextV01) GetDataContentEncoding() string {
+// DeprecatedGetDataContentEncoding implements EventContextReader.DeprecatedGetDataContentEncoding
+func (ec EventContextV01) DeprecatedGetDataContentEncoding() string {
 	var enc string
 	if err := ec.ExtensionAs(DataContentEncodingKey, &enc); err != nil {
 		return ""

@@ -18,13 +18,13 @@ type EventContextReader interface {
 	GetID() string
 	// GetTime returns the CloudEvents creation time from the context.
 	GetTime() time.Time
-	// GetSchemaURL returns the CloudEvents schema URL (if any) from the
+	// GetDataSchema returns the CloudEvents schema URL (if any) from the
 	// context.
-	GetSchemaURL() string
+	GetDataSchema() string
 	// GetDataContentType returns content type on the context.
 	GetDataContentType() string
-	// GetDataContentEncoding returns content encoding on the context.
-	GetDataContentEncoding() string
+	// DeprecatedGetDataContentEncoding returns content encoding on the context.
+	DeprecatedGetDataContentEncoding() string
 
 	// GetDataMediaType returns the MIME media type for encoded data, which is
 	// needed by both encoding and decoding. This is a processed form of
@@ -56,18 +56,20 @@ type EventContextWriter interface {
 	SetID(string) error
 	// SetTime sets the time of the context.
 	SetTime(time time.Time) error
-	// SetSchemaURL sets the schema url of the context.
-	SetSchemaURL(string) error
+	// SetDataSchema sets the schema url of the context.
+	SetDataSchema(string) error
 	// SetDataContentType sets the data content type of the context.
 	SetDataContentType(string) error
-	// SetDataContentEncoding sets the data context encoding of the context.
-	SetDataContentEncoding(string) error
+	// DeprecatedSetDataContentEncoding sets the data context encoding of the context.
+	DeprecatedSetDataContentEncoding(string) error
 
 	// SetExtension sets the given interface onto the extension attributes
 	// determined by the provided name.
 	SetExtension(string, interface{}) error
 }
 
+// EventContextConverter are the methods that allow for event version
+// conversion.
 type EventContextConverter interface {
 	// AsV01 provides a translation from whatever the "native" encoding of the
 	// CloudEvent was to the equivalent in v0.1 field names, moving fields to or
@@ -83,6 +85,11 @@ type EventContextConverter interface {
 	// CloudEvent was to the equivalent in v0.3 field names, moving fields to or
 	// from extensions as necessary.
 	AsV03() *EventContextV03
+
+	// AsV1 provides a translation from whatever the "native" encoding of the
+	// CloudEvent was to the equivalent in v1.0 field names, moving fields to or
+	// from extensions as necessary.
+	AsV1() *EventContextV1
 }
 
 // EventContext is conical interface for a CloudEvents Context.

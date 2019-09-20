@@ -85,8 +85,8 @@ func (c Codec) toAttributes(e cloudevents.Event) (map[string]string, error) {
 		t := types.Timestamp{Time: e.Time()} // TODO: change e.Time() to return string so I don't have to do this.
 		a[prefix+"time"] = t.String()
 	}
-	if e.SchemaURL() != "" {
-		a[prefix+"schemaurl"] = e.SchemaURL()
+	if e.DataSchema() != "" {
+		a[prefix+"schemaurl"] = e.DataSchema()
 	}
 
 	if e.DataContentType() != "" {
@@ -99,8 +99,8 @@ func (c Codec) toAttributes(e cloudevents.Event) (map[string]string, error) {
 		a[prefix+"subject"] = e.Subject()
 	}
 
-	if e.DataContentEncoding() != "" {
-		a[prefix+"datacontentencoding"] = e.DataContentEncoding()
+	if e.DeprecatedDataContentEncoding() != "" {
+		a[prefix+"datacontentencoding"] = e.DeprecatedDataContentEncoding()
 	}
 
 	for k, v := range e.Extensions() {
@@ -196,7 +196,7 @@ func (c Codec) fromAttributes(a map[string]string, event *cloudevents.Event) err
 	delete(a, prefix+"time")
 
 	if s := a[prefix+"schemaurl"]; s != "" {
-		if err := ec.SetSchemaURL(s); err != nil {
+		if err := ec.SetDataSchema(s); err != nil {
 			return err
 		}
 	}
@@ -217,7 +217,7 @@ func (c Codec) fromAttributes(a map[string]string, event *cloudevents.Event) err
 	delete(a, prefix+"datacontenttype")
 
 	if s := a[prefix+"datacontentencoding"]; s != "" {
-		if err := ec.SetDataContentEncoding(s); err != nil {
+		if err := ec.DeprecatedSetDataContentEncoding(s); err != nil {
 			return err
 		}
 	}
