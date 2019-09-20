@@ -84,7 +84,7 @@ func (e *Event) SetDataContentEncoding(enc string) {
 	}
 }
 
-// DeprecatedSetDataContentEncoding implements EventWriter.DeprecatedSetDataContentEncoding
+// SetExtension implements EventWriter.SetExtension
 func (e *Event) SetExtension(name string, obj interface{}) {
 	if err := e.Context.SetExtension(name, obj); err != nil {
 		panic(err)
