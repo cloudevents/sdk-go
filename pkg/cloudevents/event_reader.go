@@ -89,7 +89,7 @@ func (e Event) DeprecatedDataContentEncoding() string {
 	return ""
 }
 
-// DeprecatedDataContentEncoding implements EventReader.DeprecatedDataContentEncoding
+// Extensions implements EventReader.Extensions
 func (e Event) Extensions() map[string]interface{} {
 	if e.Context != nil {
 		return e.Context.GetExtensions()
