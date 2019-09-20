@@ -2,6 +2,7 @@ package cloudevents
 
 import (
 	"fmt"
+	"mime"
 	"sort"
 	"strings"
 
@@ -15,28 +16,38 @@ const (
 	CloudEventsVersionV1 = "1.0"
 )
 
-// EventContextV1 represents the non-data attributes of a CloudEvents v0.3
+// EventContextV1 represents the non-data attributes of a CloudEvents v1.0
 // event.
 type EventContextV1 struct {
+	// ID of the event; must be non-empty and unique within the scope of the producer.
+	// +required
+	ID string `json:"id"`
+	// Source - A URI describing the event producer.
+	// +required
+	Source types.URIRef `json:"source"`
 	// SpecVersion - The version of the CloudEvents specification used by the event.
+	// +required
 	SpecVersion string `json:"specversion"`
 	// Type - The type of the occurrence which has happened.
+	// +required
 	Type string `json:"type"`
-	// Source - A URI describing the event producer.
-	Source types.URLRef `json:"source"`
+
+	// DataContentType - A MIME (RFC2046) string describing the media type of `data`.
+	// +optional
+	DataContentType *string `json:"datacontenttype,omitempty"`
 	// Subject - The subject of the event in the context of the event producer
 	// (identified by `source`).
+	// +optional
 	Subject *string `json:"subject,omitempty"`
-	// ID of the event; must be non-empty and unique within the scope of the producer.
-	ID string `json:"id"`
 	// Time - A Timestamp when the event happened.
+	// +optional
 	Time *types.Timestamp `json:"time,omitempty"`
 	// DataSchema - A link to the schema that the `data` attribute adheres to.
-	DataSchema *types.URLRef `json:"dataschema,omitempty"` // TODO: spec changed to URL.
-	// GetDataMediaType - A MIME (RFC2046) string describing the media type of `data`.
-	// TODO: Should an empty string assume `application/json`, `application/octet-stream`, or auto-detect the content?
-	DataContentType *string `json:"datacontenttype,omitempty"`
+	// +optional
+	DataSchema *types.URI `json:"dataschema,omitempty"`
+
 	// Extensions - Additional extension metadata beyond the base spec.
+	// +optional
 	Extensions map[string]string `json:"-"`
 }
 
@@ -97,13 +108,17 @@ func (ec EventContextV1) AsV03() *EventContextV03 {
 		ID:              ec.ID,
 		Time:            ec.Time,
 		Type:            ec.Type,
-		SchemaURL:       ec.DataSchema,
 		DataContentType: ec.DataContentType,
 		//DeprecatedDataContentEncoding: ec.DeprecatedDataContentEncoding, // TODO fix up DeprecatedDataContentEncoding
-		Source:     ec.Source,
+		Source:     types.URLRef{URL: ec.Source.URL},
 		Subject:    ec.Subject,
 		Extensions: make(map[string]interface{}),
 	}
+
+	if ec.DataSchema != nil {
+		ret.SchemaURL = &types.URLRef{URL: ec.DataSchema.URL}
+	}
+
 	// TODO: DeprecatedDataContentEncoding needs to be moved to extensions.
 	if ec.Extensions != nil {
 		for k, v := range ec.Extensions {
@@ -123,27 +138,31 @@ func (ec EventContextV1) AsV1() *EventContextV1 {
 }
 
 // Validate returns errors based on requirements from the CloudEvents spec.
-// For more details, see https://github.com/cloudevents/spec/blob/master/spec.md
-// As of Feb 26, 2019, commit
-//
-// TODO: UPDATE THIS FOR v1.0
-//
-// + https://github.com/cloudevents/spec/pull/TODO -> extensions change
-// + https://github.com/cloudevents/spec/pull/TODO -> dataschema
+// For more details, see https://github.com/cloudevents/spec/blob/v1.0-rc1/spec.md.
 func (ec EventContextV1) Validate() error {
 	errors := []string(nil)
 
-	// TODO: a lot of these have changed. Double check them all.
-
-	// type
+	// id
 	// Type: String
 	// Constraints:
 	//  REQUIRED
 	//  MUST be a non-empty string
-	//  SHOULD be prefixed with a reverse-DNS name. The prefixed domain dictates the organization which defines the semantics of this event type.
-	eventType := strings.TrimSpace(ec.Type)
-	if eventType == "" {
-		errors = append(errors, "type: MUST be a non-empty string")
+	//  MUST be unique within the scope of the producer
+	id := strings.TrimSpace(ec.ID)
+	if id == "" {
+		errors = append(errors, "id: MUST be a non-empty string")
+		// no way to test "MUST be unique within the scope of the producer"
+	}
+
+	// source
+	// Type: URI-reference
+	// Constraints:
+	//  REQUIRED
+	//  MUST be a non-empty URI-reference
+	//	An absolute URI is RECOMMENDED
+	source := strings.TrimSpace(ec.Source.String())
+	if source == "" {
+		errors = append(errors, "source: REQUIRED")
 	}
 
 	// specversion
@@ -156,46 +175,35 @@ func (ec EventContextV1) Validate() error {
 		errors = append(errors, "specversion: MUST be a non-empty string")
 	}
 
-	// source
-	// Type: URI-reference
-	// Constraints:
-	//  REQUIRED
-	source := strings.TrimSpace(ec.Source.String())
-	if source == "" {
-		errors = append(errors, "source: REQUIRED")
-	}
-
-	// subject
+	// type
 	// Type: String
 	// Constraints:
-	//  OPTIONAL
+	//  REQUIRED
 	//  MUST be a non-empty string
-	if ec.Subject != nil {
-		subject := strings.TrimSpace(*ec.Subject)
-		if subject == "" {
-			errors = append(errors, "subject: if present, MUST be a non-empty string")
+	//  SHOULD be prefixed with a reverse-DNS name. The prefixed domain dictates the organization which defines the semantics of this event type.
+	eventType := strings.TrimSpace(ec.Type)
+	if eventType == "" {
+		errors = append(errors, "type: MUST be a non-empty string")
+	}
+
+	// The following attributes are optional but still have validation.
+
+	// datacontenttype
+	// Type: String per RFC 2046
+	// Constraints:
+	//  OPTIONAL
+	//  If present, MUST adhere to the format specified in RFC 2046
+	if ec.DataContentType != nil {
+		dataContentType := strings.TrimSpace(*ec.DataContentType)
+		if dataContentType == "" {
+			errors = append(errors, "datacontenttype: if present, MUST adhere to the format specified in RFC 2046")
+		} else {
+			_, _, err := mime.ParseMediaType(dataContentType)
+			if err != nil {
+				errors = append(errors, fmt.Sprintf("datacontenttype: failed to parse media type, %s", err.Error()))
+			}
 		}
 	}
-
-	// id
-	// Type: String
-	// Constraints:
-	//  REQUIRED
-	//  MUST be a non-empty string
-	//  MUST be unique within the scope of the producer
-	id := strings.TrimSpace(ec.ID)
-	if id == "" {
-		errors = append(errors, "id: MUST be a non-empty string")
-
-		// no way to test "MUST be unique within the scope of the producer"
-	}
-
-	// time
-	// Type: Timestamp
-	// Constraints:
-	//  OPTIONAL
-	//  If present, MUST adhere to the format specified in RFC 3339
-	// --> no need to test this, no way to set the time without it being valid.
 
 	// dataschema
 	// Type: URI
@@ -210,32 +218,24 @@ func (ec EventContextV1) Validate() error {
 		}
 	}
 
-	// datacontenttype
-	// Type: String per RFC 2046
+	// subject
+	// Type: String
 	// Constraints:
 	//  OPTIONAL
-	//  If present, MUST adhere to the format specified in RFC 2046
-	if ec.DataContentType != nil {
-		dataContentType := strings.TrimSpace(*ec.DataContentType)
-		if dataContentType == "" {
-			// TODO: need to test for RFC 2046
-			errors = append(errors, "datacontenttype: if present, MUST adhere to the format specified in RFC 2046")
+	//  MUST be a non-empty string
+	if ec.Subject != nil {
+		subject := strings.TrimSpace(*ec.Subject)
+		if subject == "" {
+			errors = append(errors, "subject: if present, MUST be a non-empty string")
 		}
 	}
 
-	//// datacontentencoding
-	//// Type: String per RFC 2045 Section 6.1
-	//// Constraints:
-	////  The attribute MUST be set if the data attribute contains string-encoded binary data.
-	////    Otherwise the attribute MUST NOT be set.
-	////  If present, MUST adhere to RFC 2045 Section 6.1
-	//if ec.DeprecatedDataContentEncoding != nil {
-	//	dataContentEncoding := strings.ToLower(strings.TrimSpace(*ec.DeprecatedDataContentEncoding))
-	//	if dataContentEncoding != Base64 {
-	//		// TODO: need to test for RFC 2046
-	//		errors = append(errors, "datacontentencoding: if present, MUST adhere to RFC 2045 Section 6.1")
-	//	}
-	//}
+	// time
+	// Type: Timestamp
+	// Constraints:
+	//  OPTIONAL
+	//  If present, MUST adhere to the format specified in RFC 3339
+	// --> no need to test this, no way to set the time without it being valid.
 
 	if len(errors) > 0 {
 		return fmt.Errorf(strings.Join(errors, "\n"))
@@ -265,9 +265,6 @@ func (ec EventContextV1) String() string {
 	if ec.DataContentType != nil {
 		b.WriteString("  datacontenttype: " + *ec.DataContentType + "\n")
 	}
-	//if ec.DeprecatedDataContentEncoding != nil {
-	//	b.WriteString("  datacontentencoding: " + *ec.DeprecatedDataContentEncoding + "\n")
-	//}
 
 	if ec.Extensions != nil && len(ec.Extensions) > 0 {
 		b.WriteString("Extensions,\n")
