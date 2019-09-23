@@ -105,7 +105,7 @@ func (ec EventContextV1) AsV02() *EventContextV02 {
 // AsV03 implements EventContextConverter.AsV03
 func (ec EventContextV1) AsV03() *EventContextV03 {
 	ret := EventContextV03{
-		SpecVersion:     CloudEventsVersionV02,
+		SpecVersion:     CloudEventsVersionV03,
 		ID:              ec.ID,
 		Time:            ec.Time,
 		Type:            ec.Type,
