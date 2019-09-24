@@ -139,16 +139,19 @@ func (ec EventContextV03) AsV03() *EventContextV03 {
 // AsV04 implements EventContextConverter.AsV04
 func (ec EventContextV03) AsV1() *EventContextV1 {
 	ret := EventContextV1{
-		SpecVersion:     CloudEventsVersionV02,
-		ID:              ec.ID,
-		Time:            ec.Time,
-		Type:            ec.Type,
-		DataSchema:      ec.SchemaURL,
+		SpecVersion: CloudEventsVersionV02,
+		ID:          ec.ID,
+		Time:        ec.Time,
+		Type:        ec.Type,
+
 		DataContentType: ec.DataContentType,
 		// DataContentEncoding: ec.DataContentEncoding, TODO: move this to extensions.
-		Source:     ec.Source,
+		Source:     types.URIRef{URL: ec.Source.URL},
 		Subject:    ec.Subject,
 		Extensions: make(map[string]string),
+	}
+	if ec.SchemaURL != nil {
+		ret.DataSchema = &types.URI{URL: ec.SchemaURL.URL}
 	}
 	if ec.Extensions != nil {
 		for k, v := range ec.Extensions {
