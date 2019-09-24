@@ -148,7 +148,7 @@ func (ec EventContextV03) AsV1() *EventContextV1 {
 		// DataContentEncoding: ec.DataContentEncoding, TODO: move this to extensions.
 		Source:     types.URIRef{URL: ec.Source.URL},
 		Subject:    ec.Subject,
-		Extensions: make(map[string]string),
+		Extensions: make(map[string]interface{}),
 	}
 	if ec.SchemaURL != nil {
 		ret.DataSchema = &types.URI{URL: ec.SchemaURL.URL}

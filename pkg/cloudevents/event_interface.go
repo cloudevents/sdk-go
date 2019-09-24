@@ -30,14 +30,17 @@ type EventReader interface {
 	// Extension Attributes
 
 	// Extensions returns the event.Context.GetExtensions().
+	// Extensions use the CloudEvents type system, details in package cloudevents/types.
 	Extensions() map[string]interface{}
 
+	// DEPRECATED: see event.Context.ExtensionAs
 	// ExtensionAs returns event.Context.ExtensionAs(name, obj).
 	ExtensionAs(string, interface{}) error
 
 	// Data Attribute
 
-	// ExtensionAs returns event.Context.ExtensionAs(name, obj).
+	// DataAs attempts to populate the provided data object with the event payload.
+	// data should be a pointer type.
 	DataAs(interface{}) error
 }
 
