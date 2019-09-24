@@ -1,34 +1,4 @@
-/*
-Package convert provides conversions specified by the CloudEvents type system.
-
-Each CloudEvents type has a preferred Go type, a set of convertible Go types,
-and a canonical string-encoding. This package provides conversions between these
-representations.
-
-In the table below "types" refers to package "github.com/cloudevents/sdk-go/pkg/cloudevents/types".
-
-+----------------+---------+-----------------------------------+
-|CloudEvents Type|Go type  |Compatible types                   |
-+----------------+---------+-----------------------------------+
-|Bool            |bool     |bool                               |
-+----------------+---------+-----------------------------------+
-|Integer         |int32    |Any numeric type with value in     |
-|                |         |range of int32                     |
-+----------------+---------+-----------------------------------+
-|String          |string   |string                             |
-+----------------+---------+-----------------------------------+
-|Binary          |[]byte   |[]byte                             |
-+----------------+---------+-----------------------------------+
-|URI             |url.URL  |url.URL, types.URIRef.             |
-|                |         |Must be an absolute URI.           |
-+----------------+---------+-----------------------------------+
-|URI-Reference   |url.URL  |url.URL, types.URIRef              |
-+----------------+---------+-----------------------------------+
-|Timestamp       |time.Time|time.Time, types.Timestamp         |
-+----------------+---------+-----------------------------------+
-
-*/
-package convert
+package types
 
 import (
 	"encoding/base64"
@@ -40,8 +10,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 )
 
 // Bool converts from bool or a "true"/"false" string.
@@ -122,7 +90,7 @@ func ToBinary(v interface{}) (ret []byte, err error) {
 	return ret, err
 }
 
-// URIReference converts from url.URL, types.URIref or string.
+// URIReference converts from url.URL, URIref or string.
 func ToURIReference(v interface{}) (ret url.URL, err error) {
 	name := "URI-Reference"
 	switch v := v.(type) {
@@ -134,17 +102,17 @@ func ToURIReference(v interface{}) (ret url.URL, err error) {
 		} else {
 			ret = *v
 		}
-	case types.URIRef:
+	case URIRef:
 		ret = v.URL
-	case *types.URIRef:
+	case *URIRef:
 		if v == nil {
 			err = valueErr(name, v)
 		} else {
 			ret = v.URL
 		}
-	case types.URLRef:
+	case URLRef:
 		ret = v.URL
-	case *types.URLRef:
+	case *URLRef:
 		if v == nil {
 			err = valueErr(name, v)
 		} else {
@@ -163,7 +131,7 @@ func ToURIReference(v interface{}) (ret url.URL, err error) {
 	return ret, err
 }
 
-// URI converts from url.URL, types.URIref or string. The URI must be absolute.
+// URI converts from url.URL, URIref or string. The URI must be absolute.
 func ToURI(v interface{}) (ret url.URL, err error) {
 	name := "URI"
 	ret, err = ToURIReference(v)
@@ -173,6 +141,15 @@ func ToURI(v interface{}) (ret url.URL, err error) {
 		err = fmt.Errorf("%s: %s", valueErr(name, v), "not an absolute URI")
 	}
 	return ret, err
+}
+
+// ToString converts from string.
+func ToString(v interface{}) (ret string, err error) {
+	name := "String"
+	if v, ok := v.(string); ok {
+		return v, nil
+	}
+	return "", typeErr(name, v)
 }
 
 // Timestamp converts from time.Time or string in time.RFC3339Nano format.
@@ -187,9 +164,9 @@ func ToTimestamp(v interface{}) (ret time.Time, err error) {
 		} else {
 			ret = *v
 		}
-	case types.Timestamp:
+	case Timestamp:
 		ret = v.Time
-	case *types.Timestamp:
+	case *Timestamp:
 		if v == nil {
 			err = valueErr(name, v)
 		} else {
@@ -218,10 +195,10 @@ func Normalize(v interface{}) (ret interface{}, err error) {
 		return v, nil
 	case []byte:
 		return ToBinary(v)
-	case url.URL, *url.URL, types.URLRef, *types.URLRef, types.URIRef, *types.URIRef:
+	case url.URL, *url.URL, URLRef, *URLRef, URIRef, *URIRef:
 		return ToURIReference(v)
 
-	case time.Time, *time.Time, types.Timestamp, *types.Timestamp:
+	case time.Time, *time.Time, Timestamp, *Timestamp:
 		return ToTimestamp(v)
 	default:
 		return nil, fmt.Errorf("%T is not a CloudEvents-compatible type", v)
@@ -255,6 +232,11 @@ func StringOf(v interface{}) (ret string, err error) {
 		err = fmt.Errorf("%T is not a CloudEvents-compatible type", v)
 	}
 	return ret, err
+}
+
+// Assign assumes  value to ptr if the types are compatible, returns err if not.
+func Assign() {
+
 }
 
 func typeErr(name string, v interface{}) error {

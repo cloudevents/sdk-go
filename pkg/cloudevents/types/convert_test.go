@@ -1,4 +1,4 @@
-package convert_test
+package types_test
 
 import (
 	"math"
@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cloudevents/sdk-go/pkg/binding/convert"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"github.com/stretchr/testify/assert"
 )
@@ -31,7 +30,7 @@ type tester struct {
 	convertFn interface{}
 }
 
-// Call a convert.To... function, use reflection since return types differ.
+// Call a types.To... function, use reflection since return types differ.
 func (t *tester) convert(v interface{}) (interface{}, error) {
 	args := make([]reflect.Value, 1)
 	if v == nil {
@@ -51,11 +50,11 @@ func (t *tester) ok(in, want interface{}, wantStr string) {
 	assert.NoError(t, err)
 	assert.Equal(t, want, got)
 
-	got, err = convert.Normalize(in) // ValueOf conversion
+	got, err = types.Normalize(in) // ValueOf conversion
 	assert.NoError(t, err)
 	assert.Equal(t, want, got)
 
-	gotStr, err := convert.StringOf(in) // Canonical string
+	gotStr, err := types.StringOf(in) // Canonical string
 	assert.NoError(t, err)
 	assert.Equal(t, wantStr, gotStr)
 
@@ -80,7 +79,7 @@ func (t *tester) str(str string, want interface{}) {
 }
 
 func TestBool(t *testing.T) {
-	x := tester{t, convert.ToBool}
+	x := tester{t, types.ToBool}
 	x.ok(true, true, "true")
 	x.ok(false, false, "false")
 
@@ -90,7 +89,7 @@ func TestBool(t *testing.T) {
 }
 
 func TestInteger(t *testing.T) {
-	x := tester{t, convert.ToInteger}
+	x := tester{t, types.ToInteger}
 	x.ok(42, int32(42), "42")
 	x.ok(int8(-8), int32(-8), "-8")
 	x.ok(int16(-16), int32(-16), "-16")
@@ -133,14 +132,14 @@ func TestInteger(t *testing.T) {
 }
 
 func TestString(t *testing.T) {
-	// There is no convert.ToString to avoid confusion with convert.StringOf.
+	// There is no types.ToString to avoid confusion with types.StringOf.
 	// Not much to test except that ValueOf/StringOf round-trip a string.
 	x := tester{t, func(v interface{}) (interface{}, error) { return v.(string), nil }}
 	x.ok("hello", "hello", "hello")
 }
 
 func TestBinary(t *testing.T) {
-	x := tester{t, convert.ToBinary}
+	x := tester{t, types.ToBinary}
 	x.ok([]byte("hello"), []byte("hello"), "aGVsbG8=")
 	x.ok([]byte{}, []byte{}, "")
 	// Asymmetic case: ToBinary([]byte(nil)) returns []byte(nil),
@@ -153,7 +152,7 @@ func TestBinary(t *testing.T) {
 }
 
 func TestURIReference(t *testing.T) {
-	x := tester{t, convert.ToURIReference}
+	x := tester{t, types.ToURIReference}
 	x.ok(absURI, absURI, absURI.String())
 	x.ok(&relURI, relURI, relURI.String())
 	x.ok(types.URIRef{URL: relURI}, relURI, relURI.String())
@@ -172,7 +171,7 @@ func TestURIReference(t *testing.T) {
 func TestURI(t *testing.T) {
 	// ToURI just does ToURIReference and adds an IsAbs() test.
 
-	x := tester{t, convert.ToURI}
+	x := tester{t, types.ToURI}
 	x.ok(absURI, absURI, absURI.String())
 	x.ok(&types.URIRef{URL: absURI}, absURI, absURI.String())
 
@@ -183,7 +182,7 @@ func TestURI(t *testing.T) {
 }
 
 func TestTimestamp(t *testing.T) {
-	x := tester{t, convert.ToTimestamp}
+	x := tester{t, types.ToTimestamp}
 	x.ok(someTime, someTime, timeStr)
 	x.ok(&someTime, someTime, timeStr)
 	x.ok(types.Timestamp{Time: someTime}, someTime, timeStr)
@@ -200,7 +199,7 @@ func TestTimestamp(t *testing.T) {
 
 func TestIncompatible(t *testing.T) {
 	// Values that won't convert at all.
-	x := tester{t, convert.Normalize}
+	x := tester{t, types.Normalize}
 	x.err(nil, "<nil> is not a CloudEvents-compatible type")
 	x.err(complex(0, 0), "complex128 is not a CloudEvents-compatible type")
 	x.err(map[string]interface{}{}, "map[string]interface {} is not a CloudEvents-compatible type")
