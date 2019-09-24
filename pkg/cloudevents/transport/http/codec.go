@@ -37,23 +37,17 @@ func (c *Codec) Encode(ctx context.Context, e cloudevents.Event) (transport.Mess
 	switch encoding {
 	case Default:
 		fallthrough
-	case BinaryV01:
-		fallthrough
-	case StructuredV01:
+	case BinaryV01, StructuredV01:
 		if c.v01 == nil {
 			c.v01 = &CodecV01{Encoding: encoding}
 		}
 		return c.v01.Encode(ctx, e)
-	case BinaryV02:
-		fallthrough
-	case StructuredV02:
+	case BinaryV02, StructuredV02:
 		if c.v02 == nil {
 			c.v02 = &CodecV02{Encoding: encoding}
 		}
 		return c.v02.Encode(ctx, e)
-	case BinaryV03:
-		fallthrough
-	case StructuredV03:
+	case BinaryV03, StructuredV03:
 		if c.v03 == nil {
 			c.v03 = &CodecV03{Encoding: encoding}
 		}

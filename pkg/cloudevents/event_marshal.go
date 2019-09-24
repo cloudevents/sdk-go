@@ -94,14 +94,26 @@ func JsonEncode(e Event) ([]byte, error) {
 	if e.DataContentType() == "" {
 		e.SetDataContentType(ApplicationJSON)
 	}
-	data, err := e.DataBytes()
-	if err != nil {
-		return nil, err
+	var data []byte
+	isBase64 := e.Context.DeprecatedGetDataContentEncoding() == Base64
+	if e.DataBase64 != "" {
+		isBase64 = true
+		var err error
+		data, err = json.Marshal(e.DataBase64)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		var err error
+		data, err = e.DataBytes()
+		if err != nil {
+			return nil, err
+		}
 	}
-	return jsonEncode(e.Context, data)
+	return jsonEncode(e.Context, data, isBase64)
 }
 
-func jsonEncode(ctx EventContextReader, data []byte) ([]byte, error) {
+func jsonEncode(ctx EventContextReader, data []byte, isBase64 bool) ([]byte, error) {
 	var b map[string]json.RawMessage
 	var err error
 
@@ -124,16 +136,23 @@ func jsonEncode(ctx EventContextReader, data []byte) ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		isBase64 := ctx.DeprecatedGetDataContentEncoding() == Base64
 		isJson := mediaType == "" || mediaType == ApplicationJSON || mediaType == TextJSON
 		// TODO(#60): we do not support json values at the moment, only objects and lists.
 		if isJson && !isBase64 {
 			b["data"] = data
-		} else if data[0] != byte('"') {
-			b["data"] = []byte(strconv.QuoteToASCII(string(data)))
 		} else {
-			// already quoted
-			b["data"] = data
+			var dataKey string
+			if ctx.GetSpecVersion() == CloudEventsVersionV1 {
+				dataKey = "data_base64"
+			} else {
+				dataKey = "data"
+			}
+			if data[0] != byte('"') {
+				b[dataKey] = []byte(strconv.QuoteToASCII(string(data)))
+			} else {
+				// already quoted
+				b[dataKey] = data
+			}
 		}
 	}
 
@@ -260,7 +279,7 @@ func (e *Event) JsonDecodeV1(body []byte, raw map[string]json.RawMessage) error 
 	delete(raw, "time")
 	delete(raw, "dataschema")
 	delete(raw, "datacontenttype")
-	delete(raw, "datacontentencoding")
+	//delete(raw, "datacontentencoding") //
 
 	var data interface{}
 	if d, ok := raw["data"]; ok {
@@ -268,16 +287,31 @@ func (e *Event) JsonDecodeV1(body []byte, raw map[string]json.RawMessage) error 
 	}
 	delete(raw, "data")
 
+	var dataBase64 string
+	if d, ok := raw["data_base64"]; ok {
+		var tmp string
+		if err := json.Unmarshal(d, &tmp); err != nil {
+			return err
+		}
+		dataBase64 = tmp
+	}
+	delete(raw, "data_base64")
+
 	if len(raw) > 0 {
-		extensions := make(map[string]interface{}, len(raw))
+		extensions := make(map[string]string, len(raw))
 		for k, v := range raw {
-			extensions[k] = v
+			var tmp string
+			if err := json.Unmarshal(v, &tmp); err != nil {
+				return err
+			}
+			extensions[k] = tmp
 		}
 		ec.Extensions = extensions
 	}
 
 	e.Context = &ec
 	e.Data = data
+	e.DataBase64 = dataBase64
 	e.DataEncoded = data != nil
 
 	return nil

@@ -14,7 +14,7 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 )
 
-// CodecV01 represents a http transport codec that uses CloudEvents spec v0.3
+// CodecV01 represents a http transport codec that uses CloudEvents spec v0.1
 type CodecV01 struct {
 	CodecStructured
 

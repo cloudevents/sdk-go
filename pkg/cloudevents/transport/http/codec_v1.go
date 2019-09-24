@@ -169,7 +169,7 @@ func (v CodecV1) fromHeaders(h http.Header) (cloudevents.EventContextV1, error) 
 	ec.Type = h.Get("ce-type")
 	h.Del("ce-type")
 
-	source := types.ParseURLRef(h.Get("ce-source"))
+	source := types.ParseURIRef(h.Get("ce-source"))
 	if source != nil {
 		ec.Source = *source
 	}
@@ -184,7 +184,7 @@ func (v CodecV1) fromHeaders(h http.Header) (cloudevents.EventContextV1, error) 
 	ec.Time = types.ParseTimestamp(h.Get("ce-time"))
 	h.Del("ce-time")
 
-	ec.DataSchema = types.ParseURLRef(h.Get("ce-dataschema"))
+	ec.DataSchema = types.ParseURI(h.Get("ce-dataschema"))
 	h.Del("ce-dataschema")
 
 	contentType := h.Get("Content-Type")
@@ -193,20 +193,14 @@ func (v CodecV1) fromHeaders(h http.Header) (cloudevents.EventContextV1, error) 
 	}
 	h.Del("Content-Type")
 
-	//dataContentEncoding := h.Get("ce-datacontentencoding")
-	//if dataContentEncoding != "" {
-	//	ec.DataContentEncoding = &dataContentEncoding
-	//}
-	//h.Del("ce-datacontentencoding")
-
 	// At this point, we have deleted all the known headers.
 	// Everything left is assumed to be an extension.
 
 	extensions := make(map[string]string)
-	for k, v := range h {
+	for k, _ := range h {
 		if len(k) > len("ce-") && strings.EqualFold(k[:len("ce-")], "ce-") {
 			ak := strings.ToLower(k[len("ce-"):])
-			extensions[ak] = v[0]
+			extensions[ak] = h.Get(k)
 		}
 	}
 	if len(extensions) > 0 {
