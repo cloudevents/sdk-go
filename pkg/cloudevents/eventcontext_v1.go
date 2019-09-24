@@ -32,7 +32,7 @@ type EventContextV1 struct {
 	// Time - A Timestamp when the event happened.
 	Time *types.Timestamp `json:"time,omitempty"`
 	// DataSchema - A link to the schema that the `data` attribute adheres to.
-	DataSchema *types.URLRef `json:"dataschema,omitempty"` // TODO: spec changed to URL.
+	DataSchema *types.URI `json:"dataschema,omitempty"`
 	// GetDataMediaType - A MIME (RFC2046) string describing the media type of `data`.
 	// TODO: Should an empty string assume `application/json`, `application/octet-stream`, or auto-detect the content?
 	DataContentType *string `json:"datacontenttype,omitempty"`

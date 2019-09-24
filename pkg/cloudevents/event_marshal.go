@@ -52,6 +52,8 @@ func (e *Event) UnmarshalJSON(b []byte) error {
 		err = e.JsonDecodeV02(b, raw)
 	case CloudEventsVersionV03:
 		err = e.JsonDecodeV03(b, raw)
+	case CloudEventsVersionV1:
+		err = e.JsonDecodeV1(b, raw)
 	default:
 		return fmt.Errorf("unnknown spec version: %q", version)
 	}
@@ -217,6 +219,46 @@ func (e *Event) JsonDecodeV03(body []byte, raw map[string]json.RawMessage) error
 	delete(raw, "id")
 	delete(raw, "time")
 	delete(raw, "schemaurl")
+	delete(raw, "datacontenttype")
+	delete(raw, "datacontentencoding")
+
+	var data interface{}
+	if d, ok := raw["data"]; ok {
+		data = []byte(d)
+	}
+	delete(raw, "data")
+
+	if len(raw) > 0 {
+		extensions := make(map[string]interface{}, len(raw))
+		for k, v := range raw {
+			extensions[k] = v
+		}
+		ec.Extensions = extensions
+	}
+
+	e.Context = &ec
+	e.Data = data
+	e.DataEncoded = data != nil
+
+	return nil
+}
+
+// JsonDecodeV1 takes in the byte representation of a version 1.0 structured json CloudEvent and returns a
+// cloudevent.Event or an error if there are parsing errors.
+func (e *Event) JsonDecodeV1(body []byte, raw map[string]json.RawMessage) error {
+	ec := EventContextV1{}
+	if err := json.Unmarshal(body, &ec); err != nil {
+		return err
+	}
+
+	// TODO: could use reflection to get these.
+	delete(raw, "specversion")
+	delete(raw, "type")
+	delete(raw, "source")
+	delete(raw, "subject")
+	delete(raw, "id")
+	delete(raw, "time")
+	delete(raw, "dataschema")
 	delete(raw, "datacontenttype")
 	delete(raw, "datacontentencoding")
 
