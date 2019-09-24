@@ -270,7 +270,6 @@ func (e *Event) JsonDecodeV1(body []byte, raw map[string]json.RawMessage) error 
 		return err
 	}
 
-	// TODO: could use reflection to get these.
 	delete(raw, "specversion")
 	delete(raw, "type")
 	delete(raw, "source")
@@ -279,7 +278,6 @@ func (e *Event) JsonDecodeV1(body []byte, raw map[string]json.RawMessage) error 
 	delete(raw, "time")
 	delete(raw, "dataschema")
 	delete(raw, "datacontenttype")
-	//delete(raw, "datacontentencoding") //
 
 	var data interface{}
 	if d, ok := raw["data"]; ok {

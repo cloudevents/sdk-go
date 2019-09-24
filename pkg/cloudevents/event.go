@@ -16,11 +16,11 @@ type Event struct {
 }
 
 const (
-	defaultEventVersion = CloudEventsVersionV03
+	defaultEventVersion = CloudEventsVersionV02
 )
 
 // New returns a new Event, an optional version can be passed to change the
-// default spec version from 0.3 to the provided version.
+// default spec version from 0.2 to the provided version.
 func New(version ...string) Event {
 	specVersion := defaultEventVersion // TODO: should there be a default? or set a default?
 	if len(version) >= 1 {
