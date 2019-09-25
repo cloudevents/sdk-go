@@ -31,13 +31,21 @@ type EventContextReader interface {
 	// GetDataContentType and it may return an error.
 	GetDataMediaType() (string, error)
 
-	// ExtensionAs populates the given interface with the CloudEvents extension
-	// of the given name from the extension attributes. It returns an error if
-	// the extension does not exist, the extension's type does not match the
-	// provided type, or if the type is not a supported.
+	// DEPRECATED: Access extensions directly via the GetExtensions()
+	// For example replace this:
+	//
+	//     var i int
+	//     err := ec.ExtensionAs("foo", &i)
+	//
+	// With this:
+	//
+	//     i, err := types.ToInteger(ec.GetExtensions["foo"])
+	//
 	ExtensionAs(string, interface{}) error
 
 	// GetExtensions returns the full extensions map.
+	//
+	// Extensions use the CloudEvents type system, details in package cloudevents/types.
 	GetExtensions() map[string]interface{}
 }
 

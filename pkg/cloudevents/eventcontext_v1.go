@@ -48,7 +48,7 @@ type EventContextV1 struct {
 
 	// Extensions - Additional extension metadata beyond the base spec.
 	// +optional
-	Extensions map[string]string `json:"-"`
+	Extensions map[string]interface{} `json:"-"`
 }
 
 // Adhere to EventContext
@@ -62,26 +62,27 @@ func (ec EventContextV1) ExtensionAs(name string, obj interface{}) error {
 	}
 
 	// Only support *string for now.
-	switch v := obj.(type) {
-	case *string:
-		*v = value
-		return nil
-	default:
-		return fmt.Errorf("unknown extension type %T", obj)
+	if v, ok := obj.(*string); ok {
+		if *v, ok = value.(string); ok {
+			return nil
+		}
 	}
+	return fmt.Errorf("unknown extension type %T", obj)
 }
 
 // SetExtension adds the extension 'name' with value 'value' to the CloudEvents context.
 func (ec *EventContextV1) SetExtension(name string, value interface{}) error {
 	if ec.Extensions == nil {
-		ec.Extensions = make(map[string]string)
+		ec.Extensions = make(map[string]interface{})
 	}
 	if value == nil {
 		delete(ec.Extensions, name)
+		return nil
 	} else {
-		ec.Extensions[name] = fmt.Sprintf("%s", value) // TODO we might need to do something about encoding the string.
+		var err error
+		ec.Extensions[name], err = types.Normalize(value)
+		return err
 	}
-	return nil
 }
 
 // Clone implements EventContextConverter.Clone

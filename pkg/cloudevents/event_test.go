@@ -537,6 +537,7 @@ Data,
 	}
 }
 
+// ExtensionAs is deprecated, replacement is TestExtensions below
 func TestExtensionAs(t *testing.T) {
 	now := types.Timestamp{Time: time.Now()}
 
@@ -623,6 +624,82 @@ func TestExtensionAs(t *testing.T) {
 			var got string
 			err := tc.event.Context.ExtensionAs(tc.extension, &got)
 
+			if tc.wantError {
+				if err == nil {
+					t.Errorf("expected error %q, got nil", tc.wantErrorMsg)
+				} else {
+					if diff := cmp.Diff(tc.wantErrorMsg, err.Error()); diff != "" {
+						t.Errorf("unexpected (-want, +got) = %v", diff)
+					}
+				}
+			} else {
+				if diff := cmp.Diff(tc.want, got); diff != "" {
+					t.Errorf("unexpected (-want, +got) = %v", diff)
+				}
+			}
+		})
+	}
+}
+
+func TestExtensions(t *testing.T) {
+	now := types.Timestamp{Time: time.Now()}
+
+	testCases := map[string]struct {
+		event        ce.Event
+		extension    string
+		want         string
+		wantError    bool
+		wantErrorMsg string
+	}{
+		"full v01, test extension": {
+			event: ce.Event{
+				Context: FullEventContextV01(now),
+			},
+			extension: "test",
+			want:      "extended",
+		},
+		"full v01, another-test extension invalid type": {
+			event: ce.Event{
+				Context: FullEventContextV01(now),
+			},
+			extension:    "another-test",
+			wantError:    true,
+			wantErrorMsg: "int is not compatible with CloudEvents String",
+		},
+		"full v02, test extension": {
+			event: ce.Event{
+				Context: FullEventContextV02(now),
+			},
+			extension: "test",
+			want:      "extended",
+		},
+		"full v02, another-test extension invalid type": {
+			event: ce.Event{
+				Context: FullEventContextV02(now),
+			},
+			extension:    "another-test",
+			wantError:    true,
+			wantErrorMsg: "int is not compatible with CloudEvents String",
+		},
+		"full v03, test extension": {
+			event: ce.Event{
+				Context: FullEventContextV03(now),
+			},
+			extension: "test",
+			want:      "extended",
+		},
+		"full v03, another-test extension invalid type": {
+			event: ce.Event{
+				Context: FullEventContextV03(now),
+			},
+			extension:    "another-test",
+			wantError:    true,
+			wantErrorMsg: "int is not compatible with CloudEvents String",
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+			got, err := types.ToString(tc.event.Context.GetExtensions()[tc.extension])
 			if tc.wantError {
 				if err == nil {
 					t.Errorf("expected error %q, got nil", tc.wantErrorMsg)

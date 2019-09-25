@@ -22,7 +22,7 @@ func TestValidateV1(t *testing.T) {
 	DataSchema, _ := url.Parse("http://example.com/schema")
 	schema := &types.URI{URL: *DataSchema}
 
-	extensions := make(map[string]string)
+	extensions := make(map[string]interface{})
 	extensions["test"] = "extended"
 
 	testCases := map[string]struct {
@@ -131,7 +131,7 @@ func TestValidateV1(t *testing.T) {
 				ID:              "",
 				DataSchema:      &types.URI{},
 				DataContentType: strptr(""),
-				Extensions:      make(map[string]string),
+				Extensions:      make(map[string]interface{}),
 			},
 			want: []string{
 				"type:",
