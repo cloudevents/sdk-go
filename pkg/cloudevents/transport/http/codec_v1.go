@@ -134,11 +134,11 @@ func (v CodecV1) toHeaders(ec *cloudevents.EventContextV1) (http.Header, error) 
 	for k, v := range ec.Extensions {
 		// Per spec, extensions are strings and converted to a list of headers as:
 		// ce-key: value
-		val, err := types.StringOf(v)
+		val, err := types.ValueOf(v)
 		if err != nil {
 			return h, err
 		}
-		h.Set("ce-"+k, val)
+		h.Set("ce-"+k, val.String())
 	}
 
 	return h, nil
