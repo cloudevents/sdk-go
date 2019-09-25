@@ -134,6 +134,7 @@ var (
 	WithPath                 = http.WithPath
 	WithMiddleware           = http.WithMiddleware
 	WithLongPollTarget       = http.WithLongPollTarget
+	WithListener             = http.WithListener
 
 	// HTTP Context
 
