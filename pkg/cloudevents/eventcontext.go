@@ -47,6 +47,11 @@ type EventContextReader interface {
 	//
 	// Extensions use the CloudEvents type system, details in package cloudevents/types.
 	GetExtensions() map[string]interface{}
+
+	// GetExtension returns the extension associated with with the given key.
+	// The given key is case insensitive. If the extension can not be found,
+	// an error will be returned.
+	GetExtension(string) (interface{}, error)
 }
 
 // EventContextWriter are the methods required to be a writer of context

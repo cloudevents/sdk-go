@@ -59,7 +59,7 @@ func TestCodecV1_Encode(t *testing.T) {
 					DataContentType: cloudevents.StringOfApplicationJSON(),
 					Source:          *source,
 					Subject:         &subject,
-					Extensions: map[string]string{
+					Extensions: map[string]interface{}{
 						"test": "extended",
 					},
 				},
@@ -112,7 +112,7 @@ func TestCodecV1_Encode(t *testing.T) {
 					DataContentType: cloudevents.StringOfApplicationJSON(),
 					Source:          *source,
 					Subject:         &subject,
-					Extensions: map[string]string{
+					Extensions: map[string]interface{}{
 						"test": "extended",
 					},
 				},
@@ -171,7 +171,7 @@ func TestCodecV1_Encode(t *testing.T) {
 					DataContentType: cloudevents.StringOfApplicationJSON(),
 					Source:          *source,
 					Subject:         &subject,
-					Extensions: map[string]string{
+					Extensions: map[string]interface{}{
 						"test": "extended",
 					},
 				}.AsV1(),
@@ -213,7 +213,7 @@ func TestCodecV1_Encode(t *testing.T) {
 					DataContentType: cloudevents.StringOfApplicationJSON(),
 					Source:          *source,
 					Subject:         &subject,
-					Extensions: map[string]string{
+					Extensions: map[string]interface{}{
 						"test": "extended",
 					},
 				}.AsV1(),
@@ -337,7 +337,7 @@ func TestCodecV1_Decode(t *testing.T) {
 					DataContentType: cloudevents.StringOfApplicationJSON(),
 					Source:          *source,
 					Subject:         &subject,
-					Extensions: map[string]string{
+					Extensions: map[string]interface{}{
 						"test": "extended binary",
 					},
 				},
@@ -400,7 +400,7 @@ func TestCodecV1_Decode(t *testing.T) {
 					DataContentType: cloudevents.StringOfApplicationJSON(),
 					Source:          *source,
 					Subject:         &subject,
-					Extensions: map[string]string{
+					Extensions: map[string]interface{}{
 						"test": "extended",
 					},
 				}.AsV1(),
@@ -439,7 +439,7 @@ func TestCodecV1_Decode(t *testing.T) {
 					DataContentType: cloudevents.StringOfApplicationJSON(),
 					Source:          *source,
 					Subject:         &subject,
-					Extensions: map[string]string{
+					Extensions: map[string]interface{}{
 						"test": "extended",
 					},
 				}.AsV1(),

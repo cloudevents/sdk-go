@@ -122,7 +122,11 @@ func (v CodecV1) toHeaders(ec *cloudevents.EventContextV1) (http.Header, error) 
 	for k, v := range ec.Extensions {
 		// Per spec, extensions are strings and converted to a list of headers as:
 		// ce-key: value
-		h.Set("ce-"+k, v)
+		val, err := types.StringOf(v)
+		if err != nil {
+			return h, err
+		}
+		h.Set("ce-"+k, val)
 	}
 
 	return h, nil
@@ -196,7 +200,7 @@ func (v CodecV1) fromHeaders(h http.Header) (cloudevents.EventContextV1, error) 
 	// At this point, we have deleted all the known headers.
 	// Everything left is assumed to be an extension.
 
-	extensions := make(map[string]string)
+	extensions := make(map[string]interface{})
 	for k, _ := range h {
 		if len(k) > len("ce-") && strings.EqualFold(k[:len("ce-")], "ce-") {
 			ak := strings.ToLower(k[len("ce-"):])

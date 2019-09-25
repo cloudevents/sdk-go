@@ -296,7 +296,7 @@ func (e *Event) JsonDecodeV1(body []byte, raw map[string]json.RawMessage) error 
 	delete(raw, "data_base64")
 
 	if len(raw) > 0 {
-		extensions := make(map[string]string, len(raw))
+		extensions := make(map[string]interface{}, len(raw))
 		for k, v := range raw {
 			var tmp string
 			if err := json.Unmarshal(v, &tmp); err != nil {
