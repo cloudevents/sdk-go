@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 )
 
@@ -55,7 +56,7 @@ func (c *Codec) loadCodec(encoding Encoding) (transport.Codec, error) {
 		return c.v03, nil
 	case BinaryV1, StructuredV1, BatchedV1:
 		c._v1.Do(func() {
-			c.v1 = &CodecV1{Encoding: c.Encoding}
+			c.v1 = &CodecV1{DefaultEncoding: c.Encoding}
 		})
 		return c.v1, nil
 	}
@@ -72,6 +73,7 @@ func (c *Codec) Encode(ctx context.Context, e cloudevents.Event) (transport.Mess
 	if err != nil {
 		return nil, err
 	}
+	ctx = cecontext.WithEncoding(ctx, encoding.Name())
 	return codec.Encode(ctx, e)
 }
 

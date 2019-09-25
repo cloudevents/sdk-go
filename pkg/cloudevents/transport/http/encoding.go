@@ -46,6 +46,10 @@ const (
 	// Structured is used for Context Based Encoding Selections to use the
 	// DefaultStructuredEncodingSelectionStrategy
 	Structured = "structured"
+
+	// Batched is used for Context Based Encoding Selections to use the
+	// DefaultStructuredEncodingSelectionStrategy
+	Batched = "batched"
 )
 
 func ContextBasedEncodingSelectionStrategy(ctx context.Context, e cloudevents.Event) Encoding {
@@ -181,5 +185,21 @@ func (e Encoding) Codec() string {
 	// Unknown
 	default:
 		return "unknown"
+	}
+}
+
+// Name creates a string to represent the the codec name.
+func (e Encoding) Name() string {
+	switch e {
+	case Default:
+		return Binary
+	case BinaryV01, BinaryV02, BinaryV03, BinaryV1:
+		return Binary
+	case StructuredV01, StructuredV02, StructuredV03, StructuredV1:
+		return Structured
+	case BatchedV03, BatchedV1:
+		return Batched
+	default:
+		return Binary
 	}
 }
