@@ -17,9 +17,11 @@ func (e *Event) SetSpecVersion(v string) {
 			e.Context = EventContextV02{}.AsV02()
 		case CloudEventsVersionV03:
 			e.Context = EventContextV03{}.AsV03()
+		case CloudEventsVersionV1:
+			e.Context = EventContextV1{}.AsV1()
 		default:
-			panic(fmt.Errorf("a valid spec version is required: [%s, %s, %s]",
-				CloudEventsVersionV01, CloudEventsVersionV02, CloudEventsVersionV03))
+			panic(fmt.Errorf("a valid spec version is required: [%s, %s, %s, %s]",
+				CloudEventsVersionV01, CloudEventsVersionV02, CloudEventsVersionV03, CloudEventsVersionV1))
 		}
 		return
 	}
