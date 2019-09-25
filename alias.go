@@ -26,6 +26,7 @@ type EventResponse = cloudevents.EventResponse
 // Context
 
 type EventContext = cloudevents.EventContext
+type EventContextV1 = cloudevents.EventContextV1
 type EventContextV01 = cloudevents.EventContextV01
 type EventContextV02 = cloudevents.EventContextV02
 type EventContextV03 = cloudevents.EventContextV03
@@ -61,6 +62,9 @@ const (
 
 	// HTTP Transport Encodings
 
+	HTTPBinaryV1      = http.BinaryV1
+	HTTPStructuredV1  = http.StructuredV1
+	HTTPBatchedV1     = http.BatchedV1
 	HTTPBinaryV01     = http.BinaryV01
 	HTTPStructuredV01 = http.StructuredV01
 	HTTPBinaryV02     = http.BinaryV02
@@ -115,6 +119,8 @@ var (
 
 	ParseTimestamp = types.ParseTimestamp
 	ParseURLRef    = types.ParseURLRef
+	ParseURIRef    = types.ParseURIRef
+	ParseURI       = types.ParseURI
 
 	// HTTP Transport
 
