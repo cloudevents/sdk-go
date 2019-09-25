@@ -41,17 +41,17 @@ func (c *Codec) loadCodec(encoding Encoding) (transport.Codec, error) {
 		fallthrough
 	case BinaryV01, StructuredV01:
 		c._v01.Do(func() {
-			c.v01 = &CodecV01{Encoding: c.Encoding}
+			c.v01 = &CodecV01{DefaultEncoding: c.Encoding}
 		})
 		return c.v01, nil
 	case BinaryV02, StructuredV02:
 		c._v02.Do(func() {
-			c.v02 = &CodecV02{Encoding: c.Encoding}
+			c.v02 = &CodecV02{DefaultEncoding: c.Encoding}
 		})
 		return c.v02, nil
 	case BinaryV03, StructuredV03, BatchedV03:
 		c._v03.Do(func() {
-			c.v03 = &CodecV03{Encoding: c.Encoding}
+			c.v03 = &CodecV03{DefaultEncoding: c.Encoding}
 		})
 		return c.v03, nil
 	case BinaryV1, StructuredV1, BatchedV1:

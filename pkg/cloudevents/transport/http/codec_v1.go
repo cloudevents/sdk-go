@@ -213,7 +213,7 @@ func (v CodecV1) fromHeaders(h http.Header) (cloudevents.EventContextV1, error) 
 	// Everything left is assumed to be an extension.
 
 	extensions := make(map[string]interface{})
-	for k, _ := range h {
+	for k := range h {
 		if len(k) > len("ce-") && strings.EqualFold(k[:len("ce-")], "ce-") {
 			ak := strings.ToLower(k[len("ce-"):])
 			extensions[ak] = h.Get(k)
