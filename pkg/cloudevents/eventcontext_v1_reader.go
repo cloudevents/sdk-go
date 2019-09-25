@@ -1,6 +1,7 @@
 package cloudevents
 
 import (
+	"fmt"
 	"mime"
 	"time"
 )
@@ -77,6 +78,7 @@ func (ec EventContextV1) DeprecatedGetDataContentEncoding() string {
 	return ""
 }
 
+// GetExtensions implements EventContextReader.GetExtensions
 func (ec EventContextV1) GetExtensions() map[string]interface{} {
 	// For now, convert the extensions of v1.0 to the pre-v1.0 style.
 	ext := make(map[string]interface{}, len(ec.Extensions))
@@ -84,4 +86,13 @@ func (ec EventContextV1) GetExtensions() map[string]interface{} {
 		ext[k] = v
 	}
 	return ext
+}
+
+// GetExtension implements EventContextReader.GetExtension
+func (ec EventContextV1) GetExtension(key string) (interface{}, error) {
+	v, ok := caseInsensitiveSearch(key, ec.Extensions)
+	if !ok {
+		return "", fmt.Errorf("%q not found", key)
+	}
+	return v, nil
 }

@@ -1,6 +1,7 @@
 package cloudevents
 
 import (
+	"fmt"
 	"mime"
 	"time"
 )
@@ -85,6 +86,16 @@ func (ec EventContextV02) DeprecatedGetDataContentEncoding() string {
 	return enc
 }
 
+// GetExtensions implements EventContextReader.GetExtensions
 func (ec EventContextV02) GetExtensions() map[string]interface{} {
 	return ec.Extensions
+}
+
+// GetExtension implements EventContextReader.GetExtension
+func (ec EventContextV02) GetExtension(key string) (interface{}, error) {
+	v, ok := caseInsensitiveSearch(key, ec.Extensions)
+	if !ok {
+		return "", fmt.Errorf("%q not found", key)
+	}
+	return v, nil
 }

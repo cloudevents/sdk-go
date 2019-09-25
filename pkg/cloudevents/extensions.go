@@ -1,5 +1,7 @@
 package cloudevents
 
+import "strings"
+
 const (
 	// DataContentEncodingKey is the key to DeprecatedDataContentEncoding for versions that do not support data content encoding
 	// directly.
@@ -11,3 +13,13 @@ const (
 	// SubjectKey is the key to Subject for versions that do not support subject directly.
 	SubjectKey = "subject"
 )
+
+func caseInsensitiveSearch(key string, space map[string]interface{}) (interface{}, bool) {
+	lkey := strings.ToLower(key)
+	for k, v := range space {
+		if strings.EqualFold(lkey, strings.ToLower(k)) {
+			return v, true
+		}
+	}
+	return nil, false
+}
