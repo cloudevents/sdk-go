@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
@@ -17,7 +18,7 @@ import (
 type CodecV1 struct {
 	CodecStructured
 
-	Encoding Encoding
+	DefaultEncoding Encoding
 }
 
 // Adheres to Codec
@@ -25,8 +26,19 @@ var _ transport.Codec = (*CodecV1)(nil)
 
 // Encode implements Codec.Encode
 func (v CodecV1) Encode(ctx context.Context, e cloudevents.Event) (transport.Message, error) {
-	_, r := observability.NewReporter(ctx, CodecObserved{o: reportEncode, c: v.Encoding.Codec()})
-	m, err := v.obsEncode(ctx, e)
+	encoding := v.DefaultEncoding
+	strEnc := cecontext.EncodingFrom(ctx)
+	if strEnc != "" {
+		switch strEnc {
+		case Binary:
+			encoding = BinaryV1
+		case Structured:
+			encoding = StructuredV1
+		}
+	}
+
+	_, r := observability.NewReporter(ctx, CodecObserved{o: reportEncode, c: encoding.Codec()})
+	m, err := v.obsEncode(ctx, e, encoding)
 	if err != nil {
 		r.Error()
 	} else {
@@ -35,8 +47,8 @@ func (v CodecV1) Encode(ctx context.Context, e cloudevents.Event) (transport.Mes
 	return m, err
 }
 
-func (v CodecV1) obsEncode(ctx context.Context, e cloudevents.Event) (transport.Message, error) {
-	switch v.Encoding {
+func (v CodecV1) obsEncode(ctx context.Context, e cloudevents.Event, encoding Encoding) (transport.Message, error) {
+	switch encoding {
 	case Default:
 		fallthrough
 	case BinaryV1:
@@ -46,7 +58,7 @@ func (v CodecV1) obsEncode(ctx context.Context, e cloudevents.Event) (transport.
 	case BatchedV1:
 		return nil, fmt.Errorf("not implemented")
 	default:
-		return nil, fmt.Errorf("unknown encoding: %d", v.Encoding)
+		return nil, fmt.Errorf("unknown encoding: %d", encoding)
 	}
 }
 
@@ -111,7 +123,7 @@ func (v CodecV1) toHeaders(ec *cloudevents.EventContextV1) (http.Header, error) 
 	}
 	if ec.DataContentType != nil {
 		h.Set("Content-Type", *ec.DataContentType)
-	} else if v.Encoding == Default || v.Encoding == BinaryV1 {
+	} else {
 		h.Set("Content-Type", cloudevents.ApplicationJSON)
 	}
 	// TODO: fix data content encoding for new v1.0 format.
@@ -201,7 +213,7 @@ func (v CodecV1) fromHeaders(h http.Header) (cloudevents.EventContextV1, error) 
 	// Everything left is assumed to be an extension.
 
 	extensions := make(map[string]interface{})
-	for k, _ := range h {
+	for k := range h {
 		if len(k) > len("ce-") && strings.EqualFold(k[:len("ce-")], "ce-") {
 			ak := strings.ToLower(k[len("ce-"):])
 			extensions[ak] = h.Get(k)

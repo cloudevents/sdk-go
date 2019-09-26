@@ -79,7 +79,7 @@ func TestCodecV02_Encode(t *testing.T) {
 			},
 		},
 		"simple v0.2 binary": {
-			codec: http.CodecV02{Encoding: http.BinaryV02},
+			codec: http.CodecV02{DefaultEncoding: http.BinaryV02},
 			event: cloudevents.Event{
 				Context: &cloudevents.EventContextV02{
 					Type:   "com.example.test",
@@ -98,7 +98,7 @@ func TestCodecV02_Encode(t *testing.T) {
 			},
 		},
 		"full v0.2 binary": {
-			codec: http.CodecV02{Encoding: http.BinaryV02},
+			codec: http.CodecV02{DefaultEncoding: http.BinaryV02},
 			event: cloudevents.Event{
 				Context: &cloudevents.EventContextV02{
 					ID:          "ABC-123",
@@ -141,7 +141,7 @@ func TestCodecV02_Encode(t *testing.T) {
 			},
 		},
 		"simple v0.2 structured": {
-			codec: http.CodecV02{Encoding: http.StructuredV02},
+			codec: http.CodecV02{DefaultEncoding: http.StructuredV02},
 			event: cloudevents.Event{
 				Context: cloudevents.EventContextV02{
 					Type:   "com.example.test",
@@ -166,7 +166,7 @@ func TestCodecV02_Encode(t *testing.T) {
 			},
 		},
 		"full v0.2 structured": {
-			codec: http.CodecV02{Encoding: http.StructuredV02},
+			codec: http.CodecV02{DefaultEncoding: http.StructuredV02},
 			event: cloudevents.Event{
 				Context: cloudevents.EventContextV02{
 					ID:          "ABC-123",

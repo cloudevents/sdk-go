@@ -6,11 +6,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
+
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
-	"github.com/google/uuid"
 )
 
 // Loopback Test:
@@ -23,20 +23,7 @@ import (
 func AlwaysThen(then time.Time) client.EventDefaulter {
 	return func(ctx context.Context, event cloudevents.Event) cloudevents.Event {
 		if event.Context != nil {
-			switch event.Context.GetSpecVersion() {
-			case "0.1":
-				ec := event.Context.AsV01()
-				ec.EventTime = &types.Timestamp{Time: then}
-				event.Context = ec
-			case "0.2":
-				ec := event.Context.AsV02()
-				ec.Time = &types.Timestamp{Time: then}
-				event.Context = ec
-			case "0.3":
-				ec := event.Context.AsV03()
-				ec.Time = &types.Timestamp{Time: then}
-				event.Context = ec
-			}
+			_ = event.Context.SetTime(then)
 		}
 		return event
 	}

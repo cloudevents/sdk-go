@@ -83,7 +83,7 @@ func TestCodecV1_Encode(t *testing.T) {
 			},
 		},
 		"simple v1.0 binary": {
-			codec: http.CodecV1{Encoding: http.BinaryV1},
+			codec: http.CodecV1{DefaultEncoding: http.BinaryV1},
 			event: cloudevents.Event{
 				Context: cloudevents.EventContextV1{
 					Type:   "com.example.test",
@@ -102,7 +102,7 @@ func TestCodecV1_Encode(t *testing.T) {
 			},
 		},
 		"full v1.0 binary": {
-			codec: http.CodecV1{Encoding: http.BinaryV1},
+			codec: http.CodecV1{DefaultEncoding: http.BinaryV1},
 			event: cloudevents.Event{
 				Context: &cloudevents.EventContextV1{
 					ID:              "ABC-123",
@@ -136,7 +136,7 @@ func TestCodecV1_Encode(t *testing.T) {
 			},
 		},
 		"simple v1.0 structured": {
-			codec: http.CodecV1{Encoding: http.StructuredV1},
+			codec: http.CodecV1{DefaultEncoding: http.StructuredV1},
 			event: cloudevents.Event{
 				Context: cloudevents.EventContextV1{
 					Type:   "com.example.test",
@@ -161,7 +161,7 @@ func TestCodecV1_Encode(t *testing.T) {
 			},
 		},
 		"full v1.0 structured": {
-			codec: http.CodecV1{Encoding: http.StructuredV1},
+			codec: http.CodecV1{DefaultEncoding: http.StructuredV1},
 			event: cloudevents.Event{
 				Context: cloudevents.EventContextV1{
 					ID:              "ABC-123",
@@ -203,7 +203,7 @@ func TestCodecV1_Encode(t *testing.T) {
 			},
 		},
 		"full v1.0 structured base64": {
-			codec: http.CodecV1{Encoding: http.StructuredV1},
+			codec: http.CodecV1{DefaultEncoding: http.StructuredV1},
 			event: cloudevents.Event{
 				Context: cloudevents.EventContextV1{
 					ID:              "ABC-123",
