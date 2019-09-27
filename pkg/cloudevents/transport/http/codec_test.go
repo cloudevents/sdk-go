@@ -112,13 +112,13 @@ func TestCodecEncode(t *testing.T) {
 	source := &types.URLRef{URL: *sourceUrl}
 
 	testCases := map[string]struct {
-		codec   http.Codec
+		codec   *http.Codec
 		event   cloudevents.Event
 		want    *http.Message
 		wantErr error
 	}{
 		"default v0.1 binary": {
-			codec: http.Codec{
+			codec: &http.Codec{
 				DefaultEncodingSelectionFn: http.DefaultBinaryEncodingSelectionStrategy,
 			},
 			event: cloudevents.Event{
@@ -139,7 +139,7 @@ func TestCodecEncode(t *testing.T) {
 			},
 		},
 		"default v0.1 structured": {
-			codec: http.Codec{
+			codec: &http.Codec{
 				DefaultEncodingSelectionFn: http.DefaultStructuredEncodingSelectionStrategy,
 			},
 			event: cloudevents.Event{
@@ -166,7 +166,7 @@ func TestCodecEncode(t *testing.T) {
 			},
 		},
 		"default v0.2 binary": {
-			codec: http.Codec{
+			codec: &http.Codec{
 				DefaultEncodingSelectionFn: http.DefaultBinaryEncodingSelectionStrategy,
 			},
 			event: cloudevents.Event{
@@ -187,7 +187,7 @@ func TestCodecEncode(t *testing.T) {
 			},
 		},
 		"default v0.2 structured": {
-			codec: http.Codec{
+			codec: &http.Codec{
 				DefaultEncodingSelectionFn: http.DefaultStructuredEncodingSelectionStrategy,
 			},
 			event: cloudevents.Event{
@@ -214,7 +214,7 @@ func TestCodecEncode(t *testing.T) {
 			},
 		},
 		"default v0.3 binary": {
-			codec: http.Codec{
+			codec: &http.Codec{
 				DefaultEncodingSelectionFn: http.DefaultBinaryEncodingSelectionStrategy,
 			},
 			event: cloudevents.Event{
@@ -235,7 +235,7 @@ func TestCodecEncode(t *testing.T) {
 			},
 		},
 		"default v0.3 structured": {
-			codec: http.Codec{
+			codec: &http.Codec{
 				DefaultEncodingSelectionFn: http.DefaultStructuredEncodingSelectionStrategy,
 			},
 			event: cloudevents.Event{
@@ -262,7 +262,7 @@ func TestCodecEncode(t *testing.T) {
 			},
 		},
 		"simple v0.1 binary": {
-			codec: http.Codec{Encoding: http.BinaryV01},
+			codec: &http.Codec{Encoding: http.BinaryV01},
 			event: cloudevents.Event{
 				Context: &cloudevents.EventContextV01{
 					EventType: "com.example.test",
@@ -281,7 +281,7 @@ func TestCodecEncode(t *testing.T) {
 			},
 		},
 		"simple v0.1 structured": {
-			codec: http.Codec{Encoding: http.StructuredV01},
+			codec: &http.Codec{Encoding: http.StructuredV01},
 			event: cloudevents.Event{
 				Context: cloudevents.EventContextV01{
 					EventType: "com.example.test",
@@ -306,7 +306,7 @@ func TestCodecEncode(t *testing.T) {
 			},
 		},
 		"simple v0.2 binary": {
-			codec: http.Codec{Encoding: http.BinaryV02},
+			codec: &http.Codec{Encoding: http.BinaryV02},
 			event: cloudevents.Event{
 				Context: cloudevents.EventContextV02{
 					Type:   "com.example.test",
@@ -325,7 +325,7 @@ func TestCodecEncode(t *testing.T) {
 			},
 		},
 		"simple v0.2 structured": {
-			codec: http.Codec{Encoding: http.StructuredV02},
+			codec: &http.Codec{Encoding: http.StructuredV02},
 			event: cloudevents.Event{
 				Context: cloudevents.EventContextV02{
 					Type:   "com.example.test",
@@ -350,7 +350,7 @@ func TestCodecEncode(t *testing.T) {
 			},
 		},
 		"simple v0.3 binary": {
-			codec: http.Codec{Encoding: http.BinaryV03},
+			codec: &http.Codec{Encoding: http.BinaryV03},
 			event: cloudevents.Event{
 				Context: cloudevents.EventContextV03{
 					Type:   "com.example.test",
@@ -369,7 +369,7 @@ func TestCodecEncode(t *testing.T) {
 			},
 		},
 		"simple v0.3 structured": {
-			codec: http.Codec{Encoding: http.StructuredV03},
+			codec: &http.Codec{Encoding: http.StructuredV03},
 			event: cloudevents.Event{
 				Context: cloudevents.EventContextV03{
 					Type:   "com.example.test",
@@ -438,13 +438,13 @@ func TestCodecDecode(t *testing.T) {
 	source := &types.URLRef{URL: *sourceUrl}
 
 	testCases := map[string]struct {
-		codec   http.Codec
+		codec   *http.Codec
 		msg     *http.Message
 		want    *cloudevents.Event
 		wantErr error
 	}{
 		"simple v0.1 binary": {
-			codec: http.Codec{Encoding: http.BinaryV01},
+			codec: &http.Codec{Encoding: http.BinaryV01},
 			msg: &http.Message{
 				Header: map[string][]string{
 					"CE-CloudEventsVersion": {"0.1"},
@@ -465,7 +465,7 @@ func TestCodecDecode(t *testing.T) {
 			},
 		},
 		"simple v0.1 structured": {
-			codec: http.Codec{Encoding: http.StructuredV01},
+			codec: &http.Codec{Encoding: http.StructuredV01},
 			msg: &http.Message{
 				Header: map[string][]string{
 					"Content-Type": {"application/cloudevents+json"},
@@ -490,7 +490,7 @@ func TestCodecDecode(t *testing.T) {
 			},
 		},
 		"simple v0.2 binary": {
-			codec: http.Codec{Encoding: http.BinaryV02},
+			codec: &http.Codec{Encoding: http.BinaryV02},
 			msg: &http.Message{
 				Header: map[string][]string{
 					"Ce-Specversion": {"0.2"},
@@ -511,7 +511,7 @@ func TestCodecDecode(t *testing.T) {
 			},
 		},
 		"simple v0.2 structured": {
-			codec: http.Codec{Encoding: http.StructuredV02},
+			codec: &http.Codec{Encoding: http.StructuredV02},
 			msg: &http.Message{
 				Header: map[string][]string{
 					"Content-Type": {"application/cloudevents+json"},
@@ -537,7 +537,7 @@ func TestCodecDecode(t *testing.T) {
 		},
 
 		"simple v0.3 binary": {
-			codec: http.Codec{Encoding: http.BinaryV03},
+			codec: &http.Codec{Encoding: http.BinaryV03},
 			msg: &http.Message{
 				Header: map[string][]string{
 					"Ce-Specversion": {"0.3"},
@@ -558,7 +558,7 @@ func TestCodecDecode(t *testing.T) {
 			},
 		},
 		"simple v0.3 structured": {
-			codec: http.Codec{Encoding: http.StructuredV03},
+			codec: &http.Codec{Encoding: http.StructuredV03},
 			msg: &http.Message{
 				Header: map[string][]string{
 					"Content-Type": {"application/cloudevents+json"},
@@ -586,7 +586,7 @@ func TestCodecDecode(t *testing.T) {
 		// Conversion tests.
 
 		"simple v0.1 binary -> v0.2 binary": {
-			codec: http.Codec{Encoding: http.BinaryV02},
+			codec: &http.Codec{Encoding: http.BinaryV02},
 			msg: &http.Message{
 				Header: map[string][]string{
 					"CE-CloudEventsVersion": {"0.1"},
@@ -607,7 +607,7 @@ func TestCodecDecode(t *testing.T) {
 			},
 		},
 		"simple v0.1 structured -> v0.2 structured": {
-			codec: http.Codec{Encoding: http.StructuredV02},
+			codec: &http.Codec{Encoding: http.StructuredV02},
 			msg: &http.Message{
 				Header: map[string][]string{
 					"Content-Type": {"application/cloudevents+json"},
@@ -632,7 +632,7 @@ func TestCodecDecode(t *testing.T) {
 			},
 		},
 		"simple v0.2 binary -> v0.1 binary": {
-			codec: http.Codec{Encoding: http.BinaryV01},
+			codec: &http.Codec{Encoding: http.BinaryV01},
 			msg: &http.Message{
 				Header: map[string][]string{
 					"Ce-Specversion": {"0.2"},
@@ -653,7 +653,7 @@ func TestCodecDecode(t *testing.T) {
 			},
 		},
 		"simple v0.2 structured -> v0.1 structured": {
-			codec: http.Codec{Encoding: http.StructuredV01},
+			codec: &http.Codec{Encoding: http.StructuredV01},
 			msg: &http.Message{
 				Header: map[string][]string{
 					"Content-Type": {"application/cloudevents+json"},
@@ -723,13 +723,13 @@ func TestCodecRoundTrip(t *testing.T) {
 	for _, encoding := range []http.Encoding{http.BinaryV01, http.BinaryV02, http.StructuredV01, http.StructuredV02} {
 
 		testCases := map[string]struct {
-			codec   http.Codec
+			codec   *http.Codec
 			event   cloudevents.Event
 			want    cloudevents.Event
 			wantErr error
 		}{
 			"simple data v0.1": {
-				codec: http.Codec{Encoding: encoding},
+				codec: &http.Codec{Encoding: encoding},
 				event: cloudevents.Event{
 					Context: cloudevents.EventContextV01{
 						EventType: "com.example.test",
@@ -757,7 +757,7 @@ func TestCodecRoundTrip(t *testing.T) {
 				},
 			},
 			"struct data v0.1": {
-				codec: http.Codec{Encoding: encoding},
+				codec: &http.Codec{Encoding: encoding},
 				event: cloudevents.Event{
 					Context: cloudevents.EventContextV01{
 						EventType: "com.example.test",
@@ -848,7 +848,7 @@ func TestCodecAsMiddleware(t *testing.T) {
 		for _, encoding := range []http.Encoding{http.BinaryV01, http.BinaryV02, http.BinaryV03, http.StructuredV01, http.StructuredV02, http.StructuredV03} {
 
 			testCases := map[string]struct {
-				codec   http.Codec
+				codec   *http.Codec
 				event   cloudevents.Event
 				want    cloudevents.Event
 				wantErr error
@@ -883,7 +883,7 @@ func TestCodecAsMiddleware(t *testing.T) {
 				//	},
 				//},
 				"struct data": {
-					codec: http.Codec{Encoding: encoding},
+					codec: &http.Codec{Encoding: encoding},
 					event: cloudevents.Event{
 						Context: cloudevents.EventContextV01{
 							EventType:   "com.example.test",

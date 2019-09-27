@@ -76,14 +76,14 @@ func TestCodecV03_Encode(t *testing.T) {
 					"Ce-Source":      {"http://example.com/source"},
 					"Ce-Subject":     {"resource"},
 					"Ce-Schemaurl":   {"http://example.com/schema"},
-					"Ce-Test":        {`"extended"`},
+					"Ce-Test":        {"extended"},
 					"Content-Type":   {"application/json"},
 				},
 				Body: []byte(`{"hello":"world"}`),
 			},
 		},
 		"simple v0.3 binary": {
-			codec: http.CodecV03{Encoding: http.BinaryV03},
+			codec: http.CodecV03{DefaultEncoding: http.BinaryV03},
 			event: cloudevents.Event{
 				Context: cloudevents.EventContextV03{
 					Type:   "com.example.test",
@@ -102,7 +102,7 @@ func TestCodecV03_Encode(t *testing.T) {
 			},
 		},
 		"full v0.3 binary": {
-			codec: http.CodecV03{Encoding: http.BinaryV03},
+			codec: http.CodecV03{DefaultEncoding: http.BinaryV03},
 			event: cloudevents.Event{
 				Context: &cloudevents.EventContextV03{
 					ID:              "ABC-123",
@@ -137,7 +137,7 @@ func TestCodecV03_Encode(t *testing.T) {
 					"Ce-Source":      {"http://example.com/source"},
 					"Ce-Subject":     {"resource"},
 					"Ce-Schemaurl":   {"http://example.com/schema"},
-					"Ce-Test":        {`"extended"`},
+					"Ce-Test":        {"extended"},
 					"Ce-Asmap-A":     {`"apple"`},
 					"Ce-Asmap-B":     {`"banana"`},
 					"Ce-Asmap-C":     {`{"d":"dog","e":"eel"}`},
@@ -147,7 +147,7 @@ func TestCodecV03_Encode(t *testing.T) {
 			},
 		},
 		"full v0.3 binary base64": {
-			codec: http.CodecV03{Encoding: http.BinaryV03},
+			codec: http.CodecV03{DefaultEncoding: http.BinaryV03},
 			event: cloudevents.Event{
 				Context: cloudevents.EventContextV03{
 					ID:                  "ABC-123",
@@ -183,7 +183,7 @@ func TestCodecV03_Encode(t *testing.T) {
 					"Ce-Source":              {"http://example.com/source"},
 					"Ce-Subject":             {"resource"},
 					"Ce-Schemaurl":           {"http://example.com/schema"},
-					"Ce-Test":                {`"extended"`},
+					"Ce-Test":                {"extended"},
 					"Ce-Asmap-A":             {`"apple"`},
 					"Ce-Asmap-B":             {`"banana"`},
 					"Ce-Asmap-C":             {`{"d":"dog","e":"eel"}`},
@@ -194,7 +194,7 @@ func TestCodecV03_Encode(t *testing.T) {
 			},
 		},
 		"simple v0.3 structured": {
-			codec: http.CodecV03{Encoding: http.StructuredV03},
+			codec: http.CodecV03{DefaultEncoding: http.StructuredV03},
 			event: cloudevents.Event{
 				Context: cloudevents.EventContextV03{
 					Type:   "com.example.test",
@@ -219,7 +219,7 @@ func TestCodecV03_Encode(t *testing.T) {
 			},
 		},
 		"full v0.3 structured": {
-			codec: http.CodecV03{Encoding: http.StructuredV03},
+			codec: http.CodecV03{DefaultEncoding: http.StructuredV03},
 			event: cloudevents.Event{
 				Context: cloudevents.EventContextV03{
 					ID:              "ABC-123",
@@ -261,7 +261,7 @@ func TestCodecV03_Encode(t *testing.T) {
 			},
 		},
 		"full v0.3 structured base64": {
-			codec: http.CodecV03{Encoding: http.StructuredV03},
+			codec: http.CodecV03{DefaultEncoding: http.StructuredV03},
 			event: cloudevents.Event{
 				Context: cloudevents.EventContextV03{
 					ID:                  "ABC-123",

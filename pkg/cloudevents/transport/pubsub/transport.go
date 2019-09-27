@@ -228,7 +228,6 @@ func (t *Transport) startSubscriber(ctx context.Context, sub subscriptionWithTop
 	}
 	// Ok, ready to start pulling.
 	err := conn.Receive(ctx, func(ctx context.Context, m *pubsub.Message) {
-		logger.Info("got an event!")
 		msg := &Message{
 			Attributes: m.Attributes,
 			Data:       m.Data,
@@ -263,6 +262,7 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 	}
 
 	cctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 	n := len(t.subscriptions)
 
 	// Make the channels for quit and errors.
@@ -280,22 +280,26 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 		})
 	}
 
-	// Block for parent context to finish.
-	<-ctx.Done()
-	cancel()
-
 	// Collect errors and done calls until we have n of them.
 	errs := []string(nil)
 	for success := 0; success < n; success++ {
 		var err error
 		select {
-		case err = <-errc:
+		case <-ctx.Done(): // Block for parent context to finish.
+			success--
+		case err = <-errc: // Collect errors
 		case <-quit:
+		}
+		if cancel != nil {
+			// Stop all other subscriptions.
+			cancel()
+			cancel = nil
 		}
 		if err != nil {
 			errs = append(errs, err.Error())
 		}
 	}
+
 	close(quit)
 	close(errc)
 

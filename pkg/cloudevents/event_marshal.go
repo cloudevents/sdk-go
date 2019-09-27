@@ -52,6 +52,8 @@ func (e *Event) UnmarshalJSON(b []byte) error {
 		err = e.JsonDecodeV02(b, raw)
 	case CloudEventsVersionV03:
 		err = e.JsonDecodeV03(b, raw)
+	case CloudEventsVersionV1:
+		err = e.JsonDecodeV1(b, raw)
 	default:
 		return fmt.Errorf("unnknown spec version: %q", version)
 	}
@@ -92,14 +94,26 @@ func JsonEncode(e Event) ([]byte, error) {
 	if e.DataContentType() == "" {
 		e.SetDataContentType(ApplicationJSON)
 	}
-	data, err := e.DataBytes()
-	if err != nil {
-		return nil, err
+	var data []byte
+	isBase64 := e.Context.DeprecatedGetDataContentEncoding() == Base64
+	if e.DataBase64 != "" {
+		isBase64 = true
+		var err error
+		data, err = json.Marshal(e.DataBase64)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		var err error
+		data, err = e.DataBytes()
+		if err != nil {
+			return nil, err
+		}
 	}
-	return jsonEncode(e.Context, data)
+	return jsonEncode(e.Context, data, isBase64)
 }
 
-func jsonEncode(ctx EventContextReader, data []byte) ([]byte, error) {
+func jsonEncode(ctx EventContextReader, data []byte, isBase64 bool) ([]byte, error) {
 	var b map[string]json.RawMessage
 	var err error
 
@@ -122,16 +136,23 @@ func jsonEncode(ctx EventContextReader, data []byte) ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		isBase64 := ctx.GetDataContentEncoding() == Base64
 		isJson := mediaType == "" || mediaType == ApplicationJSON || mediaType == TextJSON
 		// TODO(#60): we do not support json values at the moment, only objects and lists.
 		if isJson && !isBase64 {
 			b["data"] = data
-		} else if data[0] != byte('"') {
-			b["data"] = []byte(strconv.QuoteToASCII(string(data)))
 		} else {
-			// already quoted
-			b["data"] = data
+			var dataKey string
+			if ctx.GetSpecVersion() == CloudEventsVersionV1 {
+				dataKey = "data_base64"
+			} else {
+				dataKey = "data"
+			}
+			if data[0] != byte('"') {
+				b[dataKey] = []byte(strconv.QuoteToASCII(string(data)))
+			} else {
+				// already quoted
+				b[dataKey] = data
+			}
 		}
 	}
 
@@ -236,6 +257,59 @@ func (e *Event) JsonDecodeV03(body []byte, raw map[string]json.RawMessage) error
 
 	e.Context = &ec
 	e.Data = data
+	e.DataEncoded = data != nil
+
+	return nil
+}
+
+// JsonDecodeV1 takes in the byte representation of a version 1.0 structured json CloudEvent and returns a
+// cloudevent.Event or an error if there are parsing errors.
+func (e *Event) JsonDecodeV1(body []byte, raw map[string]json.RawMessage) error {
+	ec := EventContextV1{}
+	if err := json.Unmarshal(body, &ec); err != nil {
+		return err
+	}
+
+	delete(raw, "specversion")
+	delete(raw, "type")
+	delete(raw, "source")
+	delete(raw, "subject")
+	delete(raw, "id")
+	delete(raw, "time")
+	delete(raw, "dataschema")
+	delete(raw, "datacontenttype")
+
+	var data interface{}
+	if d, ok := raw["data"]; ok {
+		data = []byte(d)
+	}
+	delete(raw, "data")
+
+	var dataBase64 string
+	if d, ok := raw["data_base64"]; ok {
+		var tmp string
+		if err := json.Unmarshal(d, &tmp); err != nil {
+			return err
+		}
+		dataBase64 = tmp
+	}
+	delete(raw, "data_base64")
+
+	if len(raw) > 0 {
+		extensions := make(map[string]interface{}, len(raw))
+		for k, v := range raw {
+			var tmp string
+			if err := json.Unmarshal(v, &tmp); err != nil {
+				return err
+			}
+			extensions[k] = tmp
+		}
+		ec.Extensions = extensions
+	}
+
+	e.Context = &ec
+	e.Data = data
+	e.DataBase64 = dataBase64
 	e.DataEncoded = data != nil
 
 	return nil

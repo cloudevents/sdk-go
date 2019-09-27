@@ -73,7 +73,7 @@ func TestCodecV01_Encode(t *testing.T) {
 					"CE-EventType":          {"com.example.full"},
 					"CE-EventTypeVersion":   {"v1alpha1"},
 					"CE-Source":             {"http://example.com/source"},
-					"CE-SchemaURL":          {"http://example.com/schema"},
+					"CE-DataSchema":         {"http://example.com/schema"},
 					"Content-Type":          {"application/json"},
 					"CE-X-Test":             {`"extended"`},
 				},
@@ -81,7 +81,7 @@ func TestCodecV01_Encode(t *testing.T) {
 			},
 		},
 		"simple v0.1 binary": {
-			codec: http.CodecV01{Encoding: http.BinaryV01},
+			codec: http.CodecV01{DefaultEncoding: http.BinaryV01},
 			event: cloudevents.Event{
 				Context: &cloudevents.EventContextV01{
 					EventType: "com.example.test",
@@ -100,7 +100,7 @@ func TestCodecV01_Encode(t *testing.T) {
 			},
 		},
 		"full v0.1 binary": {
-			codec: http.CodecV01{Encoding: http.BinaryV01},
+			codec: http.CodecV01{DefaultEncoding: http.BinaryV01},
 			event: cloudevents.Event{
 				Context: cloudevents.EventContextV01{
 					EventID:          "ABC-123",
@@ -126,7 +126,7 @@ func TestCodecV01_Encode(t *testing.T) {
 					"CE-EventType":          {"com.example.full"},
 					"CE-EventTypeVersion":   {"v1alpha1"},
 					"CE-Source":             {"http://example.com/source"},
-					"CE-SchemaURL":          {"http://example.com/schema"},
+					"CE-DataSchema":         {"http://example.com/schema"},
 					"Content-Type":          {"application/json"},
 					"CE-X-Test":             {`"extended"`},
 				},
@@ -134,7 +134,7 @@ func TestCodecV01_Encode(t *testing.T) {
 			},
 		},
 		"simple v0.1 structured": {
-			codec: http.CodecV01{Encoding: http.StructuredV01},
+			codec: http.CodecV01{DefaultEncoding: http.StructuredV01},
 			event: cloudevents.Event{
 				Context: cloudevents.EventContextV01{
 					EventType: "com.example.test",
@@ -159,7 +159,7 @@ func TestCodecV01_Encode(t *testing.T) {
 			},
 		},
 		"full v0.1 structured": {
-			codec: http.CodecV01{Encoding: http.StructuredV01},
+			codec: http.CodecV01{DefaultEncoding: http.StructuredV01},
 			event: cloudevents.Event{
 				Context: cloudevents.EventContextV01{
 					EventID:          "ABC-123",
@@ -277,7 +277,7 @@ func TestCodecV01_Decode(t *testing.T) {
 					"CE-EventType":          {"com.example.full"},
 					"CE-EventTypeVersion":   {"v1alpha1"},
 					"CE-Source":             {"http://example.com/source"},
-					"CE-SchemaURL":          {"http://example.com/schema"},
+					"CE-DataSchema":         {"http://example.com/schema"},
 					"Content-Type":          {"application/json"},
 					"CE-X-Test":             {`"extended"`},
 				},
