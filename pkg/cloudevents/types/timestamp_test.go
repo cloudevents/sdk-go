@@ -42,6 +42,7 @@ func TestParseTimestamp(t *testing.T) {
 		},
 	}
 	for n, tc := range testCases {
+		tc := tc // Don't use range variable in func literal.
 		t.Run(n, func(t *testing.T) {
 
 			got := types.ParseTimestamp(tc.t)
@@ -79,6 +80,7 @@ func TestJsonMarshalTimestamp(t *testing.T) {
 		},
 	}
 	for n, tc := range testCases {
+		tc := tc // Don't use range variable in func literal.
 		t.Run(n, func(t *testing.T) {
 
 			tt := types.ParseTimestamp(tc.t)
@@ -119,6 +121,7 @@ func TestXMLMarshalTimestamp(t *testing.T) {
 		},
 	}
 	for n, tc := range testCases {
+		tc := tc // Don't use range variable in func literal.
 		t.Run(n, func(t *testing.T) {
 
 			var got []byte
@@ -176,6 +179,7 @@ func TestJsonUnmarshalTimestamp(t *testing.T) {
 		},
 	}
 	for n, tc := range testCases {
+		tc := tc // Don't use range variable in func literal.
 		t.Run(n, func(t *testing.T) {
 
 			got := &types.Timestamp{}
@@ -232,6 +236,7 @@ func TestXMLUnmarshalTimestamp(t *testing.T) {
 		},
 	}
 	for n, tc := range testCases {
+		tc := tc // Don't use range variable in func literal.
 		t.Run(n, func(t *testing.T) {
 
 			got := &types.Timestamp{}
@@ -274,13 +279,14 @@ func TestTimestampString(t *testing.T) {
 		},
 	}
 	for n, tc := range testCases {
+		tc := tc // Don't use range variable in func literal.
 		t.Run(n, func(t *testing.T) {
 
 			tt := types.ParseTimestamp(tc.t)
 			got := tt.String()
 
 			if diff := cmp.Diff(tc.want, got); diff != "" {
-				t.Logf("got: %s", string(got))
+				t.Logf("got: %s", got)
 				t.Errorf("unexpected string (-want, +got) = %v", diff)
 			}
 		})

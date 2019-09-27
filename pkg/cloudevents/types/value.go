@@ -10,6 +10,13 @@ import (
 	"time"
 )
 
+// StringOf returns the canonical string encoding of x.
+// x can be any type that is convertible to a CloudEvents attribute.
+func StringOf(x interface{}) (string, error) {
+	v, err := ValueOf(x)
+	return v.String(), err
+}
+
 // Value holds the value of a CloudEvents attribute.
 //
 // Value can hold the native type or the string representation.

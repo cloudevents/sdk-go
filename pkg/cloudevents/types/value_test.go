@@ -90,6 +90,7 @@ func (t *valueTester) ok(in, want interface{}, wantStr string) {
 	require.NoError(t, err)
 	assert.Equal(t, want, v.Interface())
 	assert.Equal(t, wantStr, v.String())
+
 	x, err := t.convert(v)
 	assert.NoError(t, err)
 	assert.Equal(t, want, x)
@@ -98,6 +99,10 @@ func (t *valueTester) ok(in, want interface{}, wantStr string) {
 	got, err := t.convert(sv) // String back to value
 	assert.NoError(t, err)
 	assert.Equal(t, want, got)
+
+	s, err := types.StringOf(in)
+	assert.NoError(t, err)
+	assert.Equal(t, wantStr, s)
 }
 
 // Verify expected error.
@@ -199,8 +204,8 @@ func TestURIRef(t *testing.T) {
 	x.ok(&uriRef, uriRef, uriRefStr)
 	x.ok(types.URLRef{URL: uriRef}, uriRef, uriRefStr)
 	x.ok(&types.URLRef{URL: uriRef}, uriRef, uriRefStr)
-	x.ok(types.URI{uriRef}, uriRef, uriRefStr)
-	x.ok(&types.URI{uriRef}, uriRef, uriRefStr)
+	x.ok(types.URI{URL: uriRef}, uriRef, uriRefStr)
+	x.ok(&types.URI{URL: uriRef}, uriRef, uriRefStr)
 
 	x.str("http://hello/world", url.URL{Scheme: "http", Host: "hello", Path: "/world"})
 	x.str("/world", url.URL{Path: "/world"})
