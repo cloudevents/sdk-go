@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
 )
@@ -210,6 +211,7 @@ func (e *Event) JsonDecodeV02(body []byte, raw map[string]json.RawMessage) error
 	if len(raw) > 0 {
 		extensions := make(map[string]interface{}, len(raw))
 		for k, v := range raw {
+			k = strings.ToLower(k)
 			extensions[k] = v
 		}
 		ec.Extensions = extensions
@@ -250,6 +252,7 @@ func (e *Event) JsonDecodeV03(body []byte, raw map[string]json.RawMessage) error
 	if len(raw) > 0 {
 		extensions := make(map[string]interface{}, len(raw))
 		for k, v := range raw {
+			k = strings.ToLower(k)
 			extensions[k] = v
 		}
 		ec.Extensions = extensions
@@ -298,6 +301,7 @@ func (e *Event) JsonDecodeV1(body []byte, raw map[string]json.RawMessage) error 
 	if len(raw) > 0 {
 		extensions := make(map[string]interface{}, len(raw))
 		for k, v := range raw {
+			k = strings.ToLower(k)
 			var tmp string
 			if err := json.Unmarshal(v, &tmp); err != nil {
 				return err
@@ -341,6 +345,7 @@ func marshalEvent(event interface{}, extensions map[string]interface{}) (map[str
 	}
 
 	for k, v := range extensions {
+		k = strings.ToLower(k)
 		vb, err := json.Marshal(v)
 		if err != nil {
 			return nil, err

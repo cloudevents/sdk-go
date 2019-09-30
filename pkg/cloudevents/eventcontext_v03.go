@@ -145,16 +145,16 @@ func (ec EventContextV03) AsV1() *EventContextV1 {
 		Type:        ec.Type,
 
 		DataContentType: ec.DataContentType,
-		// DataContentEncoding: ec.DataContentEncoding, TODO: move this to extensions.
-		Source:     types.URIRef{URL: ec.Source.URL},
-		Subject:    ec.Subject,
-		Extensions: make(map[string]interface{}),
+		Source:          types.URIRef{URL: ec.Source.URL},
+		Subject:         ec.Subject,
+		Extensions:      make(map[string]interface{}),
 	}
 	if ec.SchemaURL != nil {
 		ret.DataSchema = &types.URI{URL: ec.SchemaURL.URL}
 	}
 	if ec.Extensions != nil {
 		for k, v := range ec.Extensions {
+			k = strings.ToLower(k)
 			ret.Extensions[k] = fmt.Sprintf("%v", v) // TODO: This is wrong. Follow up with what should be done.
 		}
 	}

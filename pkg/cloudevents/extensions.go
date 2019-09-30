@@ -1,6 +1,9 @@
 package cloudevents
 
-import "strings"
+import (
+	"regexp"
+	"strings"
+)
 
 const (
 	// DataContentEncodingKey is the key to DeprecatedDataContentEncoding for versions that do not support data content encoding
@@ -8,7 +11,7 @@ const (
 	DataContentEncodingKey = "datacontentencoding"
 
 	// EventTypeVersionKey is the key to EventTypeVersion for versions that do not support event type version directly.
-	EventTypeVersionKey = "eventTypeVersion"
+	EventTypeVersionKey = "eventtypeversion"
 
 	// SubjectKey is the key to Subject for versions that do not support subject directly.
 	SubjectKey = "subject"
@@ -23,3 +26,5 @@ func caseInsensitiveSearch(key string, space map[string]interface{}) (interface{
 	}
 	return nil, false
 }
+
+var IsAlphaNumericLowercaseLetters = regexp.MustCompile(`^[a-z0-9]+$`).MatchString

@@ -458,7 +458,7 @@ Context Attributes,
   schemaURL: http://example.com/schema
   contentType: application/json
 Extensions,
-  another-test: 1
+  anothertest: 1
   datacontentencoding: base64
   subject: topic
   test: extended
@@ -484,9 +484,9 @@ Context Attributes,
   schemaurl: http://example.com/schema
   contenttype: application/json
 Extensions,
-  another-test: 1
+  anothertest: 1
   datacontentencoding: base64
-  eventTypeVersion: v1alpha1
+  eventtypeversion: v1alpha1
   subject: topic
   test: extended
 Data,
@@ -513,8 +513,8 @@ Context Attributes,
   datacontenttype: application/json
   datacontentencoding: base64
 Extensions,
-  another-test: 1
-  eventTypeVersion: v1alpha1
+  anothertest: 1
+  eventtypeversion: v1alpha1
   test: extended
 Data,
   {
@@ -563,13 +563,13 @@ func TestExtensionAs(t *testing.T) {
 			extension: "test",
 			want:      "extended",
 		},
-		"full v01, another-test extension invalid type": {
+		"full v01, anothertest extension invalid type": {
 			event: ce.Event{
 				Context: FullEventContextV01(now),
 			},
-			extension:    "another-test",
+			extension:    "anothertest",
 			wantError:    true,
-			wantErrorMsg: `invalid type for extension "another-test"`,
+			wantErrorMsg: `invalid type for extension "anothertest"`,
 		},
 		"min v02, no extension": {
 			event: ce.Event{
@@ -586,13 +586,13 @@ func TestExtensionAs(t *testing.T) {
 			extension: "test",
 			want:      "extended",
 		},
-		"full v02, another-test extension invalid type": {
+		"full v02, anothertest extension invalid type": {
 			event: ce.Event{
 				Context: FullEventContextV02(now),
 			},
-			extension:    "another-test",
+			extension:    "anothertest",
 			wantError:    true,
-			wantErrorMsg: `invalid type for extension "another-test"`,
+			wantErrorMsg: `invalid type for extension "anothertest"`,
 		},
 		"min v03, no extension": {
 			event: ce.Event{
@@ -609,13 +609,13 @@ func TestExtensionAs(t *testing.T) {
 			extension: "test",
 			want:      "extended",
 		},
-		"full v03, another-test extension invalid type": {
+		"full v03, anothertest extension invalid type": {
 			event: ce.Event{
 				Context: FullEventContextV03(now),
 			},
-			extension:    "another-test",
+			extension:    "anothertest",
 			wantError:    true,
-			wantErrorMsg: `invalid type for extension "another-test"`,
+			wantErrorMsg: `invalid type for extension "anothertest"`,
 		},
 	}
 	for n, tc := range testCases {
@@ -658,11 +658,11 @@ func TestExtensions(t *testing.T) {
 			extension: "test",
 			want:      "extended",
 		},
-		"full v01, another-test extension invalid type": {
+		"full v01, anothertest extension invalid type": {
 			event: ce.Event{
 				Context: FullEventContextV01(now),
 			},
-			extension:    "another-test",
+			extension:    "anothertest",
 			wantError:    true,
 			wantErrorMsg: "cannot convert int32 to String",
 		},
@@ -673,11 +673,11 @@ func TestExtensions(t *testing.T) {
 			extension: "test",
 			want:      "extended",
 		},
-		"full v02, another-test extension invalid type": {
+		"full v02, anothertest extension invalid type": {
 			event: ce.Event{
 				Context: FullEventContextV02(now),
 			},
-			extension:    "another-test",
+			extension:    "anothertest",
 			wantError:    true,
 			wantErrorMsg: "cannot convert int32 to String",
 		},
@@ -688,11 +688,11 @@ func TestExtensions(t *testing.T) {
 			extension: "test",
 			want:      "extended",
 		},
-		"full v03, another-test extension invalid type": {
+		"full v03, anothertest extension invalid type": {
 			event: ce.Event{
 				Context: FullEventContextV03(now),
 			},
-			extension:    "another-test",
+			extension:    "anothertest",
 			wantError:    true,
 			wantErrorMsg: "cannot convert int32 to String",
 		},
@@ -777,7 +777,7 @@ func FullEventContextV01(now types.Timestamp) *ce.EventContextV01 {
 	_ = eventContextV01.SetExtension(ce.SubjectKey, "topic")
 	_ = eventContextV01.SetExtension(ce.DataContentEncodingKey, ce.Base64)
 	_ = eventContextV01.SetExtension("test", "extended")
-	_ = eventContextV01.SetExtension("another-test", 1)
+	_ = eventContextV01.SetExtension("anothertest", 1)
 	return eventContextV01.AsV01()
 }
 
@@ -790,7 +790,7 @@ func FullEventContextV02(now types.Timestamp) *ce.EventContextV02 {
 
 	extensions := make(map[string]interface{})
 	extensions["test"] = "extended"
-	extensions["another-test"] = 1
+	extensions["anothertest"] = 1
 
 	eventContextV02 := ce.EventContextV02{
 		ID:          "ABC-123",
@@ -825,7 +825,7 @@ func FullEventContextV03(now types.Timestamp) *ce.EventContextV03 {
 		Subject:             strptr("topic"),
 	}
 	_ = eventContextV03.SetExtension("test", "extended")
-	_ = eventContextV03.SetExtension("another-test", 1)
+	_ = eventContextV03.SetExtension("anothertest", 1)
 	_ = eventContextV03.SetExtension(ce.EventTypeVersionKey, "v1alpha1")
 	return eventContextV03.AsV03()
 }
