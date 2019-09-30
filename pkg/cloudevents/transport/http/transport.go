@@ -623,6 +623,9 @@ func (t *Transport) listen() (net.Addr, error) {
 		port := 8080
 		if t.Port != nil {
 			port = *t.Port
+			if port < 0 || port > 65535 {
+				return nil, fmt.Errorf("invalid port %d", port)
+			}
 		}
 		var err error
 		if t.listener, err = net.Listen("tcp", fmt.Sprintf(":%d", port)); err != nil {
