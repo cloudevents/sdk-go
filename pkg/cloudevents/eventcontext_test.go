@@ -94,7 +94,7 @@ func TestContextAsV02(t *testing.T) {
 			},
 			want: MinEventContextV02(),
 		},
-		"full v01 -> v2": {
+		"full v01 -> v02": {
 			event: ce.Event{
 				Context: FullEventContextV01(now),
 			},
@@ -146,7 +146,7 @@ func TestContextAsV03(t *testing.T) {
 	}{
 		"empty, no conversion": {
 			event: ce.Event{
-				Context: &ce.EventContextV02{},
+				Context: &ce.EventContextV03{},
 			},
 			want: &ce.EventContextV03{
 				SpecVersion: "0.3",
@@ -158,7 +158,7 @@ func TestContextAsV03(t *testing.T) {
 			},
 			want: MinEventContextV03(),
 		},
-		"full v01 -> v3": {
+		"full v01 -> v03": {
 			event: ce.Event{
 				Context: FullEventContextV01(now),
 			},
@@ -193,6 +193,82 @@ func TestContextAsV03(t *testing.T) {
 		t.Run(n, func(t *testing.T) {
 
 			got := tc.event.Context.AsV03()
+
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("unexpected (-want, +got) = %v", diff)
+			}
+		})
+	}
+}
+
+func TestContextAsV1(t *testing.T) {
+	now := types.Timestamp{Time: time.Now()}
+
+	testCases := map[string]struct {
+		event ce.Event
+		want  *ce.EventContextV1
+	}{
+		"empty, no conversion": {
+			event: ce.Event{
+				Context: &ce.EventContextV1{},
+			},
+			want: &ce.EventContextV1{
+				SpecVersion: "1.0",
+			},
+		},
+		"min v01 -> v1": {
+			event: ce.Event{
+				Context: MinEventContextV01(),
+			},
+			want: MinEventContextV1(),
+		},
+		"full v01 -> v1": {
+			event: ce.Event{
+				Context: FullEventContextV01(now),
+			},
+			want: FullEventContextV1(now),
+		},
+		"min v02 -> v1": {
+			event: ce.Event{
+				Context: MinEventContextV02(),
+			},
+			want: MinEventContextV1(),
+		},
+		"full v02 -> v1": {
+			event: ce.Event{
+				Context: FullEventContextV02(now),
+			},
+			want: FullEventContextV1(now),
+		},
+		"min v03 -> v1": {
+			event: ce.Event{
+				Context: MinEventContextV03(),
+			},
+			want: MinEventContextV1(),
+		},
+		"full v03 -> v1": {
+			event: ce.Event{
+				Context: FullEventContextV03(now),
+			},
+			want: FullEventContextV1(now),
+		},
+		"min v1, no conversion": {
+			event: ce.Event{
+				Context: MinEventContextV1(),
+			},
+			want: MinEventContextV1(),
+		},
+		"full v1, no conversion": {
+			event: ce.Event{
+				Context: FullEventContextV1(now),
+			},
+			want: FullEventContextV1(now),
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+
+			got := tc.event.Context.AsV1()
 
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("unexpected (-want, +got) = %v", diff)

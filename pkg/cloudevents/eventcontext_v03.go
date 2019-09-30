@@ -83,7 +83,11 @@ func (ec *EventContextV03) SetExtension(name string, value interface{}) error {
 	if value == nil {
 		delete(ec.Extensions, name)
 	} else {
-		ec.Extensions[name] = value
+		v, err := types.ValueOf(value)
+		if err == nil {
+			ec.Extensions[name] = v.Interface()
+		}
+		return err
 	}
 	return nil
 }
@@ -155,7 +159,7 @@ func (ec EventContextV03) AsV1() *EventContextV1 {
 	if ec.Extensions != nil {
 		for k, v := range ec.Extensions {
 			k = strings.ToLower(k)
-			ret.Extensions[k] = fmt.Sprintf("%v", v) // TODO: This is wrong. Follow up with what should be done.
+			ret.Extensions[k] = v
 		}
 	}
 	if len(ret.Extensions) == 0 {

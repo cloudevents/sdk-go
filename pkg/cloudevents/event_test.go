@@ -758,6 +758,17 @@ func MinEventContextV03() *ce.EventContextV03 {
 	}.AsV03()
 }
 
+func MinEventContextV1() *ce.EventContextV1 {
+	sourceUrl, _ := url.Parse("http://example.com/source")
+	source := &types.URIRef{URL: *sourceUrl}
+
+	return ce.EventContextV1{
+		Type:   "com.example.simple",
+		Source: *source,
+		ID:     "ABC-123",
+	}.AsV1()
+}
+
 func FullEventContextV01(now types.Timestamp) *ce.EventContextV01 {
 	sourceUrl, _ := url.Parse("http://example.com/source")
 	source := &types.URLRef{URL: *sourceUrl}
@@ -777,7 +788,7 @@ func FullEventContextV01(now types.Timestamp) *ce.EventContextV01 {
 	_ = eventContextV01.SetExtension(ce.SubjectKey, "topic")
 	_ = eventContextV01.SetExtension(ce.DataContentEncodingKey, ce.Base64)
 	_ = eventContextV01.SetExtension("test", "extended")
-	_ = eventContextV01.SetExtension("anothertest", 1)
+	_ = eventContextV01.SetExtension("anothertest", int32(1))
 	return eventContextV01.AsV01()
 }
 
@@ -790,7 +801,7 @@ func FullEventContextV02(now types.Timestamp) *ce.EventContextV02 {
 
 	extensions := make(map[string]interface{})
 	extensions["test"] = "extended"
-	extensions["anothertest"] = 1
+	extensions["anothertest"] = int32(1)
 
 	eventContextV02 := ce.EventContextV02{
 		ID:          "ABC-123",
@@ -825,7 +836,29 @@ func FullEventContextV03(now types.Timestamp) *ce.EventContextV03 {
 		Subject:             strptr("topic"),
 	}
 	_ = eventContextV03.SetExtension("test", "extended")
-	_ = eventContextV03.SetExtension("anothertest", 1)
+	_ = eventContextV03.SetExtension("anothertest", int32(1))
 	_ = eventContextV03.SetExtension(ce.EventTypeVersionKey, "v1alpha1")
 	return eventContextV03.AsV03()
+}
+
+func FullEventContextV1(now types.Timestamp) *ce.EventContextV1 {
+	sourceUrl, _ := url.Parse("http://example.com/source")
+	source := &types.URIRef{URL: *sourceUrl}
+
+	schemaUrl, _ := url.Parse("http://example.com/schema")
+	schema := &types.URI{URL: *schemaUrl}
+
+	eventContextV1 := ce.EventContextV1{
+		ID:              "ABC-123",
+		Time:            &now,
+		Type:            "com.example.simple",
+		DataSchema:      schema,
+		DataContentType: ce.StringOfApplicationJSON(),
+		Source:          *source,
+		Subject:         strptr("topic"),
+	}
+	_ = eventContextV1.SetExtension("test", "extended")
+	_ = eventContextV1.SetExtension("anothertest", 1)
+	_ = eventContextV1.SetExtension(ce.EventTypeVersionKey, "v1alpha1")
+	return eventContextV1.AsV1()
 }
