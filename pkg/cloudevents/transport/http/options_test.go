@@ -319,10 +319,15 @@ func TestWithPort(t *testing.T) {
 				Port: intptr(8181),
 			},
 		},
-		"invalid port": {
+		"invalid port, low": {
 			t:       &Transport{},
 			port:    -1,
 			wantErr: `http port option was given an invalid port: -1`,
+		},
+		"invalid port, high": {
+			t:       &Transport{},
+			port:    65536,
+			wantErr: `http port option was given an invalid port: 65536`,
 		},
 		"nil transport": {
 			wantErr: `http port option can not set nil transport`,
