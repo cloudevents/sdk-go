@@ -96,7 +96,7 @@ func JsonEncode(e Event) ([]byte, error) {
 	}
 	var data []byte
 	isBase64 := e.Context.DeprecatedGetDataContentEncoding() == Base64
-	if e.DataBase64 != "" {
+	if e.DataBase64 != nil {
 		isBase64 = true
 		var err error
 		data, err = json.Marshal(e.DataBase64)
@@ -285,9 +285,9 @@ func (e *Event) JsonDecodeV1(body []byte, raw map[string]json.RawMessage) error 
 	}
 	delete(raw, "data")
 
-	var dataBase64 string
+	var dataBase64 []byte
 	if d, ok := raw["data_base64"]; ok {
-		var tmp string
+		var tmp []byte
 		if err := json.Unmarshal(d, &tmp); err != nil {
 			return err
 		}

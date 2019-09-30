@@ -11,7 +11,7 @@ import (
 type Event struct {
 	Context     EventContext
 	Data        interface{}
-	DataBase64  string // TODO this field is new and not used yet.
+	DataBase64  []byte
 	DataEncoded bool
 }
 
