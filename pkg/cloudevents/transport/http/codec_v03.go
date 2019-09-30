@@ -134,6 +134,7 @@ func (v CodecV03) toHeaders(ec *cloudevents.EventContextV03) (http.Header, error
 	}
 
 	for k, v := range ec.Extensions {
+		k = strings.ToLower(k)
 		// Per spec, map-valued extensions are converted to a list of headers as:
 		// CE-attrib-key
 		switch v.(type) {
@@ -244,6 +245,7 @@ func (v CodecV03) fromHeaders(h http.Header) (cloudevents.EventContextV03, error
 
 	extensions := make(map[string]interface{})
 	for k, v := range h {
+		k = strings.ToLower(k)
 		if len(k) > len("ce-") && strings.EqualFold(k[:len("ce-")], "ce-") {
 			ak := strings.ToLower(k[len("ce-"):])
 			if i := strings.Index(ak, "-"); i > 0 {

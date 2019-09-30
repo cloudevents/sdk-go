@@ -123,6 +123,47 @@ func TestMarshal(t *testing.T) {
 				"source":    "http://example.com/source",
 			}),
 		},
+		"v0.2 cased extensions": {
+			event: cloudevents.Event{
+				Context: cloudevents.EventContextV02{
+					Type:        "com.example.test",
+					Source:      *source,
+					SchemaURL:   schema,
+					ID:          "ABC-123",
+					Time:        &now,
+					ContentType: cloudevents.StringOfApplicationJSON(),
+					Extensions: map[string]interface{}{
+						"eX1": 42,
+						"Ex2": "testing",
+						"EX3": map[string]interface{}{
+							"an": "inner key",
+						},
+					},
+				}.AsV02(),
+				Data: DataExample{
+					AnInt:   42,
+					AString: "testing",
+				},
+			},
+			want: toBytes(map[string]interface{}{
+				"specversion": "0.2",
+				"contenttype": "application/json",
+				"data": map[string]interface{}{
+					"a": 42,
+					"b": "testing",
+				},
+				"id":   "ABC-123",
+				"time": now.Format(time.RFC3339Nano),
+				"type": "com.example.test",
+				"ex1":  42,
+				"ex2":  "testing",
+				"ex3": map[string]interface{}{
+					"an": "inner key",
+				},
+				"schemaurl": "http://example.com/schema",
+				"source":    "http://example.com/source",
+			}),
+		},
 		"struct data v0.3": {
 			event: cloudevents.Event{
 				Context: cloudevents.EventContextV03{
@@ -230,6 +271,193 @@ func TestMarshal(t *testing.T) {
 				},
 				"schemaurl": "http://example.com/schema",
 				"source":    "http://example.com/source",
+			}),
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+
+			gotBytes, err := json.Marshal(tc.event)
+
+			if tc.wantErr != nil || err != nil {
+				if diff := cmp.Diff(*tc.wantErr, err.Error()); diff != "" {
+					t.Errorf("unexpected error (-want, +got) = %v", diff)
+				}
+				return
+			}
+
+			// so we can understand the diff, turn bytes to strings
+			want := string(tc.want)
+			got := string(gotBytes)
+
+			if diff := cmp.Diff(want, got); diff != "" {
+				t.Errorf("unexpected event (-want, +got) = %v", diff)
+			}
+		})
+	}
+}
+
+func TestMarshalv1(t *testing.T) {
+	now := types.Timestamp{Time: time.Now().UTC()}
+	sourceUrl, _ := url.Parse("http://example.com/source")
+	source := &types.URIRef{URL: *sourceUrl}
+
+	schemaUrl, _ := url.Parse("http://example.com/schema")
+	schema := &types.URI{URL: *schemaUrl}
+
+	testCases := map[string]struct {
+		event   cloudevents.Event
+		want    []byte
+		wantErr *string
+	}{
+		"v1.0 cased extensions": {
+			event: cloudevents.Event{
+				Context: cloudevents.EventContextV1{
+					Type:            "com.example.test",
+					Source:          *source,
+					DataSchema:      schema,
+					ID:              "ABC-123",
+					Time:            &now,
+					DataContentType: cloudevents.StringOfApplicationJSON(),
+					Extensions: map[string]interface{}{
+						"eX1": 42,
+						"Ex2": "testing",
+						"EX3": map[string]interface{}{
+							"an": "inner key",
+						},
+					},
+				}.AsV1(),
+				Data: DataExample{
+					AnInt:   42,
+					AString: "testing",
+				},
+			},
+			want: toBytes(map[string]interface{}{
+				"specversion":     "1.0",
+				"datacontenttype": "application/json",
+				"data": map[string]interface{}{
+					"a": 42,
+					"b": "testing",
+				},
+				"id":   "ABC-123",
+				"time": now.Format(time.RFC3339Nano),
+				"type": "com.example.test",
+				"ex1":  42,
+				"ex2":  "testing",
+				"ex3": map[string]interface{}{
+					"an": "inner key",
+				},
+				"dataschema": "http://example.com/schema",
+				"source":     "http://example.com/source",
+			}),
+		},
+		"struct data v1.0": {
+			event: cloudevents.Event{
+				Context: cloudevents.EventContextV1{
+					Type:            "com.example.test",
+					Source:          *source,
+					DataSchema:      schema,
+					ID:              "ABC-123",
+					Time:            &now,
+					DataContentType: cloudevents.StringOfApplicationJSON(),
+					Extensions: map[string]interface{}{
+						"ex1": 42,
+						"ex2": "testing",
+						"ex3": map[string]interface{}{
+							"an": "inner key",
+						},
+					},
+				}.AsV1(),
+				Data: DataExample{
+					AnInt:   42,
+					AString: "testing",
+				},
+			},
+			want: toBytes(map[string]interface{}{
+				"specversion":     "1.0",
+				"datacontenttype": "application/json",
+				"data": map[string]interface{}{
+					"a": 42,
+					"b": "testing",
+				},
+				"id":   "ABC-123",
+				"time": now.Format(time.RFC3339Nano),
+				"type": "com.example.test",
+				"ex1":  42,
+				"ex2":  "testing",
+				"ex3": map[string]interface{}{
+					"an": "inner key",
+				},
+				"dataschema": "http://example.com/schema",
+				"source":     "http://example.com/source",
+			}),
+		},
+		"nil data v1.0": {
+			event: cloudevents.Event{
+				Context: cloudevents.EventContextV1{
+					Type:            "com.example.test",
+					Source:          *source,
+					DataSchema:      schema,
+					ID:              "ABC-123",
+					Time:            &now,
+					DataContentType: cloudevents.StringOfApplicationJSON(),
+					Extensions: map[string]interface{}{
+						"ex1": 42,
+						"ex2": "testing",
+						"ex3": map[string]interface{}{
+							"an": "inner key",
+						},
+					},
+				}.AsV1(),
+			},
+			want: toBytes(map[string]interface{}{
+				"specversion":     "1.0",
+				"datacontenttype": "application/json",
+				"id":              "ABC-123",
+				"time":            now.Format(time.RFC3339Nano),
+				"type":            "com.example.test",
+				"ex1":             42,
+				"ex2":             "testing",
+				"ex3": map[string]interface{}{
+					"an": "inner key",
+				},
+				"dataschema": "http://example.com/schema",
+				"source":     "http://example.com/source",
+			}),
+		},
+		"string data v1.0": {
+			event: cloudevents.Event{
+				Context: cloudevents.EventContextV1{
+					Type:            "com.example.test",
+					Source:          *source,
+					DataSchema:      schema,
+					ID:              "ABC-123",
+					Time:            &now,
+					DataContentType: cloudevents.StringOfApplicationJSON(),
+					Extensions: map[string]interface{}{
+						"ex1": 42,
+						"ex2": "testing",
+						"ex3": map[string]interface{}{
+							"an": "inner key",
+						},
+					},
+				}.AsV1(),
+				Data: "This is a string.",
+			},
+			want: toBytes(map[string]interface{}{
+				"specversion":     "1.0",
+				"datacontenttype": "application/json",
+				"data":            "This is a string.",
+				"id":              "ABC-123",
+				"time":            now.Format(time.RFC3339Nano),
+				"type":            "com.example.test",
+				"ex1":             42,
+				"ex2":             "testing",
+				"ex3": map[string]interface{}{
+					"an": "inner key",
+				},
+				"dataschema": "http://example.com/schema",
+				"source":     "http://example.com/source",
 			}),
 		},
 	}
