@@ -15,10 +15,10 @@ var _ EventContextWriter = (*EventContextV1)(nil)
 
 // SetSpecVersion implements EventContextWriter.SetSpecVersion
 func (ec *EventContextV1) SetSpecVersion(v string) error {
-	if v != CloudEventsVersionV03 {
-		return fmt.Errorf("invalid version %q, expecting %q", v, CloudEventsVersionV03)
+	if v != CloudEventsVersionV1 {
+		return fmt.Errorf("invalid version %q, expecting %q", v, CloudEventsVersionV1)
 	}
-	ec.SpecVersion = CloudEventsVersionV03
+	ec.SpecVersion = CloudEventsVersionV1
 	return nil
 }
 
