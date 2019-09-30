@@ -217,7 +217,7 @@ func TestCodecV1_Encode(t *testing.T) {
 						"test": "extended",
 					},
 				}.AsV1(),
-				DataBase64:  "eyJoZWxsbyI6IndvcmxkIn0=",
+				DataBase64:  []byte(`{"hello":"world"}`),
 				DataEncoded: true,
 			},
 			want: &http.Message{
@@ -443,7 +443,7 @@ func TestCodecV1_Decode(t *testing.T) {
 						"test": "extended",
 					},
 				}.AsV1(),
-				DataBase64: "eyJoZWxsbyI6IndvcmxkIn0=",
+				DataBase64: []byte(`{"hello":"world"}`),
 			},
 		},
 		"simple v1.0 binary with short header": {
