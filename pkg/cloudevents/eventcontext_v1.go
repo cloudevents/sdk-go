@@ -79,8 +79,10 @@ func (ec *EventContextV1) SetExtension(name string, value interface{}) error {
 		delete(ec.Extensions, name)
 		return nil
 	} else {
-		var err error
-		ec.Extensions[name], err = types.Normalize(value)
+		v, err := types.ValueOf(value)
+		if err == nil {
+			ec.Extensions[name] = v.Interface()
+		}
 		return err
 	}
 }

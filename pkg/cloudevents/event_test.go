@@ -664,7 +664,7 @@ func TestExtensions(t *testing.T) {
 			},
 			extension:    "another-test",
 			wantError:    true,
-			wantErrorMsg: "int is not compatible with CloudEvents String",
+			wantErrorMsg: "cannot convert int32 to String",
 		},
 		"full v02, test extension": {
 			event: ce.Event{
@@ -679,7 +679,7 @@ func TestExtensions(t *testing.T) {
 			},
 			extension:    "another-test",
 			wantError:    true,
-			wantErrorMsg: "int is not compatible with CloudEvents String",
+			wantErrorMsg: "cannot convert int32 to String",
 		},
 		"full v03, test extension": {
 			event: ce.Event{
@@ -694,12 +694,16 @@ func TestExtensions(t *testing.T) {
 			},
 			extension:    "another-test",
 			wantError:    true,
-			wantErrorMsg: "int is not compatible with CloudEvents String",
+			wantErrorMsg: "cannot convert int32 to String",
 		},
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
-			got, err := types.ToString(tc.event.Context.GetExtensions()[tc.extension])
+			var got string
+			v, err := types.ValueOf(tc.event.Context.GetExtensions()[tc.extension])
+			if err == nil {
+				got, err = v.ToString()
+			}
 			if tc.wantError {
 				if err == nil {
 					t.Errorf("expected error %q, got nil", tc.wantErrorMsg)

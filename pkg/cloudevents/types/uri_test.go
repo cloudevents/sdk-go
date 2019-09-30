@@ -62,6 +62,7 @@ func TestParseURL(t *testing.T) {
 		},
 	}
 	for n, tc := range testCases {
+		tc := tc // Don't use range variable in func literal.
 		t.Run(n, func(t *testing.T) {
 
 			got := types.ParseURI(tc.t)
@@ -92,6 +93,7 @@ func TestJsonMarshalURL(t *testing.T) {
 		},
 	}
 	for n, tc := range testCases {
+		tc := tc // Don't use range variable in func literal.
 		t.Run(n, func(t *testing.T) {
 
 			var got []byte
@@ -127,6 +129,7 @@ func TestXMLMarshalURI(t *testing.T) {
 		},
 	}
 	for n, tc := range testCases {
+		tc := tc // Don't use range variable in func literal.
 		t.Run(n, func(t *testing.T) {
 
 			var got []byte
@@ -172,6 +175,7 @@ func TestJsonUnmarshalURI(t *testing.T) {
 		},
 	}
 	for n, tc := range testCases {
+		tc := tc // Don't use range variable in func literal.
 		t.Run(n, func(t *testing.T) {
 
 			got := &types.URI{}
@@ -228,6 +232,7 @@ func TestXMLUnmarshalURI(t *testing.T) {
 		},
 	}
 	for n, tc := range testCases {
+		tc := tc // Don't use range variable in func literal.
 		t.Run(n, func(t *testing.T) {
 
 			got := &types.URI{}
@@ -270,13 +275,14 @@ func TestURIString(t *testing.T) {
 		},
 	}
 	for n, tc := range testCases {
+		tc := tc // Don't use range variable in func literal.
 		t.Run(n, func(t *testing.T) {
 
 			tt := types.ParseURI(tc.t)
 			got := tt.String()
 
 			if diff := cmp.Diff(tc.want, got); diff != "" {
-				t.Logf("got: %s", string(got))
+				t.Logf("got: %s", got)
 				t.Errorf("unexpected string (-want, +got) = %v", diff)
 			}
 		})

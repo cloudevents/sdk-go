@@ -64,10 +64,9 @@ func TestAllocate(t *testing.T) {
 		},
 	}
 	for n, tc := range testCases {
+		tc := tc // Don't use range variable in func literal.
 		t.Run(n, func(t *testing.T) {
-
 			got, _ := types.Allocate(tc.obj)
-
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("unexpected object (-want, +got) = %v", diff)
 			}

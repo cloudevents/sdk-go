@@ -1,40 +1,32 @@
 /*
 Package types implements the CloudEvents type system.
 
-The CloudEvents specifics defines a set of abstract types for all event context
+CloudEvents defines a small set of abstract types for all event context
 attribute values, including custom extension attributes. Each CloudEvents type
-has a corresponding Go type and a standard string encoding. Event.Extensions()
-values can be in either form.
+has a corresponding native Go type and a canonical string encoding.
 
-The To...() functions in this package convert to the Go representation from any
-convertible Go type or the CloudEvents string representation. The StringOf()
-function converts any value to the corresponding CloudEvents string form. The
-Normalize() function converts convertible values to the "normal" type, for
-example it converts any legal numeric type to int32.
+ +----------------+----------------+-----------------------------------+
+ |CloudEvents Type|Native Type     |Convertible From Types             |
+ +================+================+===================================+
+ |Bool            |bool            |bool                               |
+ +----------------+----------------+-----------------------------------+
+ |Integer         |int32           |Any numeric type with value in     |
+ |                |                |range of int32                     |
+ +----------------+----------------+-----------------------------------+
+ |String          |string          |string                             |
+ +----------------+----------------+-----------------------------------+
+ |Binary          |[]byte          |[]byte                             |
+ +----------------+----------------+-----------------------------------+
+ |URI-Reference   |url.URL         |url.URL, types.URIRef, types.URI   |
+ +----------------+----------------+-----------------------------------+
+ |URI             |url.URL         |url.URL, types.URIRef, types.URI   |
+ |                |                |Must be an absolute URI.           |
+ +----------------+----------------+-----------------------------------+
+ |Timestamp       |time.Time       |time.Time, types.Timestamp         |
+ +----------------+----------------+-----------------------------------+
 
-
-+----------------+---------+-----------------------------------+
-|CloudEvents Type|Go type  |Compatible types                   |
-+----------------+---------+-----------------------------------+
-|Bool            |bool     |bool                               |
-+----------------+---------+-----------------------------------+
-|Integer         |int32    |Any numeric type with value in     |
-|                |         |range of int32                     |
-+----------------+---------+-----------------------------------+
-|String          |string   |string                             |
-+----------------+---------+-----------------------------------+
-|Binary          |[]byte   |[]byte                             |
-+----------------+---------+-----------------------------------+
-|URI             |url.URL  |url.URL, types.URIRef.             |
-|                |         |Must be an absolute URI.           |
-+----------------+---------+-----------------------------------+
-|URI-Reference   |url.URL  |url.URL, types.URIRef              |
-+----------------+---------+-----------------------------------+
-|Timestamp       |time.Time|time.Time, types.Timestamp         |
-+----------------+---------+-----------------------------------+
-
-This package also provides some wrapper types (e.g. type.URIRef) to ensure
-correct marshalling when used as struct members.
+NOTE: CloudEvents has overlapping types 'URI' and 'URI-Reference'. Both are
+represented by the native url.URL
 
 */
 package types

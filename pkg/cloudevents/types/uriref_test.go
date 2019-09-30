@@ -41,6 +41,7 @@ func TestParseURIRef(t *testing.T) {
 		},
 	}
 	for n, tc := range testCases {
+		tc := tc // Don't use range variable in func literal.
 		t.Run(n, func(t *testing.T) {
 
 			got := types.ParseURIRef(tc.t)
@@ -71,6 +72,7 @@ func TestJsonMarshalURIRef(t *testing.T) {
 		},
 	}
 	for n, tc := range testCases {
+		tc := tc // Don't use range variable in func literal.
 		t.Run(n, func(t *testing.T) {
 
 			var got []byte
@@ -106,6 +108,7 @@ func TestXMLMarshalURIRef(t *testing.T) {
 		},
 	}
 	for n, tc := range testCases {
+		tc := tc // Don't use range variable in func literal.
 		t.Run(n, func(t *testing.T) {
 
 			var got []byte
@@ -151,6 +154,7 @@ func TestJsonUnmarshalURIRef(t *testing.T) {
 		},
 	}
 	for n, tc := range testCases {
+		tc := tc // Don't use range variable in func literal.
 		t.Run(n, func(t *testing.T) {
 
 			got := &types.URIRef{}
@@ -207,6 +211,7 @@ func TestXMLUnmarshalURIRef(t *testing.T) {
 		},
 	}
 	for n, tc := range testCases {
+		tc := tc // Don't use range variable in func literal.
 		t.Run(n, func(t *testing.T) {
 
 			got := &types.URIRef{}
@@ -249,13 +254,14 @@ func TestURIRefString(t *testing.T) {
 		},
 	}
 	for n, tc := range testCases {
+		tc := tc // Don't use range variable in func literal.
 		t.Run(n, func(t *testing.T) {
 
 			tt := types.ParseURIRef(tc.t)
 			got := tt.String()
 
 			if diff := cmp.Diff(tc.want, got); diff != "" {
-				t.Logf("got: %s", string(got))
+				t.Logf("got: %s", got)
 				t.Errorf("unexpected string (-want, +got) = %v", diff)
 			}
 		})
