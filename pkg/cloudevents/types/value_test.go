@@ -14,60 +14,42 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func ExampleValue() {
-	// Convert canonical time string to time
-	ts, err := types.ValueOfString("2020-03-21T12:34:56.78Z").ToTimestamp()
-	fmt.Printf("%v (%v)\n", ts, err)
-
-	// Then back to string
-	fmt.Printf("%q\n", types.ValueOfTimestamp(ts).String())
-
-	// Canonical string of binary value is base64
-	v := types.ValueOfBinary([]byte{1, 2, 3, 4})
-	fmt.Printf("%T(%v) %q\n", v.Interface(), v.Interface(), v.String())
-
-	// Decode base64 to []byte
-	b, err := types.ValueOfString("AQIDBA==").ToBinary()
-	fmt.Printf("%T(%v) (%v)\n", b, b, err)
-
-	// Convert float to Integer
-	v, err = types.ValueOf(123.456)
-	fmt.Printf("%T(%v) %q (%v)\n", v.Interface(), v.Interface(), v.String(), err)
-
-	// Integer conversions are range-checked
-	_, err = types.ValueOf(math.MaxUint32)
-	fmt.Println(err)
-
-	// Consistent treatment for native or string-encoded values.
-	asInt := func(x interface{}) {
-		v, _ := types.ValueOf(x)
-		i, err := v.ToInteger()
-		fmt.Printf("asInt: %v (%v)\n", i, err)
+func Example() {
+	// Handle a time value that may be in native or canonical string form.
+	printTime := func(v interface{}) {
+		t, err := types.ToTime(v)
+		fmt.Printf("%v %v\n", t, err)
 	}
-	asInt(42)
-	asInt("42")
-	asInt("notanint")
+	printTime(time.Date(1969, 3, 21, 12, 24, 0, 0, time.UTC))
+	printTime("2020-03-21T12:34:56.78Z")
+
+	// Convert numeric values to common 32-bit integer form
+	printInt := func(v interface{}) {
+		i, err := types.ToInteger(v)
+		fmt.Printf("%v %v\n", i, err)
+	}
+	printInt(123.456)
+	printInt("456")
+	printInt(int64(99999))
+	// But not illegal or out-of-range values
+	printInt(math.MaxInt32 + 1)
+	printInt("not an int")
 
 	// OUTPUT:
-	// 2020-03-21 12:34:56.78 +0000 UTC (<nil>)
-	// "2020-03-21T12:34:56.78Z"
-	// []uint8([1 2 3 4]) "AQIDBA=="
-	// []uint8([1 2 3 4]) (<nil>)
-	// int32(123) "123" (<nil>)
-	// 4294967295 is out of range for Integer
-	// asInt: 42 (<nil>)
-	// asInt: 42 (<nil>)
-	// asInt: 0 (strconv.ParseFloat: parsing "notanint": invalid syntax)
+	// 1969-03-21 12:24:00 +0000 UTC <nil>
+	// 2020-03-21 12:34:56.78 +0000 UTC <nil>
+	// 123 <nil>
+	// 456 <nil>
+	// 99999 <nil>
+	// 0 2147483648 is out of range for Integer
+	// 0 strconv.ParseFloat: parsing "not an int": invalid syntax
 }
 
 var (
-	uriRef    = url.URL{Scheme: "http", Host: "example.com", Path: "/foo"}
-	uriRefStr = "http://example.com/foo"
-	timeStr   = "2020-03-21T12:34:56.78Z"
-	someTime  = func() time.Time {
-		tm := types.ParseTimestamp(timeStr)
-		return tm.Time
-	}()
+	testURL    = &url.URL{Scheme: "http", Host: "example.com", Path: "/foo"}
+	testURLstr = "http://example.com/foo"
+	timeStr    = "2020-03-21T12:34:56.78Z"
+	someTime   = time.Date(2020, 3, 21, 12, 34, 56, 780000000, time.UTC)
 )
 
 type valueTester struct {
@@ -77,8 +59,12 @@ type valueTester struct {
 
 // Call types.To... function, use reflection since return types differ.
 func (t valueTester) convert(v interface{}) (interface{}, error) {
+	rf := reflect.ValueOf(t.convertFn)
 	args := []reflect.Value{reflect.ValueOf(v)}
-	result := reflect.ValueOf(t.convertFn).Call(args)
+	if v == nil {
+		args[0] = reflect.Zero(rf.Type().In(0)) // Avoid the zero argument reflection trap.
+	}
+	result := rf.Call(args)
 	err, _ := result[1].Interface().(error)
 	return result[0].Interface(), err
 }
@@ -86,59 +72,46 @@ func (t valueTester) convert(v interface{}) (interface{}, error) {
 // Verify round trip: convertible -> preferred -> string -> preferred
 func (t *valueTester) ok(in, want interface{}, wantStr string) {
 	t.Helper()
-	v, err := types.ValueOf(in)
+	got, err := types.Validate(in)
 	require.NoError(t, err)
-	assert.Equal(t, want, v.Interface())
-	assert.Equal(t, wantStr, v.String())
-
-	x, err := t.convert(v)
-	assert.NoError(t, err)
-	assert.Equal(t, want, x)
-	sv, err := types.ValueOf(wantStr)
-	assert.NoError(t, err)
-	got, err := t.convert(sv) // String back to value
-	assert.NoError(t, err)
 	assert.Equal(t, want, got)
 
-	s, err := types.StringOf(in)
+	gotStr, err := types.Format(in)
+	require.NoError(t, err)
+	assert.Equal(t, wantStr, gotStr)
+
+	x, err := t.convert(got)
 	assert.NoError(t, err)
-	assert.Equal(t, wantStr, s)
+	assert.Equal(t, want, x)
 }
 
 // Verify expected error.
 func (t *valueTester) err(in interface{}, wantErr string) {
 	t.Helper()
-	v, err := types.ValueOf(in)
-	if err != nil {
-		assert.EqualError(t, err, wantErr)
-		assert.Nil(t, v.Interface())
-	} else {
-		_, err = t.convert(v)
-		assert.EqualError(t, err, wantErr)
-	}
+	_, err := t.convert(in)
+	assert.EqualError(t, err, wantErr)
 }
 
 // Verify string->value conversion.
 func (t *valueTester) str(str string, want interface{}) {
 	t.Helper()
-	v, _ := types.ValueOf(str)
-	got, err := t.convert(v)
+	got, err := t.convert(str)
 	assert.NoError(t, err)
 	assert.Equal(t, want, got)
 }
 
 func TestBool(t *testing.T) {
-	x := valueTester{t, types.Value.ToBool}
+	x := valueTester{t, types.ToBool}
 	x.ok(true, true, "true")
 	x.ok(false, false, "false")
 
 	x.err("notabool", "strconv.ParseBool: parsing \"notabool\": invalid syntax")
 	x.err(0, "cannot convert int32 to Bool")
-	x.err(nil, "<nil> is not a CloudEvents type")
+	x.err(nil, "invalid CloudEvents value: <nil>")
 }
 
 func TestInteger(t *testing.T) {
-	x := valueTester{t, types.Value.ToInteger}
+	x := valueTester{t, types.ToInteger}
 	x.ok(42, int32(42), "42")
 	x.ok(int8(-8), int32(-8), "-8")
 	x.ok(int16(-16), int32(-16), "-16")
@@ -151,6 +124,9 @@ func TestInteger(t *testing.T) {
 	x.ok(uint64(64), int32(64), "64")
 	x.ok(float32(123.4), int32(123), "123")
 	x.ok(float64(-567.8), int32(-567), "-567")
+	i := new(uint16)
+	*i = 24 // non-nil pointers allowed
+	x.ok(i, int32(24), "24")
 
 	x.ok(math.MaxInt32, int32(math.MaxInt32), strconv.Itoa(math.MaxInt32))
 	x.ok(math.MinInt32, int32(math.MinInt32), strconv.Itoa(math.MinInt32))
@@ -177,16 +153,19 @@ func TestInteger(t *testing.T) {
 
 	x.err("X", "strconv.ParseFloat: parsing \"X\": invalid syntax")
 	x.err(true, "cannot convert bool to Integer")
-	x.err(nil, "<nil> is not a CloudEvents type")
+	x.err(nil, "invalid CloudEvents value: <nil>")
 }
 
 func TestString(t *testing.T) {
-	x := valueTester{t, types.Value.ToString}
+	x := valueTester{t, types.ToString}
 	x.ok("hello", "hello", "hello")
+	s := new(string)
+	*s = "foo" // non-nil pointers allowed
+	x.ok(s, "foo", "foo")
 }
 
 func TestBinary(t *testing.T) {
-	x := valueTester{t, types.Value.ToBinary}
+	x := valueTester{t, types.ToBinary}
 	x.ok([]byte("hello"), []byte("hello"), "aGVsbG8=")
 	x.ok([]byte{}, []byte{}, "")
 	// Asymmetic case: ToBinary([]byte(nil)) returns []byte(nil),
@@ -195,30 +174,30 @@ func TestBinary(t *testing.T) {
 	x.str("", []byte{})
 
 	x.err("XXX", "illegal base64 data at input byte 0")
-	x.err(nil, "<nil> is not a CloudEvents type")
+	x.err(nil, "invalid CloudEvents value: <nil>")
 }
 
-func TestURIRef(t *testing.T) {
-	x := valueTester{t, types.Value.ToURIRef}
-	x.ok(uriRef, uriRef, uriRefStr)
-	x.ok(&uriRef, uriRef, uriRefStr)
-	x.ok(types.URLRef{URL: uriRef}, uriRef, uriRefStr)
-	x.ok(&types.URLRef{URL: uriRef}, uriRef, uriRefStr)
-	x.ok(types.URI{URL: uriRef}, uriRef, uriRefStr)
-	x.ok(&types.URI{URL: uriRef}, uriRef, uriRefStr)
+func TestURL(t *testing.T) {
+	x := valueTester{t, types.ToURL}
+	x.ok(testURL, testURL, testURLstr)
+	x.ok(*testURL, testURL, testURLstr)
+	x.ok(types.URLRef{URL: *testURL}, testURL, testURLstr)
+	x.ok(&types.URLRef{URL: *testURL}, testURL, testURLstr)
+	x.ok(types.URI{URL: *testURL}, testURL, testURLstr)
+	x.ok(&types.URI{URL: *testURL}, testURL, testURLstr)
 
-	x.str("http://hello/world", url.URL{Scheme: "http", Host: "hello", Path: "/world"})
-	x.str("/world", url.URL{Path: "/world"})
-	x.str("world", url.URL{Path: "world"})
+	x.str("http://hello/world", &url.URL{Scheme: "http", Host: "hello", Path: "/world"})
+	x.str("/world", &url.URL{Path: "/world"})
+	x.str("world", &url.URL{Path: "world"})
 
 	x.err("%bad %url", "parse %bad %url: invalid URL escape \"%ur\"")
-	x.err(nil, "<nil> is not a CloudEvents type")
+	x.err(nil, "invalid CloudEvents value: <nil>")
 	x.err((*url.URL)(nil), "invalid CloudEvents value: (*url.URL)(nil)")
 	x.err((*types.URIRef)(nil), "invalid CloudEvents value: (*types.URIRef)(nil)")
 }
 
-func TestTimestamp(t *testing.T) {
-	x := valueTester{t, types.Value.ToTimestamp}
+func TestTime(t *testing.T) {
+	x := valueTester{t, types.ToTime}
 	x.ok(someTime, someTime, timeStr)
 	x.ok(&someTime, someTime, timeStr)
 	x.ok(someTime, someTime, timeStr)
@@ -226,8 +205,8 @@ func TestTimestamp(t *testing.T) {
 
 	x.str(timeStr, someTime)
 
-	x.err(nil, "<nil> is not a CloudEvents type")
-	x.err(5, "cannot convert int32 to Timestamp")
+	x.err(nil, "invalid CloudEvents value: <nil>")
+	x.err(5, "cannot convert int32 to Time")
 	x.err((*time.Time)(nil), "invalid CloudEvents value: (*time.Time)(nil)")
 	x.err((*types.Timestamp)(nil), "invalid CloudEvents value: (*types.Timestamp)(nil)")
 	x.err("not a time", "parsing time \"not a time\" as \"2006-01-02T15:04:05.999999999Z07:00\": cannot parse \"not a time\" as \"2006\"")
@@ -235,10 +214,10 @@ func TestTimestamp(t *testing.T) {
 
 func TestIncompatible(t *testing.T) {
 	// Values that won't convert at all.
-	x := valueTester{t, nil}
-	x.err(nil, "<nil> is not a CloudEvents type")
-	x.err(complex(0, 0), "complex128 is not a CloudEvents type")
-	x.err(map[string]interface{}{}, "map[string]interface {} is not a CloudEvents type")
-	x.err(struct{ i int }{i: 9}, "struct { i int } is not a CloudEvents type")
-	x.err((*int32)(nil), "*int32 is not a CloudEvents type")
+	x := valueTester{t, types.Validate}
+	x.err(nil, "invalid CloudEvents value: <nil>")
+	x.err(complex(0, 0), "invalid CloudEvents value: (0+0i)")
+	x.err(map[string]interface{}{}, "invalid CloudEvents value: map[string]interface {}{}")
+	x.err(struct{ i int }{i: 9}, "invalid CloudEvents value: struct { i int }{i:9}")
+	x.err((*int32)(nil), "invalid CloudEvents value: (*int32)(nil)")
 }
