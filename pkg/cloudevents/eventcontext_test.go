@@ -60,6 +60,18 @@ func TestContextAsV01(t *testing.T) {
 			},
 			want: FullEventContextV01(now),
 		},
+		"min v1 -> v01": {
+			event: ce.Event{
+				Context: MinEventContextV1(),
+			},
+			want: MinEventContextV01(),
+		},
+		"full v1 -> v01": {
+			event: ce.Event{
+				Context: FullEventContextV1(now),
+			},
+			want: FullEventContextV01(now),
+		},
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
@@ -124,6 +136,19 @@ func TestContextAsV02(t *testing.T) {
 			},
 			want: FullEventContextV02(now),
 		},
+
+		"min v1 -> v02": {
+			event: ce.Event{
+				Context: MinEventContextV1(),
+			},
+			want: MinEventContextV02(),
+		},
+		"full v1 -> v02": {
+			event: ce.Event{
+				Context: FullEventContextV1(now),
+			},
+			want: FullEventContextV02(now),
+		},
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
@@ -185,6 +210,18 @@ func TestContextAsV03(t *testing.T) {
 		"full v03, no conversion": {
 			event: ce.Event{
 				Context: FullEventContextV03(now),
+			},
+			want: FullEventContextV03(now),
+		},
+		"min v1 -> v03": {
+			event: ce.Event{
+				Context: MinEventContextV1(),
+			},
+			want: MinEventContextV03(),
+		},
+		"full v1 -> v03": {
+			event: ce.Event{
+				Context: FullEventContextV1(now),
 			},
 			want: FullEventContextV03(now),
 		},

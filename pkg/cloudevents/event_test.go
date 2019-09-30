@@ -57,6 +57,18 @@ func TestGetDataContentType(t *testing.T) {
 			},
 			want: "application/json",
 		},
+		"min v1, blank": {
+			event: ce.Event{
+				Context: MinEventContextV1(),
+			},
+			want: "",
+		},
+		"full v1, json": {
+			event: ce.Event{
+				Context: FullEventContextV1(now),
+			},
+			want: "application/json",
+		},
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
@@ -115,6 +127,18 @@ func TestSource(t *testing.T) {
 			},
 			want: source,
 		},
+		"min v1": {
+			event: ce.Event{
+				Context: MinEventContextV1(),
+			},
+			want: source,
+		},
+		"full v1": {
+			event: ce.Event{
+				Context: FullEventContextV1(now),
+			},
+			want: source,
+		},
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
@@ -170,6 +194,18 @@ func TestSchemaURL(t *testing.T) {
 		"full v03, schema": {
 			event: ce.Event{
 				Context: FullEventContextV03(now),
+			},
+			want: schema,
+		},
+		"min v1, empty schema": {
+			event: ce.Event{
+				Context: MinEventContextV1(),
+			},
+			want: "",
+		},
+		"full v1, schema": {
+			event: ce.Event{
+				Context: FullEventContextV1(now),
 			},
 			want: schema,
 		},
@@ -307,6 +343,11 @@ func TestValidate(t *testing.T) {
 				Context: MinEventContextV03(),
 			},
 		},
+		"min valid v1.0": {
+			event: ce.Event{
+				Context: MinEventContextV1(),
+			},
+		},
 		"json valid, v0.1": {
 			event: ce.Event{
 				Context: FullEventContextV01(now),
@@ -322,6 +363,12 @@ func TestValidate(t *testing.T) {
 		"json valid, v0.3": {
 			event: ce.Event{
 				Context: FullEventContextV03(now),
+				Data:    []byte(`{"a":"apple","b":"banana"}`),
+			},
+		},
+		"json valid, v1.0": {
+			event: ce.Event{
+				Context: FullEventContextV1(now),
 				Data:    []byte(`{"a":"apple","b":"banana"}`),
 			},
 		},
@@ -406,6 +453,23 @@ Context Attributes,
   id: 
 `,
 		},
+		"empty v1.0": {
+			event: ce.Event{
+				Context: &ce.EventContextV1{},
+			},
+			want: `Validation: invalid
+Validation Error: 
+id: MUST be a non-empty string
+source: REQUIRED
+specversion: MUST be a non-empty string
+type: MUST be a non-empty string
+Context Attributes,
+  specversion: 
+  type: 
+  source: 
+  id: 
+`,
+		},
 		"min v0.1": {
 			event: ce.Event{
 				Context: MinEventContextV01(),
@@ -437,6 +501,18 @@ Context Attributes,
 			want: `Validation: valid
 Context Attributes,
   specversion: 0.3
+  type: com.example.simple
+  source: http://example.com/source
+  id: ABC-123
+`,
+		},
+		"min v1.0": {
+			event: ce.Event{
+				Context: MinEventContextV1(),
+			},
+			want: `Validation: valid
+Context Attributes,
+  specversion: 1.0
   type: com.example.simple
   source: http://example.com/source
   id: ABC-123
@@ -514,6 +590,33 @@ Context Attributes,
   datacontentencoding: base64
 Extensions,
   anothertest: 1
+  eventtypeversion: v1alpha1
+  test: extended
+Data,
+  {
+    "a": "apple",
+    "b": "banana"
+  }
+`, now.String()),
+		},
+		"json simple, v1.0": {
+			event: ce.Event{
+				Context: FullEventContextV1(now),
+				Data:    []byte(`{"a":"apple","b":"banana"}`),
+			},
+			want: fmt.Sprintf(`Validation: valid
+Context Attributes,
+  specversion: 1.0
+  type: com.example.simple
+  source: http://example.com/source
+  subject: topic
+  id: ABC-123
+  time: %s
+  dataschema: http://example.com/schema
+  datacontenttype: application/json
+Extensions,
+  anothertest: 1
+  datacontentencoding: base64
   eventtypeversion: v1alpha1
   test: extended
 Data,
@@ -617,6 +720,21 @@ func TestExtensionAs(t *testing.T) {
 			wantError:    true,
 			wantErrorMsg: `invalid type for extension "anothertest"`,
 		},
+		"full v1, test extension": {
+			event: ce.Event{
+				Context: FullEventContextV1(now),
+			},
+			extension: "test",
+			want:      "extended",
+		},
+		"full v1, anothertest extension invalid type": {
+			event: ce.Event{
+				Context: FullEventContextV1(now),
+			},
+			extension:    "anothertest",
+			wantError:    true,
+			wantErrorMsg: `unknown extension type *string`,
+		},
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
@@ -691,6 +809,21 @@ func TestExtensions(t *testing.T) {
 		"full v03, anothertest extension invalid type": {
 			event: ce.Event{
 				Context: FullEventContextV03(now),
+			},
+			extension:    "anothertest",
+			wantError:    true,
+			wantErrorMsg: "cannot convert int32 to String",
+		},
+		"full v1, test extension": {
+			event: ce.Event{
+				Context: FullEventContextV1(now),
+			},
+			extension: "test",
+			want:      "extended",
+		},
+		"full v1, anothertest extension invalid type": {
+			event: ce.Event{
+				Context: FullEventContextV1(now),
 			},
 			extension:    "anothertest",
 			wantError:    true,
@@ -860,5 +993,6 @@ func FullEventContextV1(now types.Timestamp) *ce.EventContextV1 {
 	_ = eventContextV1.SetExtension("test", "extended")
 	_ = eventContextV1.SetExtension("anothertest", 1)
 	_ = eventContextV1.SetExtension(ce.EventTypeVersionKey, "v1alpha1")
+	_ = eventContextV1.SetExtension(ce.DataContentEncodingKey, ce.Base64)
 	return eventContextV1.AsV1()
 }

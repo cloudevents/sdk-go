@@ -143,11 +143,10 @@ func (ec EventContextV03) AsV03() *EventContextV03 {
 // AsV04 implements EventContextConverter.AsV04
 func (ec EventContextV03) AsV1() *EventContextV1 {
 	ret := EventContextV1{
-		SpecVersion: CloudEventsVersionV1,
-		ID:          ec.ID,
-		Time:        ec.Time,
-		Type:        ec.Type,
-
+		SpecVersion:     CloudEventsVersionV1,
+		ID:              ec.ID,
+		Time:            ec.Time,
+		Type:            ec.Type,
 		DataContentType: ec.DataContentType,
 		Source:          types.URIRef{URL: ec.Source.URL},
 		Subject:         ec.Subject,
@@ -156,6 +155,12 @@ func (ec EventContextV03) AsV1() *EventContextV1 {
 	if ec.SchemaURL != nil {
 		ret.DataSchema = &types.URI{URL: ec.SchemaURL.URL}
 	}
+
+	// DataContentEncoding was removed in 1.0, so put it in an extension for 1.0.
+	if ec.DataContentEncoding != nil {
+		_ = ret.SetExtension(DataContentEncodingKey, *ec.DataContentEncoding)
+	}
+
 	if ec.Extensions != nil {
 		for k, v := range ec.Extensions {
 			k = strings.ToLower(k)

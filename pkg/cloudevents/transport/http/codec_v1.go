@@ -126,10 +126,6 @@ func (v CodecV1) toHeaders(ec *cloudevents.EventContextV1) (http.Header, error) 
 	} else {
 		h.Set("Content-Type", cloudevents.ApplicationJSON)
 	}
-	// TODO: fix data content encoding for new v1.0 format.
-	//if ec.DataContentEncoding != nil {
-	//	h.Set("ce-datacontentencoding", *ec.DataContentEncoding)
-	//}
 
 	for k, v := range ec.Extensions {
 		k = strings.ToLower(k)
