@@ -194,7 +194,11 @@ func (v CodecV1) fromHeaders(h http.Header) (cloudevents.EventContextV1, error) 
 	}
 	h.Del("ce-subject")
 
-	ec.Time = types.ParseTimestamp(h.Get("ce-time"))
+	var err error
+	ec.Time, err = types.ParseTimestamp(h.Get("ce-time"))
+	if err != nil {
+		return ec, err
+	}
 	h.Del("ce-time")
 
 	ec.DataSchema = types.ParseURI(h.Get("ce-dataschema"))

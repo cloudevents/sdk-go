@@ -222,7 +222,11 @@ func (v CodecV03) fromHeaders(h http.Header) (cloudevents.EventContextV03, error
 	}
 	h.Del("ce-subject")
 
-	ec.Time = types.ParseTimestamp(h.Get("ce-time"))
+	var err error
+	ec.Time, err = types.ParseTimestamp(h.Get("ce-time"))
+	if err != nil {
+		return ec, err
+	}
 	h.Del("ce-time")
 
 	ec.SchemaURL = types.ParseURLRef(h.Get("ce-schemaurl"))

@@ -41,7 +41,7 @@ func Example() {
 	// 123 <nil>
 	// 456 <nil>
 	// 99999 <nil>
-	// 0 2147483648 is out of range for Integer
+	// 0 cannot convert 2147483648 to int32: out of range
 	// 0 strconv.ParseFloat: parsing "not an int": invalid syntax
 }
 
@@ -106,7 +106,7 @@ func TestBool(t *testing.T) {
 	x.ok(false, false, "false")
 
 	x.err("notabool", "strconv.ParseBool: parsing \"notabool\": invalid syntax")
-	x.err(0, "cannot convert int32 to Bool")
+	x.err(0, "cannot convert 0 to bool")
 	x.err(nil, "invalid CloudEvents value: <nil>")
 }
 
@@ -141,18 +141,18 @@ func TestInteger(t *testing.T) {
 	x.str(".9", int32(0))
 	x.str("-.9", int32(0))
 
-	x.err(math.MaxInt32+1, "2147483648 is out of range for Integer")
-	x.err(uint32(math.MaxInt32+1), "2147483648 is out of range for Integer")
-	x.err(int64(math.MaxInt32+1), "2147483648 is out of range for Integer")
-	x.err(int64(math.MinInt32-1), "-2147483649 is out of range for Integer")
-	x.err(float64(math.MinInt32-1), "-2.147483649e+09 is out of range for Integer")
-	x.err(float64(math.MaxInt32+1), "2.147483648e+09 is out of range for Integer")
+	x.err(math.MaxInt32+1, "cannot convert 2147483648 to int32: out of range")
+	x.err(uint32(math.MaxInt32+1), "cannot convert 0x80000000 to int32: out of range")
+	x.err(int64(math.MaxInt32+1), "cannot convert 2147483648 to int32: out of range")
+	x.err(int64(math.MinInt32-1), "cannot convert -2147483649 to int32: out of range")
+	x.err(float64(math.MinInt32-1), "cannot convert -2.147483649e+09 to int32: out of range")
+	x.err(float64(math.MaxInt32+1), "cannot convert 2.147483648e+09 to int32: out of range")
 	// Float32 doesn't keep all the bits of an int32 so we need to exaggerate fof range error.
-	x.err(float64(2*math.MinInt32), "-4.294967296e+09 is out of range for Integer")
-	x.err(float64(-2*math.MaxInt32), "-4.294967294e+09 is out of range for Integer")
+	x.err(float64(2*math.MinInt32), "cannot convert -4.294967296e+09 to int32: out of range")
+	x.err(float64(-2*math.MaxInt32), "cannot convert -4.294967294e+09 to int32: out of range")
 
 	x.err("X", "strconv.ParseFloat: parsing \"X\": invalid syntax")
-	x.err(true, "cannot convert bool to Integer")
+	x.err(true, "cannot convert true to int32")
 	x.err(nil, "invalid CloudEvents value: <nil>")
 }
 
@@ -206,7 +206,7 @@ func TestTime(t *testing.T) {
 	x.str(timeStr, someTime)
 
 	x.err(nil, "invalid CloudEvents value: <nil>")
-	x.err(5, "cannot convert int32 to Time")
+	x.err(5, "cannot convert 5 to time.Time")
 	x.err((*time.Time)(nil), "invalid CloudEvents value: (*time.Time)(nil)")
 	x.err((*types.Timestamp)(nil), "invalid CloudEvents value: (*types.Timestamp)(nil)")
 	x.err("not a time", "parsing time \"not a time\" as \"2006-01-02T15:04:05.999999999Z07:00\": cannot parse \"not a time\" as \"2006\"")

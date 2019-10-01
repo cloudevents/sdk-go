@@ -782,7 +782,7 @@ func TestExtensions(t *testing.T) {
 			},
 			extension:    "anothertest",
 			wantError:    true,
-			wantErrorMsg: "cannot convert int32 to String",
+			wantErrorMsg: "cannot convert 1 to string",
 		},
 		"full v02, test extension": {
 			event: ce.Event{
@@ -797,7 +797,7 @@ func TestExtensions(t *testing.T) {
 			},
 			extension:    "anothertest",
 			wantError:    true,
-			wantErrorMsg: "cannot convert int32 to String",
+			wantErrorMsg: "cannot convert 1 to string",
 		},
 		"full v03, test extension": {
 			event: ce.Event{
@@ -812,7 +812,7 @@ func TestExtensions(t *testing.T) {
 			},
 			extension:    "anothertest",
 			wantError:    true,
-			wantErrorMsg: "cannot convert int32 to String",
+			wantErrorMsg: "cannot convert 1 to string",
 		},
 		"full v1, test extension": {
 			event: ce.Event{
@@ -827,7 +827,7 @@ func TestExtensions(t *testing.T) {
 			},
 			extension:    "anothertest",
 			wantError:    true,
-			wantErrorMsg: "cannot convert int32 to String",
+			wantErrorMsg: "cannot convert 1 to string",
 		},
 	}
 	for n, tc := range testCases {
