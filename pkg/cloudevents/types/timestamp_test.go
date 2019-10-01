@@ -1,294 +1,82 @@
 package types_test
 
 import (
+	"encoding/json"
 	"encoding/xml"
-	"strings"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
-	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestParseTimestamp(t *testing.T) {
-	testCases := map[string]struct {
-		t    string
-		want *types.Timestamp
-	}{
-		"empty": {
-			want: nil,
-		},
-		"empty string": {
-			t:    "",
-			want: nil,
-		},
-		"invalid format": {
-			t:    "2019-02-28",
-			want: nil,
-		},
-		"RFC3339 format": {
-			t: "1984-02-28T15:04:05Z",
-			want: func() *types.Timestamp {
-				t, _ := time.Parse(time.RFC3339, "1984-02-28T15:04:05Z")
-				return &types.Timestamp{Time: t}
-			}(),
-		},
-		"RFC3339Nano format": {
-			t: "1984-02-28T15:04:05.999999999Z",
-			want: func() *types.Timestamp {
-				t, _ := time.Parse(time.RFC3339Nano, "1984-02-28T15:04:05.999999999Z")
-				return &types.Timestamp{Time: t}
-			}(),
-		},
+func TestTimestampParseString(t *testing.T) {
+	ok := func(s string, want time.Time) {
+		t.Helper()
+		got, err := types.ParseTimestamp(s)
+		assert.NoError(t, err)
+		assert.Equal(t, want, got.Time)
+		assert.Equal(t, s, got.String())
 	}
-	for n, tc := range testCases {
-		tc := tc // Don't use range variable in func literal.
-		t.Run(n, func(t *testing.T) {
+	ok("1984-02-28T15:04:05Z", time.Date(1984, 02, 28, 15, 04, 05, 0, time.UTC))
+	ok("1984-02-28T15:04:05.999999999Z", time.Date(1984, 02, 28, 15, 04, 05, 999999999, time.UTC))
 
-			got := types.ParseTimestamp(tc.t)
-
-			if diff := cmp.Diff(tc.want, got); diff != "" {
-				t.Errorf("unexpected object (-want, +got) = %v", diff)
-			}
-		})
+	bad := func(s, wanterr string) {
+		t.Helper()
+		_, err := types.ParseTime(s)
+		assert.EqualError(t, err, wanterr)
 	}
+	bad("", "cannot convert \"\" to time.Time: not in RFC3339 format")
+	bad("2019-02-28", "cannot convert \"2019-02-28\" to time.Time: not in RFC3339 format")
 }
 
-func TestJsonMarshalTimestamp(t *testing.T) {
-	testCases := map[string]struct {
-		t    string
-		want []byte
-	}{
-		"empty": {
-			want: []byte(`""`),
-		},
-		"empty string": {
-			t:    "",
-			want: []byte(`""`),
-		},
-		"invalid format": {
-			t:    "2019-02-28",
-			want: []byte(`""`),
-		},
-		"RFC3339 format": {
-			t:    "1984-02-28T15:04:05Z",
-			want: []byte(`"1984-02-28T15:04:05Z"`),
-		},
-		"RFC3339Nano format": {
-			t:    "1984-02-28T15:04:05.999999999Z",
-			want: []byte(`"1984-02-28T15:04:05.999999999Z"`),
-		},
+func TestJsonMarshalUnmarshalTimestamp(t *testing.T) {
+	ok := func(ts string) {
+		t.Helper()
+		tt, err := types.ParseTime(ts)
+		assert.NoError(t, err)
+		got, err := json.Marshal(types.Timestamp{Time: tt})
+		assert.NoError(t, err)
+		assert.Equal(t, fmt.Sprintf(`"%s"`, ts), string(got))
 	}
-	for n, tc := range testCases {
-		tc := tc // Don't use range variable in func literal.
-		t.Run(n, func(t *testing.T) {
+	ok("1984-02-28T15:04:05Z")
+	ok("1984-02-28T15:04:05.999999999Z")
 
-			tt := types.ParseTimestamp(tc.t)
-			got, _ := tt.MarshalJSON()
-
-			if diff := cmp.Diff(tc.want, got); diff != "" {
-				t.Logf("got: %s", string(got))
-				t.Errorf("unexpected object (-want, +got) = %v", diff)
-			}
-		})
+	bad := func(s, wanterr string) {
+		t.Helper()
+		var ts types.Timestamp
+		err := json.Unmarshal([]byte(s), &ts)
+		assert.EqualError(t, err, wanterr)
 	}
+	bad("", "unexpected end of JSON input")
+	bad("2019-02-28", "invalid character '-' after top-level value")
 }
 
-func TestXMLMarshalTimestamp(t *testing.T) {
-	testCases := map[string]struct {
-		t       string
-		want    []byte
-		wantErr string
-	}{
-		"empty": {
-			want: []byte(nil),
-		},
-		"empty string": {
-			t:    "",
-			want: []byte(nil),
-		},
-		"invalid format": {
-			t:    "2019-02-28",
-			want: []byte(nil),
-		},
-		"RFC3339 format": {
-			t:    "1984-02-28T15:04:05Z",
-			want: []byte(`<Timestamp>1984-02-28T15:04:05Z</Timestamp>`),
-		},
-		"RFC3339Nano format": {
-			t:    "1984-02-28T15:04:05.999999999Z",
-			want: []byte(`<Timestamp>1984-02-28T15:04:05.999999999Z</Timestamp>`),
-		},
+func TestXMLMarshalUnmarshalTimestamp(t *testing.T) {
+	ok := func(tstr string) {
+		t.Helper()
+		tt, err := types.ParseTime(tstr)
+		assert.NoError(t, err)
+		got, err := xml.Marshal(types.Timestamp{Time: tt})
+		assert.NoError(t, err)
+		assert.Equal(t, fmt.Sprintf("<Timestamp>%s</Timestamp>", tstr), string(got))
+		var ts types.Timestamp
+		err = xml.Unmarshal(got, &ts)
+		assert.NoError(t, err)
+		assert.Equal(t, tt, ts.Time)
 	}
-	for n, tc := range testCases {
-		tc := tc // Don't use range variable in func literal.
-		t.Run(n, func(t *testing.T) {
+	ok("1984-02-28T15:04:05Z")
+	ok("1984-02-28T15:04:05.999999999Z")
 
-			var got []byte
-			var err error
-			tt := types.ParseTimestamp(tc.t)
-
-			got, err = xml.Marshal(tt)
-
-			if tc.wantErr != "" {
-				if err != nil {
-					gotErr := err.Error()
-					if !strings.Contains(gotErr, tc.wantErr) {
-						t.Errorf("unexpected error, expected to contain %q, got: %q", tc.wantErr, gotErr)
-					}
-				} else {
-					t.Errorf("expected error to contain %q, got: nil", tc.wantErr)
-				}
-				return
-			}
-
-			if diff := cmp.Diff(tc.want, got); diff != "" {
-				t.Logf("got: %s", string(got))
-				t.Errorf("unexpected object (-want, +got) = %v", diff)
-			}
-		})
+	bad := func(s, wanterr string) {
+		t.Helper()
+		var ts types.Timestamp
+		err := xml.Unmarshal([]byte(s), &ts)
+		assert.EqualError(t, err, wanterr)
 	}
-}
-
-func TestJsonUnmarshalTimestamp(t *testing.T) {
-	testCases := map[string]struct {
-		b       []byte
-		want    *types.Timestamp
-		wantErr string
-	}{
-		"empty": {
-			wantErr: "unexpected end of JSON input",
-		},
-		"invalid format": {
-			b:       []byte("2019-02-28"),
-			wantErr: "invalid character '-' after top-level value",
-		},
-		"RFC3339 format": {
-			b: []byte(`"1984-02-28T15:04:05Z"`),
-			want: func() *types.Timestamp {
-				t, _ := time.Parse(time.RFC3339, "1984-02-28T15:04:05Z")
-				return &types.Timestamp{Time: t}
-			}(),
-		},
-		"RFC3339Nano format": {
-			b: []byte(`"1984-02-28T15:04:05.999999999Z"`),
-			want: func() *types.Timestamp {
-				t, _ := time.Parse(time.RFC3339Nano, "1984-02-28T15:04:05.999999999Z")
-				return &types.Timestamp{Time: t}
-			}(),
-		},
-	}
-	for n, tc := range testCases {
-		tc := tc // Don't use range variable in func literal.
-		t.Run(n, func(t *testing.T) {
-
-			got := &types.Timestamp{}
-			err := got.UnmarshalJSON(tc.b)
-
-			if tc.wantErr != "" || err != nil {
-				var gotErr string
-				if err != nil {
-					gotErr = err.Error()
-				}
-				if diff := cmp.Diff(tc.wantErr, gotErr); diff != "" {
-					t.Errorf("unexpected error (-want, +got) = %v", diff)
-				}
-				return
-			}
-
-			if diff := cmp.Diff(tc.want, got); diff != "" {
-				t.Errorf("unexpected object (-want, +got) = %v", diff)
-			}
-		})
-	}
-}
-
-func TestXMLUnmarshalTimestamp(t *testing.T) {
-	testCases := map[string]struct {
-		b       []byte
-		want    *types.Timestamp
-		wantErr string
-	}{
-		"empty": {
-			wantErr: "EOF",
-		},
-		"invalid format": {
-			b:    []byte("<Timestamp>2019-02-28</Timestamp>"),
-			want: &types.Timestamp{},
-		},
-		"nil": {
-			b:    []byte("<Timestamp></Timestamp>"),
-			want: &types.Timestamp{},
-		},
-		"RFC3339 format": {
-			b: []byte(`<Timestamp>1984-02-28T15:04:05Z</Timestamp>`),
-			want: func() *types.Timestamp {
-				t, _ := time.Parse(time.RFC3339, "1984-02-28T15:04:05Z")
-				return &types.Timestamp{Time: t}
-			}(),
-		},
-		"RFC3339Nano format": {
-			b: []byte(`<Timestamp>1984-02-28T15:04:05.999999999Z</Timestamp>`),
-			want: func() *types.Timestamp {
-				t, _ := time.Parse(time.RFC3339Nano, "1984-02-28T15:04:05.999999999Z")
-				return &types.Timestamp{Time: t}
-			}(),
-		},
-	}
-	for n, tc := range testCases {
-		tc := tc // Don't use range variable in func literal.
-		t.Run(n, func(t *testing.T) {
-
-			got := &types.Timestamp{}
-
-			err := xml.Unmarshal(tc.b, got)
-
-			if tc.wantErr != "" || err != nil {
-				var gotErr string
-				if err != nil {
-					gotErr = err.Error()
-				}
-				if diff := cmp.Diff(tc.wantErr, gotErr); diff != "" {
-					t.Errorf("unexpected error (-want, +got) = %v", diff)
-				}
-				return
-			}
-
-			if diff := cmp.Diff(tc.want, got); diff != "" {
-				t.Errorf("unexpected object (-want, +got) = %v", diff)
-			}
-		})
-	}
-}
-
-func TestTimestampString(t *testing.T) {
-	testCases := map[string]struct {
-		t    string
-		want string
-	}{
-		"empty": {
-			want: "0001-01-01T00:00:00Z",
-		},
-		"RFC3339 format": {
-			t:    "1984-02-28T15:04:05Z",
-			want: `1984-02-28T15:04:05Z`,
-		},
-		"RFC3339Nano format": {
-			t:    "1984-02-28T15:04:05.999999999Z",
-			want: `1984-02-28T15:04:05.999999999Z`,
-		},
-	}
-	for n, tc := range testCases {
-		tc := tc // Don't use range variable in func literal.
-		t.Run(n, func(t *testing.T) {
-
-			tt := types.ParseTimestamp(tc.t)
-			got := tt.String()
-
-			if diff := cmp.Diff(tc.want, got); diff != "" {
-				t.Logf("got: %s", got)
-				t.Errorf("unexpected string (-want, +got) = %v", diff)
-			}
-		})
-	}
+	bad("", "EOF")
+	bad("2019-02-28", "EOF")
+	bad("<Timestamp>2019-02-28</Timestamp>", "cannot convert \"2019-02-28\" to time.Time: not in RFC3339 format")
+	bad("<Timestamp></Timestamp>", "cannot convert \"\" to time.Time: not in RFC3339 format")
 }

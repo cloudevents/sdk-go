@@ -42,15 +42,24 @@ func ParseInteger(v string) (int32, error) {
 func ParseBinary(v string) ([]byte, error) { return base64.StdEncoding.DecodeString(v) }
 
 // ParseTime parse canonical string format: RFC3339 with nanoseconds
-func ParseTime(v string) (time.Time, error) { return time.Parse(time.RFC3339Nano, v) }
+func ParseTime(v string) (time.Time, error) {
+	t, err := time.Parse(time.RFC3339Nano, v)
+	if err != nil {
+		err := convertErr(time.Time{}, v)
+		err.extra = ": not in RFC3339 format"
+		return time.Time{}, err
+	}
+	return t, nil
+}
 
 // Format returns the canonical string format of v, where v can be
 // any type that is convertible to a CloudEvents type.
 func Format(v interface{}) (string, error) {
 	v, err := Validate(v)
-	switch v := v.(type) {
-	case nil:
+	if err != nil {
 		return "", err
+	}
+	switch v := v.(type) {
 	case bool:
 		return FormatBool(v), nil
 	case int32:
@@ -125,26 +134,32 @@ func Validate(v interface{}) (interface{}, error) {
 // ToBool accepts a bool value or canonical "true"/"false" string.
 func ToBool(v interface{}) (bool, error) {
 	v, err := Validate(v)
+	if err != nil {
+		return false, err
+	}
 	switch v := v.(type) {
 	case bool:
 		return v, nil
 	case string:
 		return ParseBool(v)
 	default:
-		return false, convertErr("Bool", v, err)
+		return false, convertErr(true, v)
 	}
 }
 
 // ToInteger accepts any numeric value in int32 range, or canonical string.
 func ToInteger(v interface{}) (int32, error) {
 	v, err := Validate(v)
+	if err != nil {
+		return 0, err
+	}
 	switch v := v.(type) {
 	case int32:
 		return v, nil
 	case string:
 		return ParseInteger(v)
 	default:
-		return 0, convertErr("Integer", v, err)
+		return 0, convertErr(int32(0), v)
 	}
 }
 
@@ -154,30 +169,39 @@ func ToInteger(v interface{}) (int32, error) {
 // Format functions for that.
 func ToString(v interface{}) (string, error) {
 	v, err := Validate(v)
+	if err != nil {
+		return "", err
+	}
 	switch v := v.(type) {
 	case string:
 		return v, nil
 	default:
-		return "", convertErr("String", v, err)
+		return "", convertErr("", v)
 	}
 }
 
 // ToBinary returns a []byte value, decoding from base64 string if necessary.
 func ToBinary(v interface{}) ([]byte, error) {
 	v, err := Validate(v)
+	if err != nil {
+		return nil, err
+	}
 	switch v := v.(type) {
 	case []byte:
 		return v, nil
 	case string:
 		return base64.StdEncoding.DecodeString(v)
 	default:
-		return nil, convertErr("Binary", v, err)
+		return nil, convertErr([]byte(nil), v)
 	}
 }
 
 // ToURL returns a *url.URL value, parsing from string if necessary.
 func ToURL(v interface{}) (*url.URL, error) {
 	v, err := Validate(v)
+	if err != nil {
+		return nil, err
+	}
 	switch v := v.(type) {
 	case *url.URL:
 		return v, nil
@@ -188,13 +212,16 @@ func ToURL(v interface{}) (*url.URL, error) {
 		}
 		return u, nil
 	default:
-		return nil, convertErr("URL", v, err)
+		return nil, convertErr((*url.URL)(nil), v)
 	}
 }
 
 // ToTime returns a time.Time value, parsing from RFC3339 string if necessary.
 func ToTime(v interface{}) (time.Time, error) {
 	v, err := Validate(v)
+	if err != nil {
+		return time.Time{}, err
+	}
 	switch v := v.(type) {
 	case time.Time:
 		return v, nil
@@ -205,17 +232,29 @@ func ToTime(v interface{}) (time.Time, error) {
 		}
 		return ts, nil
 	default:
-		return time.Time{}, convertErr("Time", v, err)
+		return time.Time{}, convertErr(time.Time{}, v)
 	}
 }
 
-func convertErr(name string, v interface{}, err error) error {
-	if err != nil {
-		return err
-	}
-	return fmt.Errorf("cannot convert %T to %s", v, name)
+type ConvertErr struct {
+	// Value being converted
+	Value interface{}
+	// Type of attempted conversion
+	Type reflect.Type
+
+	extra string
+}
+
+func (e *ConvertErr) Error() string {
+	return fmt.Sprintf("cannot convert %#v to %s%s", e.Value, e.Type, e.extra)
+}
+
+func convertErr(target, v interface{}) *ConvertErr {
+	return &ConvertErr{Value: v, Type: reflect.TypeOf(target)}
 }
 
 func rangeErr(v interface{}) error {
-	return fmt.Errorf("%v is out of range for Integer", v)
+	e := convertErr(int32(0), v)
+	e.extra = ": out of range"
+	return e
 }

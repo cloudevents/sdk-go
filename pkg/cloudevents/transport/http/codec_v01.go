@@ -182,7 +182,11 @@ func (v CodecV01) fromHeaders(h http.Header) (cloudevents.EventContextV01, error
 	if source != nil {
 		ec.Source = *source
 	}
-	ec.EventTime = types.ParseTimestamp(h.Get("CE-EventTime"))
+	var err error
+	ec.EventTime, err = types.ParseTimestamp(h.Get("CE-EventTime"))
+	if err != nil {
+		return ec, err
+	}
 	h.Del("CE-EventTime")
 	etv := h.Get("CE-EventTypeVersion")
 	h.Del("CE-EventTypeVersion")
