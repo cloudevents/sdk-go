@@ -119,10 +119,9 @@ func (ec EventContextV1) AsV03() *EventContextV03 {
 		Time:            ec.Time,
 		Type:            ec.Type,
 		DataContentType: ec.DataContentType,
-		//DeprecatedDataContentEncoding: ec.DeprecatedDataContentEncoding, // TODO fix up DeprecatedDataContentEncoding
-		Source:     types.URLRef{URL: ec.Source.URL},
-		Subject:    ec.Subject,
-		Extensions: make(map[string]interface{}),
+		Source:          types.URLRef{URL: ec.Source.URL},
+		Subject:         ec.Subject,
+		Extensions:      make(map[string]interface{}),
 	}
 
 	if ec.DataSchema != nil {
@@ -133,6 +132,14 @@ func (ec EventContextV1) AsV03() *EventContextV03 {
 	if ec.Extensions != nil {
 		for k, v := range ec.Extensions {
 			k = strings.ToLower(k)
+			// DeprecatedDataContentEncoding was introduced in 0.3, removed in 1.0
+			if strings.EqualFold(k, DataContentEncodingKey) {
+				etv, ok := v.(string)
+				if ok && etv != "" {
+					ret.DataContentEncoding = &etv
+				}
+				continue
+			}
 			ret.Extensions[k] = v
 		}
 	}

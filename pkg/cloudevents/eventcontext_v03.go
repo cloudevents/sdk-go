@@ -83,7 +83,11 @@ func (ec *EventContextV03) SetExtension(name string, value interface{}) error {
 	if value == nil {
 		delete(ec.Extensions, name)
 	} else {
-		ec.Extensions[name] = value
+		v, err := types.ValueOf(value)
+		if err == nil {
+			ec.Extensions[name] = v.Interface()
+		}
+		return err
 	}
 	return nil
 }
@@ -139,11 +143,10 @@ func (ec EventContextV03) AsV03() *EventContextV03 {
 // AsV04 implements EventContextConverter.AsV04
 func (ec EventContextV03) AsV1() *EventContextV1 {
 	ret := EventContextV1{
-		SpecVersion: CloudEventsVersionV1,
-		ID:          ec.ID,
-		Time:        ec.Time,
-		Type:        ec.Type,
-
+		SpecVersion:     CloudEventsVersionV1,
+		ID:              ec.ID,
+		Time:            ec.Time,
+		Type:            ec.Type,
 		DataContentType: ec.DataContentType,
 		Source:          types.URIRef{URL: ec.Source.URL},
 		Subject:         ec.Subject,
@@ -152,10 +155,16 @@ func (ec EventContextV03) AsV1() *EventContextV1 {
 	if ec.SchemaURL != nil {
 		ret.DataSchema = &types.URI{URL: ec.SchemaURL.URL}
 	}
+
+	// DataContentEncoding was removed in 1.0, so put it in an extension for 1.0.
+	if ec.DataContentEncoding != nil {
+		_ = ret.SetExtension(DataContentEncodingKey, *ec.DataContentEncoding)
+	}
+
 	if ec.Extensions != nil {
 		for k, v := range ec.Extensions {
 			k = strings.ToLower(k)
-			ret.Extensions[k] = fmt.Sprintf("%v", v) // TODO: This is wrong. Follow up with what should be done.
+			ret.Extensions[k] = v
 		}
 	}
 	if len(ret.Extensions) == 0 {
