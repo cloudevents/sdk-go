@@ -833,10 +833,7 @@ func TestExtensions(t *testing.T) {
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 			var got string
-			v, err := types.ValueOf(tc.event.Context.GetExtensions()[tc.extension])
-			if err == nil {
-				got, err = v.ToString()
-			}
+			got, err := types.ToString(tc.event.Context.GetExtensions()[tc.extension])
 			if tc.wantError {
 				if err == nil {
 					t.Errorf("expected error %q, got nil", tc.wantErrorMsg)

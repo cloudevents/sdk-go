@@ -86,9 +86,9 @@ func (ec *EventContextV1) SetExtension(name string, value interface{}) error {
 		delete(ec.Extensions, name)
 		return nil
 	} else {
-		v, err := types.ValueOf(value)
+		v, err := types.Validate(value) // Ensure it's a legal CE attribute value
 		if err == nil {
-			ec.Extensions[name] = v.Interface()
+			ec.Extensions[name] = v
 		}
 		return err
 	}
