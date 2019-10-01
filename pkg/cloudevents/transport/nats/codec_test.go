@@ -36,7 +36,6 @@ func TestCodecEncode(t *testing.T) {
 			want: &nats.Message{
 				Body: func() []byte {
 					body := map[string]interface{}{
-						"contenttype": "application/json",
 						"specversion": "0.2",
 						"id":          "ABC-123",
 						"type":        "com.example.test",
@@ -166,7 +165,6 @@ func TestCodecRoundTrip(t *testing.T) {
 						EventType:          "com.example.test",
 						Source:             *source,
 						EventID:            "ABC-123",
-						ContentType:        cloudevents.StringOfApplicationJSON(),
 					},
 					Data: map[string]interface{}{
 						"a": "apple",
@@ -194,7 +192,6 @@ func TestCodecRoundTrip(t *testing.T) {
 						EventType:          "com.example.test",
 						Source:             *source,
 						EventID:            "ABC-123",
-						ContentType:        cloudevents.StringOfApplicationJSON(),
 					},
 					Data: &DataExample{
 						AnInt:   42,
@@ -288,7 +285,6 @@ func TestCodecAsMiddleware(t *testing.T) {
 						EventType:          "com.example.test",
 						Source:             *source,
 						EventID:            "ABC-123",
-						ContentType:        cloudevents.StringOfApplicationJSON(),
 					},
 					Data: map[string]interface{}{
 						"a": "apple",
@@ -316,7 +312,6 @@ func TestCodecAsMiddleware(t *testing.T) {
 						EventType:          "com.example.test",
 						Source:             *source,
 						EventID:            "ABC-123",
-						ContentType:        cloudevents.StringOfApplicationJSON(),
 					},
 					Data: &DataExample{
 						AnInt:   42,

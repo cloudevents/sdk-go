@@ -31,7 +31,7 @@ func TestSenderReceiver_binary_v01(t *testing.T) {
 					Source:  *cloudevents.ParseURIRef("/unit/test/client"),
 					Subject: strptr("resource"),
 				}.AsV1(),
-				Data: map[string]string{"hello": "unittest"},
+				Data: toBytes(map[string]interface{}{"hello": "unittest"}),
 			},
 			asSent: &TapValidation{
 				Method: "POST",
@@ -80,7 +80,7 @@ func TestSenderReceiver_structured_v01(t *testing.T) {
 					Source:  *cloudevents.ParseURIRef("/unit/test/client"),
 					Subject: strptr("resource"),
 				}.AsV1(),
-				Data: map[string]string{"hello": "unittest"},
+				Data: toBytes(map[string]interface{}{"hello": "unittest"}),
 			},
 			asSent: &TapValidation{
 				Method: "POST",

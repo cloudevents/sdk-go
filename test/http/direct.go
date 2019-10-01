@@ -79,7 +79,7 @@ func ClientDirect(t *testing.T, tc DirectTapTest, topts ...cehttp.Option) {
 	// Wait until the receiver is done.
 	<-recvCtx.Done()
 
-	assertEventEquality(t, "event", tc.want, got)
+	assertEventEqualityExact(t, "event", tc.want, got)
 
 	if req, ok := tap.req[testID]; ok {
 		assertTappedEquality(t, "http request", tc.asSent, &req)

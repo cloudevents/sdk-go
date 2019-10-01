@@ -1,6 +1,8 @@
 package http
 
 import (
+	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -20,7 +22,15 @@ var (
 	}
 )
 
-func assertEventEquality(t *testing.T, ctx string, expected, actual *cloudevents.Event) {
+func toBytes(body map[string]interface{}) []byte {
+	b, err := json.Marshal(body)
+	if err != nil {
+		return []byte(fmt.Sprintf(`{"error":%q}`, err.Error()))
+	}
+	return b
+}
+
+func assertEventEqualityExact(t *testing.T, ctx string, expected, actual *cloudevents.Event) {
 	if diff := cmp.Diff(expected, actual, cmpopts.IgnoreFields(cloudevents.Event{}, "Data", "DataEncoded", "DataBinary")); diff != "" {
 		t.Errorf("Unexpected difference in %s (-want, +got): %v", ctx, diff)
 	}
@@ -28,6 +38,23 @@ func assertEventEquality(t *testing.T, ctx string, expected, actual *cloudevents
 		return
 	}
 	if diff := cmp.Diff(expected.Data, actual.Data); diff != "" {
+		t.Errorf("Unexpected data difference in %s (-want, +got): %v", ctx, diff)
+	}
+}
+
+func assertEventEquality(t *testing.T, ctx string, expected, actual *cloudevents.Event) {
+	if diff := cmp.Diff(expected, actual, cmpopts.IgnoreFields(cloudevents.Event{}, "Data", "DataEncoded", "DataBinary")); diff != "" {
+		t.Errorf("Unexpected difference in %s (-want, +got): %v", ctx, diff)
+	}
+	if expected == nil || actual == nil {
+		return
+	}
+	data := make(map[string]string)
+	err := actual.DataAs(&data)
+	if err != nil {
+		t.Error(err)
+	}
+	if diff := cmp.Diff(expected.Data, data); diff != "" {
 		t.Errorf("Unexpected data difference in %s (-want, +got): %v", ctx, diff)
 	}
 }

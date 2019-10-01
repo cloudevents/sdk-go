@@ -73,11 +73,13 @@ func ClientLoopback(t *testing.T, tc TapTest, topts ...cehttp.Option) {
 	recvCtx, recvCancel := context.WithCancel(context.Background())
 
 	go func() {
-		t.Log(ce.StartReceiver(recvCtx, func(resp *cloudevents.EventResponse) {
+		if err := ce.StartReceiver(recvCtx, func(resp *cloudevents.EventResponse) {
 			if tc.resp != nil {
 				resp.RespondWith(200, tc.resp)
 			}
-		}))
+		}); err != nil {
+			t.Log(err)
+		}
 	}()
 
 	_, got, err := ce.Send(ctx, *tc.event)

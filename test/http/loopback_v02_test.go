@@ -16,17 +16,19 @@ func TestClientLoopback_binary_v02tov01(t *testing.T) {
 			now: now,
 			event: &cloudevents.Event{
 				Context: cloudevents.EventContextV02{
-					ID:     "ABC-123",
-					Type:   "unit.test.client.sent",
-					Source: *cloudevents.ParseURLRef("/unit/test/client"),
+					ID:          "ABC-123",
+					Type:        "unit.test.client.sent",
+					Source:      *cloudevents.ParseURLRef("/unit/test/client"),
+					ContentType: cloudevents.StringOfApplicationJSON(),
 				}.AsV02(),
 				Data: map[string]string{"hello": "unittest"},
 			},
 			resp: &cloudevents.Event{
 				Context: cloudevents.EventContextV01{
-					EventID:   "321-CBA",
-					EventType: "unit.test.client.response",
-					Source:    *cloudevents.ParseURLRef("/unit/test/client"),
+					EventID:     "321-CBA",
+					EventType:   "unit.test.client.response",
+					Source:      *cloudevents.ParseURLRef("/unit/test/client"),
+					ContentType: cloudevents.StringOfApplicationJSON(),
 				}.AsV01(),
 				Data: map[string]string{"unittest": "response"},
 			},
@@ -85,17 +87,19 @@ func TestClientLoopback_binary_v02tov02(t *testing.T) {
 			now: now,
 			event: &cloudevents.Event{
 				Context: cloudevents.EventContextV02{
-					ID:     "ABC-123",
-					Type:   "unit.test.client.sent",
-					Source: *cloudevents.ParseURLRef("/unit/test/client"),
+					ID:          "ABC-123",
+					Type:        "unit.test.client.sent",
+					Source:      *cloudevents.ParseURLRef("/unit/test/client"),
+					ContentType: cloudevents.StringOfApplicationJSON(),
 				}.AsV02(),
 				Data: map[string]string{"hello": "unittest"},
 			},
 			resp: &cloudevents.Event{
 				Context: cloudevents.EventContextV02{
-					ID:     "321-CBA",
-					Type:   "unit.test.client.response",
-					Source: *cloudevents.ParseURLRef("/unit/test/client"),
+					ID:          "321-CBA",
+					Type:        "unit.test.client.response",
+					Source:      *cloudevents.ParseURLRef("/unit/test/client"),
+					ContentType: cloudevents.StringOfApplicationJSON(),
 				}.AsV02(),
 				Data: map[string]string{"unittest": "response"},
 			},
@@ -154,17 +158,19 @@ func TestClientLoopback_structured_v02tov02(t *testing.T) {
 			now: now,
 			event: &cloudevents.Event{
 				Context: cloudevents.EventContextV02{
-					ID:     "ABC-123",
-					Type:   "unit.test.client.sent",
-					Source: *cloudevents.ParseURLRef("/unit/test/client"),
+					ID:          "ABC-123",
+					Type:        "unit.test.client.sent",
+					Source:      *cloudevents.ParseURLRef("/unit/test/client"),
+					ContentType: cloudevents.StringOfApplicationJSON(),
 				}.AsV02(),
 				Data: map[string]string{"hello": "unittest"},
 			},
 			resp: &cloudevents.Event{
 				Context: cloudevents.EventContextV02{
-					ID:     "321-CBA",
-					Type:   "unit.test.client.response",
-					Source: *cloudevents.ParseURLRef("/unit/test/client"),
+					ID:          "321-CBA",
+					Type:        "unit.test.client.response",
+					Source:      *cloudevents.ParseURLRef("/unit/test/client"),
+					ContentType: cloudevents.StringOfApplicationJSON(),
 				}.AsV02(),
 				Data: map[string]string{"unittest": "response"},
 			},
@@ -215,17 +221,19 @@ func TestClientLoopback_binary_v02tov03(t *testing.T) {
 			now: now,
 			event: &cloudevents.Event{
 				Context: cloudevents.EventContextV02{
-					ID:     "ABC-123",
-					Type:   "unit.test.client.sent",
-					Source: *cloudevents.ParseURLRef("/unit/test/client"),
+					ID:          "ABC-123",
+					Type:        "unit.test.client.sent",
+					Source:      *cloudevents.ParseURLRef("/unit/test/client"),
+					ContentType: cloudevents.StringOfApplicationJSON(),
 				}.AsV02(),
 				Data: map[string]string{"hello": "unittest"},
 			},
 			resp: &cloudevents.Event{
 				Context: cloudevents.EventContextV03{
-					ID:     "321-CBA",
-					Type:   "unit.test.client.response",
-					Source: *cloudevents.ParseURLRef("/unit/test/client"),
+					ID:              "321-CBA",
+					Type:            "unit.test.client.response",
+					Source:          *cloudevents.ParseURLRef("/unit/test/client"),
+					DataContentType: cloudevents.StringOfApplicationJSON(),
 				}.AsV03(),
 				Data: map[string]string{"unittest": "response"},
 			},

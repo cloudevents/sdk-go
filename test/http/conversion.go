@@ -82,8 +82,8 @@ func ClientConversion(t *testing.T, tc ConversionTest, topts ...cehttp.Option) {
 
 	recvCtx, recvCancel := context.WithCancel(context.Background())
 	go func() {
-		t.Log(ce.StartReceiver(recvCtx, func(got *cloudevents.Event) {
-			assertEventEquality(t, "got event", tc.want, got)
+		t.Log(ce.StartReceiver(recvCtx, func(got cloudevents.Event) {
+			assertEventEquality(t, "got event", tc.want, &got)
 		}))
 	}()
 
