@@ -61,7 +61,7 @@ func assertEventEquality(t *testing.T, ctx string, expected, actual *cloudevents
 
 func assertTappedEquality(t *testing.T, ctx string, expected, actual *TapValidation) {
 	canonicalizeHeaders(expected, actual)
-	if diff := cmp.Diff(expected, actual); diff != "" {
+	if diff := cmp.Diff(expected, actual, cmpopts.IgnoreFields(TapValidation{}, "ContentLength")); diff != "" {
 		t.Errorf("Unexpected difference in %s (-want, +got): %v", ctx, diff)
 	}
 }
