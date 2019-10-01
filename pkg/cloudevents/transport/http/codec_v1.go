@@ -121,10 +121,8 @@ func (v CodecV1) toHeaders(ec *cloudevents.EventContextV1) (http.Header, error) 
 	if ec.DataSchema != nil {
 		h.Set("ce-dataschema", ec.DataSchema.String())
 	}
-	if ec.DataContentType != nil {
+	if ec.DataContentType != nil && *ec.DataContentType != "" {
 		h.Set("Content-Type", *ec.DataContentType)
-	} else {
-		h.Set("Content-Type", cloudevents.ApplicationJSON)
 	}
 
 	for k, v := range ec.Extensions {

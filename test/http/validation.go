@@ -21,18 +21,13 @@ var (
 )
 
 func assertEventEquality(t *testing.T, ctx string, expected, actual *cloudevents.Event) {
-	if diff := cmp.Diff(expected, actual, cmpopts.IgnoreFields(cloudevents.Event{}, "Data", "DataEncoded")); diff != "" {
+	if diff := cmp.Diff(expected, actual, cmpopts.IgnoreFields(cloudevents.Event{}, "Data", "DataEncoded", "DataBinary")); diff != "" {
 		t.Errorf("Unexpected difference in %s (-want, +got): %v", ctx, diff)
 	}
 	if expected == nil || actual == nil {
 		return
 	}
-	data := make(map[string]string)
-	err := actual.DataAs(&data)
-	if err != nil {
-		t.Error(err)
-	}
-	if diff := cmp.Diff(expected.Data, data); diff != "" {
+	if diff := cmp.Diff(expected.Data, actual.Data); diff != "" {
 		t.Errorf("Unexpected data difference in %s (-want, +got): %v", ctx, diff)
 	}
 }

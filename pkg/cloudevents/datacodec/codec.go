@@ -25,13 +25,13 @@ func init() {
 	decoder = make(map[string]Decoder, 10)
 	encoder = make(map[string]Encoder, 10)
 
-	AddDecoder("", json.Decode)
+	AddDecoder("", json.Decode) // TODO: nop.Decode)
 	AddDecoder("application/json", json.Decode)
 	AddDecoder("text/json", json.Decode)
 	AddDecoder("application/xml", xml.Decode)
 	AddDecoder("text/xml", xml.Decode)
 
-	AddEncoder("", json.Encode)
+	AddEncoder("", json.Encode) // TODO: nop.Encode)
 	AddEncoder("application/json", json.Encode)
 	AddEncoder("text/json", json.Encode)
 	AddEncoder("application/xml", xml.Encode)

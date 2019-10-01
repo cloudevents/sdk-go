@@ -11,8 +11,8 @@ import (
 type Event struct {
 	Context     EventContext
 	Data        interface{}
-	DataBase64  []byte
 	DataEncoded bool
+	DataBinary  bool
 }
 
 const (
