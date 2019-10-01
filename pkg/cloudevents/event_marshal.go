@@ -92,9 +92,6 @@ func versionFromRawMessage(raw map[string]json.RawMessage) string {
 
 // JsonEncode
 func JsonEncode(e Event) ([]byte, error) {
-	if e.DataContentType() == "" {
-		e.SetDataContentType(ApplicationJSON)
-	}
 	var data []byte
 	isBase64 := e.Context.DeprecatedGetDataContentEncoding() == Base64
 	if e.DataBase64 != nil {

@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"testing"
 )
 
 type TapValidation struct {
@@ -30,6 +31,51 @@ func NewTap() *tapHandler {
 		resp: make(map[string]TapValidation, 10),
 	}
 }
+
+// To help with debug, if needed.
+func printTap(t *testing.T, tap *tapHandler, testID string) {
+	if r, ok := tap.req[testID]; ok {
+		t.Log("tap request ", r.URI, r.Method)
+		if r.ContentLength > 0 {
+			t.Log(" .body: ", r.Body)
+		} else {
+			t.Log("tap request had no body.")
+		}
+
+		if len(r.Header) > 0 {
+			for h, vs := range r.Header {
+				for _, v := range vs {
+					t.Logf(" .header %s: %s", h, v)
+				}
+			}
+		} else {
+			t.Log("tap request had no headers.")
+		}
+	}
+
+	if r, ok := tap.resp[testID]; ok {
+		t.Log("tap response.status: ", r.Status)
+		if r.ContentLength > 0 {
+			t.Log(" .body: ", r.Body)
+		} else {
+			t.Log("tap response had no body.")
+		}
+
+		if len(r.Header) > 0 {
+			for h, vs := range r.Header {
+				for _, v := range vs {
+					t.Logf(" .header %s: %s", h, v)
+				}
+			}
+		} else {
+			t.Log("tap response had no headers.")
+		}
+	}
+}
+
+// Don't consider printTap as dead code even if not currently in use.
+// We want to keep it for possible future debugging.
+var _ = printTap
 
 const (
 	unitTestIDKey = "Test-Ce-Id"
