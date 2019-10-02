@@ -1,1 +1,0 @@
-package nop_test
