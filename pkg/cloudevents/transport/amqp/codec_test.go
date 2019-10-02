@@ -41,7 +41,6 @@ func TestCodecEncode(t *testing.T) {
 				ContentType: "application/cloudevents+json",
 				Body: func() []byte {
 					body := map[string]interface{}{
-						"contenttype": "application/json",
 						"specversion": "0.2",
 						"id":          "ABC-123",
 						"type":        "com.example.test",
@@ -65,12 +64,11 @@ func TestCodecEncode(t *testing.T) {
 				ContentType: "application/cloudevents+json",
 				Body: func() []byte {
 					body := map[string]interface{}{
-						"datacontenttype": "application/json",
-						"specversion":     "0.3",
-						"id":              "ABC-123",
-						"type":            "com.example.test",
-						"source":          "http://example.com/source",
-						"subject":         "a-subject",
+						"specversion": "0.3",
+						"id":          "ABC-123",
+						"type":        "com.example.test",
+						"source":      "http://example.com/source",
+						"subject":     "a-subject",
 					}
 					return toBytes(body)
 				}(),
@@ -300,7 +298,6 @@ func TestCodecRoundTrip(t *testing.T) {
 						EventType:          "com.example.test",
 						Source:             *source,
 						EventID:            "ABC-123",
-						ContentType:        cloudevents.StringOfApplicationJSON(),
 					},
 					Data: map[string]interface{}{
 						"a": "apple",
@@ -328,7 +325,6 @@ func TestCodecRoundTrip(t *testing.T) {
 						EventType:          "com.example.test",
 						Source:             *source,
 						EventID:            "ABC-123",
-						ContentType:        cloudevents.StringOfApplicationJSON(),
 					},
 					Data: &DataExample{
 						AnInt:   42,
@@ -422,7 +418,6 @@ func TestCodecAsMiddleware(t *testing.T) {
 						EventType:          "com.example.test",
 						Source:             *source,
 						EventID:            "ABC-123",
-						ContentType:        cloudevents.StringOfApplicationJSON(),
 					},
 					Data: map[string]interface{}{
 						"a": "apple",
@@ -450,7 +445,6 @@ func TestCodecAsMiddleware(t *testing.T) {
 						EventType:          "com.example.test",
 						Source:             *source,
 						EventID:            "ABC-123",
-						ContentType:        cloudevents.StringOfApplicationJSON(),
 					},
 					Data: &DataExample{
 						AnInt:   42,

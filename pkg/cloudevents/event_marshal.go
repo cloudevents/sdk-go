@@ -2,7 +2,9 @@ package cloudevents
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -20,7 +22,17 @@ func (e Event) MarshalJSON() ([]byte, error) {
 		return nil, err
 	}
 
-	b, err := JsonEncode(e)
+	var b []byte
+	var err error
+
+	switch e.SpecVersion() {
+	case CloudEventsVersionV01, CloudEventsVersionV02, CloudEventsVersionV03:
+		b, err = JsonEncodeLegacy(e)
+	case CloudEventsVersionV1:
+		b, err = JsonEncode(e)
+	default:
+		return nil, fmt.Errorf("unnknown spec version: %q", e.SpecVersion())
+	}
 
 	// Report the observable
 	if err != nil {
@@ -92,24 +104,21 @@ func versionFromRawMessage(raw map[string]json.RawMessage) string {
 
 // JsonEncode
 func JsonEncode(e Event) ([]byte, error) {
-	if e.DataContentType() == "" {
-		e.SetDataContentType(ApplicationJSON)
+	data, err := e.DataBytes()
+	if err != nil {
+		return nil, err
 	}
+	return jsonEncode(e.Context, data, e.DataBinary)
+}
+
+// JsonEncodeLegacy
+func JsonEncodeLegacy(e Event) ([]byte, error) {
 	var data []byte
 	isBase64 := e.Context.DeprecatedGetDataContentEncoding() == Base64
-	if e.DataBase64 != nil {
-		isBase64 = true
-		var err error
-		data, err = json.Marshal(e.DataBase64)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		var err error
-		data, err = e.DataBytes()
-		if err != nil {
-			return nil, err
-		}
+	var err error
+	data, err = e.DataBytes()
+	if err != nil {
+		return nil, err
 	}
 	return jsonEncode(e.Context, data, isBase64)
 }
@@ -145,6 +154,9 @@ func jsonEncode(ctx EventContextReader, data []byte, isBase64 bool) ([]byte, err
 			var dataKey string
 			if ctx.GetSpecVersion() == CloudEventsVersionV1 {
 				dataKey = "data_base64"
+				buf := make([]byte, base64.StdEncoding.EncodedLen(len(data)))
+				base64.StdEncoding.Encode(buf, data)
+				data = buf
 			} else {
 				dataKey = "data"
 			}
@@ -312,8 +324,14 @@ func (e *Event) JsonDecodeV1(body []byte, raw map[string]json.RawMessage) error 
 	}
 
 	e.Context = &ec
-	e.Data = data
-	e.DataBase64 = dataBase64
+	if data != nil && dataBase64 != nil {
+		return errors.New("parsing error: JSON decoder found both 'data', and 'data_base64' in JSON payload")
+	}
+	if data != nil {
+		e.Data = data
+	} else if dataBase64 != nil {
+		e.Data = dataBase64
+	}
 	e.DataEncoded = data != nil
 
 	return nil

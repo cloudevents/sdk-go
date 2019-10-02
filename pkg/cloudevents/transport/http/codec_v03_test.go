@@ -44,7 +44,6 @@ func TestCodecV03_Encode(t *testing.T) {
 					"Ce-Id":          {"ABC-123"},
 					"Ce-Type":        {"com.example.test"},
 					"Ce-Source":      {"http://example.com/source"},
-					"Content-Type":   {"application/json"},
 				},
 			},
 		},
@@ -97,7 +96,6 @@ func TestCodecV03_Encode(t *testing.T) {
 					"Ce-Id":          {"ABC-123"},
 					"Ce-Type":        {"com.example.test"},
 					"Ce-Source":      {"http://example.com/source"},
-					"Content-Type":   {"application/json"},
 				},
 			},
 		},
@@ -208,11 +206,10 @@ func TestCodecV03_Encode(t *testing.T) {
 				},
 				Body: func() []byte {
 					body := map[string]interface{}{
-						"datacontenttype": "application/json",
-						"specversion":     "0.3",
-						"id":              "ABC-123",
-						"type":            "com.example.test",
-						"source":          "http://example.com/source",
+						"specversion": "0.3",
+						"id":          "ABC-123",
+						"type":        "com.example.test",
+						"source":      "http://example.com/source",
 					}
 					return toBytes(body)
 				}(),

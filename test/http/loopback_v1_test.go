@@ -15,18 +15,20 @@ func TestClientLoopback_binary_v1tov01(t *testing.T) {
 			now: now,
 			event: &cloudevents.Event{
 				Context: cloudevents.EventContextV1{
-					ID:      "ABC-123",
-					Type:    "unit.test.client.sent",
-					Source:  *cloudevents.ParseURIRef("/unit/test/client"),
-					Subject: strptr("resource"),
+					ID:              "ABC-123",
+					Type:            "unit.test.client.sent",
+					Source:          *cloudevents.ParseURIRef("/unit/test/client"),
+					Subject:         strptr("resource"),
+					DataContentType: cloudevents.StringOfApplicationJSON(),
 				}.AsV1(),
 				Data: map[string]string{"hello": "unittest"},
 			},
 			resp: &cloudevents.Event{
 				Context: cloudevents.EventContextV01{
-					EventID:   "321-CBA",
-					EventType: "unit.test.client.response",
-					Source:    *cloudevents.ParseURLRef("/unit/test/client"),
+					EventID:     "321-CBA",
+					EventType:   "unit.test.client.response",
+					Source:      *cloudevents.ParseURLRef("/unit/test/client"),
+					ContentType: cloudevents.StringOfApplicationJSON(),
 				}.AsV01(),
 				Data: map[string]string{"unittest": "response"},
 			},
@@ -86,18 +88,20 @@ func TestClientLoopback_binary_v1tov02(t *testing.T) {
 			now: now,
 			event: &cloudevents.Event{
 				Context: cloudevents.EventContextV1{
-					ID:      "ABC-123",
-					Type:    "unit.test.client.sent",
-					Source:  *cloudevents.ParseURIRef("/unit/test/client"),
-					Subject: strptr("resource"),
+					ID:              "ABC-123",
+					Type:            "unit.test.client.sent",
+					Source:          *cloudevents.ParseURIRef("/unit/test/client"),
+					Subject:         strptr("resource"),
+					DataContentType: cloudevents.StringOfApplicationJSON(),
 				}.AsV1(),
 				Data: map[string]string{"hello": "unittest"},
 			},
 			resp: &cloudevents.Event{
 				Context: cloudevents.EventContextV02{
-					ID:     "321-CBA",
-					Type:   "unit.test.client.response",
-					Source: *cloudevents.ParseURLRef("/unit/test/client"),
+					ID:          "321-CBA",
+					Type:        "unit.test.client.response",
+					Source:      *cloudevents.ParseURLRef("/unit/test/client"),
+					ContentType: cloudevents.StringOfApplicationJSON(),
 				}.AsV02(),
 				Data: map[string]string{"unittest": "response"},
 			},
@@ -157,18 +161,20 @@ func TestClientLoopback_binary_v1tov03(t *testing.T) {
 			now: now,
 			event: &cloudevents.Event{
 				Context: cloudevents.EventContextV1{
-					ID:      "ABC-123",
-					Type:    "unit.test.client.sent",
-					Source:  *cloudevents.ParseURIRef("/unit/test/client"),
-					Subject: strptr("resource"),
+					ID:              "ABC-123",
+					Type:            "unit.test.client.sent",
+					Source:          *cloudevents.ParseURIRef("/unit/test/client"),
+					Subject:         strptr("resource"),
+					DataContentType: cloudevents.StringOfApplicationJSON(),
 				}.AsV1(),
 				Data: map[string]string{"hello": "unittest"},
 			},
 			resp: &cloudevents.Event{
 				Context: cloudevents.EventContextV03{
-					ID:     "321-CBA",
-					Type:   "unit.test.client.response",
-					Source: *cloudevents.ParseURLRef("/unit/test/client"),
+					ID:              "321-CBA",
+					Type:            "unit.test.client.response",
+					Source:          *cloudevents.ParseURLRef("/unit/test/client"),
+					DataContentType: cloudevents.StringOfApplicationJSON(),
 				}.AsV03(),
 				Data: map[string]string{"unittest": "response"},
 			},
@@ -224,22 +230,24 @@ func TestClientLoopback_binary_v1tov1(t *testing.T) {
 	now := time.Now()
 
 	testCases := TapTestCases{
-		"Loopback v1.0 -> v0.3": {
+		"Loopback v1.0 -> v1.0": {
 			now: now,
 			event: &cloudevents.Event{
 				Context: cloudevents.EventContextV1{
-					ID:      "ABC-123",
-					Type:    "unit.test.client.sent",
-					Source:  *cloudevents.ParseURIRef("/unit/test/client"),
-					Subject: strptr("resource"),
+					ID:              "ABC-123",
+					Type:            "unit.test.client.sent",
+					Source:          *cloudevents.ParseURIRef("/unit/test/client"),
+					Subject:         strptr("resource"),
+					DataContentType: cloudevents.StringOfApplicationJSON(),
 				}.AsV1(),
 				Data: map[string]string{"hello": "unittest"},
 			},
 			resp: &cloudevents.Event{
 				Context: cloudevents.EventContextV1{
-					ID:     "321-CBA",
-					Type:   "unit.test.client.response",
-					Source: *cloudevents.ParseURIRef("/unit/test/client"),
+					ID:              "321-CBA",
+					Type:            "unit.test.client.response",
+					Source:          *cloudevents.ParseURIRef("/unit/test/client"),
+					DataContentType: cloudevents.StringOfApplicationJSON(),
 				}.AsV1(),
 				Data: map[string]string{"unittest": "response"},
 			},

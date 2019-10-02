@@ -42,7 +42,6 @@ func TestCodecV01_Encode(t *testing.T) {
 					"CE-EventID":            {"ABC-123"},
 					"CE-EventType":          {"com.example.test"},
 					"CE-Source":             {"http://example.com/source"},
-					"Content-Type":          {"application/json"},
 				},
 			},
 		},
@@ -95,7 +94,6 @@ func TestCodecV01_Encode(t *testing.T) {
 					"CE-EventID":            {"ABC-123"},
 					"CE-EventType":          {"com.example.test"},
 					"CE-Source":             {"http://example.com/source"},
-					"Content-Type":          {"application/json"},
 				},
 			},
 		},
@@ -148,7 +146,6 @@ func TestCodecV01_Encode(t *testing.T) {
 				},
 				Body: func() []byte {
 					body := map[string]interface{}{
-						"contentType":        "application/json",
 						"cloudEventsVersion": "0.1",
 						"eventID":            "ABC-123",
 						"eventType":          "com.example.test",

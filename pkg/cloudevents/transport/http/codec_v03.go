@@ -122,12 +122,8 @@ func (v CodecV03) toHeaders(ec *cloudevents.EventContextV03) (http.Header, error
 	if ec.SchemaURL != nil {
 		h.Set("ce-schemaurl", ec.SchemaURL.String())
 	}
-	if ec.DataContentType != nil {
+	if ec.DataContentType != nil && *ec.DataContentType != "" {
 		h.Set("Content-Type", *ec.DataContentType)
-	} else {
-		// in binary v0.3, the Content-Type header is tied to ec.ContentType
-		// This was later found to be an issue with the spec, but yolo.
-		h.Set("Content-Type", cloudevents.ApplicationJSON)
 	}
 	if ec.DataContentEncoding != nil {
 		h.Set("ce-datacontentencoding", *ec.DataContentEncoding)

@@ -113,7 +113,14 @@ func TestCodecEncode(t *testing.T) {
 			contentType: "unit/testing-invalid",
 			wantErr:     `[encode] unsupported content type: "unit/testing-invalid"`,
 		},
-
+		"blank": {
+			contentType: "",
+			in: map[string]string{
+				"a": "apple",
+				"b": "banana",
+			},
+			want: []byte(`{"a":"apple","b":"banana"}`),
+		},
 		"application/json": {
 			contentType: "application/json",
 			in: map[string]string{

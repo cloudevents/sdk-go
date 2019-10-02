@@ -43,7 +43,6 @@ func UnitTestConvert(ctx context.Context, m transport.Message, err error) (*clou
 		event.SetSource("github.com/cloudevents/test/http/conversion")
 		event.SetType(fmt.Sprintf("io.cloudevents.conversion.http.%s", strings.ToLower(tx.Method)))
 		event.SetID("321-CBA")
-		event.SetExtension(unitTestIDKey, msg.Header.Get(unitTestIDKey))
 		event.Data = msg.Body
 
 		return &event, nil
@@ -82,8 +81,8 @@ func ClientConversion(t *testing.T, tc ConversionTest, topts ...cehttp.Option) {
 
 	recvCtx, recvCancel := context.WithCancel(context.Background())
 	go func() {
-		t.Log(ce.StartReceiver(recvCtx, func(got *cloudevents.Event) {
-			assertEventEquality(t, "got event", tc.want, got)
+		t.Log(ce.StartReceiver(recvCtx, func(got cloudevents.Event) {
+			assertEventEquality(t, "got event", tc.want, &got)
 		}))
 	}()
 

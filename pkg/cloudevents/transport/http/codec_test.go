@@ -134,7 +134,6 @@ func TestCodecEncode(t *testing.T) {
 					"CE-EventID":            {"ABC-123"},
 					"CE-EventType":          {"com.example.test"},
 					"CE-Source":             {"http://example.com/source"},
-					"Content-Type":          {"application/json"},
 				},
 			},
 		},
@@ -155,7 +154,6 @@ func TestCodecEncode(t *testing.T) {
 				},
 				Body: func() []byte {
 					body := map[string]interface{}{
-						"contentType":        "application/json",
 						"cloudEventsVersion": "0.1",
 						"eventID":            "ABC-123",
 						"eventType":          "com.example.test",
@@ -182,7 +180,6 @@ func TestCodecEncode(t *testing.T) {
 					"Ce-Id":          {"ABC-123"},
 					"Ce-Type":        {"com.example.test"},
 					"Ce-Source":      {"http://example.com/source"},
-					"Content-Type":   {"application/json"},
 				},
 			},
 		},
@@ -203,7 +200,6 @@ func TestCodecEncode(t *testing.T) {
 				},
 				Body: func() []byte {
 					body := map[string]interface{}{
-						"contenttype": "application/json",
 						"specversion": "0.2",
 						"id":          "ABC-123",
 						"type":        "com.example.test",
@@ -230,7 +226,6 @@ func TestCodecEncode(t *testing.T) {
 					"Ce-Id":          {"ABC-123"},
 					"Ce-Type":        {"com.example.test"},
 					"Ce-Source":      {"http://example.com/source"},
-					"Content-Type":   {"application/json"},
 				},
 			},
 		},
@@ -251,11 +246,10 @@ func TestCodecEncode(t *testing.T) {
 				},
 				Body: func() []byte {
 					body := map[string]interface{}{
-						"datacontenttype": "application/json",
-						"specversion":     "0.3",
-						"id":              "ABC-123",
-						"type":            "com.example.test",
-						"source":          "http://example.com/source",
+						"specversion": "0.3",
+						"id":          "ABC-123",
+						"type":        "com.example.test",
+						"source":      "http://example.com/source",
 					}
 					return toBytes(body)
 				}(),
@@ -276,7 +270,6 @@ func TestCodecEncode(t *testing.T) {
 					"CE-EventID":            {"ABC-123"},
 					"CE-EventType":          {"com.example.test"},
 					"CE-Source":             {"http://example.com/source"},
-					"Content-Type":          {"application/json"},
 				},
 			},
 		},
@@ -295,7 +288,6 @@ func TestCodecEncode(t *testing.T) {
 				},
 				Body: func() []byte {
 					body := map[string]interface{}{
-						"contentType":        "application/json",
 						"cloudEventsVersion": "0.1",
 						"eventID":            "ABC-123",
 						"eventType":          "com.example.test",
@@ -320,7 +312,6 @@ func TestCodecEncode(t *testing.T) {
 					"Ce-Id":          {"ABC-123"},
 					"Ce-Type":        {"com.example.test"},
 					"Ce-Source":      {"http://example.com/source"},
-					"Content-Type":   {"application/json"},
 				},
 			},
 		},
@@ -339,7 +330,6 @@ func TestCodecEncode(t *testing.T) {
 				},
 				Body: func() []byte {
 					body := map[string]interface{}{
-						"contenttype": "application/json",
 						"specversion": "0.2",
 						"id":          "ABC-123",
 						"type":        "com.example.test",
@@ -364,7 +354,6 @@ func TestCodecEncode(t *testing.T) {
 					"Ce-Id":          {"ABC-123"},
 					"Ce-Type":        {"com.example.test"},
 					"Ce-Source":      {"http://example.com/source"},
-					"Content-Type":   {"application/json"},
 				},
 			},
 		},
@@ -383,11 +372,10 @@ func TestCodecEncode(t *testing.T) {
 				},
 				Body: func() []byte {
 					body := map[string]interface{}{
-						"datacontenttype": "application/json",
-						"specversion":     "0.3",
-						"id":              "ABC-123",
-						"type":            "com.example.test",
-						"source":          "http://example.com/source",
+						"specversion": "0.3",
+						"id":          "ABC-123",
+						"type":        "com.example.test",
+						"source":      "http://example.com/source",
 					}
 					return toBytes(body)
 				}(),
@@ -747,7 +735,6 @@ func TestCodecRoundTrip(t *testing.T) {
 						EventType:          "com.example.test",
 						Source:             *source,
 						EventID:            "ABC-123",
-						ContentType:        cloudevents.StringOfApplicationJSON(),
 					}.AsV01(),
 					Data: map[string]interface{}{
 						"a": "apple",
@@ -775,7 +762,6 @@ func TestCodecRoundTrip(t *testing.T) {
 						EventType:          "com.example.test",
 						Source:             *source,
 						EventID:            "ABC-123",
-						ContentType:        cloudevents.StringOfApplicationJSON(),
 					}.AsV01(),
 					Data: &DataExample{
 						AnInt:   42,
