@@ -1,25 +1,36 @@
 /*
 
-Package binding is for implementing transport bindings and
-intermediaries like importers, brokers or channels that forward
-messages between bindings.
+Package binding defines interfaces for protocol bindings.
 
-A transport binding implements Message, Sender and Receiver interfaces.
-An intermediary uses those interfaces to transfer event messages.
+NOTE: Most applications that emit or consume events can use the client
+package. This package is for implementing new protocol bindings and
+intermediaries; processes that forward events between protocols, rather than
+emitting or consuming events themselves.
 
-A Message is an abstract container for an Event. It provides
-additional methods for efficient forwarding of structured events
-and reliable delivery when the underlying transports support it.
+Protocol Bindings
 
-A Receiver can return instances of its own Message implementations. A
-Sender must be able to send any implementation of the Message
-interface, but it may provide optimized handling for its own Message
-implementations.
+A protocol binding implements at least Message, Sender and Receiver, and usually
+Encoder.
 
-For transports that support a reliable delivery QoS, the Message
-interface allows acknowledgment between sender and receiver for QoS
-level 0, 1 or 2. The effective QoS is the lowest provided by sender or
-receiver.
+Receiver: receives protocol messages and wraps them to implement the Message interface.
+
+Message: converts to protocol-neutral cloudevents.Event or structured event
+data. It also provides methods to manage acknowledgment for reliable
+delivery across bindings.
+
+Sender: converts arbitrary Message implementations to a protocol-specific form
+and sends them.
+
+Message and ExactlyOnceMessage provide methods to allow acknowledgments to
+propagate when a reliable messages is forwarded from a Receiver to a Sender.
+QoS 0 (unreliable), 1 (at-least-once) and 2 (exactly-once) are supported.
+
+Intermediaries
+
+Intermediaries can forward Messages from a Receiver to a Sender without
+knowledge of the underlying protocols. The Message interface allows structured
+messages to be forwarded without decoding and re-encoding. It also allows any
+Message to be fully decoded and examined if needed.
 
 */
 package binding
