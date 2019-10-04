@@ -122,18 +122,15 @@ func (v CodecV03) toHeaders(ec *cloudevents.EventContextV03) (http.Header, error
 	if ec.SchemaURL != nil {
 		h.Set("ce-schemaurl", ec.SchemaURL.String())
 	}
-	if ec.DataContentType != nil {
+	if ec.DataContentType != nil && *ec.DataContentType != "" {
 		h.Set("Content-Type", *ec.DataContentType)
-	} else {
-		// in binary v0.3, the Content-Type header is tied to ec.ContentType
-		// This was later found to be an issue with the spec, but yolo.
-		h.Set("Content-Type", cloudevents.ApplicationJSON)
 	}
 	if ec.DataContentEncoding != nil {
 		h.Set("ce-datacontentencoding", *ec.DataContentEncoding)
 	}
 
 	for k, v := range ec.Extensions {
+		k = strings.ToLower(k)
 		// Per spec, map-valued extensions are converted to a list of headers as:
 		// CE-attrib-key
 		switch v.(type) {
@@ -221,7 +218,11 @@ func (v CodecV03) fromHeaders(h http.Header) (cloudevents.EventContextV03, error
 	}
 	h.Del("ce-subject")
 
-	ec.Time = types.ParseTimestamp(h.Get("ce-time"))
+	var err error
+	ec.Time, err = types.ParseTimestamp(h.Get("ce-time"))
+	if err != nil {
+		return ec, err
+	}
 	h.Del("ce-time")
 
 	ec.SchemaURL = types.ParseURLRef(h.Get("ce-schemaurl"))
@@ -244,6 +245,7 @@ func (v CodecV03) fromHeaders(h http.Header) (cloudevents.EventContextV03, error
 
 	extensions := make(map[string]interface{})
 	for k, v := range h {
+		k = strings.ToLower(k)
 		if len(k) > len("ce-") && strings.EqualFold(k[:len("ce-")], "ce-") {
 			ak := strings.ToLower(k[len("ce-"):])
 			if i := strings.Index(ak, "-"); i > 0 {

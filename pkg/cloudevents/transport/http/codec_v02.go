@@ -114,12 +114,8 @@ func (v CodecV02) toHeaders(ec *cloudevents.EventContextV02) (http.Header, error
 	if ec.SchemaURL != nil {
 		h.Set("ce-schemaurl", ec.SchemaURL.String())
 	}
-	if ec.ContentType != nil {
+	if ec.ContentType != nil && *ec.ContentType != "" {
 		h.Set("Content-Type", *ec.ContentType)
-	} else {
-		// in binary v0.2, the Content-Type header is tied to ec.ContentType
-		// This was later found to be an issue with the spec, but yolo.
-		h.Set("Content-Type", cloudevents.ApplicationJSON)
 	}
 	for k, v := range ec.Extensions {
 		// Per spec, map-valued extensions are converted to a list of headers as:
@@ -191,7 +187,11 @@ func (v CodecV02) fromHeaders(h http.Header) (cloudevents.EventContextV02, error
 	}
 	h.Del("ce-source")
 
-	ec.Time = types.ParseTimestamp(h.Get("ce-time"))
+	var err error
+	ec.Time, err = types.ParseTimestamp(h.Get("ce-time"))
+	if err != nil {
+		return ec, err
+	}
 	h.Del("ce-time")
 
 	ec.SchemaURL = types.ParseURLRef(h.Get("ce-schemaurl"))

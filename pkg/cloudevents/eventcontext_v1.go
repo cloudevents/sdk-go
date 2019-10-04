@@ -1,6 +1,7 @@
 package cloudevents
 
 import (
+	"errors"
 	"fmt"
 	"mime"
 	"sort"
@@ -56,6 +57,7 @@ var _ EventContext = (*EventContextV1)(nil)
 
 // ExtensionAs implements EventContext.ExtensionAs
 func (ec EventContextV1) ExtensionAs(name string, obj interface{}) error {
+	name = strings.ToLower(name)
 	value, ok := ec.Extensions[name]
 	if !ok {
 		return fmt.Errorf("extension %q does not exist", name)
@@ -72,6 +74,11 @@ func (ec EventContextV1) ExtensionAs(name string, obj interface{}) error {
 
 // SetExtension adds the extension 'name' with value 'value' to the CloudEvents context.
 func (ec *EventContextV1) SetExtension(name string, value interface{}) error {
+	if !IsAlphaNumericLowercaseLetters(name) {
+		return errors.New("bad key, CloudEvents attribute names MUST consist of lower-case letters ('a' to 'z') or digits ('0' to '9') from the ASCII character set")
+	}
+
+	name = strings.ToLower(name)
 	if ec.Extensions == nil {
 		ec.Extensions = make(map[string]interface{})
 	}
@@ -79,8 +86,10 @@ func (ec *EventContextV1) SetExtension(name string, value interface{}) error {
 		delete(ec.Extensions, name)
 		return nil
 	} else {
-		var err error
-		ec.Extensions[name], err = types.Normalize(value)
+		v, err := types.Validate(value) // Ensure it's a legal CE attribute value
+		if err == nil {
+			ec.Extensions[name] = v
+		}
 		return err
 	}
 }
@@ -105,15 +114,14 @@ func (ec EventContextV1) AsV02() *EventContextV02 {
 // AsV03 implements EventContextConverter.AsV03
 func (ec EventContextV1) AsV03() *EventContextV03 {
 	ret := EventContextV03{
-		SpecVersion:     CloudEventsVersionV02,
+		SpecVersion:     CloudEventsVersionV03,
 		ID:              ec.ID,
 		Time:            ec.Time,
 		Type:            ec.Type,
 		DataContentType: ec.DataContentType,
-		//DeprecatedDataContentEncoding: ec.DeprecatedDataContentEncoding, // TODO fix up DeprecatedDataContentEncoding
-		Source:     types.URLRef{URL: ec.Source.URL},
-		Subject:    ec.Subject,
-		Extensions: make(map[string]interface{}),
+		Source:          types.URLRef{URL: ec.Source.URL},
+		Subject:         ec.Subject,
+		Extensions:      make(map[string]interface{}),
 	}
 
 	if ec.DataSchema != nil {
@@ -123,6 +131,15 @@ func (ec EventContextV1) AsV03() *EventContextV03 {
 	// TODO: DeprecatedDataContentEncoding needs to be moved to extensions.
 	if ec.Extensions != nil {
 		for k, v := range ec.Extensions {
+			k = strings.ToLower(k)
+			// DeprecatedDataContentEncoding was introduced in 0.3, removed in 1.0
+			if strings.EqualFold(k, DataContentEncodingKey) {
+				etv, ok := v.(string)
+				if ok && etv != "" {
+					ret.DataContentEncoding = &etv
+				}
+				continue
+			}
 			ret.Extensions[k] = v
 		}
 	}

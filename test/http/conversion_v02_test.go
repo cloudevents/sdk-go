@@ -22,7 +22,7 @@ func TestClientConversion_v02(t *testing.T) {
 					Type:   "io.cloudevents.conversion.http.post",
 					Source: *cloudevents.ParseURLRef("github.com/cloudevents/test/http/conversion"),
 				}.AsV02(),
-				Data: map[string]string{"unittest": "response"},
+				Data: map[string]string{"hello": "unittest"},
 			},
 			asSent: &TapValidation{
 				Method: "POST",

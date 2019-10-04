@@ -14,6 +14,38 @@ import (
 
 // SetData implements EventWriter.SetData
 func (e *Event) SetData(obj interface{}) error {
+	if e.SpecVersion() != CloudEventsVersionV1 {
+		return e.legacySetData(obj)
+	}
+
+	// Version 1.0 and above.
+
+	// TODO: we will have to be smarter about how data relates to media type.
+	//  but the issue is we can not just encode data anymore without understanding
+	//  what the encoding will be on the outbound event. Structured will use
+	//  data_base64, binary will not (if the transport supports binary mode).
+
+	// TODO: look at content encoding too.
+
+	switch obj.(type) {
+	case []byte:
+		e.Data = obj
+		e.DataEncoded = true
+		e.DataBinary = true
+	default:
+		data, err := datacodec.Encode(context.Background(), e.DataMediaType(), obj)
+		if err != nil {
+			return err
+		}
+		e.Data = data
+		e.DataEncoded = true
+		e.DataBinary = false
+	}
+
+	return nil
+}
+
+func (e *Event) legacySetData(obj interface{}) error {
 	data, err := datacodec.Encode(context.Background(), e.DataMediaType(), obj)
 	if err != nil {
 		return err
@@ -91,9 +123,13 @@ func (e Event) DataAs(data interface{}) error { // TODO: Clean this function up
 		obj = buf[:n]
 	}
 
-	mediaType, err := e.Context.GetDataMediaType()
-	if err != nil {
-		return err
+	mediaType := ""
+	if e.Context.GetDataContentType() != "" {
+		var err error
+		mediaType, err = e.Context.GetDataMediaType()
+		if err != nil {
+			return err
+		}
 	}
 	return datacodec.Decode(context.Background(), mediaType, obj, data)
 }

@@ -121,24 +121,19 @@ func (v CodecV1) toHeaders(ec *cloudevents.EventContextV1) (http.Header, error) 
 	if ec.DataSchema != nil {
 		h.Set("ce-dataschema", ec.DataSchema.String())
 	}
-	if ec.DataContentType != nil {
+	if ec.DataContentType != nil && *ec.DataContentType != "" {
 		h.Set("Content-Type", *ec.DataContentType)
-	} else {
-		h.Set("Content-Type", cloudevents.ApplicationJSON)
 	}
-	// TODO: fix data content encoding for new v1.0 format.
-	//if ec.DataContentEncoding != nil {
-	//	h.Set("ce-datacontentencoding", *ec.DataContentEncoding)
-	//}
 
 	for k, v := range ec.Extensions {
+		k = strings.ToLower(k)
 		// Per spec, extensions are strings and converted to a list of headers as:
 		// ce-key: value
-		val, err := types.StringOf(v)
+		cstr, err := types.Format(v)
 		if err != nil {
 			return h, err
 		}
-		h.Set("ce-"+k, val)
+		h.Set("ce-"+k, cstr)
 	}
 
 	return h, nil
@@ -197,7 +192,11 @@ func (v CodecV1) fromHeaders(h http.Header) (cloudevents.EventContextV1, error) 
 	}
 	h.Del("ce-subject")
 
-	ec.Time = types.ParseTimestamp(h.Get("ce-time"))
+	var err error
+	ec.Time, err = types.ParseTimestamp(h.Get("ce-time"))
+	if err != nil {
+		return ec, err
+	}
 	h.Del("ce-time")
 
 	ec.DataSchema = types.ParseURI(h.Get("ce-dataschema"))
@@ -214,6 +213,7 @@ func (v CodecV1) fromHeaders(h http.Header) (cloudevents.EventContextV1, error) 
 
 	extensions := make(map[string]interface{})
 	for k := range h {
+		k = strings.ToLower(k)
 		if len(k) > len("ce-") && strings.EqualFold(k[:len("ce-")], "ce-") {
 			ak := strings.ToLower(k[len("ce-"):])
 			extensions[ak] = h.Get(k)

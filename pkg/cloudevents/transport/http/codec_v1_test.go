@@ -44,7 +44,6 @@ func TestCodecV1_Encode(t *testing.T) {
 					"Ce-Id":          {"ABC-123"},
 					"Ce-Type":        {"com.example.test"},
 					"Ce-Source":      {"http://example.com/source"},
-					"Content-Type":   {"application/json"},
 				},
 			},
 		},
@@ -97,7 +96,6 @@ func TestCodecV1_Encode(t *testing.T) {
 					"Ce-Id":          {"ABC-123"},
 					"Ce-Type":        {"com.example.test"},
 					"Ce-Source":      {"http://example.com/source"},
-					"Content-Type":   {"application/json"},
 				},
 			},
 		},
@@ -150,11 +148,10 @@ func TestCodecV1_Encode(t *testing.T) {
 				},
 				Body: func() []byte {
 					body := map[string]interface{}{
-						"datacontenttype": "application/json",
-						"specversion":     "1.0",
-						"id":              "ABC-123",
-						"type":            "com.example.test",
-						"source":          "http://example.com/source",
+						"specversion": "1.0",
+						"id":          "ABC-123",
+						"type":        "com.example.test",
+						"source":      "http://example.com/source",
 					}
 					return toBytes(body)
 				}(),
@@ -217,7 +214,8 @@ func TestCodecV1_Encode(t *testing.T) {
 						"test": "extended",
 					},
 				}.AsV1(),
-				DataBase64:  "eyJoZWxsbyI6IndvcmxkIn0=",
+				Data:        []byte(`{"hello":"world"}`),
+				DataBinary:  true,
 				DataEncoded: true,
 			},
 			want: &http.Message{
@@ -443,7 +441,7 @@ func TestCodecV1_Decode(t *testing.T) {
 						"test": "extended",
 					},
 				}.AsV1(),
-				DataBase64: "eyJoZWxsbyI6IndvcmxkIn0=",
+				Data: []byte(`{"hello":"world"}`),
 			},
 		},
 		"simple v1.0 binary with short header": {

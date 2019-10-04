@@ -103,7 +103,6 @@ func Example_using() {
 	//   type: example.com/event
 	//   source: example.com/source
 	//   id: 0
-	//   contenttype: application/json
 	// Data,
 	//   "hello 0"
 	//
@@ -113,7 +112,6 @@ func Example_using() {
 	//   type: example.com/event
 	//   source: example.com/source
 	//   id: 1
-	//   contenttype: application/json
 	// Data,
 	//   "hello 1"
 	//
@@ -123,7 +121,6 @@ func Example_using() {
 	//   type: example.com/event
 	//   source: example.com/source
 	//   id: 2
-	//   contenttype: application/json
 	// Data,
 	//   "hello 2"
 }

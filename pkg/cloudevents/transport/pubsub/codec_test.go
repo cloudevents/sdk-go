@@ -44,12 +44,11 @@ func TestCodecEncode(t *testing.T) {
 				},
 				Data: func() []byte {
 					body := map[string]interface{}{
-						"datacontenttype": "application/json",
-						"specversion":     "0.3",
-						"id":              "ABC-123",
-						"type":            "com.example.test",
-						"source":          "http://example.com/source",
-						"subject":         "a-subject",
+						"specversion": "0.3",
+						"id":          "ABC-123",
+						"type":        "com.example.test",
+						"source":      "http://example.com/source",
+						"subject":     "a-subject",
 					}
 					return toBytes(body)
 				}(),
@@ -197,11 +196,10 @@ func TestCodecAsMiddleware(t *testing.T) {
 				},
 				want: cloudevents.Event{
 					Context: &cloudevents.EventContextV03{
-						SpecVersion:     cloudevents.CloudEventsVersionV03,
-						Type:            "com.example.test",
-						Source:          *source,
-						ID:              "ABC-123",
-						DataContentType: cloudevents.StringOfApplicationJSON(),
+						SpecVersion: cloudevents.CloudEventsVersionV03,
+						Type:        "com.example.test",
+						Source:      *source,
+						ID:          "ABC-123",
 					},
 					Data: map[string]interface{}{
 						"a": "apple",
@@ -225,11 +223,10 @@ func TestCodecAsMiddleware(t *testing.T) {
 				},
 				want: cloudevents.Event{
 					Context: &cloudevents.EventContextV03{
-						SpecVersion:     cloudevents.CloudEventsVersionV03,
-						Type:            "com.example.test",
-						Source:          *source,
-						ID:              "ABC-123",
-						DataContentType: cloudevents.StringOfApplicationJSON(),
+						SpecVersion: cloudevents.CloudEventsVersionV03,
+						Type:        "com.example.test",
+						Source:      *source,
+						ID:          "ABC-123",
 					},
 					Data: &DataExample{
 						AnInt:   42,

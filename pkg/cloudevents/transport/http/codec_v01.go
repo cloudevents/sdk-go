@@ -119,13 +119,8 @@ func (v CodecV01) toHeaders(ec *cloudevents.EventContextV01) (http.Header, error
 	if ec.SchemaURL != nil {
 		h["CE-DataSchema"] = []string{ec.SchemaURL.String()}
 	}
-	if ec.ContentType != nil {
+	if ec.ContentType != nil && *ec.ContentType != "" {
 		h.Set("Content-Type", *ec.ContentType)
-	} else {
-		// in binary v0.1, the Content-Type header is tied to ec.ContentType
-		// This was later found to be an issue with the spec, but yolo.
-		// TODO: not sure what the default should be?
-		h.Set("Content-Type", cloudevents.ApplicationJSON)
 	}
 
 	// Regarding Extensions, v0.1 Spec says the following:
@@ -182,7 +177,11 @@ func (v CodecV01) fromHeaders(h http.Header) (cloudevents.EventContextV01, error
 	if source != nil {
 		ec.Source = *source
 	}
-	ec.EventTime = types.ParseTimestamp(h.Get("CE-EventTime"))
+	var err error
+	ec.EventTime, err = types.ParseTimestamp(h.Get("CE-EventTime"))
+	if err != nil {
+		return ec, err
+	}
 	h.Del("CE-EventTime")
 	etv := h.Get("CE-EventTypeVersion")
 	h.Del("CE-EventTypeVersion")
@@ -192,7 +191,9 @@ func (v CodecV01) fromHeaders(h http.Header) (cloudevents.EventContextV01, error
 	ec.SchemaURL = types.ParseURLRef(h.Get("CE-DataSchema"))
 	h.Del("CE-DataSchema")
 	et := h.Get("Content-Type")
-	ec.ContentType = &et
+	if et != "" {
+		ec.ContentType = &et
+	}
 
 	extensions := make(map[string]interface{})
 	for k, v := range h {
