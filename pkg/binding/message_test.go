@@ -16,7 +16,7 @@ var testEvent = ce.Event{
 	Context: ce.EventContextV03{Source: types.URLRef{URL: url.URL{Path: "source"}}, ID: "id", Type: "type"}.AsV03(),
 }
 
-var testJSON = `{"data":"data","datacontenttype":"application/json","id":"id","source":"source","specversion":"0.3","type":"type"}`
+var testJSON = `{"data":"data","id":"id","source":"source","specversion":"0.3","type":"type"}`
 
 func TestEventMessage(t *testing.T) {
 	assert := assert.New(t)
