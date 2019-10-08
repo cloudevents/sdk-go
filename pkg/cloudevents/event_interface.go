@@ -71,7 +71,7 @@ type EventWriter interface {
 	// Extension Attributes
 
 	// SetExtension performs event.Context.SetExtension.
-	SetExtension(string, interface{}) // TODO: this needs to move to just string.
+	SetExtension(string, interface{})
 
 	// SetData encodes the given payload with the current encoding settings.
 	SetData(interface{}) error
