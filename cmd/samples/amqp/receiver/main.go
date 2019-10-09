@@ -4,60 +4,49 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/url"
 	"os"
+	"strings"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	ce "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/amqp"
-	"github.com/kelseyhightower/envconfig"
-	qp "pack.ag/amqp"
+	ceamqp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/amqp"
+	amqp "pack.ag/amqp"
 )
 
-type envConfig struct {
-	// AMQPServer URL to connect to the amqp server.
-	AMQPServer string `envconfig:"AMQP_SERVER" default:"amqp://localhost:5672/" required:"true"`
-
-	// Queue is the amqp queue name to interact with.
-	Queue string `envconfig:"AMQP_QUEUE"`
-
-	AccessKeyName string `envconfig:"AMQP_ACCESS_KEY_NAME" default:"guest"`
-	AccessKey     string `envconfig:"AMQP_ACCESS_KEY" default:"password"`
+// Parse AMQP_URL env variable. Return server URL, AMQP node (from path) and SASLPlain
+// option if user/pass are present.
+func sampleConfig() (server, node string, opts []ceamqp.Option) {
+	env := os.Getenv("AMQP_URL")
+	if env == "" {
+		env = "/test"
+	}
+	u, err := url.Parse(env)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if u.User != nil {
+		user := u.User.Username()
+		pass, _ := u.User.Password()
+		opts = append(opts, ceamqp.WithConnOpt(amqp.ConnSASLPlain(user, pass)))
+	}
+	return env, strings.TrimPrefix(u.Path, "/"), opts
 }
 
 func main() {
-	var env envConfig
-	if err := envconfig.Process("", &env); err != nil {
-		log.Printf("[ERROR] Failed to process env var: %s", err)
-		os.Exit(1)
-	}
-	os.Exit(_main(os.Args[1:], env))
-}
-
-func receive(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error {
-	fmt.Printf("Got CloudEvent,\n%+v\n", event)
-	fmt.Println("----------------------------")
-	return nil
-}
-
-func _main(args []string, env envConfig) int {
-	ctx := context.Background()
-
-	t, err := amqp.New(env.AMQPServer, env.Queue,
-		amqp.WithConnOpt(qp.ConnSASLPlain(env.AccessKeyName, env.AccessKey)),
-	)
+	host, node, opts := sampleConfig()
+	t, err := ceamqp.New(host, node, opts...)
 	if err != nil {
-		log.Fatalf("failed to create amqp transport, %s", err.Error())
+		log.Fatalf("Failed to create AMQP transport: %v", err)
 	}
 	c, err := client.New(t)
 	if err != nil {
-		log.Fatalf("failed to create client, %s", err.Error())
+		log.Fatalf("Failed to create client: %v", err)
 	}
-
-	if err := c.StartReceiver(ctx, receive); err != nil {
-		log.Fatalf("failed to start amqp receiver, %s", err.Error())
+	err = c.StartReceiver(context.Background(), func(e ce.Event) {
+		fmt.Printf("==== Got CloudEvent\n%+v\n----\n", e)
+	})
+	if err != nil {
+		log.Fatalf("AMQP receiver error: %v", err)
 	}
-
-	// Wait until done.
-	<-ctx.Done()
-	return 0
 }

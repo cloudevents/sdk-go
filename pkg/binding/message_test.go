@@ -12,11 +12,16 @@ import (
 )
 
 var testEvent = ce.Event{
-	Data:    "data",
-	Context: ce.EventContextV03{Source: types.URLRef{URL: url.URL{Path: "source"}}, ID: "id", Type: "type"}.AsV03(),
+	Data:        []byte(`"data"`),
+	DataEncoded: true,
+	Context: ce.EventContextV1{
+		DataContentType: ce.StringOfApplicationJSON(),
+		Source:          types.URIRef{URL: url.URL{Path: "source"}},
+		ID:              "id",
+		Type:            "type"}.AsV1(),
 }
 
-var testJSON = `{"data":"data","id":"id","source":"source","specversion":"0.3","type":"type"}`
+var testJSON = `{"data":"data","datacontenttype":"application/json","id":"id","source":"source","specversion":"1.0","type":"type"}`
 
 func TestEventMessage(t *testing.T) {
 	assert := assert.New(t)
@@ -42,7 +47,7 @@ func TestStructMessage(t *testing.T) {
 	assert.Equal(testEvent.Context, e.Context)
 	var s string
 	assert.NoError(e.DataAs(&s))
-	assert.Equal(testEvent.Data, s)
+	assert.Equal("data", s)
 
 	_, err = binding.StructMessage{Format: "nosuch"}.Event()
 	assert.EqualError(err, "unknown event format media-type \"nosuch\"")

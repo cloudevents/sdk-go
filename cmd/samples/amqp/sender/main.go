@@ -6,39 +6,38 @@ import (
 	"log"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/amqp"
+	ceamqp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/amqp"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"github.com/google/uuid"
-	"github.com/kelseyhightower/envconfig"
-	qp "pack.ag/amqp"
+	"pack.ag/amqp"
 )
 
 const (
 	count = 10
 )
 
-type envConfig struct {
-	// AMQPServer URL to connect to the amqp server.
-	AMQPServer string `envconfig:"AMQP_SERVER" default:"amqp://localhost:5672/" required:"true"`
-
-	// Queue is the amqp queue name to interact with.
-	Queue string `envconfig:"AMQP_QUEUE"`
-
-	AccessKeyName string `envconfig:"AMQP_ACCESS_KEY_NAME" default:"guest"`
-	AccessKey     string `envconfig:"AMQP_ACCESS_KEY" default:"password"`
-}
-
-func main() {
-	var env envConfig
-	if err := envconfig.Process("", &env); err != nil {
-		log.Printf("[ERROR] Failed to process env var: %s", err)
-		os.Exit(1)
+// Parse AMQP_URL env variable. Return server URL, AMQP node (from path) and SASLPlain
+// option if user/pass are present.
+func sampleConfig() (server, node string, opts []ceamqp.Option) {
+	env := os.Getenv("AMQP_URL")
+	if env == "" {
+		env = "/test"
 	}
-	os.Exit(_main(os.Args[1:], env))
+	u, err := url.Parse(env)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if u.User != nil {
+		user := u.User.Username()
+		pass, _ := u.User.Password()
+		opts = append(opts, ceamqp.WithConnOpt(amqp.ConnSASLPlain(user, pass)))
+	}
+	return env, strings.TrimPrefix(u.Path, "/"), opts
 }
 
 // Simple holder for the sending sample.
@@ -67,29 +66,23 @@ func (d *Demo) Send(eventContext cloudevents.EventContext, i int) (context.Conte
 	return d.Client.Send(context.Background(), event)
 }
 
-func _main(args []string, env envConfig) int {
-	source, err := url.Parse("https://github.com/cloudevents/sdk-go/cmd/samples/sender")
+func main() {
+	host, node, opts := sampleConfig()
+	t, err := ceamqp.New(host, node, opts...)
 	if err != nil {
-		log.Printf("failed to parse source url, %v", err)
-		return 1
+		log.Fatalf("Failed to create amqp transport: %v", err)
 	}
-
-	seq := 0
-	contentType := "application/json"
-	t, err := amqp.New(env.AMQPServer, env.Queue,
-		amqp.WithConnOpt(qp.ConnSASLPlain(env.AccessKeyName, env.AccessKey)),
-	)
-	if err != nil {
-		log.Printf("failed to create amqp transport, %s", err.Error())
-		return 1
-	}
-	t.Encoding = amqp.BinaryV03
-	//t.Encoding = amqp.StructuredV02
 	c, err := client.New(t)
 	if err != nil {
-		log.Printf("failed to create client, %s", err.Error())
-		return 1
+		log.Fatalf("Failed to create client: %v", err)
 	}
+
+	// Attributes for events
+	source, _ := url.Parse("https://github.com/cloudevents/sdk-go/cmd/samples/sender")
+	contentType := "application/json"
+
+	// Value for event data
+	seq := 0
 
 	d := &Demo{
 		Message: fmt.Sprintf("Hello, %s!", contentType),
@@ -107,12 +100,9 @@ func _main(args []string, env envConfig) int {
 			DataContentType: &contentType,
 		}.AsV03()
 		if _, _, err := d.Send(ctx, seq); err != nil {
-			log.Printf("failed to send: %v", err)
-			return 1
+			log.Fatalf("Failed to send: %v", err)
 		}
 		seq++
 		time.Sleep(100 * time.Millisecond)
 	}
-
-	return 0
 }

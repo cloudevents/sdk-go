@@ -2,42 +2,79 @@
 
 This is a collection of topics related to development of the SDK.
 
-## Transcoding
+## Datacodec
 
-One of the goals of this sdk is to decouple the encoding from the transport as
-much as possible. This is done by the sdk integrator interacting primarily with
-the [Event][cloudevents.event] object. The [Transport][transport.transport]
-implementation interacts with a [Message][transport.message] object. The
-[Codec][transport.codec] is responsible for converting `Event` to `Message` for
-the the transport implementation. And this process works in reverse when a
-transport is used to receive an event.
+The CloudEvents spec has different encoding rules for event attributes and event data.
+
+Package [cloudevents/types][cloudevents.types] implements the CE type system
+for attribute values.
+
+Package [datacodec/codec][datacodec.codec] is responsible for encoding and decoding the data
+payload.  Some formats have built-in support e.g. `application/xml` and `application/json`.
+
+The DataCodec is invoked (as of this writing) when `event.SetData` is called, or
+when `event.DataAs` is called when receiving.
+
+event.Context.SetDataContenType() can also be set to a content-type that is not
+known to the datacodec. In that case Event.Data should be set or read directly as
+encoded []byte or string data, which will not be interpreted by this library.
+
+## Transcoding and Forwarding
+
+One of the goals of this sdk is to decouple the encoding from the protocol
+binding as much as possible, and to enable forwarding of messages from one
+protocol to another without loss of efficiency or reliability.
+
+Protocol bindings implement the binding.Message API to achieve this. The event
+can be represented in two ways: in "structured mode" as a (mediaType string, []byte)
+pair, or decoded as a "binary mode" [Event][cloudevents.event] object.
+
+Structured mode allows forwarding structured events with minimal re-encoding,
+but the event is a "black-box", it's attributes and data are not
+accessible. Binary mode requires decoding and re-encoding of protocol messages,
+but allows the event to be examined and modified by the application.
+
+In-memory messages in both modes can be created using the binding package:
 
 Sending:
 
 ```
- Event -[via Codec]-> Message -> Transport
+ var e cloudevents.Event
+
+ // Binary message:
+ sender.Send(ctx, binding.EventMessage(e))
+
+ // Pre-encoded structured message:
+ sender.Send(ctx, binding.StructMessage{Format: "media-type", Bytes: bytes})
+
+ // Format a binary Event as a structued message:
+ var f format.Format = ...
+ bytes, err := f.Marshal(e)
+ m, err := binding.StructuredEncoder{Format: f.MediaType(), Bytes: bytes}
+ sender.Send(ctx, m)
 ```
 
 Receiving:
 
 ```
-(Transport) -> Message -[via Codec]-> Event
+m, err := receiver.Receive(ctx)
+
+// Extract structured event if it is present
+if format, bytes := m.Structured(); format != nil { /* use structured message */ }
+
+// Decode as a binary Event
+e, err := m.Event()
 ```
 
-The CloudEvents spec outlines the various ways encoding is allowed, and there
-are two levels of encoding.
+The interface binding.Message also provides generic methods to handle reliable
+delivery Qualities of Service between different protocols, provided both
+protocols support the required QoS.
 
-1. Encoding of the context and extension attributes of the event.
-1. Encoding of the data payload of the event.
+See pkg/binding/doc.go for more details.
 
-For this reason there is also a [DataCodec][datacodec.codec] that is responsible
-for converting an encoded data payload into the intended format. These formats
-tend to be `application/xml`, `text/xml`, `application/json`, and `text/json`.
-
-The DataCodec is invoked (as of this writing) when `event.SetData` is called, or
-when `event.DataAs` is called when receiving.
 
 [cloudevents.event]: ../pkg/cloudevents/event.go
+[cloudevents.types]: ../pkg/cloudevents/types/doc.go
 [transport.transport]: ../pkg/cloudevents/transport/transport.go
 [transport.message]: ../pkg/cloudevents/transport/message.go
 [transport.codec]: ../pkg/cloudevents/transport/codec.go
