@@ -27,7 +27,7 @@ func (t *Transport) Send(ctx context.Context, e ce.Event) (context.Context, *ce.
 
 func (t *Transport) SetReceiver(r transport.Receiver) { t.handler = r }
 
-func (t *Transport) StartReceiver(ctx context.Context) (reterr error) {
+func (t *Transport) StartReceiver(ctx context.Context) error {
 	for {
 		m, err := t.Receiver.Receive(ctx)
 		if err == io.EOF { // Normal close
