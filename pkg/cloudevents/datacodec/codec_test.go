@@ -11,6 +11,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+func strptr(s string) *string { return &s }
+
 type Example struct {
 	Sequence int    `json:"id"`
 	Message  string `json:"message"`
@@ -30,6 +32,11 @@ func TestCodecDecode(t *testing.T) {
 			wantErr:     `[decode] unsupported content type: "unit/testing-invalid"`,
 		},
 
+		"text/plain": {
+			contentType: "text/plain",
+			in:          "hello😀",
+			want:        strptr("hello😀"), // Test  unicode outiside UTF-8
+		},
 		"application/json": {
 			contentType: "application/json",
 			in:          []byte(`{"a":"apple","b":"banana"}`),
