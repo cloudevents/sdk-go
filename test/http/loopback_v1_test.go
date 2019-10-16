@@ -1,6 +1,8 @@
 package http
 
 import (
+	"encoding/json"
+	"fmt"
 	"testing"
 	"time"
 
@@ -299,75 +301,143 @@ func TestClientLoopback_binary_v1tov1(t *testing.T) {
 	}
 }
 
-// TODO: this test does not work because the test looks inside event.Data.
-//       base64 content is now in DataBase64.
-//func TestClientLoopback_structured_base64_v1tov1(t *testing.T) {
-//	now := time.Now()
-//
-//	b64 := func(obj interface{}) string {
-//		data, err := json.Marshal(obj)
-//		if err != nil {
-//			t.Error(err)
-//		}
-//		buf := make([]byte, base64.StdEncoding.EncodedLen(len(data)))
-//		base64.StdEncoding.Encode(buf, data)
-//		return string(buf)
-//	}
-//
-//	testCases := TapTestCases{
-//		"Loopback Base64 v1.0 -> v1.0": {
-//			now: now,
-//			event: &cloudevents.Event{
-//				Context: cloudevents.EventContextV1{
-//					ID:     "ABC-123",
-//					Type:   "unit.test.client.sent",
-//					Source: *cloudevents.ParseURIRef("/unit/test/client"),
-//				}.AsV1(),
-//				DataBase64: b64(map[string]string{"hello": "unittest"}),
-//			},
-//			resp: &cloudevents.Event{
-//				Context: cloudevents.EventContextV1{
-//					ID:     "321-CBA",
-//					Type:   "unit.test.client.response",
-//					Source: *cloudevents.ParseURIRef("/unit/test/client"),
-//				}.AsV1(),
-//				DataBase64: b64(map[string]string{"unittest": "response"}),
-//			},
-//			want: &cloudevents.Event{
-//				Context: cloudevents.EventContextV1{
-//					ID:              "321-CBA",
-//					Type:            "unit.test.client.response",
-//					Time:            &cloudevents.Timestamp{Time: now},
-//					Source:          *cloudevents.ParseURIRef("/unit/test/client"),
-//					DataContentType: cloudevents.StringOfApplicationJSON(),
-//				}.AsV1(),
-//				DataBase64: b64(map[string]string{"unittest": "response"}),
-//			},
-//			asSent: &TapValidation{
-//				Method: "POST",
-//				URI:    "/",
-//				Header: map[string][]string{
-//					"content-type": {"application/cloudevents+json"},
-//				},
-//				Body: fmt.Sprintf(`{"data_base64":"eyJoZWxsbyI6InVuaXR0ZXN0In0=","datacontenttype":"application/json","id":"ABC-123","source":"/unit/test/client","specversion":"1.0","time":%q,"type":"unit.test.client.sent"}`, now.UTC().Format(time.RFC3339Nano)),
-//			},
-//			asRecv: &TapValidation{
-//				Header: map[string][]string{
-//					"content-type": {"application/cloudevents+json"},
-//				},
-//				Body:   fmt.Sprintf(`{"data_base64":"eyJ1bml0dGVzdCI6InJlc3BvbnNlIn0=","datacontenttype":"application/json","id":"321-CBA","source":"/unit/test/client","specversion":"1.0","time":%q,"type":"unit.test.client.response"}`, now.UTC().Format(time.RFC3339Nano)),
-//				Status: "200 OK",
-//			},
-//		},
-//	}
-//
-//	for n, tc := range testCases {
-//		t.Run(n, func(t *testing.T) {
-//			// Time and Base64 can change the length...
-//			tc.asSent.ContentLength = int64(len(tc.asSent.Body))
-//			tc.asRecv.ContentLength = int64(len(tc.asRecv.Body))
-//
-//			ClientLoopback(t, tc, cloudevents.WithStructuredEncoding())
-//		})
-//	}
-//}
+func TestClientLoopback_structured_base64_v03tov1(t *testing.T) {
+	now := time.Now()
+
+	bytes := func(obj interface{}) []byte {
+		data, err := json.Marshal(obj)
+		if err != nil {
+			t.Error(err)
+		}
+		return data
+	}
+
+	testCases := TapTestCases{
+		"Loopback Base64 v0.3 -> v1.0": {
+			now: now,
+			event: &cloudevents.Event{
+				Context: cloudevents.EventContextV03{
+					ID:                  "ABC-123",
+					Type:                "unit.test.client.sent",
+					Source:              *cloudevents.ParseURLRef("/unit/test/client"),
+					DataContentEncoding: cloudevents.StringOfBase64(),
+					DataContentType:     cloudevents.StringOfApplicationJSON(),
+				}.AsV03(),
+				Data: map[string]string{"hello": "unittest"},
+			},
+			resp: &cloudevents.Event{
+				Context: cloudevents.EventContextV1{
+					ID:     "321-CBA",
+					Type:   "unit.test.client.response",
+					Source: *cloudevents.ParseURIRef("/unit/test/client"),
+				}.AsV1(),
+				Data:       bytes(map[string]string{"unittest": "response"}),
+				DataBinary: true,
+			},
+			want: &cloudevents.Event{
+				Context: cloudevents.EventContextV1{
+					ID:     "321-CBA",
+					Type:   "unit.test.client.response",
+					Time:   &cloudevents.Timestamp{Time: now},
+					Source: *cloudevents.ParseURIRef("/unit/test/client"),
+				}.AsV1(),
+				Data: map[string]string{"unittest": "response"},
+			},
+			asSent: &TapValidation{
+				Method: "POST",
+				URI:    "/",
+				Header: map[string][]string{
+					"content-type": {"application/cloudevents+json"},
+				},
+				Body: fmt.Sprintf(`{"data":"eyJoZWxsbyI6InVuaXR0ZXN0In0=","datacontentencoding":"base64","datacontenttype":"application/json","id":"ABC-123","source":"/unit/test/client","specversion":"0.3","time":%q,"type":"unit.test.client.sent"}`, now.UTC().Format(time.RFC3339Nano)),
+			},
+			asRecv: &TapValidation{
+				Header: map[string][]string{
+					"content-type": {"application/cloudevents+json"},
+				},
+				Body:   fmt.Sprintf(`{"data_base64":"eyJ1bml0dGVzdCI6InJlc3BvbnNlIn0=","id":"321-CBA","source":"/unit/test/client","specversion":"1.0","time":%q,"type":"unit.test.client.response"}`, now.UTC().Format(time.RFC3339Nano)),
+				Status: "200 OK",
+			},
+		},
+	}
+
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+			// Time and Base64 can change the length...
+			tc.asSent.ContentLength = int64(len(tc.asSent.Body))
+			tc.asRecv.ContentLength = int64(len(tc.asRecv.Body))
+
+			ClientLoopback(t, tc, cloudevents.WithStructuredEncoding())
+		})
+	}
+}
+
+func TestClientLoopback_structured_base64_v1tov1(t *testing.T) {
+	now := time.Now()
+
+	bytes := func(obj interface{}) []byte {
+		data, err := json.Marshal(obj)
+		if err != nil {
+			t.Error(err)
+		}
+		return data
+	}
+
+	testCases := TapTestCases{
+		"Loopback Base64 v1.0 -> v1.0": {
+			now: now,
+			event: &cloudevents.Event{
+				Context: cloudevents.EventContextV1{
+					ID:     "ABC-123",
+					Type:   "unit.test.client.sent",
+					Source: *cloudevents.ParseURIRef("/unit/test/client"),
+				}.AsV1(),
+				Data:       bytes(map[string]string{"hello": "unittest"}),
+				DataBinary: true,
+			},
+			resp: &cloudevents.Event{
+				Context: cloudevents.EventContextV1{
+					ID:     "321-CBA",
+					Type:   "unit.test.client.response",
+					Source: *cloudevents.ParseURIRef("/unit/test/client"),
+				}.AsV1(),
+				Data:       bytes(map[string]string{"unittest": "response"}),
+				DataBinary: true,
+			},
+			want: &cloudevents.Event{
+				Context: cloudevents.EventContextV1{
+					ID:     "321-CBA",
+					Type:   "unit.test.client.response",
+					Time:   &cloudevents.Timestamp{Time: now},
+					Source: *cloudevents.ParseURIRef("/unit/test/client"),
+				}.AsV1(),
+				Data: map[string]string{"unittest": "response"},
+			},
+			asSent: &TapValidation{
+				Method: "POST",
+				URI:    "/",
+				Header: map[string][]string{
+					"content-type": {"application/cloudevents+json"},
+				},
+				Body: fmt.Sprintf(`{"data_base64":"eyJoZWxsbyI6InVuaXR0ZXN0In0=","id":"ABC-123","source":"/unit/test/client","specversion":"1.0","time":%q,"type":"unit.test.client.sent"}`, now.UTC().Format(time.RFC3339Nano)),
+			},
+			asRecv: &TapValidation{
+				Header: map[string][]string{
+					"content-type": {"application/cloudevents+json"},
+				},
+				Body:   fmt.Sprintf(`{"data_base64":"eyJ1bml0dGVzdCI6InJlc3BvbnNlIn0=","id":"321-CBA","source":"/unit/test/client","specversion":"1.0","time":%q,"type":"unit.test.client.response"}`, now.UTC().Format(time.RFC3339Nano)),
+				Status: "200 OK",
+			},
+		},
+	}
+
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+			// Time and Base64 can change the length...
+			tc.asSent.ContentLength = int64(len(tc.asSent.Body))
+			tc.asRecv.ContentLength = int64(len(tc.asRecv.Body))
+
+			ClientLoopback(t, tc, cloudevents.WithStructuredEncoding())
+		})
+	}
+}

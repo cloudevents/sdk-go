@@ -231,7 +231,7 @@ func TestClientLoopback_binary_base64_v03tov03(t *testing.T) {
 	now := time.Now()
 
 	testCases := TapTestCases{
-		"Loopback Base64 v0.2 -> v0.3": {
+		"Loopback Base64 v0.3 -> v0.3": {
 			now: now,
 			event: &cloudevents.Event{
 				Context: cloudevents.EventContextV03{
