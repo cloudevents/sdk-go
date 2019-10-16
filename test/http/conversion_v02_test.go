@@ -47,3 +47,36 @@ func TestClientConversion_v02(t *testing.T) {
 		})
 	}
 }
+
+func TestClientConversion_nil(t *testing.T) {
+	now := time.Now()
+
+	testCases := ConversionTestCases{
+		"Conversion NOP": {
+			now:       now,
+			convertFn: UnitTestConvertNilNil,
+			data:      map[string]string{"hello": "unittest"},
+			want:      nil,
+			asSent: &TapValidation{
+				Method: "POST",
+				URI:    "/",
+				Header: map[string][]string{
+					"content-type": {"application/json"},
+				},
+				Body:          `{"hello":"unittest"}`,
+				ContentLength: 20,
+			},
+			asRecv: &TapValidation{
+				Header:        http.Header{},
+				Status:        "204 No Content",
+				ContentLength: 0,
+			},
+		},
+	}
+
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+			ClientConversion(t, tc)
+		})
+	}
+}

@@ -106,6 +106,7 @@ func TestStableConnectionsToSingleHost(t *testing.T) {
 		Context: &cloudevents.EventContextV02{
 			SpecVersion: cloudevents.CloudEventsVersionV02,
 			Type:        "test.event",
+			ID:          "abc-123",
 			Source:      *types.ParseURLRef("test"),
 		},
 	}

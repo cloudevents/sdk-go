@@ -50,6 +50,10 @@ func UnitTestConvert(ctx context.Context, m transport.Message, err error) (*clou
 	return nil, err
 }
 
+func UnitTestConvertNilNil(context.Context, transport.Message, error) (*cloudevents.Event, error) {
+	return nil, nil
+}
+
 func ClientConversion(t *testing.T, tc ConversionTest, topts ...cehttp.Option) {
 	tap := NewTap()
 	server := httptest.NewServer(tap)
