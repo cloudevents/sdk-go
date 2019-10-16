@@ -90,10 +90,14 @@ func (t *Transport) applyEncoding(s bindings_amqp.Sender) binding.Sender {
 		return binding.VersionSender(s, spec.V02)
 	case BinaryV03:
 		return binding.VersionSender(s, spec.V03)
+	case BinaryV1:
+		return binding.VersionSender(s, spec.V1)
 	case StructuredV02:
 		return binding.StructSender(binding.VersionSender(s, spec.V02), format.JSON)
 	case StructuredV03:
 		return binding.StructSender(binding.VersionSender(s, spec.V03), format.JSON)
+	case StructuredV1:
+		return binding.StructSender(binding.VersionSender(s, spec.V1), format.JSON)
 	}
 	return s
 }
