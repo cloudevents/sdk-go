@@ -10,6 +10,8 @@ const (
 	StructuredV02
 	// StructuredV03 is Structured CloudEvents spec v0.3.
 	StructuredV03
+	// StructuredV1 is Structured CloudEvents spec v1.0.
+	StructuredV1
 	// Unknown is unknown.
 	Unknown
 )
@@ -21,9 +23,7 @@ func (e Encoding) String() string {
 		return "Default Encoding " + e.Version()
 
 	// Structured
-	case StructuredV02:
-		fallthrough
-	case StructuredV03:
+	case StructuredV02, StructuredV03, StructuredV1:
 		return "Structured Encoding " + e.Version()
 
 	default:
@@ -44,6 +44,10 @@ func (e Encoding) Version() string {
 	// Version 0.3
 	case StructuredV03:
 		return "v0.3"
+
+	// Version 1.0
+	case StructuredV1:
+		return "v1.0"
 
 	// Unknown
 	default:
