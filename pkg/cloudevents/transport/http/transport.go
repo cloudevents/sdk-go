@@ -181,6 +181,7 @@ func (t *Transport) obsSend(ctx context.Context, event cloudevents.Event) (conte
 		req.Method = t.Req.Method
 		req.URL = t.Req.URL
 		req.Close = t.Req.Close
+		req.Host = t.Req.Host
 		copyHeadersEnsure(t.Req.Header, &req.Header)
 	}
 
