@@ -11,45 +11,41 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 )
 
-const (
-	StructuredContentType = "Content-Type"
-)
-
-type CodecV03 struct {
+type CodecV1 struct {
 	CodecStructured
 
 	Encoding Encoding
 }
 
-var _ transport.Codec = (*CodecV03)(nil)
+var _ transport.Codec = (*CodecV1)(nil)
 
-func (v CodecV03) Encode(ctx context.Context, e cloudevents.Event) (transport.Message, error) {
+func (v CodecV1) Encode(ctx context.Context, e cloudevents.Event) (transport.Message, error) {
 	switch v.Encoding {
-	case Default, StructuredV03:
+	case Default, StructuredV1:
 		return v.encodeStructured(ctx, e)
-	case BinaryV03:
+	case BinaryV1:
 		return v.encodeBinary(ctx, e)
 	default:
 		return nil, fmt.Errorf("unknown encoding: %d", v.Encoding)
 	}
 }
 
-func (v CodecV03) Decode(ctx context.Context, msg transport.Message) (*cloudevents.Event, error) {
+func (v CodecV1) Decode(ctx context.Context, msg transport.Message) (*cloudevents.Event, error) {
 	// only structured is supported as of v0.3
 	switch v.inspectEncoding(ctx, msg) {
-	case StructuredV03:
-		return v.decodeStructured(ctx, cloudevents.CloudEventsVersionV03, msg)
-	case BinaryV03:
-		event := cloudevents.New(cloudevents.CloudEventsVersionV03)
+	case StructuredV1:
+		return v.decodeStructured(ctx, cloudevents.CloudEventsVersionV1, msg)
+	case BinaryV1:
+		event := cloudevents.New(cloudevents.CloudEventsVersionV1)
 		return v.decodeBinary(ctx, msg, &event)
 	default:
-		return nil, transport.NewErrMessageEncodingUnknown("v03", TransportName)
+		return nil, transport.NewErrMessageEncodingUnknown("V1", TransportName)
 	}
 }
 
-func (v CodecV03) inspectEncoding(ctx context.Context, msg transport.Message) Encoding {
+func (v CodecV1) inspectEncoding(ctx context.Context, msg transport.Message) Encoding {
 	version := msg.CloudEventsVersion()
-	if version != cloudevents.CloudEventsVersionV03 {
+	if version != cloudevents.CloudEventsVersionV1 {
 		return Unknown
 	}
 	m, ok := msg.(*Message)
@@ -57,12 +53,12 @@ func (v CodecV03) inspectEncoding(ctx context.Context, msg transport.Message) En
 		return Unknown
 	}
 	if m.Attributes[StructuredContentType] == cloudevents.ApplicationCloudEventsJSON {
-		return StructuredV03
+		return StructuredV1
 	}
-	return BinaryV03
+	return BinaryV1
 }
 
-func (v CodecV03) encodeBinary(ctx context.Context, e cloudevents.Event) (transport.Message, error) {
+func (v CodecV1) encodeBinary(ctx context.Context, e cloudevents.Event) (transport.Message, error) {
 	attributes, err := v.toAttributes(e)
 	if err != nil {
 		return nil, err
@@ -80,7 +76,7 @@ func (v CodecV03) encodeBinary(ctx context.Context, e cloudevents.Event) (transp
 	return msg, nil
 }
 
-func (v CodecV03) toAttributes(e cloudevents.Event) (map[string]string, error) {
+func (v CodecV1) toAttributes(e cloudevents.Event) (map[string]string, error) {
 	a := make(map[string]string)
 	a[prefix+"specversion"] = e.SpecVersion()
 	a[prefix+"type"] = e.Type()
@@ -91,7 +87,7 @@ func (v CodecV03) toAttributes(e cloudevents.Event) (map[string]string, error) {
 		a[prefix+"time"] = t.String()
 	}
 	if e.DataSchema() != "" {
-		a[prefix+"schemaurl"] = e.DataSchema()
+		a[prefix+"dataschema"] = e.DataSchema()
 	}
 
 	if e.DataContentType() != "" {
@@ -133,7 +129,7 @@ func (v CodecV03) toAttributes(e cloudevents.Event) (map[string]string, error) {
 	return a, nil
 }
 
-func (v CodecV03) decodeBinary(ctx context.Context, msg transport.Message, event *cloudevents.Event) (*cloudevents.Event, error) {
+func (v CodecV1) decodeBinary(ctx context.Context, msg transport.Message, event *cloudevents.Event) (*cloudevents.Event, error) {
 	m, ok := msg.(*Message)
 	if !ok {
 		return nil, fmt.Errorf("failed to convert transport.Message to pubsub.Message")
@@ -151,7 +147,7 @@ func (v CodecV03) decodeBinary(ctx context.Context, msg transport.Message, event
 	return event, nil
 }
 
-func (v CodecV03) fromAttributes(a map[string]string, event *cloudevents.Event) error {
+func (v CodecV1) fromAttributes(a map[string]string, event *cloudevents.Event) error {
 	// Normalize attributes.
 	for k, v := range a {
 		ck := strings.ToLower(k)
@@ -200,12 +196,12 @@ func (v CodecV03) fromAttributes(a map[string]string, event *cloudevents.Event) 
 	}
 	delete(a, prefix+"time")
 
-	if s := a[prefix+"schemaurl"]; s != "" {
+	if s := a[prefix+"dataschema"]; s != "" {
 		if err := ec.SetDataSchema(s); err != nil {
 			return err
 		}
 	}
-	delete(a, prefix+"schemaurl")
+	delete(a, prefix+"dataschema")
 
 	if s := a[prefix+"subject"]; s != "" {
 		if err := ec.SetSubject(s); err != nil {
