@@ -10,14 +10,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type chanSR chan binding.Message
-
-func (ch chanSR) Send(_ context.Context, m binding.Message) error    { ch <- m; return nil }
-func (ch chanSR) Receive(_ context.Context) (binding.Message, error) { return <-ch, nil }
-
 func TestVersionSender(t *testing.T) {
-	ch := make(chanSR, 1)
-	s := binding.VersionSender(ch, spec.V01)
+	ch := make(chan binding.Message, 1)
+	s := binding.VersionSender(binding.ChanSender(ch), spec.V01)
 	want := testEvent
 	want.Context = want.Context.AsV01()
 	assert.Equal(t, "1.0", testEvent.SpecVersion())
@@ -35,8 +30,8 @@ func TestVersionSender(t *testing.T) {
 }
 
 func TestStructSender(t *testing.T) {
-	ch := make(chanSR, 1)
-	s := binding.StructSender(ch, format.JSON)
+	ch := make(chan binding.Message, 1)
+	s := binding.StructSender(binding.ChanSender(ch), format.JSON)
 
 	_ = s.Send(context.Background(), binding.EventMessage(testEvent))
 	f, b := (<-ch).Structured()
@@ -50,8 +45,8 @@ func TestStructSender(t *testing.T) {
 }
 
 func TestBinarySender(t *testing.T) {
-	ch := make(chanSR, 1)
-	s := binding.BinarySender(ch)
+	ch := make(chan binding.Message, 1)
+	s := binding.BinarySender(binding.ChanSender(ch))
 
 	sm := &binding.StructMessage{Format: format.JSON.MediaType(), Bytes: []byte(testJSON)}
 	_ = s.Send(context.Background(), sm)
@@ -69,4 +64,17 @@ func TestBinarySender(t *testing.T) {
 	assert.Equal(t, em, m.(binding.EventMessage)) // Already structured, same message.
 }
 
-// FIXME(alanconway) verify callback to original message Finish.
+func TestWithFinish(t *testing.T) {
+	done := make(chan error, 1)
+	m := binding.WithFinish(binding.EventMessage(testEvent), func(err error) {
+		done <- err
+	})
+	select {
+	case <-done:
+		assert.Fail(t, "done early")
+	default:
+	}
+	ch := make(chan binding.Message, 1)
+	assert.NoError(t, binding.ChanSender(ch).Send(context.Background(), m))
+	assert.NoError(t, <-done)
+}

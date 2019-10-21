@@ -58,3 +58,23 @@ func Structured(m Message, f format.Format) ([]byte, error) {
 	}
 	return f.Marshal(e)
 }
+
+type finishMessage struct {
+	Message
+	finish func(error)
+}
+
+func (m finishMessage) Finish(err error) error {
+	err2 := m.Message.Finish(err) // Finish original message first
+	if m.finish != nil {
+		m.finish(err) // Notify callback
+	}
+	return err2
+}
+
+// WithFinish returns a wrapper for m that calls finish() and
+// m.Finish() in its Finish().
+// Allows code to be notified when a message is Finished.
+func WithFinish(m Message, finish func(error)) Message {
+	return finishMessage{Message: m, finish: finish}
+}

@@ -2,11 +2,14 @@
 
 Package binding defines interfaces for protocol bindings.
 
-NOTE: Most applications that emit or consume events can use the client
-package. This package is for implementing new protocol bindings and
-intermediaries; processes that forward events between protocols, rather than
-emitting or consuming events themselves.
+NOTE: Most applications that emit or consume events should use the ../client
+package, which provides a simpler API to the underlying binding.
 
+The interfaces in this package provide extra encoding and protocol information
+to allow efficient forwarding and end-to-end reliable delivery between a
+Receiver and a Sender belonging to different bindings. This is useful for
+intermediary applications that route or forward events, but not necessary for
+most "endpoint" applications that emit or consume events.
 
 Protocol Bindings
 
