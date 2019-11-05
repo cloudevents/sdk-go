@@ -10,25 +10,16 @@ import (
 // Sender wraps an amqp.Sender as a binding.Sender
 type Sender struct{ AMQP *amqp.Sender }
 
-func (s Sender) Send(ctx context.Context, in binding.Message) error {
-	var out *amqp.Message
+func (s Sender) Send(ctx context.Context, in binding.Message) (err error) {
+	defer func() { _ = in.Finish(err) }()
 	if m, ok := in.(Message); ok { // Already an AMQP message.
-		out = m.AMQP
-	} else if f, b := in.Structured(); f != "" { // Re-package structured message
-		out = NewStruct(f, b)
-	} else { // Construct a binary message
-		e, err := in.Event()
-		if err != nil {
-			return err
-		}
-		out, err = NewBinary(e)
-		if err != nil {
-			return err
-		}
+		return s.AMQP.Send(ctx, m.AMQP)
 	}
-	err := s.AMQP.Send(ctx, out)
-	_ = in.Finish(err)
-	return err
+	m, err := binding.Translate(in,
+		BinaryEncoder{}.Encode,
+		func(f string, b []byte) (binding.Message, error) { return Message{NewStruct(f, b)}, nil },
+	)
+	return s.AMQP.Send(ctx, m.(Message).AMQP)
 }
 
 func (s Sender) Close(ctx context.Context) error { return s.AMQP.Close(ctx) }

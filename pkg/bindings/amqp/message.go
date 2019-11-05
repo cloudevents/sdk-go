@@ -1,14 +1,12 @@
 package amqp
 
 import (
-	"fmt"
+	"errors"
 	"reflect"
-	"strings"
 
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"pack.ag/amqp"
 )
 
@@ -35,27 +33,25 @@ func (m Message) Event() (e ce.Event, err error) {
 		err = format.Unmarshal(f, b, &e)
 		return e, err
 	}
-	version, err := findVersion(m)
+	if len(m.AMQP.ApplicationProperties) == 0 {
+		return e, errors.New("AMQP CloudEvents message has no application properties")
+	}
+	version, err := specs.FindVersion(func(k string) string {
+		s, _ := m.AMQP.ApplicationProperties[k].(string)
+		return s
+	})
 	if err != nil {
-		return ce.Event{}, err
+		return e, err
 	}
 	c := version.NewContext()
-	if m.AMQP.Properties != nil {
+	if m.AMQP.Properties != nil && m.AMQP.Properties.ContentType != "" {
 		if err := c.SetDataContentType(m.AMQP.Properties.ContentType); err != nil {
-			return ce.Event{}, err
+			return e, err
 		}
 	}
 	for k, v := range m.AMQP.ApplicationProperties {
-		if a := version.Attribute(k); a != nil { // A standard CE attribute
-			if err := a.Set(c, v); err != nil {
-				return ce.Event{}, err
-			}
-		} else if strings.HasPrefix(k, prefix) { // Extension attribute
-			k = strings.TrimPrefix(k, prefix)
-			// Ignore ill-formed attributes.
-			if v, err := types.Validate(v); err == nil { // CE attribute value conversions.
-				_ = c.SetExtension(k, v)
-			}
+		if err := version.SetAttribute(c, k, v); err != nil {
+			return e, err
 		}
 	}
 	data := m.AMQP.GetData()
@@ -63,21 +59,6 @@ func (m Message) Event() (e ce.Event, err error) {
 		return ce.Event{Context: c}, nil
 	}
 	return ce.Event{Data: data, DataEncoded: true, Context: c}, nil
-}
-
-func findVersion(m Message) (spec.Version, error) {
-	for _, sv := range specs.SpecVersionNames() {
-		if v, ok := m.AMQP.ApplicationProperties[sv]; ok {
-			if s, ok := v.(string); !ok {
-				return nil, fmt.Errorf("%v property: want string, got %T", sv, v)
-			} else if version, _ := specs.Version(s); version == nil {
-				return nil, fmt.Errorf("not a valid version: %#v", s)
-			} else {
-				return version, nil
-			}
-		}
-	}
-	return nil, fmt.Errorf("no version property found")
 }
 
 func (m Message) Finish(err error) error {
