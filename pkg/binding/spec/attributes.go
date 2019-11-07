@@ -1,10 +1,11 @@
 package spec
 
 import (
-	"errors"
+	"fmt"
 	"time"
 
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 )
 
 // Kind is a version-independent identifier for a CloudEvent context attribute.
@@ -40,9 +41,6 @@ func (k Kind) String() string { return kindNames[k] }
 
 // IsRequired returns true for attributes defined as "required" by the CE spec.
 func (k Kind) IsRequired() bool { return k < DataContentType }
-
-// ErrBadType returned when there is an attribute/value type mismatch.
-var ErrBadType = errors.New("bad context attribute type")
 
 // Attribute is a named attribute accessor.
 // The attribute name is specific to a Version.
@@ -95,10 +93,11 @@ func (a *aStr) Get(c ce.EventContextReader) interface{} {
 }
 
 func (a *aStr) Set(c ce.EventContextWriter, v interface{}) error {
-	if v, ok := v.(string); ok {
-		return a.set(c, v)
+	s, err := types.ToString(v)
+	if err != nil {
+		return fmt.Errorf("invalid value for %s: %#v", a.Kind(), v)
 	}
-	return ErrBadType
+	return a.set(c, s)
 }
 
 type aTime struct {
@@ -115,8 +114,9 @@ func (a *aTime) Get(c ce.EventContextReader) interface{} {
 }
 
 func (a *aTime) Set(c ce.EventContextWriter, v interface{}) error {
-	if v, ok := v.(time.Time); ok {
-		return a.set(c, v)
+	t, err := types.ToTime(v)
+	if err != nil {
+		return fmt.Errorf("invalid value for %s: %#v", a.Kind(), v)
 	}
-	return ErrBadType
+	return a.set(c, t)
 }

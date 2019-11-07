@@ -36,9 +36,9 @@ func TestAttributes03(t *testing.T) {
 	assert.Nil(nosuch)
 
 	err = subject.Set(c, 1)
-	assert.Equal(err, spec.ErrBadType)
+	assert.EqualError(err, "invalid value for subject: 1")
 	err = atime.Set(c, "foo")
-	assert.Equal(err, spec.ErrBadType)
+	assert.EqualError(err, `invalid value for time: "foo"`)
 }
 
 func TestAttributes02(t *testing.T) {
@@ -64,9 +64,9 @@ func TestAttributes02(t *testing.T) {
 	assert.Nil(nosuch)
 
 	err = id.Set(c, 1)
-	assert.Equal(err, spec.ErrBadType)
+	assert.EqualError(err, "invalid value for id: 1")
 	err = atime.Set(c, "foo")
-	assert.Equal(err, spec.ErrBadType)
+	assert.EqualError(err, "invalid value for time: \"foo\"")
 }
 
 func TestAttributes01(t *testing.T) {

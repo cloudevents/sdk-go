@@ -2,8 +2,10 @@ package spec
 
 import (
 	"fmt"
+	"strings"
 
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 )
 
 // Version provides meta-data for a single spec-version.
@@ -12,7 +14,7 @@ type Version interface {
 	String() string
 	// Prefix for attribute names.
 	Prefix() string
-	// Attribute looks up a prefixed attribute name.
+	// Attribute looks up a prefixed attribute name (case insensitive).
 	// Returns nil if not found.
 	Attribute(name string) Attribute
 	// Attributes returns all the context attributes for this version.
@@ -21,6 +23,11 @@ type Version interface {
 	NewContext() ce.EventContext
 	// Convert translates a context to this version.
 	Convert(ce.EventContextConverter) ce.EventContext
+	// SetAttribute sets named attribute to value.
+	//
+	// Name is case insensitive.
+	// Does nothing if name does not start with prefix.
+	SetAttribute(context ce.EventContextWriter, name string, value interface{}) error
 }
 
 // Versions contains all known versions with the same attribute prefix.
@@ -50,8 +57,19 @@ func (vs *Versions) Latest() Version { return vs.all[0] }
 // Names are prefixed.
 func (vs *Versions) SpecVersionNames() []string { return vs.svnames }
 
-// Prefix is the attribute name prefix.
+// Prefix is the lowercase attribute name prefix.
 func (vs *Versions) Prefix() string { return vs.prefix }
+
+// FindVersion calls getAttr with known (prefixed) spec-version attribute names
+// till it finds a valid version.
+func (vs *Versions) FindVersion(getAttr func(string) string) (Version, error) {
+	for _, sv := range vs.svnames {
+		if v, err := vs.Version(getAttr(sv)); err == nil {
+			return v, nil
+		}
+	}
+	return nil, fmt.Errorf("CloudEvents spec-version not found")
+}
 
 type attribute struct {
 	accessor
@@ -70,13 +88,33 @@ type version struct {
 	attrs   []Attribute
 }
 
-func (v *version) Attribute(name string) Attribute { return v.attrMap[name] }
+func (v *version) Attribute(name string) Attribute { return v.attrMap[strings.ToLower(name)] }
 func (v *version) Attributes() []Attribute         { return v.attrs }
 func (v *version) String() string                  { return v.context.GetSpecVersion() }
 func (v *version) Prefix() string                  { return v.prefix }
 func (v *version) NewContext() ce.EventContext     { return v.context.Clone() }
 
+// HasPrefix is a case-insensitive prefix check.
+func (v *version) HasPrefix(name string) bool {
+	return strings.HasPrefix(strings.ToLower(name), v.prefix)
+}
+
 func (v *version) Convert(c ce.EventContextConverter) ce.EventContext { return v.convert(c) }
+
+func (v *version) SetAttribute(c ce.EventContextWriter, name string, value interface{}) error {
+	if a := v.Attribute(name); a != nil { // Standard attribute
+		return a.Set(c, value)
+	}
+	name = strings.ToLower(name)
+	var err error
+	if strings.HasPrefix(name, v.prefix) { // Extension attribute
+		value, err = types.Validate(value)
+		if err == nil {
+			err = c.SetExtension(strings.TrimPrefix(name, v.prefix), value)
+		}
+	}
+	return err
+}
 
 func newVersion(
 	prefix string,
@@ -85,7 +123,7 @@ func newVersion(
 	attrs ...*attribute,
 ) *version {
 	v := &version{
-		prefix:  prefix,
+		prefix:  strings.ToLower(prefix),
 		context: context,
 		convert: convert,
 		attrMap: map[string]Attribute{},
@@ -95,7 +133,7 @@ func newVersion(
 		a.name = prefix + a.name
 		a.version = v
 		v.attrs[i] = a
-		v.attrMap[a.name] = a
+		v.attrMap[strings.ToLower(a.name)] = a
 	}
 	return v
 }

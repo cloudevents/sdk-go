@@ -1,7 +1,6 @@
 package amqp
 
 import (
-	"context"
 	"io"
 	"net/url"
 	"os"
@@ -14,7 +13,6 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/sync/errgroup"
 	"pack.ag/amqp"
 )
 
@@ -146,37 +144,6 @@ func testSenderReceiver(t testing.TB) (io.Closer, Sender, Receiver) {
 
 func BenchmarkSendReceive(b *testing.B) {
 	c, s, r := testSenderReceiver(b)
-	defer func() {
-		if err := c.Close(); err != nil {
-			b.Fatal(err)
-		}
-	}()
-	m := binding.EventMessage(testEvent)
-	ctx := context.Background()
-	b.ResetTimer() // Don't count setup.
-	for i := 0; i < b.N; i++ {
-		n := 10 // Messages to send async.
-		g := errgroup.Group{}
-		g.Go(func() error {
-			for j := 0; j < n; j++ {
-				if err := s.Send(ctx, m); err != nil {
-					return err
-				}
-			}
-			return nil
-		})
-		g.Go(func() error {
-			for j := 0; j < n; j++ {
-				m, err := r.Receive(ctx)
-				if err != nil {
-					return err
-				}
-				if err := m.Finish(nil); err != nil {
-					return err
-				}
-			}
-			return nil
-		})
-		assert.NoError(b, g.Wait())
-	}
+	defer func() { require.NoError(b, c.Close()) }()
+	test.BenchmarkSendReceive(b, s, r)
 }
