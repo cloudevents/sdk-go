@@ -78,3 +78,19 @@ func (m finishMessage) Finish(err error) error {
 func WithFinish(m Message, finish func(error)) Message {
 	return finishMessage{Message: m, finish: finish}
 }
+
+// Translate creates a new message with the same content and mode as 'in',
+// using the given makeBinary or makeStruct functions.
+func Translate(in Message,
+	makeBinary func(ce.Event) (Message, error),
+	makeStruct func(string, []byte) (Message, error),
+) (Message, error) {
+	if f, b := in.Structured(); f != "" && len(b) > 0 {
+		return makeStruct(f, b)
+	}
+	e, err := in.Event()
+	if err != nil {
+		return nil, err
+	}
+	return makeBinary(e)
+}

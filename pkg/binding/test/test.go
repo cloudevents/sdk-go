@@ -89,11 +89,9 @@ func SendReceive(t *testing.T, in binding.Message, s binding.Sender, r binding.R
 	go func() {
 		done <- s.Send(context.Background(), in)
 	}()
-	out, err1 := r.Receive(context.Background())
-	assert.NoError(t, err1)
-	err2 := <-done
-	assert.NoError(t, err2)
-	require.True(t, err1 == nil && err2 == nil)
+	out, err := r.Receive(context.Background())
+	require.NoError(t, err)
+	require.NoError(t, out.Finish(nil))
 	return out
 }
 
