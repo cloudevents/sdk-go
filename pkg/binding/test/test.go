@@ -84,14 +84,21 @@ func EncodeDecode(t *testing.T, in ce.Event, enc binding.Encoder) (out ce.Event)
 // Halt test on error.
 func SendReceive(t *testing.T, in binding.Message, s binding.Sender, r binding.Receiver) binding.Message {
 	t.Helper()
-	// goroutine in case Send() blocks till Receive() is called.
-	done := make(chan error)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	var out binding.Message
+	var recvErr error
+	done := make(chan struct{})
 	go func() {
-		done <- s.Send(context.Background(), in)
+		defer close(done)
+		if out, recvErr = r.Receive(ctx); recvErr == nil {
+			recvErr = out.Finish(nil)
+		}
 	}()
-	out, err := r.Receive(context.Background())
-	require.NoError(t, err)
-	require.NoError(t, out.Finish(nil))
+	require.NoError(t, s.Send(ctx, in), "Send error")
+	<-done
+	require.NoError(t, recvErr, "Receive error")
 	return out
 }
 
