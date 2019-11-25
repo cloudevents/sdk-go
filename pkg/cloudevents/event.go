@@ -36,11 +36,11 @@ func New(version ...string) Event {
 // For example replace this:
 //
 //     var i int
-//     err := e.ExtensionAs("foo", &i)
+//     err := e.ExtensionAs("baz", &i)
 //
 // With this:
 //
-//     i, err := types.ToInteger(e.Extensions["foo"])
+//     i, err := types.ToInteger(e.Extensions["baz"])
 //
 func (e Event) ExtensionAs(name string, obj interface{}) error {
 	return e.Context.ExtensionAs(name, obj)

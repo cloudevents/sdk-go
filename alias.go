@@ -98,6 +98,7 @@ var (
 	WithEventDefaulter = client.WithEventDefaulter
 	WithUUIDs          = client.WithUUIDs
 	WithTimeNow        = client.WithTimeNow
+	WithOverrides      = client.WithOverrides
 	WithConverterFn    = client.WithConverterFn
 
 	// Event Creation

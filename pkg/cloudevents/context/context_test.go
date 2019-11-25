@@ -59,16 +59,16 @@ func TestEncodingContext(t *testing.T) {
 	}{
 		"nil context": {},
 		"nil context, set encoding": {
-			encoding: "foo",
-			want:     "foo",
+			encoding: "baz",
+			want:     "baz",
 		},
 		"todo context, set encoding": {
 			ctx:      context.TODO(),
-			encoding: "foo",
-			want:     "foo",
+			encoding: "baz",
+			want:     "baz",
 		},
 		"already set encoding": {
-			ctx:      cecontext.WithTarget(context.TODO(), "foo"),
+			ctx:      cecontext.WithTarget(context.TODO(), "baz"),
 			encoding: "bar",
 			want:     "bar",
 		},

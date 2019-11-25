@@ -35,11 +35,11 @@ type EventContextReader interface {
 	// For example replace this:
 	//
 	//     var i int
-	//     err := ec.ExtensionAs("foo", &i)
+	//     err := ec.ExtensionAs("baz", &i)
 	//
 	// With this:
 	//
-	//     i, err := types.ToInteger(ec.GetExtensions["foo"])
+	//     i, err := types.ToInteger(ec.GetExtensions["baz"])
 	//
 	ExtensionAs(string, interface{}) error
 

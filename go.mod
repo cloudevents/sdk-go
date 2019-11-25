@@ -8,13 +8,14 @@ require (
 	github.com/Azure/go-autorest/autorest/to v0.2.0 // indirect
 	github.com/Azure/go-autorest/autorest/validation v0.1.0 // indirect
 	github.com/fortytw2/leaktest v1.3.0 // indirect
+	github.com/fsnotify/fsnotify v1.4.7
 	github.com/google/go-cmp v0.3.0
 	github.com/google/uuid v1.1.1
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/nats-io/nats-server/v2 v2.0.0 // indirect
 	github.com/nats-io/nats.go v1.8.1
 	github.com/pkg/errors v0.8.1 // indirect
-	github.com/prometheus/client_golang v0.9.3-0.20190127221311-3c4408c8b829 // indirect
+	github.com/prometheus/common v0.2.0
 	github.com/stretchr/testify v1.3.0
 	go.opencensus.io v0.22.0
 	go.uber.org/atomic v1.4.0 // indirect
@@ -23,3 +24,5 @@ require (
 	golang.org/x/sync v0.0.0-20190423024810-112230192c58
 	pack.ag/amqp v0.11.0
 )
+
+go 1.13

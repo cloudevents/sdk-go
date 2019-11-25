@@ -19,7 +19,7 @@ import (
 To setup:
 
 gcloud pubsub topics create demo_cloudevents
-gcloud pubsub subscriptions create foo --topic=demo_cloudevents
+gcloud pubsub subscriptions create baz --topic=demo_cloudevents
 
 To test:
 
@@ -27,14 +27,14 @@ gcloud pubsub topics publish demo_cloudevents --message='{"Hello": "world"}'
 
 To fix a bad message:
 
-gcloud pubsub subscriptions pull --auto-ack foo
+gcloud pubsub subscriptions pull --auto-ack baz
 
 */
 
 type envConfig struct {
 	ProjectID string `envconfig:"GOOGLE_CLOUD_PROJECT"`
 
-	SubscriptionIDs string `envconfig:"PUBSUB_SUBSCRIPTIONS" default:"foo" required:"true"`
+	SubscriptionIDs string `envconfig:"PUBSUB_SUBSCRIPTIONS" default:"baz" required:"true"`
 }
 
 type Example struct {

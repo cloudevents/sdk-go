@@ -37,8 +37,8 @@ func TestAttributes03(t *testing.T) {
 
 	err = subject.Set(c, 1)
 	assert.EqualError(err, "invalid value for subject: 1")
-	err = atime.Set(c, "foo")
-	assert.EqualError(err, `invalid value for time: "foo"`)
+	err = atime.Set(c, "baz")
+	assert.EqualError(err, `invalid value for time: "baz"`)
 }
 
 func TestAttributes02(t *testing.T) {
@@ -65,8 +65,8 @@ func TestAttributes02(t *testing.T) {
 
 	err = id.Set(c, 1)
 	assert.EqualError(err, "invalid value for id: 1")
-	err = atime.Set(c, "foo")
-	assert.EqualError(err, "invalid value for time: \"foo\"")
+	err = atime.Set(c, "baz")
+	assert.EqualError(err, "invalid value for time: \"baz\"")
 }
 
 func TestAttributes01(t *testing.T) {

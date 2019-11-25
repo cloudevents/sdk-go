@@ -46,8 +46,8 @@ func Example() {
 }
 
 var (
-	testURL    = &url.URL{Scheme: "http", Host: "example.com", Path: "/foo"}
-	testURLstr = "http://example.com/foo"
+	testURL    = &url.URL{Scheme: "http", Host: "example.com", Path: "/baz"}
+	testURLstr = "http://example.com/baz"
 	timeStr    = "2020-03-21T12:34:56.78Z"
 	someTime   = time.Date(2020, 3, 21, 12, 34, 56, 780000000, time.UTC)
 )
@@ -160,8 +160,8 @@ func TestString(t *testing.T) {
 	x := valueTester{t, types.ToString}
 	x.ok("hello", "hello", "hello")
 	s := new(string)
-	*s = "foo" // non-nil pointers allowed
-	x.ok(s, "foo", "foo")
+	*s = "baz" // non-nil pointers allowed
+	x.ok(s, "baz", "baz")
 }
 
 func TestBinary(t *testing.T) {

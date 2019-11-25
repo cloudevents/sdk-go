@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"fmt"
 )
 
@@ -32,6 +33,20 @@ func WithUUIDs() Option {
 func WithTimeNow() Option {
 	return func(c *ceClient) error {
 		c.eventDefaulterFns = append(c.eventDefaulterFns, DefaultTimeToNowIfNotSet)
+		return nil
+	}
+}
+
+// WithOverrides adds a file based extension overrides defaulter to the end of
+// the defaulter chain. the Overrides defaulter starts an active file watcher.
+// To cancel the watcher, terminate the passed in context.
+func WithOverrides(ctx context.Context, root string) Option {
+	return func(c *ceClient) error {
+		fn, err := NewDefaultOverrides(ctx, root)
+		if err != nil {
+			return err
+		}
+		c.eventDefaulterFns = append(c.eventDefaulterFns, fn)
 		return nil
 	}
 }

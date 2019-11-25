@@ -226,7 +226,7 @@ type Middleware func(next nethttp.Handler) nethttp.Handler
 
 // WithMiddleware adds an HTTP middleware to the transport. It may be specified multiple times.
 // Middleware is applied to everything before it. For example
-// `NewClient(WithMiddleware(foo), WithMiddleware(bar))` would result in `bar(foo(original))`.
+// `NewClient(WithMiddleware(baz), WithMiddleware(bar))` would result in `bar(baz(original))`.
 func WithMiddleware(middleware Middleware) Option {
 	return func(t *Transport) error {
 		if t == nil {

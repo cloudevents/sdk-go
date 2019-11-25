@@ -12,7 +12,7 @@ import (
 
 /*
 
-To view: gcloud pubsub subscriptions pull --auto-ack foo
+To view: gcloud pubsub subscriptions pull --auto-ack baz
 
 To post: gcloud pubsub topics publish demo_cloudevents --message '{"id":123,"message":"hi from the terminal"}'
 
