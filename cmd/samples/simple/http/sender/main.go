@@ -31,13 +31,15 @@ func main() {
 		}
 
 		var version string
-		switch i % 3 {
+		switch i % 4 {
 		case 0:
 			version = cloudevents.VersionV01
 		case 1:
 			version = cloudevents.VersionV02
 		case 2:
 			version = cloudevents.VersionV03
+		case 3:
+			version = cloudevents.VersionV1
 		}
 
 		event := cloudevents.NewEvent(version)

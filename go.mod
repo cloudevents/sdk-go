@@ -14,7 +14,6 @@ require (
 	github.com/nats-io/nats-server/v2 v2.0.0 // indirect
 	github.com/nats-io/nats.go v1.8.1
 	github.com/pkg/errors v0.8.1 // indirect
-	github.com/prometheus/client_golang v0.9.3-0.20190127221311-3c4408c8b829 // indirect
 	github.com/stretchr/testify v1.3.0
 	go.opencensus.io v0.22.0
 	go.uber.org/atomic v1.4.0 // indirect
@@ -23,3 +22,5 @@ require (
 	golang.org/x/sync v0.0.0-20190423024810-112230192c58
 	pack.ag/amqp v0.11.0
 )
+
+go 1.13
