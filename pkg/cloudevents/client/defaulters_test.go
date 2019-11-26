@@ -9,8 +9,10 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+var versions = []string{"0.1", "0.2", "0.3", "1.0"}
+
 func TestDefaultIDToUUIDIfNotSet_empty(t *testing.T) {
-	for _, tc := range []string{"0.1", "0.2", "0.3", "1.0"} {
+	for _, tc := range versions {
 		t.Run(tc, func(t *testing.T) {
 			got := DefaultIDToUUIDIfNotSet(context.TODO(), cloudevents.New(tc))
 
@@ -22,7 +24,7 @@ func TestDefaultIDToUUIDIfNotSet_empty(t *testing.T) {
 }
 
 func TestDefaultIDToUUIDIfNotSet_set(t *testing.T) {
-	for _, tc := range []string{"0.1", "0.2", "0.3", "1.0"} {
+	for _, tc := range versions {
 		t.Run(tc, func(t *testing.T) {
 			event := cloudevents.New(tc)
 			event.SetID("abc-123")
@@ -67,7 +69,7 @@ func TestDefaultIDToUUIDIfNotSetImmutable(t *testing.T) {
 }
 
 func TestDefaultTimeToNowIfNotSet_empty(t *testing.T) {
-	for _, tc := range []string{"0.1", "0.2", "0.3", "1.0"} {
+	for _, tc := range versions {
 		t.Run(tc, func(t *testing.T) {
 			got := DefaultTimeToNowIfNotSet(context.TODO(), cloudevents.New(tc))
 
@@ -79,7 +81,7 @@ func TestDefaultTimeToNowIfNotSet_empty(t *testing.T) {
 }
 
 func TestDefaultTimeToNowIfNotSet_set(t *testing.T) {
-	for _, tc := range []string{"0.1", "0.2", "0.3", "1.0"} {
+	for _, tc := range versions {
 		t.Run(tc, func(t *testing.T) {
 			event := cloudevents.New(tc)
 			now := time.Now()
@@ -127,7 +129,7 @@ func TestDefaultTimeToNowIfNotSetImmutable(t *testing.T) {
 
 func TestNewDefaultDataContentTypeIfNotSet_empty(t *testing.T) {
 	ct := "a/b"
-	for _, tc := range []string{"0.1", "0.2", "0.3", "1.0"} {
+	for _, tc := range versions {
 		t.Run(tc, func(t *testing.T) {
 			fn := NewDefaultDataContentTypeIfNotSet(ct)
 			got := fn(context.TODO(), cloudevents.New(tc))
@@ -141,7 +143,7 @@ func TestNewDefaultDataContentTypeIfNotSet_empty(t *testing.T) {
 
 func TestNewDefaultDataContentTypeIfNotSet_set(t *testing.T) {
 	ct := "a/b"
-	for _, tc := range []string{"0.1", "0.2", "0.3", "1.0"} {
+	for _, tc := range versions {
 		t.Run(tc, func(t *testing.T) {
 			event := cloudevents.New(tc)
 			event.SetDataContentType(ct)
