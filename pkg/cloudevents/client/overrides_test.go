@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-const watchLag = 2 * time.Millisecond
+const watchLag = 3 * time.Millisecond
 
 func TestNewDefaultOverrides(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
