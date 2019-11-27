@@ -2,7 +2,10 @@ package binding
 
 import (
 	"context"
+	"errors"
+	"io"
 
+	"github.com/cloudevents/sdk-go/pkg/binding/spec"
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 )
 
@@ -25,18 +28,28 @@ import (
 // The Message interface supports QoS 0 and 1, the ExactlyOnceMessage interface
 // supports QoS 2
 //
+// The Structured and Binary methods provide optional optimized transfer of an event
+// to a Sender, they may not be implemented by all Message instances. A Sender should
+// try each method of interest and fall back to Event() if none are supported.
+//
 type Message interface {
 	// Event decodes and returns the contained Event.
 	Event() (ce.Event, error)
 
-	// Structured optionally returns a structured event encoding and its
-	// format type, if the message contains such an encoding. Returns
-	// ("", nil) if not.
+	// Structured optionally returns a structured event format and encoding.
+	// Returns ("", nil) if message is not in structured mode.
 	//
 	// This allows Senders to avoid re-encoding messages that are
 	// already in suitable structured form.
 	//
 	Structured() (formatMediaType string, encodedEvent []byte)
+
+	// Binary transfers a binary-mode event to an EventBuilder.
+	// Returns ErrNotBinary if message is not in binary mode.
+	//
+	// Allows Senders to forward a binary message without allocating an
+	// intermediate Event.
+	Binary(EventBuilder) error
 
 	// Finish *must* be called when message from a Receiver can be forgotten by
 	// the receiver. Sender.Send() calls Finish() when the message is sent.  A QoS
@@ -47,6 +60,27 @@ type Message interface {
 	// A non-nil return indicates that the message was not accepted
 	// by the receivers peer.
 	Finish(error) error
+}
+
+// ErrNotBinary returned by Message.Binary for non-binary messages.
+var ErrNotBinary = errors.New("message is not in binary mode")
+
+// EventBuilder receives values to build a binary event representation.
+type EventBuilder interface {
+	// Data receives an io.Reader for the data attribute.
+	Data(io.Reader)
+
+	// Set a standard attribute.
+	//
+	// The value can either be the correct type for the attribute, or a canonical
+	// string encoding. See package cloudevents/types
+	Set(attributeId spec.Kind, value interface{})
+
+	// Set an extension attribute.
+	//
+	// The value can either be the correct type for the attribute, or a canonical
+	// string encoding. See package cloudevents/types
+	SetExtension(name string) interface{}
 }
 
 // ExactlyOnceMessage is implemented by received Messages
