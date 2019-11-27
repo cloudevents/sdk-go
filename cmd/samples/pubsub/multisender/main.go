@@ -58,7 +58,7 @@ func main() {
 
 	for i, topic := range strings.Split(env.TopicIDs, ",") {
 		ctx := cecontext.WithTopic(context.Background(), topic)
-		event := cloudevents.NewEvent(cloudevents.VersionV03)
+		event := cloudevents.NewEvent(cloudevents.VersionV01)
 		event.SetType("com.cloudevents.sample.sent")
 		event.SetSource("github.com/cloudevents/sdk-go/cmd/samples/pubsub/multisender/")
 		_ = event.SetData(&Example{

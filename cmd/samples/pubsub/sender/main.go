@@ -42,7 +42,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	event := cloudevents.NewEvent(cloudevents.VersionV03)
+	event := cloudevents.NewEvent(cloudevents.VersionV1)
 	event.SetType("com.cloudevents.sample.sent")
 	event.SetSource("github.com/cloudevents/sdk-go/cmd/samples/pubsub/sender/")
 	_ = event.SetData(&Example{

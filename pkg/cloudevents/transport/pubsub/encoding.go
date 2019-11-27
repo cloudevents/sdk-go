@@ -22,8 +22,17 @@ const (
 	StructuredV03
 	// StructuredV1 is Structured CloudEvents spec v1.0.
 	StructuredV1
+
 	// Unknown is unknown.
 	Unknown
+
+	// Binary is used for Context Based Encoding Selections to use the
+	// DefaultBinaryEncodingSelectionStrategy
+	Binary = "binary"
+
+	// Structured is used for Context Based Encoding Selections to use the
+	// DefaultStructuredEncodingSelectionStrategy
+	Structured = "structured"
 )
 
 // DefaultBinaryEncodingSelectionStrategy implements a selection process for
@@ -87,5 +96,19 @@ func (e Encoding) Version() string {
 	// Unknown
 	default:
 		return "Unknown"
+	}
+}
+
+// Name creates a string to represent the the codec name.
+func (e Encoding) Name() string {
+	switch e {
+	case Default:
+		return Binary
+	case BinaryV03, BinaryV1:
+		return Binary
+	case StructuredV03, StructuredV1:
+		return Structured
+	default:
+		return Binary
 	}
 }
