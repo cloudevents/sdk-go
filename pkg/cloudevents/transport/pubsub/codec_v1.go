@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 )
@@ -14,14 +15,26 @@ import (
 type CodecV1 struct {
 	CodecStructured
 
-	Encoding Encoding
+	DefaultEncoding Encoding
 }
 
 var _ transport.Codec = (*CodecV1)(nil)
 
 func (v CodecV1) Encode(ctx context.Context, e cloudevents.Event) (transport.Message, error) {
-	switch v.Encoding {
-	case Default, StructuredV1:
+	encoding := v.DefaultEncoding
+	strEnc := cecontext.EncodingFrom(ctx)
+	if strEnc != "" {
+		switch strEnc {
+		case Binary:
+			encoding = BinaryV1
+		case Structured:
+			encoding = StructuredV1
+		}
+	}
+	switch encoding {
+	case Default:
+		fallthrough
+	case StructuredV1:
 		return v.encodeStructured(ctx, e)
 	case BinaryV1:
 		return v.encodeBinary(ctx, e)
