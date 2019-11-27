@@ -24,7 +24,7 @@ Receiving a cloudevents.Event via the HTTP Transport:
 
 ```go
 func Receive(event cloudevents.Event) {
-	baz
+	// do something with event.Context and event.Data (via event.DataAs(foo)
 }
 
 func main() {
@@ -114,7 +114,7 @@ Implement a `EventDefaulter` function:
 
 ```go
 func customOption(ctx context.Context, event cloudevents.Event) cloudevents.Event {
-	// TODO(reader): mutate event.
+	// do some defaulting on the event.
     return event
 }
 ```
