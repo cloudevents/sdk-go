@@ -92,7 +92,7 @@ func TestCodecV1_Encode(t *testing.T) {
 			},
 		},
 		"simple v1.0 structured": {
-			codec: pubsub.CodecV1{Encoding: pubsub.StructuredV1},
+			codec: pubsub.CodecV1{DefaultEncoding: pubsub.StructuredV1},
 			event: cloudevents.Event{
 				Context: cloudevents.EventContextV1{
 					Type:   "com.example.test",
@@ -116,7 +116,7 @@ func TestCodecV1_Encode(t *testing.T) {
 			},
 		},
 		"full v1.0 structured": {
-			codec: pubsub.CodecV1{Encoding: pubsub.StructuredV1},
+			codec: pubsub.CodecV1{DefaultEncoding: pubsub.StructuredV1},
 			event: cloudevents.Event{
 				Context: cloudevents.EventContextV1{
 					ID:              "ABC-123",

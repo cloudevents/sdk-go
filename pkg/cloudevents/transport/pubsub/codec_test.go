@@ -23,14 +23,14 @@ func TestCodecEncode(t *testing.T) {
 	source := &types.URLRef{URL: *sourceUrl}
 
 	testCases := map[string]struct {
-		codec   pubsub.Codec
-		event   cloudevents.Event
+		codec   *pubsub.Codec
+		event   *cloudevents.Event
 		want    *pubsub.Message
 		wantErr error
 	}{
 		"simple v03 structured": {
-			codec: pubsub.Codec{Encoding: pubsub.StructuredV03},
-			event: cloudevents.Event{
+			codec: &pubsub.Codec{Encoding: pubsub.StructuredV03},
+			event: &cloudevents.Event{
 				Context: cloudevents.EventContextV03{
 					Type:    "com.example.test",
 					Source:  *source,
@@ -55,8 +55,8 @@ func TestCodecEncode(t *testing.T) {
 			},
 		},
 		"simple v03 binary": {
-			codec: pubsub.Codec{Encoding: pubsub.BinaryV03},
-			event: cloudevents.Event{
+			codec: &pubsub.Codec{Encoding: pubsub.BinaryV03},
+			event: &cloudevents.Event{
 				Context: &cloudevents.EventContextV03{
 					Type:    "com.example.test",
 					Source:  *source,
@@ -79,7 +79,7 @@ func TestCodecEncode(t *testing.T) {
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 
-			got, err := tc.codec.Encode(context.TODO(), tc.event)
+			got, err := tc.codec.Encode(context.TODO(), *tc.event)
 
 			if tc.wantErr != nil || err != nil {
 				if diff := cmp.Diff(tc.wantErr, err); diff != "" {
@@ -109,13 +109,13 @@ func TestCodecDecode(t *testing.T) {
 	source := &types.URLRef{URL: *sourceUrl}
 
 	testCases := map[string]struct {
-		codec   pubsub.Codec
+		codec   *pubsub.Codec
 		msg     *pubsub.Message
 		want    *cloudevents.Event
 		wantErr error
 	}{
 		"simple v3 structured": {
-			codec: pubsub.Codec{Encoding: pubsub.StructuredV03},
+			codec: &pubsub.Codec{Encoding: pubsub.StructuredV03},
 			msg: &pubsub.Message{
 				Attributes: map[string]string{
 					"Content-Type": cloudevents.ApplicationCloudEventsJSON,
@@ -176,14 +176,14 @@ func TestCodecAsMiddleware(t *testing.T) {
 	for _, encoding := range []pubsub.Encoding{pubsub.StructuredV03} {
 
 		testCases := map[string]struct {
-			codec   pubsub.Codec
-			event   cloudevents.Event
-			want    cloudevents.Event
+			codec   *pubsub.Codec
+			event   *cloudevents.Event
+			want    *cloudevents.Event
 			wantErr error
 		}{
 			"simple data": {
-				codec: pubsub.Codec{Encoding: encoding},
-				event: cloudevents.Event{
+				codec: &pubsub.Codec{Encoding: encoding},
+				event: &cloudevents.Event{
 					Context: cloudevents.EventContextV03{
 						Type:   "com.example.test",
 						Source: *source,
@@ -194,7 +194,7 @@ func TestCodecAsMiddleware(t *testing.T) {
 						"b": "banana",
 					},
 				},
-				want: cloudevents.Event{
+				want: &cloudevents.Event{
 					Context: &cloudevents.EventContextV03{
 						SpecVersion: cloudevents.CloudEventsVersionV03,
 						Type:        "com.example.test",
@@ -209,8 +209,8 @@ func TestCodecAsMiddleware(t *testing.T) {
 				},
 			},
 			"struct data": {
-				codec: pubsub.Codec{Encoding: encoding},
-				event: cloudevents.Event{
+				codec: &pubsub.Codec{Encoding: encoding},
+				event: &cloudevents.Event{
 					Context: cloudevents.EventContextV03{
 						Type:   "com.example.test",
 						Source: *source,
@@ -221,7 +221,7 @@ func TestCodecAsMiddleware(t *testing.T) {
 						AString: "testing",
 					},
 				},
-				want: cloudevents.Event{
+				want: &cloudevents.Event{
 					Context: &cloudevents.EventContextV03{
 						SpecVersion: cloudevents.CloudEventsVersionV03,
 						Type:        "com.example.test",
@@ -240,7 +240,7 @@ func TestCodecAsMiddleware(t *testing.T) {
 			n = fmt.Sprintf("%s, %s", encoding, n)
 			t.Run(n, func(t *testing.T) {
 
-				msg1, err := tc.codec.Encode(context.TODO(), tc.event)
+				msg1, err := tc.codec.Encode(context.TODO(), *tc.event)
 				if err != nil {
 					if diff := cmp.Diff(tc.wantErr, err); diff != "" {
 						t.Errorf("unexpected error (-want, +got) = %v", diff)
@@ -288,12 +288,11 @@ func TestCodecAsMiddleware(t *testing.T) {
 				ctxv3 := got.Context.AsV03()
 				got.Context = ctxv3
 
-				if diff := cmp.Diff(tc.want, *got); diff != "" {
+				if diff := cmp.Diff(tc.want, got); diff != "" {
 					t.Errorf("unexpected event (-want, +got) = %v", diff)
 				}
 			})
 		}
-
 	}
 }
 
