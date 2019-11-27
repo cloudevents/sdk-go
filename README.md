@@ -96,13 +96,15 @@ Checkout the sample [sender](./cmd/samples/http/sender) and
 
 ## Client Options
 
-There are several client options that can be passed in when making a CloudEvents client. These help with defaults
-or validation that could be useful for a particular need. There is also hooks to add your own custom options and defaults 
-to extend the client provided by the Golang CloudEvents SDK.  
+There are several client options that can be passed in when making a CloudEvents
+client. These help with defaults or validation that could be useful for a
+particular need. There is also hooks to add your own custom options and defaults
+to extend the client provided by the Golang CloudEvents SDK.
 
 ### WithEventDefaulter
 
-`WithEventDefaulter` is the generic hook to add a defaulter to the defaulter chain. With the following function type:
+`WithEventDefaulter` is the generic hook to add a defaulter to the defaulter
+chain. With the following function type:
 
 ```go
 type EventDefaulter func(ctx context.Context, event cloudevents.Event) cloudevents.Event
@@ -125,29 +127,33 @@ cloudevents.NewClient(t, customOption)
 
 ### WithUUIDs
 
-`WithUUIDs` sets `event.Context.ID` to a new UUID if `ID` is not set. 
+`WithUUIDs` sets `event.Context.ID` to a new UUID if `ID` is not set.
 
 ### WithTimeNow
 
-`WithTimeNow` sets `event.Context.Time` to a `time.Now()` if `Time` is not set. 
+`WithTimeNow` sets `event.Context.Time` to a `time.Now()` if `Time` is not set.
 
 ### WithConverterFn
 
-`WithConverterFn` allows you to introduce a function to give one last try to convert a non-CloudEvent into a CloudEvent for supported transports. The convert function signature should be:
+`WithConverterFn` allows you to introduce a function to give one last try to
+convert a non-CloudEvent into a CloudEvent for supported transports. The convert
+function signature should be:
 
 ```go
 func (ctx context.Context, m transport.Message, err error) (*cloudevents.Event, error)
 ```
 
-See the [converter](./cmd/samples/http/converter/receiver) sample for a working example. 
-
+See the [converter](./cmd/samples/http/converter/receiver) sample for a working
+example.
 
 ### WithOverrides
 
-`WithOverrides` allows you to create a set of files on the filesystem that will be watched, read, and mutate the outbound event.
+`WithOverrides` allows you to create a set of files on the filesystem that will
+be watched, read, and mutate the outbound event.
 
-File names will be used as the extension attribute name (only extensions are allowed, no first-class attributes name).
-File contents will be used as the value of the extension attribute.
+File names will be used as the extension attribute name (only extensions are
+allowed, no first-class attributes name). File contents will be used as the
+value of the extension attribute.
 
 For example:
 
@@ -164,6 +170,7 @@ $ cat cmd/samples/http/overrides/extensions/foo
 42
 ```
 
-`baz` and `foo` will be added to the CloudEvents extensions  with "bar" and "42", respectively.
+`baz` and `foo` will be added to the CloudEvents extensions with "bar" and "42",
+respectively.
 
 See the [overrides](./cmd/samples/http/overrides) sample for a working example.

@@ -3,13 +3,14 @@ package client
 import (
 	"context"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/prometheus/common/log"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/prometheus/common/log"
 )
 
 const watchLag = 3 * time.Millisecond
@@ -116,7 +117,7 @@ func TestNewOverridesObserver(t *testing.T) {
 	if err := ioutil.WriteFile(filepath.Join(dir, key2), []byte(value2Delta), 0666); err != nil {
 		log.Fatal(err)
 	}
-	time.Sleep(watchLag) // Gives time for the watcher to notice.
+	time.Sleep(5 * watchLag) // Gives time for the watcher to notice.
 
 	{ // Test 3: files mutated while being watched.
 		got := o.Apply(ctx, cloudevents.New("1.0"))
