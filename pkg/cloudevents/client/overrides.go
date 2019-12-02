@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -38,7 +39,7 @@ func NewDefaultOverrides(ctx context.Context, root string) (EventDefaulter, erro
 // root/{file} contents will be used as the attribute extension value.
 func NewOverridesObserver(root string) *overridesObserver {
 	return &overridesObserver{
-		root:      root,
+		root:      filepath.Clean(root),
 		overrides: make(map[string]string, 0),
 	}
 }
@@ -67,6 +68,7 @@ func (o *overridesObserver) Apply(ctx context.Context, event cloudevents.Event) 
 
 func (o *overridesObserver) read(file string) error {
 	key := filepath.Base(file)
+
 	if !cloudevents.IsAlphaNumericLowercaseLetters(key) {
 		logger := cecontext.LoggerFrom(context.Background())
 		logger.Warnw("bad file name as attribute key, CloudEvents attribute names MUST consist of lower-case letters ('a' to 'z') or digits ('0' to '9') from the ASCII character set",
@@ -102,14 +104,23 @@ func (o *overridesObserver) String() string {
 // Walk will look at filesystem at root and load each file and cache the
 // key/value.
 func (o *overridesObserver) Walk() error {
-	return filepath.Walk(o.root, func(path string, info os.FileInfo, err error) error {
-		if !info.IsDir() {
-			if err := o.read(path); err != nil {
-				return err
-			}
-		}
+	files, err := ioutil.ReadDir(o.root)
+	if err != nil {
 		return nil
-	})
+		//return err
+	}
+
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+
+		path := path.Join(o.root, file.Name())
+		if err := o.read(path); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // Watch will maintain the overrides map to match what is on the filesystem.
@@ -134,15 +145,48 @@ func (o *overridesObserver) Watch(ctx context.Context) error {
 		}
 	}()
 
-	if err := watcher.Add(o.root); err != nil {
+	// Watch all the directories recursively starting at `o.root`.
+	if err := filepath.Walk(o.root, func(path string, info os.FileInfo, err error) error {
+		if info.IsDir() {
+			logger.Debugw("Adding watch.", zap.Any("path", path))
+			if err := watcher.Add(path); err != nil {
+				return err
+			}
+		}
+		return nil
+	}); err != nil {
 		return err
 	}
 
-	logger.Debugw("Starting watch", zap.Any("path", o.root))
 	for {
 		select {
 		case event := <-watcher.Events:
-			logger.Debugw("Got event", zap.Any("event", event))
+			logger.Debugw("Got watch event.", zap.Any("event", event))
+
+			if filepath.Dir(event.Name) != o.root {
+				logger.Debugw("A sub-dir changed.")
+				// If anything in the subtree changes, just walk the top level again.
+				if err := o.Walk(); err != nil {
+					return err
+				}
+
+				switch event.Op {
+				case fsnotify.Create:
+					fileInfo, err := os.Lstat(event.Name)
+					if err != nil {
+						logger.Errorw("Failed to lstat file.", zap.Any("event", event))
+						continue
+					}
+					if fileInfo.IsDir() {
+						if err := watcher.Add(event.Name); err != nil {
+							return err
+						}
+					}
+				}
+
+				continue
+			}
+
 			switch event.Op {
 			case fsnotify.Create, fsnotify.Write:
 				if err := o.read(event.Name); err != nil {
@@ -151,7 +195,6 @@ func (o *overridesObserver) Watch(ctx context.Context) error {
 
 			case fsnotify.Remove, fsnotify.Rename:
 				o.delete(event.Name)
-
 			}
 
 		case err := <-watcher.Errors:
