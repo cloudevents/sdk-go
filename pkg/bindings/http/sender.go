@@ -1,7 +1,6 @@
 package http
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"net/http"
@@ -9,6 +8,7 @@ import (
 	"net/url"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
+	"github.com/cloudevents/sdk-go/pkg/binding/format"
 )
 
 type Sender struct {
@@ -16,6 +16,11 @@ type Sender struct {
 	Client *http.Client
 	// Target is the URL to send event requests to.
 	Target *url.URL
+
+	transcoderFactories binding.TranscoderFactories
+
+	forceBinary     bool
+	forceStructured bool
 }
 
 func (s *Sender) Send(ctx context.Context, m binding.Message) (err error) {
@@ -23,27 +28,69 @@ func (s *Sender) Send(ctx context.Context, m binding.Message) (err error) {
 	if s.Client == nil || s.Target == nil {
 		return fmt.Errorf("not initialized: %#v", s)
 	}
-	m, err = binding.Translate(m,
-		BinaryEncoder{}.Encode,
-		func(f string, b []byte) (binding.Message, error) { return NewStruct(f, b), nil },
-	)
+
+	var req *http.Request
+	req, err = http.NewRequest("POST", s.Target.String(), nil)
 	if err != nil {
-		return err
-	}
-	body := bytes.NewReader(m.(*Message).Body)
-	req, err := http.NewRequest("POST", s.Target.String(), body)
-	if err != nil {
-		return err
+		return
 	}
 	req = req.WithContext(ctx)
-	req.Header = m.(*Message).Header
+
+	if err = s.fillHttpRequest(req, m); err != nil {
+		return
+	}
 	resp, err := s.Client.Do(req)
+	if err != nil {
+		return
+	}
 	if resp.StatusCode/100 != 2 {
 		return fmt.Errorf("%d %s", resp.StatusCode, nethttp.StatusText(resp.StatusCode))
 	}
-	return nil
+	return
 }
 
-func NewSender(client *http.Client, target *url.URL) *Sender {
-	return &Sender{Client: client, Target: target}
+// This function tries:
+// 1. Translate from structured
+// 2. Translate from binary
+// 3. Translate to Event and then re-encode back to Http Request
+func (s *Sender) fillHttpRequest(req *http.Request, m binding.Message) error {
+	if !s.forceBinary {
+		b := s.transcoderFactories.StructuredMessageTranscoder(&structuredMessageBuilder{req})
+		if b != nil {
+			if err := m.Structured(b); err == nil {
+				return nil
+			} else if err != binding.ErrNotStructured {
+				return err
+			}
+		}
+	}
+
+	if !s.forceStructured {
+		b := s.transcoderFactories.BinaryMessageTranscoder(&binaryMessageBuilder{req})
+		if b != nil {
+			if err := m.Binary(b); err == nil {
+				return nil
+			} else if err != binding.ErrNotBinary {
+				return err
+			}
+		}
+	}
+
+	if s.forceStructured {
+		return m.Event(
+			s.transcoderFactories.EventMessageTranscoder(&eventToStructuredMessageBuilder{format: format.JSON, req: req}),
+		)
+	} else {
+		return m.Event(
+			s.transcoderFactories.EventMessageTranscoder(&eventToBinaryMessageBuilder{req}),
+		)
+	}
+}
+
+func NewSender(client *http.Client, target *url.URL, options ...SenderOptionFunc) binding.Sender {
+	s := &Sender{Client: client, Target: target, transcoderFactories: make(binding.TranscoderFactories, 0)}
+	for _, o := range options {
+		o(s)
+	}
+	return s
 }

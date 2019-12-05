@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 
+	"github.com/cloudevents/sdk-go/pkg/binding/format"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 )
@@ -33,23 +34,38 @@ import (
 // try each method of interest and fall back to Event() if none are supported.
 //
 type Message interface {
-	// Event decodes and returns the contained Event.
-	Event() (ce.Event, error)
-
-	// Structured optionally returns a structured event format and encoding.
-	// Returns ("", nil) if message is not in structured mode.
+	// Structured transfers a structured-mode event to a StructuredMessageBuilder.
+	// Returns ErrNotStructured if message is not in structured mode.
+	//
+	// Returns a different err if something wrong happened while trying to read the structured event
+	// In this case, the caller must Finish the message with appropriate error
 	//
 	// This allows Senders to avoid re-encoding messages that are
 	// already in suitable structured form.
-	//
-	Structured() (formatMediaType string, encodedEvent []byte)
+	Structured(StructuredMessageBuilder) error
 
-	// Binary transfers a binary-mode event to an EventBuilder.
+	// Binary transfers a binary-mode event to an BinaryMessageBuilder.
 	// Returns ErrNotBinary if message is not in binary mode.
+	//
+	// Returns a different err if something wrong happened while trying to read the binary event
+	// In this case, the caller must Finish the message with appropriate error
 	//
 	// Allows Senders to forward a binary message without allocating an
 	// intermediate Event.
-	Binary(EventBuilder) error
+	Binary(BinaryMessageBuilder) error
+
+	// Event transfers an event to an EventMessageBuilder.
+	//
+	// A message implementation should always provide a conversion to Event data structure.
+	// The implementor can use binding.ToEvent for a straightforward implementation, starting
+	// from binary or structured representation
+	//
+	// Returns an err if something wrong happened while trying to read the event
+	// In this case, the caller must Finish the message with appropriate error
+	//
+	// Useful when the Sender can't implement a direct binary/structured to binary/structured conversion,
+	// So the intermediate Event representation is required
+	Event(EventMessageBuilder) error
 
 	// Finish *must* be called when message from a Receiver can be forgotten by
 	// the receiver. Sender.Send() calls Finish() when the message is sent.  A QoS
@@ -62,25 +78,39 @@ type Message interface {
 	Finish(error) error
 }
 
+// ErrNotStructured returned by Message.Structured for non-structured messages.
+var ErrNotStructured = errors.New("message is not in structured mode")
+
 // ErrNotBinary returned by Message.Binary for non-binary messages.
 var ErrNotBinary = errors.New("message is not in binary mode")
 
-// EventBuilder receives values to build a binary event representation.
-type EventBuilder interface {
+// StructuredMessageBuilder receives values to build a structured message representation.
+type StructuredMessageBuilder interface {
+	// Event receives an io.Reader for the whole event.
+	Event(format format.Format, event io.Reader) error
+}
+
+// BinaryMessageBuilder receives values to build a binary message representation.
+type BinaryMessageBuilder interface {
 	// Data receives an io.Reader for the data attribute.
-	Data(io.Reader)
+	// io.Reader could be empty, meaning that message payload is empty
+	Data(data io.Reader) error
 
 	// Set a standard attribute.
 	//
-	// The value can either be the correct type for the attribute, or a canonical
+	// The value can either be the correct golang type for the attribute, or a canonical
 	// string encoding. See package cloudevents/types
-	Set(attributeId spec.Kind, value interface{})
+	Set(attribute spec.Attribute, value interface{}) error
 
 	// Set an extension attribute.
 	//
-	// The value can either be the correct type for the attribute, or a canonical
+	// The value can either be the correct golang type for the attribute, or a canonical
 	// string encoding. See package cloudevents/types
-	SetExtension(name string) interface{}
+	SetExtension(name string, value interface{}) error
+}
+
+type EventMessageBuilder interface {
+	Encode(ce.Event) error
 }
 
 // ExactlyOnceMessage is implemented by received Messages
@@ -155,9 +185,4 @@ type ReceiveCloser interface {
 type SendCloser interface {
 	Sender
 	Closer
-}
-
-// Encoder encodes events as messages.
-type Encoder interface {
-	Encode(ce.Event) (Message, error)
 }

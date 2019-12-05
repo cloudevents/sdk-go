@@ -47,7 +47,7 @@ func (t *Transport) handle(ctx context.Context, m Message) (err error) {
 			err = err2
 		}
 	}()
-	e, err := m.Event()
+	e, _, _, err := ToEvent(m)
 	if err != nil {
 		return err
 	}

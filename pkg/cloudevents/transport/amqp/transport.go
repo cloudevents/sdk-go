@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/binding/format"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
+	"github.com/cloudevents/sdk-go/pkg/binding/transcoder"
 	bindings_amqp "github.com/cloudevents/sdk-go/pkg/bindings/amqp"
 	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
@@ -80,26 +80,50 @@ func New(server, queue string, opts ...Option) (*Transport, error) {
 		return nil, err
 	}
 	// TODO: in the future we might have more than one sender.
-	t.Transport.Sender = t.applyEncoding(bindings_amqp.Sender{AMQP: sender})
+	t.Transport.Sender = t.applyEncoding(sender)
 	return t, nil
 }
 
-func (t *Transport) applyEncoding(s bindings_amqp.Sender) binding.Sender {
+func (t *Transport) applyEncoding(amqpSender *amqp.Sender) binding.Sender {
 	switch t.Encoding {
 	case BinaryV02:
-		return binding.VersionSender(s, spec.V02)
+		return bindings_amqp.NewSender(
+			amqpSender,
+			bindings_amqp.ForceBinary(),
+			bindings_amqp.WithTranscoder(transcoder.Version(spec.V02)),
+		)
 	case BinaryV03:
-		return binding.VersionSender(s, spec.V03)
+		return bindings_amqp.NewSender(
+			amqpSender,
+			bindings_amqp.ForceBinary(),
+			bindings_amqp.WithTranscoder(transcoder.Version(spec.V03)),
+		)
 	case BinaryV1:
-		return binding.VersionSender(s, spec.V1)
+		return bindings_amqp.NewSender(
+			amqpSender,
+			bindings_amqp.ForceBinary(),
+			bindings_amqp.WithTranscoder(transcoder.Version(spec.V1)),
+		)
 	case StructuredV02:
-		return binding.StructSender(binding.VersionSender(s, spec.V02), format.JSON)
+		return bindings_amqp.NewSender(
+			amqpSender,
+			bindings_amqp.ForceStructured(),
+			bindings_amqp.WithTranscoder(transcoder.Version(spec.V02)),
+		)
 	case StructuredV03:
-		return binding.StructSender(binding.VersionSender(s, spec.V03), format.JSON)
+		return bindings_amqp.NewSender(
+			amqpSender,
+			bindings_amqp.ForceStructured(),
+			bindings_amqp.WithTranscoder(transcoder.Version(spec.V03)),
+		)
 	case StructuredV1:
-		return binding.StructSender(binding.VersionSender(s, spec.V1), format.JSON)
+		return bindings_amqp.NewSender(
+			amqpSender,
+			bindings_amqp.ForceStructured(),
+			bindings_amqp.WithTranscoder(transcoder.Version(spec.V1)),
+		)
 	}
-	return s
+	return bindings_amqp.NewSender(amqpSender)
 }
 
 func (t *Transport) applyOptions(opts ...Option) error {
@@ -132,7 +156,7 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	t.Transport.Receiver = bindings_amqp.Receiver{AMQP: receiver}
+	t.Transport.Receiver = &bindings_amqp.Receiver{AMQP: receiver}
 	return t.Transport.StartReceiver(ctx)
 }
 

@@ -28,6 +28,9 @@ type Version interface {
 	// Name is case insensitive.
 	// Does nothing if name does not start with prefix.
 	SetAttribute(context ce.EventContextWriter, name string, value interface{}) error
+	// Attribute looks up the attribute from kind.
+	// Returns nil if not found.
+	AttributeFromKind(kind Kind) Attribute
 }
 
 // Versions contains all known versions with the same attribute prefix.
@@ -114,6 +117,15 @@ func (v *version) SetAttribute(c ce.EventContextWriter, name string, value inter
 		}
 	}
 	return err
+}
+
+func (v *version) AttributeFromKind(kind Kind) Attribute {
+	for _, a := range v.Attributes() {
+		if a.Kind() == kind {
+			return a
+		}
+	}
+	return nil
 }
 
 func newVersion(

@@ -3,10 +3,11 @@ package format_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestJSON(t *testing.T) {
@@ -18,10 +19,11 @@ func TestJSON(t *testing.T) {
 			Source: *types.ParseURLRef("source"),
 		}.AsV03(),
 	}
+	e.SetExtension("ex", "val")
 	assert.NoError(e.SetData("foo"))
 	b, err := format.JSON.Marshal(e)
 	assert.NoError(err)
-	assert.Equal(`{"data":"foo","id":"id","source":"source","specversion":"0.3","type":"type"}`, string(b))
+	assert.Equal(`{"data":"foo","ex":"val","id":"id","source":"source","specversion":"0.3","type":"type"}`, string(b))
 
 	var e2 ce.Event
 	assert.NoError(format.JSON.Unmarshal(b, &e2))

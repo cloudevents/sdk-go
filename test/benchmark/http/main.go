@@ -44,7 +44,7 @@ func generateRandomValue(kb int, value byte) []byte {
 	return b
 }
 
-func MockedSender() *http.Sender {
+func MockedSender() binding.Sender {
 	u, _ := url.Parse("http://localhost")
 	return http.NewSender(NewTestClient(func(req *nethttp.Request) *nethttp.Response {
 		return &nethttp.Response{
