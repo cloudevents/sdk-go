@@ -19,11 +19,12 @@ const (
 	TransportName = "NATS"
 )
 
-// Transport acts as both a http client and a http handler.
+// Transport acts as both a NATS client and a NATS handler.
 type Transport struct {
-	Encoding Encoding
-	Conn     *nats.Conn
-	Subject  string
+	Encoding    Encoding
+	Conn        *nats.Conn
+	ConnOptions []nats.Option
+	Subject     string
 
 	sub *nats.Subscription
 
@@ -36,16 +37,19 @@ type Transport struct {
 }
 
 // New creates a new NATS transport.
-func New(natsServer, subject string, opts ...Option) (*Transport, error) {
-	conn, err := nats.Connect(natsServer)
+func New(natsURL, subject string, opts ...Option) (*Transport, error) {
+	t := &Transport{
+		Subject:     subject,
+		ConnOptions: []nats.Option{},
+	}
+
+	err := t.applyOptions(opts...)
 	if err != nil {
 		return nil, err
 	}
-	t := &Transport{
-		Conn:    conn,
-		Subject: subject,
-	}
-	if err := t.applyOptions(opts...); err != nil {
+
+	t.Conn, err = nats.Connect(natsURL, t.ConnOptions...)
+	if err != nil {
 		return nil, err
 	}
 

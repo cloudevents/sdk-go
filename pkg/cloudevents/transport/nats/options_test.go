@@ -5,6 +5,8 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/nats-io/nats.go"
+
 )
 
 func TestWithEncoding(t *testing.T) {
@@ -45,5 +47,11 @@ func TestWithEncoding(t *testing.T) {
 				t.Errorf("unexpected (-want, +got) = %v", diff)
 			}
 		})
+	}
+}
+
+func TestWithConnOptions(t *testing.T) {
+	opts := []nats.Option{
+		// nats.
 	}
 }
