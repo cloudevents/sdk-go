@@ -11,8 +11,8 @@ require (
 	github.com/google/go-cmp v0.3.0
 	github.com/google/uuid v1.1.1
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/nats-io/nats-server/v2 v2.0.0 // indirect
-	github.com/nats-io/nats.go v1.8.1
+	github.com/nats-io/nats-server/v2 v2.1.2
+	github.com/nats-io/nats.go v1.9.1
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/stretchr/testify v1.3.0
 	go.opencensus.io v0.22.0

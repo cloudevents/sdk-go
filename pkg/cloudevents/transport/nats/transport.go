@@ -24,6 +24,7 @@ type Transport struct {
 	Encoding    Encoding
 	Conn        *nats.Conn
 	ConnOptions []nats.Option
+	NatsURL     string
 	Subject     string
 
 	sub *nats.Subscription
@@ -40,6 +41,7 @@ type Transport struct {
 func New(natsURL, subject string, opts ...Option) (*Transport, error) {
 	t := &Transport{
 		Subject:     subject,
+		NatsURL:     natsURL,
 		ConnOptions: []nats.Option{},
 	}
 
@@ -48,12 +50,20 @@ func New(natsURL, subject string, opts ...Option) (*Transport, error) {
 		return nil, err
 	}
 
-	t.Conn, err = nats.Connect(natsURL, t.ConnOptions...)
+	err = t.connect()
 	if err != nil {
 		return nil, err
 	}
 
 	return t, nil
+}
+
+func (t *Transport) connect() error {
+	var err error
+
+	t.Conn, err = nats.Connect(t.NatsURL, t.ConnOptions...)
+
+	return err
 }
 
 func (t *Transport) applyOptions(opts ...Option) error {
