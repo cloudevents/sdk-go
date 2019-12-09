@@ -99,7 +99,7 @@ func Example_using() {
 	// Output:
 	// Validation: valid
 	// Context Attributes,
-	//   specversion: 0.2
+	//   specversion: 1.0
 	//   type: example.com/event
 	//   source: example.com/source
 	//   id: 0
@@ -108,7 +108,7 @@ func Example_using() {
 	//
 	// Validation: valid
 	// Context Attributes,
-	//   specversion: 0.2
+	//   specversion: 1.0
 	//   type: example.com/event
 	//   source: example.com/source
 	//   id: 1
@@ -117,7 +117,7 @@ func Example_using() {
 	//
 	// Validation: valid
 	// Context Attributes,
-	//   specversion: 0.2
+	//   specversion: 1.0
 	//   type: example.com/event
 	//   source: example.com/source
 	//   id: 2

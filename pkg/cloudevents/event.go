@@ -16,7 +16,7 @@ type Event struct {
 }
 
 const (
-	defaultEventVersion = CloudEventsVersionV02
+	defaultEventVersion = CloudEventsVersionV1
 )
 
 // New returns a new Event, an optional version can be passed to change the

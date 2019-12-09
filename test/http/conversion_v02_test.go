@@ -8,20 +8,20 @@ import (
 	"github.com/cloudevents/sdk-go"
 )
 
-func TestClientConversion_v02(t *testing.T) {
+func TestClientConversion_v1(t *testing.T) {
 	now := time.Now()
 
 	testCases := ConversionTestCases{
-		"Conversion v0.2": {
+		"Conversion v1.0": {
 			now:       now,
 			convertFn: UnitTestConvert,
 			data:      map[string]string{"hello": "unittest"},
 			want: &cloudevents.Event{
-				Context: cloudevents.EventContextV02{
+				Context: cloudevents.EventContextV1{
 					ID:     "321-CBA",
 					Type:   "io.cloudevents.conversion.http.post",
-					Source: *cloudevents.ParseURLRef("github.com/cloudevents/test/http/conversion"),
-				}.AsV02(),
+					Source: *cloudevents.ParseURIRef("github.com/cloudevents/test/http/conversion"),
+				}.AsV1(),
 				Data: map[string]string{"hello": "unittest"},
 			},
 			asSent: &TapValidation{
