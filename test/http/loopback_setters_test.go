@@ -1,7 +1,6 @@
 package http
 
 import (
-	"encoding/json"
 	"fmt"
 	"testing"
 	"time"
@@ -543,7 +542,7 @@ func TestClientLoopback_setters_structured_json_base64(t *testing.T) {
 						Source:      *cloudevents.ParseURLRef("/unit/test/client"),
 						ContentType: cloudevents.StringOfApplicationJSON(),
 						Extensions: map[string]interface{}{
-							"datacontentencoding": json.RawMessage(`"base64"`),
+							"datacontentencoding": "base64",
 						},
 					}.AsV02(),
 					Data: map[string]string{"unittest": "response"},

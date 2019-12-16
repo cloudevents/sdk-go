@@ -2,7 +2,6 @@ package pubsub_test
 
 import (
 	"context"
-	"encoding/json"
 	"net/url"
 	"testing"
 	"time"
@@ -254,7 +253,7 @@ func TestCodecV03_Decode(t *testing.T) {
 					DataContentType: cloudevents.StringOfApplicationJSON(),
 					Source:          *source,
 					Extensions: map[string]interface{}{
-						"test": json.RawMessage(`"extended"`),
+						"test": "extended",
 					},
 				},
 				Data: toBytes(map[string]interface{}{

@@ -2,7 +2,6 @@ package http_test
 
 import (
 	"context"
-	"encoding/json"
 	"net/url"
 	"testing"
 	"time"
@@ -366,7 +365,7 @@ func TestCodecV02_Decode(t *testing.T) {
 					ContentType: cloudevents.StringOfApplicationJSON(),
 					Source:      *source,
 					Extensions: map[string]interface{}{
-						"test": json.RawMessage(`"extended"`),
+						"test": "extended",
 					},
 				},
 				Data: toBytes(map[string]interface{}{

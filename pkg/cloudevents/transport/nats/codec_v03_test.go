@@ -2,15 +2,15 @@ package nats_test
 
 import (
 	"context"
-	"encoding/json"
 	"net/url"
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
+
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/nats"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
-	"github.com/google/go-cmp/cmp"
 )
 
 func TestCodecV03_Encode(t *testing.T) {
@@ -236,7 +236,7 @@ func TestCodecV03_Decode(t *testing.T) {
 					DataContentType: cloudevents.StringOfApplicationJSON(),
 					Source:          *source,
 					Extensions: map[string]interface{}{
-						"test": json.RawMessage(`"extended"`),
+						"test": "extended",
 					},
 				},
 				Data: toBytes(map[string]interface{}{

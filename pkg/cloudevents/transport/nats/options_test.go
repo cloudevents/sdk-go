@@ -59,7 +59,7 @@ func TestWithConnOptions(t *testing.T) {
 
 	srv, err := natsd.NewServer(&natsd.Options{Port: -1})
 	if err != nil {
-		t.Errorf("could not start nats server: %w", err)
+		t.Errorf("could not start nats server: %s", err)
 	}
 	go srv.Start()
 	defer srv.Shutdown()
@@ -70,7 +70,7 @@ func TestWithConnOptions(t *testing.T) {
 
 	tr, err := New(srv.Addr().String(), "testing", WithConnOptions(opts...))
 	if err != nil {
-		t.Errorf("connection failed: %w", err)
+		t.Errorf("connection failed: %s", err)
 	}
 
 	if !tr.Conn.Opts.NoRandomize {
