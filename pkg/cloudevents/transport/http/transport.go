@@ -301,8 +301,6 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 	t.reMu.Lock()
 	defer t.reMu.Unlock()
 
-	// TODO： 第一步，先捕获 ERROR
-
 	if t.LongPollReq != nil {
 		go func() { _ = t.longPollStart(ctx) }()
 	}
