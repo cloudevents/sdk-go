@@ -302,7 +302,7 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 	defer t.reMu.Unlock()
 
 	if t.LongPollReq != nil {
-		go func() { _ = t.longPollStart(ctx) }()
+		return t.longPollStart(ctx)
 	}
 
 	if t.Handler == nil {
