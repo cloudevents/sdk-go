@@ -23,6 +23,8 @@ import (
 
 // Transport adheres to transport.Transport.
 var _ transport.Transport = (*Transport)(nil)
+var longPullLastAckID string
+
 
 const (
 	// DefaultShutdownTimeout defines the default timeout given to the http.Server when calling Shutdown.
@@ -386,6 +388,11 @@ func (t *Transport) longPollStart(ctx context.Context) error {
 
 	go func(ch chan<- Message) {
 		for {
+			if longPullLastAckID != "" {
+				req.Header.Set("Last-Ack-Id", longPullLastAckID)
+			} else {
+				req.Header.Del("Last-Ack-Id")
+			}
 			if resp, err := t.LongPollClient.Do(req); err != nil {
 				logger.Errorw("long poll request returned error", err)
 				uErr := err.(*url.Error)
@@ -434,6 +441,17 @@ func (t *Transport) longPollStart(ctx context.Context) error {
 				// TODO: deliver event.
 				if _, err := t.invokeReceiver(ctx, *event); err != nil {
 					logger.Errorw("could not invoke receiver event", zap.Error(err))
+				} else {
+					var ackIDHasSet bool
+					if ackID, err := event.Context.GetExtension("ack-id"); err == nil {
+						if s, ok := ackID.(string); ok {
+							longPullLastAckID = s
+							ackIDHasSet = true
+						}
+					}
+					if !ackIDHasSet {
+						longPullLastAckID = ""
+					}
 				}
 			}
 		}
