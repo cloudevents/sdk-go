@@ -17,31 +17,31 @@ func Translate(
 	createRootEventEncoder func() EventEncoder,
 	factories TransformerFactories,
 ) (bool, bool, error) {
-		if createRootStructuredEncoder != nil {
-			// Wrap the transformers in the structured builder
-			structuredEncoder := factories.StructuredTransformer(createRootStructuredEncoder())
+	if createRootStructuredEncoder != nil {
+		// Wrap the transformers in the structured builder
+		structuredEncoder := factories.StructuredTransformer(createRootStructuredEncoder())
 
-			// StructuredTransformer could return nil if one of transcoders doesn't support
-			// direct structured transcoding
-			if structuredEncoder != nil {
-				if err := message.Structured(structuredEncoder); err == nil {
-					return true, false, nil
-				} else if err != ErrNotStructured {
-					return true, false, err
-				}
+		// StructuredTransformer could return nil if one of transcoders doesn't support
+		// direct structured transcoding
+		if structuredEncoder != nil {
+			if err := message.Structured(structuredEncoder); err == nil {
+				return true, false, nil
+			} else if err != ErrNotStructured {
+				return true, false, err
 			}
 		}
+	}
 
-		if createRootBinaryEncoder != nil {
-			binaryEncoder := factories.BinaryTransformer(createRootBinaryEncoder())
-			if binaryEncoder != nil {
-				if err := message.Binary(binaryEncoder); err == nil {
-					return false, true, nil
-				} else if err != ErrNotBinary {
-					return false, true, err
-				}
+	if createRootBinaryEncoder != nil {
+		binaryEncoder := factories.BinaryTransformer(createRootBinaryEncoder())
+		if binaryEncoder != nil {
+			if err := message.Binary(binaryEncoder); err == nil {
+				return false, true, nil
+			} else if err != ErrNotBinary {
+				return false, true, err
 			}
 		}
+	}
 
 	eventEncoder := factories.EventTransformer(createRootEventEncoder())
 	return false, false, message.Event(eventEncoder)
