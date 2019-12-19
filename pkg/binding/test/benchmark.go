@@ -9,7 +9,7 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-// Simpe send/receive benchmark.
+// Simple send/receive benchmark.
 // Requires a sender and receiver that are connected to each other.
 func BenchmarkSendReceive(b *testing.B, s binding.Sender, r binding.Receiver) {
 	m := binding.EventMessage(FullEvent())

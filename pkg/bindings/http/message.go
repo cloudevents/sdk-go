@@ -36,15 +36,15 @@ func NewMessage(header nethttp.Header, body io.ReadCloser) (*Message, error) {
 	return &m, nil
 }
 
-func (m *Message) Structured(builder binding.StructuredMessageBuilder) error {
+func (m *Message) Structured(encoder binding.StructuredEncoder) error {
 	if ft := format.Lookup(m.Header.Get(ContentType)); ft == nil {
 		return binding.ErrNotStructured
 	} else {
-		return builder.Event(ft, m.BodyReader)
+		return encoder.SetStructuredEvent(ft, m.BodyReader)
 	}
 }
 
-func (m *Message) Binary(builder binding.BinaryMessageBuilder) error {
+func (m *Message) Binary(encoder binding.BinaryEncoder) error {
 	version, err := specs.FindVersion(m.Header.Get)
 	if err != nil {
 		return binding.ErrNotBinary
@@ -54,12 +54,12 @@ func (m *Message) Binary(builder binding.BinaryMessageBuilder) error {
 		if strings.HasPrefix(k, prefix) {
 			attr := version.Attribute(k)
 			if attr != nil {
-				err = builder.Set(attr, v[0])
+				err = encoder.SetAttribute(attr, v[0])
 			} else {
-				err = builder.SetExtension(strings.ToLower(strings.TrimPrefix(k, prefix)), v[0])
+				err = encoder.SetExtension(strings.ToLower(strings.TrimPrefix(k, prefix)), v[0])
 			}
 		} else if k == ContentType {
-			err = builder.Set(version.AttributeFromKind(spec.DataContentType), v[0])
+			err = encoder.SetAttribute(version.AttributeFromKind(spec.DataContentType), v[0])
 		}
 		if err != nil {
 			return err
@@ -67,7 +67,7 @@ func (m *Message) Binary(builder binding.BinaryMessageBuilder) error {
 	}
 
 	if m.BodyReader != nil {
-		err = builder.Data(m.BodyReader)
+		err = encoder.SetData(m.BodyReader)
 		if err != nil {
 			return err
 		}
@@ -76,12 +76,12 @@ func (m *Message) Binary(builder binding.BinaryMessageBuilder) error {
 	return nil
 }
 
-func (m *Message) Event(builder binding.EventMessageBuilder) error {
+func (m *Message) Event(encoder binding.EventEncoder) error {
 	e, _, _, err := binding.ToEvent(m)
 	if err != nil {
 		return err
 	}
-	return builder.Encode(e)
+	return encoder.SetEvent(e)
 }
 
 func (m *Message) Finish(err error) error {

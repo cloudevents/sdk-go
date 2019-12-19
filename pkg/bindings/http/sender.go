@@ -17,7 +17,7 @@ type Sender struct {
 	// Target is the URL to send event requests to.
 	Target *url.URL
 
-	transcoderFactories binding.TranscoderFactories
+	transformerFactories binding.TransformerFactories
 
 	forceBinary     bool
 	forceStructured bool
@@ -54,41 +54,33 @@ func (s *Sender) Send(ctx context.Context, m binding.Message) (err error) {
 // 2. Translate from binary
 // 3. Translate to Event and then re-encode back to Http Request
 func (s *Sender) fillHttpRequest(req *http.Request, m binding.Message) error {
-	if !s.forceBinary {
-		b := s.transcoderFactories.StructuredMessageTranscoder(&structuredMessageBuilder{req})
-		if b != nil {
-			if err := m.Structured(b); err == nil {
-				return nil
-			} else if err != binding.ErrNotStructured {
-				return err
-			}
-		}
+	createStructured := func() binding.StructuredEncoder {
+		return &structuredMessageEncoder{req}
+	}
+	if s.forceBinary {
+		createStructured = nil
 	}
 
-	if !s.forceStructured {
-		b := s.transcoderFactories.BinaryMessageTranscoder(&binaryMessageBuilder{req})
-		if b != nil {
-			if err := m.Binary(b); err == nil {
-				return nil
-			} else if err != binding.ErrNotBinary {
-				return err
-			}
-		}
+	createBinary := func() binding.BinaryEncoder {
+		return &binaryMessageEncoder{req}
 	}
-
 	if s.forceStructured {
-		return m.Event(
-			s.transcoderFactories.EventMessageTranscoder(&eventToStructuredMessageBuilder{format: format.JSON, req: req}),
-		)
-	} else {
-		return m.Event(
-			s.transcoderFactories.EventMessageTranscoder(&eventToBinaryMessageBuilder{req}),
-		)
+		createBinary = nil
 	}
+
+	createEvent := func() binding.EventEncoder {
+		if s.forceStructured {
+			return &eventToStructuredMessageEncoder{format: format.JSON, req: req}
+		}
+		return &eventToBinaryMessageEncoder{req}
+	}
+
+	_, _, err := binding.Translate(m, createStructured, createBinary, createEvent, s.transformerFactories)
+	return err
 }
 
 func NewSender(client *http.Client, target *url.URL, options ...SenderOptionFunc) binding.Sender {
-	s := &Sender{Client: client, Target: target, transcoderFactories: make(binding.TranscoderFactories, 0)}
+	s := &Sender{Client: client, Target: target, transformerFactories: make(binding.TransformerFactories, 0)}
 	for _, o := range options {
 		o(s)
 	}

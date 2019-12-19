@@ -8,53 +8,54 @@ import (
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 )
 
+// Returns a TransformerFactory that converts the event context version to the specified one.
+func Version(version spec.Version) binding.TransformerFactory {
+	return versionTranscoderFactory{version: version}
+}
+
 type versionTranscoderFactory struct {
 	version spec.Version
 }
 
-func (v versionTranscoderFactory) StructuredMessageTranscoder(builder binding.StructuredMessageBuilder) binding.StructuredMessageBuilder {
-	return nil // Not supported!
+func (v versionTranscoderFactory) StructuredTransformer(binding.StructuredEncoder) binding.StructuredEncoder {
+	return nil // Not supported, must fallback to EventTransformer!
 }
 
-func (v versionTranscoderFactory) BinaryMessageTranscoder(builder binding.BinaryMessageBuilder) binding.BinaryMessageBuilder {
-	return binaryVersionTranscoder{version: v.version, delegate: builder}
+func (v versionTranscoderFactory) BinaryTransformer(encoder binding.BinaryEncoder) binding.BinaryEncoder {
+	return binaryVersionTransformer{version: v.version, delegate: encoder}
 }
 
-func (v versionTranscoderFactory) EventMessageTranscoder(builder binding.EventMessageBuilder) binding.EventMessageBuilder {
-	return eventVersionTranscoder{version: v.version, delegate: builder}
+func (v versionTranscoderFactory) EventTransformer(encoder binding.EventEncoder) binding.EventEncoder {
+	return eventVersionTransformer{version: v.version, delegate: encoder}
 }
 
-func Version(version spec.Version) binding.TranscoderFactory {
-	return versionTranscoderFactory{version: version}
-}
-
-type binaryVersionTranscoder struct {
-	delegate binding.BinaryMessageBuilder
+type binaryVersionTransformer struct {
+	delegate binding.BinaryEncoder
 	version  spec.Version
 }
 
-func (b binaryVersionTranscoder) Data(data io.Reader) error {
-	return b.delegate.Data(data)
+func (b binaryVersionTransformer) SetData(data io.Reader) error {
+	return b.delegate.SetData(data)
 }
 
-func (b binaryVersionTranscoder) Set(attribute spec.Attribute, value interface{}) error {
+func (b binaryVersionTransformer) SetAttribute(attribute spec.Attribute, value interface{}) error {
 	if attribute.Kind() == spec.SpecVersion {
-		return b.delegate.Set(b.version.AttributeFromKind(spec.SpecVersion), b.version.String())
+		return b.delegate.SetAttribute(b.version.AttributeFromKind(spec.SpecVersion), b.version.String())
 	}
 	attributeInDifferentVersion := b.version.AttributeFromKind(attribute.Kind())
-	return b.delegate.Set(attributeInDifferentVersion, value)
+	return b.delegate.SetAttribute(attributeInDifferentVersion, value)
 }
 
-func (b binaryVersionTranscoder) SetExtension(name string, value interface{}) error {
+func (b binaryVersionTransformer) SetExtension(name string, value interface{}) error {
 	return b.delegate.SetExtension(name, value)
 }
 
-type eventVersionTranscoder struct {
-	delegate binding.EventMessageBuilder
+type eventVersionTransformer struct {
+	delegate binding.EventEncoder
 	version  spec.Version
 }
 
-func (e eventVersionTranscoder) Encode(event ce.Event) error {
+func (e eventVersionTransformer) SetEvent(event ce.Event) error {
 	event.Context = e.version.Convert(event.Context)
-	return e.delegate.Encode(event)
+	return e.delegate.SetEvent(event)
 }

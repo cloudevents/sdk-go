@@ -24,20 +24,20 @@ func NewMockStructuredMessage(e cloudevents.Event) *MockStructuredMessage {
 	}
 }
 
-func (s *MockStructuredMessage) Event(b EventMessageBuilder) error {
+func (s *MockStructuredMessage) Event(b EventEncoder) error {
 	e := cloudevents.Event{}
 	err := s.Format.Unmarshal(s.Bytes, &e)
 	if err != nil {
 		return err
 	}
-	return b.Encode(e)
+	return b.SetEvent(e)
 }
 
-func (s *MockStructuredMessage) Structured(b StructuredMessageBuilder) error {
-	return b.Event(s.Format, bytes.NewReader(s.Bytes))
+func (s *MockStructuredMessage) Structured(b StructuredEncoder) error {
+	return b.SetStructuredEvent(s.Format, bytes.NewReader(s.Bytes))
 }
 
-func (s *MockStructuredMessage) Binary(BinaryMessageBuilder) error {
+func (s *MockStructuredMessage) Binary(BinaryEncoder) error {
 	return ErrNotBinary
 }
 

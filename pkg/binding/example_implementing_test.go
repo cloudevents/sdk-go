@@ -29,21 +29,21 @@ import (
 // requires the use of unknown types.
 type ExMessage json.RawMessage
 
-func (m ExMessage) Structured(b binding.StructuredMessageBuilder) error {
-	return b.Event(format.JSON, bytes.NewReader([]byte(m)))
+func (m ExMessage) Structured(b binding.StructuredEncoder) error {
+	return b.SetStructuredEvent(format.JSON, bytes.NewReader([]byte(m)))
 }
 
-func (m ExMessage) Binary(binding.BinaryMessageBuilder) error {
+func (m ExMessage) Binary(binding.BinaryEncoder) error {
 	return binding.ErrNotBinary
 }
 
-func (m ExMessage) Event(b binding.EventMessageBuilder) error {
+func (m ExMessage) Event(b binding.EventEncoder) error {
 	e := ce.Event{}
 	err := json.Unmarshal(m, &e)
 	if err != nil {
 		return err
 	}
-	return b.Encode(e)
+	return b.SetEvent(e)
 }
 
 func (m ExMessage) Finish(error) error { return nil }
@@ -52,37 +52,34 @@ var _ binding.Message = (*ExMessage)(nil)
 
 // ExSender sends by writing JSON encoded events to an io.Writer
 // ExSender supports transcoding
-// ExSender implements directly StructuredMessageBuilder & EventMessageBuilder
+// ExSender implements directly StructuredEncoder & EventEncoder
 type ExSender struct {
 	encoder      *json.Encoder
-	transcodings binding.TranscoderFactories
+	transformers binding.TransformerFactories
 }
 
-func NewExSender(w io.Writer, factories ...binding.TranscoderFactory) binding.Sender {
-	return &ExSender{encoder: json.NewEncoder(w), transcodings: factories}
+func NewExSender(w io.Writer, factories ...binding.TransformerFactory) binding.Sender {
+	return &ExSender{encoder: json.NewEncoder(w), transformers: factories}
 }
 
 func (s *ExSender) Send(ctx context.Context, m binding.Message) error {
-	// Wrap the transcoders in the structured builder
-	structuredBuilder := s.transcodings.StructuredMessageTranscoder(s)
+	// Translate tries the various encodings, starting with provided root encoder factories.
+	// If a sender doesn't support a specific encoding, a null root encoder factory could be provided.
+	_, _, err := binding.Translate(
+		m,
+		func() binding.StructuredEncoder {
+			return s
+		},
+		nil,
+		func() binding.EventEncoder {
+			return s
+		},
+		s.transformers)
 
-	// StructuredMessageTranscoder could return nil if one of transcoders doesn't support
-	// direct structured transcoding
-	if structuredBuilder != nil {
-		// Fast case: Let's try to build in structured mode
-		if err := m.Structured(structuredBuilder); err == nil {
-			return nil
-		} else if err != binding.ErrNotStructured {
-			return err
-		}
-	}
-
-	// Some other message encoding. Decode as generic Event and re-encode.
-	eventBuilder := s.transcodings.EventMessageTranscoder(s)
-	return m.Event(eventBuilder)
+	return err
 }
 
-func (s *ExSender) Event(f format.Format, event io.Reader) error {
+func (s *ExSender) SetStructuredEvent(f format.Format, event io.Reader) error {
 	if f == format.JSON {
 		b, err := ioutil.ReadAll(event)
 		if err != nil {
@@ -94,15 +91,15 @@ func (s *ExSender) Event(f format.Format, event io.Reader) error {
 	}
 }
 
-func (s *ExSender) Encode(event ce.Event) error {
+func (s *ExSender) SetEvent(event ce.Event) error {
 	return s.encoder.Encode(&event)
 }
 
 func (s *ExSender) Close(context.Context) error { return nil }
 
 var _ binding.Sender = (*ExSender)(nil)
-var _ binding.StructuredMessageBuilder = (*ExSender)(nil)
-var _ binding.EventMessageBuilder = (*ExSender)(nil)
+var _ binding.StructuredEncoder = (*ExSender)(nil)
+var _ binding.EventEncoder = (*ExSender)(nil)
 
 // ExReceiver receives by reading JSON encoded events from an io.Reader
 type ExReceiver struct{ decoder *json.Decoder }

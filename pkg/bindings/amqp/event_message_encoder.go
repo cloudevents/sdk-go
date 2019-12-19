@@ -9,13 +9,13 @@ import (
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 )
 
-type eventToBinaryMessageBuilder struct {
+type eventToBinaryMessageEncoder struct {
 	amqpMessage *amqp.Message
 }
 
-var _ binding.EventMessageBuilder = (*eventToBinaryMessageBuilder)(nil) // Test it conforms to the interface
+var _ binding.EventEncoder = (*eventToBinaryMessageEncoder)(nil) // Test it conforms to the interface
 
-func (b *eventToBinaryMessageBuilder) Encode(e ce.Event) error {
+func (b *eventToBinaryMessageEncoder) SetEvent(e ce.Event) error {
 	version, err := specs.Version(e.SpecVersion())
 	if err != nil {
 		return err
@@ -51,14 +51,14 @@ func (b *eventToBinaryMessageBuilder) Encode(e ce.Event) error {
 	return nil
 }
 
-type eventToStructuredMessageBuilder struct {
+type eventToStructuredMessageEncoder struct {
 	format      format.Format
 	amqpMessage *amqp.Message
 }
 
-var _ binding.EventMessageBuilder = (*eventToStructuredMessageBuilder)(nil) // Test it conforms to the interface
+var _ binding.EventEncoder = (*eventToStructuredMessageEncoder)(nil) // Test it conforms to the interface
 
-func (b *eventToStructuredMessageBuilder) Encode(event ce.Event) error {
+func (b *eventToStructuredMessageEncoder) SetEvent(event ce.Event) error {
 	data, err := b.format.Marshal(event)
 	if err != nil {
 		return err

@@ -31,10 +31,10 @@ import (
 //
 // The Structured and Binary methods provide optional optimized transfer of an event
 // to a Sender, they may not be implemented by all Message instances. A Sender should
-// try each method of interest and fall back to Event() if none are supported.
+// try each method of interest and fall back to Event(EventEncoder) if none are supported.
 //
 type Message interface {
-	// Structured transfers a structured-mode event to a StructuredMessageBuilder.
+	// Structured transfers a structured-mode event to a StructuredEncoder.
 	// Returns ErrNotStructured if message is not in structured mode.
 	//
 	// Returns a different err if something wrong happened while trying to read the structured event
@@ -42,9 +42,9 @@ type Message interface {
 	//
 	// This allows Senders to avoid re-encoding messages that are
 	// already in suitable structured form.
-	Structured(StructuredMessageBuilder) error
+	Structured(StructuredEncoder) error
 
-	// Binary transfers a binary-mode event to an BinaryMessageBuilder.
+	// Binary transfers a binary-mode event to an BinaryEncoder.
 	// Returns ErrNotBinary if message is not in binary mode.
 	//
 	// Returns a different err if something wrong happened while trying to read the binary event
@@ -52,9 +52,9 @@ type Message interface {
 	//
 	// Allows Senders to forward a binary message without allocating an
 	// intermediate Event.
-	Binary(BinaryMessageBuilder) error
+	Binary(BinaryEncoder) error
 
-	// Event transfers an event to an EventMessageBuilder.
+	// Event transfers an event to an EventEncoder.
 	//
 	// A message implementation should always provide a conversion to Event data structure.
 	// The implementor can use binding.ToEvent for a straightforward implementation, starting
@@ -65,7 +65,7 @@ type Message interface {
 	//
 	// Useful when the Sender can't implement a direct binary/structured to binary/structured conversion,
 	// So the intermediate Event representation is required
-	Event(EventMessageBuilder) error
+	Event(EventEncoder) error
 
 	// Finish *must* be called when message from a Receiver can be forgotten by
 	// the receiver. Sender.Send() calls Finish() when the message is sent.  A QoS
@@ -84,23 +84,29 @@ var ErrNotStructured = errors.New("message is not in structured mode")
 // ErrNotBinary returned by Message.Binary for non-binary messages.
 var ErrNotBinary = errors.New("message is not in binary mode")
 
-// StructuredMessageBuilder receives values to build a structured message representation.
-type StructuredMessageBuilder interface {
+// StructuredEncoder should generate a new representation of the event starting from a structured message.
+//
+// Protocols that supports structured encoding should implement this interface to implement direct
+// structured -> structured transfer.
+type StructuredEncoder interface {
 	// Event receives an io.Reader for the whole event.
-	Event(format format.Format, event io.Reader) error
+	SetStructuredEvent(format format.Format, event io.Reader) error
 }
 
-// BinaryMessageBuilder receives values to build a binary message representation.
-type BinaryMessageBuilder interface {
-	// Data receives an io.Reader for the data attribute.
+// BinaryEncoder should generate a new representation of the event starting from a binary message.
+//
+// Protocols that supports binary encoding should implement this interface to implement direct
+// binary -> binary transfer.
+type BinaryEncoder interface {
+	// SetData receives an io.Reader for the data attribute.
 	// io.Reader could be empty, meaning that message payload is empty
-	Data(data io.Reader) error
+	SetData(data io.Reader) error
 
 	// Set a standard attribute.
 	//
 	// The value can either be the correct golang type for the attribute, or a canonical
 	// string encoding. See package cloudevents/types
-	Set(attribute spec.Attribute, value interface{}) error
+	SetAttribute(attribute spec.Attribute, value interface{}) error
 
 	// Set an extension attribute.
 	//
@@ -109,8 +115,12 @@ type BinaryMessageBuilder interface {
 	SetExtension(name string, value interface{}) error
 }
 
-type EventMessageBuilder interface {
-	Encode(ce.Event) error
+// EventEncoder should generate a new representation of the event starting from an event message.
+//
+// Every protocol must implement this interface. If a protocol supports both structured and binary encoding,
+// two EventEncoder implementations could be provided
+type EventEncoder interface {
+	SetEvent(ce.Event) error
 }
 
 // ExactlyOnceMessage is implemented by received Messages

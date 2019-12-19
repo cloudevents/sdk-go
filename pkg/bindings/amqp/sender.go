@@ -13,7 +13,7 @@ import (
 type Sender struct {
 	AMQP *amqp.Sender
 
-	transcoderFactories binding.TranscoderFactories
+	transformerFactories binding.TransformerFactories
 
 	forceBinary     bool
 	forceStructured bool
@@ -40,43 +40,35 @@ func (s *Sender) Send(ctx context.Context, in binding.Message) error {
 // 2. Translate from binary
 // 3. Translate to Event and then re-encode back to amqp.Message
 func (s *Sender) fillAMQPRequest(amqpMessage *amqp.Message, m binding.Message) error {
-	if !s.forceBinary {
-		b := s.transcoderFactories.StructuredMessageTranscoder(&structuredMessageBuilder{amqpMessage})
-		if b != nil {
-			if err := m.Structured(b); err == nil {
-				return nil
-			} else if err != binding.ErrNotStructured {
-				return err
-			}
-		}
+	createStructured := func() binding.StructuredEncoder {
+		return &structuredMessageEncoder{amqpMessage}
+	}
+	if s.forceBinary {
+		createStructured = nil
 	}
 
-	if !s.forceStructured {
-		b := s.transcoderFactories.BinaryMessageTranscoder(newBinaryMessageBuilder(amqpMessage))
-		if b != nil {
-			if err := m.Binary(b); err == nil {
-				return nil
-			} else if err != binding.ErrNotBinary {
-				return err
-			}
-		}
+	createBinary := func() binding.BinaryEncoder {
+		return newBinaryMessageEncoder(amqpMessage)
 	}
-
 	if s.forceStructured {
-		return m.Event(
-			s.transcoderFactories.EventMessageTranscoder(&eventToStructuredMessageBuilder{format: format.JSON, amqpMessage: amqpMessage}),
-		)
-	} else {
-		return m.Event(
-			s.transcoderFactories.EventMessageTranscoder(&eventToBinaryMessageBuilder{amqpMessage}),
-		)
+		createBinary = nil
 	}
+
+	createEvent := func() binding.EventEncoder {
+		if s.forceStructured {
+			return &eventToStructuredMessageEncoder{format: format.JSON, amqpMessage: amqpMessage}
+		}
+		return &eventToBinaryMessageEncoder{amqpMessage}
+	}
+
+	_, _, err := binding.Translate(m, createStructured, createBinary, createEvent, s.transformerFactories)
+	return err
 }
 
 func (s *Sender) Close(ctx context.Context) error { return s.AMQP.Close(ctx) }
 
 func NewSender(amqpClient *amqp.Sender, options ...SenderOptionFunc) binding.Sender {
-	s := &Sender{AMQP: amqpClient, transcoderFactories: make(binding.TranscoderFactories, 0)}
+	s := &Sender{AMQP: amqpClient, transformerFactories: make(binding.TransformerFactories, 0)}
 	for _, o := range options {
 		o(s)
 	}

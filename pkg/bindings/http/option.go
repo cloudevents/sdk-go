@@ -16,8 +16,8 @@ func ForceStructured() SenderOptionFunc {
 	}
 }
 
-func WithTranscoder(factory binding.TranscoderFactory) SenderOptionFunc {
+func WithTranscoder(factory binding.TransformerFactory) SenderOptionFunc {
 	return func(sender *Sender) {
-		sender.transcoderFactories = append(sender.transcoderFactories, factory)
+		sender.transformerFactories = append(sender.transformerFactories, factory)
 	}
 }

@@ -12,18 +12,18 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 )
 
-type binaryMessageBuilder struct {
+type binaryMessageEncoder struct {
 	amqpMessage *amqp.Message
 }
 
-var _ binding.BinaryMessageBuilder = (*binaryMessageBuilder)(nil) // Test it conforms to the interface
+var _ binding.BinaryEncoder = (*binaryMessageEncoder)(nil) // Test it conforms to the interface
 
-func newBinaryMessageBuilder(amqpMessage *amqp.Message) *binaryMessageBuilder {
+func newBinaryMessageEncoder(amqpMessage *amqp.Message) *binaryMessageEncoder {
 	amqpMessage.ApplicationProperties = make(map[string]interface{})
-	return &binaryMessageBuilder{amqpMessage: amqpMessage}
+	return &binaryMessageEncoder{amqpMessage: amqpMessage}
 }
 
-func (b *binaryMessageBuilder) Data(reader io.Reader) error {
+func (b *binaryMessageEncoder) SetData(reader io.Reader) error {
 	data, err := ioutil.ReadAll(reader)
 	if err != nil {
 		return err
@@ -32,7 +32,7 @@ func (b *binaryMessageBuilder) Data(reader io.Reader) error {
 	return nil
 }
 
-func (b *binaryMessageBuilder) Set(attribute spec.Attribute, value interface{}) error {
+func (b *binaryMessageEncoder) SetAttribute(attribute spec.Attribute, value interface{}) error {
 	if attribute.Kind() == spec.DataContentType {
 		s, err := types.Format(value)
 		if err != nil {
@@ -49,7 +49,7 @@ func (b *binaryMessageBuilder) Set(attribute spec.Attribute, value interface{}) 
 	return nil
 }
 
-func (b *binaryMessageBuilder) SetExtension(name string, value interface{}) error {
+func (b *binaryMessageEncoder) SetExtension(name string, value interface{}) error {
 	v, err := types.Validate(value)
 	if err != nil {
 		return err

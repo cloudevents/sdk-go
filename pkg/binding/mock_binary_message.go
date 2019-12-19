@@ -46,21 +46,21 @@ func NewMockBinaryMessage(e cloudevents.Event) *MockBinaryMessage {
 	return &m
 }
 
-func (bm *MockBinaryMessage) Event(b EventMessageBuilder) error {
+func (bm *MockBinaryMessage) Event(b EventEncoder) error {
 	e, _, _, err := ToEvent(bm)
 	if err != nil {
 		return err
 	}
-	return b.Encode(e)
+	return b.SetEvent(e)
 }
 
-func (bm *MockBinaryMessage) Structured(b StructuredMessageBuilder) error {
+func (bm *MockBinaryMessage) Structured(b StructuredEncoder) error {
 	return ErrNotStructured
 }
 
-func (bm *MockBinaryMessage) Binary(b BinaryMessageBuilder) error {
+func (bm *MockBinaryMessage) Binary(b BinaryEncoder) error {
 	for k, v := range bm.Metadata {
-		err := b.Set(k, v)
+		err := b.SetAttribute(k, v)
 		if err != nil {
 			return err
 		}
@@ -74,7 +74,7 @@ func (bm *MockBinaryMessage) Binary(b BinaryMessageBuilder) error {
 	if len(bm.Body) == 0 {
 		return nil
 	}
-	return b.Data(bytes.NewReader(bm.Body))
+	return b.SetData(bytes.NewReader(bm.Body))
 }
 
 func (bm *MockBinaryMessage) Finish(error) error { return nil }

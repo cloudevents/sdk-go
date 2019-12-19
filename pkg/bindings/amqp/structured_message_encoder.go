@@ -10,13 +10,13 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
 )
 
-type structuredMessageBuilder struct {
+type structuredMessageEncoder struct {
 	amqpMessage *amqp.Message
 }
 
-var _ binding.StructuredMessageBuilder = (*structuredMessageBuilder)(nil) // Test it conforms to the interface
+var _ binding.StructuredEncoder = (*structuredMessageEncoder)(nil) // Test it conforms to the interface
 
-func (b *structuredMessageBuilder) Event(format format.Format, event io.Reader) error {
+func (b *structuredMessageEncoder) SetStructuredEvent(format format.Format, event io.Reader) error {
 	val, err := ioutil.ReadAll(event)
 	if err != nil {
 		return err

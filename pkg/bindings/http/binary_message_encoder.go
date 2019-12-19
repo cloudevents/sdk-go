@@ -10,18 +10,18 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 )
 
-type binaryMessageBuilder struct {
+type binaryMessageEncoder struct {
 	req *http.Request
 }
 
-var _ binding.BinaryMessageBuilder = (*binaryMessageBuilder)(nil) // Test it conforms to the interface
+var _ binding.BinaryEncoder = (*binaryMessageEncoder)(nil) // Test it conforms to the interface
 
-func (b *binaryMessageBuilder) Data(reader io.Reader) error {
+func (b *binaryMessageEncoder) SetData(reader io.Reader) error {
 	b.req.Body = ioutil.NopCloser(reader)
 	return nil
 }
 
-func (b *binaryMessageBuilder) Set(attribute spec.Attribute, value interface{}) error {
+func (b *binaryMessageEncoder) SetAttribute(attribute spec.Attribute, value interface{}) error {
 	// Http headers, everything is a string!
 	s, err := types.Format(value)
 	if err != nil {
@@ -36,7 +36,7 @@ func (b *binaryMessageBuilder) Set(attribute spec.Attribute, value interface{}) 
 	return nil
 }
 
-func (b *binaryMessageBuilder) SetExtension(name string, value interface{}) error {
+func (b *binaryMessageEncoder) SetExtension(name string, value interface{}) error {
 	// Http headers, everything is a string!
 	s, err := types.Format(value)
 	if err != nil {

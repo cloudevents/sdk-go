@@ -7,9 +7,9 @@ import ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 //     s.Send(ctx, binding.EventMessage(e))
 type EventMessage ce.Event
 
-func (m EventMessage) Event(builder EventMessageBuilder) error   { return builder.Encode(ce.Event(m)) }
-func (m EventMessage) Structured(StructuredMessageBuilder) error { return ErrNotStructured }
-func (m EventMessage) Binary(BinaryMessageBuilder) error         { return ErrNotBinary }
-func (EventMessage) Finish(error) error                          { return nil }
+func (m EventMessage) Event(builder EventEncoder) error   { return builder.SetEvent(ce.Event(m)) }
+func (m EventMessage) Structured(StructuredEncoder) error { return ErrNotStructured }
+func (m EventMessage) Binary(BinaryEncoder) error         { return ErrNotBinary }
+func (EventMessage) Finish(error) error                   { return nil }
 
 var _ Message = (*EventMessage)(nil) // Test it conforms to the interface

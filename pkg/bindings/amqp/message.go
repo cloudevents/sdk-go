@@ -27,14 +27,14 @@ type Message struct{ AMQP *amqp.Message }
 // Check if amqp.Message implements binding.Message
 var _ binding.Message = (*Message)(nil)
 
-func (m *Message) Structured(builder binding.StructuredMessageBuilder) error {
+func (m *Message) Structured(encoder binding.StructuredEncoder) error {
 	if m.AMQP.Properties != nil && format.IsFormat(m.AMQP.Properties.ContentType) {
-		return builder.Event(format.Lookup(m.AMQP.Properties.ContentType), bytes.NewReader(m.AMQP.GetData()))
+		return encoder.SetStructuredEvent(format.Lookup(m.AMQP.Properties.ContentType), bytes.NewReader(m.AMQP.GetData()))
 	}
 	return binding.ErrNotStructured
 }
 
-func (m *Message) Binary(builder binding.BinaryMessageBuilder) error {
+func (m *Message) Binary(encoder binding.BinaryEncoder) error {
 	if len(m.AMQP.ApplicationProperties) == 0 {
 		return errors.New("AMQP CloudEvents message has no application properties")
 	}
@@ -46,7 +46,7 @@ func (m *Message) Binary(builder binding.BinaryMessageBuilder) error {
 		return err
 	}
 	if m.AMQP.Properties != nil && m.AMQP.Properties.ContentType != "" {
-		err = builder.Set(version.AttributeFromKind(spec.DataContentType), m.AMQP.Properties.ContentType)
+		err = encoder.SetAttribute(version.AttributeFromKind(spec.DataContentType), m.AMQP.Properties.ContentType)
 		if err != nil {
 			return err
 		}
@@ -56,9 +56,9 @@ func (m *Message) Binary(builder binding.BinaryMessageBuilder) error {
 		if strings.HasPrefix(k, prefix) {
 			attr := version.Attribute(k)
 			if attr != nil {
-				err = builder.Set(attr, v)
+				err = encoder.SetAttribute(attr, v)
 			} else {
-				err = builder.SetExtension(strings.ToLower(strings.TrimPrefix(k, prefix)), v)
+				err = encoder.SetExtension(strings.ToLower(strings.TrimPrefix(k, prefix)), v)
 			}
 		}
 		if err != nil {
@@ -68,17 +68,17 @@ func (m *Message) Binary(builder binding.BinaryMessageBuilder) error {
 
 	data := m.AMQP.GetData()
 	if len(data) != 0 { // Some data
-		return builder.Data(bytes.NewReader(data))
+		return encoder.SetData(bytes.NewReader(data))
 	}
 	return nil
 }
 
-func (m *Message) Event(builder binding.EventMessageBuilder) error {
+func (m *Message) Event(encoder binding.EventEncoder) error {
 	e, _, _, err := binding.ToEvent(m)
 	if err != nil {
 		return err
 	}
-	return builder.Encode(e)
+	return encoder.SetEvent(e)
 }
 
 func (m *Message) Finish(err error) error {
