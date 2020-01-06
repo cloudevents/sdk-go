@@ -1,14 +1,13 @@
 package amqp
 
 import (
-	"net/url"
+	"pack.ag/amqp"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
-	"pack.ag/amqp"
 )
 
 // NewStruct returns a new structured amqp.Message
@@ -53,8 +52,14 @@ func NewBinary(e ce.Event) (*amqp.Message, error) {
 			return m, err
 		}
 		switch t := v.(type) {
-		case *url.URL: // Use string form of URLs.
+		case types.URI: // Use string form of URLs.
 			v = t.String()
+		case types.URIRef:
+			v = t.String()
+		case types.URLRef:
+			v = t.String()
+		case types.Timestamp:
+			v = t.Time
 		case int32: // Use AMQP long for Integer as per CE spec.
 			v = int64(t)
 		}

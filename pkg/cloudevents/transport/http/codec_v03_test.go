@@ -2,7 +2,6 @@ package http_test
 
 import (
 	"context"
-	"encoding/json"
 	"net/url"
 	"testing"
 	"time"
@@ -513,7 +512,7 @@ func TestCodecV03_Decode(t *testing.T) {
 					Source:          *source,
 					Subject:         &subject,
 					Extensions: map[string]interface{}{
-						"test": json.RawMessage(`"extended"`),
+						"test": "extended",
 					},
 				}.AsV03(),
 				Data: toBytes(map[string]interface{}{
@@ -554,7 +553,7 @@ func TestCodecV03_Decode(t *testing.T) {
 					Source:              *source,
 					Subject:             &subject,
 					Extensions: map[string]interface{}{
-						"test": json.RawMessage(`"extended"`),
+						"test": "extended",
 					},
 				}.AsV03(),
 				Data:        []byte(`"eyJoZWxsbyI6IndvcmxkIn0="`), // TODO: structured comes in quoted. Unquote?

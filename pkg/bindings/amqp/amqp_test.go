@@ -70,6 +70,7 @@ func exurl(e ce.Event) ce.Event {
 	if s, _ := types.Format(e.Extensions()["exurl"]); s != "" {
 		e.SetExtension("exurl", s)
 	}
+
 	return e
 }
 
