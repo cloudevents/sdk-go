@@ -395,14 +395,12 @@ func (t *Transport) longPollStart(ctx context.Context) error {
 				logger.Errorw("long poll request returned error", err)
 				uErr := err.(*url.Error)
 				if uErr.Temporary() || uErr.Timeout() {
-					time.Sleep(time.Second * 2)
 					continue
 				}
 				// TODO: if the transport is throwing errors, we might want to try again. Maybe with a back-off sleep.
 				// But this error also might be that there was a done on the context.
 			} else if resp.StatusCode == http.StatusNotModified {
 				// Keep polling.
-				time.Sleep(time.Second * 2)
 				continue
 			} else if resp.StatusCode == http.StatusOK {
 				body, _ := ioutil.ReadAll(resp.Body)
@@ -416,7 +414,6 @@ func (t *Transport) longPollStart(ctx context.Context) error {
 				msgCh <- msg
 			} else {
 				// TODO: not sure what to do with upstream errors yet.
-				time.Sleep(time.Second * 2)
 				logger.Errorw("unhandled long poll response", zap.Any("resp", resp))
 			}
 		}
