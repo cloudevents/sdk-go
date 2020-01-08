@@ -163,6 +163,9 @@ func TestPublishReceiveRoundtrip(t *testing.T) {
 
 	ctx2, cancel := context.WithCancel(ctx)
 	mux := &sync.Mutex{}
+	// Pubsub will drop all messages if there is no subscription.
+	// Call Receive first so that subscription can be created before
+	// we publish any message.
 	go psconn.Receive(ctx2, func(_ context.Context, msg *pubsub.Message) {
 		mux.Lock()
 		defer mux.Unlock()
@@ -170,6 +173,7 @@ func TestPublishReceiveRoundtrip(t *testing.T) {
 		msg.Ack()
 		wg.Done()
 	})
+	// Wait a little bit for the subscription creation to complete.
 	time.Sleep(time.Second)
 
 	for i := 0; i < 10; i++ {
