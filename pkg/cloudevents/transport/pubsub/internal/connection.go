@@ -36,6 +36,7 @@ type Connection struct {
 	subWasCreated  bool
 	subOnce        sync.Once
 
+	// ReceiveSettings is used to configure Pubsub pull subscription.
 	ReceiveSettings *pubsub.ReceiveSettings
 
 	// AckDeadline is Pub/Sub AckDeadline.
@@ -56,6 +57,8 @@ var DefaultReceiveSettings = pubsub.ReceiveSettings{
 	// https://godoc.org/cloud.google.com/go/pubsub#Client.Subscription
 
 	// Override the default number of goroutines.
+	// This is a magical number now. This has shown throughput improvements empirically
+	// by at least 10x (compared to the default value).
 	NumGoroutines: 1000,
 	Synchronous:   false,
 }
