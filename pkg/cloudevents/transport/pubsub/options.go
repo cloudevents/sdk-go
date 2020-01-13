@@ -197,3 +197,11 @@ func AllowCreateSubscription(allow bool) Option {
 		return nil
 	}
 }
+
+// WithReceiveSettings sets the Pubsub ReceiveSettings for pull subscriptions.
+func WithReceiveSettings(rs *pubsub.ReceiveSettings) Option {
+	return func(t *Transport) error {
+		t.ReceiveSettings = rs
+		return nil
+	}
+}
