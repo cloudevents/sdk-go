@@ -1,9 +1,6 @@
 package amqp
 
 import (
-	"io"
-	"io/ioutil"
-
 	"pack.ag/amqp"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
@@ -16,12 +13,8 @@ type structuredMessageEncoder struct {
 
 var _ binding.StructuredEncoder = (*structuredMessageEncoder)(nil) // Test it conforms to the interface
 
-func (b *structuredMessageEncoder) SetStructuredEvent(format format.Format, event io.Reader) error {
-	val, err := ioutil.ReadAll(event)
-	if err != nil {
-		return err
-	}
-	b.amqpMessage.Data = [][]byte{val}
+func (b *structuredMessageEncoder) SetStructuredEvent(format format.Format, event binding.MessagePayloadReader) error {
+	b.amqpMessage.Data = [][]byte{event.Bytes()}
 	b.amqpMessage.Properties = &amqp.MessageProperties{ContentType: format.MediaType()}
 	return nil
 }

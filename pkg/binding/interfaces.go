@@ -84,13 +84,26 @@ var ErrNotStructured = errors.New("message is not in structured mode")
 // ErrNotBinary returned by Message.Binary for non-binary messages.
 var ErrNotBinary = errors.New("message is not in binary mode")
 
+// MessagePayload allows to read a message payload or as a byte array or as a reader
+// Message implementers must re
+type MessagePayloadReader interface {
+	// Returns true if the message payload is empty
+	IsEmpty() bool
+
+	// Returns the payload as a byte array, nil if IsEmpty() == true
+	Bytes() []byte
+
+	// Returns the payload as an io.Reader, nil if IsEmpty() == true
+	Reader() io.Reader
+}
+
 // StructuredEncoder should generate a new representation of the event starting from a structured message.
 //
 // Protocols that supports structured encoding should implement this interface to implement direct
 // structured -> structured transfer.
 type StructuredEncoder interface {
 	// Event receives an io.Reader for the whole event.
-	SetStructuredEvent(format format.Format, event io.Reader) error
+	SetStructuredEvent(format format.Format, event MessagePayloadReader) error
 }
 
 // BinaryEncoder should generate a new representation of the event starting from a binary message.
@@ -100,7 +113,7 @@ type StructuredEncoder interface {
 type BinaryEncoder interface {
 	// SetData receives an io.Reader for the data attribute.
 	// io.Reader could be empty, meaning that message payload is empty
-	SetData(data io.Reader) error
+	SetData(data MessagePayloadReader) error
 
 	// Set a standard attribute.
 	//

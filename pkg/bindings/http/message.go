@@ -1,9 +1,12 @@
 package http
 
 import (
+	"bytes"
 	"io"
 	nethttp "net/http"
 	"strings"
+
+	"github.com/valyala/bytebufferpool"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
@@ -16,41 +19,51 @@ var specs = spec.WithPrefix(prefix)
 
 const ContentType = "Content-Type"
 
-// Message holds the Header and Body of a HTTP Request or Response.
+// Message holds the Header and Body of a HTTP Request.
 type Message struct {
-	Header     nethttp.Header
-	BodyReader io.ReadCloser
-	OnFinish   func(error) error
+	header   nethttp.Header
+	body     *bytebufferpool.ByteBuffer
+	pool     *bytebufferpool.Pool
+	onFinish func(error) error
 }
 
-// Check if http.Message implements binding.Message
+// Check if http.Message implements binding.Message & binding.MessagePayloadReader
 var _ binding.Message = (*Message)(nil)
+var _ binding.MessagePayloadReader = (*Message)(nil)
 
 // NewMessage returns a Message with header and data from body.
 // Reads and closes body.
-func NewMessage(header nethttp.Header, body io.ReadCloser) (*Message, error) {
-	m := Message{Header: header}
+func NewMessage(pool *bytebufferpool.Pool, header nethttp.Header, body io.ReadCloser) (*Message, error) {
+	m := Message{header: header, pool: pool}
 	if body != nil {
-		m.BodyReader = body
+		m.body = pool.Get()
+		_, err := m.body.ReadFrom(body)
+		if err != nil {
+			return nil, err
+		}
+		err = body.Close()
+		if err != nil {
+			return nil, err
+		}
 	}
 	return &m, nil
 }
 
 func (m *Message) Structured(encoder binding.StructuredEncoder) error {
-	if ft := format.Lookup(m.Header.Get(ContentType)); ft == nil {
+	if ft := format.Lookup(m.header.Get(ContentType)); ft == nil {
 		return binding.ErrNotStructured
 	} else {
-		return encoder.SetStructuredEvent(ft, m.BodyReader)
+		return encoder.SetStructuredEvent(ft, m)
 	}
 }
 
 func (m *Message) Binary(encoder binding.BinaryEncoder) error {
-	version, err := specs.FindVersion(m.Header.Get)
+	version, err := specs.FindVersion(m.header.Get)
 	if err != nil {
 		return binding.ErrNotBinary
 	}
 
-	for k, v := range m.Header {
+	for k, v := range m.header {
 		if strings.HasPrefix(k, prefix) {
 			attr := version.Attribute(k)
 			if attr != nil {
@@ -66,13 +79,9 @@ func (m *Message) Binary(encoder binding.BinaryEncoder) error {
 		}
 	}
 
-	if m.BodyReader != nil {
-		err = encoder.SetData(m.BodyReader)
-		if err != nil {
-			return err
-		}
+	if !m.IsEmpty() {
+		return encoder.SetData(m)
 	}
-
 	return nil
 }
 
@@ -84,12 +93,24 @@ func (m *Message) Event(encoder binding.EventEncoder) error {
 	return encoder.SetEvent(e)
 }
 
+func (m *Message) IsEmpty() bool {
+	return m.body == nil
+}
+
+func (m *Message) Bytes() []byte {
+	return m.body.Bytes()
+}
+
+func (m *Message) Reader() io.Reader {
+	return bytes.NewReader(m.body.Bytes())
+}
+
 func (m *Message) Finish(err error) error {
-	if m.BodyReader != nil {
-		_ = m.BodyReader.Close()
+	if m.body != nil {
+		m.pool.Put(m.body)
 	}
-	if m.OnFinish != nil {
-		return m.OnFinish(err)
+	if m.onFinish != nil {
+		return m.onFinish(err)
 	}
 	return nil
 }

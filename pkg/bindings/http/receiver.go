@@ -7,6 +7,8 @@ import (
 	"net/http"
 	nethttp "net/http"
 
+	"github.com/valyala/bytebufferpool"
+
 	"github.com/cloudevents/sdk-go/pkg/binding"
 )
 
@@ -18,18 +20,19 @@ type msgErr struct {
 // Receiver for CloudEvents as HTTP requests.
 // Implements http.Handler, To receive messages, associate it with a http.Server.
 type Receiver struct {
-	incoming chan msgErr
+	incoming   chan msgErr
+	memoryPool *bytebufferpool.Pool
 }
 
 // ServeHTTP implements http.Handler.
 // Blocks until Message.Finish is called.
 func (r *Receiver) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	m, err := NewMessage(req.Header, req.Body)
+	m, err := NewMessage(r.memoryPool, req.Header, req.Body)
 	if err != nil {
 		r.incoming <- msgErr{nil, err}
 	}
 	done := make(chan error)
-	m.OnFinish = func(err error) error { done <- err; return nil }
+	m.onFinish = func(err error) error { done <- err; return nil }
 	r.incoming <- msgErr{m, err} // Send to Receive()
 	if err = <-done; err != nil {
 		nethttp.Error(rw, fmt.Sprintf("cannot forward CloudEvent: %v", err), http.StatusInternalServerError)
@@ -38,7 +41,8 @@ func (r *Receiver) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 // NewReceiver creates a receiver
 func NewReceiver() *Receiver {
-	return &Receiver{incoming: make(chan msgErr)}
+	var pool bytebufferpool.Pool
+	return &Receiver{incoming: make(chan msgErr), memoryPool: &pool}
 }
 
 // Receive the next incoming HTTP request as a CloudEvent.

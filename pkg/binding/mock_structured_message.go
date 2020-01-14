@@ -2,6 +2,7 @@ package binding
 
 import (
 	"bytes"
+	"io"
 
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
@@ -9,8 +10,8 @@ import (
 
 // MockStructuredMessage implements a structured-mode message as a simple struct.
 type MockStructuredMessage struct {
-	Format format.Format
-	Bytes  []byte
+	format format.Format
+	body   []byte
 }
 
 func NewMockStructuredMessage(e cloudevents.Event) *MockStructuredMessage {
@@ -19,14 +20,14 @@ func NewMockStructuredMessage(e cloudevents.Event) *MockStructuredMessage {
 		panic(err)
 	}
 	return &MockStructuredMessage{
-		Bytes:  testEventSerialized,
-		Format: format.JSON,
+		body:   testEventSerialized,
+		format: format.JSON,
 	}
 }
 
 func (s *MockStructuredMessage) Event(b EventEncoder) error {
 	e := cloudevents.Event{}
-	err := s.Format.Unmarshal(s.Bytes, &e)
+	err := s.format.Unmarshal(s.body, &e)
 	if err != nil {
 		return err
 	}
@@ -34,11 +35,23 @@ func (s *MockStructuredMessage) Event(b EventEncoder) error {
 }
 
 func (s *MockStructuredMessage) Structured(b StructuredEncoder) error {
-	return b.SetStructuredEvent(s.Format, bytes.NewReader(s.Bytes))
+	return b.SetStructuredEvent(s.format, s)
 }
 
 func (s *MockStructuredMessage) Binary(BinaryEncoder) error {
 	return ErrNotBinary
+}
+
+func (s *MockStructuredMessage) IsEmpty() bool {
+	return s.body == nil
+}
+
+func (s *MockStructuredMessage) Bytes() []byte {
+	return s.body
+}
+
+func (s *MockStructuredMessage) Reader() io.Reader {
+	return bytes.NewReader(s.body)
 }
 
 func (s *MockStructuredMessage) Finish(error) error { return nil }

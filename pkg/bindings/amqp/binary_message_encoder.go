@@ -1,8 +1,6 @@
 package amqp
 
 import (
-	"io"
-	"io/ioutil"
 	"net/url"
 
 	"pack.ag/amqp"
@@ -23,12 +21,11 @@ func newBinaryMessageEncoder(amqpMessage *amqp.Message) *binaryMessageEncoder {
 	return &binaryMessageEncoder{amqpMessage: amqpMessage}
 }
 
-func (b *binaryMessageEncoder) SetData(reader io.Reader) error {
-	data, err := ioutil.ReadAll(reader)
-	if err != nil {
-		return err
+func (b *binaryMessageEncoder) SetData(reader binding.MessagePayloadReader) error {
+	if reader.IsEmpty() {
+		return nil
 	}
-	b.amqpMessage.Data = [][]byte{data}
+	b.amqpMessage.Data = [][]byte{reader.Bytes()}
 	return nil
 }
 

@@ -1,9 +1,6 @@
 package binding
 
 import (
-	"io"
-	"io/ioutil"
-
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
@@ -55,21 +52,12 @@ func (b *messageToEventBuilder) SetEvent(e ce.Event) error {
 	return nil
 }
 
-func (b *messageToEventBuilder) SetStructuredEvent(format format.Format, event io.Reader) error {
-	//TODO(slinkydeveloper) can we do pooling for this allocation?
-	val, err := ioutil.ReadAll(event)
-	if err != nil {
-		return err
-	}
-	return format.Unmarshal(val, b.event)
+func (b *messageToEventBuilder) SetStructuredEvent(format format.Format, event MessagePayloadReader) error {
+	return format.Unmarshal(event.Bytes(), b.event)
 }
 
-func (b *messageToEventBuilder) SetData(data io.Reader) error {
-	//TODO(slinkydeveloper) can we do pooling for this allocation?
-	val, err := ioutil.ReadAll(data)
-	if err != nil {
-		return err
-	}
+func (b *messageToEventBuilder) SetData(data MessagePayloadReader) error {
+	val := data.Bytes()
 	if len(val) != 0 {
 		return b.event.SetData(val)
 	}

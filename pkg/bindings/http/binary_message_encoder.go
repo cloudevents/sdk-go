@@ -1,7 +1,6 @@
 package http
 
 import (
-	"io"
 	"io/ioutil"
 	"net/http"
 
@@ -16,8 +15,10 @@ type binaryMessageEncoder struct {
 
 var _ binding.BinaryEncoder = (*binaryMessageEncoder)(nil) // Test it conforms to the interface
 
-func (b *binaryMessageEncoder) SetData(reader io.Reader) error {
-	b.req.Body = ioutil.NopCloser(reader)
+func (b *binaryMessageEncoder) SetData(payload binding.MessagePayloadReader) error {
+	if !payload.IsEmpty() {
+		b.req.Body = ioutil.NopCloser(payload.Reader())
+	}
 	return nil
 }
 

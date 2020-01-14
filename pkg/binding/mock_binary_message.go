@@ -2,6 +2,7 @@ package binding
 
 import (
 	"bytes"
+	"io"
 
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
@@ -74,7 +75,19 @@ func (bm *MockBinaryMessage) Binary(b BinaryEncoder) error {
 	if len(bm.Body) == 0 {
 		return nil
 	}
-	return b.SetData(bytes.NewReader(bm.Body))
+	return b.SetData(bm)
+}
+
+func (bm *MockBinaryMessage) IsEmpty() bool {
+	return bm.Body == nil
+}
+
+func (bm *MockBinaryMessage) Bytes() []byte {
+	return bm.Body
+}
+
+func (bm *MockBinaryMessage) Reader() io.Reader {
+	return bytes.NewReader(bm.Body)
 }
 
 func (bm *MockBinaryMessage) Finish(error) error { return nil }

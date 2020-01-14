@@ -3,6 +3,7 @@ package amqp
 import (
 	"bytes"
 	"errors"
+	"io"
 	"reflect"
 	"strings"
 
@@ -24,12 +25,13 @@ var (
 // Message implements binding.Message by wrapping an *amqp.Message.
 type Message struct{ AMQP *amqp.Message }
 
-// Check if amqp.Message implements binding.Message
+// Check if amqp.Message implements binding.Message & binding.MessagePayloadReader
 var _ binding.Message = (*Message)(nil)
+var _ binding.MessagePayloadReader = (*Message)(nil)
 
 func (m *Message) Structured(encoder binding.StructuredEncoder) error {
 	if m.AMQP.Properties != nil && format.IsFormat(m.AMQP.Properties.ContentType) {
-		return encoder.SetStructuredEvent(format.Lookup(m.AMQP.Properties.ContentType), bytes.NewReader(m.AMQP.GetData()))
+		return encoder.SetStructuredEvent(format.Lookup(m.AMQP.Properties.ContentType), m)
 	}
 	return binding.ErrNotStructured
 }
@@ -66,9 +68,8 @@ func (m *Message) Binary(encoder binding.BinaryEncoder) error {
 		}
 	}
 
-	data := m.AMQP.GetData()
-	if len(data) != 0 { // Some data
-		return encoder.SetData(bytes.NewReader(data))
+	if !m.IsEmpty() {
+		return encoder.SetData(m)
 	}
 	return nil
 }
@@ -79,6 +80,18 @@ func (m *Message) Event(encoder binding.EventEncoder) error {
 		return err
 	}
 	return encoder.SetEvent(e)
+}
+
+func (m *Message) IsEmpty() bool {
+	return m.AMQP.Data == nil || len(m.AMQP.Data) == 0
+}
+
+func (m *Message) Bytes() []byte {
+	return m.AMQP.GetData()
+}
+
+func (m *Message) Reader() io.Reader {
+	return bytes.NewReader(m.AMQP.GetData())
 }
 
 func (m *Message) Finish(err error) error {

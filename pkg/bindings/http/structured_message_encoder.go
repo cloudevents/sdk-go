@@ -1,7 +1,6 @@
 package http
 
 import (
-	"io"
 	"io/ioutil"
 	"net/http"
 
@@ -15,8 +14,8 @@ type structuredMessageEncoder struct {
 
 var _ binding.StructuredEncoder = (*structuredMessageEncoder)(nil) // Test it conforms to the interface
 
-func (b *structuredMessageEncoder) SetStructuredEvent(format format.Format, event io.Reader) error {
+func (b *structuredMessageEncoder) SetStructuredEvent(format format.Format, event binding.MessagePayloadReader) error {
 	b.req.Header.Set(ContentType, format.MediaType())
-	b.req.Body = ioutil.NopCloser(event)
+	b.req.Body = ioutil.NopCloser(event.Reader())
 	return nil
 }

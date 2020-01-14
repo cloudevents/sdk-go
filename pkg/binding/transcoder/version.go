@@ -34,7 +34,7 @@ type binaryVersionTransformer struct {
 	version  spec.Version
 }
 
-func (b binaryVersionTransformer) SetData(data io.Reader) error {
+func (b binaryVersionTransformer) SetData(data binding.MessagePayloadReader) error {
 	return b.delegate.SetData(data)
 }
 
