@@ -2,7 +2,11 @@ package binding
 
 import (
 	"context"
+	"errors"
+	"io"
 
+	"github.com/cloudevents/sdk-go/pkg/binding/format"
+	"github.com/cloudevents/sdk-go/pkg/binding/spec"
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 )
 
@@ -25,18 +29,43 @@ import (
 // The Message interface supports QoS 0 and 1, the ExactlyOnceMessage interface
 // supports QoS 2
 //
+// The Structured and Binary methods provide optional optimized transfer of an event
+// to a Sender, they may not be implemented by all Message instances. A Sender should
+// try each method of interest and fall back to Event(EventEncoder) if none are supported.
+//
 type Message interface {
-	// Event decodes and returns the contained Event.
-	Event() (ce.Event, error)
-
-	// Structured optionally returns a structured event encoding and its
-	// format type, if the message contains such an encoding. Returns
-	// ("", nil) if not.
+	// Structured transfers a structured-mode event to a StructuredEncoder.
+	// Returns ErrNotStructured if message is not in structured mode.
+	//
+	// Returns a different err if something wrong happened while trying to read the structured event
+	// In this case, the caller must Finish the message with appropriate error
 	//
 	// This allows Senders to avoid re-encoding messages that are
 	// already in suitable structured form.
+	Structured(StructuredEncoder) error
+
+	// Binary transfers a binary-mode event to an BinaryEncoder.
+	// Returns ErrNotBinary if message is not in binary mode.
 	//
-	Structured() (formatMediaType string, encodedEvent []byte)
+	// Returns a different err if something wrong happened while trying to read the binary event
+	// In this case, the caller must Finish the message with appropriate error
+	//
+	// Allows Senders to forward a binary message without allocating an
+	// intermediate Event.
+	Binary(BinaryEncoder) error
+
+	// Event transfers an event to an EventEncoder.
+	//
+	// A message implementation should always provide a conversion to Event data structure.
+	// The implementor can use binding.ToEvent for a straightforward implementation, starting
+	// from binary or structured representation
+	//
+	// Returns an err if something wrong happened while trying to read the event
+	// In this case, the caller must Finish the message with appropriate error
+	//
+	// Useful when the Sender can't implement a direct binary/structured to binary/structured conversion,
+	// So the intermediate Event representation is required
+	Event(EventEncoder) error
 
 	// Finish *must* be called when message from a Receiver can be forgotten by
 	// the receiver. Sender.Send() calls Finish() when the message is sent.  A QoS
@@ -47,6 +76,51 @@ type Message interface {
 	// A non-nil return indicates that the message was not accepted
 	// by the receivers peer.
 	Finish(error) error
+}
+
+// ErrNotStructured returned by Message.Structured for non-structured messages.
+var ErrNotStructured = errors.New("message is not in structured mode")
+
+// ErrNotBinary returned by Message.Binary for non-binary messages.
+var ErrNotBinary = errors.New("message is not in binary mode")
+
+// StructuredEncoder should generate a new representation of the event starting from a structured message.
+//
+// Protocols that supports structured encoding should implement this interface to implement direct
+// structured -> structured transfer.
+type StructuredEncoder interface {
+	// Event receives an io.Reader for the whole event.
+	SetStructuredEvent(format format.Format, event io.Reader) error
+}
+
+// BinaryEncoder should generate a new representation of the event starting from a binary message.
+//
+// Protocols that supports binary encoding should implement this interface to implement direct
+// binary -> binary transfer.
+type BinaryEncoder interface {
+	// SetData receives an io.Reader for the data attribute.
+	// io.Reader could be empty, meaning that message payload is empty
+	SetData(data io.Reader) error
+
+	// Set a standard attribute.
+	//
+	// The value can either be the correct golang type for the attribute, or a canonical
+	// string encoding. See package cloudevents/types
+	SetAttribute(attribute spec.Attribute, value interface{}) error
+
+	// Set an extension attribute.
+	//
+	// The value can either be the correct golang type for the attribute, or a canonical
+	// string encoding. See package cloudevents/types
+	SetExtension(name string, value interface{}) error
+}
+
+// EventEncoder should generate a new representation of the event starting from an event message.
+//
+// Every protocol must implement this interface. If a protocol supports both structured and binary encoding,
+// two EventEncoder implementations could be provided
+type EventEncoder interface {
+	SetEvent(ce.Event) error
 }
 
 // ExactlyOnceMessage is implemented by received Messages
@@ -121,9 +195,4 @@ type ReceiveCloser interface {
 type SendCloser interface {
 	Sender
 	Closer
-}
-
-// Encoder encodes events as messages.
-type Encoder interface {
-	Encode(ce.Event) (Message, error)
 }

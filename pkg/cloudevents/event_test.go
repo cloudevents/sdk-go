@@ -9,9 +9,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
+
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
-	"github.com/google/go-cmp/cmp"
 )
 
 func TestGetDataContentType(t *testing.T) {

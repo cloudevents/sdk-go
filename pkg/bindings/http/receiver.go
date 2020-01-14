@@ -44,7 +44,7 @@ func NewReceiver() *Receiver {
 // Receive the next incoming HTTP request as a CloudEvent.
 // Returns non-nil error if the incoming HTTP request fails to parse as a CloudEvent
 // Returns io.EOF if the receiver is closed.
-func (r *Receiver) Receive(context.Context) (binding.Message, error) {
+func (r *Receiver) Receive(ctx context.Context) (binding.Message, error) {
 	msgErr, ok := <-r.incoming
 	if !ok {
 		return nil, io.EOF
