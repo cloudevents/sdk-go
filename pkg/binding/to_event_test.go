@@ -19,7 +19,7 @@ type toEventTestCase struct {
 }
 
 func TestToEvent(t *testing.T) {
-	var tests []toEventTestCase
+	tests := []toEventTestCase{}
 
 	for _, v := range test.Events() {
 		tests = append(tests, []toEventTestCase{
@@ -68,6 +68,7 @@ func TestToEvent(t *testing.T) {
 		}...)
 	}
 	for _, tt := range tests {
+		tt := tt // Don't use range variable in Run() scope
 		t.Run(tt.name, func(t *testing.T) {
 			got, isStructured, isBinary, err := binding.ToEvent(tt.message)
 			require.NoError(t, err)
