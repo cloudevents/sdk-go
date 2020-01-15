@@ -24,6 +24,14 @@ type Format interface {
 	Unmarshal([]byte, *ce.Event) error
 }
 
+// UnknownFormat allows an event with an unknown format string to be forwarded,
+// but Marshal() and Unmarshal will always fail.
+type UnknownFormat string
+
+func (uf UnknownFormat) MediaType() string                 { return string(uf) }
+func (uf UnknownFormat) Marshal(ce.Event) ([]byte, error)  { return nil, unknown(uf.MediaType()) }
+func (uf UnknownFormat) Unmarshal([]byte, *ce.Event) error { return unknown(uf.MediaType()) }
+
 // Prefix for event-format media types.
 const Prefix = "application/cloudevents"
 
