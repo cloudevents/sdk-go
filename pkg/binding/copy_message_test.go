@@ -3,6 +3,7 @@ package binding_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
@@ -10,7 +11,7 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 )
 
-type toEventTestCase struct {
+type copyMessageTestCase struct {
 	name         string
 	isStructured bool
 	isBinary     bool
@@ -18,11 +19,11 @@ type toEventTestCase struct {
 	want         cloudevents.Event
 }
 
-func TestToEvent(t *testing.T) {
-	tests := []toEventTestCase{}
+func TestCopyMessage(t *testing.T) {
+	tests := []copyMessageTestCase{}
 
 	for _, v := range test.Events() {
-		tests = append(tests, []toEventTestCase{
+		tests = append(tests, []copyMessageTestCase{
 			{
 				name:         "From structured with payload/" + test.NameOf(v),
 				isStructured: true,
@@ -70,11 +71,16 @@ func TestToEvent(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt // Don't use range variable in Run() scope
 		t.Run(tt.name, func(t *testing.T) {
-			got, isStructured, isBinary, err := binding.ToEvent(tt.message)
+			copy, err := binding.CopyMessage(tt.message)
 			require.NoError(t, err)
-			require.Equal(t, tt.isStructured, isStructured)
-			require.Equal(t, tt.isBinary, isBinary)
-			test.AssertEventEquals(t, test.ExToStr(t, tt.want), test.ExToStr(t, got))
+			// The copy can be read any number of times
+			for i := 0; i < 3; i++ {
+				got, isStructured, isBinary, err := binding.ToEvent(copy)
+				assert.NoError(t, err)
+				require.Equal(t, tt.isStructured, isStructured)
+				require.Equal(t, tt.isBinary, isBinary)
+				test.AssertEventEquals(t, test.ExToStr(t, tt.want), test.ExToStr(t, got))
+			}
 		})
 	}
 }

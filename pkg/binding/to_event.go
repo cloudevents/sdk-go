@@ -20,10 +20,10 @@ import (
 // * nil, false, true, err if message was binary but error happened during translation
 // * nil, false, false, err if message was event but error happened during translation
 // * nil, false, false, err in other cases
-func ToEvent(message Message, factories ...TransformerFactory) (ce.Event, bool, bool, error) {
-	e := cloudevents.NewEvent()
+func ToEvent(message Message, factories ...TransformerFactory) (e ce.Event, wasStructured bool, wasBinary bool, err error) {
+	e = cloudevents.NewEvent()
 	encoder := &messageToEventBuilder{event: &e}
-	wasStructured, wasBinary, err := Translate(
+	wasStructured, wasBinary, err = Translate(
 		message,
 		func() StructuredEncoder {
 			return encoder
