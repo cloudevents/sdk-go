@@ -73,6 +73,9 @@ func SendReceive(t *testing.T, in binding.Message, s binding.Sender, r binding.R
 		out, recvErr := r.Receive(ctx)
 		require.NoError(t, recvErr)
 		outAssert(out)
+		// Check if out message can be consumed more than one time
+		outAssert(out)
+		outAssert(out)
 		finishErr := out.Finish(nil)
 		require.NoError(t, finishErr)
 	}()
