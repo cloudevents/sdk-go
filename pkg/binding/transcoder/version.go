@@ -1,8 +1,6 @@
 package transcoder
 
 import (
-	"io"
-
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
