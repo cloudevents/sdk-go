@@ -33,6 +33,8 @@ import (
 // to a Sender, they may not be implemented by all Message instances. A Sender should
 // try each method of interest and fall back to Event(EventEncoder) if none are supported.
 //
+// The message should be "consumable" several times, meaning that its methods to visit it can be called several times.
+//
 type Message interface {
 	// Structured transfers a structured-mode event to a StructuredEncoder.
 	// Returns ErrNotStructured if message is not in structured mode.

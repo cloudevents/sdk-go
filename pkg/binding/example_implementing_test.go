@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
@@ -30,7 +29,7 @@ import (
 type ExMessage json.RawMessage
 
 func (m ExMessage) Structured(b binding.StructuredEncoder) error {
-	return b.SetStructuredEvent(format.JSON, bytes.NewReader([]byte(m)))
+	return b.SetStructuredEvent(format.JSON, m)
 }
 
 func (m ExMessage) Binary(binding.BinaryEncoder) error {
@@ -46,9 +45,22 @@ func (m ExMessage) Event(b binding.EventEncoder) error {
 	return b.SetEvent(e)
 }
 
+func (m ExMessage) IsEmpty() bool {
+	return m == nil
+}
+
+func (m ExMessage) Bytes() []byte {
+	return []byte(m)
+}
+
+func (m ExMessage) Reader() io.Reader {
+	return bytes.NewReader(m.Bytes())
+}
+
 func (m ExMessage) Finish(error) error { return nil }
 
 var _ binding.Message = (*ExMessage)(nil)
+var _ binding.MessagePayloadReader = (*ExMessage)(nil)
 
 // ExSender sends by writing JSON encoded events to an io.Writer
 // ExSender supports transcoding
@@ -79,13 +91,9 @@ func (s *ExSender) Send(ctx context.Context, m binding.Message) error {
 	return err
 }
 
-func (s *ExSender) SetStructuredEvent(f format.Format, event io.Reader) error {
+func (s *ExSender) SetStructuredEvent(f format.Format, event binding.MessagePayloadReader) error {
 	if f == format.JSON {
-		b, err := ioutil.ReadAll(event)
-		if err != nil {
-			return err
-		}
-		return s.encoder.Encode(json.RawMessage(b))
+		return s.encoder.Encode(event.Bytes())
 	} else {
 		return binding.ErrNotStructured
 	}
