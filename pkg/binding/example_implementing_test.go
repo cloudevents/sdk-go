@@ -29,7 +29,7 @@ import (
 type ExMessage json.RawMessage
 
 func (m ExMessage) Structured(b binding.StructuredEncoder) error {
-	return b.SetStructuredEvent(format.JSON, m)
+	return b.SetStructuredEvent(format.JSON, &m)
 }
 
 func (m ExMessage) Binary(binding.BinaryEncoder) error {
@@ -45,15 +45,15 @@ func (m ExMessage) Event(b binding.EventEncoder) error {
 	return b.SetEvent(e)
 }
 
-func (m ExMessage) IsEmpty() bool {
+func (m *ExMessage) IsEmpty() bool {
 	return m == nil
 }
 
-func (m ExMessage) Bytes() []byte {
-	return []byte(m)
+func (m *ExMessage) Bytes() []byte {
+	return *m
 }
 
-func (m ExMessage) Reader() io.Reader {
+func (m *ExMessage) Reader() io.Reader {
 	return bytes.NewReader(m.Bytes())
 }
 
@@ -75,6 +75,9 @@ func NewExSender(w io.Writer, factories ...binding.TransformerFactory) binding.S
 }
 
 func (s *ExSender) Send(ctx context.Context, m binding.Message) error {
+	// Invoke m.Finish to notify the receiver that message was processed
+	defer func() { _ = m.Finish(nil) }()
+
 	// Translate tries the various encodings, starting with provided root encoder factories.
 	// If a sender doesn't support a specific encoding, a null root encoder factory could be provided.
 	_, _, err := binding.Translate(
