@@ -4,11 +4,11 @@ import "sync/atomic"
 
 type acksMessage struct {
 	Message
-	requiredAcks uint32
+	requiredAcks int32
 }
 
 func (m *acksMessage) Finish(err error) error {
-	remainingAcks := atomic.AddUint32(&m.requiredAcks, -1)
+	remainingAcks := atomic.AddInt32(&m.requiredAcks, -1)
 	if remainingAcks == 0 {
 		return m.Message.Finish(err)
 	}
@@ -19,5 +19,5 @@ func (m *acksMessage) Finish(err error) error {
 // only after the specified number of acks are received.
 // Use it when you need to route a Message to more Sender instances
 func WithAcksBeforeFinish(m Message, requiredAcks uint) Message {
-	return &acksMessage{Message: m, requiredAcks: uint32(requiredAcks)}
+	return &acksMessage{Message: m, requiredAcks: int32(requiredAcks)}
 }
