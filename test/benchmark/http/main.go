@@ -40,6 +40,10 @@ func benchmarkBaseline(cases []benchmark.BenchmarkCase, requestFactory func([]by
 	r := rand.New(rand.NewSource(time.Now().Unix()))
 
 	for _, c := range cases {
+		if c.OutputSenders > 1 {
+			// It doesn't make sense for this test
+			continue
+		}
 		fmt.Printf("%+v\n", c)
 
 		buffer := make([]byte, c.PayloadSize)
@@ -182,7 +186,7 @@ var bench = flag.String(
 	"[baseline-structured, baseline-binary, binding-structured-to-structured, binding-structured-to-binary, binding-binary-to-structured, binding-binary-to-binary, client]",
 )
 var out = flag.String("out", "out.csv", "Output file")
-var maxPayloadKb = flag.Int("max-payload", 32, "Max payload size")
+var maxPayloadKb = flag.Int("max-payload", 32, "Max payload size in kb")
 var maxParallelism = flag.Int("max-parallelism", runtime.NumCPU()*2, "Max parallelism")
 var maxOutputSenders = flag.Int("max-output-senders", 1, "Max output senders")
 
