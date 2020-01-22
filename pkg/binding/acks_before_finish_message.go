@@ -18,6 +18,6 @@ func (m *acksMessage) Finish(err error) error {
 // WithAcksBeforeFinish returns a wrapper for m that calls m.Finish()
 // only after the specified number of acks are received.
 // Use it when you need to route a Message to more Sender instances
-func WithAcksBeforeFinish(m Message, requiredAcks uint) Message {
+func WithAcksBeforeFinish(m Message, requiredAcks int) Message {
 	return &acksMessage{Message: m, requiredAcks: int32(requiredAcks)}
 }

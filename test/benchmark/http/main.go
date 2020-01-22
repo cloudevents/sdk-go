@@ -64,26 +64,47 @@ func benchmarkBaseline(cases []benchmark.BenchmarkCase, requestFactory func([]by
 	return results
 }
 
-func pipeLoop(r *http.Receiver, endCtx context.Context, outputSenders int, opts ...http.SenderOptionFunc) {
+func pipeLoopDirect(r *http.Receiver, endCtx context.Context, opts ...http.SenderOptionFunc) {
 	s := MockedSender(opts...)
 	var err error
 	var m binding.Message
-	messageCtx := context.Background()
 	for err != io.EOF {
 		select {
-		case _, ok := <-endCtx.Done():
-			if !ok {
-				return
-			}
+		case <-endCtx.Done():
+			return
 		default:
-			m, err = r.Receive(messageCtx)
+			m, err = r.Receive(endCtx)
+			if err != nil || m == nil {
+				continue
+			}
+			_ = s.Send(context.Background(), m)
+		}
+	}
+}
+
+func pipeLoopMulti(r *http.Receiver, endCtx context.Context, outputSenders int, opts ...http.SenderOptionFunc) {
+	s := MockedSender(opts...)
+	var err error
+	var m binding.Message
+	for err != io.EOF {
+		select {
+		case <-endCtx.Done():
+			return
+		default:
+			m, err = r.Receive(endCtx)
 			if err != nil {
 				continue
 			}
-			//TODO multisend when implemented!
-			//Be aware that multisend implementation MUST finish the message AFTER all sends are completed,
-			//otherwise we cheat the results, because the time is calculated from the message received to Message.finish() call
-			_ = s.Send(messageCtx, m)
+			copiedMessage, err := binding.CopyMessage(m)
+			if err != nil {
+				continue
+			}
+			outputMessage := binding.WithAcksBeforeFinish(copiedMessage, outputSenders)
+			for i := 0; i < outputSenders; i++ {
+				go func(m binding.Message) {
+					_ = s.Send(context.Background(), outputMessage)
+				}(outputMessage)
+			}
 		}
 	}
 }
@@ -100,7 +121,11 @@ func benchmarkReceiverSender(cases []benchmark.BenchmarkCase, requestFactory fun
 
 		// Spawn dispatchers
 		for i := 0; i < c.Parallelism; i++ {
-			go pipeLoop(receiver, ctx, c.OutputSenders, opts...)
+			if c.OutputSenders == 1 {
+				go pipeLoopDirect(receiver, ctx, opts...)
+			} else {
+				go pipeLoopMulti(receiver, ctx, c.OutputSenders, opts...)
+			}
 		}
 
 		buffer := make([]byte, c.PayloadSize)

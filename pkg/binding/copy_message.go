@@ -11,7 +11,7 @@ func CopyMessage(m Message) (Message, error) {
 	err := m.Structured(&sm)
 	switch err {
 	case nil:
-		return &sm, nil
+		return WithFinish(&sm, func(err error) { _ = m.Finish(err) }), nil //TODO this case is not tested
 	case ErrNotStructured:
 		break
 	default:
