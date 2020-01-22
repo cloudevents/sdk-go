@@ -73,7 +73,7 @@ func MockedBinaryRequest(body []byte) *nethttp.Request {
 
 var (
 	eventBegin = []byte("{" +
-		"\"id\":0," +
+		"\"id\":\"0\"," +
 		"\"subject\":\"sub\"," +
 		"\"specversion\":\"1.0\"," +
 		"\"type\":\"t\"," +
