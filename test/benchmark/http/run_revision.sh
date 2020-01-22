@@ -72,7 +72,8 @@ BENCHS=(
   "binding-structured-to-binary"
   "binding-binary-to-structured"
   "binding-binary-to-binary"
-  "client"
+  "client-binary"
+  "client-structured"
 )
 
 for i in "${BENCHS[@]}"; do

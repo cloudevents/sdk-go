@@ -141,7 +141,7 @@ func dispatchReceiver(clients []cloudevents.Client, outputSenders int) transport
 	})
 }
 
-func benchmarkClient(cases []benchmark.BenchmarkCase) benchmark.BenchmarkResults {
+func benchmarkClient(cases []benchmark.BenchmarkCase, requestFactory func([]byte) *nethttp.Request) benchmark.BenchmarkResults {
 	var results benchmark.BenchmarkResults
 	random := rand.New(rand.NewSource(time.Now().Unix()))
 
@@ -166,7 +166,7 @@ func benchmarkClient(cases []benchmark.BenchmarkCase) benchmark.BenchmarkResults
 			b.RunParallel(func(pb *testing.PB) {
 				for pb.Next() {
 					w := httptest.NewRecorder()
-					mockedReceiverTransport.ServeHTTP(w, MockedBinaryRequest(buffer))
+					mockedReceiverTransport.ServeHTTP(w, requestFactory(buffer))
 				}
 			})
 		})
@@ -183,7 +183,7 @@ var memprofile = flag.String("memprofile", "", "write memory profile to `file`")
 var bench = flag.String(
 	"bench",
 	"baseline-binary",
-	"[baseline-structured, baseline-binary, binding-structured-to-structured, binding-structured-to-binary, binding-binary-to-structured, binding-binary-to-binary, client]",
+	"[baseline-structured, baseline-binary, binding-structured-to-structured, binding-structured-to-binary, binding-binary-to-structured, binding-binary-to-binary, client-binary, client-structured]",
 )
 var out = flag.String("out", "out.csv", "Output file")
 var maxPayloadKb = flag.Int("max-payload", 32, "Max payload size in kb")
@@ -232,8 +232,11 @@ func main() {
 	case "binding-binary-to-binary":
 		results = benchmarkReceiverSender(benchmarkCases, MockedBinaryRequest, http.ForceBinary())
 		break
-	case "client":
-		results = benchmarkClient(benchmarkCases)
+	case "client-binary":
+		results = benchmarkClient(benchmarkCases, MockedBinaryRequest)
+		break
+	case "client-structured":
+		results = benchmarkClient(benchmarkCases, MockedStructuredRequest)
 		break
 	default:
 		panic("Wrong bench flag")

@@ -14,5 +14,6 @@ plot "baseline-binary.csv" using 1:(($2==payload_size && $3==output_senders)?$4:
      "binding-structured-to-binary.csv" using 1:($2==payload_size && $3==output_senders?$4:1/0) title "Binding Structured to Binary ".payload_size_kb."kb" with linespoint, \
      "binding-binary-to-structured.csv" using 1:($2==payload_size && $3==output_senders?$4:1/0) title "Binding Binary to Structured ".payload_size_kb."kb" with linespoint, \
      "binding-binary-to-binary.csv" using 1:($2==payload_size && $3==output_senders?$4:1/0) title "Binding Binary to Binary ".payload_size_kb."kb" with linespoint, \
-     "client.csv" using 1:($2==payload_size && $3==output_senders?$4:1/0) title "Client ".payload_size_kb."kb" with linespoint
+     "client-binary.csv" using 1:($2==payload_size && $3==output_senders?$4:1/0) title "Client Binary ".payload_size_kb."kb" with linespoint, \
+     "client-structured.csv" using 1:($2==payload_size && $3==output_senders?$4:1/0) title "Client Structured ".payload_size_kb."kb" with linespoint
 pause -1
