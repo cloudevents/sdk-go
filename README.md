@@ -6,8 +6,22 @@
 [![Releases](https://img.shields.io/github/release-pre/cloudevents/sdk-go.svg)](https://github.com/cloudevents/sdk-go/releases)
 [![LICENSE](https://img.shields.io/github/license/cloudevents/sdk-go.svg)](https://github.com/cloudevents/sdk-go/blob/master/LICENSE)
 
-**NOTE: This SDK is still considered work in progress, things might (and will)
-break with every update.**
+**NOTE: This SDK is still considered work in progress.**
+
+**With v1.0.0:**
+
+The API that exists under [`pkg/cloudevents`](./pkg/cloudevents) will follow
+semver rules. This applies to the root [`./alias.go`](./alias.go) file as well.
+
+The API that exists under [`pkg/bindings`](./pkg/bindings) is a new API that
+will become SDK v2.x, and will replace `pkg/cloudevents`. This area is still
+under heavy development and will not be following the same semver rules as
+`pkg/cloudevents`. If a release is required to ship changes to `pkg/bindings`, a
+bug fix release will be issued (x.y.z+1).
+
+We will target ~2 months of development to release v2 of this SDK with an end
+date of March 27. You can read more about the plan for SDK v2 in the
+[SDK v2 planning doc](./docs/SDK_v2.md).
 
 ## Working with CloudEvents
 
