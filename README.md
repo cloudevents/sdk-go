@@ -13,6 +13,10 @@
 The API that exists under [`pkg/cloudevents`](./pkg/cloudevents) will follow
 semver rules. This applies to the root [`./alias.go`](./alias.go) file as well.
 
+Even though `pkg/cloudevents` is v1.0.0, there could still be minor bugs and
+performance issues. We will continue to track and fix these issues as they come
+up. Please file a pull request or issue if you experiance problems.
+
 The API that exists under [`pkg/bindings`](./pkg/bindings) is a new API that
 will become SDK v2.x, and will replace `pkg/cloudevents`. This area is still
 under heavy development and will not be following the same semver rules as
