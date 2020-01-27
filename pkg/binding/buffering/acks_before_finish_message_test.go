@@ -1,4 +1,4 @@
-package binding
+package buffering
 
 import (
 	"context"
@@ -9,6 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	cloudevents "github.com/cloudevents/sdk-go"
+	"github.com/cloudevents/sdk-go/pkg/binding"
+	"github.com/cloudevents/sdk-go/pkg/binding/event"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 )
 
@@ -24,7 +26,7 @@ func TestWithAcksBeforeFinish(t *testing.T) {
 	}
 
 	finishCalled := false
-	finishMessage := WithFinish(EventMessage(testEvent), func(err error) {
+	finishMessage := binding.WithFinish(event.EventMessage(testEvent), func(err error) {
 		finishCalled = true
 	})
 
@@ -33,9 +35,9 @@ func TestWithAcksBeforeFinish(t *testing.T) {
 	messageToTest := WithAcksBeforeFinish(finishMessage, 1000)
 	for i := 0; i < 1000; i++ {
 		wg.Add(1)
-		go func(m Message) {
-			ch := make(chan Message, 1)
-			assert.NoError(t, ChanSender(ch).Send(context.Background(), m))
+		go func(m binding.Message) {
+			ch := make(chan binding.Message, 1)
+			assert.NoError(t, binding.ChanSender(ch).Send(context.Background(), m))
 			<-ch
 			wg.Done()
 		}(messageToTest)
@@ -57,11 +59,11 @@ func TestCopyAndWithAcksBeforeFinish(t *testing.T) {
 	}
 
 	finishCalled := false
-	finishMessage := WithFinish(EventMessage(testEvent), func(err error) {
+	finishMessage := binding.WithFinish(event.EventMessage(testEvent), func(err error) {
 		finishCalled = true
 	})
 
-	copiedMessage, err := CopyMessage(finishMessage)
+	copiedMessage, err := BufferMessage(finishMessage)
 	assert.NoError(t, err)
 
 	wg := sync.WaitGroup{}
@@ -69,9 +71,9 @@ func TestCopyAndWithAcksBeforeFinish(t *testing.T) {
 	messageToTest := WithAcksBeforeFinish(copiedMessage, 1000)
 	for i := 0; i < 1000; i++ {
 		wg.Add(1)
-		go func(m Message) {
-			ch := make(chan Message, 1)
-			assert.NoError(t, ChanSender(ch).Send(context.Background(), m))
+		go func(m binding.Message) {
+			ch := make(chan binding.Message, 1)
+			assert.NoError(t, binding.ChanSender(ch).Send(context.Background(), m))
 			<-ch
 			wg.Done()
 		}(messageToTest)

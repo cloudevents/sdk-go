@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
+	"github.com/cloudevents/sdk-go/pkg/binding/event"
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
@@ -116,7 +117,7 @@ func (r *ExReceiver) Close(context.Context) error { return nil }
 // NewExTransport returns a transport.Transport which is implemented by
 // an ExSender and an ExReceiver
 func NewExTransport(r io.Reader, w io.Writer) transport.Transport {
-	return binding.NewTransport(NewExSender(w), NewExReceiver(r))
+	return event.NewTransportAdapter(NewExSender(w), NewExReceiver(r))
 }
 
 // Example of implementing a transport including a simple message type,

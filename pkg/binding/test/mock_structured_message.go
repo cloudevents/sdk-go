@@ -1,9 +1,10 @@
-package binding
+package test
 
 import (
 	"bytes"
 
 	cloudevents "github.com/cloudevents/sdk-go"
+	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
 )
 
@@ -24,7 +25,7 @@ func NewMockStructuredMessage(e cloudevents.Event) *MockStructuredMessage {
 	}
 }
 
-func (s *MockStructuredMessage) Event(b EventEncoder) error {
+func (s *MockStructuredMessage) Event(b binding.EventEncoder) error {
 	e := cloudevents.Event{}
 	err := s.Format.Unmarshal(s.Bytes, &e)
 	if err != nil {
@@ -33,14 +34,14 @@ func (s *MockStructuredMessage) Event(b EventEncoder) error {
 	return b.SetEvent(e)
 }
 
-func (s *MockStructuredMessage) Structured(b StructuredEncoder) error {
+func (s *MockStructuredMessage) Structured(b binding.StructuredEncoder) error {
 	return b.SetStructuredEvent(s.Format, bytes.NewReader(s.Bytes))
 }
 
-func (s *MockStructuredMessage) Binary(BinaryEncoder) error {
-	return ErrNotBinary
+func (s *MockStructuredMessage) Binary(binding.BinaryEncoder) error {
+	return binding.ErrNotBinary
 }
 
 func (s *MockStructuredMessage) Finish(error) error { return nil }
 
-var _ Message = (*MockStructuredMessage)(nil) // Test it conforms to the interface
+var _ binding.Message = (*MockStructuredMessage)(nil) // Test it conforms to the interface

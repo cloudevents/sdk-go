@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
+	"github.com/cloudevents/sdk-go/pkg/binding/event"
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
 )
@@ -77,7 +78,7 @@ func (m *Message) Binary(encoder binding.BinaryEncoder) error {
 }
 
 func (m *Message) Event(encoder binding.EventEncoder) error {
-	e, _, _, err := binding.ToEvent(m)
+	e, _, _, err := event.ToEvent(m)
 	if err != nil {
 		return err
 	}

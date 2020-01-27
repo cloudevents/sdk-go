@@ -18,6 +18,7 @@ import (
 
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
+	"github.com/cloudevents/sdk-go/pkg/binding/buffering"
 	"github.com/cloudevents/sdk-go/pkg/bindings/http"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	"github.com/cloudevents/sdk-go/test/benchmark"
@@ -95,11 +96,11 @@ func pipeLoopMulti(r *http.Receiver, endCtx context.Context, outputSenders int, 
 			if err != nil {
 				continue
 			}
-			copiedMessage, err := binding.CopyMessage(m)
+			copiedMessage, err := buffering.BufferMessage(m)
 			if err != nil {
 				continue
 			}
-			outputMessage := binding.WithAcksBeforeFinish(copiedMessage, outputSenders)
+			outputMessage := buffering.WithAcksBeforeFinish(copiedMessage, outputSenders)
 			for i := 0; i < outputSenders; i++ {
 				go func(m binding.Message) {
 					_ = s.Send(context.Background(), outputMessage)

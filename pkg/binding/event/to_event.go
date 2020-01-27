@@ -1,10 +1,11 @@
-package binding
+package event
 
 import (
+	"bytes"
 	"io"
-	"io/ioutil"
 
 	cloudevents "github.com/cloudevents/sdk-go"
+	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
@@ -20,18 +21,18 @@ import (
 // * nil, false, true, err if message was binary but error happened during translation
 // * nil, false, false, err if message was event but error happened during translation
 // * nil, false, false, err in other cases
-func ToEvent(message Message, factories ...TransformerFactory) (e ce.Event, wasStructured bool, wasBinary bool, err error) {
+func ToEvent(message binding.Message, factories ...binding.TransformerFactory) (e ce.Event, wasStructured bool, wasBinary bool, err error) {
 	e = cloudevents.NewEvent()
 	encoder := &messageToEventBuilder{event: &e}
-	wasStructured, wasBinary, err = Translate(
+	wasStructured, wasBinary, err = binding.Translate(
 		message,
-		func() StructuredEncoder {
+		func() binding.StructuredEncoder {
 			return encoder
 		},
-		func() BinaryEncoder {
+		func() binding.BinaryEncoder {
 			return encoder
 		},
-		func() EventEncoder {
+		func() binding.EventEncoder {
 			return encoder
 		},
 		factories,
@@ -43,9 +44,9 @@ type messageToEventBuilder struct {
 	event *ce.Event
 }
 
-var _ StructuredEncoder = (*messageToEventBuilder)(nil)
-var _ BinaryEncoder = (*messageToEventBuilder)(nil)
-var _ EventEncoder = (*messageToEventBuilder)(nil)
+var _ binding.StructuredEncoder = (*messageToEventBuilder)(nil)
+var _ binding.BinaryEncoder = (*messageToEventBuilder)(nil)
+var _ binding.EventEncoder = (*messageToEventBuilder)(nil)
 
 func (b *messageToEventBuilder) SetEvent(e ce.Event) error {
 	b.event.Data = e.Data
@@ -56,22 +57,22 @@ func (b *messageToEventBuilder) SetEvent(e ce.Event) error {
 }
 
 func (b *messageToEventBuilder) SetStructuredEvent(format format.Format, event io.Reader) error {
-	//TODO(slinkydeveloper) can we do pooling for this allocation?
-	val, err := ioutil.ReadAll(event)
+	var buf bytes.Buffer
+	_, err := io.Copy(&buf, event)
 	if err != nil {
 		return err
 	}
-	return format.Unmarshal(val, b.event)
+	return format.Unmarshal(buf.Bytes(), b.event)
 }
 
 func (b *messageToEventBuilder) SetData(data io.Reader) error {
-	//TODO(slinkydeveloper) can we do pooling for this allocation?
-	val, err := ioutil.ReadAll(data)
+	var buf bytes.Buffer
+	w, err := io.Copy(&buf, data)
 	if err != nil {
 		return err
 	}
-	if len(val) != 0 {
-		return b.event.SetData(val)
+	if w != 0 {
+		return b.event.SetData(buf.Bytes())
 	}
 	return nil
 }

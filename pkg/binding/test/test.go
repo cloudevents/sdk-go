@@ -14,6 +14,7 @@ import (
 
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
+	"github.com/cloudevents/sdk-go/pkg/binding/event"
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
@@ -123,7 +124,7 @@ func MustJSON(e ce.Event) []byte {
 
 func MustToEvent(m binding.Message) (e ce.Event, wasStructured bool, wasBinary bool) {
 	var err error
-	e, wasStructured, wasBinary, err = binding.ToEvent(m)
+	e, wasStructured, wasBinary, err = event.ToEvent(m)
 	if err != nil {
 		panic(err)
 	}

@@ -3,13 +3,15 @@ package amqp
 import (
 	"context"
 
+	"pack.ag/amqp"
+
 	"github.com/cloudevents/sdk-go/pkg/binding"
+	"github.com/cloudevents/sdk-go/pkg/binding/event"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
 	"github.com/cloudevents/sdk-go/pkg/binding/transcoder"
 	bindings_amqp "github.com/cloudevents/sdk-go/pkg/bindings/amqp"
 	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
-	"pack.ag/amqp"
 )
 
 // Transport adheres to transport.Transport.
@@ -21,7 +23,7 @@ const (
 )
 
 type Transport struct {
-	binding.Transport
+	event.BindingTransport
 	connOpts         []amqp.ConnOption
 	sessionOpts      []amqp.SessionOption
 	senderLinkOpts   []amqp.LinkOption
@@ -80,7 +82,7 @@ func New(server, queue string, opts ...Option) (*Transport, error) {
 		return nil, err
 	}
 	// TODO: in the future we might have more than one sender.
-	t.Transport.Sender = t.applyEncoding(sender)
+	t.BindingTransport.Sender = t.applyEncoding(sender)
 	return t, nil
 }
 
@@ -156,8 +158,8 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	t.Transport.Receiver = &bindings_amqp.Receiver{AMQP: receiver}
-	return t.Transport.StartReceiver(ctx)
+	t.BindingTransport.Receiver = &bindings_amqp.Receiver{AMQP: receiver}
+	return t.BindingTransport.StartReceiver(ctx)
 }
 
 func (t *Transport) Close() error {

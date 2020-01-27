@@ -11,6 +11,7 @@ import (
 	"pack.ag/amqp"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
+	"github.com/cloudevents/sdk-go/pkg/binding/event"
 	"github.com/cloudevents/sdk-go/pkg/binding/test"
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 )
@@ -20,7 +21,7 @@ func TestSendReceiveBinary(t *testing.T) {
 	defer c.Close()
 	test.EachEvent(t, test.Events(), func(t *testing.T, e ce.Event) {
 		eventIn := test.ExToStr(t, e)
-		in := binding.NewMockBinaryMessage(eventIn)
+		in := test.NewMockBinaryMessage(eventIn)
 		test.SendReceive(t, in, s, r, func(out binding.Message) {
 			eventOut, _, isBinary := test.MustToEvent(out)
 			assert.True(t, isBinary)
@@ -34,7 +35,7 @@ func TestSendReceiveStruct(t *testing.T) {
 	defer c.Close()
 	test.EachEvent(t, test.Events(), func(t *testing.T, e ce.Event) {
 		eventIn := test.ExToStr(t, e)
-		in := binding.NewMockStructuredMessage(eventIn)
+		in := test.NewMockStructuredMessage(eventIn)
 		test.SendReceive(t, in, s, r, func(out binding.Message) {
 			eventOut, isStructured, _ := test.MustToEvent(out)
 			assert.True(t, isStructured)
@@ -48,7 +49,7 @@ func TestSendEventReceiveBinary(t *testing.T) {
 	defer c.Close()
 	test.EachEvent(t, test.Events(), func(t *testing.T, e ce.Event) {
 		eventIn := test.ExToStr(t, e)
-		in := binding.EventMessage(eventIn)
+		in := event.EventMessage(eventIn)
 		test.SendReceive(t, in, s, r, func(out binding.Message) {
 			eventOut, _, isBinary := test.MustToEvent(out)
 			assert.True(t, isBinary)
@@ -62,7 +63,7 @@ func TestSendEventReceiveStruct(t *testing.T) {
 	defer c.Close()
 	test.EachEvent(t, test.Events(), func(t *testing.T, e ce.Event) {
 		eventIn := test.ExToStr(t, e)
-		in := binding.EventMessage(eventIn)
+		in := event.EventMessage(eventIn)
 		test.SendReceive(t, in, s, r, func(out binding.Message) {
 			eventOut, isStructured, _ := test.MustToEvent(out)
 			assert.True(t, isStructured)

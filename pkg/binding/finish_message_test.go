@@ -1,4 +1,4 @@
-package binding
+package binding_test
 
 import (
 	"context"
@@ -8,6 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	cloudevents "github.com/cloudevents/sdk-go"
+	"github.com/cloudevents/sdk-go/pkg/binding"
+	"github.com/cloudevents/sdk-go/pkg/binding/event"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 )
 
@@ -23,7 +25,7 @@ func TestWithFinish(t *testing.T) {
 	}
 
 	done := make(chan error, 1)
-	m := WithFinish(EventMessage(testEvent), func(err error) {
+	m := binding.WithFinish(event.EventMessage(testEvent), func(err error) {
 		done <- err
 	})
 	select {
@@ -31,7 +33,7 @@ func TestWithFinish(t *testing.T) {
 		assert.Fail(t, "done early")
 	default:
 	}
-	ch := make(chan Message, 1)
-	assert.NoError(t, ChanSender(ch).Send(context.Background(), m))
+	ch := make(chan binding.Message, 1)
+	assert.NoError(t, binding.ChanSender(ch).Send(context.Background(), m))
 	assert.NoError(t, <-done)
 }
