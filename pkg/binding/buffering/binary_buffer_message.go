@@ -6,22 +6,19 @@ import (
 
 	"github.com/valyala/bytebufferpool"
 
-	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/event"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
-	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 )
 
-var specs = spec.New()
 var binaryMessagePool bytebufferpool.Pool
 
 // binaryBufferedMessage implements a binary-mode message as a simple struct.
 // This message implementation is used by CopyMessage and BufferMessage
 type binaryBufferedMessage struct {
-	context ce.EventContext
-	body    *bytebufferpool.ByteBuffer
+	metadata   map[spec.Attribute]interface{}
+	extensions map[string]interface{}
+	body       *bytebufferpool.ByteBuffer
 }
 
 func (m *binaryBufferedMessage) Structured(binding.StructuredEncoder) error {
@@ -29,9 +26,17 @@ func (m *binaryBufferedMessage) Structured(binding.StructuredEncoder) error {
 }
 
 func (m *binaryBufferedMessage) Binary(b binding.BinaryEncoder) (err error) {
-	err = event.EventContextToBinaryEncoder(m.context, b)
-	if err != nil {
-		return err
+	for k, v := range m.metadata {
+		err := b.SetAttribute(k, v)
+		if err != nil {
+			return err
+		}
+	}
+	for k, v := range m.extensions {
+		err := b.SetExtension(k, v)
+		if err != nil {
+			return err
+		}
 	}
 	if m.body != nil {
 		return b.SetData(bytes.NewReader(m.body.Bytes()))
@@ -40,24 +45,11 @@ func (m *binaryBufferedMessage) Binary(b binding.BinaryEncoder) (err error) {
 }
 
 func (m *binaryBufferedMessage) Event(builder binding.EventEncoder) error {
-	// We must copy the body to don't cause memory leaks
-	if m.body != nil {
-		var buf bytes.Buffer
-		_, err := io.Copy(&buf, bytes.NewReader(m.body.Bytes()))
-		if err != nil {
-			return err
-		}
-
-		return builder.SetEvent(ce.Event{
-			Context:     m.context,
-			Data:        buf.Bytes(),
-			DataEncoded: true,
-			DataBinary:  true,
-		})
+	e, _, _, err := event.ToEvent(m)
+	if err != nil {
+		return err
 	}
-	return builder.SetEvent(ce.Event{
-		Context: m.context,
-	})
+	return builder.SetEvent(e)
 }
 
 func (b *binaryBufferedMessage) Finish(error) error {
@@ -84,32 +76,13 @@ func (b *binaryBufferedMessage) SetData(data io.Reader) error {
 
 func (b *binaryBufferedMessage) SetAttribute(attribute spec.Attribute, value interface{}) error {
 	// If spec version we need to change to right context struct
-	if attribute.Kind() == spec.SpecVersion {
-		str, err := types.ToString(value)
-		if err != nil {
-			return err
-		}
-		switch str {
-		case cloudevents.VersionV01:
-			b.context = b.context.AsV01()
-		case cloudevents.VersionV02:
-			b.context = b.context.AsV02()
-		case cloudevents.VersionV03:
-			b.context = b.context.AsV03()
-		case cloudevents.VersionV1:
-			b.context = b.context.AsV1()
-		}
-		return nil
-	}
-	return attribute.Set(b.context, value)
+	b.metadata[attribute] = value
+	return nil
 }
 
 func (b *binaryBufferedMessage) SetExtension(name string, value interface{}) error {
-	value, err := types.Validate(value)
-	if err != nil {
-		return err
-	}
-	return b.context.SetExtension(name, value)
+	b.extensions[name] = value
+	return nil
 }
 
 var _ binding.Message = (*binaryBufferedMessage)(nil) // Test it conforms to the interface

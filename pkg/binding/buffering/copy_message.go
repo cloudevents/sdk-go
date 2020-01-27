@@ -1,9 +1,9 @@
 package buffering
 
 import (
-	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/event"
+	"github.com/cloudevents/sdk-go/pkg/binding/spec"
 )
 
 // BufferMessage does the same than CopyMessage and it also bounds the original Message
@@ -31,7 +31,10 @@ func CopyMessage(m binding.Message) (binding.Message, error) {
 	default:
 		return nil, err
 	}
-	bm := binaryBufferedMessage{context: &cloudevents.EventContextV1{}}
+	bm := binaryBufferedMessage{
+		metadata:   make(map[spec.Attribute]interface{}, 4),
+		extensions: make(map[string]interface{}),
+	}
 	err = m.Binary(&bm)
 	switch err {
 	case nil:
