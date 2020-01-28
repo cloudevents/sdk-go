@@ -17,7 +17,7 @@ semver rules. This applies to the root [`./alias.go`](./alias.go) file as well.
 
 Even though `pkg/cloudevents` is v1.0.0, there could still be minor bugs and
 performance issues. We will continue to track and fix these issues as they come
-up. Please file a pull request or issue if you experiance problems.
+up. Please file a pull request or issue if you experience problems.
 
 The API that exists under [`pkg/bindings`](./pkg/bindings) is a new API that
 will become SDK v2.x, and will replace `pkg/cloudevents`. This area is still
@@ -26,7 +26,7 @@ under heavy development and will not be following the same semver rules as
 bug fix release will be issued (x.y.z+1).
 
 We will target ~2 months of development to release v2 of this SDK with an end
-date of March 27. You can read more about the plan for SDK v2 in the
+date of March 27, 2020. You can read more about the plan for SDK v2 in the
 [SDK v2 planning doc](./docs/SDK_v2.md).
 
 This SDK current supports the following versions of CloudEvents:
