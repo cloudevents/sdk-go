@@ -10,26 +10,29 @@ import (
 )
 
 type ReadWriteTest struct {
-	event   ce.Event
-	set     string
-	want    interface{}
-	wantErr string
+	event     ce.Event
+	set       string
+	want      interface{}
+	corrected interface{} // used in corrected tests.
+	wantErr   string
 }
 
 func TestEventRW_SpecVersion(t *testing.T) {
 	testCases := map[string]ReadWriteTest{
 		"empty v01": {
 			event:   ce.New(),
+			want:    "0.2",
 			set:     "0.1",
 			wantErr: "invalid version",
 		},
 		"empty v02": {
 			event: ce.New(),
-			set:   "0.2",
 			want:  "0.2",
+			set:   "0.2",
 		},
 		"empty v03": {
 			event:   ce.New(),
+			want:    "0.2",
 			set:     "0.3",
 			wantErr: "invalid version",
 		},
@@ -50,35 +53,32 @@ func TestEventRW_SpecVersion(t *testing.T) {
 		},
 		"invalid v01": {
 			event:   ce.New("0.1"),
+			want:    "0.1",
 			set:     "1.1",
 			wantErr: "invalid version",
 		},
 		"invalid v02": {
 			event:   ce.New("0.2"),
+			want:    "0.2",
 			set:     "1.2",
 			wantErr: "invalid version",
 		},
 		"invalid v03": {
 			event:   ce.New("0.3"),
+			want:    "0.3",
 			set:     "1.3",
 			wantErr: "invalid version",
 		},
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
-
 			var got interface{}
-			defer func() {
-				var err error
-				r := recover()
-				if r != nil {
-					err = r.(error)
-				}
-				validateReaderWriter(t, tc, got, err)
-			}()
 
 			tc.event.SetSpecVersion(tc.set)
 			got = tc.event.SpecVersion()
+
+			err := tc.event.Validate()
+			validateReaderWriter(t, tc, got, err)
 		})
 	}
 }
@@ -119,17 +119,12 @@ func TestEventRW_Type(t *testing.T) {
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 			var got interface{}
-			defer func() {
-				var err error
-				r := recover()
-				if r != nil {
-					err = r.(error)
-				}
-				validateReaderWriter(t, tc, got, err)
-			}()
 
 			tc.event.SetType(tc.set)
 			got = tc.event.Type()
+
+			err := tc.event.Validate()
+			validateReaderWriter(t, tc, got, err)
 		})
 	}
 }
@@ -170,17 +165,12 @@ func TestEventRW_ID(t *testing.T) {
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 			var got interface{}
-			defer func() {
-				var err error
-				r := recover()
-				if r != nil {
-					err = r.(error)
-				}
-				validateReaderWriter(t, tc, got, err)
-			}()
 
 			tc.event.SetID(tc.set)
 			got = tc.event.ID()
+
+			err := tc.event.Validate()
+			validateReaderWriter(t, tc, got, err)
 		})
 	}
 }
@@ -205,33 +195,81 @@ func TestEventRW_Source(t *testing.T) {
 		"invalid v01": {
 			event:   ce.New("0.1"),
 			set:     "%",
+			want:    "",
 			wantErr: "invalid URL escape",
 		},
 		"invalid v02": {
 			event:   ce.New("0.2"),
 			set:     "%",
+			want:    "",
 			wantErr: "invalid URL escape",
 		},
 		"invalid v03": {
 			event:   ce.New("0.3"),
 			set:     "%",
+			want:    "",
 			wantErr: "invalid URL escape",
 		},
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 			var got interface{}
-			defer func() {
-				var err error
-				r := recover()
-				if r != nil {
-					err = r.(error)
-				}
-				validateReaderWriter(t, tc, got, err)
-			}()
 
 			tc.event.SetSource(tc.set)
 			got = tc.event.Source()
+
+			err := tc.event.Validate()
+			validateReaderWriter(t, tc, got, err)
+		})
+	}
+}
+
+// Set will be split on pipe, set1|set2
+func TestEventRW_Corrected_Source(t *testing.T) {
+	testCases := map[string]ReadWriteTest{
+		"corrected v01": {
+			event:     ce.New("0.1"),
+			set:       "%|http://good",
+			want:      "",
+			corrected: "http://good",
+			wantErr:   "invalid URL escape",
+		},
+		"corrected v02": {
+			event:     ce.New("0.2"),
+			set:       "%|http://good",
+			want:      "",
+			corrected: "http://good",
+			wantErr:   "invalid URL escape",
+		},
+		"corrected v03": {
+			event:     ce.New("0.3"),
+			set:       "%|http://good",
+			want:      "",
+			corrected: "http://good",
+			wantErr:   "invalid URL escape",
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+			var got interface{}
+			var err error
+
+			// Split set on pipe.
+			set := strings.Split(tc.set, "|")
+
+			// Set
+
+			tc.event.SetSource(set[0])
+			got = tc.event.Source()
+			err = tc.event.Validate()
+			validateReaderWriter(t, tc, got, err)
+
+			// Correct
+
+			tc.event.SetSource(set[1])
+			got = tc.event.Source()
+			err = tc.event.Validate()
+			validateReaderWriterCorrected(t, tc, got, err)
 		})
 	}
 }
@@ -296,17 +334,12 @@ func TestEventRW_Subject(t *testing.T) {
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 			var got interface{}
-			defer func() {
-				var err error
-				r := recover()
-				if r != nil {
-					err = r.(error)
-				}
-				validateReaderWriter(t, tc, got, err)
-			}()
 
 			tc.event.SetSubject(tc.set)
 			got = tc.event.Subject()
+
+			err := tc.event.Validate()
+			validateReaderWriter(t, tc, got, err)
 		})
 	}
 }
@@ -358,14 +391,6 @@ func TestEventRW_Time(t *testing.T) {
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 			var got interface{}
-			defer func() {
-				var err error
-				r := recover()
-				if r != nil {
-					err = r.(error)
-				}
-				validateReaderWriter(t, tc, got, err)
-			}()
 
 			if tc.set == "now" {
 				tc.event.SetTime(now) // pull now from outer test.
@@ -373,6 +398,9 @@ func TestEventRW_Time(t *testing.T) {
 				tc.event.SetTime(time.Time{}) // pull now from outer test.
 			}
 			got = tc.event.Time()
+
+			err := tc.event.Validate()
+			validateReaderWriter(t, tc, got, err)
 		})
 	}
 }
@@ -397,16 +425,19 @@ func TestEventRW_SchemaURL(t *testing.T) {
 		"invalid v01": {
 			event:   ce.New("0.1"),
 			set:     "%",
+			want:    "",
 			wantErr: "invalid URL escape",
 		},
 		"invalid v02": {
 			event:   ce.New("0.2"),
 			set:     "%",
+			want:    "",
 			wantErr: "invalid URL escape",
 		},
 		"invalid v03": {
 			event:   ce.New("0.3"),
 			set:     "%",
+			want:    "",
 			wantErr: "invalid URL escape",
 		},
 		"nilled v01": {
@@ -437,17 +468,12 @@ func TestEventRW_SchemaURL(t *testing.T) {
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 			var got interface{}
-			defer func() {
-				var err error
-				r := recover()
-				if r != nil {
-					err = r.(error)
-				}
-				validateReaderWriter(t, tc, got, err)
-			}()
 
 			tc.event.SetDataSchema(tc.set)
 			got = tc.event.DataSchema()
+
+			err := tc.event.Validate()
+			validateReaderWriter(t, tc, got, err)
 		})
 	}
 }
@@ -512,17 +538,12 @@ func TestEventRW_DataContentType(t *testing.T) {
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 			var got interface{}
-			defer func() {
-				var err error
-				r := recover()
-				if r != nil {
-					err = r.(error)
-				}
-				validateReaderWriter(t, tc, got, err)
-			}()
 
 			tc.event.SetDataContentType(tc.set)
 			got = tc.event.DataContentType()
+
+			err := tc.event.Validate()
+			validateReaderWriter(t, tc, got, err)
 		})
 	}
 }
@@ -602,17 +623,12 @@ func TestEventRW_DataContentEncoding(t *testing.T) {
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 			var got interface{}
-			defer func() {
-				var err error
-				r := recover()
-				if r != nil {
-					err = r.(error)
-				}
-				validateReaderWriter(t, tc, got, err)
-			}()
 
 			tc.event.SetDataContentEncoding(tc.set)
 			got = tc.event.DeprecatedDataContentEncoding()
+
+			err := tc.event.Validate()
+			validateReaderWriter(t, tc, got, err)
 		})
 	}
 }
@@ -621,9 +637,6 @@ func validateReaderWriter(t *testing.T, tc ReadWriteTest, got interface{}, err e
 	var gotErr string
 	if err != nil {
 		gotErr = err.Error()
-		if tc.wantErr == "" {
-			t.Errorf("unexpected no error, got %q", gotErr)
-		}
 	}
 	if tc.wantErr != "" {
 		if !strings.Contains(gotErr, tc.wantErr) {
@@ -631,6 +644,21 @@ func validateReaderWriter(t *testing.T, tc ReadWriteTest, got interface{}, err e
 		}
 	}
 	if diff := cmp.Diff(tc.want, got); diff != "" {
+		t.Errorf("unexpected (-want, +got) = %v", diff)
+	}
+}
+
+func validateReaderWriterCorrected(t *testing.T, tc ReadWriteTest, got interface{}, err error) {
+	var gotErr string
+	if err != nil {
+		gotErr = err.Error()
+	}
+	if tc.wantErr != "" {
+		if strings.Contains(gotErr, tc.wantErr) {
+			t.Errorf("unexpected error, expected to NOT contain %q, got: %q ", tc.wantErr, gotErr)
+		}
+	}
+	if diff := cmp.Diff(tc.corrected, got); diff != "" {
 		t.Errorf("unexpected (-want, +got) = %v", diff)
 	}
 }
