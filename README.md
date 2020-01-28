@@ -6,8 +6,16 @@
 [![Releases](https://img.shields.io/github/release-pre/cloudevents/sdk-go.svg)](https://github.com/cloudevents/sdk-go/releases)
 [![LICENSE](https://img.shields.io/github/license/cloudevents/sdk-go.svg)](https://github.com/cloudevents/sdk-go/blob/master/LICENSE)
 
-**NOTE: This SDK is still considered work in progress, things might (and will)
-break with every update.**
+## Status
+
+This SDK is still considered a work in progress, therefore things might (and
+will) break with every update.
+
+This SDK current supports the following versions of CloudEvents:
+- v1.0
+- v0.3
+- v0.2
+- v0.1
 
 ## Working with CloudEvents
 
@@ -93,3 +101,15 @@ c, err := cloudevents.NewClient(t, opts...)
 
 Checkout the sample [sender](./cmd/samples/http/sender) and
 [receiver](./cmd/samples/http/receiver) applications for working demo.
+
+## Community
+
+- There are bi-weekly calls immediately following the [Serverless/CloudEvents
+  call](https://github.com/cloudevents/spec#meeting-time) at
+  9am PT (US Pacific). Which means they will typically start at 10am PT, but
+  if the other call ends early then the SDK call will start early as well.
+  See the [CloudEvents meeting minutes](https://docs.google.com/document/d/1OVF68rpuPK5shIHILK9JOqlZBbfe91RNzQ7u_P7YCDE/edit#)
+  to determine which week will have the call.
+- Slack: #cloudeventssdk channel under
+  [CNCF's Slack workspace](https://slack.cncf.io/).
+- Contact for additional information: Scott Nichols (`@Scott Nichols` on slack).
