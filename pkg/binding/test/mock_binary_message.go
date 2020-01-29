@@ -1,9 +1,11 @@
-package binding
+package test
 
 import (
 	"bytes"
 
 	cloudevents "github.com/cloudevents/sdk-go"
+	"github.com/cloudevents/sdk-go/pkg/binding"
+	"github.com/cloudevents/sdk-go/pkg/binding/event"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
 )
 
@@ -46,19 +48,19 @@ func NewMockBinaryMessage(e cloudevents.Event) *MockBinaryMessage {
 	return &m
 }
 
-func (bm *MockBinaryMessage) Event(b EventEncoder) error {
-	e, _, _, err := ToEvent(bm)
+func (bm *MockBinaryMessage) Event(b binding.EventEncoder) error {
+	e, _, _, err := event.ToEvent(bm)
 	if err != nil {
 		return err
 	}
 	return b.SetEvent(e)
 }
 
-func (bm *MockBinaryMessage) Structured(b StructuredEncoder) error {
-	return ErrNotStructured
+func (bm *MockBinaryMessage) Structured(b binding.StructuredEncoder) error {
+	return binding.ErrNotStructured
 }
 
-func (bm *MockBinaryMessage) Binary(b BinaryEncoder) error {
+func (bm *MockBinaryMessage) Binary(b binding.BinaryEncoder) error {
 	for k, v := range bm.Metadata {
 		err := b.SetAttribute(k, v)
 		if err != nil {
@@ -79,4 +81,4 @@ func (bm *MockBinaryMessage) Binary(b BinaryEncoder) error {
 
 func (bm *MockBinaryMessage) Finish(error) error { return nil }
 
-var _ Message = (*MockBinaryMessage)(nil) // Test it conforms to the interface
+var _ binding.Message = (*MockBinaryMessage)(nil) // Test it conforms to the interface

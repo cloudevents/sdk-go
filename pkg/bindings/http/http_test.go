@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
+	"github.com/cloudevents/sdk-go/pkg/binding/event"
 	"github.com/cloudevents/sdk-go/pkg/binding/test"
 	"github.com/cloudevents/sdk-go/pkg/bindings/http"
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
@@ -20,7 +21,7 @@ func TestForceSendStructured(t *testing.T) {
 	defer close()
 	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn ce.Event) {
 		eventIn = test.ExToStr(t, eventIn)
-		in := binding.NewMockBinaryMessage(eventIn)
+		in := test.NewMockBinaryMessage(eventIn)
 		test.SendReceive(t, in, s, r, func(out binding.Message) {
 			eventOut, isStructured, _ := test.MustToEvent(out)
 			assert.True(t, isStructured)
@@ -34,7 +35,7 @@ func TestForceSendBinary(t *testing.T) {
 	defer close()
 	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn ce.Event) {
 		eventIn = test.ExToStr(t, eventIn)
-		in := binding.NewMockStructuredMessage(eventIn)
+		in := test.NewMockStructuredMessage(eventIn)
 		test.SendReceive(t, in, s, r, func(out binding.Message) {
 			eventOut, _, isBinary := test.MustToEvent(out)
 			assert.True(t, isBinary)
@@ -48,7 +49,7 @@ func TestSendBinaryReceiveBinary(t *testing.T) {
 	defer close()
 	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn ce.Event) {
 		eventIn = test.ExToStr(t, eventIn)
-		in := binding.NewMockBinaryMessage(eventIn)
+		in := test.NewMockBinaryMessage(eventIn)
 		test.SendReceive(t, in, s, r, func(out binding.Message) {
 			eventOut, _, isBinary := test.MustToEvent(out)
 			assert.True(t, isBinary)
@@ -62,7 +63,7 @@ func TestSendStructReceiveStruct(t *testing.T) {
 	defer close()
 	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn ce.Event) {
 		eventIn = test.ExToStr(t, eventIn)
-		in := binding.NewMockStructuredMessage(eventIn)
+		in := test.NewMockStructuredMessage(eventIn)
 		test.SendReceive(t, in, s, r, func(out binding.Message) {
 			eventOut, isStructured, _ := test.MustToEvent(out)
 			assert.True(t, isStructured)
@@ -76,7 +77,7 @@ func TestSendEventReceiveBinary(t *testing.T) {
 	defer close()
 	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn ce.Event) {
 		eventIn = test.ExToStr(t, eventIn)
-		in := binding.EventMessage(eventIn)
+		in := event.EventMessage(eventIn)
 		test.SendReceive(t, in, s, r, func(out binding.Message) {
 			eventOut, _, isBinary := test.MustToEvent(out)
 			assert.True(t, isBinary)
