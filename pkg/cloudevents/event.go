@@ -17,7 +17,7 @@ type Event struct {
 }
 
 const (
-	defaultEventVersion = CloudEventsVersionV02
+	defaultEventVersion = CloudEventsVersionV1
 )
 
 func (e *Event) fieldError(field string, err error) {

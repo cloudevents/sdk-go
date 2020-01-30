@@ -21,20 +21,26 @@ func TestEventRW_SpecVersion(t *testing.T) {
 	testCases := map[string]ReadWriteTest{
 		"empty v01": {
 			event:   ce.New(),
-			want:    "0.2",
+			want:    "1.0",
 			set:     "0.1",
 			wantErr: "invalid version",
 		},
 		"empty v02": {
-			event: ce.New(),
-			want:  "0.2",
-			set:   "0.2",
+			event:   ce.New(),
+			want:    "1.0",
+			set:     "0.2",
+			wantErr: "invalid version",
 		},
 		"empty v03": {
 			event:   ce.New(),
-			want:    "0.2",
+			want:    "1.0",
 			set:     "0.3",
 			wantErr: "invalid version",
+		},
+		"empty v1": {
+			event: ce.New(),
+			set:   "1.0",
+			want:  "1.0",
 		},
 		"v01": {
 			event: ce.New("0.1"),
@@ -51,6 +57,11 @@ func TestEventRW_SpecVersion(t *testing.T) {
 			set:   "0.3",
 			want:  "0.3",
 		},
+		"v1": {
+			event: ce.New("1.0"),
+			set:   "1.0",
+			want:  "1.0",
+		},
 		"invalid v01": {
 			event:   ce.New("0.1"),
 			want:    "0.1",
@@ -66,6 +77,12 @@ func TestEventRW_SpecVersion(t *testing.T) {
 		"invalid v03": {
 			event:   ce.New("0.3"),
 			want:    "0.3",
+			set:     "1.3",
+			wantErr: "invalid version",
+		},
+		"invalid v1": {
+			event:   ce.New("1.0"),
+			want:    "1.0",
 			set:     "1.3",
 			wantErr: "invalid version",
 		},
