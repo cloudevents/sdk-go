@@ -1,13 +1,17 @@
 package amqp
 
 import (
+	"bytes"
 	"errors"
 	"reflect"
+	"strings"
 
+	"pack.ag/amqp"
+
+	"github.com/cloudevents/sdk-go/pkg/binding"
+	"github.com/cloudevents/sdk-go/pkg/binding/event"
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
-	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"pack.ag/amqp"
 )
 
 const prefix = "cloudEvents:" // Name prefix for AMQP properties that hold CE attributes.
@@ -21,47 +25,64 @@ var (
 // Message implements binding.Message by wrapping an *amqp.Message.
 type Message struct{ AMQP *amqp.Message }
 
-func (m Message) Structured() (string, []byte) {
-	if format.IsFormat(m.AMQP.Properties.ContentType) {
-		return m.AMQP.Properties.ContentType, m.AMQP.GetData()
+// Check if amqp.Message implements binding.Message
+var _ binding.Message = (*Message)(nil)
+
+func (m *Message) Structured(encoder binding.StructuredEncoder) error {
+	if m.AMQP.Properties != nil && format.IsFormat(m.AMQP.Properties.ContentType) {
+		return encoder.SetStructuredEvent(format.Lookup(m.AMQP.Properties.ContentType), bytes.NewReader(m.AMQP.GetData()))
 	}
-	return "", nil
+	return binding.ErrNotStructured
 }
 
-func (m Message) Event() (e ce.Event, err error) {
-	if f, b := m.Structured(); f != "" {
-		err = format.Unmarshal(f, b, &e)
-		return e, err
-	}
+func (m *Message) Binary(encoder binding.BinaryEncoder) error {
 	if len(m.AMQP.ApplicationProperties) == 0 {
-		return e, errors.New("AMQP CloudEvents message has no application properties")
+		return errors.New("AMQP CloudEvents message has no application properties")
 	}
 	version, err := specs.FindVersion(func(k string) string {
 		s, _ := m.AMQP.ApplicationProperties[k].(string)
 		return s
 	})
 	if err != nil {
-		return e, err
+		return err
 	}
-	c := version.NewContext()
 	if m.AMQP.Properties != nil && m.AMQP.Properties.ContentType != "" {
-		if err := c.SetDataContentType(m.AMQP.Properties.ContentType); err != nil {
-			return e, err
+		err = encoder.SetAttribute(version.AttributeFromKind(spec.DataContentType), m.AMQP.Properties.ContentType)
+		if err != nil {
+			return err
 		}
 	}
+
 	for k, v := range m.AMQP.ApplicationProperties {
-		if err := version.SetAttribute(c, k, v); err != nil {
-			return e, err
+		if strings.HasPrefix(k, prefix) {
+			attr := version.Attribute(k)
+			if attr != nil {
+				err = encoder.SetAttribute(attr, v)
+			} else {
+				err = encoder.SetExtension(strings.ToLower(strings.TrimPrefix(k, prefix)), v)
+			}
+		}
+		if err != nil {
+			return err
 		}
 	}
+
 	data := m.AMQP.GetData()
-	if len(data) == 0 { // No data
-		return ce.Event{Context: c}, nil
+	if len(data) != 0 { // Some data
+		return encoder.SetData(bytes.NewReader(data))
 	}
-	return ce.Event{Data: data, DataEncoded: true, Context: c}, nil
+	return nil
 }
 
-func (m Message) Finish(err error) error {
+func (m *Message) Event(encoder binding.EventEncoder) error {
+	e, _, _, err := event.ToEvent(m)
+	if err != nil {
+		return err
+	}
+	return encoder.SetEvent(e)
+}
+
+func (m *Message) Finish(err error) error {
 	if err != nil {
 		return m.AMQP.Reject(&amqp.Error{
 			Condition:   condition,

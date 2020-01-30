@@ -5,15 +5,19 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"reflect"
+	"sync"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
+	"github.com/cloudevents/sdk-go/pkg/binding/event"
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
-	"github.com/google/go-cmp/cmp"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 // NameOf generates a string test name from x, esp. for ce.Event and ce.Message.
@@ -25,11 +29,7 @@ func NameOf(x interface{}) string {
 			return fmt.Sprintf("Event%s", b)
 		}
 	case binding.Message:
-		if f, b := x.Structured(); f != "" {
-			return fmt.Sprintf("Message{MediaType:%s, Bytes:%s}", f, b)
-		} else if e, err := x.Event(); err == nil {
-			return fmt.Sprintf("Message{%s}", NameOf(e))
-		}
+		return fmt.Sprintf("Message{%s}", reflect.TypeOf(x).String())
 	}
 	return fmt.Sprintf("%T(%#v)", x, x)
 }
@@ -60,76 +60,58 @@ func Canonical(t *testing.T, c ce.EventContext) {
 	}
 }
 
-func EncodeAll(t *testing.T, in []ce.Event, enc binding.Encoder) (out []binding.Message) {
-	t.Helper()
-	for _, e := range in {
-		m, err := enc.Encode(e)
-		require.NoError(t, err)
-		out = append(out, m)
-	}
-	return out
-}
-
-// EncodeDecode enc.Encode(); m.Decode(); return result. Halt test on error.
-func EncodeDecode(t *testing.T, in ce.Event, enc binding.Encoder) (out ce.Event) {
-	t.Helper()
-	m, err := enc.Encode(in)
-	require.NoError(t, err)
-	out, err = m.Event()
-	require.NoError(t, err)
-	return out
-}
-
 // SendReceive does, s.Send(in) and returns r.Receive().
 // Halt test on error.
-func SendReceive(t *testing.T, in binding.Message, s binding.Sender, r binding.Receiver) binding.Message {
+func SendReceive(t *testing.T, in binding.Message, s binding.Sender, r binding.Receiver, outAssert func(binding.Message)) {
 	t.Helper()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	wg := sync.WaitGroup{}
+	wg.Add(2)
 
-	var out binding.Message
-	var recvErr error
-	done := make(chan struct{})
 	go func() {
-		defer close(done)
-		if out, recvErr = r.Receive(ctx); recvErr == nil {
-			recvErr = out.Finish(nil)
-		}
+		defer wg.Done()
+		out, recvErr := r.Receive(ctx)
+		require.NoError(t, recvErr)
+		outAssert(out)
+		finishErr := out.Finish(nil)
+		require.NoError(t, finishErr)
 	}()
-	require.NoError(t, s.Send(ctx, in), "Send error")
-	<-done
-	require.NoError(t, recvErr, "Receive error")
-	return out
+
+	go func() {
+		defer wg.Done()
+		err := s.Send(ctx, in)
+		require.NoError(t, err)
+	}()
+
+	wg.Wait()
 }
 
-// DiffMessageStruct compares x.Structured() and y.Structured()
-func DiffMessageStruct(x, y binding.Message) string {
-	var sx, sy binding.StructMessage
-	sx.Format, sx.Bytes = x.Structured()
-	sy.Format, sy.Bytes = x.Structured()
-	return cmp.Diff(sx, sy)
+func AssertEventEquals(t *testing.T, want cloudevents.Event, have cloudevents.Event) {
+	assert.Equal(t, want.Context, have.Context)
+	wantPayload, err := want.DataBytes()
+	assert.NoError(t, err)
+	havePayload, err := have.DataBytes()
+	assert.NoError(t, err)
+	assert.Equal(t, wantPayload, havePayload)
 }
 
-// AssertMessageEventEqual compares x.Event() and y.Event()
-func AssertMessageEventEqual(t testing.TB, x, y binding.Message) {
-	t.Helper()
-	ex, errx := x.Event()
-	ey, erry := y.Event()
-	assert.True(t, errx == nil && erry == nil, "Error comparing events: %q, %q", errx, erry)
-	assert.Equal(t, ex, ey)
-}
+func ExToStr(t *testing.T, e ce.Event) ce.Event {
+	for k, v := range e.Extensions() {
+		var vParsed interface{}
+		var err error
 
-// AssertMessageEqual asserts that x and y are both structured or both binary and equal.
-func AssertMessageEqual(t testing.TB, x, y binding.Message) {
-	t.Helper()
-	var sx, sy binding.StructMessage
-	sx.Format, sx.Bytes = x.Structured()
-	sy.Format, sy.Bytes = x.Structured()
-	if sx.Format != "" || sy.Format != "" {
-		assert.Equal(t, sx, sy)
-	} else {
-		AssertMessageEventEqual(t, x, y)
+		switch v.(type) {
+		case json.RawMessage:
+			err = json.Unmarshal(v.(json.RawMessage), &vParsed)
+			assert.NoError(t, err)
+		default:
+			vParsed, err = types.Format(v)
+			require.NoError(t, err)
+		}
+		e.SetExtension(k, vParsed)
 	}
+	return e
 }
 
 func MustJSON(e ce.Event) []byte {
@@ -138,4 +120,13 @@ func MustJSON(e ce.Event) []byte {
 		panic(err)
 	}
 	return b
+}
+
+func MustToEvent(m binding.Message) (e ce.Event, wasStructured bool, wasBinary bool) {
+	var err error
+	e, wasStructured, wasBinary, err = event.ToEvent(m)
+	if err != nil {
+		panic(err)
+	}
+	return
 }

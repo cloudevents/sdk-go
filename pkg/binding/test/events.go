@@ -31,16 +31,16 @@ func FullEvent() ce.Event {
 			DataSchema:      &schema,
 			DataContentType: strptr("text/json"),
 			Subject:         strptr("topic"),
-			Extensions: map[string]interface{}{
-				"exbool":   true,
-				"exint":    int32(42),
-				"exstring": "exstring",
-				"exbinary": []byte{0, 1, 2, 3},
-				"exurl":    source,
-				"extime":   timestamp.Time,
-			},
 		}.AsV1(),
 	}
+
+	e.SetExtension("exbool", true)
+	e.SetExtension("exint", 42)
+	e.SetExtension("exstring", "exstring")
+	e.SetExtension("exbinary", []byte{0, 1, 2, 3})
+	e.SetExtension("exurl", source)
+	e.SetExtension("extime", timestamp)
+
 	if err := e.SetData("hello"); err != nil {
 		panic(err)
 	}

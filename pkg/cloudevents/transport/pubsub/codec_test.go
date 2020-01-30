@@ -14,6 +14,10 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+const (
+	prefix = "ce-"
+)
+
 func strptr(s string) *string {
 	return &s
 }

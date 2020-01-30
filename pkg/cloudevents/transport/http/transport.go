@@ -170,7 +170,9 @@ func (t *Transport) Send(ctx context.Context, event cloudevents.Event) (context.
 func (t *Transport) obsSend(ctx context.Context, event cloudevents.Event) (context.Context, *cloudevents.Event, error) {
 	if t.Client == nil {
 		t.crMu.Lock()
-		t.Client = &http.Client{}
+		if t.Client == nil {
+			t.Client = &http.Client{}
+		}
 		t.crMu.Unlock()
 	}
 
@@ -383,9 +385,14 @@ func (t *Transport) longPollStart(ctx context.Context) error {
 	req = req.WithContext(ctx)
 	msgCh := make(chan Message)
 	defer close(msgCh)
+	isClosed := false
 
 	go func(ch chan<- Message) {
 		for {
+			if isClosed {
+				return
+			}
+
 			if resp, err := t.LongPollClient.Do(req); err != nil {
 				logger.Errorw("long poll request returned error", err)
 				uErr := err.(*url.Error)
@@ -424,6 +431,7 @@ func (t *Transport) longPollStart(ctx context.Context) error {
 	for {
 		select {
 		case <-ctx.Done():
+			isClosed = true
 			return nil
 		case msg := <-msgCh:
 			logger.Debug("got a message", zap.Any("msg", msg))

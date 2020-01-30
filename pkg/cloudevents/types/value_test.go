@@ -69,7 +69,7 @@ func (t valueTester) convert(v interface{}) (interface{}, error) {
 	return result[0].Interface(), err
 }
 
-// Verify round trip: convertible -> preferred -> string -> preferred
+// Verify round trip: convertible -> wrapped -> string -> wrapped
 func (t *valueTester) ok(in, want interface{}, wantStr string) {
 	t.Helper()
 	got, err := types.Validate(in)
@@ -80,9 +80,29 @@ func (t *valueTester) ok(in, want interface{}, wantStr string) {
 	require.NoError(t, err)
 	assert.Equal(t, wantStr, gotStr)
 
-	x, err := t.convert(got)
+	x, err := t.convert(gotStr)
 	assert.NoError(t, err)
-	assert.Equal(t, want, x)
+	x2, err := types.Validate(x)
+	assert.NoError(t, err)
+	assert.Equal(t, want, x2)
+}
+
+// Verify round trip with exception: convertible -> wrapped -> string -> different wrapped
+func (t *valueTester) okWithDifferentFromString(in, want interface{}, wantStr string, wantAfterStr interface{}) {
+	t.Helper()
+	got, err := types.Validate(in)
+	require.NoError(t, err)
+	assert.Equal(t, want, got)
+
+	gotStr, err := types.Format(in)
+	require.NoError(t, err)
+	assert.Equal(t, wantStr, gotStr)
+
+	x, err := t.convert(gotStr)
+	assert.NoError(t, err)
+	x2, err := types.Validate(x)
+	assert.NoError(t, err)
+	assert.Equal(t, wantAfterStr, x2)
 }
 
 // Verify expected error.
@@ -179,12 +199,14 @@ func TestBinary(t *testing.T) {
 
 func TestURL(t *testing.T) {
 	x := valueTester{t, types.ToURL}
-	x.ok(testURL, testURL, testURLstr)
-	x.ok(*testURL, testURL, testURLstr)
-	x.ok(types.URLRef{URL: *testURL}, testURL, testURLstr)
-	x.ok(&types.URLRef{URL: *testURL}, testURL, testURLstr)
-	x.ok(types.URI{URL: *testURL}, testURL, testURLstr)
-	x.ok(&types.URI{URL: *testURL}, testURL, testURLstr)
+	x.ok(testURL, types.URI{*testURL}, testURLstr)
+	x.ok(*testURL, types.URI{*testURL}, testURLstr)
+	x.okWithDifferentFromString(types.URLRef{URL: *testURL}, types.URIRef{*testURL}, testURLstr, types.URI{*testURL})
+	x.okWithDifferentFromString(&types.URLRef{URL: *testURL}, types.URIRef{*testURL}, testURLstr, types.URI{*testURL})
+	x.okWithDifferentFromString(types.URIRef{URL: *testURL}, types.URIRef{*testURL}, testURLstr, types.URI{*testURL})
+	x.okWithDifferentFromString(&types.URIRef{URL: *testURL}, types.URIRef{*testURL}, testURLstr, types.URI{*testURL})
+	x.ok(types.URI{URL: *testURL}, types.URI{*testURL}, testURLstr)
+	x.ok(&types.URI{URL: *testURL}, types.URI{*testURL}, testURLstr)
 
 	x.str("http://hello/world", &url.URL{Scheme: "http", Host: "hello", Path: "/world"})
 	x.str("/world", &url.URL{Path: "/world"})
@@ -198,10 +220,10 @@ func TestURL(t *testing.T) {
 
 func TestTime(t *testing.T) {
 	x := valueTester{t, types.ToTime}
-	x.ok(someTime, someTime, timeStr)
-	x.ok(&someTime, someTime, timeStr)
-	x.ok(someTime, someTime, timeStr)
-	x.ok(&someTime, someTime, timeStr)
+	x.ok(someTime, types.Timestamp{someTime}, timeStr)
+	x.ok(&someTime, types.Timestamp{someTime}, timeStr)
+	x.ok(types.Timestamp{someTime}, types.Timestamp{someTime}, timeStr)
+	x.ok(&types.Timestamp{someTime}, types.Timestamp{someTime}, timeStr)
 
 	x.str(timeStr, someTime)
 

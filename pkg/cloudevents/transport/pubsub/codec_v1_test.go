@@ -62,7 +62,8 @@ func TestCodecV1_Encode(t *testing.T) {
 					DataContentType: cloudevents.StringOfApplicationJSON(),
 					Source:          *source,
 					Extensions: map[string]interface{}{
-						"test": "extended",
+						"test":       "extended",
+						"generation": "1579743478182200",
 					},
 				}.AsV1(),
 				Data: map[string]interface{}{
@@ -84,10 +85,51 @@ func TestCodecV1_Encode(t *testing.T) {
 						"time":       now,
 						"type":       "com.example.test",
 						"test":       "extended",
+						"generation": "1579743478182200",
 						"dataschema": "http://example.com/schema",
 						"source":     "http://example.com/source",
 					}
 					return toBytes(body)
+				}(),
+			},
+		},
+		"full v1.0 binary": {
+			codec: pubsub.CodecV1{
+				DefaultEncoding: pubsub.BinaryV1,
+			},
+			event: cloudevents.Event{
+				Context: cloudevents.EventContextV1{
+					ID:         "ABC-123",
+					Time:       &now,
+					Type:       "com.example.test",
+					DataSchema: schema,
+					Source:     *source,
+					Extensions: map[string]interface{}{
+						"test":       "extended",
+						"generation": "1579743478182200",
+					},
+				}.AsV1(),
+				Data: map[string]interface{}{
+					"hello": "world",
+				},
+			},
+			want: &pubsub.Message{
+				Attributes: map[string]string{
+					prefix + "specversion":     "1.0",
+					prefix + "id":              "ABC-123",
+					prefix + "datacontenttype": cloudevents.ApplicationJSON,
+					prefix + "time":            now.String(),
+					prefix + "type":            "com.example.test",
+					prefix + "dataschema":      "http://example.com/schema",
+					prefix + "source":          "http://example.com/source",
+					prefix + "test":            "extended",
+					prefix + "generation":      "1579743478182200",
+				},
+				Data: func() []byte {
+					data := map[string]interface{}{
+						"hello": "world",
+					}
+					return toBytes(data)
 				}(),
 			},
 		},
@@ -238,6 +280,7 @@ func TestCodecV1_Decode(t *testing.T) {
 					"time":       now,
 					"type":       "com.example.test",
 					"test":       "extended",
+					"generation": "1579743478182200",
 					"dataschema": "http://example.com/schema",
 					"source":     "http://example.com/source",
 				}),
@@ -252,7 +295,44 @@ func TestCodecV1_Decode(t *testing.T) {
 					DataContentType: cloudevents.StringOfApplicationJSON(),
 					Source:          *source,
 					Extensions: map[string]interface{}{
-						"test": "extended",
+						"test":       "extended",
+						"generation": "1579743478182200",
+					},
+				},
+				Data: toBytes(map[string]interface{}{
+					"hello": "world",
+				}),
+				DataEncoded: true,
+			},
+		},
+		"full v1.0 binary": {
+			codec: pubsub.CodecV1{},
+			msg: &pubsub.Message{
+				Attributes: map[string]string{
+					prefix + "specversion": "1.0",
+					prefix + "id":          "ABC-123",
+					prefix + "time":        now.String(),
+					prefix + "type":        "com.example.test",
+					prefix + "dataschema":  "http://example.com/schema",
+					prefix + "source":      "http://example.com/source",
+					prefix + "test":        "extended",
+					prefix + "generation":  "1579743478182200",
+				},
+				Data: toBytes(map[string]interface{}{
+					"hello": "world",
+				}),
+			},
+			want: &cloudevents.Event{
+				Context: &cloudevents.EventContextV1{
+					SpecVersion: cloudevents.CloudEventsVersionV1,
+					ID:          "ABC-123",
+					Time:        &now,
+					Type:        "com.example.test",
+					DataSchema:  schema,
+					Source:      *source,
+					Extensions: map[string]interface{}{
+						"test":       "extended",
+						"generation": "1579743478182200",
 					},
 				},
 				Data: toBytes(map[string]interface{}{

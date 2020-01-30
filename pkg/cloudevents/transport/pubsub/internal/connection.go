@@ -36,6 +36,9 @@ type Connection struct {
 	subWasCreated  bool
 	subOnce        sync.Once
 
+	// ReceiveSettings is used to configure Pubsub pull subscription.
+	ReceiveSettings *pubsub.ReceiveSettings
+
 	// AckDeadline is Pub/Sub AckDeadline.
 	// Default is 30 seconds.
 	AckDeadline *time.Duration
@@ -48,6 +51,17 @@ const (
 	DefaultAckDeadline       = 30 * time.Second
 	DefaultRetentionDuration = 25 * time.Hour
 )
+
+var DefaultReceiveSettings = pubsub.ReceiveSettings{
+	// Pubsub default receive settings will fill in other values.
+	// https://godoc.org/cloud.google.com/go/pubsub#Client.Subscription
+
+	// Override the default number of goroutines.
+	// This is a magical number now. This has shown throughput improvements empirically
+	// by at least 10x (compared to the default value).
+	NumGoroutines: 1000,
+	Synchronous:   false,
+}
 
 func (c *Connection) getOrCreateTopic(ctx context.Context) (*pubsub.Topic, error) {
 	var err error
@@ -82,15 +96,16 @@ func (c *Connection) getOrCreateTopic(ctx context.Context) (*pubsub.Topic, error
 
 // DeleteTopic
 func (c *Connection) DeleteTopic(ctx context.Context) error {
-	if c.topicWasCreated {
-		if err := c.topic.Delete(ctx); err != nil {
-			return err
-		}
-		c.topic = nil
-		c.topicWasCreated = false
-		c.topicOnce = sync.Once{}
+	if !c.topicWasCreated {
+		return errors.New("topic was not created by pubsub transport")
 	}
-	return errors.New("topic was not created by pubsub transport")
+	if err := c.topic.Delete(ctx); err != nil {
+		return err
+	}
+	c.topic = nil
+	c.topicWasCreated = false
+	c.topicOnce = sync.Once{}
+	return nil
 }
 
 func (c *Connection) getOrCreateSubscription(ctx context.Context) (*pubsub.Subscription, error) {
@@ -138,6 +153,11 @@ func (c *Connection) getOrCreateSubscription(ctx context.Context) (*pubsub.Subsc
 				_ = c.Client.Close()
 				return
 			}
+			if c.ReceiveSettings == nil {
+				sub.ReceiveSettings = DefaultReceiveSettings
+			} else {
+				sub.ReceiveSettings = *c.ReceiveSettings
+			}
 			c.subWasCreated = true
 		}
 		// Success.
@@ -151,15 +171,16 @@ func (c *Connection) getOrCreateSubscription(ctx context.Context) (*pubsub.Subsc
 
 // DeleteSubscription
 func (c *Connection) DeleteSubscription(ctx context.Context) error {
-	if c.subWasCreated {
-		if err := c.sub.Delete(ctx); err != nil {
-			return err
-		}
-		c.sub = nil
-		c.subWasCreated = false
-		c.subOnce = sync.Once{}
+	if !c.subWasCreated {
+		return errors.New("subscription was not created by pubsub transport")
 	}
-	return errors.New("subscription was not created by pubsub transport")
+	if err := c.sub.Delete(ctx); err != nil {
+		return err
+	}
+	c.sub = nil
+	c.subWasCreated = false
+	c.subOnce = sync.Once{}
+	return nil
 }
 
 // Publish

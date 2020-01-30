@@ -2,7 +2,6 @@ package pubsub
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -118,27 +117,13 @@ func (v CodecV1) toAttributes(e cloudevents.Event) (map[string]string, error) {
 	}
 
 	for k, v := range e.Extensions() {
-		if mapVal, ok := v.(map[string]interface{}); ok {
-			for subkey, subval := range mapVal {
-				encoded, err := json.Marshal(subval)
-				if err != nil {
-					return nil, err
-				}
-				a[prefix+k+"-"+subkey] = string(encoded)
-			}
-			continue
-		}
-		if s, ok := v.(string); ok {
-			a[prefix+k] = s
-			continue
-		}
-		encoded, err := json.Marshal(v)
+		k = strings.ToLower(k)
+		cstr, err := types.Format(v)
 		if err != nil {
-			return nil, err
+			return a, err
 		}
-		a[prefix+k] = string(encoded)
+		a[prefix+k] = cstr
 	}
-
 	return a, nil
 }
 
@@ -244,32 +229,7 @@ func (v CodecV1) fromAttributes(a map[string]string, event *cloudevents.Event) e
 	for k, v := range a {
 		if len(k) > len(prefix) && strings.EqualFold(k[:len(prefix)], prefix) {
 			ak := strings.ToLower(k[len(prefix):])
-			if i := strings.Index(ak, "-"); i > 0 {
-				// attrib-key
-				attrib := ak[:i]
-				key := ak[(i + 1):]
-				if xv, ok := extensions[attrib]; ok {
-					if m, ok := xv.(map[string]interface{}); ok {
-						m[key] = v
-						continue
-					}
-					// TODO: revisit how we want to bubble errors up.
-					return fmt.Errorf("failed to process map type extension")
-				} else {
-					m := make(map[string]interface{})
-					m[key] = v
-					extensions[attrib] = m
-				}
-			} else {
-				// key
-				var tmp interface{}
-				if err := json.Unmarshal([]byte(v), &tmp); err == nil {
-					extensions[ak] = tmp
-				} else {
-					// If we can't unmarshal the data, treat it as a string.
-					extensions[ak] = v
-				}
-			}
+			extensions[ak] = v
 		}
 	}
 	event.Context = ec

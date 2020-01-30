@@ -1,198 +1,220 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"encoding/csv"
 	"flag"
+	"fmt"
 	"io"
-	"io/ioutil"
+	"math/rand"
 	nethttp "net/http"
 	"net/http/httptest"
-	"net/url"
 	"os"
 	"runtime"
 	"runtime/pprof"
-	"strconv"
+	"sync"
 	"testing"
+	"time"
 
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
+	"github.com/cloudevents/sdk-go/pkg/binding/buffering"
 	"github.com/cloudevents/sdk-go/pkg/bindings/http"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
-	cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+	"github.com/cloudevents/sdk-go/test/benchmark"
 )
 
-type RoundTripFunc func(req *nethttp.Request) *nethttp.Response
+var letters = []byte("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
-func (f RoundTripFunc) RoundTrip(req *nethttp.Request) (*nethttp.Response, error) {
-	return f(req), nil
-}
-
-func NewTestClient(fn RoundTripFunc) *nethttp.Client {
-	return &nethttp.Client{
-		Transport: RoundTripFunc(fn),
+func fillRandom(buf []byte, r *rand.Rand) {
+	for i := 0; i < cap(buf); i++ {
+		buf[i] = letters[r.Intn(len(letters))]
 	}
-}
-
-func generateRandomValue(kb int, value byte) []byte {
-	length := 1024 * kb
-	b := make([]byte, length)
-	for i := 0; i < length; i++ {
-		b[i] = value
-	}
-	return b
-}
-
-func MockedSender() *http.Sender {
-	u, _ := url.Parse("http://localhost")
-	return http.NewSender(NewTestClient(func(req *nethttp.Request) *nethttp.Response {
-		return &nethttp.Response{
-			StatusCode: 202,
-			Header:     make(nethttp.Header),
-		}
-	}), u)
-}
-
-func MockedClient() (cloudevents.Client, *cehttp.Transport) {
-	t, err := cehttp.New(cehttp.WithTarget("http://localhost"))
-
-	if err != nil {
-		panic(err)
-	}
-
-	t.Client = NewTestClient(func(req *nethttp.Request) *nethttp.Response {
-		return &nethttp.Response{
-			StatusCode: 202,
-			Header:     make(nethttp.Header),
-			Body:       ioutil.NopCloser(bytes.NewReader([]byte{})),
-		}
-	})
-
-	client, err := cloudevents.NewClient(t)
-
-	if err != nil {
-		panic(err)
-	}
-
-	t.SetReceiver(transport.ReceiveFunc(func(ctx context.Context, e cloudevents.Event, er *cloudevents.EventResponse) error {
-		_, _, _ = client.Send(ctx, e)
-		er.RespondWith(202, nil)
-		return nil
-	}))
-
-	return client, t
-}
-
-func MockedRequest(body []byte) *nethttp.Request {
-	r := httptest.NewRequest("POST", "http://localhost:8080", bytes.NewBuffer(body))
-	r.Header.Add("Ce-id", "0")
-	r.Header.Add("Ce-subject", "sub")
-	r.Header.Add("Ce-specversion", "1.0")
-	r.Header.Add("Ce-type", "t")
-	r.Header.Add("Ce-source", "http://localhost")
-	r.Header.Add("Content-type", "text/plain")
-	return r
 }
 
 // Avoid DCE
 var W *httptest.ResponseRecorder
 var R *nethttp.Request
 
-type BenchResult struct {
-	parallelism   int
-	payloadSizeKb int
-	testing.BenchmarkResult
-}
+func benchmarkBaseline(cases []benchmark.BenchmarkCase, requestFactory func([]byte) *nethttp.Request) benchmark.BenchmarkResults {
+	var results benchmark.BenchmarkResults
+	r := rand.New(rand.NewSource(time.Now().Unix()))
 
-func runBench(do func(body []byte)) []BenchResult {
-	results := make([]BenchResult, 0)
-	for p := 1; p <= runtime.NumCPU(); p++ {
-		for k := 1; k <= 32; k *= 2 {
-			body := generateRandomValue(k, byte('a'))
-			r := testing.Benchmark(func(b *testing.B) {
-				b.SetParallelism(p)
-				b.RunParallel(func(pb *testing.PB) {
-					for pb.Next() {
-						do(body)
-					}
-				})
-			})
-			results = append(results, BenchResult{p, k, r})
+	for _, c := range cases {
+		if c.OutputSenders > 1 {
+			// It doesn't make sense for this test
+			continue
 		}
+		fmt.Printf("%+v\n", c)
+
+		buffer := make([]byte, c.PayloadSize)
+		fillRandom(buffer, r)
+
+		result := testing.Benchmark(func(b *testing.B) {
+			b.SetParallelism(c.Parallelism)
+			b.RunParallel(func(pb *testing.PB) {
+				for pb.Next() {
+					W = httptest.NewRecorder()
+					R = requestFactory(buffer)
+				}
+			})
+		})
+		results = append(results, benchmark.BenchmarkResult{BenchmarkCase: c, BenchmarkResult: result})
 	}
+
 	return results
 }
 
-func benchmarkBaseline() []BenchResult {
-	return runBench(func(body []byte) {
-		W = httptest.NewRecorder()
-		R = MockedRequest(body)
-	})
+func pipeLoopDirect(r *http.Receiver, endCtx context.Context, opts ...http.SenderOptionFunc) {
+	s := MockedSender(opts...)
+	var err error
+	var m binding.Message
+	for err != io.EOF {
+		select {
+		case <-endCtx.Done():
+			return
+		default:
+			m, err = r.Receive(endCtx)
+			if err != nil || m == nil {
+				continue
+			}
+			_ = s.Send(context.Background(), m)
+		}
+	}
 }
 
-func benchmarkReceiverSender() []BenchResult {
-	r := http.NewReceiver()
+func pipeLoopMulti(r *http.Receiver, endCtx context.Context, outputSenders int, opts ...http.SenderOptionFunc) {
+	s := MockedSender(opts...)
+	var err error
+	var m binding.Message
+	for err != io.EOF {
+		select {
+		case <-endCtx.Done():
+			return
+		default:
+			m, err = r.Receive(endCtx)
+			if err != nil {
+				continue
+			}
+			copiedMessage, err := buffering.BufferMessage(m)
+			if err != nil {
+				continue
+			}
+			outputMessage := buffering.WithAcksBeforeFinish(copiedMessage, outputSenders)
+			for i := 0; i < outputSenders; i++ {
+				go func(m binding.Message) {
+					_ = s.Send(context.Background(), outputMessage)
+				}(outputMessage)
+			}
+		}
+	}
+}
 
-	results := make([]BenchResult, 0)
-	for p := 1; p <= runtime.NumCPU(); p++ {
+func benchmarkReceiverSender(cases []benchmark.BenchmarkCase, requestFactory func([]byte) *nethttp.Request, opts ...http.SenderOptionFunc) benchmark.BenchmarkResults {
+	var results benchmark.BenchmarkResults
+	random := rand.New(rand.NewSource(time.Now().Unix()))
+
+	for _, c := range cases {
+		fmt.Printf("%+v\n", c)
+
 		ctx, cancel := context.WithCancel(context.TODO())
+		receiver := http.NewReceiver()
 
 		// Spawn dispatchers
-		for i := 0; i < p; i++ {
-			go func(r *http.Receiver) {
-				s := MockedSender()
-				var err error
-				var m binding.Message
-				messageCtx := context.Background()
-				for err != io.EOF {
-					select {
-					case _, ok := <-ctx.Done():
-						if !ok {
-							return
-						}
-					default:
-						m, err = r.Receive(messageCtx)
-						if err != nil {
-							continue
-						}
-						_ = s.Send(messageCtx, m)
-					}
-				}
-			}(r)
+		for i := 0; i < c.Parallelism; i++ {
+			if c.OutputSenders == 1 {
+				go pipeLoopDirect(receiver, ctx, opts...)
+			} else {
+				go pipeLoopMulti(receiver, ctx, c.OutputSenders, opts...)
+			}
 		}
 
-		for k := 1; k <= 32; k *= 2 {
-			body := generateRandomValue(k, byte('a'))
-			r := testing.Benchmark(func(b *testing.B) {
-				b.SetParallelism(p)
-				b.RunParallel(func(pb *testing.PB) {
-					for pb.Next() {
-						w := httptest.NewRecorder()
-						r.ServeHTTP(w, MockedRequest(body))
-					}
-				})
+		buffer := make([]byte, c.PayloadSize)
+		fillRandom(buffer, random)
+		runtime.GC()
+
+		result := testing.Benchmark(func(b *testing.B) {
+			b.SetParallelism(c.Parallelism)
+			b.RunParallel(func(pb *testing.PB) {
+				for pb.Next() {
+					w := httptest.NewRecorder()
+					receiver.ServeHTTP(w, requestFactory(buffer))
+				}
 			})
-			results = append(results, BenchResult{p, k, r})
-		}
+		})
+		results = append(results, benchmark.BenchmarkResult{BenchmarkCase: c, BenchmarkResult: result})
 
 		cancel()
+		runtime.GC()
 	}
+
 	return results
 }
 
-func benchmarkClient() []BenchResult {
-	_, mockedTransport := MockedClient()
-
-	return runBench(func(body []byte) {
-		w := httptest.NewRecorder()
-		mockedTransport.ServeHTTP(w, MockedRequest(body))
+func dispatchReceiver(clients []cloudevents.Client, outputSenders int) transport.Receiver {
+	return transport.ReceiveFunc(func(ctx context.Context, e cloudevents.Event, er *cloudevents.EventResponse) error {
+		var wg sync.WaitGroup
+		for i := 0; i < outputSenders; i++ {
+			wg.Add(1)
+			go func(client cloudevents.Client) {
+				_, _, _ = client.Send(ctx, e)
+				wg.Done()
+			}(clients[i])
+		}
+		wg.Wait()
+		er.RespondWith(200, nil)
+		return nil
 	})
+}
+
+func benchmarkClient(cases []benchmark.BenchmarkCase, requestFactory func([]byte) *nethttp.Request) benchmark.BenchmarkResults {
+	var results benchmark.BenchmarkResults
+	random := rand.New(rand.NewSource(time.Now().Unix()))
+
+	for _, c := range cases {
+		fmt.Printf("%+v\n", c)
+
+		_, mockedReceiverTransport := MockedClient()
+
+		senderClients := make([]cloudevents.Client, c.OutputSenders)
+		for i := 0; i < c.OutputSenders; i++ {
+			senderClients[i], _ = MockedClient()
+		}
+
+		mockedReceiverTransport.SetReceiver(dispatchReceiver(senderClients, c.OutputSenders))
+
+		buffer := make([]byte, c.PayloadSize)
+		fillRandom(buffer, random)
+		runtime.GC()
+
+		result := testing.Benchmark(func(b *testing.B) {
+			b.SetParallelism(c.Parallelism)
+			b.RunParallel(func(pb *testing.PB) {
+				for pb.Next() {
+					w := httptest.NewRecorder()
+					mockedReceiverTransport.ServeHTTP(w, requestFactory(buffer))
+				}
+			})
+		})
+		results = append(results, benchmark.BenchmarkResult{BenchmarkCase: c, BenchmarkResult: result})
+
+		runtime.GC()
+	}
+
+	return results
 }
 
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to `file`")
 var memprofile = flag.String("memprofile", "", "write memory profile to `file`")
-var bench = flag.String("bench", "baseline", "[baseline, receiver-sender, client]")
+var bench = flag.String(
+	"bench",
+	"baseline-binary",
+	"[baseline-structured, baseline-binary, binding-structured-to-structured, binding-structured-to-binary, binding-binary-to-structured, binding-binary-to-binary, client-binary, client-structured]",
+)
+var out = flag.String("out", "out.csv", "Output file")
+var maxPayloadKb = flag.Int("max-payload", 32, "Max payload size in kb")
+var maxParallelism = flag.Int("max-parallelism", runtime.NumCPU()*2, "Max parallelism")
+var maxOutputSenders = flag.Int("max-output-senders", 1, "Max output senders")
 
 func main() {
 	flag.Parse()
@@ -204,17 +226,43 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	var results []BenchResult
+	benchmarkCases := benchmark.GenerateAllBenchmarkCases(
+		1024,
+		1024*(*maxPayloadKb),
+		1,
+		*maxParallelism,
+		1,
+		*maxOutputSenders, //TODO to be increased when receiver-sender will support multi senders
+	)
+
+	var results benchmark.BenchmarkResults
+
+	fmt.Printf("--- Starting benchmark %s ---\n", *bench)
 
 	switch *bench {
-	case "baseline":
-		results = benchmarkBaseline()
+	case "baseline-structured":
+		results = benchmarkBaseline(benchmarkCases, MockedStructuredRequest)
 		break
-	case "receiver-sender":
-		results = benchmarkReceiverSender()
+	case "baseline-binary":
+		results = benchmarkBaseline(benchmarkCases, MockedBinaryRequest)
 		break
-	case "client":
-		results = benchmarkClient()
+	case "binding-structured-to-structured":
+		results = benchmarkReceiverSender(benchmarkCases, MockedStructuredRequest, http.ForceStructured())
+		break
+	case "binding-structured-to-binary":
+		results = benchmarkReceiverSender(benchmarkCases, MockedStructuredRequest, http.ForceBinary())
+		break
+	case "binding-binary-to-structured":
+		results = benchmarkReceiverSender(benchmarkCases, MockedBinaryRequest, http.ForceStructured())
+		break
+	case "binding-binary-to-binary":
+		results = benchmarkReceiverSender(benchmarkCases, MockedBinaryRequest, http.ForceBinary())
+		break
+	case "client-binary":
+		results = benchmarkClient(benchmarkCases, MockedBinaryRequest)
+		break
+	case "client-structured":
+		results = benchmarkClient(benchmarkCases, MockedStructuredRequest)
 		break
 	default:
 		panic("Wrong bench flag")
@@ -229,16 +277,17 @@ func main() {
 		_ = pprof.WriteHeapProfile(f)
 	}
 
-	writer := csv.NewWriter(os.Stdout)
+	f, err := os.Create(*out)
+	if err != nil {
+		panic(fmt.Sprintf("Cannot open file %s: %v", *out, err))
+	}
+	defer f.Close()
+
+	writer := csv.NewWriter(f)
 	defer writer.Flush()
 
-	for _, res := range results {
-		_ = writer.Write([]string{
-			strconv.Itoa(res.parallelism),
-			strconv.Itoa(res.payloadSizeKb),
-			strconv.FormatInt(res.NsPerOp(), 10),
-			strconv.FormatInt(res.AllocedBytesPerOp(), 10),
-		})
+	err = results.WriteToCsv(writer)
+	if err != nil {
+		panic(err)
 	}
-
 }

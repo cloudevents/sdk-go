@@ -24,6 +24,14 @@ type Format interface {
 	Unmarshal([]byte, *ce.Event) error
 }
 
+// UnknownFormat allows an event with an unknown format string to be forwarded,
+// but Marshal() and Unmarshal will always fail.
+type UnknownFormat string
+
+func (uf UnknownFormat) MediaType() string                 { return string(uf) }
+func (uf UnknownFormat) Marshal(ce.Event) ([]byte, error)  { return nil, unknown(uf.MediaType()) }
+func (uf UnknownFormat) Unmarshal([]byte, *ce.Event) error { return unknown(uf.MediaType()) }
+
 // Prefix for event-format media types.
 const Prefix = "application/cloudevents"
 
@@ -37,8 +45,28 @@ type jsonFmt struct{}
 
 func (jsonFmt) MediaType() string { return ce.ApplicationCloudEventsJSON }
 
-func (jsonFmt) Marshal(e ce.Event) ([]byte, error)    { return json.Marshal(e) }
-func (jsonFmt) Unmarshal(b []byte, e *ce.Event) error { return json.Unmarshal(b, e) }
+func (jsonFmt) Marshal(e ce.Event) ([]byte, error) { return json.Marshal(e) }
+func (jsonFmt) Unmarshal(b []byte, e *ce.Event) error {
+	err := json.Unmarshal(b, e)
+	if err != nil {
+		return err
+	}
+
+	// Extensions to go types when unparsed
+	for k, v := range e.Extensions() {
+		var vParsed interface{}
+		switch v.(type) {
+		case json.RawMessage:
+			err = json.Unmarshal(v.(json.RawMessage), &vParsed)
+			if err != nil {
+				return err
+			}
+			e.SetExtension(k, vParsed)
+		}
+	}
+
+	return nil
+}
 
 // built-in formats
 var formats map[string]Format

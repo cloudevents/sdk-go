@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"go.uber.org/zap"
 	"strings"
 	"sync"
+
+	"go.uber.org/zap"
 
 	"cloud.google.com/go/pubsub"
 
@@ -41,6 +42,9 @@ type Transport struct {
 	coMu sync.Mutex
 
 	// PubSub
+
+	// ReceiveSettings is used to configure Pubsub pull subscription.
+	ReceiveSettings *pubsub.ReceiveSettings
 
 	// AllowCreateTopic controls if the transport can create a topic if it does
 	// not exist.
@@ -154,6 +158,7 @@ func (t *Transport) getOrCreateConnection(ctx context.Context, topic, subscripti
 	conn := &internal.Connection{
 		AllowCreateSubscription: t.AllowCreateSubscription,
 		AllowCreateTopic:        t.AllowCreateTopic,
+		ReceiveSettings:         t.ReceiveSettings,
 		Client:                  t.client,
 		ProjectID:               t.projectID,
 		TopicID:                 topic,

@@ -88,7 +88,7 @@ func TestSendReceive(t *testing.T) {
 		_, _, err := tester.s.Send(ctx, e)
 		assert.NoError(t, err)
 		got := <-tester.got
-		assert.Equal(t, exurl(e), got)
+		test.AssertEventEquals(t, exurl(e), got.(ce.Event))
 	})
 }
 
@@ -103,6 +103,6 @@ func TestWithEncoding(t *testing.T) {
 		assert.NoError(t, err)
 		got := <-tester.got
 		e.Context = spec.V03.Convert(e.Context)
-		assert.Equal(t, exurl(e), got)
+		test.AssertEventEquals(t, exurl(e), got.(ce.Event))
 	})
 }
