@@ -11,6 +11,35 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 )
 
+//TODO (slinkydeveloper) this is the public access to http encoders, document it
+func EncodeHttpRequest(m binding.Message, req *http.Request, forceStructured bool, forceBinary bool, transformerFactories binding.TransformerFactories) error {
+	var structuredEncoder binding.StructuredEncoder
+	if !forceBinary {
+		structuredEncoder = (*httpRequestEncoder)(req)
+	}
+
+	var binaryEncoder binding.BinaryEncoder
+	if !forceStructured {
+		binaryEncoder = (*httpRequestEncoder)(req)
+	}
+
+	var preferredEventEncoding binding.Encoding
+	if forceStructured {
+		preferredEventEncoding = binding.EncodingStructured
+	} else {
+		preferredEventEncoding = binding.EncodingBinary
+	}
+
+	_, err := binding.Encode(
+		m,
+		structuredEncoder,
+		binaryEncoder,
+		transformerFactories,
+		preferredEventEncoding,
+	)
+	return err
+}
+
 type httpRequestEncoder http.Request
 
 func (b *httpRequestEncoder) SetStructuredEvent(format format.Format, event io.Reader) error {

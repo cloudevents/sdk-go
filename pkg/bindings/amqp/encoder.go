@@ -13,6 +13,39 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 )
 
+//TODO (slinkydeveloper) this is the public access to http encoders, document it
+func EncodeAMQPMessage(m binding.Message, amqpMessage *amqp.Message, forceStructured bool, forceBinary bool, transformerFactories binding.TransformerFactories) error {
+	//TODO remove this stuff with lifecycle of encoders?
+	amqpMessage.Properties = &amqp.MessageProperties{}
+	amqpMessage.ApplicationProperties = make(map[string]interface{})
+
+	var structuredEncoder binding.StructuredEncoder
+	if !forceBinary {
+		structuredEncoder = (*amqpMessageEncoder)(amqpMessage)
+	}
+
+	var binaryEncoder binding.BinaryEncoder
+	if !forceStructured {
+		binaryEncoder = (*amqpMessageEncoder)(amqpMessage)
+	}
+
+	var preferredEventEncoding binding.Encoding
+	if forceStructured {
+		preferredEventEncoding = binding.EncodingStructured
+	} else {
+		preferredEventEncoding = binding.EncodingBinary
+	}
+
+	_, err := binding.Encode(
+		m,
+		structuredEncoder,
+		binaryEncoder,
+		transformerFactories,
+		preferredEventEncoding,
+	)
+	return err
+}
+
 type amqpMessageEncoder amqp.Message
 
 func (b *amqpMessageEncoder) SetStructuredEvent(format format.Format, event io.Reader) error {

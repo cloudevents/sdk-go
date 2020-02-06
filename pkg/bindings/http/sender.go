@@ -35,7 +35,7 @@ func (s *Sender) Send(ctx context.Context, m binding.Message) (err error) {
 	}
 	req = req.WithContext(ctx)
 
-	if err = s.fillHttpRequest(req, m); err != nil {
+	if err = EncodeHttpRequest(m, req, s.forceStructured, s.forceBinary, s.transformerFactories); err != nil {
 		return
 	}
 	resp, err := s.Client.Do(req)
@@ -46,38 +46,6 @@ func (s *Sender) Send(ctx context.Context, m binding.Message) (err error) {
 		return fmt.Errorf("%d %s", resp.StatusCode, nethttp.StatusText(resp.StatusCode))
 	}
 	return
-}
-
-// This function tries:
-// 1. Translate from structured
-// 2. Translate from binary
-// 3. Translate to Event and then re-encode back to Http Request
-func (s *Sender) fillHttpRequest(req *http.Request, m binding.Message) error {
-	var structuredEncoder binding.StructuredEncoder
-	if !s.forceBinary {
-		structuredEncoder = (*httpRequestEncoder)(req)
-	}
-
-	var binaryEncoder binding.BinaryEncoder
-	if !s.forceStructured {
-		binaryEncoder = (*httpRequestEncoder)(req)
-	}
-
-	var preferredEventEncoding binding.Encoding
-	if s.forceStructured {
-		preferredEventEncoding = binding.EncodingStructured
-	} else {
-		preferredEventEncoding = binding.EncodingBinary
-	}
-
-	_, err := binding.Encode(
-		m,
-		structuredEncoder,
-		binaryEncoder,
-		s.transformerFactories,
-		preferredEventEncoding,
-	)
-	return err
 }
 
 func NewSender(client *http.Client, target *url.URL, options ...SenderOptionFunc) binding.Sender {

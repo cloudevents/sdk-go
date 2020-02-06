@@ -26,47 +26,12 @@ func (s *Sender) Send(ctx context.Context, in binding.Message) error {
 	}
 
 	var amqpMessage amqp.Message
-	err = s.fillAMQPRequest(&amqpMessage, in)
+	err = EncodeAMQPMessage(in, &amqpMessage, s.forceStructured, s.forceBinary, s.transformerFactories)
 	if err != nil {
 		return err
 	}
 
 	return s.AMQP.Send(ctx, &amqpMessage)
-}
-
-// This function tries:
-// 1. Translate from structured
-// 2. Translate from binary
-// 3. Translate to Event and then re-encode back to amqp.Message
-func (s *Sender) fillAMQPRequest(amqpMessage *amqp.Message, m binding.Message) error {
-	amqpMessage.Properties = &amqp.MessageProperties{}
-	amqpMessage.ApplicationProperties = make(map[string]interface{})
-
-	var structuredEncoder binding.StructuredEncoder
-	if !s.forceBinary {
-		structuredEncoder = (*amqpMessageEncoder)(amqpMessage)
-	}
-
-	var binaryEncoder binding.BinaryEncoder
-	if !s.forceStructured {
-		binaryEncoder = (*amqpMessageEncoder)(amqpMessage)
-	}
-
-	var preferredEventEncoding binding.Encoding
-	if s.forceStructured {
-		preferredEventEncoding = binding.EncodingStructured
-	} else {
-		preferredEventEncoding = binding.EncodingBinary
-	}
-
-	_, err := binding.Encode(
-		m,
-		structuredEncoder,
-		binaryEncoder,
-		s.transformerFactories,
-		preferredEventEncoding,
-	)
-	return err
 }
 
 func (s *Sender) Close(ctx context.Context) error { return s.AMQP.Close(ctx) }

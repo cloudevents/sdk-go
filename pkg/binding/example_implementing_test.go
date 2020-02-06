@@ -38,7 +38,7 @@ func (m ExMessage) Encoding() binding.Encoding {
 }
 
 func (m ExMessage) Structured(b binding.StructuredEncoder) error {
-	return b.SetStructuredEvent(format.JSON, bytes.NewReader([]byte(m)))
+	return b.SetStructuredEvent(format.JSON, bytes.NewReader(m))
 }
 
 func (m ExMessage) Binary(binding.BinaryEncoder) error {
