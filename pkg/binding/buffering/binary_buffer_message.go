@@ -7,7 +7,6 @@ import (
 	"github.com/valyala/bytebufferpool"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/binding/event"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
 )
 
@@ -19,6 +18,14 @@ type binaryBufferedMessage struct {
 	metadata   map[spec.Attribute]interface{}
 	extensions map[string]interface{}
 	body       *bytebufferpool.ByteBuffer
+}
+
+func (m *binaryBufferedMessage) GetParent() binding.Message {
+	return nil
+}
+
+func (m *binaryBufferedMessage) Encoding() binding.Encoding {
+	return binding.EncodingBinary
 }
 
 func (m *binaryBufferedMessage) Structured(binding.StructuredEncoder) error {
@@ -42,14 +49,6 @@ func (m *binaryBufferedMessage) Binary(b binding.BinaryEncoder) (err error) {
 		return b.SetData(bytes.NewReader(m.body.Bytes()))
 	}
 	return err
-}
-
-func (m *binaryBufferedMessage) Event(builder binding.EventEncoder) error {
-	e, _, _, err := event.ToEvent(m)
-	if err != nil {
-		return err
-	}
-	return builder.SetEvent(e)
 }
 
 func (b *binaryBufferedMessage) Finish(error) error {

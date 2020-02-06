@@ -11,7 +11,6 @@ import (
 	"pack.ag/amqp"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/binding/event"
 	"github.com/cloudevents/sdk-go/pkg/binding/test"
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 )
@@ -23,8 +22,8 @@ func TestSendReceiveBinary(t *testing.T) {
 		eventIn := test.ExToStr(t, e)
 		in := test.NewMockBinaryMessage(eventIn)
 		test.SendReceive(t, in, s, r, func(out binding.Message) {
-			eventOut, _, isBinary := test.MustToEvent(out)
-			assert.True(t, isBinary)
+			eventOut, encoding := test.MustToEvent(out)
+			assert.Equal(t, encoding, binding.EncodingBinary)
 			test.AssertEventEquals(t, eventIn, test.ExToStr(t, eventOut))
 		})
 	})
@@ -37,8 +36,8 @@ func TestSendReceiveStruct(t *testing.T) {
 		eventIn := test.ExToStr(t, e)
 		in := test.NewMockStructuredMessage(eventIn)
 		test.SendReceive(t, in, s, r, func(out binding.Message) {
-			eventOut, isStructured, _ := test.MustToEvent(out)
-			assert.True(t, isStructured)
+			eventOut, encoding := test.MustToEvent(out)
+			assert.Equal(t, encoding, binding.EncodingStructured)
 			test.AssertEventEquals(t, eventIn, test.ExToStr(t, eventOut))
 		})
 	})
@@ -49,10 +48,10 @@ func TestSendEventReceiveBinary(t *testing.T) {
 	defer c.Close()
 	test.EachEvent(t, test.Events(), func(t *testing.T, e ce.Event) {
 		eventIn := test.ExToStr(t, e)
-		in := event.EventMessage(eventIn)
+		in := binding.EventMessage(eventIn)
 		test.SendReceive(t, in, s, r, func(out binding.Message) {
-			eventOut, _, isBinary := test.MustToEvent(out)
-			assert.True(t, isBinary)
+			eventOut, encoding := test.MustToEvent(out)
+			assert.Equal(t, encoding, binding.EncodingBinary)
 			test.AssertEventEquals(t, eventIn, test.ExToStr(t, eventOut))
 		})
 	})
@@ -63,10 +62,10 @@ func TestSendEventReceiveStruct(t *testing.T) {
 	defer c.Close()
 	test.EachEvent(t, test.Events(), func(t *testing.T, e ce.Event) {
 		eventIn := test.ExToStr(t, e)
-		in := event.EventMessage(eventIn)
+		in := binding.EventMessage(eventIn)
 		test.SendReceive(t, in, s, r, func(out binding.Message) {
-			eventOut, isStructured, _ := test.MustToEvent(out)
-			assert.True(t, isStructured)
+			eventOut, encoding := test.MustToEvent(out)
+			assert.Equal(t, encoding, binding.EncodingStructured)
 			test.AssertEventEquals(t, eventIn, test.ExToStr(t, eventOut))
 		})
 	})

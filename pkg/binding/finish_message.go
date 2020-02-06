@@ -5,7 +5,11 @@ type finishMessage struct {
 	finish func(error)
 }
 
-func (m finishMessage) Finish(err error) error {
+func (m *finishMessage) GetParent() Message {
+	return m.Message
+}
+
+func (m *finishMessage) Finish(err error) error {
 	err2 := m.Message.Finish(err) // Finish original message first
 	if m.finish != nil {
 		m.finish(err) // Notify callback
@@ -17,5 +21,5 @@ func (m finishMessage) Finish(err error) error {
 // m.Finish() in its Finish().
 // Allows code to be notified when a message is Finished.
 func WithFinish(m Message, finish func(error)) Message {
-	return finishMessage{Message: m, finish: finish}
+	return &finishMessage{Message: m, finish: finish}
 }

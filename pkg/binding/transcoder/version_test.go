@@ -8,7 +8,6 @@ import (
 
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/binding/event"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
 	"github.com/cloudevents/sdk-go/pkg/binding/test"
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
@@ -44,18 +43,18 @@ func TestVersionTranscoder(t *testing.T) {
 		want    ce.Event
 	}{
 		{
-			name:    "V02 -> V1 with Structured message",
+			name:    "V02 -> V1 with Mock Structured message",
 			message: test.NewMockStructuredMessage(copyEventContext(testEventV02)),
 			want:    copyEventContext(testEventV1),
 		},
 		{
-			name:    "V02 -> V1 with Binary message",
+			name:    "V02 -> V1 with Mock Binary message",
 			message: test.NewMockBinaryMessage(copyEventContext(testEventV02)),
 			want:    copyEventContext(testEventV1),
 		},
 		{
 			name:    "V02 -> V1 with Event message",
-			message: event.EventMessage(copyEventContext(testEventV02)),
+			message: binding.EventMessage(copyEventContext(testEventV02)),
 			want:    copyEventContext(testEventV1),
 		},
 	}
@@ -63,7 +62,10 @@ func TestVersionTranscoder(t *testing.T) {
 		tt := tt // Don't use range variable inside scope
 		factory := Version(spec.V1)
 		t.Run(tt.name, func(t *testing.T) {
-			e, _, _, err := event.ToEvent(tt.message, factory)
+			e, _, err := binding.ToEvent(
+				tt.message,
+				factory,
+			)
 			assert.NoError(t, err)
 			test.AssertEventEquals(t, tt.want, e)
 		})

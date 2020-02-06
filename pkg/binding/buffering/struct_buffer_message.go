@@ -8,7 +8,6 @@ import (
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
-	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 )
 
 var structMessagePool bytebufferpool.Pool
@@ -20,14 +19,12 @@ type structBufferedMessage struct {
 	Bytes  *bytebufferpool.ByteBuffer
 }
 
-// Event unmarshals the formatted event.
-func (m *structBufferedMessage) Event(enc binding.EventEncoder) error {
-	var e ce.Event
-	err := m.Format.Unmarshal(m.Bytes.B, &e)
-	if err != nil {
-		return err
-	}
-	return enc.SetEvent(e)
+func (m *structBufferedMessage) GetParent() binding.Message {
+	return nil
+}
+
+func (m *structBufferedMessage) Encoding() binding.Encoding {
+	return binding.EncodingStructured
 }
 
 // Structured copies structured data to a StructuredEncoder
@@ -36,7 +33,7 @@ func (m *structBufferedMessage) Structured(enc binding.StructuredEncoder) error 
 }
 
 // Binary returns ErrNotBinary
-func (m structBufferedMessage) Binary(enc binding.BinaryEncoder) error { return binding.ErrNotBinary }
+func (m structBufferedMessage) Binary(binding.BinaryEncoder) error { return binding.ErrNotBinary }
 
 func (m *structBufferedMessage) Finish(error) error {
 	structMessagePool.Put(m.Bytes)

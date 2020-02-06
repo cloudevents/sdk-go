@@ -9,7 +9,6 @@ import (
 	"pack.ag/amqp"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/binding/event"
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
 )
@@ -23,10 +22,34 @@ var (
 )
 
 // Message implements binding.Message by wrapping an *amqp.Message.
-type Message struct{ AMQP *amqp.Message }
+type Message struct {
+	AMQP     *amqp.Message
+	encoding binding.Encoding
+}
+
+func NewMessage(message *amqp.Message) *Message {
+	if message.Properties != nil && format.IsFormat(message.Properties.ContentType) {
+		return &Message{AMQP: message, encoding: binding.EncodingStructured}
+	} else if _, err := specs.FindVersion(func(k string) string {
+		s, _ := message.ApplicationProperties[k].(string)
+		return s
+	}); err == nil {
+		return &Message{AMQP: message, encoding: binding.EncodingBinary}
+	} else {
+		return &Message{AMQP: message, encoding: binding.EncodingUnknown}
+	}
+}
 
 // Check if amqp.Message implements binding.Message
 var _ binding.Message = (*Message)(nil)
+
+func (m *Message) GetParent() binding.Message {
+	return nil
+}
+
+func (m *Message) Encoding() binding.Encoding {
+	return m.encoding
+}
 
 func (m *Message) Structured(encoder binding.StructuredEncoder) error {
 	if m.AMQP.Properties != nil && format.IsFormat(m.AMQP.Properties.ContentType) {
@@ -72,14 +95,6 @@ func (m *Message) Binary(encoder binding.BinaryEncoder) error {
 		return encoder.SetData(bytes.NewReader(data))
 	}
 	return nil
-}
-
-func (m *Message) Event(encoder binding.EventEncoder) error {
-	e, _, _, err := event.ToEvent(m)
-	if err != nil {
-		return err
-	}
-	return encoder.SetEvent(e)
 }
 
 func (m *Message) Finish(err error) error {

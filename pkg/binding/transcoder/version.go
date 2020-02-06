@@ -25,8 +25,11 @@ func (v versionTranscoderFactory) BinaryTransformer(encoder binding.BinaryEncode
 	return binaryVersionTransformer{version: v.version, delegate: encoder}
 }
 
-func (v versionTranscoderFactory) EventTransformer(encoder binding.EventEncoder) binding.EventEncoder {
-	return eventVersionTransformer{version: v.version, delegate: encoder}
+func (v versionTranscoderFactory) EventTransformer() binding.EventTransformer {
+	return func(e *ce.Event) error {
+		e.Context = v.version.Convert(e.Context)
+		return nil
+	}
 }
 
 type binaryVersionTransformer struct {
@@ -48,14 +51,4 @@ func (b binaryVersionTransformer) SetAttribute(attribute spec.Attribute, value i
 
 func (b binaryVersionTransformer) SetExtension(name string, value interface{}) error {
 	return b.delegate.SetExtension(name, value)
-}
-
-type eventVersionTransformer struct {
-	delegate binding.EventEncoder
-	version  spec.Version
-}
-
-func (e eventVersionTransformer) SetEvent(event ce.Event) error {
-	event.Context = e.version.Convert(event.Context)
-	return e.delegate.SetEvent(event)
 }

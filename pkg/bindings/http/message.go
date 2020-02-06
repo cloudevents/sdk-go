@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/binding/event"
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
 )
@@ -21,6 +20,7 @@ const ContentType = "Content-Type"
 type Message struct {
 	Header     nethttp.Header
 	BodyReader io.ReadCloser
+	encoding   binding.Encoding
 	OnFinish   func(error) error
 }
 
@@ -34,7 +34,22 @@ func NewMessage(header nethttp.Header, body io.ReadCloser) (*Message, error) {
 	if body != nil {
 		m.BodyReader = body
 	}
+	if ft := format.Lookup(header.Get(ContentType)); ft == nil {
+		m.encoding = binding.EncodingStructured
+	} else if _, err := specs.FindVersion(m.Header.Get); err != nil {
+		m.encoding = binding.EncodingBinary
+	} else {
+		m.encoding = binding.EncodingUnknown
+	}
 	return &m, nil
+}
+
+func (m *Message) GetParent() binding.Message {
+	return nil
+}
+
+func (m *Message) Encoding() binding.Encoding {
+	return m.encoding
 }
 
 func (m *Message) Structured(encoder binding.StructuredEncoder) error {
@@ -75,14 +90,6 @@ func (m *Message) Binary(encoder binding.BinaryEncoder) error {
 	}
 
 	return nil
-}
-
-func (m *Message) Event(encoder binding.EventEncoder) error {
-	e, _, _, err := event.ToEvent(m)
-	if err != nil {
-		return err
-	}
-	return encoder.SetEvent(e)
 }
 
 func (m *Message) Finish(err error) error {

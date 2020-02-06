@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/binding/event"
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
@@ -30,21 +29,20 @@ import (
 // requires the use of unknown types.
 type ExMessage json.RawMessage
 
+func (m ExMessage) GetParent() binding.Message {
+	return nil
+}
+
+func (m ExMessage) Encoding() binding.Encoding {
+	return binding.EncodingStructured
+}
+
 func (m ExMessage) Structured(b binding.StructuredEncoder) error {
 	return b.SetStructuredEvent(format.JSON, bytes.NewReader([]byte(m)))
 }
 
 func (m ExMessage) Binary(binding.BinaryEncoder) error {
 	return binding.ErrNotBinary
-}
-
-func (m ExMessage) Event(b binding.EventEncoder) error {
-	e := ce.Event{}
-	err := json.Unmarshal(m, &e)
-	if err != nil {
-		return err
-	}
-	return b.SetEvent(e)
 }
 
 func (m ExMessage) Finish(error) error { return nil }
@@ -64,18 +62,15 @@ func NewExSender(w io.Writer, factories ...binding.TransformerFactory) binding.S
 }
 
 func (s *ExSender) Send(ctx context.Context, m binding.Message) error {
-	// Translate tries the various encodings, starting with provided root encoder factories.
+	// RunEncoders tries the various encodings, starting with provided root encoder factories.
 	// If a sender doesn't support a specific encoding, a null root encoder factory could be provided.
-	_, _, err := binding.Translate(
+	_, err := binding.Encode(
 		m,
-		func() binding.StructuredEncoder {
-			return s
-		},
+		s,
 		nil,
-		func() binding.EventEncoder {
-			return s
-		},
-		s.transformers)
+		s.transformers,
+		binding.EncodingStructured,
+	)
 
 	return err
 }
@@ -100,7 +95,6 @@ func (s *ExSender) Close(context.Context) error { return nil }
 
 var _ binding.Sender = (*ExSender)(nil)
 var _ binding.StructuredEncoder = (*ExSender)(nil)
-var _ binding.EventEncoder = (*ExSender)(nil)
 
 // ExReceiver receives by reading JSON encoded events from an io.Reader
 type ExReceiver struct{ decoder *json.Decoder }
@@ -117,7 +111,7 @@ func (r *ExReceiver) Close(context.Context) error { return nil }
 // NewExTransport returns a transport.Transport which is implemented by
 // an ExSender and an ExReceiver
 func NewExTransport(r io.Reader, w io.Writer) transport.Transport {
-	return event.NewTransportAdapter(NewExSender(w), NewExReceiver(r))
+	return binding.NewTransportAdapter(NewExSender(w), NewExReceiver(r))
 }
 
 // Example of implementing a transport including a simple message type,

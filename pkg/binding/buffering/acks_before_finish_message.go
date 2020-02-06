@@ -11,6 +11,10 @@ type acksMessage struct {
 	requiredAcks int32
 }
 
+func (m *acksMessage) GetParent() binding.Message {
+	return m.Message
+}
+
 func (m *acksMessage) Finish(err error) error {
 	remainingAcks := atomic.AddInt32(&m.requiredAcks, -1)
 	if remainingAcks == 0 {

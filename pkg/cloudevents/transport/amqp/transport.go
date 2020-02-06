@@ -6,7 +6,6 @@ import (
 	"pack.ag/amqp"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/binding/event"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
 	"github.com/cloudevents/sdk-go/pkg/binding/transcoder"
 	bindings_amqp "github.com/cloudevents/sdk-go/pkg/bindings/amqp"
@@ -23,7 +22,7 @@ const (
 )
 
 type Transport struct {
-	event.BindingTransport
+	binding.BindingTransport
 	connOpts         []amqp.ConnOption
 	sessionOpts      []amqp.SessionOption
 	senderLinkOpts   []amqp.LinkOption

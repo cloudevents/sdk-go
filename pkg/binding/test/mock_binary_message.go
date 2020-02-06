@@ -5,7 +5,6 @@ import (
 
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/binding/event"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
 )
 
@@ -48,15 +47,11 @@ func NewMockBinaryMessage(e cloudevents.Event) *MockBinaryMessage {
 	return &m
 }
 
-func (bm *MockBinaryMessage) Event(b binding.EventEncoder) error {
-	e, _, _, err := event.ToEvent(bm)
-	if err != nil {
-		return err
-	}
-	return b.SetEvent(e)
+func (bm *MockBinaryMessage) GetParent() binding.Message {
+	return nil
 }
 
-func (bm *MockBinaryMessage) Structured(b binding.StructuredEncoder) error {
+func (bm *MockBinaryMessage) Structured(binding.StructuredEncoder) error {
 	return binding.ErrNotStructured
 }
 
@@ -77,6 +72,10 @@ func (bm *MockBinaryMessage) Binary(b binding.BinaryEncoder) error {
 		return nil
 	}
 	return b.SetData(bytes.NewReader(bm.Body))
+}
+
+func (bm *MockBinaryMessage) Encoding() binding.Encoding {
+	return binding.EncodingBinary
 }
 
 func (bm *MockBinaryMessage) Finish(error) error { return nil }

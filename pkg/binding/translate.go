@@ -1,48 +1,105 @@
 package binding
 
+import (
+	"errors"
+
+	ce "github.com/cloudevents/sdk-go"
+)
+
 // Invokes the encoders. createRootStructuredEncoder and createRootBinaryEncoder could be null if the protocol doesn't support it
 //
 // Returns:
-// * true, false, nil if message was structured and correctly translated to Event
-// * false, true, nil if message was binary and correctly translated to Event
-// * false, false, nil if message was event and correctly translated to Event
-// * true, false, err if message was structured but error happened during translation
-// * false, true, err if message was binary but error happened during translation
-// * false, false, err if message was event but error happened during translation
-// * false, false, err in other cases
-func Translate(
+// * EncodingStructured, nil if message was structured and correctly translated to Event
+// * EncodingBinary, nil if message was binary and correctly translated to Event
+// * EncodingStructured, err if message was structured but error happened during translation
+// * BinaryEncoding, err if message was binary but error happened during translation
+// * EncodingUnknown, ErrUnknownEncoding if message is not recognized
+func RunDirectEncoding(
 	message Message,
-	createRootStructuredEncoder func() StructuredEncoder,
-	createRootBinaryEncoder func() BinaryEncoder,
-	createRootEventEncoder func() EventEncoder,
+	structuredEncoder StructuredEncoder,
+	binaryEncoder BinaryEncoder,
 	factories TransformerFactories,
-) (bool, bool, error) {
-	if createRootStructuredEncoder != nil {
+) (Encoding, error) {
+	if structuredEncoder != nil {
 		// Wrap the transformers in the structured builder
-		structuredEncoder := factories.StructuredTransformer(createRootStructuredEncoder())
+		structuredEncoder = factories.StructuredTransformer(structuredEncoder)
 
 		// StructuredTransformer could return nil if one of transcoders doesn't support
 		// direct structured transcoding
 		if structuredEncoder != nil {
 			if err := message.Structured(structuredEncoder); err == nil {
-				return true, false, nil
+				return EncodingStructured, nil
 			} else if err != ErrNotStructured {
-				return true, false, err
+				return EncodingStructured, err
 			}
 		}
 	}
 
-	if createRootBinaryEncoder != nil {
-		binaryEncoder := factories.BinaryTransformer(createRootBinaryEncoder())
+	if binaryEncoder != nil {
+		binaryEncoder = factories.BinaryTransformer(binaryEncoder)
 		if binaryEncoder != nil {
 			if err := message.Binary(binaryEncoder); err == nil {
-				return false, true, nil
+				return EncodingBinary, nil
 			} else if err != ErrNotBinary {
-				return false, true, err
+				return EncodingBinary, err
 			}
 		}
 	}
 
-	eventEncoder := factories.EventTransformer(createRootEventEncoder())
-	return false, false, message.Event(eventEncoder)
+	return EncodingUnknown, ErrUnknownEncoding
+}
+
+// This is the full algorithm to encode a Message using transformers:
+// 1. It first tries direct encoding using RunEncoders
+// 2. If no direct encoding is possible, it goes through ToEvent to generate an event representation
+// 3. Using the encoders previously defined
+// Returns:
+// * EncodingStructured, nil if message was structured and correctly translated to Event
+// * EncodingBinary, nil if message was binary and correctly translated to Event
+// * EncodingStructured, err if message was structured but error happened during translation
+// * BinaryEncoding, err if message was binary but error happened during translation
+// * EncodingUnknown, ErrUnknownEncoding if message is not recognized
+func Encode(
+	message Message,
+	structuredEncoder StructuredEncoder,
+	binaryEncoder BinaryEncoder,
+	transformers TransformerFactories,
+	eventPreferredEncoding Encoding,
+) (Encoding, error) {
+	enc := message.Encoding()
+	var err error
+	// Skip direct encoding if the event is an event message
+	if enc != EncodingEvent {
+		enc, err = RunDirectEncoding(message, structuredEncoder, binaryEncoder, transformers)
+		if enc != EncodingUnknown {
+			// Message directly encoded, nothing else to do here
+			return enc, err
+		}
+	}
+
+	var e ce.Event
+	e, enc, err = ToEvent(message, transformers)
+	if err != nil {
+		return enc, err
+	}
+
+	message = EventMessage(e)
+
+	if eventPreferredEncoding == EncodingStructured {
+		if structuredEncoder != nil {
+			return EncodingStructured, message.Structured(structuredEncoder)
+		}
+		if binaryEncoder != nil {
+			return EncodingStructured, message.Binary(binaryEncoder)
+		}
+	} else {
+		if binaryEncoder != nil {
+			return EncodingStructured, message.Binary(binaryEncoder)
+		}
+		if structuredEncoder != nil {
+			return EncodingStructured, message.Structured(structuredEncoder)
+		}
+	}
+
+	return enc, errors.New("cannot find a suitable encoder to use from EventMessage")
 }

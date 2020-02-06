@@ -6,7 +6,6 @@ import (
 	"pack.ag/amqp"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/binding/format"
 )
 
 // Sender wraps an amqp.Sender as a binding.Sender
@@ -40,28 +39,33 @@ func (s *Sender) Send(ctx context.Context, in binding.Message) error {
 // 2. Translate from binary
 // 3. Translate to Event and then re-encode back to amqp.Message
 func (s *Sender) fillAMQPRequest(amqpMessage *amqp.Message, m binding.Message) error {
-	createStructured := func() binding.StructuredEncoder {
-		return &structuredMessageEncoder{amqpMessage}
-	}
-	if s.forceBinary {
-		createStructured = nil
+	amqpMessage.Properties = &amqp.MessageProperties{}
+	amqpMessage.ApplicationProperties = make(map[string]interface{})
+
+	var structuredEncoder binding.StructuredEncoder
+	if !s.forceBinary {
+		structuredEncoder = (*amqpMessageEncoder)(amqpMessage)
 	}
 
-	createBinary := func() binding.BinaryEncoder {
-		return newBinaryMessageEncoder(amqpMessage)
+	var binaryEncoder binding.BinaryEncoder
+	if !s.forceStructured {
+		binaryEncoder = (*amqpMessageEncoder)(amqpMessage)
 	}
+
+	var preferredEventEncoding binding.Encoding
 	if s.forceStructured {
-		createBinary = nil
+		preferredEventEncoding = binding.EncodingStructured
+	} else {
+		preferredEventEncoding = binding.EncodingBinary
 	}
 
-	createEvent := func() binding.EventEncoder {
-		if s.forceStructured {
-			return &eventToStructuredMessageEncoder{format: format.JSON, amqpMessage: amqpMessage}
-		}
-		return &eventToBinaryMessageEncoder{amqpMessage}
-	}
-
-	_, _, err := binding.Translate(m, createStructured, createBinary, createEvent, s.transformerFactories)
+	_, err := binding.Encode(
+		m,
+		structuredEncoder,
+		binaryEncoder,
+		s.transformerFactories,
+		preferredEventEncoding,
+	)
 	return err
 }
 

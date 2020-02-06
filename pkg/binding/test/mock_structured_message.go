@@ -14,6 +14,10 @@ type MockStructuredMessage struct {
 	Bytes  []byte
 }
 
+func (s *MockStructuredMessage) GetParent() binding.Message {
+	return nil
+}
+
 func NewMockStructuredMessage(e cloudevents.Event) *MockStructuredMessage {
 	testEventSerialized, err := format.JSON.Marshal(e)
 	if err != nil {
@@ -25,21 +29,16 @@ func NewMockStructuredMessage(e cloudevents.Event) *MockStructuredMessage {
 	}
 }
 
-func (s *MockStructuredMessage) Event(b binding.EventEncoder) error {
-	e := cloudevents.Event{}
-	err := s.Format.Unmarshal(s.Bytes, &e)
-	if err != nil {
-		return err
-	}
-	return b.SetEvent(e)
-}
-
 func (s *MockStructuredMessage) Structured(b binding.StructuredEncoder) error {
 	return b.SetStructuredEvent(s.Format, bytes.NewReader(s.Bytes))
 }
 
 func (s *MockStructuredMessage) Binary(binding.BinaryEncoder) error {
 	return binding.ErrNotBinary
+}
+
+func (bm *MockStructuredMessage) Encoding() binding.Encoding {
+	return binding.EncodingStructured
 }
 
 func (s *MockStructuredMessage) Finish(error) error { return nil }

@@ -8,17 +8,15 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/binding/event"
 	"github.com/cloudevents/sdk-go/pkg/binding/test"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 )
 
 type copyMessageTestCase struct {
-	name         string
-	isStructured bool
-	isBinary     bool
-	message      binding.Message
-	want         cloudevents.Event
+	name     string
+	encoding binding.Encoding
+	message  binding.Message
+	want     cloudevents.Event
 }
 
 func TestCopyMessage(t *testing.T) {
@@ -27,46 +25,40 @@ func TestCopyMessage(t *testing.T) {
 	for _, v := range test.Events() {
 		tests = append(tests, []copyMessageTestCase{
 			{
-				name:         "From structured with payload/" + test.NameOf(v),
-				isStructured: true,
-				isBinary:     false,
-				message:      test.NewMockStructuredMessage(v),
-				want:         v,
+				name:     "From structured with payload/" + test.NameOf(v),
+				encoding: binding.EncodingStructured,
+				message:  test.NewMockStructuredMessage(v),
+				want:     v,
 			},
 			{
-				name:         "From structured without payload/" + test.NameOf(v),
-				isStructured: true,
-				isBinary:     false,
-				message:      test.NewMockStructuredMessage(v),
-				want:         v,
+				name:     "From structured without payload/" + test.NameOf(v),
+				encoding: binding.EncodingStructured,
+				message:  test.NewMockStructuredMessage(v),
+				want:     v,
 			},
 			{
-				name:         "From binary with payload/" + test.NameOf(v),
-				isBinary:     true,
-				isStructured: false,
-				message:      test.NewMockBinaryMessage(v),
-				want:         v,
+				name:     "From binary with payload/" + test.NameOf(v),
+				encoding: binding.EncodingBinary,
+				message:  test.NewMockBinaryMessage(v),
+				want:     v,
 			},
 			{
-				name:         "From binary without payload/" + test.NameOf(v),
-				isBinary:     true,
-				isStructured: false,
-				message:      test.NewMockBinaryMessage(v),
-				want:         v,
+				name:     "From binary without payload/" + test.NameOf(v),
+				encoding: binding.EncodingBinary,
+				message:  test.NewMockBinaryMessage(v),
+				want:     v,
 			},
 			{
-				name:         "From event with payload/" + test.NameOf(v),
-				isBinary:     true,
-				isStructured: false,
-				message:      event.EventMessage(v),
-				want:         v,
+				name:     "From event with payload/" + test.NameOf(v),
+				encoding: binding.EncodingEvent,
+				message:  binding.EventMessage(v),
+				want:     v,
 			},
 			{
-				name:         "From event without payload/" + test.NameOf(v),
-				isBinary:     true,
-				isStructured: false,
-				message:      event.EventMessage(v),
-				want:         v,
+				name:     "From event without payload/" + test.NameOf(v),
+				encoding: binding.EncodingEvent,
+				message:  binding.EventMessage(v),
+				want:     v,
 			},
 		}...)
 	}
@@ -81,10 +73,9 @@ func TestCopyMessage(t *testing.T) {
 			require.NoError(t, err)
 			// The copy can be read any number of times
 			for i := 0; i < 3; i++ {
-				got, isStructured, isBinary, err := event.ToEvent(cpy)
+				got, encoding, err := binding.ToEvent(cpy)
 				assert.NoError(t, err)
-				require.Equal(t, tt.isStructured, isStructured)
-				require.Equal(t, tt.isBinary, isBinary)
+				require.Equal(t, tt.encoding, encoding)
 				test.AssertEventEquals(t, test.ExToStr(t, tt.want), test.ExToStr(t, got))
 			}
 			require.NoError(t, cpy.Finish(nil))
@@ -99,10 +90,9 @@ func TestCopyMessage(t *testing.T) {
 			require.NoError(t, err)
 			// The copy can be read any number of times
 			for i := 0; i < 3; i++ {
-				got, isStructured, isBinary, err := event.ToEvent(cpy)
+				got, encoding, err := binding.ToEvent(cpy)
 				assert.NoError(t, err)
-				require.Equal(t, tt.isStructured, isStructured)
-				require.Equal(t, tt.isBinary, isBinary)
+				require.Equal(t, tt.encoding, encoding)
 				test.AssertEventEquals(t, test.ExToStr(t, tt.want), test.ExToStr(t, got))
 			}
 			require.NoError(t, cpy.Finish(nil))

@@ -7,8 +7,21 @@ import (
 
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
-	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 )
+
+// Encoding enum specifies the type of encodings supported by binding interfaces
+type Encoding int
+
+const (
+	EncodingBinary Encoding = iota
+	EncodingStructured
+	// Used when the Message is an instance of EventMessage
+	EncodingEvent
+	EncodingUnknown
+)
+
+// Error to specify that or the Message is not an event or it is encoded with an unknown encoding
+var ErrUnknownEncoding = errors.New("unknown Message encoding")
 
 // Message is the interface to a binding-specific message containing an event.
 //
@@ -34,6 +47,14 @@ import (
 // try each method of interest and fall back to Event(EventEncoder) if none are supported.
 //
 type Message interface {
+	// TODO(slinkydeveloper) add docs
+	GetParent() Message
+
+	// TODO(slinkydeveloper) add docs
+	// Return the kind of encoding.
+	// The encoding should be preferably calculated when the message is constructed
+	Encoding() Encoding
+
 	// Structured transfers a structured-mode event to a StructuredEncoder.
 	// Returns ErrNotStructured if message is not in structured mode.
 	//
@@ -53,19 +74,6 @@ type Message interface {
 	// Allows Senders to forward a binary message without allocating an
 	// intermediate Event.
 	Binary(BinaryEncoder) error
-
-	// Event transfers an event to an EventEncoder.
-	//
-	// A message implementation should always provide a conversion to Event data structure.
-	// The implementor can use binding.ToEvent for a straightforward implementation, starting
-	// from binary or structured representation
-	//
-	// Returns an err if something wrong happened while trying to read the event
-	// In this case, the caller must Finish the message with appropriate error
-	//
-	// Useful when the Sender can't implement a direct binary/structured to binary/structured conversion,
-	// So the intermediate Event representation is required
-	Event(EventEncoder) error
 
 	// Finish *must* be called when message from a Receiver can be forgotten by
 	// the receiver. Sender.Send() calls Finish() when the message is sent.  A QoS
@@ -113,14 +121,6 @@ type BinaryEncoder interface {
 	// The value can either be the correct golang type for the attribute, or a canonical
 	// string encoding. See package cloudevents/types
 	SetExtension(name string, value interface{}) error
-}
-
-// EventEncoder should generate a new representation of the event starting from an event message.
-//
-// Every protocol must implement this interface. If a protocol supports both structured and binary encoding,
-// two EventEncoder implementations could be provided
-type EventEncoder interface {
-	SetEvent(ce.Event) error
 }
 
 // ExactlyOnceMessage is implemented by received Messages
