@@ -21,11 +21,13 @@ type binaryBufferedMessage struct {
 }
 
 func (m *binaryBufferedMessage) Init() error {
-	return nil //TODO do allocations needed
+	m.metadata = make(map[spec.Attribute]interface{}, 4)
+	m.extensions = make(map[string]interface{})
+	return nil
 }
 
 func (m *binaryBufferedMessage) End() error {
-	return nil //TODO do allocations needed
+	return nil
 }
 
 func (m *binaryBufferedMessage) GetParent() binding.Message {

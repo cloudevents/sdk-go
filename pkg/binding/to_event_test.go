@@ -46,7 +46,6 @@ func TestToEvent(t *testing.T) {
 				message:  test.NewMockBinaryMessage(v),
 				want:     v,
 			},
-			// TODO we should test the binary encoding of EventMessage too!
 			{
 				name:     "From event with payload/" + test.NameOf(v),
 				encoding: binding.EncodingEvent,

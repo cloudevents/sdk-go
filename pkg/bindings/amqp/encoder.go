@@ -15,10 +15,6 @@ import (
 
 //TODO (slinkydeveloper) this is the public access to http encoders, document it
 func EncodeAMQPMessage(m binding.Message, amqpMessage *amqp.Message, forceStructured bool, forceBinary bool, transformerFactories binding.TransformerFactories) error {
-	//TODO remove this stuff with lifecycle of encoders?
-	amqpMessage.Properties = &amqp.MessageProperties{}
-	amqpMessage.ApplicationProperties = make(map[string]interface{})
-
 	var structuredEncoder binding.StructuredEncoder
 	if !forceBinary {
 		structuredEncoder = (*amqpMessageEncoder)(amqpMessage)
@@ -49,6 +45,8 @@ func EncodeAMQPMessage(m binding.Message, amqpMessage *amqp.Message, forceStruct
 type amqpMessageEncoder amqp.Message
 
 func (b *amqpMessageEncoder) Init() error {
+	b.Properties = &amqp.MessageProperties{}
+	b.ApplicationProperties = make(map[string]interface{})
 	return nil
 }
 
@@ -62,7 +60,7 @@ func (b *amqpMessageEncoder) SetStructuredEvent(format format.Format, event io.R
 		return err
 	}
 	b.Data = [][]byte{val}
-	b.Properties.ContentType = format.MediaType()
+	b.Properties = &amqp.MessageProperties{ContentType: format.MediaType()}
 	return nil
 }
 

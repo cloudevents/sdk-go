@@ -2,7 +2,6 @@ package buffering
 
 import (
 	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/binding/spec"
 )
 
 // BufferMessage does the same than CopyMessage and it also bounds the original Message
@@ -33,11 +32,7 @@ func CopyMessage(m binding.Message, transformers ...binding.TransformerFactory) 
 	}
 
 	sm := structBufferedMessage{}
-	//TODO those allocations could be avoided having some plugs in the binding encoding lifecycle (begin/end)
-	bm := binaryBufferedMessage{
-		metadata:   make(map[spec.Attribute]interface{}, 4),
-		extensions: make(map[string]interface{}),
-	}
+	bm := binaryBufferedMessage{}
 
 	encoding, err := binding.RunDirectEncoding(m, &sm, &bm, transformers)
 	if encoding == binding.EncodingStructured {
