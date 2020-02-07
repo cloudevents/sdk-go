@@ -69,6 +69,12 @@ func (m *Message) Binary(encoder binding.BinaryEncoder) error {
 	if err != nil {
 		return err
 	}
+
+	err = encoder.Init()
+	if err != nil {
+		return err
+	}
+
 	if m.AMQP.Properties != nil && m.AMQP.Properties.ContentType != "" {
 		err = encoder.SetAttribute(version.AttributeFromKind(spec.DataContentType), m.AMQP.Properties.ContentType)
 		if err != nil {
@@ -92,9 +98,12 @@ func (m *Message) Binary(encoder binding.BinaryEncoder) error {
 
 	data := m.AMQP.GetData()
 	if len(data) != 0 { // Some data
-		return encoder.SetData(bytes.NewReader(data))
+		err = encoder.SetData(bytes.NewReader(data))
+		if err != nil {
+			return err
+		}
 	}
-	return nil
+	return encoder.End()
 }
 
 func (m *Message) Finish(err error) error {

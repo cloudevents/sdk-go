@@ -20,6 +20,14 @@ type binaryBufferedMessage struct {
 	body       *bytebufferpool.ByteBuffer
 }
 
+func (m *binaryBufferedMessage) Init() error {
+	return nil //TODO do allocations needed
+}
+
+func (m *binaryBufferedMessage) End() error {
+	return nil //TODO do allocations needed
+}
+
 func (m *binaryBufferedMessage) GetParent() binding.Message {
 	return nil
 }
@@ -33,22 +41,29 @@ func (m *binaryBufferedMessage) Structured(binding.StructuredEncoder) error {
 }
 
 func (m *binaryBufferedMessage) Binary(b binding.BinaryEncoder) (err error) {
+	err = b.Init()
+	if err != nil {
+		return
+	}
 	for k, v := range m.metadata {
-		err := b.SetAttribute(k, v)
+		err = b.SetAttribute(k, v)
 		if err != nil {
-			return err
+			return
 		}
 	}
 	for k, v := range m.extensions {
-		err := b.SetExtension(k, v)
+		err = b.SetExtension(k, v)
 		if err != nil {
-			return err
+			return
 		}
 	}
 	if m.body != nil {
-		return b.SetData(bytes.NewReader(m.body.Bytes()))
+		err = b.SetData(bytes.NewReader(m.body.Bytes()))
+		if err != nil {
+			return
+		}
 	}
-	return err
+	return b.End()
 }
 
 func (b *binaryBufferedMessage) Finish(error) error {

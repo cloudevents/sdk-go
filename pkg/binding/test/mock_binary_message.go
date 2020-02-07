@@ -56,22 +56,29 @@ func (bm *MockBinaryMessage) Structured(binding.StructuredEncoder) error {
 }
 
 func (bm *MockBinaryMessage) Binary(b binding.BinaryEncoder) error {
+	err := b.Init()
+	if err != nil {
+		return err
+	}
 	for k, v := range bm.Metadata {
-		err := b.SetAttribute(k, v)
+		err = b.SetAttribute(k, v)
 		if err != nil {
 			return err
 		}
 	}
 	for k, v := range bm.Extensions {
-		err := b.SetExtension(k, v)
+		err = b.SetExtension(k, v)
 		if err != nil {
 			return err
 		}
 	}
-	if len(bm.Body) == 0 {
-		return nil
+	if len(bm.Body) != 0 {
+		err = b.SetData(bytes.NewReader(bm.Body))
+		if err != nil {
+			return err
+		}
 	}
-	return b.SetData(bytes.NewReader(bm.Body))
+	return b.End()
 }
 
 func (bm *MockBinaryMessage) Encoding() binding.Encoding {

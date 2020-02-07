@@ -1,8 +1,6 @@
 package transcoder
 
 import (
-	"io"
-
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
@@ -22,7 +20,7 @@ func (v versionTranscoderFactory) StructuredTransformer(binding.StructuredEncode
 }
 
 func (v versionTranscoderFactory) BinaryTransformer(encoder binding.BinaryEncoder) binding.BinaryEncoder {
-	return binaryVersionTransformer{version: v.version, delegate: encoder}
+	return binaryVersionTransformer{BinaryEncoder: encoder, version: v.version}
 }
 
 func (v versionTranscoderFactory) EventTransformer() binding.EventTransformer {
@@ -33,22 +31,14 @@ func (v versionTranscoderFactory) EventTransformer() binding.EventTransformer {
 }
 
 type binaryVersionTransformer struct {
-	delegate binding.BinaryEncoder
-	version  spec.Version
-}
-
-func (b binaryVersionTransformer) SetData(data io.Reader) error {
-	return b.delegate.SetData(data)
+	binding.BinaryEncoder
+	version spec.Version
 }
 
 func (b binaryVersionTransformer) SetAttribute(attribute spec.Attribute, value interface{}) error {
 	if attribute.Kind() == spec.SpecVersion {
-		return b.delegate.SetAttribute(b.version.AttributeFromKind(spec.SpecVersion), b.version.String())
+		return b.BinaryEncoder.SetAttribute(b.version.AttributeFromKind(spec.SpecVersion), b.version.String())
 	}
 	attributeInDifferentVersion := b.version.AttributeFromKind(attribute.Kind())
-	return b.delegate.SetAttribute(attributeInDifferentVersion, value)
-}
-
-func (b binaryVersionTransformer) SetExtension(name string, value interface{}) error {
-	return b.delegate.SetExtension(name, value)
+	return b.BinaryEncoder.SetAttribute(attributeInDifferentVersion, value)
 }

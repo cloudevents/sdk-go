@@ -64,6 +64,14 @@ func (b *messageToEventBuilder) SetStructuredEvent(format format.Format, event i
 	return format.Unmarshal(buf.Bytes(), b.event)
 }
 
+func (b *messageToEventBuilder) Init() error {
+	return nil
+}
+
+func (b *messageToEventBuilder) End() error {
+	return nil
+}
+
 func (b *messageToEventBuilder) SetData(data io.Reader) error {
 	var buf bytes.Buffer
 	w, err := io.Copy(&buf, data)

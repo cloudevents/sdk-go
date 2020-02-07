@@ -4,7 +4,7 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
@@ -29,47 +29,30 @@ func TestVersionTranscoder(t *testing.T) {
 
 	data := []byte("\"data\"")
 	err := testEventV02.SetData(data)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(t, err)
 	err = testEventV1.SetData(data)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(t, err)
 
-	tests := []struct {
-		name    string
-		message binding.Message
-		want    ce.Event
-	}{
+	RunTranscoderTests(t, []TranscoderTestArgs{
 		{
-			name:    "V02 -> V1 with Mock Structured message",
-			message: test.NewMockStructuredMessage(copyEventContext(testEventV02)),
-			want:    copyEventContext(testEventV1),
+			name:         "V02 -> V1 with Mock Structured message",
+			inputMessage: test.NewMockStructuredMessage(copyEventContext(testEventV02)),
+			wantEvent:    copyEventContext(testEventV1),
+			transformer:  Version(spec.V1),
 		},
 		{
-			name:    "V02 -> V1 with Mock Binary message",
-			message: test.NewMockBinaryMessage(copyEventContext(testEventV02)),
-			want:    copyEventContext(testEventV1),
+			name:         "V02 -> V1 with Mock Binary message",
+			inputMessage: test.NewMockBinaryMessage(copyEventContext(testEventV02)),
+			wantEvent:    copyEventContext(testEventV1),
+			transformer:  Version(spec.V1),
 		},
 		{
-			name:    "V02 -> V1 with Event message",
-			message: binding.EventMessage(copyEventContext(testEventV02)),
-			want:    copyEventContext(testEventV1),
+			name:         "V02 -> V1 with Event message",
+			inputMessage: binding.EventMessage(copyEventContext(testEventV02)),
+			wantEvent:    copyEventContext(testEventV1),
+			transformer:  Version(spec.V1),
 		},
-	}
-	for _, tt := range tests {
-		tt := tt // Don't use range variable inside scope
-		factory := Version(spec.V1)
-		t.Run(tt.name, func(t *testing.T) {
-			e, _, err := binding.ToEvent(
-				tt.message,
-				factory,
-			)
-			assert.NoError(t, err)
-			test.AssertEventEquals(t, tt.want, e)
-		})
-	}
+	})
 }
 
 func copyEventContext(e ce.Event) ce.Event {

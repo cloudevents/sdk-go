@@ -54,6 +54,8 @@ type Attribute interface {
 	Get(ce.EventContextReader) interface{}
 	// Set the value of this attribute on an event context
 	Set(ce.EventContextWriter, interface{}) error
+	// Delete this attribute from and event context, when possible
+	Delete(ce.EventContextWriter) error
 }
 
 // accessor provides Kind, Get, Set.
@@ -61,6 +63,7 @@ type accessor interface {
 	Kind() Kind
 	Get(ce.EventContextReader) interface{}
 	Set(ce.EventContextWriter, interface{}) error
+	Delete(ce.EventContextWriter) error
 }
 
 var acc = [nAttrs]accessor{
@@ -100,6 +103,10 @@ func (a *aStr) Set(c ce.EventContextWriter, v interface{}) error {
 	return a.set(c, s)
 }
 
+func (a *aStr) Delete(c ce.EventContextWriter) error {
+	return a.set(c, "")
+}
+
 type aTime struct {
 	aKind
 	get func(ce.EventContextReader) time.Time
@@ -119,4 +126,8 @@ func (a *aTime) Set(c ce.EventContextWriter, v interface{}) error {
 		return fmt.Errorf("invalid value for %s: %#v", a.Kind(), v)
 	}
 	return a.set(c, t)
+}
+
+func (a *aTime) Delete(c ce.EventContextWriter) error {
+	return a.set(c, time.Time{})
 }

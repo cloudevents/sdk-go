@@ -66,6 +66,11 @@ func (m *Message) Binary(encoder binding.BinaryEncoder) error {
 		return binding.ErrNotBinary
 	}
 
+	err = encoder.Init()
+	if err != nil {
+		return err
+	}
+
 	for k, v := range m.Header {
 		if strings.HasPrefix(k, prefix) {
 			attr := version.Attribute(k)
@@ -89,7 +94,7 @@ func (m *Message) Binary(encoder binding.BinaryEncoder) error {
 		}
 	}
 
-	return nil
+	return encoder.End()
 }
 
 func (m *Message) Finish(err error) error {

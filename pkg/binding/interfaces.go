@@ -12,6 +12,8 @@ import (
 // Encoding enum specifies the type of encodings supported by binding interfaces
 type Encoding int
 
+// TODO(slinkydeveloper) docs
+
 const (
 	EncodingBinary Encoding = iota
 	EncodingStructured
@@ -106,6 +108,10 @@ type StructuredEncoder interface {
 // Protocols that supports binary encoding should implement this interface to implement direct
 // binary -> binary transfer.
 type BinaryEncoder interface {
+	//TODO explain init and end with relative propagation!!!
+
+	Init() error
+
 	// SetData receives an io.Reader for the data attribute.
 	// io.Reader could be empty, meaning that message payload is empty
 	SetData(data io.Reader) error
@@ -121,6 +127,8 @@ type BinaryEncoder interface {
 	// The value can either be the correct golang type for the attribute, or a canonical
 	// string encoding. See package cloudevents/types
 	SetExtension(name string, value interface{}) error
+
+	End() error
 }
 
 // ExactlyOnceMessage is implemented by received Messages

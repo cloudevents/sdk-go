@@ -42,6 +42,14 @@ func EncodeHttpRequest(m binding.Message, req *http.Request, forceStructured boo
 
 type httpRequestEncoder http.Request
 
+func (b *httpRequestEncoder) Init() error {
+	return nil
+}
+
+func (b *httpRequestEncoder) End() error {
+	return nil
+}
+
 func (b *httpRequestEncoder) SetStructuredEvent(format format.Format, event io.Reader) error {
 	b.Header.Set(ContentType, format.MediaType())
 	b.Body = ioutil.NopCloser(event)

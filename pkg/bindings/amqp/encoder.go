@@ -48,6 +48,14 @@ func EncodeAMQPMessage(m binding.Message, amqpMessage *amqp.Message, forceStruct
 
 type amqpMessageEncoder amqp.Message
 
+func (b *amqpMessageEncoder) Init() error {
+	return nil
+}
+
+func (b *amqpMessageEncoder) End() error {
+	return nil
+}
+
 func (b *amqpMessageEncoder) SetStructuredEvent(format format.Format, event io.Reader) error {
 	val, err := ioutil.ReadAll(event)
 	if err != nil {
