@@ -62,7 +62,7 @@ func NewExSender(w io.Writer, factories ...binding.TransformerFactory) binding.S
 }
 
 func (s *ExSender) Send(ctx context.Context, m binding.Message) error {
-	// RunEncoders tries the various encodings, starting with provided root encoder factories.
+	// Encode tries the various encodings, starting with provided root encoder factories.
 	// If a sender doesn't support a specific encoding, a null root encoder factory could be provided.
 	_, err := binding.Encode(
 		m,
