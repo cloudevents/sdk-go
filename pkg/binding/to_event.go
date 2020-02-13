@@ -22,12 +22,17 @@ func ToEvent(message Message, transformers ...TransformerFactory) (e ce.Event, e
 
 	messageEncoding := message.Encoding()
 	if messageEncoding == EncodingEvent {
-		for m := message; m != nil; m = m.GetParent() {
+		for m := message; m != nil; {
 			if em, ok := m.(EventMessage); ok {
 				e = ce.Event(em)
 				encoding = EncodingEvent
 				err = TransformerFactories(transformers).EventTransformer()(&e)
 				return
+			}
+			if mw, ok := m.(MessageWrapper); ok {
+				m = mw.GetWrappedMessage()
+			} else {
+				break
 			}
 		}
 		err = ErrCannotConvertToEvent

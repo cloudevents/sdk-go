@@ -50,9 +50,6 @@ var ErrUnknownEncoding = errors.New("unknown Message encoding")
 //
 type Message interface {
 	// TODO(slinkydeveloper) add docs
-	GetParent() Message
-
-	// TODO(slinkydeveloper) add docs
 	// Return the kind of encoding.
 	// The encoding should be preferably calculated when the message is constructed
 	Encoding() Encoding
@@ -150,6 +147,14 @@ type ExactlyOnceMessage interface {
 	// If sending fails, or if the sender does not support QoS 2, then
 	// Finish() may be called without any call to Received()
 	Received(settle func(error))
+}
+
+//TODO
+type MessageWrapper interface {
+	Message
+
+	// TODO(slinkydeveloper) add docs
+	GetWrappedMessage() Message
 }
 
 // Receiver receives messages.

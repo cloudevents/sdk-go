@@ -5,7 +5,7 @@ type finishMessage struct {
 	finish func(error)
 }
 
-func (m *finishMessage) GetParent() Message {
+func (m *finishMessage) GetWrappedMessage() Message {
 	return m.Message
 }
 
@@ -16,6 +16,8 @@ func (m *finishMessage) Finish(err error) error {
 	}
 	return err2
 }
+
+var _ MessageWrapper = (*finishMessage)(nil)
 
 // WithFinish returns a wrapper for m that calls finish() and
 // m.Finish() in its Finish().
