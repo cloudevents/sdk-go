@@ -20,7 +20,7 @@ type binaryBufferedMessage struct {
 	body       *bytebufferpool.ByteBuffer
 }
 
-func (m *binaryBufferedMessage) Init() error {
+func (m *binaryBufferedMessage) Start() error {
 	m.metadata = make(map[spec.Attribute]interface{}, 4)
 	m.extensions = make(map[string]interface{})
 	return nil
@@ -43,7 +43,7 @@ func (m *binaryBufferedMessage) Structured(binding.StructuredEncoder) error {
 }
 
 func (m *binaryBufferedMessage) Binary(b binding.BinaryEncoder) (err error) {
-	err = b.Init()
+	err = b.Start()
 	if err != nil {
 		return
 	}

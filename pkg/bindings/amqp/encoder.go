@@ -44,7 +44,7 @@ func EncodeAMQPMessage(m binding.Message, amqpMessage *amqp.Message, forceStruct
 
 type amqpMessageEncoder amqp.Message
 
-func (b *amqpMessageEncoder) Init() error {
+func (b *amqpMessageEncoder) Start() error {
 	b.Properties = &amqp.MessageProperties{}
 	b.ApplicationProperties = make(map[string]interface{})
 	return nil

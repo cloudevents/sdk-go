@@ -110,7 +110,7 @@ type StructuredEncoder interface {
 type BinaryEncoder interface {
 	//TODO explain init and end with relative propagation!!!
 
-	Init() error
+	Start() error
 
 	// SetData receives an io.Reader for the data attribute.
 	// io.Reader could be empty, meaning that message payload is empty

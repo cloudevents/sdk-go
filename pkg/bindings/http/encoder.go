@@ -42,7 +42,7 @@ func EncodeHttpRequest(m binding.Message, req *http.Request, forceStructured boo
 
 type httpRequestEncoder http.Request
 
-func (b *httpRequestEncoder) Init() error {
+func (b *httpRequestEncoder) Start() error {
 	return nil
 }
 

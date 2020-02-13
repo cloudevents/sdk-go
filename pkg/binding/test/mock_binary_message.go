@@ -56,7 +56,7 @@ func (bm *MockBinaryMessage) Structured(binding.StructuredEncoder) error {
 }
 
 func (bm *MockBinaryMessage) Binary(b binding.BinaryEncoder) error {
-	err := b.Init()
+	err := b.Start()
 	if err != nil {
 		return err
 	}

@@ -64,7 +64,7 @@ func (b *messageToEventBuilder) SetStructuredEvent(format format.Format, event i
 	return format.Unmarshal(buf.Bytes(), b.event)
 }
 
-func (b *messageToEventBuilder) Init() error {
+func (b *messageToEventBuilder) Start() error {
 	return nil
 }
 

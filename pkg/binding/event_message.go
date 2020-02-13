@@ -32,7 +32,7 @@ func (m EventMessage) Structured(builder StructuredEncoder) error {
 }
 
 func (m EventMessage) Binary(b BinaryEncoder) (err error) {
-	err = b.Init()
+	err = b.Start()
 	if err != nil {
 		return err
 	}

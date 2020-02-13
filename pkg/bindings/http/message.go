@@ -66,7 +66,7 @@ func (m *Message) Binary(encoder binding.BinaryEncoder) error {
 		return binding.ErrNotBinary
 	}
 
-	err = encoder.Init()
+	err = encoder.Start()
 	if err != nil {
 		return err
 	}
