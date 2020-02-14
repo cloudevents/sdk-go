@@ -1,9 +1,16 @@
 package binding
 
 import (
+	"context"
 	"errors"
 
 	ce "github.com/cloudevents/sdk-go"
+)
+
+const (
+	SKIP_DIRECT_STRUCTURED_ENCODING = "SKIP_DIRECT_STRUCTURED_ENCODING"
+	SKIP_DIRECT_BINARY_ENCODING     = "SKIP_DIRECT_BINARY_ENCODING"
+	PREFERRED_EVENT_ENCODING        = "PREFERRED_EVENT_ENCODING"
 )
 
 // Invokes the encoders. createRootStructuredEncoder and createRootBinaryEncoder could be null if the protocol doesn't support it
@@ -15,19 +22,20 @@ import (
 // * BinaryEncoding, err if message was binary but error happened during translation
 // * EncodingUnknown, ErrUnknownEncoding if message is not recognized
 func RunDirectEncoding(
+	ctx context.Context,
 	message Message,
 	structuredEncoder StructuredEncoder,
 	binaryEncoder BinaryEncoder,
 	factories TransformerFactories,
 ) (Encoding, error) {
-	if structuredEncoder != nil {
+	if structuredEncoder != nil && !getOrDefaultFromCtx(ctx, SKIP_DIRECT_STRUCTURED_ENCODING, false).(bool) {
 		// Wrap the transformers in the structured builder
 		structuredEncoder = factories.StructuredTransformer(structuredEncoder)
 
 		// StructuredTransformer could return nil if one of transcoders doesn't support
 		// direct structured transcoding
 		if structuredEncoder != nil {
-			if err := message.Structured(structuredEncoder); err == nil {
+			if err := message.Structured(ctx, structuredEncoder); err == nil {
 				return EncodingStructured, nil
 			} else if err != ErrNotStructured {
 				return EncodingStructured, err
@@ -35,10 +43,10 @@ func RunDirectEncoding(
 		}
 	}
 
-	if binaryEncoder != nil {
+	if binaryEncoder != nil && !getOrDefaultFromCtx(ctx, SKIP_DIRECT_BINARY_ENCODING, false).(bool) {
 		binaryEncoder = factories.BinaryTransformer(binaryEncoder)
 		if binaryEncoder != nil {
-			if err := message.Binary(binaryEncoder); err == nil {
+			if err := message.Binary(ctx, binaryEncoder); err == nil {
 				return EncodingBinary, nil
 			} else if err != ErrNotBinary {
 				return EncodingBinary, err
@@ -60,17 +68,17 @@ func RunDirectEncoding(
 // * BinaryEncoding, err if message was binary but error happened during translation
 // * EncodingUnknown, ErrUnknownEncoding if message is not recognized
 func Encode(
+	ctx context.Context,
 	message Message,
 	structuredEncoder StructuredEncoder,
 	binaryEncoder BinaryEncoder,
 	transformers TransformerFactories,
-	eventPreferredEncoding Encoding,
 ) (Encoding, error) {
 	enc := message.Encoding()
 	var err error
 	// Skip direct encoding if the event is an event message
 	if enc != EncodingEvent {
-		enc, err = RunDirectEncoding(message, structuredEncoder, binaryEncoder, transformers)
+		enc, err = RunDirectEncoding(ctx, message, structuredEncoder, binaryEncoder, transformers)
 		if enc != EncodingUnknown {
 			// Message directly encoded, nothing else to do here
 			return enc, err
@@ -78,28 +86,56 @@ func Encode(
 	}
 
 	var e ce.Event
-	e, enc, err = ToEvent(message, transformers)
+	e, enc, err = ToEvent(ctx, message, transformers)
 	if err != nil {
 		return enc, err
 	}
 
 	message = EventMessage(e)
 
-	if eventPreferredEncoding == EncodingStructured {
+	if getOrDefaultFromCtx(ctx, PREFERRED_EVENT_ENCODING, EncodingBinary).(Encoding) == EncodingStructured {
 		if structuredEncoder != nil {
-			return EncodingStructured, message.Structured(structuredEncoder)
+			return EncodingStructured, message.Structured(ctx, structuredEncoder)
 		}
 		if binaryEncoder != nil {
-			return EncodingStructured, message.Binary(binaryEncoder)
+			return EncodingStructured, message.Binary(ctx, binaryEncoder)
 		}
 	} else {
 		if binaryEncoder != nil {
-			return EncodingStructured, message.Binary(binaryEncoder)
+			return EncodingStructured, message.Binary(ctx, binaryEncoder)
 		}
 		if structuredEncoder != nil {
-			return EncodingStructured, message.Structured(structuredEncoder)
+			return EncodingStructured, message.Structured(ctx, structuredEncoder)
 		}
 	}
 
 	return enc, errors.New("cannot find a suitable encoder to use from EventMessage")
+}
+
+func WithSkipDirectStructuredEncoding(ctx context.Context, skip bool) context.Context {
+	return context.WithValue(ctx, SKIP_DIRECT_STRUCTURED_ENCODING, skip)
+}
+
+func WithSkipDirectBinaryEncoding(ctx context.Context, skip bool) context.Context {
+	return context.WithValue(ctx, SKIP_DIRECT_BINARY_ENCODING, skip)
+}
+
+func WithPreferredEventEncoding(ctx context.Context, enc Encoding) context.Context {
+	return context.WithValue(ctx, PREFERRED_EVENT_ENCODING, enc)
+}
+
+func WithForceStructured(ctx context.Context) context.Context {
+	return context.WithValue(context.WithValue(ctx, PREFERRED_EVENT_ENCODING, EncodingStructured), SKIP_DIRECT_BINARY_ENCODING, true)
+}
+
+func WithForceBinary(ctx context.Context) context.Context {
+	return context.WithValue(context.WithValue(ctx, PREFERRED_EVENT_ENCODING, EncodingBinary), SKIP_DIRECT_STRUCTURED_ENCODING, true)
+}
+
+func getOrDefaultFromCtx(ctx context.Context, key string, def interface{}) interface{} {
+	if val := ctx.Value(key); val != nil {
+		return val
+	} else {
+		return def
+	}
 }

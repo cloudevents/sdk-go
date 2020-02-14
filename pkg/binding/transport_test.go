@@ -13,7 +13,7 @@ import (
 
 func TestTransportSend(t *testing.T) {
 	messageChannel := make(chan binding.Message, 1)
-	transport := binding.NewTransportAdapter(binding.ChanSender(messageChannel), binding.ChanReceiver(messageChannel))
+	transport := binding.NewTransportAdapter(binding.ChanSender(messageChannel), binding.ChanReceiver(messageChannel), nil)
 	ev := test.MinEvent()
 
 	client, err := cloudevents.NewClient(transport)
@@ -30,7 +30,7 @@ func TestTransportSend(t *testing.T) {
 func TestTransportReceive(t *testing.T) {
 	messageChannel := make(chan binding.Message, 1)
 	eventReceivedChannel := make(chan cloudevents.Event, 1)
-	transport := binding.NewTransportAdapter(binding.ChanSender(messageChannel), binding.ChanReceiver(messageChannel))
+	transport := binding.NewTransportAdapter(binding.ChanSender(messageChannel), binding.ChanReceiver(messageChannel), nil)
 	ev := test.MinEvent()
 
 	client, err := cloudevents.NewClient(transport)

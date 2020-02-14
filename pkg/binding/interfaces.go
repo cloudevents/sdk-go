@@ -62,7 +62,7 @@ type Message interface {
 	//
 	// This allows Senders to avoid re-encoding messages that are
 	// already in suitable structured form.
-	Structured(StructuredEncoder) error
+	Structured(context.Context, StructuredEncoder) error
 
 	// Binary transfers a binary-mode event to an BinaryEncoder.
 	// Returns ErrNotBinary if message is not in binary mode.
@@ -72,7 +72,7 @@ type Message interface {
 	//
 	// Allows Senders to forward a binary message without allocating an
 	// intermediate Event.
-	Binary(BinaryEncoder) error
+	Binary(context.Context, BinaryEncoder) error
 
 	// Finish *must* be called when message from a Receiver can be forgotten by
 	// the receiver. Sender.Send() calls Finish() when the message is sent.  A QoS
@@ -97,7 +97,7 @@ var ErrNotBinary = errors.New("message is not in binary mode")
 // structured -> structured transfer.
 type StructuredEncoder interface {
 	// Event receives an io.Reader for the whole event.
-	SetStructuredEvent(format format.Format, event io.Reader) error
+	SetStructuredEvent(ctx context.Context, format format.Format, event io.Reader) error
 }
 
 // BinaryEncoder should generate a new representation of the event starting from a binary message.
@@ -107,7 +107,7 @@ type StructuredEncoder interface {
 type BinaryEncoder interface {
 	//TODO explain init and end with relative propagation!!!
 
-	Start() error
+	Start(ctx context.Context) error
 
 	// SetData receives an io.Reader for the data attribute.
 	// io.Reader could be empty, meaning that message payload is empty

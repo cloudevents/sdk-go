@@ -62,9 +62,9 @@ func Canonical(t *testing.T, c ce.EventContext) {
 
 // SendReceive does, s.Send(in) and returns r.Receive().
 // Halt test on error.
-func SendReceive(t *testing.T, in binding.Message, s binding.Sender, r binding.Receiver, outAssert func(binding.Message)) {
+func SendReceive(t *testing.T, ctx context.Context, in binding.Message, s binding.Sender, r binding.Receiver, outAssert func(binding.Message)) {
 	t.Helper()
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	wg := sync.WaitGroup{}
 	wg.Add(2)
@@ -136,9 +136,9 @@ func MustJSON(e ce.Event) []byte {
 	return b
 }
 
-func MustToEvent(m binding.Message) (e ce.Event, encoding binding.Encoding) {
+func MustToEvent(ctx context.Context, m binding.Message) (e ce.Event, encoding binding.Encoding) {
 	var err error
-	e, encoding, err = binding.ToEvent(m)
+	e, encoding, err = binding.ToEvent(ctx, m)
 	if err != nil {
 		panic(err)
 	}

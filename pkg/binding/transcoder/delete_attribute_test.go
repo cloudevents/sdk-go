@@ -1,6 +1,7 @@
 package transcoder
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -22,7 +23,7 @@ func TestDeleteAttribute(t *testing.T) {
 	noSubjectEvent := copyEventContext(withSubjectEvent)
 	require.NoError(t, noSubjectEvent.Context.SetSubject(""))
 
-	RunTranscoderTests(t, []TranscoderTestArgs{
+	RunTranscoderTests(t, context.Background(), []TranscoderTestArgs{
 		{
 			name:         "Remove subject from Mock Structured message",
 			inputMessage: test.NewMockStructuredMessage(copyEventContext(withSubjectEvent)),

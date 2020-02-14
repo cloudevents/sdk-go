@@ -2,6 +2,7 @@ package amqp
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"reflect"
 	"strings"
@@ -43,22 +44,18 @@ func NewMessage(message *amqp.Message) *Message {
 // Check if amqp.Message implements binding.Message
 var _ binding.Message = (*Message)(nil)
 
-func (m *Message) GetParent() binding.Message {
-	return nil
-}
-
 func (m *Message) Encoding() binding.Encoding {
 	return m.encoding
 }
 
-func (m *Message) Structured(encoder binding.StructuredEncoder) error {
+func (m *Message) Structured(ctx context.Context, encoder binding.StructuredEncoder) error {
 	if m.AMQP.Properties != nil && format.IsFormat(m.AMQP.Properties.ContentType) {
-		return encoder.SetStructuredEvent(format.Lookup(m.AMQP.Properties.ContentType), bytes.NewReader(m.AMQP.GetData()))
+		return encoder.SetStructuredEvent(ctx, format.Lookup(m.AMQP.Properties.ContentType), bytes.NewReader(m.AMQP.GetData()))
 	}
 	return binding.ErrNotStructured
 }
 
-func (m *Message) Binary(encoder binding.BinaryEncoder) error {
+func (m *Message) Binary(ctx context.Context, encoder binding.BinaryEncoder) error {
 	if len(m.AMQP.ApplicationProperties) == 0 {
 		return errors.New("AMQP CloudEvents message has no application properties")
 	}
@@ -70,7 +67,7 @@ func (m *Message) Binary(encoder binding.BinaryEncoder) error {
 		return err
 	}
 
-	err = encoder.Start()
+	err = encoder.Start(ctx)
 	if err != nil {
 		return err
 	}

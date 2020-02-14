@@ -1,6 +1,7 @@
 package amqp
 
 import (
+	"context"
 	"io"
 	"io/ioutil"
 	"net/url"
@@ -14,53 +15,39 @@ import (
 )
 
 //TODO (slinkydeveloper) this is the public access to http encoders, document it
-func EncodeAMQPMessage(m binding.Message, amqpMessage *amqp.Message, forceStructured bool, forceBinary bool, transformerFactories binding.TransformerFactories) error {
-	var structuredEncoder binding.StructuredEncoder
-	if !forceBinary {
-		structuredEncoder = (*amqpMessageEncoder)(amqpMessage)
-	}
-
-	var binaryEncoder binding.BinaryEncoder
-	if !forceStructured {
-		binaryEncoder = (*amqpMessageEncoder)(amqpMessage)
-	}
-
-	var preferredEventEncoding binding.Encoding
-	if forceStructured {
-		preferredEventEncoding = binding.EncodingStructured
-	} else {
-		preferredEventEncoding = binding.EncodingBinary
-	}
+func EncodeAMQPMessage(ctx context.Context, m binding.Message, amqpMessage *amqp.Message, transformerFactories binding.TransformerFactories) error {
+	structuredEncoder := (*amqpMessageEncoder)(amqpMessage)
+	binaryEncoder := (*amqpMessageEncoder)(amqpMessage)
 
 	_, err := binding.Encode(
+		ctx,
 		m,
 		structuredEncoder,
 		binaryEncoder,
 		transformerFactories,
-		preferredEventEncoding,
 	)
 	return err
 }
 
 type amqpMessageEncoder amqp.Message
 
-func (b *amqpMessageEncoder) Start() error {
-	b.Properties = &amqp.MessageProperties{}
-	b.ApplicationProperties = make(map[string]interface{})
-	return nil
-}
-
-func (b *amqpMessageEncoder) End() error {
-	return nil
-}
-
-func (b *amqpMessageEncoder) SetStructuredEvent(format format.Format, event io.Reader) error {
+func (b *amqpMessageEncoder) SetStructuredEvent(ctx context.Context, format format.Format, event io.Reader) error {
 	val, err := ioutil.ReadAll(event)
 	if err != nil {
 		return err
 	}
 	b.Data = [][]byte{val}
 	b.Properties = &amqp.MessageProperties{ContentType: format.MediaType()}
+	return nil
+}
+
+func (b *amqpMessageEncoder) Start(ctx context.Context) error {
+	b.Properties = &amqp.MessageProperties{}
+	b.ApplicationProperties = make(map[string]interface{})
+	return nil
+}
+
+func (b *amqpMessageEncoder) End() error {
 	return nil
 }
 

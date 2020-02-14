@@ -13,9 +13,6 @@ type Sender struct {
 	AMQP *amqp.Sender
 
 	transformerFactories binding.TransformerFactories
-
-	forceBinary     bool
-	forceStructured bool
 }
 
 func (s *Sender) Send(ctx context.Context, in binding.Message) error {
@@ -26,7 +23,7 @@ func (s *Sender) Send(ctx context.Context, in binding.Message) error {
 	}
 
 	var amqpMessage amqp.Message
-	err = EncodeAMQPMessage(in, &amqpMessage, s.forceStructured, s.forceBinary, s.transformerFactories)
+	err = EncodeAMQPMessage(ctx, in, &amqpMessage, s.transformerFactories)
 	if err != nil {
 		return err
 	}

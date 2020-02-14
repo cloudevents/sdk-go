@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"io"
 	nethttp "net/http"
 	"strings"
@@ -44,29 +45,25 @@ func NewMessage(header nethttp.Header, body io.ReadCloser) (*Message, error) {
 	return &m, nil
 }
 
-func (m *Message) GetParent() binding.Message {
-	return nil
-}
-
 func (m *Message) Encoding() binding.Encoding {
 	return m.encoding
 }
 
-func (m *Message) Structured(encoder binding.StructuredEncoder) error {
+func (m *Message) Structured(ctx context.Context, encoder binding.StructuredEncoder) error {
 	if ft := format.Lookup(m.Header.Get(ContentType)); ft == nil {
 		return binding.ErrNotStructured
 	} else {
-		return encoder.SetStructuredEvent(ft, m.BodyReader)
+		return encoder.SetStructuredEvent(ctx, ft, m.BodyReader)
 	}
 }
 
-func (m *Message) Binary(encoder binding.BinaryEncoder) error {
+func (m *Message) Binary(ctx context.Context, encoder binding.BinaryEncoder) error {
 	version, err := specs.FindVersion(m.Header.Get)
 	if err != nil {
 		return binding.ErrNotBinary
 	}
 
-	err = encoder.Start()
+	err = encoder.Start(ctx)
 	if err != nil {
 		return err
 	}

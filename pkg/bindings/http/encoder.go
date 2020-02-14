@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -12,47 +13,33 @@ import (
 )
 
 //TODO (slinkydeveloper) this is the public access to http encoders, document it
-func EncodeHttpRequest(m binding.Message, req *http.Request, forceStructured bool, forceBinary bool, transformerFactories binding.TransformerFactories) error {
-	var structuredEncoder binding.StructuredEncoder
-	if !forceBinary {
-		structuredEncoder = (*httpRequestEncoder)(req)
-	}
-
-	var binaryEncoder binding.BinaryEncoder
-	if !forceStructured {
-		binaryEncoder = (*httpRequestEncoder)(req)
-	}
-
-	var preferredEventEncoding binding.Encoding
-	if forceStructured {
-		preferredEventEncoding = binding.EncodingStructured
-	} else {
-		preferredEventEncoding = binding.EncodingBinary
-	}
+func EncodeHttpRequest(ctx context.Context, m binding.Message, req *http.Request, transformerFactories binding.TransformerFactories) error {
+	structuredEncoder := (*httpRequestEncoder)(req)
+	binaryEncoder := (*httpRequestEncoder)(req)
 
 	_, err := binding.Encode(
+		ctx,
 		m,
 		structuredEncoder,
 		binaryEncoder,
 		transformerFactories,
-		preferredEventEncoding,
 	)
 	return err
 }
 
 type httpRequestEncoder http.Request
 
-func (b *httpRequestEncoder) Start() error {
+func (b *httpRequestEncoder) SetStructuredEvent(ctx context.Context, format format.Format, event io.Reader) error {
+	b.Header.Set(ContentType, format.MediaType())
+	b.Body = ioutil.NopCloser(event)
+	return nil
+}
+
+func (b *httpRequestEncoder) Start(ctx context.Context) error {
 	return nil
 }
 
 func (b *httpRequestEncoder) End() error {
-	return nil
-}
-
-func (b *httpRequestEncoder) SetStructuredEvent(format format.Format, event io.Reader) error {
-	b.Header.Set(ContentType, format.MediaType())
-	b.Body = ioutil.NopCloser(event)
 	return nil
 }
 
@@ -86,5 +73,5 @@ func (b *httpRequestEncoder) SetExtension(name string, value interface{}) error 
 	return nil
 }
 
-var _ binding.BinaryEncoder = (*httpRequestEncoder)(nil)     // Test it conforms to the interface
 var _ binding.StructuredEncoder = (*httpRequestEncoder)(nil) // Test it conforms to the interface
+var _ binding.BinaryEncoder = (*httpRequestEncoder)(nil)     // Test it conforms to the interface

@@ -9,7 +9,6 @@ import (
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
-	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 )
 
@@ -37,11 +36,11 @@ func (m ExMessage) Encoding() binding.Encoding {
 	return binding.EncodingStructured
 }
 
-func (m ExMessage) Structured(b binding.StructuredEncoder) error {
-	return b.SetStructuredEvent(format.JSON, bytes.NewReader(m))
+func (m ExMessage) Structured(ctx context.Context, b binding.StructuredEncoder) error {
+	return b.SetStructuredEvent(ctx, format.JSON, bytes.NewReader(m))
 }
 
-func (m ExMessage) Binary(binding.BinaryEncoder) error {
+func (m ExMessage) Binary(context.Context, binding.BinaryEncoder) error {
 	return binding.ErrNotBinary
 }
 
@@ -65,17 +64,17 @@ func (s *ExSender) Send(ctx context.Context, m binding.Message) error {
 	// Encode tries the various encodings, starting with provided root encoder factories.
 	// If a sender doesn't support a specific encoding, a null root encoder factory could be provided.
 	_, err := binding.Encode(
+		ctx,
 		m,
 		s,
 		nil,
 		s.transformers,
-		binding.EncodingStructured,
 	)
 
 	return err
 }
 
-func (s *ExSender) SetStructuredEvent(f format.Format, event io.Reader) error {
+func (s *ExSender) SetStructuredEvent(ctx context.Context, f format.Format, event io.Reader) error {
 	if f == format.JSON {
 		b, err := ioutil.ReadAll(event)
 		if err != nil {
@@ -85,10 +84,6 @@ func (s *ExSender) SetStructuredEvent(f format.Format, event io.Reader) error {
 	} else {
 		return binding.ErrNotStructured
 	}
-}
-
-func (s *ExSender) SetEvent(event ce.Event) error {
-	return s.encoder.Encode(&event)
 }
 
 func (s *ExSender) Close(context.Context) error { return nil }
@@ -111,7 +106,7 @@ func (r *ExReceiver) Close(context.Context) error { return nil }
 // NewExTransport returns a transport.Transport which is implemented by
 // an ExSender and an ExReceiver
 func NewExTransport(r io.Reader, w io.Writer) transport.Transport {
-	return binding.NewTransportAdapter(NewExSender(w), NewExReceiver(r))
+	return binding.NewTransportAdapter(NewExSender(w), NewExReceiver(r), []func(ctx context.Context) context.Context{})
 }
 
 // Example of implementing a transport including a simple message type,

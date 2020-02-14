@@ -2,6 +2,7 @@ package binding
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"io"
 
@@ -17,7 +18,7 @@ var ErrCannotConvertToEvent = errors.New("cannot convert message to event")
 // Translates a Message with a valid Structured or Binary representation to an Event
 // The TransformerFactories **aren't invoked** during the transformation to event,
 // but after the event instance is generated
-func ToEvent(message Message, transformers ...TransformerFactory) (e ce.Event, encoding Encoding, err error) {
+func ToEvent(ctx context.Context, message Message, transformers ...TransformerFactory) (e ce.Event, encoding Encoding, err error) {
 	e = cloudevents.NewEvent()
 
 	messageEncoding := message.Encoding()
@@ -41,6 +42,7 @@ func ToEvent(message Message, transformers ...TransformerFactory) (e ce.Event, e
 
 	encoder := &messageToEventBuilder{event: &e}
 	encoding, err = RunDirectEncoding(
+		context.TODO(),
 		message,
 		encoder,
 		encoder,
@@ -60,7 +62,7 @@ type messageToEventBuilder struct {
 var _ StructuredEncoder = (*messageToEventBuilder)(nil)
 var _ BinaryEncoder = (*messageToEventBuilder)(nil)
 
-func (b *messageToEventBuilder) SetStructuredEvent(format format.Format, event io.Reader) error {
+func (b *messageToEventBuilder) SetStructuredEvent(ctx context.Context, format format.Format, event io.Reader) error {
 	var buf bytes.Buffer
 	_, err := io.Copy(&buf, event)
 	if err != nil {
@@ -69,7 +71,7 @@ func (b *messageToEventBuilder) SetStructuredEvent(format format.Format, event i
 	return format.Unmarshal(buf.Bytes(), b.event)
 }
 
-func (b *messageToEventBuilder) Start() error {
+func (b *messageToEventBuilder) Start(ctx context.Context) error {
 	return nil
 }
 

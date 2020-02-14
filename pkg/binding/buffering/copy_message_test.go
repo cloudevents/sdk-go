@@ -1,6 +1,7 @@
 package buffering
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -69,11 +70,11 @@ func TestCopyMessage(t *testing.T) {
 			message := binding.WithFinish(tt.message, func(err error) {
 				finished = true
 			})
-			cpy, err := CopyMessage(message)
+			cpy, err := CopyMessage(context.Background(), message)
 			require.NoError(t, err)
 			// The copy can be read any number of times
 			for i := 0; i < 3; i++ {
-				got, encoding, err := binding.ToEvent(cpy)
+				got, encoding, err := binding.ToEvent(context.Background(), cpy)
 				assert.NoError(t, err)
 				require.Equal(t, tt.encoding, encoding)
 				test.AssertEventEquals(t, test.ExToStr(t, tt.want), test.ExToStr(t, got))
@@ -86,11 +87,11 @@ func TestCopyMessage(t *testing.T) {
 			message := binding.WithFinish(tt.message, func(err error) {
 				finished = true
 			})
-			cpy, err := BufferMessage(message)
+			cpy, err := BufferMessage(context.Background(), message)
 			require.NoError(t, err)
 			// The copy can be read any number of times
 			for i := 0; i < 3; i++ {
-				got, encoding, err := binding.ToEvent(cpy)
+				got, encoding, err := binding.ToEvent(context.Background(), cpy)
 				assert.NoError(t, err)
 				require.Equal(t, tt.encoding, encoding)
 				test.AssertEventEquals(t, test.ExToStr(t, tt.want), test.ExToStr(t, got))

@@ -2,6 +2,7 @@ package test
 
 import (
 	"bytes"
+	"context"
 
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
@@ -29,11 +30,11 @@ func NewMockStructuredMessage(e cloudevents.Event) *MockStructuredMessage {
 	}
 }
 
-func (s *MockStructuredMessage) Structured(b binding.StructuredEncoder) error {
-	return b.SetStructuredEvent(s.Format, bytes.NewReader(s.Bytes))
+func (s *MockStructuredMessage) Structured(ctx context.Context, b binding.StructuredEncoder) error {
+	return b.SetStructuredEvent(ctx, s.Format, bytes.NewReader(s.Bytes))
 }
 
-func (s *MockStructuredMessage) Binary(binding.BinaryEncoder) error {
+func (s *MockStructuredMessage) Binary(context.Context, binding.BinaryEncoder) error {
 	return binding.ErrNotBinary
 }
 

@@ -43,7 +43,7 @@ func TestSendReceive(t *testing.T) {
 
 	var allOut []binding.Message
 	test.EachMessage(t, allIn, func(t *testing.T, in binding.Message) {
-		test.SendReceive(t, in, sr, sr, func(out binding.Message) {
+		test.SendReceive(t, context.Background(), in, sr, sr, func(out binding.Message) {
 			assert.Equal(t, in, out)
 			allOut = append(allOut, out)
 		})

@@ -2,6 +2,7 @@ package binding
 
 import (
 	"bytes"
+	"context"
 
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
@@ -22,17 +23,17 @@ func (m EventMessage) Encoding() Encoding {
 	return EncodingEvent
 }
 
-func (m EventMessage) Structured(builder StructuredEncoder) error {
+func (m EventMessage) Structured(ctx context.Context, builder StructuredEncoder) error {
 	//TODO here only json is supported, should we support other message encodings?
 	b, err := format.JSON.Marshal(ce.Event(m))
 	if err != nil {
 		return err
 	}
-	return builder.SetStructuredEvent(format.JSON, bytes.NewReader(b))
+	return builder.SetStructuredEvent(ctx, format.JSON, bytes.NewReader(b))
 }
 
-func (m EventMessage) Binary(b BinaryEncoder) (err error) {
-	err = b.Start()
+func (m EventMessage) Binary(ctx context.Context, b BinaryEncoder) (err error) {
+	err = b.Start(ctx)
 	if err != nil {
 		return err
 	}

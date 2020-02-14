@@ -17,9 +17,6 @@ type Sender struct {
 	Target *url.URL
 
 	transformerFactories binding.TransformerFactories
-
-	forceBinary     bool
-	forceStructured bool
 }
 
 func (s *Sender) Send(ctx context.Context, m binding.Message) (err error) {
@@ -35,7 +32,7 @@ func (s *Sender) Send(ctx context.Context, m binding.Message) (err error) {
 	}
 	req = req.WithContext(ctx)
 
-	if err = EncodeHttpRequest(m, req, s.forceStructured, s.forceBinary, s.transformerFactories); err != nil {
+	if err = EncodeHttpRequest(ctx, m, req, s.transformerFactories); err != nil {
 		return
 	}
 	resp, err := s.Client.Do(req)

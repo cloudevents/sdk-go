@@ -1,6 +1,7 @@
 package transcoder
 
 import (
+	"context"
 	"strings"
 	"testing"
 	"time"
@@ -35,7 +36,7 @@ func TestUpdateAttribute(t *testing.T) {
 	updatedTimeEvent := copyEventContext(withTimeEvent)
 	require.NoError(t, updatedTimeEvent.Context.SetTime(timeUpdateFunc(timestamp).(time.Time)))
 
-	RunTranscoderTests(t, []TranscoderTestArgs{
+	RunTranscoderTests(t, context.Background(), []TranscoderTestArgs{
 		{
 			name:         "Update subject in Mock Structured message",
 			inputMessage: test.NewMockStructuredMessage(copyEventContext(withSubjectEvent)),

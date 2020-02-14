@@ -2,6 +2,7 @@ package buffering
 
 import (
 	"bytes"
+	"context"
 	"io"
 
 	"github.com/valyala/bytebufferpool"
@@ -20,7 +21,7 @@ type binaryBufferedMessage struct {
 	body       *bytebufferpool.ByteBuffer
 }
 
-func (m *binaryBufferedMessage) Start() error {
+func (m *binaryBufferedMessage) Start(ctx context.Context) error {
 	m.metadata = make(map[spec.Attribute]interface{}, 4)
 	m.extensions = make(map[string]interface{})
 	return nil
@@ -38,12 +39,12 @@ func (m *binaryBufferedMessage) Encoding() binding.Encoding {
 	return binding.EncodingBinary
 }
 
-func (m *binaryBufferedMessage) Structured(binding.StructuredEncoder) error {
+func (m *binaryBufferedMessage) Structured(context.Context, binding.StructuredEncoder) error {
 	return binding.ErrNotStructured
 }
 
-func (m *binaryBufferedMessage) Binary(b binding.BinaryEncoder) (err error) {
-	err = b.Start()
+func (m *binaryBufferedMessage) Binary(ctx context.Context, b binding.BinaryEncoder) (err error) {
+	err = b.Start(ctx)
 	if err != nil {
 		return
 	}
