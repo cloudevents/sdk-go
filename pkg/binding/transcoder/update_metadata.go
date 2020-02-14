@@ -11,6 +11,10 @@ func UpdateAttribute(attributeKind spec.Kind, updater func(interface{}) interfac
 	return updateAttributeTranscoderFactory{attributeKind: attributeKind, updater: updater}
 }
 
+func UpdateExtension(name string, updater func(interface{}) interface{}) binding.TransformerFactory {
+	return updateExtensionTranscoderFactory{name: name, updater: updater}
+}
+
 type updateAttributeTranscoderFactory struct {
 	attributeKind spec.Kind
 	updater       func(interface{}) interface{}
@@ -46,6 +50,33 @@ func (a updateAttributeTranscoderFactory) EventTransformer() binding.EventTransf
 	}
 }
 
+type updateExtensionTranscoderFactory struct {
+	name    string
+	updater func(interface{}) interface{}
+}
+
+func (a updateExtensionTranscoderFactory) StructuredTransformer(binding.StructuredEncoder) binding.StructuredEncoder {
+	return nil
+}
+
+func (a updateExtensionTranscoderFactory) BinaryTransformer(encoder binding.BinaryEncoder) binding.BinaryEncoder {
+	return &updateExtensionTransformer{
+		BinaryEncoder: encoder,
+		name:          a.name,
+		updater:       a.updater,
+	}
+}
+
+func (a updateExtensionTranscoderFactory) EventTransformer() binding.EventTransformer {
+	return func(event *cloudevents.Event) error {
+		if val, ok := event.Extensions()[a.name]; ok {
+			newVal := a.updater(val)
+			return event.Context.SetExtension(a.name, newVal)
+		}
+		return nil
+	}
+}
+
 type updateAttributeTransformer struct {
 	binding.BinaryEncoder
 	attributeKind spec.Kind
@@ -61,4 +92,21 @@ func (b *updateAttributeTransformer) SetAttribute(attribute spec.Attribute, valu
 		return nil
 	}
 	return b.BinaryEncoder.SetAttribute(attribute, value)
+}
+
+type updateExtensionTransformer struct {
+	binding.BinaryEncoder
+	name    string
+	updater func(interface{}) interface{}
+}
+
+func (b *updateExtensionTransformer) SetExtension(name string, value interface{}) error {
+	if name == b.name {
+		newVal := b.updater(value)
+		if newVal != nil {
+			return b.BinaryEncoder.SetExtension(name, newVal)
+		}
+		return nil
+	}
+	return b.BinaryEncoder.SetExtension(name, value)
 }

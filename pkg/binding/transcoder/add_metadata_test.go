@@ -83,3 +83,52 @@ func TestAddAttribute(t *testing.T) {
 		},
 	})
 }
+
+func TestAddExtension(t *testing.T) {
+	e := test.MinEvent()
+	e.Context = e.Context.AsV1()
+
+	extName := "aaa"
+	extValue := "bbb"
+	expectedEventWithExtension := copyEventContext(e)
+	require.NoError(t, expectedEventWithExtension.Context.SetExtension(extName, extValue))
+
+	RunTranscoderTests(t, context.Background(), []TranscoderTestArgs{
+		{
+			name:         "No change to extension 'aaa' to Mock Structured message",
+			inputMessage: test.NewMockStructuredMessage(copyEventContext(expectedEventWithExtension)),
+			wantEvent:    copyEventContext(expectedEventWithExtension),
+			transformer:  AddExtension(extName, extValue),
+		},
+		{
+			name:         "No change to extension 'aaa' to Mock Binary message",
+			inputMessage: test.NewMockBinaryMessage(copyEventContext(expectedEventWithExtension)),
+			wantEvent:    copyEventContext(expectedEventWithExtension),
+			transformer:  AddExtension(extName, extValue),
+		},
+		{
+			name:         "No change to extension 'aaa' to Event message",
+			inputMessage: binding.EventMessage(copyEventContext(expectedEventWithExtension)),
+			wantEvent:    copyEventContext(expectedEventWithExtension),
+			transformer:  AddExtension(extName, extValue),
+		},
+		{
+			name:         "Add extension 'aaa' to Mock Structured message",
+			inputMessage: test.NewMockStructuredMessage(copyEventContext(e)),
+			wantEvent:    copyEventContext(expectedEventWithExtension),
+			transformer:  AddExtension(extName, extValue),
+		},
+		{
+			name:         "Add extension 'aaa' to Mock Binary message",
+			inputMessage: test.NewMockBinaryMessage(copyEventContext(e)),
+			wantEvent:    copyEventContext(expectedEventWithExtension),
+			transformer:  AddExtension(extName, extValue),
+		},
+		{
+			name:         "Add extension 'aaa' to Event message",
+			inputMessage: binding.EventMessage(copyEventContext(e)),
+			wantEvent:    copyEventContext(expectedEventWithExtension),
+			transformer:  AddExtension(extName, extValue),
+		},
+	})
+}

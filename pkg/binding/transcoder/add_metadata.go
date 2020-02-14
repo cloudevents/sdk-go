@@ -12,6 +12,10 @@ func AddAttribute(attributeKind spec.Kind, value interface{}) binding.Transforme
 	return setAttributeTranscoderFactory{attributeKind: attributeKind, value: value}
 }
 
+func AddExtension(name string, value interface{}) binding.TransformerFactory {
+	return setExtensionTranscoderFactory{name: name, value: value}
+}
+
 type setAttributeTranscoderFactory struct {
 	attributeKind spec.Kind
 	value         interface{}
@@ -43,6 +47,33 @@ func (a setAttributeTranscoderFactory) EventTransformer() binding.EventTransform
 	}
 }
 
+type setExtensionTranscoderFactory struct {
+	name  string
+	value interface{}
+}
+
+func (a setExtensionTranscoderFactory) StructuredTransformer(binding.StructuredEncoder) binding.StructuredEncoder {
+	return nil
+}
+
+func (a setExtensionTranscoderFactory) BinaryTransformer(encoder binding.BinaryEncoder) binding.BinaryEncoder {
+	return &setExtensionTransformer{
+		BinaryEncoder: encoder,
+		name:          a.name,
+		value:         a.value,
+		found:         false,
+	}
+}
+
+func (a setExtensionTranscoderFactory) EventTransformer() binding.EventTransformer {
+	return func(event *cloudevents.Event) error {
+		if _, ok := event.Extensions()[a.name]; !ok {
+			return event.Context.SetExtension(a.name, a.value)
+		}
+		return nil
+	}
+}
+
 type setAttributeTransformer struct {
 	binding.BinaryEncoder
 	attributeKind spec.Kind
@@ -62,6 +93,27 @@ func (b *setAttributeTransformer) SetAttribute(attribute spec.Attribute, value i
 func (b *setAttributeTransformer) End() error {
 	if !b.found {
 		return b.BinaryEncoder.SetAttribute(b.version.AttributeFromKind(b.attributeKind), b.value)
+	}
+	return nil
+}
+
+type setExtensionTransformer struct {
+	binding.BinaryEncoder
+	name  string
+	value interface{}
+	found bool
+}
+
+func (b *setExtensionTransformer) SetExtension(name string, value interface{}) error {
+	if name == b.name {
+		b.found = true
+	}
+	return b.BinaryEncoder.SetExtension(name, value)
+}
+
+func (b *setExtensionTransformer) End() error {
+	if !b.found {
+		return b.BinaryEncoder.SetExtension(b.name, b.value)
 	}
 	return nil
 }

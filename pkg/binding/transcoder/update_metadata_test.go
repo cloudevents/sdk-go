@@ -99,3 +99,54 @@ func TestUpdateAttribute(t *testing.T) {
 		},
 	})
 }
+
+func TestUpdateExtension(t *testing.T) {
+	e := test.MinEvent()
+	e.Context = e.Context.AsV1()
+	require.NoError(t, e.Context.SetExtension("aaa", "bbb"))
+
+	updateFunc := func(v interface{}) interface{} {
+		return strings.ToUpper(v.(string))
+	}
+	updatedExtensionEvent := copyEventContext(e)
+	require.NoError(t, updatedExtensionEvent.Context.SetExtension("aaa", updateFunc("bbb").(string)))
+
+	RunTranscoderTests(t, context.Background(), []TranscoderTestArgs{
+		{
+			name:         "No change in Mock Structured message",
+			inputMessage: test.NewMockStructuredMessage(copyEventContext(e)),
+			wantEvent:    copyEventContext(e),
+			transformer:  UpdateExtension("ccc", updateFunc),
+		},
+		{
+			name:         "No change in Mock Binary message",
+			inputMessage: test.NewMockBinaryMessage(copyEventContext(e)),
+			wantEvent:    copyEventContext(e),
+			transformer:  UpdateExtension("ccc", updateFunc),
+		},
+		{
+			name:         "No change in Event message",
+			inputMessage: binding.EventMessage(copyEventContext(e)),
+			wantEvent:    copyEventContext(e),
+			transformer:  UpdateExtension("ccc", updateFunc),
+		},
+		{
+			name:         "Update extension 'aaa' in Mock Structured message",
+			inputMessage: test.NewMockStructuredMessage(copyEventContext(e)),
+			wantEvent:    copyEventContext(updatedExtensionEvent),
+			transformer:  UpdateExtension("aaa", updateFunc),
+		},
+		{
+			name:         "Update extension 'aaa' in Mock Binary message",
+			inputMessage: test.NewMockBinaryMessage(copyEventContext(e)),
+			wantEvent:    copyEventContext(updatedExtensionEvent),
+			transformer:  UpdateExtension("aaa", updateFunc),
+		},
+		{
+			name:         "Update extension 'aaa' in Event message",
+			inputMessage: binding.EventMessage(copyEventContext(e)),
+			wantEvent:    copyEventContext(updatedExtensionEvent),
+			transformer:  UpdateExtension("aaa", updateFunc),
+		},
+	})
+}

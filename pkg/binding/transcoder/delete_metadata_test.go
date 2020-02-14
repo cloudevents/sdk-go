@@ -80,3 +80,52 @@ func TestDeleteAttribute(t *testing.T) {
 		},
 	})
 }
+
+func TestDeleteExtension(t *testing.T) {
+	e := test.MinEvent()
+	e.Context = e.Context.AsV1()
+
+	extName := "aaa"
+	extValue := "bbb"
+	expectedEventWithExtension := copyEventContext(e)
+	require.NoError(t, expectedEventWithExtension.Context.SetExtension(extName, extValue))
+
+	RunTranscoderTests(t, context.Background(), []TranscoderTestArgs{
+		{
+			name:         "No change to Mock Structured message",
+			inputMessage: test.NewMockStructuredMessage(copyEventContext(expectedEventWithExtension)),
+			wantEvent:    copyEventContext(expectedEventWithExtension),
+			transformer:  DeleteExtension("ccc"),
+		},
+		{
+			name:         "No change to Mock Binary message",
+			inputMessage: test.NewMockBinaryMessage(copyEventContext(expectedEventWithExtension)),
+			wantEvent:    copyEventContext(expectedEventWithExtension),
+			transformer:  DeleteExtension("ccc"),
+		},
+		{
+			name:         "No change to Event message",
+			inputMessage: binding.EventMessage(copyEventContext(expectedEventWithExtension)),
+			wantEvent:    copyEventContext(expectedEventWithExtension),
+			transformer:  DeleteExtension("ccc"),
+		},
+		{
+			name:         "Delete extension 'aaa' from Mock Structured message",
+			inputMessage: test.NewMockStructuredMessage(copyEventContext(expectedEventWithExtension)),
+			wantEvent:    copyEventContext(e),
+			transformer:  DeleteExtension(extName),
+		},
+		{
+			name:         "Delete extension 'aaa' from Mock Binary message",
+			inputMessage: test.NewMockBinaryMessage(copyEventContext(expectedEventWithExtension)),
+			wantEvent:    copyEventContext(e),
+			transformer:  DeleteExtension(extName),
+		},
+		{
+			name:         "Delete extension 'aaa' from Event message",
+			inputMessage: binding.EventMessage(copyEventContext(expectedEventWithExtension)),
+			wantEvent:    copyEventContext(e),
+			transformer:  DeleteExtension(extName),
+		},
+	})
+}
