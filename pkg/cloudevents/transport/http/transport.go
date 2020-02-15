@@ -44,11 +44,6 @@ type Transport struct {
 	// If nil, DefaultShutdownTimeout is used.
 	ShutdownTimeout *time.Duration
 
-	// Sending
-
-	// Client is the http client that will be used to send requests.
-	// If nil, the Transport will create a one.
-	Client *http.Client
 	// Req is the base http request that is used for http.Do.
 	// Only .Method, .URL, .Close, and .Header is considered.
 	// If not set, Req.Method defaults to POST.
@@ -90,6 +85,10 @@ type Transport struct {
 	reMu sync.Mutex
 
 	middleware []Middleware
+
+	// transport is the http client transport that will be used to send requests.
+	// If nil, the default transport will be used.
+	transport http.RoundTripper
 }
 
 func New(opts ...Option) (*Transport, error) {
@@ -168,14 +167,6 @@ func (t *Transport) Send(ctx context.Context, event cloudevents.Event) (context.
 }
 
 func (t *Transport) obsSend(ctx context.Context, event cloudevents.Event) (context.Context, *cloudevents.Event, error) {
-	if t.Client == nil {
-		t.crMu.Lock()
-		if t.Client == nil {
-			t.Client = &http.Client{}
-		}
-		t.crMu.Unlock()
-	}
-
 	req := http.Request{
 		Header: HeaderFrom(ctx),
 	}
@@ -203,7 +194,7 @@ func (t *Transport) obsSend(ctx context.Context, event cloudevents.Event) (conte
 
 	if m, ok := msg.(*Message); ok {
 		m.ToRequest(&req)
-		return httpDo(ctx, t.Client, &req, func(resp *http.Response, err error) (context.Context, *cloudevents.Event, error) {
+		return httpDo(ctx, &http.Client{Transport: t.transport}, &req, func(resp *http.Response, err error) (context.Context, *cloudevents.Event, error) {
 			rctx := WithTransportContext(ctx, NewTransportContextFromResponse(resp))
 			if err != nil {
 				return rctx, nil, err

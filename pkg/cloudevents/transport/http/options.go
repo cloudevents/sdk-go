@@ -264,3 +264,11 @@ func WithLongPollTarget(targetUrl string) Option {
 		return fmt.Errorf("http long poll target option was empty string")
 	}
 }
+
+// WithHTTPTransport sets the HTTP client transport.
+func WithHTTPTransport(httpTransport nethttp.RoundTripper) Option {
+	return func(t *Transport) error {
+		t.transport = httpTransport
+		return nil
+	}
+}
