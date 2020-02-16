@@ -268,3 +268,48 @@ func TestAttendToHeader(t *testing.T) {
 		})
 	}
 }
+
+func TestSetHeaders(t *testing.T) {
+	testCases := map[string]struct {
+		initial nethttp.Header
+		want    nethttp.Header
+	}{
+		"nil": {
+			want: nethttp.Header{},
+		},
+		"no initial": {
+			want: func() nethttp.Header {
+				h := nethttp.Header{}
+				h.Set("unit", "test header")
+				h.Set("testing", "header unit")
+				return h
+			}(),
+		},
+		"with initial": {
+			initial: func() nethttp.Header {
+				h := nethttp.Header{}
+				h.Set("unit", "test header")
+				h.Set("testing", "header unit")
+				return h
+			}(),
+			want: func() nethttp.Header {
+				h := nethttp.Header{}
+				h.Set("new", "test header")
+				h.Set("testing", "header unit")
+				return h
+			}(),
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+			ctx := context.TODO()
+			ctx = http.SetContextHeaders(ctx, tc.initial)
+			ctx = http.SetContextHeaders(ctx, tc.want)
+			got := http.HeaderFrom(ctx)
+
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("unexpected (-want, +got) = %v", diff)
+			}
+		})
+	}
+}
