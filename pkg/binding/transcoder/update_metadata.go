@@ -6,11 +6,12 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
 )
 
-// TODO(slinkydeveloper) docs
+// Update cloudevents attribute (if present) using the provided function during the encoding process
 func UpdateAttribute(attributeKind spec.Kind, updater func(interface{}) interface{}) binding.TransformerFactory {
 	return updateAttributeTranscoderFactory{attributeKind: attributeKind, updater: updater}
 }
 
+// Update cloudevents extension (if present) using the provided function during the encoding process
 func UpdateExtension(name string, updater func(interface{}) interface{}) binding.TransformerFactory {
 	return updateExtensionTranscoderFactory{name: name, updater: updater}
 }

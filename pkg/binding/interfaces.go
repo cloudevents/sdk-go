@@ -12,13 +12,14 @@ import (
 // Encoding enum specifies the type of encodings supported by binding interfaces
 type Encoding int
 
-// TODO(slinkydeveloper) docs
-
 const (
+	// Binary encoding as specified in https://github.com/cloudevents/spec/blob/master/spec.md#message
 	EncodingBinary Encoding = iota
+	// Structured encoding as specified in https://github.com/cloudevents/spec/blob/master/spec.md#message
 	EncodingStructured
-	// Used when the Message is an instance of EventMessage
+	// Message is an instance of EventMessage or it contains it nested (through MessageWrapper)
 	EncodingEvent
+	// When the encoding is unknown (which means that the message is a non-event)
 	EncodingUnknown
 )
 
@@ -46,12 +47,11 @@ var ErrUnknownEncoding = errors.New("unknown Message encoding")
 //
 // The Structured and Binary methods provide optional optimized transfer of an event
 // to a Sender, they may not be implemented by all Message instances. A Sender should
-// try each method of interest and fall back to Event(EventEncoder) if none are supported.
+// try each method of interest and fall back to ToEvent() if none are supported.
 //
 type Message interface {
-	// TODO(slinkydeveloper) add docs
-	// Return the kind of encoding.
-	// The encoding should be preferably calculated when the message is constructed
+	// Return the type of the message Encoding.
+	// The encoding should be preferably computed when the message is constructed.
 	Encoding() Encoding
 
 	// Structured transfers a structured-mode event to a StructuredEncoder.
@@ -91,27 +91,24 @@ var ErrNotStructured = errors.New("message is not in structured mode")
 // ErrNotBinary returned by Message.Binary for non-binary messages.
 var ErrNotBinary = errors.New("message is not in binary mode")
 
-// StructuredEncoder should generate a new representation of the event starting from a structured message.
+// StructuredEncoder is used to visit a structured Message and generate a new representation.
 //
 // Protocols that supports structured encoding should implement this interface to implement direct
-// structured -> structured transfer.
+// structured -> structured transfer and event -> binary.
 type StructuredEncoder interface {
 	// Event receives an io.Reader for the whole event.
 	SetStructuredEvent(ctx context.Context, format format.Format, event io.Reader) error
 }
 
-// BinaryEncoder should generate a new representation of the event starting from a binary message.
+// BinaryEncoder is used to visit a binary Message and generate a new representation.
 //
 // Protocols that supports binary encoding should implement this interface to implement direct
-// binary -> binary transfer.
+// binary -> binary transfer and event -> binary.
+//
+// Start() and End() methods are invoked every time this BinaryEncoder implementation is used to visit a Message
 type BinaryEncoder interface {
-	//TODO explain init and end with relative propagation!!!
-
+	// Method invoked at the beginning of the visit. Useful to perform initial memory allocations
 	Start(ctx context.Context) error
-
-	// SetData receives an io.Reader for the data attribute.
-	// io.Reader could be empty, meaning that message payload is empty
-	SetData(data io.Reader) error
 
 	// Set a standard attribute.
 	//
@@ -125,6 +122,12 @@ type BinaryEncoder interface {
 	// string encoding. See package cloudevents/types
 	SetExtension(name string, value interface{}) error
 
+	// SetData receives an io.Reader for the data attribute.
+	// io.Reader could be empty, meaning that message payload is empty
+	SetData(data io.Reader) error
+
+	// End method is invoked only after the whole encoding process ends successfully.
+	// If it fails, it's never invoked. It can be used to finalize the message.
 	End() error
 }
 
@@ -149,11 +152,11 @@ type ExactlyOnceMessage interface {
 	Received(settle func(error))
 }
 
-//TODO
+// Message Wrapper interface is used to walk through a decorated Message and unwrap it.
 type MessageWrapper interface {
 	Message
 
-	// TODO(slinkydeveloper) add docs
+	// Method to get the wrapped message
 	GetWrappedMessage() Message
 }
 

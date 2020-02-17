@@ -6,12 +6,12 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
 )
 
-// TODO(slinkydeveloper) docs
+// Delete cloudevents attribute during the encoding process
 func DeleteAttribute(attributeKind spec.Kind) binding.TransformerFactory {
 	return deleteAttributeTranscoderFactory{attributeKind: attributeKind}
 }
 
-// TODO(slinkydeveloper) docs
+// Delete cloudevents extension during the encoding process
 func DeleteExtension(name string) binding.TransformerFactory {
 	return deleteExtensionTranscoderFactory{name: name}
 }

@@ -24,7 +24,7 @@ func (m EventMessage) Encoding() Encoding {
 }
 
 func (m EventMessage) Structured(ctx context.Context, builder StructuredEncoder) error {
-	//TODO here only json is supported, should we support other message encodings?
+	// TODO here only json is supported, should we support other message encodings?
 	b, err := format.JSON.Marshal(ce.Event(m))
 	if err != nil {
 		return err

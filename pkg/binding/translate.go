@@ -61,6 +61,8 @@ func RunDirectEncoding(
 // 1. It first tries direct encoding using RunEncoders
 // 2. If no direct encoding is possible, it goes through ToEvent to generate an event representation
 // 3. Using the encoders previously defined
+// You can tweak the encoding process using the context decorators WithForceStructured, WithForceStructured, etc.
+// This function guarantees that transformers are invoked only one time during the encoding process.
 // Returns:
 // * EncodingStructured, nil if message was structured and correctly translated to Event
 // * EncodingBinary, nil if message was binary and correctly translated to Event
@@ -112,22 +114,27 @@ func Encode(
 	return enc, errors.New("cannot find a suitable encoder to use from EventMessage")
 }
 
+// Skip direct structured to structured encoding during the encoding process
 func WithSkipDirectStructuredEncoding(ctx context.Context, skip bool) context.Context {
 	return context.WithValue(ctx, SKIP_DIRECT_STRUCTURED_ENCODING, skip)
 }
 
+// Skip direct binary to binary encoding during the encoding process
 func WithSkipDirectBinaryEncoding(ctx context.Context, skip bool) context.Context {
 	return context.WithValue(ctx, SKIP_DIRECT_BINARY_ENCODING, skip)
 }
 
+// Define the preferred encoding from event to message during the encoding process
 func WithPreferredEventEncoding(ctx context.Context, enc Encoding) context.Context {
 	return context.WithValue(ctx, PREFERRED_EVENT_ENCODING, enc)
 }
 
+// Force structured encoding during the encoding process
 func WithForceStructured(ctx context.Context) context.Context {
 	return context.WithValue(context.WithValue(ctx, PREFERRED_EVENT_ENCODING, EncodingStructured), SKIP_DIRECT_BINARY_ENCODING, true)
 }
 
+// Force binary encoding during the encoding process
 func WithForceBinary(ctx context.Context) context.Context {
 	return context.WithValue(context.WithValue(ctx, PREFERRED_EVENT_ENCODING, EncodingBinary), SKIP_DIRECT_STRUCTURED_ENCODING, true)
 }
