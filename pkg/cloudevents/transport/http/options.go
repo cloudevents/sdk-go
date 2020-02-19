@@ -40,8 +40,8 @@ func WithTarget(targetUrl string) Option {
 	}
 }
 
-// WithMethod sets the outbound recipient of cloudevents when using an HTTP
-// request.
+// WithMethod sets the HTTP verb (GET, POST, PUT, etc.) to use
+// when using an HTTP request.
 func WithMethod(method string) Option {
 	return func(t *Transport) error {
 		if t == nil {
