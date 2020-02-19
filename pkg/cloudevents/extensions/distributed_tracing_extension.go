@@ -3,6 +3,9 @@ package extensions
 import (
 	"reflect"
 	"strings"
+
+	"github.com/lightstep/tracecontext.go/traceparent"
+	"go.opencensus.io/trace"
 )
 
 // EventTracer interface allows setting extension for cloudevents context.
@@ -34,4 +37,25 @@ func (d DistributedTracingExtension) AddTracingAttributes(ec EventTracer) error 
 		}
 	}
 	return nil
+}
+
+// FromSpanContext populates DistributedTracingExtension from a SpanContext.
+func FromSpanContext(sc trace.SpanContext) DistributedTracingExtension {
+	tp := traceparent.TraceParent{
+		TraceID: sc.TraceID,
+		SpanID:  sc.SpanID,
+		Flags: traceparent.Flags{
+			Recorded: sc.IsSampled(),
+		},
+	}
+
+	var entries = make([]string, 0, len(sc.Tracestate.Entries()))
+	for _, entry := range sc.Tracestate.Entries() {
+		entries = append(entries, strings.Join([]string{entry.Key, entry.Value}, "="))
+	}
+
+	return DistributedTracingExtension{
+		TraceParent: tp.String(),
+		TraceState:  strings.Join(entries, ","),
+	}
 }
