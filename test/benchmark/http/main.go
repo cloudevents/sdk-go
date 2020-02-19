@@ -65,7 +65,7 @@ func benchmarkBaseline(cases []benchmark.BenchmarkCase, requestFactory func([]by
 	return results
 }
 
-func pipeLoopDirect(r *http.Receiver, endCtx context.Context, opts ...http.SenderOptionFunc) {
+func pipeLoopDirect(r *http.Receiver, sendCtx context.Context, endCtx context.Context, opts ...http.SenderOptionFunc) {
 	s := MockedSender(opts...)
 	var err error
 	var m binding.Message
@@ -78,12 +78,12 @@ func pipeLoopDirect(r *http.Receiver, endCtx context.Context, opts ...http.Sende
 			if err != nil || m == nil {
 				continue
 			}
-			_ = s.Send(context.Background(), m)
+			_ = s.Send(sendCtx, m)
 		}
 	}
 }
 
-func pipeLoopMulti(r *http.Receiver, endCtx context.Context, outputSenders int, opts ...http.SenderOptionFunc) {
+func pipeLoopMulti(r *http.Receiver, sendCtx context.Context, endCtx context.Context, outputSenders int, opts ...http.SenderOptionFunc) {
 	s := MockedSender(opts...)
 	var err error
 	var m binding.Message
@@ -96,21 +96,21 @@ func pipeLoopMulti(r *http.Receiver, endCtx context.Context, outputSenders int, 
 			if err != nil {
 				continue
 			}
-			copiedMessage, err := buffering.BufferMessage(m)
+			copiedMessage, err := buffering.BufferMessage(context.TODO(), m)
 			if err != nil {
 				continue
 			}
 			outputMessage := buffering.WithAcksBeforeFinish(copiedMessage, outputSenders)
 			for i := 0; i < outputSenders; i++ {
 				go func(m binding.Message) {
-					_ = s.Send(context.Background(), outputMessage)
+					_ = s.Send(sendCtx, outputMessage)
 				}(outputMessage)
 			}
 		}
 	}
 }
 
-func benchmarkReceiverSender(cases []benchmark.BenchmarkCase, requestFactory func([]byte) *nethttp.Request, opts ...http.SenderOptionFunc) benchmark.BenchmarkResults {
+func benchmarkReceiverSender(cases []benchmark.BenchmarkCase, requestFactory func([]byte) *nethttp.Request, contextDecorator func(context.Context) context.Context) benchmark.BenchmarkResults {
 	var results benchmark.BenchmarkResults
 	random := rand.New(rand.NewSource(time.Now().Unix()))
 
@@ -123,9 +123,9 @@ func benchmarkReceiverSender(cases []benchmark.BenchmarkCase, requestFactory fun
 		// Spawn dispatchers
 		for i := 0; i < c.Parallelism; i++ {
 			if c.OutputSenders == 1 {
-				go pipeLoopDirect(receiver, ctx, opts...)
+				go pipeLoopDirect(receiver, contextDecorator(context.TODO()), ctx)
 			} else {
-				go pipeLoopMulti(receiver, ctx, c.OutputSenders, opts...)
+				go pipeLoopMulti(receiver, contextDecorator(context.TODO()), ctx, c.OutputSenders)
 			}
 		}
 
@@ -247,16 +247,16 @@ func main() {
 		results = benchmarkBaseline(benchmarkCases, MockedBinaryRequest)
 		break
 	case "binding-structured-to-structured":
-		results = benchmarkReceiverSender(benchmarkCases, MockedStructuredRequest, http.ForceStructured())
+		results = benchmarkReceiverSender(benchmarkCases, MockedStructuredRequest, binding.WithForceStructured)
 		break
 	case "binding-structured-to-binary":
-		results = benchmarkReceiverSender(benchmarkCases, MockedStructuredRequest, http.ForceBinary())
+		results = benchmarkReceiverSender(benchmarkCases, MockedStructuredRequest, binding.WithForceBinary)
 		break
 	case "binding-binary-to-structured":
-		results = benchmarkReceiverSender(benchmarkCases, MockedBinaryRequest, http.ForceStructured())
+		results = benchmarkReceiverSender(benchmarkCases, MockedBinaryRequest, binding.WithForceStructured)
 		break
 	case "binding-binary-to-binary":
-		results = benchmarkReceiverSender(benchmarkCases, MockedBinaryRequest, http.ForceBinary())
+		results = benchmarkReceiverSender(benchmarkCases, MockedBinaryRequest, binding.WithForceBinary)
 		break
 	case "client-binary":
 		results = benchmarkClient(benchmarkCases, MockedBinaryRequest)

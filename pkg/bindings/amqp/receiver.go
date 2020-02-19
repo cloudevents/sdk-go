@@ -12,7 +12,7 @@ type Receiver struct{ AMQP *amqp.Receiver }
 
 func (r *Receiver) Receive(ctx context.Context) (binding.Message, error) {
 	m, err := r.AMQP.Receive(ctx)
-	return &Message{AMQP: m}, err
+	return NewMessage(m), err
 }
 
 func (r *Receiver) Close(ctx context.Context) error { return r.AMQP.Close(ctx) }

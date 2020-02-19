@@ -10,7 +10,6 @@ import (
 
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/binding/event"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 )
 
@@ -26,7 +25,7 @@ func TestWithAcksBeforeFinish(t *testing.T) {
 	}
 
 	finishCalled := false
-	finishMessage := binding.WithFinish(event.EventMessage(testEvent), func(err error) {
+	finishMessage := binding.WithFinish(binding.EventMessage(testEvent), func(err error) {
 		finishCalled = true
 	})
 
@@ -59,11 +58,11 @@ func TestCopyAndWithAcksBeforeFinish(t *testing.T) {
 	}
 
 	finishCalled := false
-	finishMessage := binding.WithFinish(event.EventMessage(testEvent), func(err error) {
+	finishMessage := binding.WithFinish(binding.EventMessage(testEvent), func(err error) {
 		finishCalled = true
 	})
 
-	copiedMessage, err := BufferMessage(finishMessage)
+	copiedMessage, err := BufferMessage(context.Background(), finishMessage)
 	assert.NoError(t, err)
 
 	wg := sync.WaitGroup{}

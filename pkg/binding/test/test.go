@@ -14,8 +14,8 @@ import (
 
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/binding/event"
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
+	"github.com/cloudevents/sdk-go/pkg/binding/spec"
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 )
@@ -62,9 +62,9 @@ func Canonical(t *testing.T, c ce.EventContext) {
 
 // SendReceive does, s.Send(in) and returns r.Receive().
 // Halt test on error.
-func SendReceive(t *testing.T, in binding.Message, s binding.Sender, r binding.Receiver, outAssert func(binding.Message)) {
+func SendReceive(t *testing.T, ctx context.Context, in binding.Message, s binding.Sender, r binding.Receiver, outAssert func(binding.Message)) {
 	t.Helper()
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	wg := sync.WaitGroup{}
 	wg.Add(2)
@@ -87,8 +87,22 @@ func SendReceive(t *testing.T, in binding.Message, s binding.Sender, r binding.R
 	wg.Wait()
 }
 
+func AssertEventContextEquals(t *testing.T, want cloudevents.EventContext, have cloudevents.EventContext) {
+	wantVersion, err := spec.VS.Version(want.GetSpecVersion())
+	require.NoError(t, err)
+	haveVersion, err := spec.VS.Version(have.GetSpecVersion())
+	require.NoError(t, err)
+	require.Equal(t, wantVersion, haveVersion)
+
+	for _, a := range wantVersion.Attributes() {
+		require.Equal(t, a.Get(want), a.Get(have), "Attribute %s does not match: %v != %v", a.Name(), a.Get(want), a.Get(have))
+	}
+
+	require.Equal(t, want.GetExtensions(), have.GetExtensions(), "Extensions")
+}
+
 func AssertEventEquals(t *testing.T, want cloudevents.Event, have cloudevents.Event) {
-	assert.Equal(t, want.Context, have.Context)
+	AssertEventContextEquals(t, want.Context, have.Context)
 	wantPayload, err := want.DataBytes()
 	assert.NoError(t, err)
 	havePayload, err := have.DataBytes()
@@ -122,9 +136,9 @@ func MustJSON(e ce.Event) []byte {
 	return b
 }
 
-func MustToEvent(m binding.Message) (e ce.Event, wasStructured bool, wasBinary bool) {
+func MustToEvent(ctx context.Context, m binding.Message) (e ce.Event, encoding binding.Encoding) {
 	var err error
-	e, wasStructured, wasBinary, err = event.ToEvent(m)
+	e, encoding, err = binding.ToEvent(ctx, m)
 	if err != nil {
 		panic(err)
 	}

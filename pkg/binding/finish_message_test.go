@@ -9,7 +9,6 @@ import (
 
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/binding/event"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 )
 
@@ -25,7 +24,7 @@ func TestWithFinish(t *testing.T) {
 	}
 
 	done := make(chan error, 1)
-	m := binding.WithFinish(event.EventMessage(testEvent), func(err error) {
+	m := binding.WithFinish(binding.EventMessage(testEvent), func(err error) {
 		done <- err
 	})
 	select {

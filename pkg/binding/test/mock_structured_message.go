@@ -2,6 +2,7 @@ package test
 
 import (
 	"bytes"
+	"context"
 
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
@@ -12,6 +13,10 @@ import (
 type MockStructuredMessage struct {
 	Format format.Format
 	Bytes  []byte
+}
+
+func (s *MockStructuredMessage) GetParent() binding.Message {
+	return nil
 }
 
 func NewMockStructuredMessage(e cloudevents.Event) *MockStructuredMessage {
@@ -25,21 +30,16 @@ func NewMockStructuredMessage(e cloudevents.Event) *MockStructuredMessage {
 	}
 }
 
-func (s *MockStructuredMessage) Event(b binding.EventEncoder) error {
-	e := cloudevents.Event{}
-	err := s.Format.Unmarshal(s.Bytes, &e)
-	if err != nil {
-		return err
-	}
-	return b.SetEvent(e)
+func (s *MockStructuredMessage) Structured(ctx context.Context, b binding.StructuredEncoder) error {
+	return b.SetStructuredEvent(ctx, s.Format, bytes.NewReader(s.Bytes))
 }
 
-func (s *MockStructuredMessage) Structured(b binding.StructuredEncoder) error {
-	return b.SetStructuredEvent(s.Format, bytes.NewReader(s.Bytes))
-}
-
-func (s *MockStructuredMessage) Binary(binding.BinaryEncoder) error {
+func (s *MockStructuredMessage) Binary(context.Context, binding.BinaryEncoder) error {
 	return binding.ErrNotBinary
+}
+
+func (bm *MockStructuredMessage) Encoding() binding.Encoding {
+	return binding.EncodingStructured
 }
 
 func (s *MockStructuredMessage) Finish(error) error { return nil }

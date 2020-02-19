@@ -8,7 +8,6 @@ import (
 	"net/url"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/binding/format"
 )
 
 type Sender struct {
@@ -18,9 +17,6 @@ type Sender struct {
 	Target *url.URL
 
 	transformerFactories binding.TransformerFactories
-
-	forceBinary     bool
-	forceStructured bool
 }
 
 func (s *Sender) Send(ctx context.Context, m binding.Message) (err error) {
@@ -36,7 +32,7 @@ func (s *Sender) Send(ctx context.Context, m binding.Message) (err error) {
 	}
 	req = req.WithContext(ctx)
 
-	if err = s.fillHttpRequest(req, m); err != nil {
+	if err = EncodeHttpRequest(ctx, m, req, s.transformerFactories); err != nil {
 		return
 	}
 	resp, err := s.Client.Do(req)
@@ -47,36 +43,6 @@ func (s *Sender) Send(ctx context.Context, m binding.Message) (err error) {
 		return fmt.Errorf("%d %s", resp.StatusCode, nethttp.StatusText(resp.StatusCode))
 	}
 	return
-}
-
-// This function tries:
-// 1. Translate from structured
-// 2. Translate from binary
-// 3. Translate to Event and then re-encode back to Http Request
-func (s *Sender) fillHttpRequest(req *http.Request, m binding.Message) error {
-	createStructured := func() binding.StructuredEncoder {
-		return &structuredMessageEncoder{req}
-	}
-	if s.forceBinary {
-		createStructured = nil
-	}
-
-	createBinary := func() binding.BinaryEncoder {
-		return &binaryMessageEncoder{req}
-	}
-	if s.forceStructured {
-		createBinary = nil
-	}
-
-	createEvent := func() binding.EventEncoder {
-		if s.forceStructured {
-			return &eventToStructuredMessageEncoder{format: format.JSON, req: req}
-		}
-		return &eventToBinaryMessageEncoder{req}
-	}
-
-	_, _, err := binding.Translate(m, createStructured, createBinary, createEvent, s.transformerFactories)
-	return err
 }
 
 func NewSender(client *http.Client, target *url.URL, options ...SenderOptionFunc) binding.Sender {

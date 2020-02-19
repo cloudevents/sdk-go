@@ -2,12 +2,12 @@ package buffering
 
 import (
 	"bytes"
+	"context"
 	"io"
 
 	"github.com/valyala/bytebufferpool"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/binding/event"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
 )
 
@@ -21,35 +21,52 @@ type binaryBufferedMessage struct {
 	body       *bytebufferpool.ByteBuffer
 }
 
-func (m *binaryBufferedMessage) Structured(binding.StructuredEncoder) error {
+func (m *binaryBufferedMessage) Start(ctx context.Context) error {
+	m.metadata = make(map[spec.Attribute]interface{}, 4)
+	m.extensions = make(map[string]interface{})
+	return nil
+}
+
+func (m *binaryBufferedMessage) End() error {
+	return nil
+}
+
+func (m *binaryBufferedMessage) GetParent() binding.Message {
+	return nil
+}
+
+func (m *binaryBufferedMessage) Encoding() binding.Encoding {
+	return binding.EncodingBinary
+}
+
+func (m *binaryBufferedMessage) Structured(context.Context, binding.StructuredEncoder) error {
 	return binding.ErrNotStructured
 }
 
-func (m *binaryBufferedMessage) Binary(b binding.BinaryEncoder) (err error) {
+func (m *binaryBufferedMessage) Binary(ctx context.Context, b binding.BinaryEncoder) (err error) {
+	err = b.Start(ctx)
+	if err != nil {
+		return
+	}
 	for k, v := range m.metadata {
-		err := b.SetAttribute(k, v)
+		err = b.SetAttribute(k, v)
 		if err != nil {
-			return err
+			return
 		}
 	}
 	for k, v := range m.extensions {
-		err := b.SetExtension(k, v)
+		err = b.SetExtension(k, v)
 		if err != nil {
-			return err
+			return
 		}
 	}
 	if m.body != nil {
-		return b.SetData(bytes.NewReader(m.body.Bytes()))
+		err = b.SetData(bytes.NewReader(m.body.Bytes()))
+		if err != nil {
+			return
+		}
 	}
-	return err
-}
-
-func (m *binaryBufferedMessage) Event(builder binding.EventEncoder) error {
-	e, _, _, err := event.ToEvent(m)
-	if err != nil {
-		return err
-	}
-	return builder.SetEvent(e)
+	return b.End()
 }
 
 func (b *binaryBufferedMessage) Finish(error) error {

@@ -1,6 +1,7 @@
 package amqp
 
 import (
+	"context"
 	"io"
 	"net/url"
 	"os"
@@ -11,62 +12,61 @@ import (
 	"pack.ag/amqp"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/binding/event"
 	"github.com/cloudevents/sdk-go/pkg/binding/test"
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 )
 
-func TestSendReceiveBinary(t *testing.T) {
-	c, s, r := testSenderReceiver(t, ForceBinary())
+func TestSendSkipBinary(t *testing.T) {
+	c, s, r := testSenderReceiver(t)
 	defer c.Close()
 	test.EachEvent(t, test.Events(), func(t *testing.T, e ce.Event) {
 		eventIn := test.ExToStr(t, e)
 		in := test.NewMockBinaryMessage(eventIn)
-		test.SendReceive(t, in, s, r, func(out binding.Message) {
-			eventOut, _, isBinary := test.MustToEvent(out)
-			assert.True(t, isBinary)
+		test.SendReceive(t, binding.WithSkipDirectBinaryEncoding(binding.WithPreferredEventEncoding(context.Background(), binding.EncodingStructured), true), in, s, r, func(out binding.Message) {
+			eventOut, encoding := test.MustToEvent(context.TODO(), out)
+			assert.Equal(t, encoding, binding.EncodingStructured)
 			test.AssertEventEquals(t, eventIn, test.ExToStr(t, eventOut))
 		})
 	})
 }
 
-func TestSendReceiveStruct(t *testing.T) {
-	c, s, r := testSenderReceiver(t, ForceStructured())
+func TestSendSkipStructured(t *testing.T) {
+	c, s, r := testSenderReceiver(t)
 	defer c.Close()
 	test.EachEvent(t, test.Events(), func(t *testing.T, e ce.Event) {
 		eventIn := test.ExToStr(t, e)
 		in := test.NewMockStructuredMessage(eventIn)
-		test.SendReceive(t, in, s, r, func(out binding.Message) {
-			eventOut, isStructured, _ := test.MustToEvent(out)
-			assert.True(t, isStructured)
-			test.AssertEventEquals(t, eventIn, test.ExToStr(t, eventOut))
-		})
-	})
-}
-
-func TestSendEventReceiveBinary(t *testing.T) {
-	c, s, r := testSenderReceiver(t, ForceBinary())
-	defer c.Close()
-	test.EachEvent(t, test.Events(), func(t *testing.T, e ce.Event) {
-		eventIn := test.ExToStr(t, e)
-		in := event.EventMessage(eventIn)
-		test.SendReceive(t, in, s, r, func(out binding.Message) {
-			eventOut, _, isBinary := test.MustToEvent(out)
-			assert.True(t, isBinary)
+		test.SendReceive(t, binding.WithSkipDirectStructuredEncoding(context.Background(), true), in, s, r, func(out binding.Message) {
+			eventOut, encoding := test.MustToEvent(context.Background(), out)
+			assert.Equal(t, encoding, binding.EncodingBinary)
 			test.AssertEventEquals(t, eventIn, test.ExToStr(t, eventOut))
 		})
 	})
 }
 
 func TestSendEventReceiveStruct(t *testing.T) {
-	c, s, r := testSenderReceiver(t, ForceStructured())
+	c, s, r := testSenderReceiver(t)
 	defer c.Close()
 	test.EachEvent(t, test.Events(), func(t *testing.T, e ce.Event) {
 		eventIn := test.ExToStr(t, e)
-		in := event.EventMessage(eventIn)
-		test.SendReceive(t, in, s, r, func(out binding.Message) {
-			eventOut, isStructured, _ := test.MustToEvent(out)
-			assert.True(t, isStructured)
+		in := binding.EventMessage(eventIn)
+		test.SendReceive(t, binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingStructured), in, s, r, func(out binding.Message) {
+			eventOut, encoding := test.MustToEvent(context.Background(), out)
+			assert.Equal(t, encoding, binding.EncodingStructured)
+			test.AssertEventEquals(t, eventIn, test.ExToStr(t, eventOut))
+		})
+	})
+}
+
+func TestSendEventReceiveBinary(t *testing.T) {
+	c, s, r := testSenderReceiver(t)
+	defer c.Close()
+	test.EachEvent(t, test.Events(), func(t *testing.T, e ce.Event) {
+		eventIn := test.ExToStr(t, e)
+		in := binding.EventMessage(eventIn)
+		test.SendReceive(t, context.Background(), in, s, r, func(out binding.Message) {
+			eventOut, encoding := test.MustToEvent(context.Background(), out)
+			assert.Equal(t, encoding, binding.EncodingBinary)
 			test.AssertEventEquals(t, eventIn, test.ExToStr(t, eventOut))
 		})
 	})

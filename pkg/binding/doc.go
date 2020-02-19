@@ -18,9 +18,8 @@ Encoder.
 
 Receiver: receives protocol messages and wraps them to implement the Message interface.
 
-Message: converts to protocol-neutral cloudevents.Event or structured event
-data. It also provides methods to manage acknowledgment for reliable
-delivery across bindings.
+Message: interface that defines the visitors for an encoded event in structured mode,
+binary mode or event mode. A method is provided to read the Encoding of the message
 
 Sender: converts arbitrary Message implementations to a protocol-specific form
 and sends them. A protocol Sender should preserve the spec-version and

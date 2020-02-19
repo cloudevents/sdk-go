@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/binding/event"
 	"github.com/cloudevents/sdk-go/pkg/binding/test"
 )
 
@@ -39,12 +38,12 @@ func TestSendReceive(t *testing.T) {
 	sr := make(dummySR)
 	allIn := []binding.Message{}
 	for _, e := range test.Events() {
-		allIn = append(allIn, event.EventMessage(e))
+		allIn = append(allIn, binding.EventMessage(e))
 	}
 
 	var allOut []binding.Message
 	test.EachMessage(t, allIn, func(t *testing.T, in binding.Message) {
-		test.SendReceive(t, in, sr, sr, func(out binding.Message) {
+		test.SendReceive(t, context.Background(), in, sr, sr, func(out binding.Message) {
 			assert.Equal(t, in, out)
 			allOut = append(allOut, out)
 		})

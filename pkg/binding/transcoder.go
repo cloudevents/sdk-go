@@ -1,5 +1,7 @@
 package binding
 
+import ce "github.com/cloudevents/sdk-go"
+
 // Implements a transformation process while transferring the event from the Message implementation
 // to the provided encoder
 //
@@ -12,8 +14,8 @@ type TransformerFactory interface {
 	// Can return nil if the transformation doesn't support binary encoding directly
 	BinaryTransformer(encoder BinaryEncoder) BinaryEncoder
 
-	// Cannot return nil
-	EventTransformer(encoder EventEncoder) EventEncoder
+	// Can return nil if the transformation doesn't support events
+	EventTransformer() EventTransformer
 }
 
 // Utility type alias to manage multiple TransformerFactory
@@ -49,10 +51,20 @@ func (t TransformerFactories) BinaryTransformer(encoder BinaryEncoder) BinaryEnc
 	return res
 }
 
-func (t TransformerFactories) EventTransformer(encoder EventEncoder) EventEncoder {
-	res := encoder
-	for _, b := range t {
-		res = b.EventTransformer(res)
+func (t TransformerFactories) EventTransformer() EventTransformer {
+	return func(e *ce.Event) error {
+		for _, factory := range t {
+			f := factory.EventTransformer()
+
+			if f != nil {
+				err := f(e)
+				if err != nil {
+					return err
+				}
+			}
+		}
+		return nil
 	}
-	return res
 }
+
+type EventTransformer func(*ce.Event) error

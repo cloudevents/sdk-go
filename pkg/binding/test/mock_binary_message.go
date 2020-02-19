@@ -2,10 +2,10 @@ package test
 
 import (
 	"bytes"
+	"context"
 
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/binding/event"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
 )
 
@@ -48,35 +48,42 @@ func NewMockBinaryMessage(e cloudevents.Event) *MockBinaryMessage {
 	return &m
 }
 
-func (bm *MockBinaryMessage) Event(b binding.EventEncoder) error {
-	e, _, _, err := event.ToEvent(bm)
-	if err != nil {
-		return err
-	}
-	return b.SetEvent(e)
+func (bm *MockBinaryMessage) GetParent() binding.Message {
+	return nil
 }
 
-func (bm *MockBinaryMessage) Structured(b binding.StructuredEncoder) error {
+func (bm *MockBinaryMessage) Structured(context.Context, binding.StructuredEncoder) error {
 	return binding.ErrNotStructured
 }
 
-func (bm *MockBinaryMessage) Binary(b binding.BinaryEncoder) error {
+func (bm *MockBinaryMessage) Binary(ctx context.Context, b binding.BinaryEncoder) error {
+	err := b.Start(ctx)
+	if err != nil {
+		return err
+	}
 	for k, v := range bm.Metadata {
-		err := b.SetAttribute(k, v)
+		err = b.SetAttribute(k, v)
 		if err != nil {
 			return err
 		}
 	}
 	for k, v := range bm.Extensions {
-		err := b.SetExtension(k, v)
+		err = b.SetExtension(k, v)
 		if err != nil {
 			return err
 		}
 	}
-	if len(bm.Body) == 0 {
-		return nil
+	if len(bm.Body) != 0 {
+		err = b.SetData(bytes.NewReader(bm.Body))
+		if err != nil {
+			return err
+		}
 	}
-	return b.SetData(bytes.NewReader(bm.Body))
+	return b.End()
+}
+
+func (bm *MockBinaryMessage) Encoding() binding.Encoding {
+	return binding.EncodingBinary
 }
 
 func (bm *MockBinaryMessage) Finish(error) error { return nil }

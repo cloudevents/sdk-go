@@ -11,6 +11,10 @@ type acksMessage struct {
 	requiredAcks int32
 }
 
+func (m *acksMessage) GetWrappedMessage() binding.Message {
+	return m.Message
+}
+
 func (m *acksMessage) Finish(err error) error {
 	remainingAcks := atomic.AddInt32(&m.requiredAcks, -1)
 	if remainingAcks == 0 {
@@ -18,6 +22,8 @@ func (m *acksMessage) Finish(err error) error {
 	}
 	return nil
 }
+
+var _ binding.MessageWrapper = (*acksMessage)(nil)
 
 // WithAcksBeforeFinish returns a wrapper for m that calls m.Finish()
 // only after the specified number of acks are received.

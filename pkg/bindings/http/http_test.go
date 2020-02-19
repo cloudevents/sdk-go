@@ -1,6 +1,7 @@
 package http_test
 
 import (
+	"context"
 	nethttp "net/http"
 	"net/http/httptest"
 	"net/url"
@@ -10,35 +11,34 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/binding/event"
 	"github.com/cloudevents/sdk-go/pkg/binding/test"
 	"github.com/cloudevents/sdk-go/pkg/bindings/http"
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 )
 
-func TestForceSendStructured(t *testing.T) {
-	close, s, r := testSenderReceiver(t, http.ForceStructured())
+func TestSendSkipBinary(t *testing.T) {
+	close, s, r := testSenderReceiver(t)
 	defer close()
 	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn ce.Event) {
 		eventIn = test.ExToStr(t, eventIn)
 		in := test.NewMockBinaryMessage(eventIn)
-		test.SendReceive(t, in, s, r, func(out binding.Message) {
-			eventOut, isStructured, _ := test.MustToEvent(out)
-			assert.True(t, isStructured)
+		test.SendReceive(t, binding.WithSkipDirectBinaryEncoding(binding.WithPreferredEventEncoding(context.Background(), binding.EncodingStructured), true), in, s, r, func(out binding.Message) {
+			eventOut, encoding := test.MustToEvent(context.Background(), out)
+			assert.Equal(t, encoding, binding.EncodingStructured)
 			test.AssertEventEquals(t, eventIn, test.ExToStr(t, eventOut))
 		})
 	})
 }
 
-func TestForceSendBinary(t *testing.T) {
-	close, s, r := testSenderReceiver(t, http.ForceBinary())
+func TestSendSkipStructured(t *testing.T) {
+	close, s, r := testSenderReceiver(t)
 	defer close()
 	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn ce.Event) {
 		eventIn = test.ExToStr(t, eventIn)
 		in := test.NewMockStructuredMessage(eventIn)
-		test.SendReceive(t, in, s, r, func(out binding.Message) {
-			eventOut, _, isBinary := test.MustToEvent(out)
-			assert.True(t, isBinary)
+		test.SendReceive(t, binding.WithSkipDirectStructuredEncoding(context.Background(), true), in, s, r, func(out binding.Message) {
+			eventOut, encoding := test.MustToEvent(context.Background(), out)
+			assert.Equal(t, encoding, binding.EncodingBinary)
 			test.AssertEventEquals(t, eventIn, test.ExToStr(t, eventOut))
 		})
 	})
@@ -50,9 +50,9 @@ func TestSendBinaryReceiveBinary(t *testing.T) {
 	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn ce.Event) {
 		eventIn = test.ExToStr(t, eventIn)
 		in := test.NewMockBinaryMessage(eventIn)
-		test.SendReceive(t, in, s, r, func(out binding.Message) {
-			eventOut, _, isBinary := test.MustToEvent(out)
-			assert.True(t, isBinary)
+		test.SendReceive(t, context.Background(), in, s, r, func(out binding.Message) {
+			eventOut, encoding := test.MustToEvent(context.Background(), out)
+			assert.Equal(t, encoding, binding.EncodingBinary)
 			test.AssertEventEquals(t, eventIn, test.ExToStr(t, eventOut))
 		})
 	})
@@ -64,9 +64,9 @@ func TestSendStructReceiveStruct(t *testing.T) {
 	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn ce.Event) {
 		eventIn = test.ExToStr(t, eventIn)
 		in := test.NewMockStructuredMessage(eventIn)
-		test.SendReceive(t, in, s, r, func(out binding.Message) {
-			eventOut, isStructured, _ := test.MustToEvent(out)
-			assert.True(t, isStructured)
+		test.SendReceive(t, context.Background(), in, s, r, func(out binding.Message) {
+			eventOut, encoding := test.MustToEvent(context.Background(), out)
+			assert.Equal(t, encoding, binding.EncodingStructured)
 			test.AssertEventEquals(t, eventIn, test.ExToStr(t, eventOut))
 		})
 	})
@@ -77,10 +77,10 @@ func TestSendEventReceiveBinary(t *testing.T) {
 	defer close()
 	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn ce.Event) {
 		eventIn = test.ExToStr(t, eventIn)
-		in := event.EventMessage(eventIn)
-		test.SendReceive(t, in, s, r, func(out binding.Message) {
-			eventOut, _, isBinary := test.MustToEvent(out)
-			assert.True(t, isBinary)
+		in := binding.EventMessage(eventIn)
+		test.SendReceive(t, context.Background(), in, s, r, func(out binding.Message) {
+			eventOut, encoding := test.MustToEvent(context.Background(), out)
+			assert.Equal(t, encoding, binding.EncodingBinary)
 			test.AssertEventEquals(t, eventIn, test.ExToStr(t, eventOut))
 		})
 	})

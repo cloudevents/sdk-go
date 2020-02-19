@@ -2,13 +2,13 @@ package buffering
 
 import (
 	"bytes"
+	"context"
 	"io"
 
 	"github.com/valyala/bytebufferpool"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
-	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 )
 
 var structMessagePool bytebufferpool.Pool
@@ -20,30 +20,30 @@ type structBufferedMessage struct {
 	Bytes  *bytebufferpool.ByteBuffer
 }
 
-// Event unmarshals the formatted event.
-func (m *structBufferedMessage) Event(enc binding.EventEncoder) error {
-	var e ce.Event
-	err := m.Format.Unmarshal(m.Bytes.B, &e)
-	if err != nil {
-		return err
-	}
-	return enc.SetEvent(e)
+func (m *structBufferedMessage) GetParent() binding.Message {
+	return nil
+}
+
+func (m *structBufferedMessage) Encoding() binding.Encoding {
+	return binding.EncodingStructured
 }
 
 // Structured copies structured data to a StructuredEncoder
-func (m *structBufferedMessage) Structured(enc binding.StructuredEncoder) error {
-	return enc.SetStructuredEvent(m.Format, bytes.NewReader(m.Bytes.B))
+func (m *structBufferedMessage) Structured(ctx context.Context, enc binding.StructuredEncoder) error {
+	return enc.SetStructuredEvent(ctx, m.Format, bytes.NewReader(m.Bytes.B))
 }
 
 // Binary returns ErrNotBinary
-func (m structBufferedMessage) Binary(enc binding.BinaryEncoder) error { return binding.ErrNotBinary }
+func (m structBufferedMessage) Binary(context.Context, binding.BinaryEncoder) error {
+	return binding.ErrNotBinary
+}
 
 func (m *structBufferedMessage) Finish(error) error {
 	structMessagePool.Put(m.Bytes)
 	return nil
 }
 
-func (m *structBufferedMessage) SetStructuredEvent(format format.Format, event io.Reader) error {
+func (m *structBufferedMessage) SetStructuredEvent(ctx context.Context, format format.Format, event io.Reader) error {
 	m.Bytes = structMessagePool.Get()
 	_, err := io.Copy(m.Bytes, event)
 	if err != nil {

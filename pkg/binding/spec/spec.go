@@ -217,6 +217,7 @@ func New() *Versions { return WithPrefix("") }
 
 // Built-in un-prefixed versions.
 var (
+	VS  *Versions
 	V01 Version
 	V02 Version
 	V03 Version
@@ -224,9 +225,9 @@ var (
 )
 
 func init() {
-	vs := New()
-	V01, _ = vs.Version("0.1")
-	V02, _ = vs.Version("0.2")
-	V03, _ = vs.Version("0.3")
-	V1, _ = vs.Version("1.0")
+	VS = New()
+	V01, _ = VS.Version("0.1")
+	V02, _ = VS.Version("0.2")
+	V03, _ = VS.Version("0.3")
+	V1, _ = VS.Version("1.0")
 }
