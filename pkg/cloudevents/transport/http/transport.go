@@ -44,6 +44,12 @@ type Transport struct {
 	// If nil, DefaultShutdownTimeout is used.
 	ShutdownTimeout *time.Duration
 
+	// Sending
+
+	// Deprecated - setting http client will override use of the
+	// HTTP transport set with WithHTTPTransport.
+	Client *http.Client
+
 	// Req is the base http request that is used for http.Do.
 	// Only .Method, .URL, .Close, and .Header is considered.
 	// If not set, Req.Method defaults to POST.
@@ -194,7 +200,11 @@ func (t *Transport) obsSend(ctx context.Context, event cloudevents.Event) (conte
 
 	if m, ok := msg.(*Message); ok {
 		m.ToRequest(&req)
-		return httpDo(ctx, &http.Client{Transport: t.transport}, &req, func(resp *http.Response, err error) (context.Context, *cloudevents.Event, error) {
+		client := t.Client
+		if client == nil {
+			client = &http.Client{Transport: t.transport}
+		}
+		return httpDo(ctx, client, &req, func(resp *http.Response, err error) (context.Context, *cloudevents.Event, error) {
 			rctx := WithTransportContext(ctx, NewTransportContextFromResponse(resp))
 			if err != nil {
 				return rctx, nil, err
