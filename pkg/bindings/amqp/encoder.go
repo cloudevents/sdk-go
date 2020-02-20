@@ -4,7 +4,6 @@ import (
 	"context"
 	"io"
 	"io/ioutil"
-	"net/url"
 
 	"pack.ag/amqp"
 
@@ -79,15 +78,9 @@ func (b *amqpMessageEncoder) SetAttribute(attribute spec.Attribute, value interf
 }
 
 func (b *amqpMessageEncoder) SetExtension(name string, value interface{}) error {
-	v, err := types.Validate(value)
+	v, err := safeAMQPPropertiesUnwrap(value)
 	if err != nil {
 		return err
-	}
-	switch t := v.(type) {
-	case *url.URL: // Use string form of URLs.
-		v = t.String()
-	case int32: // Use AMQP long for Integer as per CE spec.
-		v = int64(t)
 	}
 	b.ApplicationProperties[prefix+name] = v
 	return nil
