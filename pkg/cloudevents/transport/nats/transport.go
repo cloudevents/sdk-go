@@ -180,3 +180,8 @@ func (t *Transport) StartReceiver(ctx context.Context) (err error) {
 	<-ctx.Done()
 	return err
 }
+
+// HasTracePropagation implements Transport.HasTracePropagation
+func (t *Transport) HasTracePropagation() bool {
+	return false
+}

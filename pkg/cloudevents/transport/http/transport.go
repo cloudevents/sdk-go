@@ -353,6 +353,12 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 	}
 }
 
+// HasTracePropagation implements Transport.HasTracePropagation
+// TODO: implement HTTP trace propagation.
+func (t *Transport) HasTracePropagation() bool {
+	return false
+}
+
 func (t *Transport) longPollStart(ctx context.Context) error {
 	logger := cecontext.LoggerFrom(ctx)
 	logger.Info("starting long poll receiver")

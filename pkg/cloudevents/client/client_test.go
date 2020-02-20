@@ -3,6 +3,7 @@ package client_test
 import (
 	"bytes"
 	"context"
+	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -14,8 +15,10 @@ import (
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
 	cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"go.opencensus.io/trace"
 
 	"github.com/google/go-cmp/cmp"
 )
@@ -267,6 +270,134 @@ func TestClientSend(t *testing.T) {
 			rv := handler.popRequest(t)
 
 			assertEquality(t, server.URL, *tc.want, rv)
+		})
+	}
+}
+
+func TestTracingClientSend(t *testing.T) {
+	now := time.Now()
+
+	testCases := map[string]struct {
+		c       func(target string) client.Client
+		event   cloudevents.Event
+		resp    *http.Response
+		want    *requestValidation
+		wantErr string
+		sample  bool
+	}{
+		"send unsampled": {
+			c: simpleBinaryClient,
+			event: cloudevents.Event{
+				Context: cloudevents.EventContextV01{
+					EventType: "unit.test.client",
+					Source:    *types.ParseURLRef("/unit/test/client"),
+					EventTime: &types.Timestamp{Time: now},
+					EventID:   "AABBCCDDEE",
+				}.AsV1(),
+				Data: &map[string]interface{}{
+					"sq":  42,
+					"msg": "hello",
+				},
+			},
+			resp: &http.Response{
+				StatusCode: http.StatusAccepted,
+			},
+			want: &requestValidation{
+				Headers: map[string][]string{
+					"ce-specversion": {"1.0"},
+					"ce-id":          {"AABBCCDDEE"},
+					"ce-time":        {now.UTC().Format(time.RFC3339Nano)},
+					"ce-type":        {"unit.test.client"},
+					"ce-source":      {"/unit/test/client"},
+				},
+				Body: `{"msg":"hello","sq":42}`,
+			},
+		},
+		"send sampled": {
+			c: simpleBinaryClient,
+			event: cloudevents.Event{
+				Context: cloudevents.EventContextV01{
+					EventType: "unit.test.client",
+					Source:    *types.ParseURLRef("/unit/test/client"),
+					EventTime: &types.Timestamp{Time: now},
+					EventID:   "AABBCCDDEE",
+				}.AsV1(),
+				Data: &map[string]interface{}{
+					"sq":  42,
+					"msg": "hello",
+				},
+			},
+			resp: &http.Response{
+				StatusCode: http.StatusAccepted,
+			},
+			want: &requestValidation{
+				Headers: map[string][]string{
+					"ce-specversion": {"1.0"},
+					"ce-id":          {"AABBCCDDEE"},
+					"ce-time":        {now.UTC().Format(time.RFC3339Nano)},
+					"ce-type":        {"unit.test.client"},
+					"ce-source":      {"/unit/test/client"},
+				},
+				Body: `{"msg":"hello","sq":42}`,
+			},
+			sample: true,
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+			handler := &fakeHandler{
+				t:        t,
+				response: tc.resp,
+				requests: make([]requestValidation, 0),
+			}
+			server := httptest.NewServer(handler)
+			defer server.Close()
+
+			c := tc.c(server.URL)
+
+			var sampler trace.Sampler
+			if tc.sample {
+				sampler = trace.AlwaysSample()
+			} else {
+				sampler = trace.NeverSample()
+			}
+			ctx, span := trace.StartSpan(context.TODO(), "test-span", trace.WithSampler(sampler))
+			sc := span.SpanContext()
+			want := requestValidation{
+				Host:    tc.want.Host,
+				Headers: tc.want.Headers.Clone(),
+				Body:    tc.want.Body,
+			}
+			tp := "00-" + hex.EncodeToString(sc.TraceID[:]) + "-" + hex.EncodeToString(sc.SpanID[:])
+			if tc.sample {
+				tp += "-01"
+			} else {
+				tp += "-00"
+			}
+			want.Headers.Add("ce-traceparent", tp)
+
+			_, _, err := c.Send(ctx, tc.event)
+			span.End()
+
+			if tc.wantErr != "" {
+				if err == nil {
+					t.Fatalf("failed to return expected error, got nil")
+				}
+				want := tc.wantErr
+				got := err.Error()
+				if !strings.Contains(got, want) {
+					t.Fatalf("failed to return expected error, got %q, want %q", err, want)
+				}
+				return
+			} else {
+				if err != nil {
+					t.Fatalf("failed to send event: %s", err)
+				}
+			}
+
+			rv := handler.popRequest(t)
+
+			assertEquality(t, server.URL, want, rv)
 		})
 	}
 }
@@ -553,6 +684,114 @@ func TestClientReceive(t *testing.T) {
 				}
 			})
 		}
+	}
+}
+
+func TestTracedClientReceive(t *testing.T) {
+	now := time.Now()
+	observability.EnableTracing(true)
+
+	testCases := map[string]struct {
+		optsFn func(port int, path string) []cehttp.Option
+		event  cloudevents.Event
+	}{
+		"simple binary v1.0": {
+			optsFn: simpleBinaryOptions,
+			event: cloudevents.Event{
+				Context: cloudevents.EventContextV01{
+					EventType:   "unit.test.client",
+					ContentType: cloudevents.StringOfApplicationJSON(),
+					Source:      *types.ParseURLRef("/unit/test/client"),
+					EventTime:   &types.Timestamp{Time: now},
+					EventID:     "AABBCCDDEE",
+				}.AsV1(),
+				Data: &map[string]string{
+					"sq":  "42",
+					"msg": "hello",
+				},
+			},
+		},
+		"simple binary v0.2": {
+			optsFn: simpleBinaryOptions,
+			event: cloudevents.Event{
+				Context: cloudevents.EventContextV02{
+					Type:        "unit.test.client",
+					ContentType: cloudevents.StringOfApplicationJSON(),
+					Source:      *types.ParseURLRef("/unit/test/client"),
+					Time:        &types.Timestamp{Time: now},
+					ID:          "AABBCCDDEE",
+				}.AsV02(),
+				Data: &map[string]string{
+					"sq":  "42",
+					"msg": "hello",
+				},
+			},
+		},
+		"simple binary v0.3": {
+			optsFn: simpleBinaryOptions,
+			event: cloudevents.Event{
+				Context: cloudevents.EventContextV03{
+					Type:            "unit.test.client",
+					DataContentType: cloudevents.StringOfApplicationJSON(),
+					Source:          *types.ParseURLRef("/unit/test/client"),
+					Time:            &types.Timestamp{Time: now},
+					ID:              "AABBCCDDEE",
+				}.AsV03(),
+				Data: &map[string]string{
+					"sq":  "42",
+					"msg": "hello",
+				},
+			},
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+			spanContexts := make(chan trace.SpanContext)
+
+			tp, err := cehttp.New(tc.optsFn(0, "")...)
+			if err != nil {
+				t.Errorf("failed to make http transport %s", err.Error())
+			}
+
+			c, err := client.New(tp)
+			if err != nil {
+				t.Errorf("failed to make client %s", err.Error())
+			}
+
+			ctx, cancel := context.WithCancel(context.TODO())
+			go func() {
+				err = c.StartReceiver(ctx, func(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error {
+					go func() {
+						spanContexts <- trace.FromContext(ctx).SpanContext()
+					}()
+					return nil
+				})
+				if err != nil {
+					t.Errorf("failed to start receiver %s", err.Error())
+				}
+			}()
+			time.Sleep(5 * time.Millisecond) // let the server start
+
+			target := fmt.Sprintf("http://localhost:%d", tp.GetPort())
+			client := simpleBinaryClient(target)
+
+			ctx, span := trace.StartSpan(context.TODO(), "test-span")
+			_, _, err = client.Send(ctx, tc.event)
+			span.End()
+
+			if err != nil {
+				t.Fatalf("failed to send event %s", err)
+			}
+
+			got := <-spanContexts
+
+			if span.SpanContext().TraceID != got.TraceID {
+				t.Errorf("unexpected traceID. want: %s, got %s", span.SpanContext().TraceID, got.TraceID)
+			}
+
+			// Now stop the client
+			cancel()
+		})
 	}
 }
 

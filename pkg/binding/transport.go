@@ -63,3 +63,4 @@ func (t *BindingTransport) handle(ctx context.Context, m Message) (err error) {
 
 func (t *BindingTransport) SetConverter(transport.Converter) {}
 func (t *BindingTransport) HasConverter() bool               { return false }
+func (t *BindingTransport) HasTracePropagation() bool        { return false }

@@ -19,6 +19,8 @@ type Transport interface {
 	SetConverter(Converter)
 	// HasConverter is true when a non-nil converter has been set.
 	HasConverter() bool
+
+	HasTracePropagation() bool
 }
 
 // Receiver is an interface to define how a transport will invoke a listener
