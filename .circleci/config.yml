@@ -45,7 +45,7 @@ jobs:
       - run:
           name: Run unit tests
           command: |
-            ./hack/presubmit-test.sh | tee ${TEST_RESULTS}/go-test.out
+            TEST_AMQP_URL=amqp://localhost/test ./hack/presubmit-test.sh | tee ${TEST_RESULTS}/go-test.out
 
       - save_cache:
           key: gomod-cache-{{ checksum "go.sum" }}
