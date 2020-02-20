@@ -4,10 +4,17 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"github.com/lightstep/tracecontext.go/traceparent"
 	"github.com/lightstep/tracecontext.go/tracestate"
 	"go.opencensus.io/trace"
 	octs "go.opencensus.io/trace/tracestate"
+)
+
+const (
+	TraceParentExtension = "traceparent"
+	TraceStateExtension  = "tracestate"
 )
 
 // EventTracer interface allows setting extension for cloudevents context.
@@ -30,7 +37,7 @@ func (d DistributedTracingExtension) AddTracingAttributes(ec EventTracer) error 
 		for i := 0; i < value.NumField(); i++ {
 			k := strings.ToLower(typeOf.Field(i).Name)
 			v := value.Field(i).Interface()
-			if k == "tracestate" && v == "" {
+			if k == TraceStateExtension && v == "" {
 				continue
 			}
 			if err := ec.SetExtension(k, v); err != nil {
@@ -39,6 +46,19 @@ func (d DistributedTracingExtension) AddTracingAttributes(ec EventTracer) error 
 		}
 	}
 	return nil
+}
+
+func GetDistributedTracingExtension(event cloudevents.Event) (DistributedTracingExtension, bool) {
+	if tp, ok := event.Extensions()[TraceParentExtension]; ok {
+		if tpStr, err := types.ToString(tp); err == nil {
+			var tsStr string
+			if ts, ok := event.Extensions()[TraceStateExtension]; ok {
+				tsStr, _ = types.ToString(ts)
+			}
+			return DistributedTracingExtension{TraceParent: tpStr, TraceState: tsStr}, true
+		}
+	}
+	return DistributedTracingExtension{}, false
 }
 
 // FromSpanContext populates DistributedTracingExtension from a SpanContext.
