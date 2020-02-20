@@ -3,6 +3,25 @@ jobs:
   build:
     docker:
       - image: circleci/golang:1.13.4
+      - image: scholzj/qpid-dispatch
+        environment:
+          QDROUTERD_CONFIG_OPTIONS: |
+            router {
+                mode: standalone
+                id: ZTg2NDQ0N2Q1YjU1OGE1N2NkNzY4NDFk
+                workerThreads: 4
+            }
+            log {
+                 module: DEFAULT
+                 enable: trace+
+                 timestamp: true
+            }
+            listener {
+                 role: normal
+                 host: 0.0.0.0
+                 port: amqp
+                 saslMechanisms: ANONYMOUS
+            }
 
     environment:
       TEST_RESULTS: /tmp/test-results
@@ -26,7 +45,7 @@ jobs:
       - run:
           name: Run unit tests
           command: |
-            ./hack/presubmit-test.sh | tee ${TEST_RESULTS}/go-test.out
+            TEST_AMQP_URL=amqp://localhost/test ./hack/presubmit-test.sh | tee ${TEST_RESULTS}/go-test.out
 
       - save_cache:
           key: gomod-cache-{{ checksum "go.sum" }}
