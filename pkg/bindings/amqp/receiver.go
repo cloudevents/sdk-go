@@ -15,6 +15,7 @@ func (r *Receiver) Receive(ctx context.Context) (binding.Message, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return NewMessage(m), nil
 }
 
