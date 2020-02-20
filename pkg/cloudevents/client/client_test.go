@@ -30,6 +30,8 @@ var (
 		"content-length",
 		"user-agent",
 		"connection",
+		"traceparent",
+		"tracestate",
 	}
 )
 
