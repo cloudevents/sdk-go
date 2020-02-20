@@ -37,19 +37,21 @@ func MockedSender(options ...http.SenderOptionFunc) binding.Sender {
 }
 
 func MockedClient() (cloudevents.Client, *cehttp.Transport) {
-	t, err := cehttp.New(cehttp.WithTarget("http://localhost"))
-
-	if err != nil {
-		panic(err)
-	}
-
-	t.Client = NewTestClient(func(req *nethttp.Request) *nethttp.Response {
+	mockTransport := RoundTripFunc(func(req *nethttp.Request) *nethttp.Response {
 		return &nethttp.Response{
 			StatusCode: 202,
 			Header:     make(nethttp.Header),
 			Body:       ioutil.NopCloser(bytes.NewReader([]byte{})),
 		}
 	})
+	t, err := cehttp.New(
+		cehttp.WithTarget("http://localhost"),
+		cehttp.WithHTTPTransport(mockTransport),
+	)
+
+	if err != nil {
+		panic(err)
+	}
 
 	client, err := cloudevents.NewClient(t)
 

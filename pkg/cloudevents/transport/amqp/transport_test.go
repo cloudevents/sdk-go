@@ -6,13 +6,14 @@ import (
 	"os"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
 	"github.com/cloudevents/sdk-go/pkg/binding/test"
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/amqp"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
-	"github.com/stretchr/testify/assert"
 )
 
 // TODO(alanconway) Need better self-test without external dependency.
@@ -86,7 +87,7 @@ func TestSendReceive(t *testing.T) {
 	defer tester.Close()
 	test.EachEvent(t, test.Events(), func(t *testing.T, e ce.Event) {
 		_, _, err := tester.s.Send(ctx, e)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		got := <-tester.got
 		test.AssertEventEquals(t, exurl(e), got.(ce.Event))
 	})
@@ -100,7 +101,7 @@ func TestWithEncoding(t *testing.T) {
 	events := test.NoExtensions(test.Events())
 	test.EachEvent(t, events, func(t *testing.T, e ce.Event) {
 		_, _, err := tester.s.Send(ctx, e)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		got := <-tester.got
 		e.Context = spec.V03.Convert(e.Context)
 		test.AssertEventEquals(t, exurl(e), got.(ce.Event))

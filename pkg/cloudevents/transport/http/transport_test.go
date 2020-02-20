@@ -63,18 +63,17 @@ func doConcurrently(concurrency int, duration time.Duration, fn task) error {
 // An example of how to make a stable client under sustained
 // concurrency sending to a single host
 func makeStableClient(addr string) (*cehttp.Transport, error) {
-	ceClient, err := cehttp.New(cehttp.WithTarget(addr))
-	if err != nil {
-		return nil, err
-	}
 	netHTTPTransport := &http.Transport{
 		MaxIdleConnsPerHost: 1000,
 		MaxConnsPerHost:     5000,
 	}
-	netHTTPClient := &http.Client{
-		Transport: netHTTPTransport,
+	ceClient, err := cehttp.New(
+		cehttp.WithTarget(addr),
+		cehttp.WithHTTPTransport(netHTTPTransport),
+	)
+	if err != nil {
+		return nil, err
 	}
-	ceClient.Client = netHTTPClient
 	return ceClient, nil
 }
 

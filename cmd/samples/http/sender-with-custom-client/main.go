@@ -72,11 +72,6 @@ func _main(args []string, env envConfig) int {
 
 	tlsConfig.BuildNameToCertificate()
 
-	// Creating client with TLS and custom configuration
-	client := &http.Client{
-		Transport: &http.Transport{TLSClientConfig: tlsConfig},
-	}
-
 	seq := 0
 	for _, dataContentType := range []string{"application/json", "application/xml"} {
 		for _, encoding := range []cloudevents.HTTPEncoding{cloudevents.HTTPBinaryV03, cloudevents.HTTPStructuredV03} {
@@ -84,10 +79,10 @@ func _main(args []string, env envConfig) int {
 			t, err := cloudevents.NewHTTPTransport(
 				cloudevents.WithTarget(env.Target),
 				cloudevents.WithEncoding(encoding),
+				// Use custom transport
+				cloudevents.WithHTTPTransport(&http.Transport{TLSClientConfig: tlsConfig}),
 			)
 
-			// Using the custom client
-			t.Client = client
 			if err != nil {
 				log.Printf("failed to create transport, %v", err)
 				return 1
