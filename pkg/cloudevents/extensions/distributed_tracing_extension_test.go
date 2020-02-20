@@ -249,7 +249,7 @@ func decodeSID(s string) (sid [8]byte, err error) {
 	return
 }
 
-func TestFromSpanContext(t *testing.T) {
+func TestConvertSpanContext(t *testing.T) {
 	tid, err := decodeTID("4bf92f3577b34da6a3ce929d0e0e4736")
 	if err != nil {
 		t.Fatalf("failed to decode traceID: %w", err)
@@ -274,7 +274,7 @@ func TestFromSpanContext(t *testing.T) {
 	tests := []struct {
 		name string
 		sc   trace.SpanContext
-		want extensions.DistributedTracingExtension
+		ext  extensions.DistributedTracingExtension
 	}{{
 		name: "with tracestate",
 		sc: trace.SpanContext{
@@ -283,7 +283,7 @@ func TestFromSpanContext(t *testing.T) {
 			TraceOptions: 1,
 			Tracestate:   ts,
 		},
-		want: extensions.DistributedTracingExtension{
+		ext: extensions.DistributedTracingExtension{
 			TraceParent: "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
 			TraceState:  "rojo=00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01,congo=lZWRzIHRoNhcm5hbCBwbGVhc3VyZS4",
 		},
@@ -294,7 +294,7 @@ func TestFromSpanContext(t *testing.T) {
 			SpanID:       sid,
 			TraceOptions: 1,
 		},
-		want: extensions.DistributedTracingExtension{
+		ext: extensions.DistributedTracingExtension{
 			TraceParent: "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
 		},
 	}, {
@@ -304,16 +304,26 @@ func TestFromSpanContext(t *testing.T) {
 			SpanID:       sid,
 			TraceOptions: 0,
 		},
-		want: extensions.DistributedTracingExtension{
+		ext: extensions.DistributedTracingExtension{
 			TraceParent: "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-00",
 		},
 	}}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		t.Run("FromSpanContext: "+tt.name, func(t *testing.T) {
 			t.Parallel()
 			got := extensions.FromSpanContext(tt.sc)
-			if diff := cmp.Diff(tt.want, got); diff != "" {
+			if diff := cmp.Diff(tt.ext, got); diff != "" {
+				t.Errorf("\nunexpected (-want, +got) = %v", diff)
+			}
+		})
+		t.Run("ToSpanContext: "+tt.name, func(t *testing.T) {
+			t.Parallel()
+			got, err := tt.ext.ToSpanContext()
+			if err != nil {
+				t.Error(err)
+			}
+			if diff := cmp.Diff(tt.sc, got); diff != "" {
 				t.Errorf("\nunexpected (-want, +got) = %v", diff)
 			}
 		})
