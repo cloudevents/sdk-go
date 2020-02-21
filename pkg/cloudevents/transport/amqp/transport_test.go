@@ -1,3 +1,5 @@
+// +build amqp
+
 package amqp_test
 
 import (
@@ -15,8 +17,6 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/amqp"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 )
-
-// TODO(alanconway) Need better self-test without external dependency.
 
 // Requires an external AMQP broker or router, skip if not available.
 // The env variable TEST_AMQP_URL provides the URL, default is "/test"
