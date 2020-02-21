@@ -112,6 +112,7 @@ func New(opts ...Option) (*Transport, error) {
 		Base:           t.transport,
 		Propagation:    &tracecontext.HTTPFormat{},
 		NewClientTrace: ochttp.NewSpanAnnotatingClientTrace,
+		FormatSpanName: formatSpanName,
 	}
 	return t, nil
 }
@@ -330,8 +331,9 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 	t.server = &http.Server{
 		Addr: addr.String(),
 		Handler: &ochttp.Handler{
-			Propagation: &tracecontext.HTTPFormat{},
-			Handler:     attachMiddleware(t.Handler, t.middleware),
+			Propagation:    &tracecontext.HTTPFormat{},
+			Handler:        attachMiddleware(t.Handler, t.middleware),
+			FormatSpanName: formatSpanName,
 		},
 	}
 
@@ -470,6 +472,10 @@ func attachMiddleware(h http.Handler, middleware []Middleware) http.Handler {
 		h = m(h)
 	}
 	return h
+}
+
+func formatSpanName(r *http.Request) string {
+	return "cloudevents.http." + r.URL.Path
 }
 
 type eventError struct {
