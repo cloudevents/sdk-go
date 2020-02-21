@@ -1,3 +1,5 @@
+// +build amqp
+
 package amqp
 
 import (
@@ -72,7 +74,6 @@ func TestSendEventReceiveBinary(t *testing.T) {
 	})
 }
 
-// TODO(alanconway) Need better self-test without external dependency.
 // Ideally add AMQP server support to the binding.
 
 // Some test require an AMQP broker or router. If the connection fails
