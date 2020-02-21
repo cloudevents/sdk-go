@@ -63,7 +63,7 @@ func main() {
 }
 ```
 
-Creating a minimal CloudEvent in version 0.2:
+Creating a minimal CloudEvent in version 1.0:
 
 ```go
 event := cloudevents.NewEvent()
@@ -73,12 +73,12 @@ event.SetSource("http://localhost:8080/")
 event.SetData(data)
 ```
 
-Sending a cloudevents.Event via the HTTP Transport with Binary v0.2 encoding:
+Sending a cloudevents.Event via the HTTP Transport with Binary v1.0 encoding:
 
 ```go
 t, err := cloudevents.NewHTTPTransport(
 	cloudevents.WithTarget("http://localhost:8080/"),
-	cloudevents.WithEncoding(cloudevents.HTTPBinaryV02),
+	cloudevents.WithEncoding(cloudevents.HTTPBinaryV1),
 )
 if err != nil {
 	panic("failed to create transport, " + err.Error())
