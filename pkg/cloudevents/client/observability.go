@@ -31,7 +31,6 @@ var _ observability.Observable = observed(0)
 const (
 	reportSend observed = iota
 	reportReceive
-	reportReceiveFn
 )
 
 // TraceName implements Observable.TraceName
@@ -41,8 +40,6 @@ func (o observed) TraceName() string {
 		return "client/send"
 	case reportReceive:
 		return "client/receive"
-	case reportReceiveFn:
-		return "client/receive/fn"
 	default:
 		return "client/unknown"
 	}
@@ -55,8 +52,6 @@ func (o observed) MethodName() string {
 		return "send"
 	case reportReceive:
 		return "receive"
-	case reportReceiveFn:
-		return "receive/fn"
 	default:
 		return "unknown"
 	}
