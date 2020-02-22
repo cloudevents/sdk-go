@@ -73,18 +73,16 @@ func NewReporter(ctx context.Context, on Observable) (context.Context, Reporter)
 // and injects a trace span with the given remote parent into the context.
 func NewReporterWithRemoteParent(ctx context.Context, on Observable, parent trace.SpanContext) (context.Context, Reporter) {
 	var span *trace.Span
-	if tracingEnabled {
-		transportSpan := trace.FromContext(ctx)
-		ctx, span = trace.StartSpanWithRemoteParent(ctx, on.TraceName(), parent)
-		if transportSpan != nil {
-			// Add link to the transport trace.
-			transportSc := transportSpan.SpanContext()
-			span.AddLink(trace.Link{
-				TraceID: transportSc.TraceID,
-				SpanID:  transportSc.SpanID,
-				Type:    trace.LinkTypeParent,
-			})
-		}
+	transportSpan := trace.FromContext(ctx)
+	ctx, span = trace.StartSpanWithRemoteParent(ctx, on.TraceName(), parent)
+	if transportSpan != nil {
+		// Add link to the transport trace.
+		transportSc := transportSpan.SpanContext()
+		span.AddLink(trace.Link{
+			TraceID: transportSc.TraceID,
+			SpanID:  transportSc.SpanID,
+			Type:    trace.LinkTypeParent,
+		})
 	}
 	r := &reporter{
 		ctx:   ctx,
