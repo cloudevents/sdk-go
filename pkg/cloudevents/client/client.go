@@ -152,13 +152,7 @@ func (c *ceClient) Receive(ctx context.Context, event cloudevents.Event, resp *c
 
 func (c *ceClient) obsReceive(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error {
 	if c.fn != nil {
-		ctx, rFn := observability.NewReporter(ctx, reportReceiveFn)
 		err := c.fn.invoke(ctx, event, resp)
-		if err != nil {
-			rFn.Error()
-		} else {
-			rFn.OK()
-		}
 
 		// Apply the defaulter chain to the outgoing event.
 		if err == nil && resp != nil && resp.Event != nil && len(c.eventDefaulterFns) > 0 {
