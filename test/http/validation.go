@@ -19,6 +19,8 @@ var (
 		"user-agent",
 		"connection",
 		"test-ce-id",
+		"traceparent",
+		"tracestate",
 	}
 )
 

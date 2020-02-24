@@ -310,3 +310,8 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 
 	return errors.New(strings.Join(errs, "\n"))
 }
+
+// HasTracePropagation implements Transport.HasTracePropagation
+func (t *Transport) HasTracePropagation() bool {
+	return false
+}

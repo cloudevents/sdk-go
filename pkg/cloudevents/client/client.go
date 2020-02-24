@@ -6,9 +6,11 @@ import (
 	"sync"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/extensions"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+	"go.opencensus.io/trace"
 )
 
 // Client interface defines the runtime contract the CloudEvents client supports.
@@ -78,6 +80,8 @@ type ceClient struct {
 
 	receiverMu        sync.Mutex
 	eventDefaulterFns []EventDefaulter
+
+	disableTracePropagation bool
 }
 
 // Send transmits the provided event on a preconfigured Transport.
@@ -107,6 +111,15 @@ func (c *ceClient) obsSend(ctx context.Context, event cloudevents.Event) (contex
 		}
 	}
 
+	// Set distributed tracing extension.
+	if !c.disableTracePropagation {
+		if span := trace.FromContext(ctx); span != nil {
+			if err := extensions.FromSpanContext(span.SpanContext()).AddTracingAttributes(event.Context); err != nil {
+				return ctx, nil, fmt.Errorf("error setting distributed tracing extension: %w", err)
+			}
+		}
+	}
+
 	// Validate the event conforms to the CloudEvents Spec.
 	if err := event.Validate(); err != nil {
 		return ctx, nil, err
@@ -117,7 +130,17 @@ func (c *ceClient) obsSend(ctx context.Context, event cloudevents.Event) (contex
 
 // Receive is called from from the transport on event delivery.
 func (c *ceClient) Receive(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error {
-	ctx, r := observability.NewReporter(ctx, reportReceive)
+	var r observability.Reporter
+	if !c.transport.HasTracePropagation() {
+		if ext, ok := extensions.GetDistributedTracingExtension(event); ok {
+			if sc, err := ext.ToSpanContext(); err == nil {
+				ctx, r = observability.NewReporterWithRemoteParent(ctx, reportReceive, sc)
+			}
+		}
+	}
+	if r == nil {
+		ctx, r = observability.NewReporter(ctx, reportReceive)
+	}
 	err := c.obsReceive(ctx, event, resp)
 	if err != nil {
 		r.Error()

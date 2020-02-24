@@ -3,6 +3,18 @@ package extensions
 import (
 	"reflect"
 	"strings"
+
+	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/lightstep/tracecontext.go/traceparent"
+	"github.com/lightstep/tracecontext.go/tracestate"
+	"go.opencensus.io/trace"
+	octs "go.opencensus.io/trace/tracestate"
+)
+
+const (
+	TraceParentExtension = "traceparent"
+	TraceStateExtension  = "tracestate"
 )
 
 // EventTracer interface allows setting extension for cloudevents context.
@@ -25,7 +37,7 @@ func (d DistributedTracingExtension) AddTracingAttributes(ec EventTracer) error 
 		for i := 0; i < value.NumField(); i++ {
 			k := strings.ToLower(typeOf.Field(i).Name)
 			v := value.Field(i).Interface()
-			if k == "tracestate" && v == "" {
+			if k == TraceStateExtension && v == "" {
 				continue
 			}
 			if err := ec.SetExtension(k, v); err != nil {
@@ -34,4 +46,69 @@ func (d DistributedTracingExtension) AddTracingAttributes(ec EventTracer) error 
 		}
 	}
 	return nil
+}
+
+func GetDistributedTracingExtension(event cloudevents.Event) (DistributedTracingExtension, bool) {
+	if tp, ok := event.Extensions()[TraceParentExtension]; ok {
+		if tpStr, err := types.ToString(tp); err == nil {
+			var tsStr string
+			if ts, ok := event.Extensions()[TraceStateExtension]; ok {
+				tsStr, _ = types.ToString(ts)
+			}
+			return DistributedTracingExtension{TraceParent: tpStr, TraceState: tsStr}, true
+		}
+	}
+	return DistributedTracingExtension{}, false
+}
+
+// FromSpanContext populates DistributedTracingExtension from a SpanContext.
+func FromSpanContext(sc trace.SpanContext) DistributedTracingExtension {
+	tp := traceparent.TraceParent{
+		TraceID: sc.TraceID,
+		SpanID:  sc.SpanID,
+		Flags: traceparent.Flags{
+			Recorded: sc.IsSampled(),
+		},
+	}
+
+	entries := make([]string, 0, len(sc.Tracestate.Entries()))
+	for _, entry := range sc.Tracestate.Entries() {
+		entries = append(entries, strings.Join([]string{entry.Key, entry.Value}, "="))
+	}
+
+	return DistributedTracingExtension{
+		TraceParent: tp.String(),
+		TraceState:  strings.Join(entries, ","),
+	}
+}
+
+// ToSpanContext creates a SpanContext from a DistributedTracingExtension instance.
+func (d DistributedTracingExtension) ToSpanContext() (trace.SpanContext, error) {
+	tp, err := traceparent.ParseString(d.TraceParent)
+	if err != nil {
+		return trace.SpanContext{}, err
+	}
+	sc := trace.SpanContext{
+		TraceID: tp.TraceID,
+		SpanID:  tp.SpanID,
+	}
+	if tp.Flags.Recorded {
+		sc.TraceOptions &= 1
+	}
+
+	if ts, err := tracestate.ParseString(d.TraceState); err == nil {
+		entries := make([]octs.Entry, 0, len(ts))
+		for _, member := range ts {
+			var key string
+			if member.Vendor != "" {
+				key = member.Tenant + "@" + member.Vendor
+			} else {
+				key = member.Tenant
+			}
+			entries = append(entries, octs.Entry{Key: key, Value: member.Value})
+		}
+		sc.Tracestate, _ = octs.New(nil, entries...)
+	}
+
+	return sc, nil
 }

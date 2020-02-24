@@ -155,6 +155,11 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 	return t.BindingTransport.StartReceiver(ctx)
 }
 
+// HasTracePropagation implements Transport.HasTracePropagation
+func (t *Transport) HasTracePropagation() bool {
+	return false
+}
+
 func (t *Transport) Close() error {
 	return t.Client.Close()
 }
