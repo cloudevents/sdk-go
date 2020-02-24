@@ -55,13 +55,18 @@ func EncodeKafkaProducerMessage(ctx context.Context, m binding.Message, producer
 	}
 
 	var e ce.Event
-	e, enc, err = binding.ToEvent(ctx, m, transformerFactories)
+	e, _, err = binding.ToEvent(ctx, m, transformerFactories)
 	if err != nil {
 		return err
 	}
 
 	if val, ok := e.Extensions()["key"]; ok {
-		producerMessage.Key = sarama.StringEncoder(val.(string))
+		s, err := types.Format(val)
+		if err != nil {
+			return err
+		}
+
+		producerMessage.Key = sarama.StringEncoder(s)
 	}
 
 	eventMessage := binding.EventMessage(e)

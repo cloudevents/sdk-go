@@ -64,8 +64,6 @@ func Canonical(t *testing.T, c ce.EventContext) {
 // Halt test on error.
 func SendReceive(t *testing.T, ctx context.Context, in binding.Message, s binding.Sender, r binding.Receiver, outAssert func(binding.Message)) {
 	t.Helper()
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
 	wg := sync.WaitGroup{}
 	wg.Add(2)
 

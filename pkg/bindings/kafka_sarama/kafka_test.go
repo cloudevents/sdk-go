@@ -8,10 +8,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Shopify/sarama"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/Shopify/sarama"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/test"
@@ -22,6 +23,38 @@ import (
 const (
 	TEST_GROUP_ID = "test_group_id"
 )
+
+func TestSendStructuredMessageToStructuredWithKey(t *testing.T) {
+	close, s, r := testSenderReceiver(t)
+	defer close()
+	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn ce.Event) {
+		eventIn = test.ExToStr(t, eventIn)
+		require.NoError(t, eventIn.Context.SetExtension("key", "aaa"))
+
+		in := test.NewMockStructuredMessage(eventIn)
+		test.SendReceive(t, binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingStructured), in, s, r, func(out binding.Message) {
+			eventOut, encoding := test.MustToEvent(context.Background(), out)
+			assert.Equal(t, binding.EncodingEvent, encoding)
+			test.AssertEventEquals(t, eventIn, test.ExToStr(t, eventOut))
+		})
+	})
+}
+
+func TestSendBinaryMessageToBinaryWithKey(t *testing.T) {
+	close, s, r := testSenderReceiver(t)
+	defer close()
+	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn ce.Event) {
+		eventIn = test.ExToStr(t, eventIn)
+		require.NoError(t, eventIn.Context.SetExtension("key", "aaa"))
+
+		in := test.NewMockBinaryMessage(eventIn)
+		test.SendReceive(t, binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingBinary), in, s, r, func(out binding.Message) {
+			eventOut, encoding := test.MustToEvent(context.Background(), out)
+			assert.Equal(t, encoding, binding.EncodingBinary)
+			test.AssertEventEquals(t, eventIn, test.ExToStr(t, eventOut))
+		})
+	})
+}
 
 func testClient(t testing.TB) sarama.Client {
 	t.Helper()
@@ -34,82 +67,13 @@ func testClient(t testing.TB) sarama.Client {
 	config.Version = sarama.V2_0_0_0
 	config.Producer.Return.Successes = true
 	config.Producer.Return.Errors = true
+	config.Consumer.Offsets.Initial = sarama.OffsetOldest
 	client, err := sarama.NewClient(strings.Split(s, ","), config)
 	if err != nil {
 		t.Skipf("Cannot create sarama client to servers [%s]: %v", s, err)
 	}
 
 	return client
-}
-
-func TestSendSkipBinary(t *testing.T) {
-	close, s, r := testSenderReceiver(t)
-	defer close()
-	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn ce.Event) {
-		eventIn = test.ExToStr(t, eventIn)
-		in := test.NewMockBinaryMessage(eventIn)
-		test.SendReceive(t, kafka_sarama.WithSkipKeyExtension(binding.WithSkipDirectBinaryEncoding(binding.WithPreferredEventEncoding(context.Background(), binding.EncodingStructured), true)), in, s, r, func(out binding.Message) {
-			eventOut, encoding := test.MustToEvent(context.Background(), out)
-			assert.Equal(t, encoding, binding.EncodingStructured)
-			test.AssertEventEquals(t, eventIn, test.ExToStr(t, eventOut))
-		})
-	})
-}
-
-func TestSendSkipStructured(t *testing.T) {
-	close, s, r := testSenderReceiver(t)
-	defer close()
-	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn ce.Event) {
-		eventIn = test.ExToStr(t, eventIn)
-		in := test.NewMockStructuredMessage(eventIn)
-		test.SendReceive(t, binding.WithSkipDirectStructuredEncoding(context.Background(), true), in, s, r, func(out binding.Message) {
-			eventOut, encoding := test.MustToEvent(context.Background(), out)
-			assert.Equal(t, encoding, binding.EncodingBinary)
-			test.AssertEventEquals(t, eventIn, test.ExToStr(t, eventOut))
-		})
-	})
-}
-
-func TestSendBinaryReceiveBinary(t *testing.T) {
-	close, s, r := testSenderReceiver(t)
-	defer close()
-	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn ce.Event) {
-		eventIn = test.ExToStr(t, eventIn)
-		in := test.NewMockBinaryMessage(eventIn)
-		test.SendReceive(t, context.Background(), in, s, r, func(out binding.Message) {
-			eventOut, encoding := test.MustToEvent(context.Background(), out)
-			assert.Equal(t, encoding, binding.EncodingBinary)
-			test.AssertEventEquals(t, eventIn, test.ExToStr(t, eventOut))
-		})
-	})
-}
-
-func TestSendStructReceiveStruct(t *testing.T) {
-	close, s, r := testSenderReceiver(t)
-	defer close()
-	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn ce.Event) {
-		eventIn = test.ExToStr(t, eventIn)
-		in := test.NewMockStructuredMessage(eventIn)
-		test.SendReceive(t, context.Background(), in, s, r, func(out binding.Message) {
-			eventOut, encoding := test.MustToEvent(context.Background(), out)
-			assert.Equal(t, encoding, binding.EncodingStructured)
-			test.AssertEventEquals(t, eventIn, test.ExToStr(t, eventOut))
-		})
-	})
-}
-
-func TestSendEventReceiveBinary(t *testing.T) {
-	close, s, r := testSenderReceiver(t)
-	defer close()
-	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn ce.Event) {
-		eventIn = test.ExToStr(t, eventIn)
-		in := binding.EventMessage(eventIn)
-		test.SendReceive(t, context.Background(), in, s, r, func(out binding.Message) {
-			eventOut, encoding := test.MustToEvent(context.Background(), out)
-			assert.Equal(t, encoding, binding.EncodingBinary)
-			test.AssertEventEquals(t, eventIn, test.ExToStr(t, eventOut))
-		})
-	})
 }
 
 func testSenderReceiver(t testing.TB, options ...kafka_sarama.SenderOptionFunc) (func(), binding.Sender, binding.Receiver) {
@@ -123,7 +87,9 @@ func testSenderReceiver(t testing.TB, options ...kafka_sarama.SenderOptionFunc) 
 	return func() {
 		err = r.Close(context.TODO())
 		require.NoError(t, err)
-		_ = s.Close(context.TODO())
+		err = s.Close(context.TODO())
+		require.NoError(t, err)
+		err = client.Close()
 		require.NoError(t, err)
 	}, s, r
 }

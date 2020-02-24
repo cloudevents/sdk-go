@@ -5,6 +5,7 @@ import (
 	"context"
 	"strings"
 
+	ce "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
@@ -32,7 +33,7 @@ var _ binding.Message = (*Message)(nil)
 
 // NewMessage returns a Message with data from body.
 // Reads and closes body.
-func NewMessage(cm *sarama.ConsumerMessage) (*Message, error) {
+func NewMessage(cm *sarama.ConsumerMessage) (binding.Message, error) {
 	var contentType string
 	headers := make(map[string][]byte, len(cm.Headers))
 	for _, r := range cm.Headers {
@@ -45,21 +46,46 @@ func NewMessage(cm *sarama.ConsumerMessage) (*Message, error) {
 	return NewMessageFromRaw(cm.Key, cm.Value, contentType, headers)
 }
 
-func NewMessageFromRaw(key []byte, value []byte, contentType string, headers map[string][]byte) (*Message, error) {
-	m := Message{
+func NewMessageFromRaw(key []byte, value []byte, contentType string, headers map[string][]byte) (binding.Message, error) {
+	if ft := format.Lookup(contentType); ft != nil {
+		// if the message is structured and has a key,
+		// then it's cheaper to go through event message
+		// because we need to add the key as extension
+		if key != nil {
+			event := ce.Event{}
+			err := ft.Unmarshal(value, &event)
+			if err != nil {
+				return nil, err
+			}
+			event.SetExtension("key", string(key))
+			return binding.EventMessage(event), nil
+		} else {
+			return &Message{
+				key:         key,
+				value:       value,
+				contentType: contentType,
+				headers:     headers,
+				format:      ft,
+			}, nil
+		}
+	} else if v, err := specs.FindVersion(func(s string) string {
+		return string(headers[strings.ToLower(s)])
+	}); err == nil {
+		return &Message{
+			key:         key,
+			value:       value,
+			contentType: contentType,
+			headers:     headers,
+			version:     v,
+		}, nil
+	}
+
+	return &Message{
 		key:         key,
 		value:       value,
 		contentType: contentType,
 		headers:     headers,
-	}
-	if ft := format.Lookup(contentType); ft != nil {
-		m.format = ft
-	} else if v, err := specs.FindVersion(func(s string) string {
-		return string(headers[s])
-	}); err == nil {
-		m.version = v
-	}
-	return &m, nil
+	}, nil
 }
 
 func (m *Message) Encoding() binding.Encoding {
