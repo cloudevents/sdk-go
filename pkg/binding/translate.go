@@ -28,7 +28,7 @@ func RunDirectEncoding(
 	binaryEncoder BinaryEncoder,
 	factories TransformerFactories,
 ) (Encoding, error) {
-	if structuredEncoder != nil && !getOrDefaultFromCtx(ctx, SKIP_DIRECT_STRUCTURED_ENCODING, false).(bool) {
+	if structuredEncoder != nil && !GetOrDefaultFromCtx(ctx, SKIP_DIRECT_STRUCTURED_ENCODING, false).(bool) {
 		// Wrap the transformers in the structured builder
 		structuredEncoder = factories.StructuredTransformer(structuredEncoder)
 
@@ -43,7 +43,7 @@ func RunDirectEncoding(
 		}
 	}
 
-	if binaryEncoder != nil && !getOrDefaultFromCtx(ctx, SKIP_DIRECT_BINARY_ENCODING, false).(bool) {
+	if binaryEncoder != nil && !GetOrDefaultFromCtx(ctx, SKIP_DIRECT_BINARY_ENCODING, false).(bool) {
 		binaryEncoder = factories.BinaryTransformer(binaryEncoder)
 		if binaryEncoder != nil {
 			if err := message.Binary(ctx, binaryEncoder); err == nil {
@@ -95,7 +95,7 @@ func Encode(
 
 	message = EventMessage(e)
 
-	if getOrDefaultFromCtx(ctx, PREFERRED_EVENT_ENCODING, EncodingBinary).(Encoding) == EncodingStructured {
+	if GetOrDefaultFromCtx(ctx, PREFERRED_EVENT_ENCODING, EncodingBinary).(Encoding) == EncodingStructured {
 		if structuredEncoder != nil {
 			return EncodingStructured, message.Structured(ctx, structuredEncoder)
 		}
@@ -139,7 +139,7 @@ func WithForceBinary(ctx context.Context) context.Context {
 	return context.WithValue(context.WithValue(ctx, PREFERRED_EVENT_ENCODING, EncodingBinary), SKIP_DIRECT_STRUCTURED_ENCODING, true)
 }
 
-func getOrDefaultFromCtx(ctx context.Context, key string, def interface{}) interface{} {
+func GetOrDefaultFromCtx(ctx context.Context, key string, def interface{}) interface{} {
 	if val := ctx.Value(key); val != nil {
 		return val
 	} else {
