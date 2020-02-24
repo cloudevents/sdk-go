@@ -7,6 +7,7 @@ import (
 
 	"github.com/Shopify/sarama"
 
+	ce "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
@@ -22,12 +23,12 @@ const (
 func EncodeKafkaProducerMessage(ctx context.Context, m binding.Message, producerMessage *sarama.ProducerMessage, transformerFactories binding.TransformerFactories) error {
 	skipKey := binding.GetOrDefaultFromCtx(ctx, SKIP_KEY_EXTENSION, false).(bool)
 
-	enc := &kafkaProducerMessageEncoder{
-		producerMessage,
-		skipKey,
-	}
-
 	if skipKey {
+		enc := &kafkaProducerMessageEncoder{
+			producerMessage,
+			skipKey,
+		}
+
 		_, err := binding.Encode(
 			ctx,
 			m,
@@ -38,14 +39,43 @@ func EncodeKafkaProducerMessage(ctx context.Context, m binding.Message, producer
 		return err
 	}
 
-	_, err := binding.Encode(
-		ctx,
-		m,
-		nil,
-		enc,
-		transformerFactories,
-	)
-	return err
+	enc := m.Encoding()
+	var err error
+	// Skip direct encoding if the event is an event message
+	if enc == binding.EncodingBinary {
+		encoder := &kafkaProducerMessageEncoder{
+			producerMessage,
+			skipKey,
+		}
+		enc, err = binding.RunDirectEncoding(ctx, m, nil, encoder, transformerFactories)
+		if enc != binding.EncodingUnknown {
+			// Message directly encoded binary -> binary, nothing else to do here
+			return err
+		}
+	}
+
+	var e ce.Event
+	e, enc, err = binding.ToEvent(ctx, m, transformerFactories)
+	if err != nil {
+		return err
+	}
+
+	if val, ok := e.Extensions()["key"]; ok {
+		producerMessage.Key = sarama.StringEncoder(val.(string))
+	}
+
+	eventMessage := binding.EventMessage(e)
+
+	encoder := &kafkaProducerMessageEncoder{
+		producerMessage,
+		skipKey,
+	}
+
+	if binding.GetOrDefaultFromCtx(ctx, binding.PREFERRED_EVENT_ENCODING, binding.EncodingBinary).(binding.Encoding) == binding.EncodingStructured {
+		return eventMessage.Structured(ctx, encoder)
+	} else {
+		return eventMessage.Binary(ctx, encoder)
+	}
 }
 
 type kafkaProducerMessageEncoder struct {

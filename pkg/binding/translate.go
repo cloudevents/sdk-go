@@ -100,11 +100,11 @@ func Encode(
 			return EncodingStructured, message.Structured(ctx, structuredEncoder)
 		}
 		if binaryEncoder != nil {
-			return EncodingStructured, message.Binary(ctx, binaryEncoder)
+			return EncodingBinary, message.Binary(ctx, binaryEncoder)
 		}
 	} else {
 		if binaryEncoder != nil {
-			return EncodingStructured, message.Binary(ctx, binaryEncoder)
+			return EncodingBinary, message.Binary(ctx, binaryEncoder)
 		}
 		if structuredEncoder != nil {
 			return EncodingStructured, message.Structured(ctx, structuredEncoder)

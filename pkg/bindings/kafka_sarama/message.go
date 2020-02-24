@@ -52,11 +52,11 @@ func NewMessageFromRaw(key []byte, value []byte, contentType string, headers map
 		contentType: contentType,
 		headers:     headers,
 	}
-	if ft := format.Lookup(contentType); ft == nil {
+	if ft := format.Lookup(contentType); ft != nil {
 		m.format = ft
 	} else if v, err := specs.FindVersion(func(s string) string {
 		return string(headers[s])
-	}); err != nil {
+	}); err == nil {
 		m.version = v
 	}
 	return &m, nil
@@ -105,9 +105,11 @@ func (m *Message) Binary(ctx context.Context, encoder binding.BinaryEncoder) err
 		}
 	}
 
-	err = encoder.SetExtension("key", string(m.key))
-	if err != nil {
-		return err
+	if m.key != nil {
+		err = encoder.SetExtension("key", string(m.key))
+		if err != nil {
+			return err
+		}
 	}
 
 	if m.value != nil {
