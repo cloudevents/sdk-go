@@ -19,7 +19,7 @@ func (s *MockStructuredMessage) GetParent() binding.Message {
 	return nil
 }
 
-func NewMockStructuredMessage(e cloudevents.Event) *MockStructuredMessage {
+func NewMockStructuredMessage(e cloudevents.Event) binding.Message {
 	testEventSerialized, err := format.JSON.Marshal(e)
 	if err != nil {
 		panic(err)

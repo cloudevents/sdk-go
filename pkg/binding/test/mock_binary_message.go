@@ -18,7 +18,7 @@ type MockBinaryMessage struct {
 
 var versions = spec.New()
 
-func NewMockBinaryMessage(e cloudevents.Event) *MockBinaryMessage {
+func NewMockBinaryMessage(e cloudevents.Event) binding.Message {
 	version, err := versions.Version(e.SpecVersion())
 	if err != nil {
 		panic(err)
