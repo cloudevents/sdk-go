@@ -1,4 +1,4 @@
-package benchmark
+package e2e
 
 import (
 	"encoding/csv"

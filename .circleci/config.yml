@@ -3,6 +3,9 @@ jobs:
   build:
     docker:
       - image: circleci/golang:1.13.4
+      - image: lensesio/fast-data-dev
+        environment:
+          - ADV_HOST=localhost
       - image: scholzj/qpid-dispatch
         environment:
           QDROUTERD_CONFIG_OPTIONS: |
