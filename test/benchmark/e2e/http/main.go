@@ -21,7 +21,7 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/binding/buffering"
 	"github.com/cloudevents/sdk-go/pkg/bindings/http"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
-	"github.com/cloudevents/sdk-go/test/benchmark"
+	"github.com/cloudevents/sdk-go/test/benchmark/e2e"
 )
 
 var letters = []byte("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -36,8 +36,8 @@ func fillRandom(buf []byte, r *rand.Rand) {
 var W *httptest.ResponseRecorder
 var R *nethttp.Request
 
-func benchmarkBaseline(cases []benchmark.BenchmarkCase, requestFactory func([]byte) *nethttp.Request) benchmark.BenchmarkResults {
-	var results benchmark.BenchmarkResults
+func benchmarkBaseline(cases []e2e.BenchmarkCase, requestFactory func([]byte) *nethttp.Request) e2e.BenchmarkResults {
+	var results e2e.BenchmarkResults
 	r := rand.New(rand.NewSource(time.Now().Unix()))
 
 	for _, c := range cases {
@@ -59,7 +59,7 @@ func benchmarkBaseline(cases []benchmark.BenchmarkCase, requestFactory func([]by
 				}
 			})
 		})
-		results = append(results, benchmark.BenchmarkResult{BenchmarkCase: c, BenchmarkResult: result})
+		results = append(results, e2e.BenchmarkResult{BenchmarkCase: c, BenchmarkResult: result})
 	}
 
 	return results
@@ -110,8 +110,8 @@ func pipeLoopMulti(r *http.Receiver, sendCtx context.Context, endCtx context.Con
 	}
 }
 
-func benchmarkReceiverSender(cases []benchmark.BenchmarkCase, requestFactory func([]byte) *nethttp.Request, contextDecorator func(context.Context) context.Context) benchmark.BenchmarkResults {
-	var results benchmark.BenchmarkResults
+func benchmarkReceiverSender(cases []e2e.BenchmarkCase, requestFactory func([]byte) *nethttp.Request, contextDecorator func(context.Context) context.Context) e2e.BenchmarkResults {
+	var results e2e.BenchmarkResults
 	random := rand.New(rand.NewSource(time.Now().Unix()))
 
 	for _, c := range cases {
@@ -142,7 +142,7 @@ func benchmarkReceiverSender(cases []benchmark.BenchmarkCase, requestFactory fun
 				}
 			})
 		})
-		results = append(results, benchmark.BenchmarkResult{BenchmarkCase: c, BenchmarkResult: result})
+		results = append(results, e2e.BenchmarkResult{BenchmarkCase: c, BenchmarkResult: result})
 
 		cancel()
 		runtime.GC()
@@ -167,8 +167,8 @@ func dispatchReceiver(clients []cloudevents.Client, outputSenders int) transport
 	})
 }
 
-func benchmarkClient(cases []benchmark.BenchmarkCase, requestFactory func([]byte) *nethttp.Request) benchmark.BenchmarkResults {
-	var results benchmark.BenchmarkResults
+func benchmarkClient(cases []e2e.BenchmarkCase, requestFactory func([]byte) *nethttp.Request) e2e.BenchmarkResults {
+	var results e2e.BenchmarkResults
 	random := rand.New(rand.NewSource(time.Now().Unix()))
 
 	for _, c := range cases {
@@ -196,7 +196,7 @@ func benchmarkClient(cases []benchmark.BenchmarkCase, requestFactory func([]byte
 				}
 			})
 		})
-		results = append(results, benchmark.BenchmarkResult{BenchmarkCase: c, BenchmarkResult: result})
+		results = append(results, e2e.BenchmarkResult{BenchmarkCase: c, BenchmarkResult: result})
 
 		runtime.GC()
 	}
@@ -226,7 +226,7 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	benchmarkCases := benchmark.GenerateAllBenchmarkCases(
+	benchmarkCases := e2e.GenerateAllBenchmarkCases(
 		1024,
 		1024*(*maxPayloadKb),
 		1,
@@ -235,7 +235,7 @@ func main() {
 		*maxOutputSenders, //TODO to be increased when receiver-sender will support multi senders
 	)
 
-	var results benchmark.BenchmarkResults
+	var results e2e.BenchmarkResults
 
 	fmt.Printf("--- Starting benchmark %s ---\n", *bench)
 
