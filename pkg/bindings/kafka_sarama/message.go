@@ -21,9 +21,9 @@ const ContentType = "content-type"
 
 // Message holds a sarama ConsumerMessage.
 type Message struct {
-	key, value  []byte
-	headers     map[string][]byte
-	contentType string
+	Key, Value  []byte
+	Headers     map[string][]byte
+	ContentType string
 	format      format.Format
 	version     spec.Version
 }
@@ -61,10 +61,10 @@ func NewMessageFromRaw(key []byte, value []byte, contentType string, headers map
 			return binding.EventMessage(event), nil
 		} else {
 			return &Message{
-				key:         key,
-				value:       value,
-				contentType: contentType,
-				headers:     headers,
+				Key:         key,
+				Value:       value,
+				ContentType: contentType,
+				Headers:     headers,
 				format:      ft,
 			}, nil
 		}
@@ -72,19 +72,19 @@ func NewMessageFromRaw(key []byte, value []byte, contentType string, headers map
 		return string(headers[strings.ToLower(s)])
 	}); err == nil {
 		return &Message{
-			key:         key,
-			value:       value,
-			contentType: contentType,
-			headers:     headers,
+			Key:         key,
+			Value:       value,
+			ContentType: contentType,
+			Headers:     headers,
 			version:     v,
 		}, nil
 	}
 
 	return &Message{
-		key:         key,
-		value:       value,
-		contentType: contentType,
-		headers:     headers,
+		Key:         key,
+		Value:       value,
+		ContentType: contentType,
+		Headers:     headers,
 	}, nil
 }
 
@@ -100,7 +100,7 @@ func (m *Message) Encoding() binding.Encoding {
 
 func (m *Message) Structured(ctx context.Context, encoder binding.StructuredEncoder) error {
 	if m.format != nil {
-		return encoder.SetStructuredEvent(ctx, m.format, bytes.NewReader(m.value))
+		return encoder.SetStructuredEvent(ctx, m.format, bytes.NewReader(m.Value))
 	}
 	return binding.ErrNotStructured
 }
@@ -115,7 +115,7 @@ func (m *Message) Binary(ctx context.Context, encoder binding.BinaryEncoder) err
 		return err
 	}
 
-	for k, v := range m.headers {
+	for k, v := range m.Headers {
 		if strings.HasPrefix(k, prefix) {
 			attr := m.version.Attribute(k)
 			if attr != nil {
@@ -131,15 +131,15 @@ func (m *Message) Binary(ctx context.Context, encoder binding.BinaryEncoder) err
 		}
 	}
 
-	if m.key != nil {
-		err = encoder.SetExtension("key", string(m.key))
+	if m.Key != nil {
+		err = encoder.SetExtension("key", string(m.Key))
 		if err != nil {
 			return err
 		}
 	}
 
-	if m.value != nil {
-		err = encoder.SetData(bytes.NewReader(m.value))
+	if m.Value != nil {
+		err = encoder.SetData(bytes.NewReader(m.Value))
 		if err != nil {
 			return err
 		}
