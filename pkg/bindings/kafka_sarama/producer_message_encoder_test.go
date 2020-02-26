@@ -24,13 +24,13 @@ func TestEncodeKafkaProducerMessage(t *testing.T) {
 		expectedEncoding binding.Encoding
 		skipKey          bool
 	}{
-		//{
-		//	name:             "Structured to Structured with Skip key",
-		//	context:          context.TODO(),
-		//	messageFactory:   func(e cloudevents.Event) binding.Message { return test.NewMockStructuredMessage(e) },
-		//	expectedEncoding: binding.EncodingStructured,
-		//	skipKey:          true,
-		//},
+		{
+			name:             "Structured to Structured with Skip key",
+			context:          context.TODO(),
+			messageFactory:   func(e cloudevents.Event) binding.Message { return test.NewMockStructuredMessage(e) },
+			expectedEncoding: binding.EncodingStructured,
+			skipKey:          true,
+		},
 		{
 			name:             "Binary to Binary with Skip key",
 			context:          context.TODO(),
@@ -38,48 +38,48 @@ func TestEncodeKafkaProducerMessage(t *testing.T) {
 			expectedEncoding: binding.EncodingBinary,
 			skipKey:          true,
 		},
-		//{
-		//	name:             "Event to Structured with Skip key",
-		//	context:          binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingStructured),
-		//	messageFactory:   func(e cloudevents.Event) binding.Message { return binding.EventMessage(e) },
-		//	expectedEncoding: binding.EncodingStructured,
-		//	skipKey:          true,
-		//},
-		//{
-		//	name:             "Event to Binary with Skip key",
-		//	context:          binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingBinary),
-		//	messageFactory:   func(e cloudevents.Event) binding.Message { return binding.EventMessage(e) },
-		//	expectedEncoding: binding.EncodingBinary,
-		//	skipKey:          true,
-		//},
-		//{
-		//	name:             "Structured to Structured",
-		//	context:          binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingStructured),
-		//	messageFactory:   func(e cloudevents.Event) binding.Message { return test.NewMockStructuredMessage(e) },
-		//	expectedEncoding: binding.EncodingEvent,
-		//	skipKey:          false,
-		//},
-		//{
-		//	name:             "Binary to Binary",
-		//	context:          context.TODO(),
-		//	messageFactory:   func(e cloudevents.Event) binding.Message { return test.NewMockBinaryMessage(e) },
-		//	expectedEncoding: binding.EncodingBinary,
-		//	skipKey:          false,
-		//},
-		//{
-		//	name:             "Event to Structured",
-		//	context:          binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingStructured),
-		//	messageFactory:   func(e cloudevents.Event) binding.Message { return binding.EventMessage(e) },
-		//	expectedEncoding: binding.EncodingEvent,
-		//	skipKey:          false,
-		//},
-		//{
-		//	name:             "Event to Binary",
-		//	context:          binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingBinary),
-		//	messageFactory:   func(e cloudevents.Event) binding.Message { return binding.EventMessage(e) },
-		//	expectedEncoding: binding.EncodingBinary,
-		//	skipKey:          false,
-		//},
+		{
+			name:             "Event to Structured with Skip key",
+			context:          binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingStructured),
+			messageFactory:   func(e cloudevents.Event) binding.Message { return binding.EventMessage(e) },
+			expectedEncoding: binding.EncodingStructured,
+			skipKey:          true,
+		},
+		{
+			name:             "Event to Binary with Skip key",
+			context:          binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingBinary),
+			messageFactory:   func(e cloudevents.Event) binding.Message { return binding.EventMessage(e) },
+			expectedEncoding: binding.EncodingBinary,
+			skipKey:          true,
+		},
+		{
+			name:             "Structured to Structured",
+			context:          binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingStructured),
+			messageFactory:   func(e cloudevents.Event) binding.Message { return test.NewMockStructuredMessage(e) },
+			expectedEncoding: binding.EncodingEvent,
+			skipKey:          false,
+		},
+		{
+			name:             "Binary to Binary",
+			context:          context.TODO(),
+			messageFactory:   func(e cloudevents.Event) binding.Message { return test.NewMockBinaryMessage(e) },
+			expectedEncoding: binding.EncodingBinary,
+			skipKey:          false,
+		},
+		{
+			name:             "Event to Structured",
+			context:          binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingStructured),
+			messageFactory:   func(e cloudevents.Event) binding.Message { return binding.EventMessage(e) },
+			expectedEncoding: binding.EncodingEvent,
+			skipKey:          false,
+		},
+		{
+			name:             "Event to Binary",
+			context:          binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingBinary),
+			messageFactory:   func(e cloudevents.Event) binding.Message { return binding.EventMessage(e) },
+			expectedEncoding: binding.EncodingBinary,
+			skipKey:          false,
+		},
 	}
 	for _, tt := range tests {
 		test.EachEvent(t, test.Events(), func(t *testing.T, eventIn ce.Event) {
