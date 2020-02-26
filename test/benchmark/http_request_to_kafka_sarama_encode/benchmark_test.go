@@ -15,61 +15,46 @@ import (
 )
 
 var (
-	e                                   = test.FullEvent()
-	structuredConsumerMessageWithoutKey = &sarama.ConsumerMessage{
-		Value: test.MustJSON(e),
-		Headers: []*sarama.RecordHeader{{
-			Key:   []byte(kafka_sarama.ContentType),
-			Value: []byte(cloudevents.ApplicationCloudEventsJSON),
-		}},
-	}
-	structuredConsumerMessageWithKey = &sarama.ConsumerMessage{
-		Key:   []byte("aaa"),
-		Value: test.MustJSON(e),
-		Headers: []*sarama.RecordHeader{{
-			Key:   []byte(kafka_sarama.ContentType),
-			Value: []byte(cloudevents.ApplicationCloudEventsJSON),
-		}},
-	}
-	binaryConsumerMessageWithoutKey = &sarama.ConsumerMessage{
-		Value: []byte("hello world!"),
-		Headers: mustToSaramaConsumerHeaders(map[string]string{
-			"ce_type":            e.Type(),
-			"ce_source":          e.Source(),
-			"ce_id":              e.ID(),
-			"ce_time":            test.Timestamp.String(),
-			"ce_specversion":     "1.0",
-			"ce_dataschema":      test.Schema.String(),
-			"ce_datacontenttype": "text/json",
-			"ce_subject":         "topic",
-			"ce_exta":            "someext",
-		}),
-	}
-	binaryConsumerMessageWithKey = &sarama.ConsumerMessage{
-		Key:   []byte("akey"),
-		Value: []byte("hello world!"),
-		Headers: mustToSaramaConsumerHeaders(map[string]string{
-			"ce_type":            e.Type(),
-			"ce_source":          e.Source(),
-			"ce_id":              e.ID(),
-			"ce_time":            test.Timestamp.String(),
-			"ce_specversion":     "1.0",
-			"ce_dataschema":      test.Schema.String(),
-			"ce_datacontenttype": "text/json",
-			"ce_subject":         "topic",
-			"ce_exta":            "someext",
-		}),
-	}
+	eventWithoutKey                 cloudevents.Event
+	eventWithKey                    cloudevents.Event
+	structuredHttpRequestWithoutKey *nethttp.Request
+	structuredHttpRequestWithKey    *nethttp.Request
+	binaryHttpRequestWithoutKey     *nethttp.Request
+	binaryHttpRequestWithKey        *nethttp.Request
+
+	ctxSkipKey = kafka_sarama.WithSkipKeyExtension(context.TODO())
+	ctx        = context.TODO()
 )
 
-func mustToSaramaConsumerHeaders(m map[string]string) []*sarama.RecordHeader {
-	res := make([]*sarama.RecordHeader, len(m))
-	i := 0
-	for k, v := range m {
-		res[i] = &sarama.RecordHeader{Key: []byte(k), Value: []byte(v)}
-		i++
+func init() {
+	eventWithoutKey = test.FullEvent()
+	eventWithKey = test.FullEvent()
+	eventWithKey.SetExtension("key", "aaa")
+
+	structuredHttpRequestWithoutKey, _ = nethttp.NewRequest("POST", "http://localhost", nil)
+	Err = http.EncodeHttpRequest(context.TODO(), binding.EventMessage(eventWithoutKey), structuredHttpRequestWithoutKey, binding.TransformerFactories{})
+	if Err != nil {
+		panic(Err)
 	}
-	return res
+
+	structuredHttpRequestWithKey, _ = nethttp.NewRequest("POST", "http://localhost", nil)
+	Err = http.EncodeHttpRequest(context.TODO(), binding.EventMessage(eventWithKey), structuredHttpRequestWithKey, binding.TransformerFactories{})
+	if Err != nil {
+		panic(Err)
+	}
+
+	binaryHttpRequestWithoutKey, _ = nethttp.NewRequest("POST", "http://localhost", nil)
+	Err = http.EncodeHttpRequest(context.TODO(), binding.EventMessage(eventWithoutKey), binaryHttpRequestWithoutKey, binding.TransformerFactories{})
+	if Err != nil {
+		panic(Err)
+	}
+
+	binaryHttpRequestWithKey, _ = nethttp.NewRequest("POST", "http://localhost", nil)
+	Err = http.EncodeHttpRequest(context.TODO(), binding.EventMessage(eventWithKey), binaryHttpRequestWithKey, binding.TransformerFactories{})
+	if Err != nil {
+		panic(Err)
+	}
+
 }
 
 // Avoid DCE
@@ -77,34 +62,78 @@ var M binding.Message
 var Req *nethttp.Request
 var Err error
 
-func BenchmarkStructuredWithKey(b *testing.B) {
+func BenchmarkBaselineStructured(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		M, Err = kafka_sarama.NewMessage(structuredConsumerMessageWithKey)
-		Req, Err = nethttp.NewRequest("POST", "http://localhost", nil)
-		Err = http.EncodeHttpRequest(context.TODO(), M, Req, binding.TransformerFactories{})
+		Req, _ = nethttp.NewRequest("POST", "http://localhost", nil)
+		Err = http.EncodeHttpRequest(context.TODO(), binding.EventMessage(eventWithKey), Req, binding.TransformerFactories{})
 	}
 }
 
-func BenchmarkStructuredWithoutKey(b *testing.B) {
+func BenchmarkStructured(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		M, Err = kafka_sarama.NewMessage(structuredConsumerMessageWithoutKey)
+		tempReq, _ := nethttp.NewRequest("POST", "http://localhost", nil)
+		Err = http.EncodeHttpRequest(context.TODO(), binding.EventMessage(eventWithKey), tempReq, binding.TransformerFactories{})
+
+		M, Err = http.NewMessage(tempReq.Header, tempReq.Body)
 		Req, Err = nethttp.NewRequest("POST", "http://localhost", nil)
-		Err = http.EncodeHttpRequest(context.TODO(), M, Req, binding.TransformerFactories{})
+		producerMessage := &sarama.ProducerMessage{}
+		Err = kafka_sarama.EncodeKafkaProducerMessage(ctx, M, producerMessage, binding.TransformerFactories{})
 	}
 }
 
-func BenchmarkBinaryWithKey(b *testing.B) {
+func BenchmarkBaselineStructuredSkipKey(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		M, Err = kafka_sarama.NewMessage(binaryConsumerMessageWithKey)
-		Req, Err = nethttp.NewRequest("POST", "http://localhost", nil)
-		Err = http.EncodeHttpRequest(context.TODO(), M, Req, binding.TransformerFactories{})
+		Req, _ = nethttp.NewRequest("POST", "http://localhost", nil)
+		Err = http.EncodeHttpRequest(context.TODO(), binding.EventMessage(eventWithoutKey), Req, binding.TransformerFactories{})
 	}
 }
 
-func BenchmarkBinaryWithoutKey(b *testing.B) {
+func BenchmarkStructuredSkipKey(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		M, Err = kafka_sarama.NewMessage(binaryConsumerMessageWithoutKey)
+		tempReq, _ := nethttp.NewRequest("POST", "http://localhost", nil)
+		Err = http.EncodeHttpRequest(context.TODO(), binding.EventMessage(eventWithoutKey), tempReq, binding.TransformerFactories{})
+
+		M, Err = http.NewMessage(tempReq.Header, tempReq.Body)
 		Req, Err = nethttp.NewRequest("POST", "http://localhost", nil)
-		Err = http.EncodeHttpRequest(context.TODO(), M, Req, binding.TransformerFactories{})
+		producerMessage := &sarama.ProducerMessage{}
+		Err = kafka_sarama.EncodeKafkaProducerMessage(ctxSkipKey, M, producerMessage, binding.TransformerFactories{})
+	}
+}
+
+func BenchmarkBaselineBinary(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		Req, _ = nethttp.NewRequest("POST", "http://localhost", nil)
+		Err = http.EncodeHttpRequest(context.TODO(), binding.EventMessage(eventWithKey), Req, binding.TransformerFactories{})
+	}
+}
+
+func BenchmarkBinary(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		tempReq, _ := nethttp.NewRequest("POST", "http://localhost", nil)
+		Err = http.EncodeHttpRequest(context.TODO(), binding.EventMessage(eventWithKey), tempReq, binding.TransformerFactories{})
+
+		M, Err = http.NewMessage(tempReq.Header, tempReq.Body)
+		Req, Err = nethttp.NewRequest("POST", "http://localhost", nil)
+		producerMessage := &sarama.ProducerMessage{}
+		Err = kafka_sarama.EncodeKafkaProducerMessage(ctx, M, producerMessage, binding.TransformerFactories{})
+	}
+}
+
+func BenchmarkBaselineBinarySkipKey(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		Req, _ = nethttp.NewRequest("POST", "http://localhost", nil)
+		Err = http.EncodeHttpRequest(context.TODO(), binding.EventMessage(eventWithoutKey), Req, binding.TransformerFactories{})
+	}
+}
+
+func BenchmarkBinarySkipKey(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		tempReq, _ := nethttp.NewRequest("POST", "http://localhost", nil)
+		Err = http.EncodeHttpRequest(context.TODO(), binding.EventMessage(eventWithoutKey), tempReq, binding.TransformerFactories{})
+
+		M, Err = http.NewMessage(tempReq.Header, tempReq.Body)
+		Req, Err = nethttp.NewRequest("POST", "http://localhost", nil)
+		producerMessage := &sarama.ProducerMessage{}
+		Err = kafka_sarama.EncodeKafkaProducerMessage(ctxSkipKey, M, producerMessage, binding.TransformerFactories{})
 	}
 }
