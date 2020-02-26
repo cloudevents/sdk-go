@@ -24,6 +24,6 @@ bazel-*
 # Others
 ## IDE-specific
 *.iml
-test/benchmark/http/results/
+test/benchmark/e2e/http/results/
 tmp/
 
