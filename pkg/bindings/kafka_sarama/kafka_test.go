@@ -1,6 +1,6 @@
 // +build kafka
 
-package kafka_sarama_test
+package kafka_sarama
 
 import (
 	"context"
@@ -16,12 +16,59 @@ import (
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/test"
-	"github.com/cloudevents/sdk-go/pkg/bindings/kafka_sarama"
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 )
 
 const (
 	TEST_GROUP_ID = "test_group_id"
+)
+
+var (
+	e                                   = test.FullEvent()
+	StructuredConsumerMessageWithoutKey = &sarama.ConsumerMessage{
+		Value: test.MustJSON(e),
+		Headers: []*sarama.RecordHeader{{
+			Key:   []byte(ContentType),
+			Value: []byte(cloudevents.ApplicationCloudEventsJSON),
+		}},
+	}
+	StructuredConsumerMessageWithKey = &sarama.ConsumerMessage{
+		Key:   []byte("aaa"),
+		Value: test.MustJSON(e),
+		Headers: []*sarama.RecordHeader{{
+			Key:   []byte(ContentType),
+			Value: []byte(cloudevents.ApplicationCloudEventsJSON),
+		}},
+	}
+	BinaryConsumerMessageWithoutKey = &sarama.ConsumerMessage{
+		Value: []byte("hello world!"),
+		Headers: mustToSaramaConsumerHeaders(map[string]string{
+			"ce_type":            e.Type(),
+			"ce_source":          e.Source(),
+			"ce_id":              e.ID(),
+			"ce_time":            test.Timestamp.String(),
+			"ce_specversion":     "1.0",
+			"ce_dataschema":      test.Schema.String(),
+			"ce_datacontenttype": "text/json",
+			"ce_subject":         "topic",
+			"ce_exta":            "someext",
+		}),
+	}
+	BinaryConsumerMessageWithKey = &sarama.ConsumerMessage{
+		Key:   []byte("akey"),
+		Value: []byte("hello world!"),
+		Headers: mustToSaramaConsumerHeaders(map[string]string{
+			"ce_type":            e.Type(),
+			"ce_source":          e.Source(),
+			"ce_id":              e.ID(),
+			"ce_time":            test.Timestamp.String(),
+			"ce_specversion":     "1.0",
+			"ce_dataschema":      test.Schema.String(),
+			"ce_datacontenttype": "text/json",
+			"ce_subject":         "topic",
+			"ce_exta":            "someext",
+		}),
+	}
 )
 
 func TestSendStructuredMessageToStructuredWithKey(t *testing.T) {
@@ -40,12 +87,42 @@ func TestSendStructuredMessageToStructuredWithKey(t *testing.T) {
 	})
 }
 
+func TestSendStructuredMessageToStructuredWithoutKey(t *testing.T) {
+	close, s, r := testSenderReceiver(t)
+	defer close()
+	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn ce.Event) {
+		eventIn = test.ExToStr(t, eventIn)
+
+		in := test.NewMockStructuredMessage(eventIn)
+		test.SendReceive(t, binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingStructured), in, s, r, func(out binding.Message) {
+			eventOut, encoding := test.MustToEvent(context.Background(), out)
+			assert.Equal(t, binding.EncodingEvent, encoding)
+			test.AssertEventEquals(t, eventIn, test.ExToStr(t, eventOut))
+		})
+	})
+}
+
 func TestSendBinaryMessageToBinaryWithKey(t *testing.T) {
 	close, s, r := testSenderReceiver(t)
 	defer close()
 	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn ce.Event) {
 		eventIn = test.ExToStr(t, eventIn)
 		require.NoError(t, eventIn.Context.SetExtension("key", "aaa"))
+
+		in := test.NewMockBinaryMessage(eventIn)
+		test.SendReceive(t, binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingBinary), in, s, r, func(out binding.Message) {
+			eventOut, encoding := test.MustToEvent(context.Background(), out)
+			assert.Equal(t, encoding, binding.EncodingBinary)
+			test.AssertEventEquals(t, eventIn, test.ExToStr(t, eventOut))
+		})
+	})
+}
+
+func TestSendBinaryMessageToBinaryWithKey(t *testing.T) {
+	close, s, r := testSenderReceiver(t)
+	defer close()
+	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn ce.Event) {
+		eventIn = test.ExToStr(t, eventIn)
 
 		in := test.NewMockBinaryMessage(eventIn)
 		test.SendReceive(t, binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingBinary), in, s, r, func(out binding.Message) {
@@ -76,12 +153,12 @@ func testClient(t testing.TB) sarama.Client {
 	return client
 }
 
-func testSenderReceiver(t testing.TB, options ...kafka_sarama.SenderOptionFunc) (func(), binding.Sender, binding.Receiver) {
+func testSenderReceiver(t testing.TB, options ...SenderOptionFunc) (func(), binding.Sender, binding.Receiver) {
 	client := testClient(t)
 
 	topicName := "test-ce-client-" + uuid.New().String()
-	r := kafka_sarama.NewReceiver(client, TEST_GROUP_ID, topicName)
-	s, err := kafka_sarama.NewSender(client, topicName, options...)
+	r := NewReceiver(client, TEST_GROUP_ID, topicName)
+	s, err := NewSender(client, topicName, options...)
 	require.NoError(t, err)
 
 	return func() {
