@@ -15,9 +15,9 @@ import (
 func strptr(s string) *string { return &s }
 
 var (
-	source    = types.URIRef{URL: url.URL{Scheme: "http", Host: "example.com", Path: "/source"}}
-	timestamp = types.Timestamp{Time: time.Date(2020, 03, 21, 12, 34, 56, 780000000, time.UTC)}
-	schema    = types.URI{URL: url.URL{Scheme: "http", Host: "example.com", Path: "/schema"}}
+	Source    = types.URIRef{URL: url.URL{Scheme: "http", Host: "example.com", Path: "/source"}}
+	Timestamp = types.Timestamp{Time: time.Date(2020, 03, 21, 12, 34, 56, 780000000, time.UTC)}
+	Schema    = types.URI{URL: url.URL{Scheme: "http", Host: "example.com", Path: "/schema"}}
 )
 
 // FullEvent has all context attributes set and JSON string data.
@@ -25,10 +25,10 @@ func FullEvent() ce.Event {
 	e := ce.Event{
 		Context: ce.EventContextV1{
 			Type:            "com.example.FullEvent",
-			Source:          source,
+			Source:          Source,
 			ID:              "full-event",
-			Time:            &timestamp,
-			DataSchema:      &schema,
+			Time:            &Timestamp,
+			DataSchema:      &Schema,
 			DataContentType: strptr("text/json"),
 			Subject:         strptr("topic"),
 		}.AsV1(),
@@ -38,8 +38,8 @@ func FullEvent() ce.Event {
 	e.SetExtension("exint", 42)
 	e.SetExtension("exstring", "exstring")
 	e.SetExtension("exbinary", []byte{0, 1, 2, 3})
-	e.SetExtension("exurl", source)
-	e.SetExtension("extime", timestamp)
+	e.SetExtension("exurl", Source)
+	e.SetExtension("extime", Timestamp)
 
 	if err := e.SetData("hello"); err != nil {
 		panic(err)
@@ -52,7 +52,7 @@ func MinEvent() ce.Event {
 	return ce.Event{
 		Context: ce.EventContextV1{
 			Type:   "com.example.MinEvent",
-			Source: source,
+			Source: Source,
 			ID:     "min-event",
 		}.AsV1(),
 	}

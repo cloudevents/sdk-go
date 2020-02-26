@@ -99,3 +99,13 @@ func BenchmarkSendReceive(b *testing.B) {
 	defer c() // Cleanup
 	test.BenchmarkSendReceive(b, s, r)
 }
+
+func mustToSaramaConsumerHeaders(m map[string]string) []*sarama.RecordHeader {
+	res := make([]*sarama.RecordHeader, len(m))
+	i := 0
+	for k, v := range m {
+		res[i] = &sarama.RecordHeader{Key: []byte(k), Value: []byte(v)}
+		i++
+	}
+	return res
+}
