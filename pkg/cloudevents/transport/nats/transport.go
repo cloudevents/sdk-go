@@ -3,12 +3,15 @@ package nats
 import (
 	"context"
 	"fmt"
+	"github.com/cloudevents/sdk-go/pkg/binding"
+	"github.com/cloudevents/sdk-go/pkg/binding/spec"
+	"github.com/cloudevents/sdk-go/pkg/binding/transcoder"
+	bindings_nats "github.com/cloudevents/sdk-go/pkg/bindings/nats"
+	"go.uber.org/zap"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	context2 "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
+	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	"github.com/nats-io/nats.go"
-	"go.uber.org/zap"
 )
 
 // Transport adheres to transport.Transport.
@@ -21,6 +24,8 @@ const (
 
 // Transport acts as both a NATS client and a NATS handler.
 type Transport struct {
+	binding.BindingTransport
+
 	Encoding    Encoding
 	Conn        *nats.Conn
 	ConnOptions []nats.Option
@@ -29,12 +34,9 @@ type Transport struct {
 
 	sub *nats.Subscription
 
-	Receiver transport.Receiver
 	// Converter is invoked if the incoming transport receives an undecodable
 	// message.
 	Converter transport.Converter
-
-	codec transport.Codec
 }
 
 // New creates a new NATS transport.
@@ -55,6 +57,7 @@ func New(natsURL, subject string, opts ...Option) (*Transport, error) {
 		return nil, err
 	}
 
+	t.BindingTransport.Sender, t.BindingTransport.SenderContextDecorators = t.applyEncoding()
 	return t, nil
 }
 
@@ -75,48 +78,6 @@ func (t *Transport) applyOptions(opts ...Option) error {
 	return nil
 }
 
-func (t *Transport) loadCodec() bool {
-	if t.codec == nil {
-		switch t.Encoding {
-		case Default:
-			t.codec = &Codec{}
-		case StructuredV02:
-			t.codec = &CodecV02{Encoding: t.Encoding}
-		case StructuredV03:
-			t.codec = &CodecV03{Encoding: t.Encoding}
-		case StructuredV1:
-			t.codec = &CodecV1{Encoding: t.Encoding}
-		default:
-			return false
-		}
-	}
-	return true
-}
-
-// Send implements Transport.Send
-func (t *Transport) Send(ctx context.Context, event cloudevents.Event) (context.Context, *cloudevents.Event, error) {
-	// TODO populate response context properly.
-	if ok := t.loadCodec(); !ok {
-		return ctx, nil, fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
-	}
-
-	msg, err := t.codec.Encode(ctx, event)
-	if err != nil {
-		return ctx, nil, err
-	}
-
-	if m, ok := msg.(*Message); ok {
-		return ctx, nil, t.Conn.Publish(t.Subject, m.Body)
-	}
-
-	return ctx, nil, fmt.Errorf("failed to encode Event into a Message")
-}
-
-// SetReceiver implements Transport.SetReceiver
-func (t *Transport) SetReceiver(r transport.Receiver) {
-	t.Receiver = r
-}
-
 // SetConverter implements Transport.SetConverter
 func (t *Transport) SetConverter(c transport.Converter) {
 	t.Converter = c
@@ -130,14 +91,14 @@ func (t *Transport) HasConverter() bool {
 // StartReceiver implements Transport.StartReceiver
 // NOTE: This is a blocking call.
 func (t *Transport) StartReceiver(ctx context.Context) (err error) {
+	logger := cecontext.LoggerFrom(ctx)
+	logger.Info("StartReceiver on ", t.Subject)
+
 	if t.Conn == nil {
 		return fmt.Errorf("no active nats connection")
 	}
 	if t.sub != nil {
 		return fmt.Errorf("already subscribed")
-	}
-	if ok := t.loadCodec(); !ok {
-		return fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
 	}
 
 	// TODO: there could be more than one subscription. Might have to do a map
@@ -147,41 +108,60 @@ func (t *Transport) StartReceiver(ctx context.Context) (err error) {
 		return fmt.Errorf("subject required for nats listen")
 	}
 
-	// Simple Async Subscriber
-	t.sub, err = t.Conn.Subscribe(t.Subject, func(m *nats.Msg) {
-		logger := context2.LoggerFrom(ctx)
-		msg := &Message{
-			Body: m.Data,
-		}
-		event, err := t.codec.Decode(ctx, msg)
-		// If codec returns and error, try with the converter if it is set.
-		if err != nil && t.HasConverter() {
-			event, err = t.Converter.Convert(ctx, msg, err)
-		}
-		if err != nil {
-			logger.Errorw("failed to decode message", zap.Error(err)) // TODO: create an error channel to pass this up
-			return
-		}
-		// TODO: I do not know enough about NATS to implement reply.
-		// For now, NATS does not support reply.
-		if err := t.Receiver.Receive(context.TODO(), *event, nil); err != nil {
-			logger.Warnw("nats receiver return err", zap.Error(err))
-		}
-	})
+	t.sub, err = t.Conn.SubscribeSync(t.Subject)
+	if err != nil {
+		return err
+	}
+
 	defer func() {
-		if t.sub != nil {
+		if t.sub != nil && t.sub.IsValid() {
 			err2 := t.sub.Unsubscribe()
+			if err2 != nil {
+				logger.Errorw("failed to unsubscribe transport", zap.Error(err2))
+			}
+			// TODO: We're logging the "Unsubscribe" error so should we be hiding deeper errors?
 			if err != nil {
 				err = err2 // Set the returned error if not already set.
 			}
 			t.sub = nil
 		}
 	}()
-	<-ctx.Done()
-	return err
+
+	t.BindingTransport.Receiver = bindings_nats.NewReceiver(t.sub)
+
+	// this blocks until ctx is closed
+	return t.BindingTransport.StartReceiver(ctx)
 }
 
 // HasTracePropagation implements Transport.HasTracePropagation
 func (t *Transport) HasTracePropagation() bool {
 	return false
+}
+
+func (t *Transport) applyEncoding() (binding.Sender, []func(context.Context) context.Context) {
+	ctxDecorator := []func(context.Context) context.Context{binding.WithForceStructured}
+
+	switch t.Encoding {
+	case Default:
+		fallthrough
+	case StructuredV02:
+		return bindings_nats.NewSender(
+			t.Conn,
+			t.Subject,
+			bindings_nats.WithTranscoder(transcoder.Version(spec.V02)),
+		), ctxDecorator
+	case StructuredV03:
+		return bindings_nats.NewSender(
+			t.Conn,
+			t.Subject,
+			bindings_nats.WithTranscoder(transcoder.Version(spec.V03)),
+		), ctxDecorator
+	case StructuredV1:
+		return bindings_nats.NewSender(
+			t.Conn,
+			t.Subject,
+			bindings_nats.WithTranscoder(transcoder.Version(spec.V1)),
+		), ctxDecorator
+	}
+	return bindings_nats.NewSender(t.Conn, t.Subject), []func(context.Context) context.Context{}
 }
