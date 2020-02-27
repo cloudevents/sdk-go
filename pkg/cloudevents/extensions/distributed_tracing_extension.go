@@ -1,6 +1,7 @@
 package extensions
 
 import (
+	"context"
 	"reflect"
 	"strings"
 
@@ -111,4 +112,22 @@ func (d DistributedTracingExtension) ToSpanContext() (trace.SpanContext, error) 
 	}
 
 	return sc, nil
+}
+
+func (d DistributedTracingExtension) StartChildSpan(ctx context.Context, name string, opts ...trace.StartOption) (context.Context, *trace.Span) {
+	if sc, err := d.ToSpanContext(); err == nil {
+		tSpan := trace.FromContext(ctx)
+		ctx, span := trace.StartSpanWithRemoteParent(ctx, name, sc, opts...)
+		if tSpan != nil {
+			// Add link to the previous in-process trace.
+			tsc := tSpan.SpanContext()
+			span.AddLink(trace.Link{
+				TraceID: tsc.TraceID,
+				SpanID:  tsc.SpanID,
+				Type:    trace.LinkTypeParent,
+			})
+		}
+		return ctx, span
+	}
+	return ctx, nil
 }

@@ -62,6 +62,7 @@ func ClientLoopback(t *testing.T, tc TapTest, topts ...cehttp.Option) {
 	ce, err := cloudevents.NewClient(
 		transport,
 		cloudevents.WithEventDefaulter(AlwaysThen(tc.now)),
+		cloudevents.WithoutTracePropagation(),
 	)
 	if err != nil {
 		t.Fatal(err)

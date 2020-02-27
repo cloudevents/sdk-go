@@ -3,7 +3,6 @@ package client_test
 import (
 	"bytes"
 	"context"
-	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -15,9 +14,9 @@ import (
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
 	cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/lightstep/tracecontext.go/traceparent"
 	"go.opencensus.io/trace"
 
 	"github.com/google/go-cmp/cmp"
@@ -44,6 +43,22 @@ func simpleBinaryClient(target string) client.Client {
 		return nil
 	}
 
+	c, err := client.New(t, client.WithoutTracePropagation())
+	if err != nil {
+		return nil
+	}
+	return c
+}
+
+func simpleTracingBinaryClient(target string) client.Client {
+	t, err := cehttp.New(
+		cehttp.WithTarget(target),
+		cehttp.WithBinaryEncoding(),
+	)
+	if err != nil {
+		return nil
+	}
+
 	c, err := client.New(t)
 	if err != nil {
 		return nil
@@ -60,7 +75,7 @@ func simpleStructuredClient(target string) client.Client {
 		return nil
 	}
 
-	c, err := client.New(t)
+	c, err := client.New(t, client.WithoutTracePropagation())
 	if err != nil {
 		return nil
 	}
@@ -280,15 +295,14 @@ func TestTracingClientSend(t *testing.T) {
 	now := time.Now()
 
 	testCases := map[string]struct {
-		c       func(target string) client.Client
-		event   cloudevents.Event
-		resp    *http.Response
-		want    *requestValidation
-		wantErr string
-		sample  bool
+		c        func(target string) client.Client
+		event    cloudevents.Event
+		resp     *http.Response
+		tpHeader string
+		sample   bool
 	}{
 		"send unsampled": {
-			c: simpleBinaryClient,
+			c: simpleTracingBinaryClient,
 			event: cloudevents.Event{
 				Context: cloudevents.EventContextV01{
 					EventType: "unit.test.client",
@@ -304,19 +318,10 @@ func TestTracingClientSend(t *testing.T) {
 			resp: &http.Response{
 				StatusCode: http.StatusAccepted,
 			},
-			want: &requestValidation{
-				Headers: map[string][]string{
-					"ce-specversion": {"1.0"},
-					"ce-id":          {"AABBCCDDEE"},
-					"ce-time":        {now.UTC().Format(time.RFC3339Nano)},
-					"ce-type":        {"unit.test.client"},
-					"ce-source":      {"/unit/test/client"},
-				},
-				Body: `{"msg":"hello","sq":42}`,
-			},
+			tpHeader: "ce-traceparent",
 		},
 		"send sampled": {
-			c: simpleBinaryClient,
+			c: simpleTracingBinaryClient,
 			event: cloudevents.Event{
 				Context: cloudevents.EventContextV01{
 					EventType: "unit.test.client",
@@ -332,17 +337,8 @@ func TestTracingClientSend(t *testing.T) {
 			resp: &http.Response{
 				StatusCode: http.StatusAccepted,
 			},
-			want: &requestValidation{
-				Headers: map[string][]string{
-					"ce-specversion": {"1.0"},
-					"ce-id":          {"AABBCCDDEE"},
-					"ce-time":        {now.UTC().Format(time.RFC3339Nano)},
-					"ce-type":        {"unit.test.client"},
-					"ce-source":      {"/unit/test/client"},
-				},
-				Body: `{"msg":"hello","sq":42}`,
-			},
-			sample: true,
+			sample:   true,
+			tpHeader: "ce-traceparent",
 		},
 	}
 	for n, tc := range testCases {
@@ -365,41 +361,31 @@ func TestTracingClientSend(t *testing.T) {
 			}
 			ctx, span := trace.StartSpan(context.TODO(), "test-span", trace.WithSampler(sampler))
 			sc := span.SpanContext()
-			want := requestValidation{
-				Host:    tc.want.Host,
-				Headers: tc.want.Headers.Clone(),
-				Body:    tc.want.Body,
-			}
-			tp := "00-" + hex.EncodeToString(sc.TraceID[:]) + "-" + hex.EncodeToString(sc.SpanID[:])
-			if tc.sample {
-				tp += "-01"
-			} else {
-				tp += "-00"
-			}
-			want.Headers.Add("ce-traceparent", tp)
 
 			_, _, err := c.Send(ctx, tc.event)
 			span.End()
 
-			if tc.wantErr != "" {
-				if err == nil {
-					t.Fatalf("failed to return expected error, got nil")
-				}
-				want := tc.wantErr
-				got := err.Error()
-				if !strings.Contains(got, want) {
-					t.Fatalf("failed to return expected error, got %q, want %q", err, want)
-				}
-				return
-			} else {
-				if err != nil {
-					t.Fatalf("failed to send event: %s", err)
-				}
+			if err != nil {
+				t.Fatalf("failed to send event: %s", err)
 			}
 
 			rv := handler.popRequest(t)
 
-			assertEquality(t, server.URL, want, rv)
+			var got traceparent.TraceParent
+			if tp := rv.Headers.Get(tc.tpHeader); tp == "" {
+				t.Fatal("missing traceparent header")
+			} else {
+				got, err = traceparent.ParseString(tp)
+				if err != nil {
+					t.Fatalf("invalid traceparent: %s", err)
+				}
+			}
+			if got.TraceID != sc.TraceID {
+				t.Errorf("unexpected trace id: want %s got %s", sc.TraceID, got.TraceID)
+			}
+			if got.Flags.Recorded != tc.sample {
+				t.Errorf("unexpected recorded flag: want %t got %t", tc.sample, got.Flags.Recorded)
+			}
 		})
 	}
 }
@@ -691,7 +677,6 @@ func TestClientReceive(t *testing.T) {
 
 func TestTracedClientReceive(t *testing.T) {
 	now := time.Now()
-	observability.EnableTracing(true)
 
 	testCases := map[string]struct {
 		optsFn func(port int, path string) []cehttp.Option
