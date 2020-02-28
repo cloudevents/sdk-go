@@ -90,6 +90,13 @@ type ceClient struct {
 // error.
 func (c *ceClient) Send(ctx context.Context, event cloudevents.Event) (context.Context, *cloudevents.Event, error) {
 	ctx, r := observability.NewReporter(ctx, reportSend)
+
+	ctx, span := trace.StartSpan(ctx, clientSpanName, trace.WithSpanKind(trace.SpanKindClient))
+	defer span.End()
+	if span.IsRecordingEvents() {
+		span.AddAttributes(eventTraceAttributes(event.Context)...)
+	}
+
 	rctx, resp, err := c.obsSend(ctx, event)
 	if err != nil {
 		r.Error()
@@ -130,17 +137,22 @@ func (c *ceClient) obsSend(ctx context.Context, event cloudevents.Event) (contex
 
 // Receive is called from from the transport on event delivery.
 func (c *ceClient) Receive(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error {
-	var r observability.Reporter
+	ctx, r := observability.NewReporter(ctx, reportReceive)
+
+	var span *trace.Span
 	if !c.transport.HasTracePropagation() {
 		if ext, ok := extensions.GetDistributedTracingExtension(event); ok {
-			if sc, err := ext.ToSpanContext(); err == nil {
-				ctx, r = observability.NewReporterWithRemoteParent(ctx, reportReceive, sc)
-			}
+			ctx, span = ext.StartChildSpan(ctx, clientSpanName, trace.WithSpanKind(trace.SpanKindServer))
 		}
 	}
-	if r == nil {
-		ctx, r = observability.NewReporter(ctx, reportReceive)
+	if span == nil {
+		ctx, span = trace.StartSpan(ctx, clientSpanName, trace.WithSpanKind(trace.SpanKindServer))
 	}
+	defer span.End()
+	if span.IsRecordingEvents() {
+		span.AddAttributes(eventTraceAttributes(event.Context)...)
+	}
+
 	err := c.obsReceive(ctx, event, resp)
 	if err != nil {
 		r.Error()

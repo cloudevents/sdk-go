@@ -1,9 +1,11 @@
 package client
 
 import (
+	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
+	"go.opencensus.io/trace"
 )
 
 var (
@@ -29,21 +31,17 @@ type observed int32
 var _ observability.Observable = observed(0)
 
 const (
+	clientSpanName = "cloudevents.client"
+
+	specversionAttr     = "cloudevents.specversion"
+	typeAttr            = "cloudevents.type"
+	sourceAttr          = "cloudevents.source"
+	subjectAttr         = "cloudevents.subject"
+	datacontenttypeAttr = "cloudevents.datacontenttype"
+
 	reportSend observed = iota
 	reportReceive
 )
-
-// TraceName implements Observable.TraceName
-func (o observed) TraceName() string {
-	switch o {
-	case reportSend:
-		return "client/send"
-	case reportReceive:
-		return "client/receive"
-	default:
-		return "client/unknown"
-	}
-}
 
 // MethodName implements Observable.MethodName
 func (o observed) MethodName() string {
@@ -60,4 +58,19 @@ func (o observed) MethodName() string {
 // LatencyMs implements Observable.LatencyMs
 func (o observed) LatencyMs() *stats.Float64Measure {
 	return LatencyMs
+}
+
+func eventTraceAttributes(e cloudevents.EventContextReader) []trace.Attribute {
+	as := []trace.Attribute{
+		trace.StringAttribute(specversionAttr, e.GetSpecVersion()),
+		trace.StringAttribute(typeAttr, e.GetType()),
+		trace.StringAttribute(sourceAttr, e.GetSource()),
+	}
+	if sub := e.GetSubject(); sub != "" {
+		as = append(as, trace.StringAttribute(subjectAttr, sub))
+	}
+	if dct := e.GetDataContentType(); dct != "" {
+		as = append(as, trace.StringAttribute(datacontenttypeAttr, dct))
+	}
+	return as
 }
