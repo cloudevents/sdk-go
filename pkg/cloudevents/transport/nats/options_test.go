@@ -1,6 +1,7 @@
 package nats
 
 import (
+	"github.com/cloudevents/sdk-go/pkg/binding"
 	"testing"
 	"time"
 
@@ -44,7 +45,8 @@ func TestWithEncoding(t *testing.T) {
 			got := tc.t
 
 			if diff := cmp.Diff(tc.want, got,
-				cmpopts.IgnoreUnexported(Transport{})); diff != "" {
+				cmpopts.IgnoreUnexported(Transport{}),
+				cmpopts.IgnoreUnexported(binding.BindingTransport{})); diff != "" {
 				t.Errorf("unexpected (-want, +got) = %v", diff)
 			}
 		})
