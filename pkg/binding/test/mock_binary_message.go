@@ -6,9 +6,9 @@ import (
 	"io"
 	"io/ioutil"
 
-	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 )
 
 // MockBinaryMessage implements a binary-mode message as a simple struct.

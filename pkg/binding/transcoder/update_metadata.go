@@ -1,9 +1,9 @@
 package transcoder
 
 import (
-	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 )
 
 // Update cloudevents attribute (if present) using the provided function during the encoding process

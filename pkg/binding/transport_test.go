@@ -6,9 +6,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/test"
+	cloudevents "github.com/cloudevents/sdk-go/pkg/cloudevents"
+	client "github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 )
 
 func TestTransportSend(t *testing.T) {
@@ -16,10 +17,10 @@ func TestTransportSend(t *testing.T) {
 	transport := binding.NewTransportAdapter(binding.ChanSender(messageChannel), binding.ChanReceiver(messageChannel), nil)
 	ev := test.MinEvent()
 
-	client, err := cloudevents.NewClient(transport)
+	c, err := client.New(transport)
 	require.NoError(t, err)
 
-	_, _, err = client.Send(context.Background(), ev)
+	_, _, err = c.Send(context.Background(), ev)
 	require.NoError(t, err)
 
 	result := <-messageChannel
@@ -33,13 +34,13 @@ func TestTransportReceive(t *testing.T) {
 	transport := binding.NewTransportAdapter(binding.ChanSender(messageChannel), binding.ChanReceiver(messageChannel), nil)
 	ev := test.MinEvent()
 
-	client, err := cloudevents.NewClient(transport)
+	c, err := client.New(transport)
 	require.NoError(t, err)
 
 	messageChannel <- binding.EventMessage(ev)
 
 	go func() {
-		err = client.StartReceiver(context.Background(), func(event cloudevents.Event) {
+		err = c.StartReceiver(context.Background(), func(event cloudevents.Event) {
 			eventReceivedChannel <- event
 		})
 		require.NoError(t, err)

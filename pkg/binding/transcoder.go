@@ -1,6 +1,6 @@
 package binding
 
-import ce "github.com/cloudevents/sdk-go"
+import ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 
 // Implements a transformation process while transferring the event from the Message implementation
 // to the provided encoder

@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"context"
 
-	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
+	cloudevents "github.com/cloudevents/sdk-go/pkg/cloudevents"
 )
 
 // EventMessage type-converts a cloudevents.Event object to implement Message.
