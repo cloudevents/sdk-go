@@ -50,8 +50,19 @@ support the following:
 ## Interaction Models
 
 - Sender, when a Producer is creating new events.
+
+![sender](./images/sender.png "Sender")
+
 - Receiver, when a Consumer is accepting events.
+
+![receiver](./images/receiver.png "Receiver")
+
 - Forwarder, when a Intermediary accepts an event only after it has successfully
   continued the message to one or more Consumers.
+
+![forwarder](./images/forwarder.png "Forwarder")
+
 - Mutator, when a Producer or Intermediary blocks on a response from a Consumer,
   replacing the original Event.
+
+![mutator](./images/mutator.png "Mutator")
