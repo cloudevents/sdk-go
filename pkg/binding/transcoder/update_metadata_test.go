@@ -21,81 +21,81 @@ func TestUpdateAttribute(t *testing.T) {
 	subjectUpdateFunc := func(v interface{}) (interface{}, error) {
 		return strings.ToUpper(v.(string)), nil
 	}
-	updatedSubjectEvent := copyEventContext(withSubjectEvent)
+	updatedSubjectEvent := test.CopyEventContext(withSubjectEvent)
 	require.NoError(t, updatedSubjectEvent.Context.SetSubject(strings.ToUpper("abc")))
 
 	location, err := time.LoadLocation("UTC")
 	require.NoError(t, err)
 	timestamp := time.Now().In(location)
-	withTimeEvent := copyEventContext(withSubjectEvent)
+	withTimeEvent := test.CopyEventContext(withSubjectEvent)
 	require.NoError(t, withTimeEvent.Context.SetTime(timestamp))
 
 	timeUpdateFunc := func(v interface{}) (interface{}, error) {
 		return v.(time.Time).Add(3 * time.Hour), nil
 	}
-	updatedTimeEvent := copyEventContext(withTimeEvent)
+	updatedTimeEvent := test.CopyEventContext(withTimeEvent)
 	require.NoError(t, updatedTimeEvent.Context.SetTime(timestamp.Add(3*time.Hour)))
 
 	RunTranscoderTests(t, context.Background(), []TranscoderTestArgs{
 		{
 			name:         "Update subject in Mock Structured message",
-			inputMessage: test.NewMockStructuredMessage(copyEventContext(withSubjectEvent)),
-			wantEvent:    copyEventContext(updatedSubjectEvent),
-			transformer:  UpdateAttribute(spec.Subject, subjectUpdateFunc),
+			inputMessage: test.NewMockStructuredMessage(test.CopyEventContext(withSubjectEvent)),
+			wantEvent:    test.CopyEventContext(updatedSubjectEvent),
+			transformer:  binding.TransformerFactories{UpdateAttribute(spec.Subject, subjectUpdateFunc)},
 		},
 		{
 			name:         "Update subject in Mock Binary message",
-			inputMessage: test.NewMockBinaryMessage(copyEventContext(withSubjectEvent)),
-			wantEvent:    copyEventContext(updatedSubjectEvent),
-			transformer:  UpdateAttribute(spec.Subject, subjectUpdateFunc),
+			inputMessage: test.NewMockBinaryMessage(test.CopyEventContext(withSubjectEvent)),
+			wantEvent:    test.CopyEventContext(updatedSubjectEvent),
+			transformer:  binding.TransformerFactories{UpdateAttribute(spec.Subject, subjectUpdateFunc)},
 		},
 		{
 			name:         "Update subject in Event message",
-			inputMessage: binding.EventMessage(copyEventContext(withSubjectEvent)),
-			wantEvent:    copyEventContext(updatedSubjectEvent),
-			transformer:  UpdateAttribute(spec.Subject, subjectUpdateFunc),
+			inputMessage: binding.EventMessage(test.CopyEventContext(withSubjectEvent)),
+			wantEvent:    test.CopyEventContext(updatedSubjectEvent),
+			transformer:  binding.TransformerFactories{UpdateAttribute(spec.Subject, subjectUpdateFunc)},
 		},
 		{
 			name:         "Update time in Mock Structured message",
-			inputMessage: test.NewMockStructuredMessage(copyEventContext(withTimeEvent)),
-			wantEvent:    copyEventContext(updatedTimeEvent),
-			transformer:  UpdateAttribute(spec.Time, timeUpdateFunc),
+			inputMessage: test.NewMockStructuredMessage(test.CopyEventContext(withTimeEvent)),
+			wantEvent:    test.CopyEventContext(updatedTimeEvent),
+			transformer:  binding.TransformerFactories{UpdateAttribute(spec.Time, timeUpdateFunc)},
 		},
 		{
 			name:         "Update time in Mock Binary message",
-			inputMessage: test.NewMockBinaryMessage(copyEventContext(withTimeEvent)),
-			wantEvent:    copyEventContext(updatedTimeEvent),
-			transformer:  UpdateAttribute(spec.Time, timeUpdateFunc),
+			inputMessage: test.NewMockBinaryMessage(test.CopyEventContext(withTimeEvent)),
+			wantEvent:    test.CopyEventContext(updatedTimeEvent),
+			transformer:  binding.TransformerFactories{UpdateAttribute(spec.Time, timeUpdateFunc)},
 		},
 		{
 			name:         "Update time in Event message",
-			inputMessage: binding.EventMessage(copyEventContext(withTimeEvent)),
-			wantEvent:    copyEventContext(updatedTimeEvent),
-			transformer:  UpdateAttribute(spec.Time, timeUpdateFunc),
+			inputMessage: binding.EventMessage(test.CopyEventContext(withTimeEvent)),
+			wantEvent:    test.CopyEventContext(updatedTimeEvent),
+			transformer:  binding.TransformerFactories{UpdateAttribute(spec.Time, timeUpdateFunc)},
 		},
 		{
 			name:         "Do nothing with Mock Structured message",
-			inputMessage: test.NewMockStructuredMessage(copyEventContext(withSubjectEvent)),
-			wantEvent:    copyEventContext(withSubjectEvent),
-			transformer: UpdateAttribute(spec.DataContentType, func(i interface{}) (interface{}, error) {
+			inputMessage: test.NewMockStructuredMessage(test.CopyEventContext(withSubjectEvent)),
+			wantEvent:    test.CopyEventContext(withSubjectEvent),
+			transformer: binding.TransformerFactories{UpdateAttribute(spec.DataContentType, func(i interface{}) (interface{}, error) {
 				return "text/plain", nil
-			}),
+			})},
 		},
 		{
 			name:         "Do nothing with Mock Binary message",
-			inputMessage: test.NewMockBinaryMessage(copyEventContext(withSubjectEvent)),
-			wantEvent:    copyEventContext(withSubjectEvent),
-			transformer: UpdateAttribute(spec.DataContentType, func(i interface{}) (interface{}, error) {
+			inputMessage: test.NewMockBinaryMessage(test.CopyEventContext(withSubjectEvent)),
+			wantEvent:    test.CopyEventContext(withSubjectEvent),
+			transformer: binding.TransformerFactories{UpdateAttribute(spec.DataContentType, func(i interface{}) (interface{}, error) {
 				return "text/plain", nil
-			}),
+			})},
 		},
 		{
 			name:         "Do nothing with Event message",
-			inputMessage: binding.EventMessage(copyEventContext(withSubjectEvent)),
-			wantEvent:    copyEventContext(withSubjectEvent),
-			transformer: UpdateAttribute(spec.DataContentType, func(i interface{}) (interface{}, error) {
+			inputMessage: binding.EventMessage(test.CopyEventContext(withSubjectEvent)),
+			wantEvent:    test.CopyEventContext(withSubjectEvent),
+			transformer: binding.TransformerFactories{UpdateAttribute(spec.DataContentType, func(i interface{}) (interface{}, error) {
 				return "text/plain", nil
-			}),
+			})},
 		},
 	})
 }
@@ -108,45 +108,45 @@ func TestUpdateExtension(t *testing.T) {
 	updateFunc := func(v interface{}) (interface{}, error) {
 		return strings.ToUpper(v.(string)), nil
 	}
-	updatedExtensionEvent := copyEventContext(e)
+	updatedExtensionEvent := test.CopyEventContext(e)
 	require.NoError(t, updatedExtensionEvent.Context.SetExtension("aaa", strings.ToUpper("bbb")))
 
 	RunTranscoderTests(t, context.Background(), []TranscoderTestArgs{
 		{
 			name:         "No change in Mock Structured message",
-			inputMessage: test.NewMockStructuredMessage(copyEventContext(e)),
-			wantEvent:    copyEventContext(e),
-			transformer:  UpdateExtension("ccc", updateFunc),
+			inputMessage: test.NewMockStructuredMessage(test.CopyEventContext(e)),
+			wantEvent:    test.CopyEventContext(e),
+			transformer:  binding.TransformerFactories{UpdateExtension("ccc", updateFunc)},
 		},
 		{
 			name:         "No change in Mock Binary message",
-			inputMessage: test.NewMockBinaryMessage(copyEventContext(e)),
-			wantEvent:    copyEventContext(e),
-			transformer:  UpdateExtension("ccc", updateFunc),
+			inputMessage: test.NewMockBinaryMessage(test.CopyEventContext(e)),
+			wantEvent:    test.CopyEventContext(e),
+			transformer:  binding.TransformerFactories{UpdateExtension("ccc", updateFunc)},
 		},
 		{
 			name:         "No change in Event message",
-			inputMessage: binding.EventMessage(copyEventContext(e)),
-			wantEvent:    copyEventContext(e),
-			transformer:  UpdateExtension("ccc", updateFunc),
+			inputMessage: binding.EventMessage(test.CopyEventContext(e)),
+			wantEvent:    test.CopyEventContext(e),
+			transformer:  binding.TransformerFactories{UpdateExtension("ccc", updateFunc)},
 		},
 		{
 			name:         "Update extension 'aaa' in Mock Structured message",
-			inputMessage: test.NewMockStructuredMessage(copyEventContext(e)),
-			wantEvent:    copyEventContext(updatedExtensionEvent),
-			transformer:  UpdateExtension("aaa", updateFunc),
+			inputMessage: test.NewMockStructuredMessage(test.CopyEventContext(e)),
+			wantEvent:    test.CopyEventContext(updatedExtensionEvent),
+			transformer:  binding.TransformerFactories{UpdateExtension("aaa", updateFunc)},
 		},
 		{
 			name:         "Update extension 'aaa' in Mock Binary message",
-			inputMessage: test.NewMockBinaryMessage(copyEventContext(e)),
-			wantEvent:    copyEventContext(updatedExtensionEvent),
-			transformer:  UpdateExtension("aaa", updateFunc),
+			inputMessage: test.NewMockBinaryMessage(test.CopyEventContext(e)),
+			wantEvent:    test.CopyEventContext(updatedExtensionEvent),
+			transformer:  binding.TransformerFactories{UpdateExtension("aaa", updateFunc)},
 		},
 		{
 			name:         "Update extension 'aaa' in Event message",
-			inputMessage: binding.EventMessage(copyEventContext(e)),
-			wantEvent:    copyEventContext(updatedExtensionEvent),
-			transformer:  UpdateExtension("aaa", updateFunc),
+			inputMessage: binding.EventMessage(test.CopyEventContext(e)),
+			wantEvent:    test.CopyEventContext(updatedExtensionEvent),
+			transformer:  binding.TransformerFactories{UpdateExtension("aaa", updateFunc)},
 		},
 	})
 }

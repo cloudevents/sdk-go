@@ -16,14 +16,14 @@ type TranscoderTestArgs struct {
 	name         string
 	inputMessage binding.Message
 	wantEvent    cloudevents.Event
-	transformer  binding.TransformerFactory
+	transformer  binding.TransformerFactories
 }
 
 func RunTranscoderTests(t *testing.T, ctx context.Context, tests []TranscoderTestArgs) {
 	for _, tt := range tests {
 		tt := tt // Don't use range variable inside scope
 		t.Run(tt.name, func(t *testing.T) {
-			copied, err := buffering.CopyMessage(ctx, tt.inputMessage, tt.transformer)
+			copied, err := buffering.CopyMessage(ctx, tt.inputMessage, tt.transformer...)
 			require.NoError(t, err)
 			e, _, err := binding.ToEvent(ctx, copied)
 			require.NoError(t, err)

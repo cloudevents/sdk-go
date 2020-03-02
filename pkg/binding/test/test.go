@@ -142,3 +142,12 @@ func MustToEvent(ctx context.Context, m binding.Message) (e ce.Event, encoding b
 	}
 	return
 }
+
+func CopyEventContext(e ce.Event) ce.Event {
+	newE := ce.Event{}
+	newE.Context = e.Context.Clone()
+	newE.DataEncoded = e.DataEncoded
+	newE.Data = e.Data
+	newE.DataBinary = e.DataBinary
+	return newE
+}
