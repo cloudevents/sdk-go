@@ -35,22 +35,22 @@ func TestVersionTranscoder(t *testing.T) {
 
 	test.RunTranscoderTests(t, context.Background(), []test.TranscoderTestArgs{
 		{
-			name:         "V02 -> V1 with Mock Structured message",
-			inputMessage: test.NewMockStructuredMessage(test.CopyEventContext(testEventV02)),
-			wantEvent:    test.CopyEventContext(testEventV1),
-			transformer:  binding.TransformerFactories{Version(spec.V1)},
+			Name:         "V02 -> V1 with Mock Structured message",
+			InputMessage: test.NewMockStructuredMessage(test.CopyEventContext(testEventV02)),
+			WantEvent:    test.CopyEventContext(testEventV1),
+			Transformers: binding.TransformerFactories{Version(spec.V1)},
 		},
 		{
-			name:         "V02 -> V1 with Mock Binary message",
-			inputMessage: test.NewMockBinaryMessage(test.CopyEventContext(testEventV02)),
-			wantEvent:    test.CopyEventContext(testEventV1),
-			transformer:  binding.TransformerFactories{Version(spec.V1)},
+			Name:         "V02 -> V1 with Mock Binary message",
+			InputMessage: test.NewMockBinaryMessage(test.CopyEventContext(testEventV02)),
+			WantEvent:    test.CopyEventContext(testEventV1),
+			Transformers: binding.TransformerFactories{Version(spec.V1)},
 		},
 		{
-			name:         "V02 -> V1 with Event message",
-			inputMessage: binding.EventMessage(test.CopyEventContext(testEventV02)),
-			wantEvent:    test.CopyEventContext(testEventV1),
-			transformer:  binding.TransformerFactories{Version(spec.V1)},
+			Name:         "V02 -> V1 with Event message",
+			InputMessage: binding.EventMessage(test.CopyEventContext(testEventV02)),
+			WantEvent:    test.CopyEventContext(testEventV1),
+			Transformers: binding.TransformerFactories{Version(spec.V1)},
 		},
 	})
 }
