@@ -10,6 +10,20 @@
 
 This SDK is still considered work in progress.
 
+**With v1.1.0:**
+
+[Master](https://github.com/cloudevents/sdk-go/tree/master) will now be the base
+of the effort for v2.0.0 of this SDK and will contain breaking changes or
+missing libraries.
+
+Future work on v1.X.Y releases will branch off of
+[release-1.y.z](https://github.com/cloudevents/sdk-go/tree/release-1.y.z). To
+add a bugfix to a v1.X.Y release, please make a PR to that branch and we can do
+releases as needed on the v1 SDK. No date for EOL on v1 support yet, that will
+be determined by the progress on v2.
+
+The CloudEvents golang team is working hard to bring you v2.0.0 of the SDK.
+
 **With v1.0.0:**
 
 The API that exists under [`pkg/cloudevents`](./pkg/cloudevents) will follow
