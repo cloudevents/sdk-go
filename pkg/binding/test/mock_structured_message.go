@@ -3,6 +3,8 @@ package test
 import (
 	"bytes"
 	"context"
+	"io"
+	"io/ioutil"
 
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
@@ -15,7 +17,13 @@ type MockStructuredMessage struct {
 	Bytes  []byte
 }
 
-func (s *MockStructuredMessage) GetParent() binding.Message {
+func (s *MockStructuredMessage) SetStructuredEvent(ctx context.Context, format format.Format, event io.Reader) (err error) {
+	s.Format = format
+	s.Bytes, err = ioutil.ReadAll(event)
+	if err != nil {
+		return
+	}
+
 	return nil
 }
 
@@ -45,3 +53,4 @@ func (bm *MockStructuredMessage) Encoding() binding.Encoding {
 func (s *MockStructuredMessage) Finish(error) error { return nil }
 
 var _ binding.Message = (*MockStructuredMessage)(nil) // Test it conforms to the interface
+var _ binding.StructuredEncoder = (*MockStructuredMessage)(nil)

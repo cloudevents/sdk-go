@@ -8,7 +8,6 @@ import (
 
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/binding/buffering"
 )
 
 type TranscoderTestArgs struct {
@@ -22,9 +21,23 @@ func RunTranscoderTests(t *testing.T, ctx context.Context, tests []TranscoderTes
 	for _, tt := range tests {
 		tt := tt // Don't use range variable inside scope
 		t.Run(tt.Name, func(t *testing.T) {
-			copied, err := buffering.CopyMessage(ctx, tt.InputMessage, tt.Transformers...)
+
+			mockStructured := MockStructuredMessage{}
+			mockBinary := MockBinaryMessage{}
+
+			enc, err := binding.Encode(ctx, tt.InputMessage, &mockStructured, &mockBinary, tt.Transformers)
 			require.NoError(t, err)
-			e, _, err := binding.ToEvent(ctx, copied)
+
+			var e cloudevents.Event
+			if enc == binding.EncodingStructured {
+				e, _, err = binding.ToEvent(ctx, &mockStructured)
+				require.NoError(t, err)
+			} else if enc == binding.EncodingBinary {
+				e, _, err = binding.ToEvent(ctx, &mockBinary)
+				require.NoError(t, err)
+			} else {
+				t.Fatalf("Unexpected encoding %v", enc)
+			}
 			require.NoError(t, err)
 			AssertEventEquals(t, tt.WantEvent, e)
 		})
