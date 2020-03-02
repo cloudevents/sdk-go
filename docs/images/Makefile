@@ -1,6 +1,6 @@
 .PHONY: all
 
-all: $(patsubst %.dot,%.png,$(wildcard *.dot))
+all: $(patsubst %.dot,%.svg,$(wildcard *.dot))
 
-%.png: %.dot
-	dot -Tpng $< -o $@
+%.svg: %.dot
+	dot -Tsvg $< -o $@

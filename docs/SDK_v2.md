@@ -51,18 +51,18 @@ support the following:
 
 - Sender, when a Producer is creating new events.
 
-![sender](./images/sender.png "Sender")
+![sender](./images/sender.svg "Sender")
 
 - Receiver, when a Consumer is accepting events.
 
-![receiver](./images/receiver.png "Receiver")
+![receiver](./images/receiver.svg "Receiver")
 
 - Forwarder, when a Intermediary accepts an event only after it has successfully
   continued the message to one or more Consumers.
 
-![forwarder](./images/forwarder.png "Forwarder")
+![forwarder](./images/forwarder.svg "Forwarder")
 
 - Mutator, when a Producer or Intermediary blocks on a response from a Consumer,
   replacing the original Event.
 
-![mutator](./images/mutator.png "Mutator")
+![mutator](./images/mutator.svg "Mutator")
