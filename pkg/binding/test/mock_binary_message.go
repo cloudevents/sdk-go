@@ -3,6 +3,8 @@ package test
 import (
 	"bytes"
 	"context"
+	"io"
+	"io/ioutil"
 
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
@@ -14,6 +16,31 @@ type MockBinaryMessage struct {
 	Metadata   map[spec.Attribute]interface{}
 	Extensions map[string]interface{}
 	Body       []byte
+}
+
+func (bm *MockBinaryMessage) Start(ctx context.Context) error {
+	bm.Metadata = make(map[spec.Attribute]interface{})
+	bm.Extensions = make(map[string]interface{})
+	return nil
+}
+
+func (bm *MockBinaryMessage) SetAttribute(attribute spec.Attribute, value interface{}) error {
+	bm.Metadata[attribute] = value
+	return nil
+}
+
+func (bm *MockBinaryMessage) SetExtension(name string, value interface{}) error {
+	bm.Extensions[name] = value
+	return nil
+}
+
+func (bm *MockBinaryMessage) SetData(data io.Reader) (err error) {
+	bm.Body, err = ioutil.ReadAll(data)
+	return err
+}
+
+func (bm *MockBinaryMessage) End() error {
+	return nil
 }
 
 var versions = spec.New()
@@ -89,3 +116,4 @@ func (bm *MockBinaryMessage) Encoding() binding.Encoding {
 func (bm *MockBinaryMessage) Finish(error) error { return nil }
 
 var _ binding.Message = (*MockBinaryMessage)(nil) // Test it conforms to the interface
+var _ binding.BinaryEncoder = (*MockBinaryMessage)(nil)
