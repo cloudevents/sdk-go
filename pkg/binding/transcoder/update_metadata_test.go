@@ -18,11 +18,11 @@ func TestUpdateAttribute(t *testing.T) {
 	withSubjectEvent.Context = withSubjectEvent.Context.AsV1()
 	require.NoError(t, withSubjectEvent.Context.SetSubject("abc"))
 
-	subjectUpdateFunc := func(v interface{}) interface{} {
-		return strings.ToUpper(v.(string))
+	subjectUpdateFunc := func(v interface{}) (interface{}, error) {
+		return strings.ToUpper(v.(string)), nil
 	}
 	updatedSubjectEvent := copyEventContext(withSubjectEvent)
-	require.NoError(t, updatedSubjectEvent.Context.SetSubject(subjectUpdateFunc("abc").(string)))
+	require.NoError(t, updatedSubjectEvent.Context.SetSubject(strings.ToUpper("abc")))
 
 	location, err := time.LoadLocation("UTC")
 	require.NoError(t, err)
@@ -30,11 +30,11 @@ func TestUpdateAttribute(t *testing.T) {
 	withTimeEvent := copyEventContext(withSubjectEvent)
 	require.NoError(t, withTimeEvent.Context.SetTime(timestamp))
 
-	timeUpdateFunc := func(v interface{}) interface{} {
-		return v.(time.Time).Add(3 * time.Hour)
+	timeUpdateFunc := func(v interface{}) (interface{}, error) {
+		return v.(time.Time).Add(3 * time.Hour), nil
 	}
 	updatedTimeEvent := copyEventContext(withTimeEvent)
-	require.NoError(t, updatedTimeEvent.Context.SetTime(timeUpdateFunc(timestamp).(time.Time)))
+	require.NoError(t, updatedTimeEvent.Context.SetTime(timestamp.Add(3*time.Hour)))
 
 	RunTranscoderTests(t, context.Background(), []TranscoderTestArgs{
 		{
@@ -77,24 +77,24 @@ func TestUpdateAttribute(t *testing.T) {
 			name:         "Do nothing with Mock Structured message",
 			inputMessage: test.NewMockStructuredMessage(copyEventContext(withSubjectEvent)),
 			wantEvent:    copyEventContext(withSubjectEvent),
-			transformer: UpdateAttribute(spec.DataContentType, func(i interface{}) interface{} {
-				return "text/plain"
+			transformer: UpdateAttribute(spec.DataContentType, func(i interface{}) (interface{}, error) {
+				return "text/plain", nil
 			}),
 		},
 		{
 			name:         "Do nothing with Mock Binary message",
 			inputMessage: test.NewMockBinaryMessage(copyEventContext(withSubjectEvent)),
 			wantEvent:    copyEventContext(withSubjectEvent),
-			transformer: UpdateAttribute(spec.DataContentType, func(i interface{}) interface{} {
-				return "text/plain"
+			transformer: UpdateAttribute(spec.DataContentType, func(i interface{}) (interface{}, error) {
+				return "text/plain", nil
 			}),
 		},
 		{
 			name:         "Do nothing with Event message",
 			inputMessage: binding.EventMessage(copyEventContext(withSubjectEvent)),
 			wantEvent:    copyEventContext(withSubjectEvent),
-			transformer: UpdateAttribute(spec.DataContentType, func(i interface{}) interface{} {
-				return "text/plain"
+			transformer: UpdateAttribute(spec.DataContentType, func(i interface{}) (interface{}, error) {
+				return "text/plain", nil
 			}),
 		},
 	})
@@ -105,11 +105,11 @@ func TestUpdateExtension(t *testing.T) {
 	e.Context = e.Context.AsV1()
 	require.NoError(t, e.Context.SetExtension("aaa", "bbb"))
 
-	updateFunc := func(v interface{}) interface{} {
-		return strings.ToUpper(v.(string))
+	updateFunc := func(v interface{}) (interface{}, error) {
+		return strings.ToUpper(v.(string)), nil
 	}
 	updatedExtensionEvent := copyEventContext(e)
-	require.NoError(t, updatedExtensionEvent.Context.SetExtension("aaa", updateFunc("bbb").(string)))
+	require.NoError(t, updatedExtensionEvent.Context.SetExtension("aaa", strings.ToUpper("bbb")))
 
 	RunTranscoderTests(t, context.Background(), []TranscoderTestArgs{
 		{

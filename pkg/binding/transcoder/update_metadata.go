@@ -7,18 +7,18 @@ import (
 )
 
 // Update cloudevents attribute (if present) using the provided function during the encoding process
-func UpdateAttribute(attributeKind spec.Kind, updater func(interface{}) interface{}) binding.TransformerFactory {
+func UpdateAttribute(attributeKind spec.Kind, updater func(interface{}) (interface{}, error)) binding.TransformerFactory {
 	return updateAttributeTranscoderFactory{attributeKind: attributeKind, updater: updater}
 }
 
 // Update cloudevents extension (if present) using the provided function during the encoding process
-func UpdateExtension(name string, updater func(interface{}) interface{}) binding.TransformerFactory {
+func UpdateExtension(name string, updater func(interface{}) (interface{}, error)) binding.TransformerFactory {
 	return updateExtensionTranscoderFactory{name: name, updater: updater}
 }
 
 type updateAttributeTranscoderFactory struct {
 	attributeKind spec.Kind
-	updater       func(interface{}) interface{}
+	updater       func(interface{}) (interface{}, error)
 }
 
 func (a updateAttributeTranscoderFactory) StructuredTransformer(binding.StructuredEncoder) binding.StructuredEncoder {
@@ -40,7 +40,10 @@ func (a updateAttributeTranscoderFactory) EventTransformer() binding.EventTransf
 			return err
 		}
 		if val := v.AttributeFromKind(a.attributeKind).Get(event.Context); val != nil {
-			newVal := a.updater(val)
+			newVal, err := a.updater(val)
+			if err != nil {
+				return err
+			}
 			if newVal == nil {
 				return v.AttributeFromKind(a.attributeKind).Delete(event.Context)
 			} else {
@@ -53,7 +56,7 @@ func (a updateAttributeTranscoderFactory) EventTransformer() binding.EventTransf
 
 type updateExtensionTranscoderFactory struct {
 	name    string
-	updater func(interface{}) interface{}
+	updater func(interface{}) (interface{}, error)
 }
 
 func (a updateExtensionTranscoderFactory) StructuredTransformer(binding.StructuredEncoder) binding.StructuredEncoder {
@@ -71,7 +74,10 @@ func (a updateExtensionTranscoderFactory) BinaryTransformer(encoder binding.Bina
 func (a updateExtensionTranscoderFactory) EventTransformer() binding.EventTransformer {
 	return func(event *cloudevents.Event) error {
 		if val, ok := event.Extensions()[a.name]; ok {
-			newVal := a.updater(val)
+			newVal, err := a.updater(val)
+			if err != nil {
+				return err
+			}
 			return event.Context.SetExtension(a.name, newVal)
 		}
 		return nil
@@ -81,12 +87,15 @@ func (a updateExtensionTranscoderFactory) EventTransformer() binding.EventTransf
 type updateAttributeTransformer struct {
 	binding.BinaryEncoder
 	attributeKind spec.Kind
-	updater       func(interface{}) interface{}
+	updater       func(interface{}) (interface{}, error)
 }
 
 func (b *updateAttributeTransformer) SetAttribute(attribute spec.Attribute, value interface{}) error {
 	if attribute.Kind() == b.attributeKind {
-		newVal := b.updater(value)
+		newVal, err := b.updater(value)
+		if err != nil {
+			return err
+		}
 		if newVal != nil {
 			return b.BinaryEncoder.SetAttribute(attribute, newVal)
 		}
@@ -98,12 +107,15 @@ func (b *updateAttributeTransformer) SetAttribute(attribute spec.Attribute, valu
 type updateExtensionTransformer struct {
 	binding.BinaryEncoder
 	name    string
-	updater func(interface{}) interface{}
+	updater func(interface{}) (interface{}, error)
 }
 
 func (b *updateExtensionTransformer) SetExtension(name string, value interface{}) error {
 	if name == b.name {
-		newVal := b.updater(value)
+		newVal, err := b.updater(value)
+		if err != nil {
+			return err
+		}
 		if newVal != nil {
 			return b.BinaryEncoder.SetExtension(name, newVal)
 		}
