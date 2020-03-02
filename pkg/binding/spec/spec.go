@@ -2,10 +2,10 @@ package spec
 
 import (
 	"fmt"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"strings"
 
-	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/cloudevents/sdk-go/pkg/types"
 )
 
 // Version provides meta-data for a single spec-version.
@@ -20,14 +20,14 @@ type Version interface {
 	// Attributes returns all the context attributes for this version.
 	Attributes() []Attribute
 	// NewContext returns a new context for this version.
-	NewContext() ce.EventContext
+	NewContext() event.EventContext
 	// Convert translates a context to this version.
-	Convert(ce.EventContextConverter) ce.EventContext
+	Convert(event.EventContextConverter) event.EventContext
 	// SetAttribute sets named attribute to value.
 	//
 	// Name is case insensitive.
 	// Does nothing if name does not start with prefix.
-	SetAttribute(context ce.EventContextWriter, name string, value interface{}) error
+	SetAttribute(context event.EventContextWriter, name string, value interface{}) error
 	// Attribute looks up the attribute from kind.
 	// Returns nil if not found.
 	AttributeFromKind(kind Kind) Attribute
@@ -85,8 +85,8 @@ func (a *attribute) Version() Version { return a.version }
 
 type version struct {
 	prefix  string
-	context ce.EventContext
-	convert func(ce.EventContextConverter) ce.EventContext
+	context event.EventContext
+	convert func(event.EventContextConverter) event.EventContext
 	attrMap map[string]Attribute
 	attrs   []Attribute
 }
@@ -95,16 +95,16 @@ func (v *version) Attribute(name string) Attribute { return v.attrMap[strings.To
 func (v *version) Attributes() []Attribute         { return v.attrs }
 func (v *version) String() string                  { return v.context.GetSpecVersion() }
 func (v *version) Prefix() string                  { return v.prefix }
-func (v *version) NewContext() ce.EventContext     { return v.context.Clone() }
+func (v *version) NewContext() event.EventContext  { return v.context.Clone() }
 
 // HasPrefix is a case-insensitive prefix check.
 func (v *version) HasPrefix(name string) bool {
 	return strings.HasPrefix(strings.ToLower(name), v.prefix)
 }
 
-func (v *version) Convert(c ce.EventContextConverter) ce.EventContext { return v.convert(c) }
+func (v *version) Convert(c event.EventContextConverter) event.EventContext { return v.convert(c) }
 
-func (v *version) SetAttribute(c ce.EventContextWriter, name string, value interface{}) error {
+func (v *version) SetAttribute(c event.EventContextWriter, name string, value interface{}) error {
 	if a := v.Attribute(name); a != nil { // Standard attribute
 		return a.Set(c, value)
 	}
@@ -130,8 +130,8 @@ func (v *version) AttributeFromKind(kind Kind) Attribute {
 
 func newVersion(
 	prefix string,
-	context ce.EventContext,
-	convert func(ce.EventContextConverter) ce.EventContext,
+	context event.EventContext,
+	convert func(event.EventContextConverter) event.EventContext,
 	attrs ...*attribute,
 ) *version {
 	v := &version{
@@ -162,8 +162,8 @@ func WithPrefix(prefix string) *Versions {
 			prefix + "cloudEventsVersion",
 		},
 		all: []Version{
-			newVersion(prefix, ce.EventContextV1{}.AsV1(),
-				func(c ce.EventContextConverter) ce.EventContext { return c.AsV1() },
+			newVersion(prefix, event.EventContextV1{}.AsV1(),
+				func(c event.EventContextConverter) event.EventContext { return c.AsV1() },
 				attr("id", ID),
 				attr("source", Source),
 				attr("specversion", SpecVersion),
@@ -173,8 +173,8 @@ func WithPrefix(prefix string) *Versions {
 				attr("subject", Subject),
 				attr("time", Time),
 			),
-			newVersion(prefix, ce.EventContextV03{}.AsV03(),
-				func(c ce.EventContextConverter) ce.EventContext { return c.AsV03() },
+			newVersion(prefix, event.EventContextV03{}.AsV03(),
+				func(c event.EventContextConverter) event.EventContext { return c.AsV03() },
 				attr("specversion", SpecVersion),
 				attr("type", Type),
 				attr("source", Source),
@@ -184,8 +184,8 @@ func WithPrefix(prefix string) *Versions {
 				attr("time", Time),
 				attr("datacontenttype", DataContentType),
 			),
-			newVersion(prefix, ce.EventContextV02{}.AsV02(),
-				func(c ce.EventContextConverter) ce.EventContext { return c.AsV02() },
+			newVersion(prefix, event.EventContextV02{}.AsV02(),
+				func(c event.EventContextConverter) event.EventContext { return c.AsV02() },
 				attr("specversion", SpecVersion),
 				attr("type", Type),
 				attr("source", Source),
@@ -194,8 +194,8 @@ func WithPrefix(prefix string) *Versions {
 				attr("time", Time),
 				attr("contenttype", DataContentType),
 			),
-			newVersion(prefix, ce.EventContextV01{}.AsV01(),
-				func(c ce.EventContextConverter) ce.EventContext { return c.AsV01() },
+			newVersion(prefix, event.EventContextV01{}.AsV01(),
+				func(c event.EventContextConverter) event.EventContext { return c.AsV01() },
 				attr("cloudEventsVersion", SpecVersion),
 				attr("eventType", Type),
 				attr("source", Source),

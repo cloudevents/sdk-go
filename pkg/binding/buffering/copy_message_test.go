@@ -3,6 +3,7 @@ package buffering
 import (
 	"context"
 	"fmt"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -10,14 +11,13 @@ import (
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/test"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 )
 
 type copyMessageTestCase struct {
 	name     string
 	encoding binding.Encoding
 	message  binding.Message
-	want     cloudevents.Event
+	want     event.Event
 }
 
 func TestCopyMessage(t *testing.T) {

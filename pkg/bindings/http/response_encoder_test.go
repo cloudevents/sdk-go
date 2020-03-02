@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -11,7 +12,6 @@ import (
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/test"
-	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 )
 
 func TestEncodeHttpResponse(t *testing.T) {
@@ -47,7 +47,7 @@ func TestEncodeHttpResponse(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		test.EachEvent(t, test.Events(), func(t *testing.T, eventIn ce.Event) {
+		test.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
 			t.Run(tt.name, func(t *testing.T) {
 				res := &http.Response{
 					Header: make(http.Header),

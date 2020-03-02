@@ -74,7 +74,7 @@ See pkg/binding/doc.go for more details.
 
 
 [cloudevents.event]: ../pkg/cloudevents/event.go
-[cloudevents.types]: ../pkg/cloudevents/types/doc.go
+[cloudevents.types]: ../pkg/types/doc.go
 [transport.transport]: ../pkg/cloudevents/transport/transport.go
 [transport.message]: ../pkg/cloudevents/transport/message.go
 [transport.codec]: ../pkg/cloudevents/transport/codec.go

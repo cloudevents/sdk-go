@@ -10,7 +10,7 @@ import (
 
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/cloudevents/sdk-go/pkg/types"
 )
 
 func TestWithAcksBeforeFinish(t *testing.T) {

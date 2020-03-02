@@ -1,8 +1,8 @@
 package client
 
 import (
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/trace"
@@ -60,7 +60,7 @@ func (o observed) LatencyMs() *stats.Float64Measure {
 	return LatencyMs
 }
 
-func eventTraceAttributes(e cloudevents.EventContextReader) []trace.Attribute {
+func eventTraceAttributes(e event.EventContextReader) []trace.Attribute {
 	as := []trace.Attribute{
 		trace.StringAttribute(specversionAttr, e.GetSpecVersion()),
 		trace.StringAttribute(typeAttr, e.GetType()),

@@ -3,17 +3,17 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"log"
 	"net/url"
 	"os"
 	"time"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	cloudeventshttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 	cloudeventsnats "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/nats"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/cloudevents/sdk-go/pkg/types"
 	"github.com/kelseyhightower/envconfig"
 )
 
@@ -63,8 +63,8 @@ type Example struct {
 	Message  string `json:"message"`
 }
 
-func (d *Demo) Send() (context.Context, *cloudevents.Event, error) {
-	event := cloudevents.Event{
+func (d *Demo) Send() (context.Context, *event.Event, error) {
+	event := event.Event{
 		Context: d.context(),
 		Data: &Example{
 			Sequence: seq,
@@ -75,8 +75,8 @@ func (d *Demo) Send() (context.Context, *cloudevents.Event, error) {
 	return d.Client.Send(context.Background(), event)
 }
 
-func (d *Demo) context() cloudevents.EventContext {
-	ctx := cloudevents.EventContextV01{
+func (d *Demo) context() event.EventContext {
+	ctx := event.EventContextV01{
 		EventType:   d.EventType,
 		Source:      types.URLRef{URL: d.Source},
 		ContentType: &d.ContentType,

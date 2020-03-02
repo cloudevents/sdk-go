@@ -2,13 +2,13 @@ package http_test
 
 import (
 	"context"
+	event2 "github.com/cloudevents/sdk-go/pkg/event"
 	"net/url"
 	"testing"
 	"time"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/cloudevents/sdk-go/pkg/types"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -22,14 +22,14 @@ func TestCodecV01_Encode(t *testing.T) {
 
 	testCases := map[string]struct {
 		codec   http.CodecV01
-		event   cloudevents.Event
+		event   event2.Event
 		want    *http.Message
 		wantErr error
 	}{
 		"simple v0.1 default": {
 			codec: http.CodecV01{},
-			event: cloudevents.Event{
-				Context: cloudevents.EventContextV01{
+			event: event2.Event{
+				Context: event2.EventContextV01{
 					CloudEventsVersion: "TestIfDefaulted",
 					EventType:          "com.example.test",
 					Source:             *source,
@@ -47,14 +47,14 @@ func TestCodecV01_Encode(t *testing.T) {
 		},
 		"full v0.1 default": {
 			codec: http.CodecV01{},
-			event: cloudevents.Event{
-				Context: cloudevents.EventContextV01{
+			event: event2.Event{
+				Context: event2.EventContextV01{
 					EventID:          "ABC-123",
 					EventTime:        &now,
 					EventType:        "com.example.full",
 					EventTypeVersion: strptr("v1alpha1"),
 					SchemaURL:        schema,
-					ContentType:      cloudevents.StringOfApplicationJSON(),
+					ContentType:      event2.StringOfApplicationJSON(),
 					Source:           *source,
 					Extensions: map[string]interface{}{
 						"test": "extended",
@@ -81,8 +81,8 @@ func TestCodecV01_Encode(t *testing.T) {
 		},
 		"simple v0.1 binary": {
 			codec: http.CodecV01{DefaultEncoding: http.BinaryV01},
-			event: cloudevents.Event{
-				Context: &cloudevents.EventContextV01{
+			event: event2.Event{
+				Context: &event2.EventContextV01{
 					EventType: "com.example.test",
 					Source:    *source,
 					EventID:   "ABC-123",
@@ -99,14 +99,14 @@ func TestCodecV01_Encode(t *testing.T) {
 		},
 		"full v0.1 binary": {
 			codec: http.CodecV01{DefaultEncoding: http.BinaryV01},
-			event: cloudevents.Event{
-				Context: cloudevents.EventContextV01{
+			event: event2.Event{
+				Context: event2.EventContextV01{
 					EventID:          "ABC-123",
 					EventTime:        &now,
 					EventType:        "com.example.full",
 					EventTypeVersion: strptr("v1alpha1"),
 					SchemaURL:        schema,
-					ContentType:      cloudevents.StringOfApplicationJSON(),
+					ContentType:      event2.StringOfApplicationJSON(),
 					Source:           *source,
 					Extensions: map[string]interface{}{
 						"test": "extended",
@@ -133,8 +133,8 @@ func TestCodecV01_Encode(t *testing.T) {
 		},
 		"simple v0.1 structured": {
 			codec: http.CodecV01{DefaultEncoding: http.StructuredV01},
-			event: cloudevents.Event{
-				Context: cloudevents.EventContextV01{
+			event: event2.Event{
+				Context: event2.EventContextV01{
 					EventType: "com.example.test",
 					Source:    *source,
 					EventID:   "ABC-123",
@@ -157,14 +157,14 @@ func TestCodecV01_Encode(t *testing.T) {
 		},
 		"full v0.1 structured": {
 			codec: http.CodecV01{DefaultEncoding: http.StructuredV01},
-			event: cloudevents.Event{
-				Context: cloudevents.EventContextV01{
+			event: event2.Event{
+				Context: event2.EventContextV01{
 					EventID:          "ABC-123",
 					EventTime:        &now,
 					EventType:        "com.example.full",
 					EventTypeVersion: strptr("v1alpha1"),
 					SchemaURL:        schema,
-					ContentType:      cloudevents.StringOfApplicationJSON(),
+					ContentType:      event2.StringOfApplicationJSON(),
 					Source:           *source,
 					Extensions: map[string]interface{}{
 						"test": "extended",
@@ -240,7 +240,7 @@ func TestCodecV01_Decode(t *testing.T) {
 	testCases := map[string]struct {
 		codec   http.CodecV01
 		msg     *http.Message
-		want    *cloudevents.Event
+		want    *event2.Event
 		wantErr error
 	}{
 		"simple v0.1 binary": {
@@ -254,13 +254,13 @@ func TestCodecV01_Decode(t *testing.T) {
 					"Content-Type":          {"application/json"},
 				},
 			},
-			want: &cloudevents.Event{
-				Context: &cloudevents.EventContextV01{
-					CloudEventsVersion: cloudevents.CloudEventsVersionV01,
+			want: &event2.Event{
+				Context: &event2.EventContextV01{
+					CloudEventsVersion: event2.CloudEventsVersionV01,
 					EventType:          "com.example.test",
 					Source:             *source,
 					EventID:            "ABC-123",
-					ContentType:        cloudevents.StringOfApplicationJSON(),
+					ContentType:        event2.StringOfApplicationJSON(),
 				},
 			},
 		},
@@ -282,15 +282,15 @@ func TestCodecV01_Decode(t *testing.T) {
 					"hello": "world",
 				}),
 			},
-			want: &cloudevents.Event{
-				Context: &cloudevents.EventContextV01{
-					CloudEventsVersion: cloudevents.CloudEventsVersionV01,
+			want: &event2.Event{
+				Context: &event2.EventContextV01{
+					CloudEventsVersion: event2.CloudEventsVersionV01,
 					EventID:            "ABC-123",
 					EventTime:          &now,
 					EventType:          "com.example.full",
 					EventTypeVersion:   strptr("v1alpha1"),
 					SchemaURL:          schema,
-					ContentType:        cloudevents.StringOfApplicationJSON(),
+					ContentType:        event2.StringOfApplicationJSON(),
 					Source:             *source,
 					Extensions: map[string]interface{}{
 						"Test": "extended",
@@ -315,9 +315,9 @@ func TestCodecV01_Decode(t *testing.T) {
 					"source":             "http://example.com/source",
 				}),
 			},
-			want: &cloudevents.Event{
-				Context: &cloudevents.EventContextV01{
-					CloudEventsVersion: cloudevents.CloudEventsVersionV01,
+			want: &event2.Event{
+				Context: &event2.EventContextV01{
+					CloudEventsVersion: event2.CloudEventsVersionV01,
 					EventType:          "com.example.test",
 					Source:             *source,
 					EventID:            "ABC-123",
@@ -347,15 +347,15 @@ func TestCodecV01_Decode(t *testing.T) {
 					"source":    "http://example.com/source",
 				}),
 			},
-			want: &cloudevents.Event{
-				Context: &cloudevents.EventContextV01{
-					CloudEventsVersion: cloudevents.CloudEventsVersionV01,
+			want: &event2.Event{
+				Context: &event2.EventContextV01{
+					CloudEventsVersion: event2.CloudEventsVersionV01,
 					EventID:            "ABC-123",
 					EventTime:          &now,
 					EventType:          "com.example.full",
 					EventTypeVersion:   strptr("v1alpha1"),
 					SchemaURL:          schema,
-					ContentType:        cloudevents.StringOfApplicationJSON(),
+					ContentType:        event2.StringOfApplicationJSON(),
 					Source:             *source,
 					Extensions: map[string]interface{}{
 						"test": "extended",
@@ -379,13 +379,13 @@ func TestCodecV01_Decode(t *testing.T) {
 					"X":                     {"Notice how short the header's name is"},
 				},
 			},
-			want: &cloudevents.Event{
-				Context: &cloudevents.EventContextV01{
-					CloudEventsVersion: cloudevents.CloudEventsVersionV01,
+			want: &event2.Event{
+				Context: &event2.EventContextV01{
+					CloudEventsVersion: event2.CloudEventsVersionV01,
 					EventType:          "com.example.test",
 					Source:             *source,
 					EventID:            "ABC-123",
-					ContentType:        cloudevents.StringOfApplicationJSON(),
+					ContentType:        event2.StringOfApplicationJSON(),
 				},
 			},
 		},

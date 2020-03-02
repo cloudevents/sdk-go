@@ -3,17 +3,17 @@ package binding
 import (
 	"bytes"
 	"context"
+	"github.com/cloudevents/sdk-go/pkg/event"
 
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
-	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 )
 
 // EventMessage type-converts a cloudevents.Event object to implement Message.
 // This allows local cloudevents.Event objects to be sent directly via Sender.Send()
 //     s.Send(ctx, binding.EventMessage(e))
-type EventMessage ce.Event
+type EventMessage event.Event
 
 func (m EventMessage) GetParent() Message {
 	return nil
@@ -25,7 +25,7 @@ func (m EventMessage) Encoding() Encoding {
 
 func (m EventMessage) Structured(ctx context.Context, builder StructuredEncoder) error {
 	// TODO here only json is supported, should we support other message encodings?
-	b, err := format.JSON.Marshal(ce.Event(m))
+	b, err := format.JSON.Marshal(event.Event(m))
 	if err != nil {
 		return err
 	}
@@ -42,7 +42,7 @@ func (m EventMessage) Binary(ctx context.Context, b BinaryEncoder) (err error) {
 		return err
 	}
 	// Pass the body
-	body, err := (*ce.Event)(&m).DataBytes()
+	body, err := (*event.Event)(&m).DataBytes()
 	if err != nil {
 		return err
 	}
@@ -57,7 +57,7 @@ func (m EventMessage) Binary(ctx context.Context, b BinaryEncoder) (err error) {
 
 func (EventMessage) Finish(error) error { return nil }
 
-func (m *EventMessage) SetEvent(e ce.Event) error {
+func (m *EventMessage) SetEvent(e event.Event) error {
 	*m = EventMessage(e)
 	return nil
 }

@@ -4,6 +4,7 @@ package amqp_test
 
 import (
 	"context"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"net/url"
 	"os"
 	"testing"
@@ -12,10 +13,9 @@ import (
 
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
 	"github.com/cloudevents/sdk-go/pkg/binding/test"
-	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/amqp"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/cloudevents/sdk-go/pkg/types"
 )
 
 // Requires an external AMQP broker or router, skip if not available.
@@ -43,7 +43,7 @@ type tester struct {
 	got  chan interface{} // ce.Event or error
 }
 
-func (t *tester) Receive(_ context.Context, e ce.Event, _ *ce.EventResponse) error {
+func (t *tester) Receive(_ context.Context, e event.Event, _ *event.EventResponse) error {
 	t.got <- e
 	return nil
 }
@@ -72,7 +72,7 @@ func newTester(t *testing.T, sendOpts, recvOpts []amqp.Option) *tester {
 	return tester
 }
 
-func exurl(e ce.Event) ce.Event {
+func exurl(e event.Event) event.Event {
 	// Flatten exurl to string, AMQP doesn't preserve the URL type.
 	// It should preserve other attribute types.
 	if s, _ := types.Format(e.Extensions()["exurl"]); s != "" {
@@ -85,11 +85,11 @@ func TestSendReceive(t *testing.T) {
 	ctx := context.Background()
 	tester := newTester(t, nil, nil)
 	defer tester.Close()
-	test.EachEvent(t, test.Events(), func(t *testing.T, e ce.Event) {
+	test.EachEvent(t, test.Events(), func(t *testing.T, e event.Event) {
 		_, _, err := tester.s.Send(ctx, e)
 		require.NoError(t, err)
 		got := <-tester.got
-		test.AssertEventEquals(t, exurl(e), got.(ce.Event))
+		test.AssertEventEquals(t, exurl(e), got.(event.Event))
 	})
 }
 
@@ -99,11 +99,11 @@ func TestWithEncoding(t *testing.T) {
 	defer tester.Close()
 	// FIXME(alanconway) problem with JSON round-tripping extensions
 	events := test.NoExtensions(test.Events())
-	test.EachEvent(t, events, func(t *testing.T, e ce.Event) {
+	test.EachEvent(t, events, func(t *testing.T, e event.Event) {
 		_, _, err := tester.s.Send(ctx, e)
 		require.NoError(t, err)
 		got := <-tester.got
 		e.Context = spec.V03.Convert(e.Context)
-		test.AssertEventEquals(t, exurl(e), got.(ce.Event))
+		test.AssertEventEquals(t, exurl(e), got.(event.Event))
 	})
 }

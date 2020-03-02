@@ -2,15 +2,15 @@ package http
 
 import (
 	"context"
+	"github.com/cloudevents/sdk-go/pkg/event"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 )
 
 // Encoding to use for HTTP transport.
 type Encoding int32
 
-type EncodingSelector func(context.Context, cloudevents.Event) Encoding
+type EncodingSelector func(context.Context, event.Event) Encoding
 
 const (
 	// Default
@@ -52,7 +52,7 @@ const (
 	Batched = "batched"
 )
 
-func ContextBasedEncodingSelectionStrategy(ctx context.Context, e cloudevents.Event) Encoding {
+func ContextBasedEncodingSelectionStrategy(ctx context.Context, e event.Event) Encoding {
 	encoding := cecontext.EncodingFrom(ctx)
 	switch encoding {
 	case "", Binary:
@@ -65,15 +65,15 @@ func ContextBasedEncodingSelectionStrategy(ctx context.Context, e cloudevents.Ev
 
 // DefaultBinaryEncodingSelectionStrategy implements a selection process for
 // which binary encoding to use based on spec version of the event.
-func DefaultBinaryEncodingSelectionStrategy(ctx context.Context, e cloudevents.Event) Encoding {
+func DefaultBinaryEncodingSelectionStrategy(ctx context.Context, e event.Event) Encoding {
 	switch e.SpecVersion() {
-	case cloudevents.CloudEventsVersionV01:
+	case event.CloudEventsVersionV01:
 		return BinaryV01
-	case cloudevents.CloudEventsVersionV02:
+	case event.CloudEventsVersionV02:
 		return BinaryV02
-	case cloudevents.CloudEventsVersionV03:
+	case event.CloudEventsVersionV03:
 		return BinaryV03
-	case cloudevents.CloudEventsVersionV1:
+	case event.CloudEventsVersionV1:
 		return BinaryV1
 	}
 	// Unknown version, return Default.
@@ -82,15 +82,15 @@ func DefaultBinaryEncodingSelectionStrategy(ctx context.Context, e cloudevents.E
 
 // DefaultStructuredEncodingSelectionStrategy implements a selection process
 // for which structured encoding to use based on spec version of the event.
-func DefaultStructuredEncodingSelectionStrategy(ctx context.Context, e cloudevents.Event) Encoding {
+func DefaultStructuredEncodingSelectionStrategy(ctx context.Context, e event.Event) Encoding {
 	switch e.SpecVersion() {
-	case cloudevents.CloudEventsVersionV01:
+	case event.CloudEventsVersionV01:
 		return StructuredV01
-	case cloudevents.CloudEventsVersionV02:
+	case event.CloudEventsVersionV02:
 		return StructuredV02
-	case cloudevents.CloudEventsVersionV03:
+	case event.CloudEventsVersionV03:
 		return StructuredV03
-	case cloudevents.CloudEventsVersionV1:
+	case event.CloudEventsVersionV1:
 		return StructuredV1
 	}
 	// Unknown version, return Default.

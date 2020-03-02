@@ -3,10 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"log"
 	"os"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	cloudeventshttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 	cloudeventsnats "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/nats"
@@ -42,7 +42,7 @@ type Example struct {
 	Message  string `json:"message"`
 }
 
-func (r *Receiver) Receive(event cloudevents.Event) error {
+func (r *Receiver) Receive(event event.Event) error {
 	fmt.Printf("Got Event Context: %+v\n", event.Context)
 
 	data := &Example{}

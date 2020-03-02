@@ -3,15 +3,15 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"log"
 	"net/url"
 	"os"
 	"time"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	cloudeventsnats "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/nats"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/cloudevents/sdk-go/pkg/types"
 	"github.com/google/uuid"
 	"github.com/kelseyhightower/envconfig"
 )
@@ -52,8 +52,8 @@ type Example struct {
 	Message  string `json:"message"`
 }
 
-func (d *Demo) Send(eventContext cloudevents.EventContext, i int) (context.Context, *cloudevents.Event, error) {
-	event := cloudevents.Event{
+func (d *Demo) Send(eventContext event.EventContext, i int) (context.Context, *event.Event, error) {
+	event := event.Event{
 		Context: eventContext,
 		Data: &Example{
 			Sequence: i,
@@ -91,7 +91,7 @@ func _main(args []string, env envConfig) int {
 
 		for i := 0; i < count; i++ {
 			now := time.Now()
-			ctx := cloudevents.EventContextV01{
+			ctx := event.EventContextV01{
 				EventID:     uuid.New().String(),
 				EventType:   "com.cloudevents.sample.sent",
 				EventTime:   &types.Timestamp{Time: now},

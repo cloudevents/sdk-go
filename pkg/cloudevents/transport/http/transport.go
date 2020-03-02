@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	event2 "github.com/cloudevents/sdk-go/pkg/event"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -17,7 +18,6 @@ import (
 	"go.opencensus.io/plugin/ochttp/propagation/tracecontext"
 	"go.uber.org/zap"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
@@ -169,7 +169,7 @@ func copyHeadersEnsure(from http.Header, to *http.Header) {
 }
 
 // Send implements Transport.Send
-func (t *Transport) Send(ctx context.Context, event cloudevents.Event) (context.Context, *cloudevents.Event, error) {
+func (t *Transport) Send(ctx context.Context, event event2.Event) (context.Context, *event2.Event, error) {
 	ctx, r := observability.NewReporter(ctx, reportSend)
 	rctx, resp, err := t.obsSend(ctx, event)
 	if err != nil {
@@ -180,7 +180,7 @@ func (t *Transport) Send(ctx context.Context, event cloudevents.Event) (context.
 	return rctx, resp, err
 }
 
-func (t *Transport) obsSend(ctx context.Context, event cloudevents.Event) (context.Context, *cloudevents.Event, error) {
+func (t *Transport) obsSend(ctx context.Context, event event2.Event) (context.Context, *event2.Event, error) {
 	req := http.Request{
 		Header: HeaderFrom(ctx),
 	}
@@ -212,7 +212,7 @@ func (t *Transport) obsSend(ctx context.Context, event cloudevents.Event) (conte
 		if client == nil {
 			client = &http.Client{Transport: t.transport}
 		}
-		return httpDo(ctx, client, &req, func(resp *http.Response, err error) (context.Context, *cloudevents.Event, error) {
+		return httpDo(ctx, client, &req, func(resp *http.Response, err error) (context.Context, *event2.Event, error) {
 			rctx := WithTransportContext(ctx, NewTransportContextFromResponse(resp))
 			if err != nil {
 				return rctx, nil, err
@@ -251,9 +251,9 @@ func (t *Transport) obsSend(ctx context.Context, event cloudevents.Event) (conte
 	return WithTransportContext(ctx, NewTransportContextFromResponse(nil)), nil, fmt.Errorf("failed to encode Event into a Message")
 }
 
-func (t *Transport) MessageToEvent(ctx context.Context, msg *Message) (*cloudevents.Event, error) {
+func (t *Transport) MessageToEvent(ctx context.Context, msg *Message) (*event2.Event, error) {
 	logger := cecontext.LoggerFrom(ctx)
-	var event *cloudevents.Event
+	var event *event2.Event
 	var err error
 
 	if msg.CloudEventsVersion() != "" {
@@ -480,11 +480,11 @@ func formatSpanName(r *http.Request) string {
 
 type eventError struct {
 	ctx   context.Context
-	event *cloudevents.Event
+	event *event2.Event
 	err   error
 }
 
-func httpDo(ctx context.Context, client *http.Client, req *http.Request, fn func(*http.Response, error) (context.Context, *cloudevents.Event, error)) (context.Context, *cloudevents.Event, error) {
+func httpDo(ctx context.Context, client *http.Client, req *http.Request, fn func(*http.Response, error) (context.Context, *event2.Event, error)) (context.Context, *event2.Event, error) {
 	// Run the HTTP request in a goroutine and pass the response to fn.
 	c := make(chan eventError, 1)
 	req = req.WithContext(ctx)
@@ -509,7 +509,7 @@ func accepted(resp *http.Response) bool {
 	return false
 }
 
-func (t *Transport) invokeReceiver(ctx context.Context, event cloudevents.Event) (*Response, error) {
+func (t *Transport) invokeReceiver(ctx context.Context, event event2.Event) (*Response, error) {
 	ctx, r := observability.NewReporter(ctx, reportReceive)
 	resp, err := t.obsInvokeReceiver(ctx, event)
 	if err != nil {
@@ -520,11 +520,11 @@ func (t *Transport) invokeReceiver(ctx context.Context, event cloudevents.Event)
 	return resp, err
 }
 
-func (t *Transport) obsInvokeReceiver(ctx context.Context, event cloudevents.Event) (*Response, error) {
+func (t *Transport) obsInvokeReceiver(ctx context.Context, event event2.Event) (*Response, error) {
 	logger := cecontext.LoggerFrom(ctx)
 	if t.Receiver != nil {
 		// Note: http does not use eventResp.Reason
-		eventResp := cloudevents.EventResponse{}
+		eventResp := event2.EventResponse{}
 		resp := Response{}
 
 		err := t.Receiver.Receive(ctx, event, &eventResp)

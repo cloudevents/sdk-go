@@ -8,7 +8,7 @@ import (
 	"time"
 
 	cej "github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec/json"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/cloudevents/sdk-go/pkg/types"
 	"github.com/google/go-cmp/cmp"
 )
 

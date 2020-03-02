@@ -2,10 +2,10 @@ package client
 
 import (
 	"context"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"testing"
 	"time"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -14,7 +14,7 @@ var versions = []string{"0.1", "0.2", "0.3", "1.0"}
 func TestDefaultIDToUUIDIfNotSet_empty(t *testing.T) {
 	for _, tc := range versions {
 		t.Run(tc, func(t *testing.T) {
-			got := DefaultIDToUUIDIfNotSet(context.TODO(), cloudevents.New(tc))
+			got := DefaultIDToUUIDIfNotSet(context.TODO(), event.New(tc))
 
 			if got.Context != nil && got.ID() == "" {
 				t.Errorf("failed to generate an id for event")
@@ -26,7 +26,7 @@ func TestDefaultIDToUUIDIfNotSet_empty(t *testing.T) {
 func TestDefaultIDToUUIDIfNotSet_set(t *testing.T) {
 	for _, tc := range versions {
 		t.Run(tc, func(t *testing.T) {
-			event := cloudevents.New(tc)
+			event := event.New(tc)
 			event.SetID("abc-123")
 
 			got := DefaultIDToUUIDIfNotSet(context.TODO(), event)
@@ -39,7 +39,7 @@ func TestDefaultIDToUUIDIfNotSet_set(t *testing.T) {
 }
 
 func TestDefaultIDToUUIDIfNotSet_nil(t *testing.T) {
-	got := DefaultIDToUUIDIfNotSet(context.TODO(), cloudevents.Event{})
+	got := DefaultIDToUUIDIfNotSet(context.TODO(), event.Event{})
 
 	if got.Context != nil && got.ID() == "" {
 		t.Errorf("failed to generate time for nil context event")
@@ -47,8 +47,8 @@ func TestDefaultIDToUUIDIfNotSet_nil(t *testing.T) {
 }
 
 func TestDefaultIDToUUIDIfNotSetImmutable(t *testing.T) {
-	event := cloudevents.Event{
-		Context: &cloudevents.EventContextV01{},
+	event := event.Event{
+		Context: &event.EventContextV01{},
 	}
 
 	got := DefaultIDToUUIDIfNotSet(context.TODO(), event)
@@ -71,7 +71,7 @@ func TestDefaultIDToUUIDIfNotSetImmutable(t *testing.T) {
 func TestDefaultTimeToNowIfNotSet_empty(t *testing.T) {
 	for _, tc := range versions {
 		t.Run(tc, func(t *testing.T) {
-			got := DefaultTimeToNowIfNotSet(context.TODO(), cloudevents.New(tc))
+			got := DefaultTimeToNowIfNotSet(context.TODO(), event.New(tc))
 
 			if got.Time().IsZero() {
 				t.Errorf("failed to generate time for event")
@@ -83,7 +83,7 @@ func TestDefaultTimeToNowIfNotSet_empty(t *testing.T) {
 func TestDefaultTimeToNowIfNotSet_set(t *testing.T) {
 	for _, tc := range versions {
 		t.Run(tc, func(t *testing.T) {
-			event := cloudevents.New(tc)
+			event := event.New(tc)
 			now := time.Now()
 
 			event.SetTime(now)
@@ -98,7 +98,7 @@ func TestDefaultTimeToNowIfNotSet_set(t *testing.T) {
 }
 
 func TestDefaultTimeToNowIfNotSet_nil(t *testing.T) {
-	got := DefaultTimeToNowIfNotSet(context.TODO(), cloudevents.Event{})
+	got := DefaultTimeToNowIfNotSet(context.TODO(), event.Event{})
 
 	if got.Context != nil && got.Time().IsZero() {
 		t.Errorf("failed to generate time for nil context event")
@@ -106,8 +106,8 @@ func TestDefaultTimeToNowIfNotSet_nil(t *testing.T) {
 }
 
 func TestDefaultTimeToNowIfNotSetImmutable(t *testing.T) {
-	event := cloudevents.Event{
-		Context: &cloudevents.EventContextV01{},
+	event := event.Event{
+		Context: &event.EventContextV01{},
 	}
 
 	got := DefaultTimeToNowIfNotSet(context.TODO(), event)
@@ -132,7 +132,7 @@ func TestNewDefaultDataContentTypeIfNotSet_empty(t *testing.T) {
 	for _, tc := range versions {
 		t.Run(tc, func(t *testing.T) {
 			fn := NewDefaultDataContentTypeIfNotSet(ct)
-			got := fn(context.TODO(), cloudevents.New(tc))
+			got := fn(context.TODO(), event.New(tc))
 
 			if got.DataContentType() != ct {
 				t.Errorf("failed to default data content type for event")
@@ -145,7 +145,7 @@ func TestNewDefaultDataContentTypeIfNotSet_set(t *testing.T) {
 	ct := "a/b"
 	for _, tc := range versions {
 		t.Run(tc, func(t *testing.T) {
-			event := cloudevents.New(tc)
+			event := event.New(tc)
 			event.SetDataContentType(ct)
 
 			fn := NewDefaultDataContentTypeIfNotSet("b/c")

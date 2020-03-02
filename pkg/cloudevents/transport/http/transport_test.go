@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	event2 "github.com/cloudevents/sdk-go/pkg/event"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -13,9 +14,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/cloudevents/sdk-go/pkg/types"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -101,9 +101,9 @@ func TestStableConnectionsToSingleHost(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error creating CloudEvents client %v", err.Error())
 	}
-	event := cloudevents.Event{
-		Context: &cloudevents.EventContextV02{
-			SpecVersion: cloudevents.CloudEventsVersionV02,
+	event := event2.Event{
+		Context: &event2.EventContextV02{
+			SpecVersion: event2.CloudEventsVersionV02,
 			Type:        "test.event",
 			ID:          "abc-123",
 			Source:      *types.ParseURLRef("test"),

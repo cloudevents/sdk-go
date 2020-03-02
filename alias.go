@@ -4,12 +4,12 @@ package cloudevents
 // the number of imports for simple HTTP clients.
 
 import (
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/cloudevents/sdk-go/pkg/event"
+	"github.com/cloudevents/sdk-go/pkg/types"
 )
 
 // Client
@@ -20,16 +20,16 @@ type ConvertFn = client.ConvertFn
 
 // Event
 
-type Event = cloudevents.Event
-type EventResponse = cloudevents.EventResponse
+type Event = event.Event
+type EventResponse = event.EventResponse
 
 // Context
 
-type EventContext = cloudevents.EventContext
-type EventContextV1 = cloudevents.EventContextV1
-type EventContextV01 = cloudevents.EventContextV01
-type EventContextV02 = cloudevents.EventContextV02
-type EventContextV03 = cloudevents.EventContextV03
+type EventContext = event.EventContext
+type EventContextV1 = event.EventContextV1
+type EventContextV01 = event.EventContextV01
+type EventContextV02 = event.EventContextV02
+type EventContextV03 = event.EventContextV03
 
 // Custom Types
 
@@ -47,18 +47,18 @@ type HTTPEncoding = http.Encoding
 const (
 	// Encoding
 
-	ApplicationXML                  = cloudevents.ApplicationXML
-	ApplicationJSON                 = cloudevents.ApplicationJSON
-	ApplicationCloudEventsJSON      = cloudevents.ApplicationCloudEventsJSON
-	ApplicationCloudEventsBatchJSON = cloudevents.ApplicationCloudEventsBatchJSON
-	Base64                          = cloudevents.Base64
+	ApplicationXML                  = event.ApplicationXML
+	ApplicationJSON                 = event.ApplicationJSON
+	ApplicationCloudEventsJSON      = event.ApplicationCloudEventsJSON
+	ApplicationCloudEventsBatchJSON = event.ApplicationCloudEventsBatchJSON
+	Base64                          = event.Base64
 
 	// Event Versions
 
-	VersionV1  = cloudevents.CloudEventsVersionV1
-	VersionV01 = cloudevents.CloudEventsVersionV01
-	VersionV02 = cloudevents.CloudEventsVersionV02
-	VersionV03 = cloudevents.CloudEventsVersionV03
+	VersionV1  = event.CloudEventsVersionV1
+	VersionV01 = event.CloudEventsVersionV01
+	VersionV02 = event.CloudEventsVersionV02
+	VersionV03 = event.CloudEventsVersionV03
 
 	// HTTP Transport Encodings
 
@@ -82,11 +82,11 @@ const (
 var (
 	// ContentType Helpers
 
-	StringOfApplicationJSON                 = cloudevents.StringOfApplicationJSON
-	StringOfApplicationXML                  = cloudevents.StringOfApplicationXML
-	StringOfApplicationCloudEventsJSON      = cloudevents.StringOfApplicationCloudEventsJSON
-	StringOfApplicationCloudEventsBatchJSON = cloudevents.StringOfApplicationCloudEventsBatchJSON
-	StringOfBase64                          = cloudevents.StringOfBase64
+	StringOfApplicationJSON                 = event.StringOfApplicationJSON
+	StringOfApplicationXML                  = event.StringOfApplicationXML
+	StringOfApplicationCloudEventsJSON      = event.StringOfApplicationCloudEventsJSON
+	StringOfApplicationCloudEventsBatchJSON = event.StringOfApplicationCloudEventsBatchJSON
+	StringOfBase64                          = event.StringOfBase64
 
 	// Client Creation
 
@@ -104,7 +104,7 @@ var (
 
 	// Event Creation
 
-	NewEvent = cloudevents.New
+	NewEvent = event.New
 
 	// Tracing
 

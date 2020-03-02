@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"sync"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 )
@@ -49,7 +49,7 @@ func (c *Codec) loadCodec(encoding Encoding) (transport.Codec, error) {
 	return nil, fmt.Errorf("unknown encoding: %s", encoding)
 }
 
-func (c *Codec) Encode(ctx context.Context, e cloudevents.Event) (transport.Message, error) {
+func (c *Codec) Encode(ctx context.Context, e event.Event) (transport.Message, error) {
 	encoding := c.Encoding
 	if encoding == Default && c.DefaultEncodingSelectionFn != nil {
 		encoding = c.DefaultEncodingSelectionFn(ctx, e)
@@ -62,7 +62,7 @@ func (c *Codec) Encode(ctx context.Context, e cloudevents.Event) (transport.Mess
 	return codec.Encode(ctx, e)
 }
 
-func (c *Codec) Decode(ctx context.Context, msg transport.Message) (*cloudevents.Event, error) {
+func (c *Codec) Decode(ctx context.Context, msg transport.Message) (*event.Event, error) {
 	codec, err := c.loadCodec(c.inspectEncoding(ctx, msg))
 	if err != nil {
 		return nil, err
@@ -75,7 +75,7 @@ func (c *Codec) Decode(ctx context.Context, msg transport.Message) (*cloudevents
 }
 
 // Give the context back as the user expects
-func (c *Codec) convertEvent(event *cloudevents.Event) (*cloudevents.Event, error) {
+func (c *Codec) convertEvent(event *event.Event) (*event.Event, error) {
 	if event == nil {
 		return nil, errors.New("event is nil, can not convert")
 	}
