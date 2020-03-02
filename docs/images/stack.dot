@@ -1,0 +1,7 @@
+digraph {
+    rankdir=LR;
+
+    Client -> ProtocolBinding [label="[Event]"]
+    ProtocolBinding -> ProtocolBindingImpl [label="[Event, Message]"]
+    ProtocolBindingImpl -> Protocol [label="[Message]"]
+}

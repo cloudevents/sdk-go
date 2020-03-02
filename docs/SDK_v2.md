@@ -49,20 +49,31 @@ support the following:
 
 ## Interaction Models
 
-- Sender, when a Producer is creating new events.
+The SDK enables the following interaction models.
+
+### Sender
+
+Sender, when a Producer is creating new events.
 
 ![sender](./images/sender.svg "Sender")
 
-- Receiver, when a Consumer is accepting events.
+### Receiver
+
+Receiver, when a Consumer is accepting events.
 
 ![receiver](./images/receiver.svg "Receiver")
 
-- Forwarder, when a Intermediary accepts an event only after it has successfully
-  continued the message to one or more Consumers.
+### Forwarder
+
+Forwarder, when a Intermediary accepts an event only after it has successfully continued the message to one or more Consumers.
 
 ![forwarder](./images/forwarder.svg "Forwarder")
 
-- Mutator, when a Producer or Intermediary blocks on a response from a Consumer,
-  replacing the original Event.
+### Mutator
+
+Mutator, when a Producer or Intermediary blocks on a response from a Consumer, replacing the original Event.
 
 ![mutator](./images/mutator.svg "Mutator")
+
+
+
