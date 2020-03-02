@@ -33,7 +33,7 @@ func TestVersionTranscoder(t *testing.T) {
 	err = testEventV1.SetData(data)
 	require.NoError(t, err)
 
-	RunTranscoderTests(t, context.Background(), []TranscoderTestArgs{
+	test.RunTranscoderTests(t, context.Background(), []test.TranscoderTestArgs{
 		{
 			name:         "V02 -> V1 with Mock Structured message",
 			inputMessage: test.NewMockStructuredMessage(test.CopyEventContext(testEventV02)),

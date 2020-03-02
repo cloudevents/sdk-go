@@ -36,7 +36,7 @@ func TestUpdateAttribute(t *testing.T) {
 	updatedTimeEvent := test.CopyEventContext(withTimeEvent)
 	require.NoError(t, updatedTimeEvent.Context.SetTime(timestamp.Add(3*time.Hour)))
 
-	RunTranscoderTests(t, context.Background(), []TranscoderTestArgs{
+	test.RunTranscoderTests(t, context.Background(), []test.TranscoderTestArgs{
 		{
 			name:         "Update subject in Mock Structured message",
 			inputMessage: test.NewMockStructuredMessage(test.CopyEventContext(withSubjectEvent)),
@@ -111,7 +111,7 @@ func TestUpdateExtension(t *testing.T) {
 	updatedExtensionEvent := test.CopyEventContext(e)
 	require.NoError(t, updatedExtensionEvent.Context.SetExtension("aaa", strings.ToUpper("bbb")))
 
-	RunTranscoderTests(t, context.Background(), []TranscoderTestArgs{
+	test.RunTranscoderTests(t, context.Background(), []test.TranscoderTestArgs{
 		{
 			name:         "No change in Mock Structured message",
 			inputMessage: test.NewMockStructuredMessage(test.CopyEventContext(e)),

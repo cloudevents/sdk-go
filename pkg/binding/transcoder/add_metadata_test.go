@@ -26,7 +26,7 @@ func TestAddAttribute(t *testing.T) {
 	expectedEventWithTime := test.CopyEventContext(e)
 	require.NoError(t, expectedEventWithTime.Context.SetTime(timestamp))
 
-	RunTranscoderTests(t, context.Background(), []TranscoderTestArgs{
+	test.RunTranscoderTests(t, context.Background(), []test.TranscoderTestArgs{
 		{
 			name:         "No change to id to Mock Structured message",
 			inputMessage: test.NewMockStructuredMessage(test.CopyEventContext(e)),
@@ -93,7 +93,7 @@ func TestAddExtension(t *testing.T) {
 	expectedEventWithExtension := test.CopyEventContext(e)
 	require.NoError(t, expectedEventWithExtension.Context.SetExtension(extName, extValue))
 
-	RunTranscoderTests(t, context.Background(), []TranscoderTestArgs{
+	test.RunTranscoderTests(t, context.Background(), []test.TranscoderTestArgs{
 		{
 			name:         "No change to extension 'aaa' to Mock Structured message",
 			inputMessage: test.NewMockStructuredMessage(test.CopyEventContext(expectedEventWithExtension)),

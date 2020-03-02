@@ -1,4 +1,4 @@
-package transcoder
+package test
 
 import (
 	"context"
@@ -9,7 +9,6 @@ import (
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/buffering"
-	"github.com/cloudevents/sdk-go/pkg/binding/test"
 )
 
 type TranscoderTestArgs struct {
@@ -27,7 +26,7 @@ func RunTranscoderTests(t *testing.T, ctx context.Context, tests []TranscoderTes
 			require.NoError(t, err)
 			e, _, err := binding.ToEvent(ctx, copied)
 			require.NoError(t, err)
-			test.AssertEventEquals(t, tt.wantEvent, e)
+			AssertEventEquals(t, tt.wantEvent, e)
 		})
 	}
 }

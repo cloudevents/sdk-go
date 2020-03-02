@@ -23,7 +23,7 @@ func TestDeleteAttribute(t *testing.T) {
 	noSubjectEvent := test.CopyEventContext(withSubjectEvent)
 	require.NoError(t, noSubjectEvent.Context.SetSubject(""))
 
-	RunTranscoderTests(t, context.Background(), []TranscoderTestArgs{
+	test.RunTranscoderTests(t, context.Background(), []test.TranscoderTestArgs{
 		{
 			name:         "Remove subject from Mock Structured message",
 			inputMessage: test.NewMockStructuredMessage(test.CopyEventContext(withSubjectEvent)),
@@ -90,7 +90,7 @@ func TestDeleteExtension(t *testing.T) {
 	expectedEventWithExtension := test.CopyEventContext(e)
 	require.NoError(t, expectedEventWithExtension.Context.SetExtension(extName, extValue))
 
-	RunTranscoderTests(t, context.Background(), []TranscoderTestArgs{
+	test.RunTranscoderTests(t, context.Background(), []test.TranscoderTestArgs{
 		{
 			name:         "No change to Mock Structured message",
 			inputMessage: test.NewMockStructuredMessage(test.CopyEventContext(expectedEventWithExtension)),
