@@ -8,8 +8,8 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/cloudevents/sdk-go/pkg/event"
+	"github.com/cloudevents/sdk-go/pkg/types"
 )
 
 func TestValidateV1(t *testing.T) {
