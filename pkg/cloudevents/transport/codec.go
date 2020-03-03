@@ -3,15 +3,14 @@ package transport
 import (
 	"context"
 	"fmt"
-
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/event"
 )
 
 // Codec is the interface for transport codecs to convert between transport
 // specific payloads and the Message interface.
 type Codec interface {
-	Encode(context.Context, cloudevents.Event) (Message, error)
-	Decode(context.Context, Message) (*cloudevents.Event, error)
+	Encode(context.Context, event.Event) (Message, error)
+	Decode(context.Context, Message) (*event.Event, error)
 }
 
 // ErrMessageEncodingUnknown is an error produced when the encoding for an incoming

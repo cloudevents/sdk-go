@@ -2,14 +2,13 @@ package pubsub
 
 import (
 	"context"
-
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/event"
 )
 
 // Encoding to use for pubsub transport.
 type Encoding int32
 
-type EncodingSelector func(context.Context, cloudevents.Event) Encoding
+type EncodingSelector func(context.Context, event.Event) Encoding
 
 const (
 	// Default allows pubsub transport implementation to pick.
@@ -37,11 +36,11 @@ const (
 
 // DefaultBinaryEncodingSelectionStrategy implements a selection process for
 // which binary encoding to use based on spec version of the event.
-func DefaultBinaryEncodingSelectionStrategy(ctx context.Context, e cloudevents.Event) Encoding {
+func DefaultBinaryEncodingSelectionStrategy(ctx context.Context, e event.Event) Encoding {
 	switch e.SpecVersion() {
-	case cloudevents.CloudEventsVersionV01, cloudevents.CloudEventsVersionV02, cloudevents.CloudEventsVersionV03:
+	case event.CloudEventsVersionV01, event.CloudEventsVersionV02, event.CloudEventsVersionV03:
 		return BinaryV03
-	case cloudevents.CloudEventsVersionV1:
+	case event.CloudEventsVersionV1:
 		return BinaryV1
 	}
 	// Unknown version, return Default.
@@ -50,11 +49,11 @@ func DefaultBinaryEncodingSelectionStrategy(ctx context.Context, e cloudevents.E
 
 // DefaultStructuredEncodingSelectionStrategy implements a selection process
 // for which structured encoding to use based on spec version of the event.
-func DefaultStructuredEncodingSelectionStrategy(ctx context.Context, e cloudevents.Event) Encoding {
+func DefaultStructuredEncodingSelectionStrategy(ctx context.Context, e event.Event) Encoding {
 	switch e.SpecVersion() {
-	case cloudevents.CloudEventsVersionV01, cloudevents.CloudEventsVersionV02, cloudevents.CloudEventsVersionV03:
+	case event.CloudEventsVersionV01, event.CloudEventsVersionV02, event.CloudEventsVersionV03:
 		return StructuredV03
-	case cloudevents.CloudEventsVersionV1:
+	case event.CloudEventsVersionV1:
 		return StructuredV1
 	}
 	// Unknown version, return Default.

@@ -2,14 +2,13 @@ package transport
 
 import (
 	"context"
-
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/event"
 )
 
 // Transport is the interface for transport sender to send the converted Message
 // over the underlying transport.
 type Transport interface {
-	Send(context.Context, cloudevents.Event) (context.Context, *cloudevents.Event, error)
+	Send(context.Context, event.Event) (context.Context, *event.Event, error)
 
 	SetReceiver(Receiver)
 	StartReceiver(context.Context) error
@@ -29,14 +28,14 @@ type Transport interface {
 // Receiver is an interface to define how a transport will invoke a listener
 // of incoming events.
 type Receiver interface {
-	Receive(context.Context, cloudevents.Event, *cloudevents.EventResponse) error
+	Receive(context.Context, event.Event, *event.EventResponse) error
 }
 
 // ReceiveFunc wraps a function as a Receiver object.
-type ReceiveFunc func(ctx context.Context, e cloudevents.Event, er *cloudevents.EventResponse) error
+type ReceiveFunc func(ctx context.Context, e event.Event, er *event.EventResponse) error
 
 // Receive implements Receiver.Receive
-func (f ReceiveFunc) Receive(ctx context.Context, e cloudevents.Event, er *cloudevents.EventResponse) error {
+func (f ReceiveFunc) Receive(ctx context.Context, e event.Event, er *event.EventResponse) error {
 	return f(ctx, e, er)
 }
 
@@ -45,5 +44,5 @@ func (f ReceiveFunc) Receive(ctx context.Context, e cloudevents.Event, er *cloud
 // Converter allows incoming requests to be bridged to CloudEvents format if
 // they have not been sent as an event in CloudEvents format.
 type Converter interface {
-	Convert(context.Context, Message, error) (*cloudevents.Event, error)
+	Convert(context.Context, Message, error) (*event.Event, error)
 }

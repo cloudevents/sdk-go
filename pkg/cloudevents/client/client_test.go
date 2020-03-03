@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -12,10 +13,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/cloudevents/sdk-go/pkg/types"
 	"github.com/lightstep/tracecontext.go/traceparent"
 	"go.opencensus.io/trace"
 
@@ -87,15 +87,15 @@ func TestClientSend(t *testing.T) {
 
 	testCases := map[string]struct {
 		c       func(target string) client.Client
-		event   cloudevents.Event
+		event   event.Event
 		resp    *http.Response
 		want    *requestValidation
 		wantErr string
 	}{
 		"binary simple v0.1": {
 			c: simpleBinaryClient,
-			event: cloudevents.Event{
-				Context: cloudevents.EventContextV01{
+			event: event.Event{
+				Context: event.EventContextV01{
 					EventType: "unit.test.client",
 					Source:    *types.ParseURLRef("/unit/test/client"),
 					EventTime: &types.Timestamp{Time: now},
@@ -122,8 +122,8 @@ func TestClientSend(t *testing.T) {
 		},
 		"binary simple v0.2": {
 			c: simpleBinaryClient,
-			event: cloudevents.Event{
-				Context: cloudevents.EventContextV02{
+			event: event.Event{
+				Context: event.EventContextV02{
 					Type:   "unit.test.client",
 					Source: *types.ParseURLRef("/unit/test/client"),
 					Time:   &types.Timestamp{Time: now},
@@ -150,8 +150,8 @@ func TestClientSend(t *testing.T) {
 		},
 		"binary simple v0.3": {
 			c: simpleBinaryClient,
-			event: cloudevents.Event{
-				Context: cloudevents.EventContextV03{
+			event: event.Event{
+				Context: event.EventContextV03{
 					Type:   "unit.test.client",
 					Source: *types.ParseURLRef("/unit/test/client"),
 					Time:   &types.Timestamp{Time: now},
@@ -178,8 +178,8 @@ func TestClientSend(t *testing.T) {
 		},
 		"structured simple v0.1": {
 			c: simpleStructuredClient,
-			event: cloudevents.Event{
-				Context: cloudevents.EventContextV01{
+			event: event.Event{
+				Context: event.EventContextV01{
 					EventType: "unit.test.client",
 					Source:    *types.ParseURLRef("/unit/test/client"),
 					EventTime: &types.Timestamp{Time: now},
@@ -204,8 +204,8 @@ func TestClientSend(t *testing.T) {
 		},
 		"structured simple v0.2": {
 			c: simpleStructuredClient,
-			event: cloudevents.Event{
-				Context: cloudevents.EventContextV02{
+			event: event.Event{
+				Context: event.EventContextV02{
 					Type:   "unit.test.client",
 					Source: *types.ParseURLRef("/unit/test/client"),
 					Time:   &types.Timestamp{Time: now},
@@ -230,8 +230,8 @@ func TestClientSend(t *testing.T) {
 		},
 		"structured simple v0.3": {
 			c: simpleStructuredClient,
-			event: cloudevents.Event{
-				Context: cloudevents.EventContextV03{
+			event: event.Event{
+				Context: event.EventContextV03{
 					Type:   "unit.test.client",
 					Source: *types.ParseURLRef("/unit/test/client"),
 					Time:   &types.Timestamp{Time: now},
@@ -296,15 +296,15 @@ func TestTracingClientSend(t *testing.T) {
 
 	testCases := map[string]struct {
 		c        func(target string) client.Client
-		event    cloudevents.Event
+		event    event.Event
 		resp     *http.Response
 		tpHeader string
 		sample   bool
 	}{
 		"send unsampled": {
 			c: simpleTracingBinaryClient,
-			event: cloudevents.Event{
-				Context: cloudevents.EventContextV01{
+			event: event.Event{
+				Context: event.EventContextV01{
 					EventType: "unit.test.client",
 					Source:    *types.ParseURLRef("/unit/test/client"),
 					EventTime: &types.Timestamp{Time: now},
@@ -322,8 +322,8 @@ func TestTracingClientSend(t *testing.T) {
 		},
 		"send sampled": {
 			c: simpleTracingBinaryClient,
-			event: cloudevents.Event{
-				Context: cloudevents.EventContextV01{
+			event: event.Event{
+				Context: event.EventContextV01{
 					EventType: "unit.test.client",
 					Source:    *types.ParseURLRef("/unit/test/client"),
 					EventTime: &types.Timestamp{Time: now},
@@ -418,7 +418,7 @@ func TestClientReceive(t *testing.T) {
 	testCases := map[string]struct {
 		optsFn  func(port int, path string) []cehttp.Option
 		req     *requestValidation
-		want    cloudevents.Event
+		want    event.Event
 		wantErr string
 	}{
 		"binary simple v0.1": {
@@ -434,10 +434,10 @@ func TestClientReceive(t *testing.T) {
 				},
 				Body: `{"msg":"hello","sq":"42"}`,
 			},
-			want: cloudevents.Event{
-				Context: cloudevents.EventContextV01{
+			want: event.Event{
+				Context: event.EventContextV01{
 					EventType:   "unit.test.client",
-					ContentType: cloudevents.StringOfApplicationJSON(),
+					ContentType: event.StringOfApplicationJSON(),
 					Source:      *types.ParseURLRef("/unit/test/client"),
 					EventTime:   &types.Timestamp{Time: now},
 					EventID:     "AABBCCDDEE",
@@ -461,10 +461,10 @@ func TestClientReceive(t *testing.T) {
 				},
 				Body: `{"msg":"hello","sq":"42"}`,
 			},
-			want: cloudevents.Event{
-				Context: cloudevents.EventContextV02{
+			want: event.Event{
+				Context: event.EventContextV02{
 					Type:        "unit.test.client",
-					ContentType: cloudevents.StringOfApplicationJSON(),
+					ContentType: event.StringOfApplicationJSON(),
 					Source:      *types.ParseURLRef("/unit/test/client"),
 					Time:        &types.Timestamp{Time: now},
 					ID:          "AABBCCDDEE",
@@ -488,10 +488,10 @@ func TestClientReceive(t *testing.T) {
 				},
 				Body: `{"msg":"hello","sq":"42"}`,
 			},
-			want: cloudevents.Event{
-				Context: cloudevents.EventContextV03{
+			want: event.Event{
+				Context: event.EventContextV03{
 					Type:            "unit.test.client",
-					DataContentType: cloudevents.StringOfApplicationJSON(),
+					DataContentType: event.StringOfApplicationJSON(),
 					Source:          *types.ParseURLRef("/unit/test/client"),
 					Time:            &types.Timestamp{Time: now},
 					ID:              "AABBCCDDEE",
@@ -512,10 +512,10 @@ func TestClientReceive(t *testing.T) {
 					now.UTC().Format(time.RFC3339Nano),
 				),
 			},
-			want: cloudevents.Event{
-				Context: cloudevents.EventContextV01{
+			want: event.Event{
+				Context: event.EventContextV01{
 					EventType:   "unit.test.client",
-					ContentType: cloudevents.StringOfApplicationJSON(),
+					ContentType: event.StringOfApplicationJSON(),
 					Source:      *types.ParseURLRef("/unit/test/client"),
 					EventTime:   &types.Timestamp{Time: now},
 					EventID:     "AABBCCDDEE",
@@ -536,10 +536,10 @@ func TestClientReceive(t *testing.T) {
 					now.UTC().Format(time.RFC3339Nano),
 				),
 			},
-			want: cloudevents.Event{
-				Context: cloudevents.EventContextV02{
+			want: event.Event{
+				Context: event.EventContextV02{
 					Type:        "unit.test.client",
-					ContentType: cloudevents.StringOfApplicationJSON(),
+					ContentType: event.StringOfApplicationJSON(),
 					Source:      *types.ParseURLRef("/unit/test/client"),
 					Time:        &types.Timestamp{Time: now},
 					ID:          "AABBCCDDEE",
@@ -560,10 +560,10 @@ func TestClientReceive(t *testing.T) {
 					now.UTC().Format(time.RFC3339Nano),
 				),
 			},
-			want: cloudevents.Event{
-				Context: cloudevents.EventContextV03{
+			want: event.Event{
+				Context: event.EventContextV03{
 					Type:            "unit.test.client",
-					DataContentType: cloudevents.StringOfApplicationJSON(),
+					DataContentType: event.StringOfApplicationJSON(),
 					Source:          *types.ParseURLRef("/unit/test/client"),
 					Time:            &types.Timestamp{Time: now},
 					ID:              "AABBCCDDEE",
@@ -579,7 +579,7 @@ func TestClientReceive(t *testing.T) {
 		for _, path := range []string{"", "/", "/unittest/"} {
 			t.Run(n+" at path "+path, func(t *testing.T) {
 
-				events := make(chan cloudevents.Event)
+				events := make(chan event.Event)
 
 				tp, err := cehttp.New(tc.optsFn(0, path)...)
 				if err != nil {
@@ -593,7 +593,7 @@ func TestClientReceive(t *testing.T) {
 
 				ctx, cancel := context.WithCancel(context.TODO())
 				go func() {
-					err = c.StartReceiver(ctx, func(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error {
+					err = c.StartReceiver(ctx, func(ctx context.Context, event event.Event, resp *event.EventResponse) error {
 						go func() {
 							events <- event
 						}()
@@ -680,14 +680,14 @@ func TestTracedClientReceive(t *testing.T) {
 
 	testCases := map[string]struct {
 		optsFn func(port int, path string) []cehttp.Option
-		event  cloudevents.Event
+		event  event.Event
 	}{
 		"simple binary v1.0": {
 			optsFn: simpleBinaryOptions,
-			event: cloudevents.Event{
-				Context: cloudevents.EventContextV01{
+			event: event.Event{
+				Context: event.EventContextV01{
 					EventType:   "unit.test.client",
-					ContentType: cloudevents.StringOfApplicationJSON(),
+					ContentType: event.StringOfApplicationJSON(),
 					Source:      *types.ParseURLRef("/unit/test/client"),
 					EventTime:   &types.Timestamp{Time: now},
 					EventID:     "AABBCCDDEE",
@@ -700,10 +700,10 @@ func TestTracedClientReceive(t *testing.T) {
 		},
 		"simple binary v0.2": {
 			optsFn: simpleBinaryOptions,
-			event: cloudevents.Event{
-				Context: cloudevents.EventContextV02{
+			event: event.Event{
+				Context: event.EventContextV02{
 					Type:        "unit.test.client",
-					ContentType: cloudevents.StringOfApplicationJSON(),
+					ContentType: event.StringOfApplicationJSON(),
 					Source:      *types.ParseURLRef("/unit/test/client"),
 					Time:        &types.Timestamp{Time: now},
 					ID:          "AABBCCDDEE",
@@ -716,10 +716,10 @@ func TestTracedClientReceive(t *testing.T) {
 		},
 		"simple binary v0.3": {
 			optsFn: simpleBinaryOptions,
-			event: cloudevents.Event{
-				Context: cloudevents.EventContextV03{
+			event: event.Event{
+				Context: event.EventContextV03{
 					Type:            "unit.test.client",
-					DataContentType: cloudevents.StringOfApplicationJSON(),
+					DataContentType: event.StringOfApplicationJSON(),
 					Source:          *types.ParseURLRef("/unit/test/client"),
 					Time:            &types.Timestamp{Time: now},
 					ID:              "AABBCCDDEE",
@@ -747,7 +747,7 @@ func TestTracedClientReceive(t *testing.T) {
 
 			ctx, cancel := context.WithCancel(context.TODO())
 			go func() {
-				err = c.StartReceiver(ctx, func(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error {
+				err = c.StartReceiver(ctx, func(ctx context.Context, event event.Event, resp *event.EventResponse) error {
 					go func() {
 						spanContexts <- trace.FromContext(ctx).SpanContext()
 					}()

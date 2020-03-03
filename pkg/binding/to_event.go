@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"io"
 
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 	cloudevents "github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/cloudevents/sdk-go/pkg/types"
 )
 
 var ErrCannotConvertToEvent = errors.New("cannot convert message to event")
@@ -18,14 +19,14 @@ var ErrCannotConvertToEvent = errors.New("cannot convert message to event")
 // Translates a Message with a valid Structured or Binary representation to an Event
 // The TransformerFactories **aren't invoked** during the transformation to event,
 // but after the event instance is generated
-func ToEvent(ctx context.Context, message Message, transformers ...TransformerFactory) (e ce.Event, encoding Encoding, err error) {
-	e = cloudevents.New()
+func ToEvent(ctx context.Context, message Message, transformers ...TransformerFactory) (e event.Event, encoding Encoding, err error) {
+	e = cloudevents.NewEvent()
 
 	messageEncoding := message.Encoding()
 	if messageEncoding == EncodingEvent {
 		for m := message; m != nil; {
 			if em, ok := m.(EventMessage); ok {
-				e = ce.Event(em)
+				e = event.Event(em)
 				encoding = EncodingEvent
 				err = TransformerFactories(transformers).EventTransformer()(&e)
 				return
@@ -56,7 +57,7 @@ func ToEvent(ctx context.Context, message Message, transformers ...TransformerFa
 }
 
 type messageToEventBuilder struct {
-	event *ce.Event
+	event *event.Event
 }
 
 var _ StructuredEncoder = (*messageToEventBuilder)(nil)

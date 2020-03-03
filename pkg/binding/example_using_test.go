@@ -3,10 +3,10 @@ package binding_test
 import (
 	"context"
 	"fmt"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"io"
 	"strconv"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 )
 
@@ -19,7 +19,7 @@ func runSender(w io.Writer) error {
 		return err
 	}
 	for i := 0; i < count; i++ {
-		e := cloudevents.New()
+		e := event.New()
 		e.SetType("example.com/event")
 		e.SetSource("example.com/source")
 		e.SetID(strconv.Itoa(i))
@@ -36,7 +36,7 @@ func runSender(w io.Writer) error {
 // The receiver uses the cloudevents.Client API, not the transport APIs directly.
 func runReceiver(r io.Reader) error {
 	i := 0
-	process := func(e cloudevents.Event) error {
+	process := func(e event.Event) error {
 		fmt.Printf("%s\n", e)
 		i++
 		if i == count {

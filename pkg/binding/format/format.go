@@ -9,9 +9,8 @@ package format
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"strings"
-
-	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 )
 
 // Format marshals and unmarshals structured events to bytes.
@@ -19,18 +18,18 @@ type Format interface {
 	// MediaType identifies the format
 	MediaType() string
 	// Marshal event to bytes
-	Marshal(ce.Event) ([]byte, error)
+	Marshal(event.Event) ([]byte, error)
 	// Unmarshal bytes to event
-	Unmarshal([]byte, *ce.Event) error
+	Unmarshal([]byte, *event.Event) error
 }
 
 // UnknownFormat allows an event with an unknown format string to be forwarded,
 // but Marshal() and Unmarshal will always fail.
 type UnknownFormat string
 
-func (uf UnknownFormat) MediaType() string                 { return string(uf) }
-func (uf UnknownFormat) Marshal(ce.Event) ([]byte, error)  { return nil, unknown(uf.MediaType()) }
-func (uf UnknownFormat) Unmarshal([]byte, *ce.Event) error { return unknown(uf.MediaType()) }
+func (uf UnknownFormat) MediaType() string                    { return string(uf) }
+func (uf UnknownFormat) Marshal(event.Event) ([]byte, error)  { return nil, unknown(uf.MediaType()) }
+func (uf UnknownFormat) Unmarshal([]byte, *event.Event) error { return unknown(uf.MediaType()) }
 
 // Prefix for event-format media types.
 const Prefix = "application/cloudevents"
@@ -43,10 +42,10 @@ var JSON = jsonFmt{}
 
 type jsonFmt struct{}
 
-func (jsonFmt) MediaType() string { return ce.ApplicationCloudEventsJSON }
+func (jsonFmt) MediaType() string { return event.ApplicationCloudEventsJSON }
 
-func (jsonFmt) Marshal(e ce.Event) ([]byte, error) { return json.Marshal(e) }
-func (jsonFmt) Unmarshal(b []byte, e *ce.Event) error {
+func (jsonFmt) Marshal(e event.Event) ([]byte, error) { return json.Marshal(e) }
+func (jsonFmt) Unmarshal(b []byte, e *event.Event) error {
 	err := json.Unmarshal(b, e)
 	if err != nil {
 		return err
@@ -87,7 +86,7 @@ func unknown(mediaType string) error {
 func Add(f Format) { formats[f.MediaType()] = f }
 
 // Marshal an event to bytes using the mediaType event format.
-func Marshal(mediaType string, e ce.Event) ([]byte, error) {
+func Marshal(mediaType string, e event.Event) ([]byte, error) {
 	if f := formats[mediaType]; f != nil {
 		return f.Marshal(e)
 	}
@@ -95,7 +94,7 @@ func Marshal(mediaType string, e ce.Event) ([]byte, error) {
 }
 
 // Unmarshal bytes to an event using the mediaType event format.
-func Unmarshal(mediaType string, b []byte, e *ce.Event) error {
+func Unmarshal(mediaType string, b []byte, e *event.Event) error {
 	if f := formats[mediaType]; f != nil {
 		return f.Unmarshal(b, e)
 	}

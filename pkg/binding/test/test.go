@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"reflect"
 	"sync"
 	"testing"
@@ -15,15 +16,14 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/cloudevents/sdk-go/pkg/types"
 )
 
 // NameOf generates a string test name from x, esp. for ce.Event and ce.Message.
 func NameOf(x interface{}) string {
 	switch x := x.(type) {
-	case ce.Event:
+	case event.Event:
 		b, err := json.Marshal(x)
 		if err == nil {
 			return fmt.Sprintf("Event%s", b)
@@ -35,7 +35,7 @@ func NameOf(x interface{}) string {
 }
 
 // Run f as a test for each event in events
-func EachEvent(t *testing.T, events []ce.Event, f func(*testing.T, ce.Event)) {
+func EachEvent(t *testing.T, events []event.Event, f func(*testing.T, event.Event)) {
 	for _, e := range events {
 		in := e
 		t.Run(NameOf(in), func(t *testing.T) { f(t, in) })
@@ -51,7 +51,7 @@ func EachMessage(t *testing.T, messages []binding.Message, f func(*testing.T, bi
 }
 
 // Canonical converts all attributes to canonical string form for comparisons.
-func Canonical(t *testing.T, c ce.EventContext) {
+func Canonical(t *testing.T, c event.EventContext) {
 	t.Helper()
 	for k, v := range c.GetExtensions() {
 		s, err := types.Format(v)
@@ -108,7 +108,7 @@ func AssertEventEquals(t *testing.T, want cloudevents.Event, have cloudevents.Ev
 	assert.Equal(t, wantPayload, havePayload)
 }
 
-func ExToStr(t *testing.T, e ce.Event) ce.Event {
+func ExToStr(t *testing.T, e event.Event) event.Event {
 	for k, v := range e.Extensions() {
 		var vParsed interface{}
 		var err error
@@ -126,7 +126,7 @@ func ExToStr(t *testing.T, e ce.Event) ce.Event {
 	return e
 }
 
-func MustJSON(e ce.Event) []byte {
+func MustJSON(e event.Event) []byte {
 	b, err := format.JSON.Marshal(e)
 	if err != nil {
 		panic(err)
@@ -134,7 +134,7 @@ func MustJSON(e ce.Event) []byte {
 	return b
 }
 
-func MustToEvent(ctx context.Context, m binding.Message) (e ce.Event, encoding binding.Encoding) {
+func MustToEvent(ctx context.Context, m binding.Message) (e event.Event, encoding binding.Encoding) {
 	var err error
 	e, encoding, err = binding.ToEvent(ctx, m)
 	if err != nil {
@@ -143,8 +143,8 @@ func MustToEvent(ctx context.Context, m binding.Message) (e ce.Event, encoding b
 	return
 }
 
-func CopyEventContext(e ce.Event) ce.Event {
-	newE := ce.Event{}
+func CopyEventContext(e event.Event) event.Event {
+	newE := event.Event{}
 	newE.Context = e.Context.Clone()
 	newE.DataEncoded = e.DataEncoded
 	newE.Data = e.Data

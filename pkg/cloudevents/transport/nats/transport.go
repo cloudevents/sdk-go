@@ -3,8 +3,8 @@ package nats
 import (
 	"context"
 	"fmt"
+	"github.com/cloudevents/sdk-go/pkg/event"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	context2 "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	"github.com/nats-io/nats.go"
@@ -94,7 +94,7 @@ func (t *Transport) loadCodec() bool {
 }
 
 // Send implements Transport.Send
-func (t *Transport) Send(ctx context.Context, event cloudevents.Event) (context.Context, *cloudevents.Event, error) {
+func (t *Transport) Send(ctx context.Context, event event.Event) (context.Context, *event.Event, error) {
 	// TODO populate response context properly.
 	if ok := t.loadCodec(); !ok {
 		return ctx, nil, fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)

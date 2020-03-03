@@ -9,7 +9,7 @@ import (
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	cloudevents "github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/cloudevents/sdk-go/pkg/types"
 )
 
 func TestWithFinish(t *testing.T) {
