@@ -88,36 +88,6 @@ func (ec EventContextV02) Clone() EventContext {
 	return ec.AsV02()
 }
 
-// AsV01 implements EventContextConverter.AsV01
-func (ec EventContextV02) AsV01() *EventContextV01 {
-	ret := EventContextV01{
-		CloudEventsVersion: CloudEventsVersionV01,
-		EventID:            ec.ID,
-		EventTime:          ec.Time,
-		EventType:          ec.Type,
-		SchemaURL:          ec.SchemaURL,
-		Source:             ec.Source,
-		ContentType:        ec.ContentType,
-		Extensions:         make(map[string]interface{}),
-	}
-
-	for k, v := range ec.Extensions {
-		// eventTypeVersion was retired in v0.2
-		if strings.EqualFold(k, EventTypeVersionKey) {
-			etv, ok := v.(string)
-			if ok && etv != "" {
-				ret.EventTypeVersion = &etv
-			}
-			continue
-		}
-		ret.Extensions[k] = v
-	}
-	if len(ret.Extensions) == 0 {
-		ret.Extensions = nil
-	}
-	return &ret
-}
-
 // AsV02 implements EventContextConverter.AsV02
 func (ec EventContextV02) AsV02() *EventContextV02 {
 	ec.SpecVersion = CloudEventsVersionV02

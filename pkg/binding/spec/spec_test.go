@@ -5,21 +5,21 @@ import (
 
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
 	"github.com/cloudevents/sdk-go/pkg/event"
-	"github.com/stretchr/testify/assert"
+	tassert "github.com/stretchr/testify/assert"
 )
 
 func TestVersions(t *testing.T) {
-	assert := assert.New(t)
+	assert := tassert.New(t)
 	versions := spec.New()
 	assert.Equal([]string{"specversion", "cloudEventsVersion"}, versions.SpecVersionNames())
 
-	want := []string{"1.0", "0.3", "0.2", "0.1"}
+	want := []string{"1.0", "0.3", "0.2"}
 	all := versions.Versions()
 	assert.Equal(len(want), len(all))
 	for i, s := range want {
 		assert.Equal(s, all[i].String())
 		assert.Equal(s, all[i].NewContext().GetSpecVersion())
-		converted := all[i].Convert(event.EventContextV01{}.AsV01())
+		converted := all[i].Convert(event.EventContextV02{}.AsV02())
 		assert.Equal(s, converted.GetSpecVersion(), "%v %v %v", i, s, converted)
 	}
 	assert.Equal(want[0], versions.Latest().NewContext().GetSpecVersion())

@@ -97,12 +97,6 @@ func (ec EventContextV03) Clone() EventContext {
 	return ec.AsV03()
 }
 
-// AsV01 implements EventContextConverter.AsV01
-func (ec EventContextV03) AsV01() *EventContextV01 {
-	ecv2 := ec.AsV02()
-	return ecv2.AsV01()
-}
-
 // AsV02 implements EventContextConverter.AsV02
 func (ec EventContextV03) AsV02() *EventContextV02 {
 	ret := EventContextV02{

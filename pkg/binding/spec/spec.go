@@ -194,16 +194,6 @@ func WithPrefix(prefix string) *Versions {
 				attr("time", Time),
 				attr("contenttype", DataContentType),
 			),
-			newVersion(prefix, event.EventContextV01{}.AsV01(),
-				func(c event.EventContextConverter) event.EventContext { return c.AsV01() },
-				attr("cloudEventsVersion", SpecVersion),
-				attr("eventType", Type),
-				attr("source", Source),
-				attr("schemaURL", DataSchema),
-				attr("eventID", ID),
-				attr("eventTime", Time),
-				attr("contentType", DataContentType),
-			),
 		},
 	}
 	for _, v := range vs.all {
@@ -218,7 +208,6 @@ func New() *Versions { return WithPrefix("") }
 // Built-in un-prefixed versions.
 var (
 	VS  *Versions
-	V01 Version
 	V02 Version
 	V03 Version
 	V1  Version
@@ -226,7 +215,6 @@ var (
 
 func init() {
 	VS = New()
-	V01, _ = VS.Version("0.1")
 	V02, _ = VS.Version("0.2")
 	V03, _ = VS.Version("0.3")
 	V1, _ = VS.Version("1.0")

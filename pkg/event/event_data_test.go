@@ -20,7 +20,7 @@ type DataTest struct {
 func TestEventSetData_Json(t *testing.T) {
 	// All version should be the same, so run through them all.
 
-	versions := []string{event.CloudEventsVersionV01, event.CloudEventsVersionV02, event.CloudEventsVersionV03}
+	versions := []string{event.CloudEventsVersionV02, event.CloudEventsVersionV03}
 
 	testCases := map[string]DataTest{
 		"empty": {
@@ -104,7 +104,7 @@ type XmlExample struct {
 func TestEventSetData_xml(t *testing.T) {
 	// All version should be the same, so run through them all.
 
-	versions := []string{event.CloudEventsVersionV01, event.CloudEventsVersionV02, event.CloudEventsVersionV03}
+	versions := []string{event.CloudEventsVersionV02, event.CloudEventsVersionV03}
 
 	testCases := map[string]DataTest{
 		"empty": {

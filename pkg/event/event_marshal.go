@@ -28,7 +28,7 @@ func (e Event) MarshalJSON() ([]byte, error) {
 	var err error
 
 	switch e.SpecVersion() {
-	case CloudEventsVersionV01, CloudEventsVersionV02, CloudEventsVersionV03:
+	case CloudEventsVersionV02, CloudEventsVersionV03:
 		b, err = JsonEncodeLegacy(e)
 	case CloudEventsVersionV1:
 		b, err = JsonEncode(e)

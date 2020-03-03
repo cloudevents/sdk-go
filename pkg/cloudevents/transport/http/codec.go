@@ -38,11 +38,6 @@ var _ transport.Codec = (*Codec)(nil)
 
 func (c *Codec) loadCodec(encoding Encoding) (transport.Codec, error) {
 	switch encoding {
-	case BinaryV01, StructuredV01:
-		c._v01.Do(func() {
-			c.v01 = &CodecV01{DefaultEncoding: c.Encoding}
-		})
-		return c.v01, nil
 	case BinaryV02, StructuredV02:
 		c._v02.Do(func() {
 			c.v02 = &CodecV02{DefaultEncoding: c.Encoding}
@@ -98,10 +93,6 @@ func (c *Codec) convertEvent(event *event.Event) (*event.Event, error) {
 	switch c.Encoding {
 	case Default:
 		return event, nil
-	case BinaryV01, StructuredV01:
-		ca := event.Context.AsV01()
-		event.Context = ca
-		return event, nil
 	case BinaryV02, StructuredV02:
 		ca := event.Context.AsV02()
 		event.Context = ca
@@ -137,13 +128,6 @@ func (c *Codec) inspectEncoding(ctx context.Context, msg transport.Message) Enco
 	// Try v0.2.
 	_, _ = c.loadCodec(BinaryV02)
 	encoding = c.v02.inspectEncoding(ctx, msg)
-	if encoding != Unknown {
-		return encoding
-	}
-
-	// Try v0.1 first.
-	_, _ = c.loadCodec(BinaryV01)
-	encoding = c.v01.inspectEncoding(ctx, msg)
 	if encoding != Unknown {
 		return encoding
 	}
