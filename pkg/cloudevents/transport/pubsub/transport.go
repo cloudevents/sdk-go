@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/event"
 	"strings"
 	"sync"
+
+	"github.com/cloudevents/sdk-go/pkg/event"
 
 	"go.uber.org/zap"
 

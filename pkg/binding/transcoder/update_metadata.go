@@ -1,9 +1,9 @@
 package transcoder
 
 import (
-	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
+	"github.com/cloudevents/sdk-go/pkg/event"
 )
 
 // Update cloudevents attribute (if present) using the provided function during the encoding process
@@ -34,7 +34,7 @@ func (a updateAttributeTranscoderFactory) BinaryTransformer(encoder binding.Bina
 }
 
 func (a updateAttributeTranscoderFactory) EventTransformer() binding.EventTransformer {
-	return func(event *cloudevents.Event) error {
+	return func(event *event.Event) error {
 		v, err := spec.VS.Version(event.SpecVersion())
 		if err != nil {
 			return err
@@ -72,7 +72,7 @@ func (a updateExtensionTranscoderFactory) BinaryTransformer(encoder binding.Bina
 }
 
 func (a updateExtensionTranscoderFactory) EventTransformer() binding.EventTransformer {
-	return func(event *cloudevents.Event) error {
+	return func(event *event.Event) error {
 		if val, ok := event.Extensions()[a.name]; ok {
 			newVal, err := a.updater(val)
 			if err != nil {

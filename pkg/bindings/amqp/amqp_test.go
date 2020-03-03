@@ -4,7 +4,6 @@ package amqp
 
 import (
 	"context"
-	"github.com/cloudevents/sdk-go/pkg/event"
 	"io"
 	"net/url"
 	"os"
@@ -16,6 +15,7 @@ import (
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/test"
+	"github.com/cloudevents/sdk-go/pkg/event"
 )
 
 func TestSendSkipBinary(t *testing.T) {

@@ -2,10 +2,10 @@ package binding
 
 import (
 	"context"
-	"github.com/cloudevents/sdk-go/pkg/event"
 	"io"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
+	"github.com/cloudevents/sdk-go/pkg/event"
 )
 
 // BindingTransport implements transport.Transport using a Sender and Receiver.

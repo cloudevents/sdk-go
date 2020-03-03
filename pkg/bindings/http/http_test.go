@@ -2,11 +2,12 @@ package http_test
 
 import (
 	"context"
-	"github.com/cloudevents/sdk-go/pkg/event"
 	nethttp "net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
+
+	"github.com/cloudevents/sdk-go/pkg/event"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

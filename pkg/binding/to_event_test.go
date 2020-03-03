@@ -2,13 +2,13 @@ package binding_test
 
 import (
 	"context"
-	"github.com/cloudevents/sdk-go/pkg/event"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/test"
+	"github.com/cloudevents/sdk-go/pkg/event"
 )
 
 type toEventTestCase struct {

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	event2 "github.com/cloudevents/sdk-go/pkg/event"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -13,6 +12,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	event2 "github.com/cloudevents/sdk-go/pkg/event"
 
 	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/plugin/ochttp/propagation/tracecontext"

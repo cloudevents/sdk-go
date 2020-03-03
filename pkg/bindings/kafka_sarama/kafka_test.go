@@ -8,15 +8,15 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Shopify/sarama"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/Shopify/sarama"
-
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/test"
+	"github.com/cloudevents/sdk-go/pkg/event"
 )
 
 const (
@@ -74,7 +74,7 @@ var (
 func TestSendStructuredMessageToStructuredWithKey(t *testing.T) {
 	close, s, r := testSenderReceiver(t)
 	defer close()
-	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn cloudevents.Event) {
+	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
 		eventIn = test.ExToStr(t, eventIn)
 		require.NoError(t, eventIn.Context.SetExtension("key", "aaa"))
 
@@ -90,7 +90,7 @@ func TestSendStructuredMessageToStructuredWithKey(t *testing.T) {
 func TestSendStructuredMessageToStructuredWithoutKey(t *testing.T) {
 	close, s, r := testSenderReceiver(t)
 	defer close()
-	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn cloudevents.Event) {
+	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
 		eventIn = test.ExToStr(t, eventIn)
 
 		in := test.NewMockStructuredMessage(eventIn)
@@ -105,7 +105,7 @@ func TestSendStructuredMessageToStructuredWithoutKey(t *testing.T) {
 func TestSendBinaryMessageToBinaryWithKey(t *testing.T) {
 	close, s, r := testSenderReceiver(t)
 	defer close()
-	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn cloudevents.Event) {
+	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
 		eventIn = test.ExToStr(t, eventIn)
 		require.NoError(t, eventIn.Context.SetExtension("key", "aaa"))
 
@@ -121,7 +121,7 @@ func TestSendBinaryMessageToBinaryWithKey(t *testing.T) {
 func TestSendBinaryMessageToBinaryWithoutKey(t *testing.T) {
 	close, s, r := testSenderReceiver(t)
 	defer close()
-	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn cloudevents.Event) {
+	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
 		eventIn = test.ExToStr(t, eventIn)
 
 		in := test.NewMockBinaryMessage(eventIn)

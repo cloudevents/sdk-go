@@ -3,26 +3,24 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/event"
 	"log"
 	"math/rand"
 	"net/http"
 	"time"
 
+	"contrib.go.opencensus.io/exporter/prometheus"
 	"go.opencensus.io/examples/exporter"
+	"go.opencensus.io/stats/view"
 	"go.opencensus.io/trace"
 	"go.opencensus.io/zpages"
 
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec/json"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec/xml"
-
-	"contrib.go.opencensus.io/exporter/prometheus"
-	"go.opencensus.io/stats/view"
-
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	transporthttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"github.com/cloudevents/sdk-go/pkg/types"
 )
 

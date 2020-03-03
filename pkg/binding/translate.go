@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	ce "github.com/cloudevents/sdk-go"
+	"github.com/cloudevents/sdk-go/pkg/event"
 )
 
 const (
@@ -87,7 +87,7 @@ func Encode(
 		}
 	}
 
-	var e ce.Event
+	var e event.Event
 	e, enc, err = ToEvent(ctx, message, transformers)
 	if err != nil {
 		return enc, err

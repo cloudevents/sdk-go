@@ -7,18 +7,18 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
 	"github.com/cloudevents/sdk-go/pkg/binding/test"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"github.com/cloudevents/sdk-go/pkg/types"
 )
 
 func TestVersionTranscoder(t *testing.T) {
-	var testEventV02 = cloudevents.Event{
-		Context: cloudevents.EventContextV02{
+	var testEventV02 = event.Event{
+		Context: event.EventContextV02{
 			Source:      types.URLRef{URL: url.URL{Path: "source"}},
-			ContentType: cloudevents.StringOfApplicationJSON(),
+			ContentType: event.StringOfApplicationJSON(),
 			ID:          "id",
 			Type:        "type",
 		}.AsV02(),

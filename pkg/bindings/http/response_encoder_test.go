@@ -2,23 +2,21 @@ package http
 
 import (
 	"context"
-	"github.com/cloudevents/sdk-go/pkg/event"
+	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
-	"net/http"
-
-	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/test"
+	"github.com/cloudevents/sdk-go/pkg/event"
 )
 
 func TestEncodeHttpResponse(t *testing.T) {
 	tests := []struct {
 		name             string
 		context          context.Context
-		messageFactory   func(e cloudevents.Event) binding.Message
+		messageFactory   func(e event.Event) binding.Message
 		expectedEncoding binding.Encoding
 	}{
 		{
@@ -36,13 +34,13 @@ func TestEncodeHttpResponse(t *testing.T) {
 		{
 			name:             "Event to Structured",
 			context:          binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingStructured),
-			messageFactory:   func(e cloudevents.Event) binding.Message { return binding.EventMessage(e) },
+			messageFactory:   func(e event.Event) binding.Message { return binding.EventMessage(e) },
 			expectedEncoding: binding.EncodingStructured,
 		},
 		{
 			name:             "Event to Binary",
 			context:          binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingBinary),
-			messageFactory:   func(e cloudevents.Event) binding.Message { return binding.EventMessage(e) },
+			messageFactory:   func(e event.Event) binding.Message { return binding.EventMessage(e) },
 			expectedEncoding: binding.EncodingBinary,
 		},
 	}

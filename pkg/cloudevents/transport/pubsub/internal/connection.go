@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/event"
 	"sync"
 	"time"
+
+	"github.com/cloudevents/sdk-go/pkg/event"
 
 	"cloud.google.com/go/pubsub"
 	pscontext "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/pubsub/context"

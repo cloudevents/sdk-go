@@ -4,7 +4,6 @@ package amqp_test
 
 import (
 	"context"
-	"github.com/cloudevents/sdk-go/pkg/event"
 	"net/url"
 	"os"
 	"testing"
@@ -15,6 +14,7 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/binding/test"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/amqp"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"github.com/cloudevents/sdk-go/pkg/types"
 )
 

@@ -3,8 +3,9 @@ package client
 import (
 	"context"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/event"
 	"sync"
+
+	"github.com/cloudevents/sdk-go/pkg/event"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/extensions"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
@@ -27,14 +28,14 @@ type Client interface {
 	// * func() error
 	// * func(context.Context)
 	// * func(context.Context) error
-	// * func(cloudevents.Event)
-	// * func(cloudevents.Event) error
-	// * func(context.Context, cloudevents.Event)
-	// * func(context.Context, cloudevents.Event) error
-	// * func(cloudevents.Event, *cloudevents.EventResponse)
-	// * func(cloudevents.Event, *cloudevents.EventResponse) error
-	// * func(context.Context, cloudevents.Event, *cloudevents.EventResponse)
-	// * func(context.Context, cloudevents.Event, *cloudevents.EventResponse) error
+	// * func(event.Event)
+	// * func(event.Event) error
+	// * func(context.Context, event.Event)
+	// * func(context.Context, event.Event) error
+	// * func(event.Event, *event.EventResponse)
+	// * func(event.Event, *event.EventResponse) error
+	// * func(context.Context, event.Event, *event.EventResponse)
+	// * func(context.Context, event.Event, *event.EventResponse) error
 	// Note: if fn returns an error, it is treated as a critical and
 	// EventResponse will not be processed.
 	StartReceiver(ctx context.Context, fn interface{}) error

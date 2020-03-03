@@ -1,12 +1,12 @@
 package format_test
 
 import (
-	"github.com/cloudevents/sdk-go/pkg/event"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"github.com/cloudevents/sdk-go/pkg/types"
 )
 

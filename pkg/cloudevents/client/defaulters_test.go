@@ -2,9 +2,10 @@ package client
 
 import (
 	"context"
-	"github.com/cloudevents/sdk-go/pkg/event"
 	"testing"
 	"time"
+
+	"github.com/cloudevents/sdk-go/pkg/event"
 
 	"github.com/google/go-cmp/cmp"
 )

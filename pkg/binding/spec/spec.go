@@ -2,9 +2,9 @@ package spec
 
 import (
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/event"
 	"strings"
 
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"github.com/cloudevents/sdk-go/pkg/types"
 )
 

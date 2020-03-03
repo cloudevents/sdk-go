@@ -3,12 +3,12 @@ package test
 
 import (
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/event"
 	"net/url"
 	"reflect"
 	"time"
 
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"github.com/cloudevents/sdk-go/pkg/types"
 )
 

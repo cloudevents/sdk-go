@@ -3,11 +3,11 @@ package binding_test
 import (
 	"context"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/event"
 	"io"
 	"strconv"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+	"github.com/cloudevents/sdk-go/pkg/event"
 )
 
 const count = 3 // Example ends after this many events.
@@ -54,7 +54,7 @@ func runReceiver(r io.Reader) error {
 // The intermediary receives events and forwards them to another
 // process using ExReceiver and ExSender directly.
 //
-// By forwarding a transport.Message instead of a cloudevents.Event,
+// By forwarding a transport.Message instead of a event.Event,
 // it allows the transports to avoid un-necessary decoding of
 // structured events, and to exchange delivery status between reliable
 // transports. Even transports using different protocols can ensure

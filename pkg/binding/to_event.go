@@ -4,12 +4,11 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"github.com/cloudevents/sdk-go/pkg/event"
 	"io"
 
-	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"github.com/cloudevents/sdk-go/pkg/types"
 )
 
@@ -19,7 +18,7 @@ var ErrCannotConvertToEvent = errors.New("cannot convert message to event")
 // The TransformerFactories **aren't invoked** during the transformation to event,
 // but after the event instance is generated
 func ToEvent(ctx context.Context, message Message, transformers ...TransformerFactory) (e event.Event, encoding Encoding, err error) {
-	e = cloudevents.NewEvent()
+	e = event.New()
 
 	messageEncoding := message.Encoding()
 	if messageEncoding == EncodingEvent {
@@ -99,13 +98,13 @@ func (b *messageToEventBuilder) SetAttribute(attribute spec.Attribute, value int
 			return err
 		}
 		switch str {
-		case cloudevents.VersionV01:
+		case event.CloudEventsVersionV01:
 			b.event.Context = b.event.Context.AsV01()
-		case cloudevents.VersionV02:
+		case event.CloudEventsVersionV02:
 			b.event.Context = b.event.Context.AsV02()
-		case cloudevents.VersionV03:
+		case event.CloudEventsVersionV03:
 			b.event.Context = b.event.Context.AsV03()
-		case cloudevents.VersionV1:
+		case event.CloudEventsVersionV1:
 			b.event.Context = b.event.Context.AsV1()
 		}
 		return nil

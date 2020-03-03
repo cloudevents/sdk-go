@@ -8,10 +8,10 @@ import (
 
 	"github.com/Shopify/sarama"
 
-	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/test"
 	"github.com/cloudevents/sdk-go/pkg/bindings/kafka_sarama"
+	"github.com/cloudevents/sdk-go/pkg/event"
 )
 
 // Avoid DCE
@@ -20,8 +20,8 @@ var ProducerMessage *sarama.ProducerMessage
 var (
 	ctxSkipKey                  context.Context
 	ctx                         context.Context
-	eventWithoutKey             cloudevents.Event
-	eventWithKey                cloudevents.Event
+	eventWithoutKey             event.Event
+	eventWithKey                event.Event
 	structuredMessageWithoutKey binding.Message
 	structuredMessageWithKey    binding.Message
 	binaryMessageWithoutKey     binding.Message
