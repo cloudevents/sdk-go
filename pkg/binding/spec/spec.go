@@ -80,8 +80,9 @@ type attribute struct {
 	version Version
 }
 
-func (a *attribute) Name() string     { return a.name }
-func (a *attribute) Version() Version { return a.version }
+func (a *attribute) PrefixedName() string { return a.version.Prefix() + a.name }
+func (a *attribute) Name() string         { return a.name }
+func (a *attribute) Version() Version     { return a.version }
 
 type version struct {
 	prefix  string
@@ -142,10 +143,9 @@ func newVersion(
 		attrs:   make([]Attribute, len(attrs)),
 	}
 	for i, a := range attrs {
-		a.name = prefix + a.name
 		a.version = v
 		v.attrs[i] = a
-		v.attrMap[strings.ToLower(a.name)] = a
+		v.attrMap[strings.ToLower(a.PrefixedName())] = a
 	}
 	return v
 }
