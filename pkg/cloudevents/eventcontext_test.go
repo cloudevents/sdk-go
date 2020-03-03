@@ -7,6 +7,7 @@ import (
 	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
 	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/require"
 )
 
 func TestContextAsV01(t *testing.T) {
@@ -310,6 +311,43 @@ func TestContextAsV1(t *testing.T) {
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("unexpected (-want, +got) = %v", diff)
 			}
+		})
+	}
+}
+
+func TestEventContextClone(t *testing.T) {
+	tests := []struct {
+		name    string
+		context ce.EventContext
+	}{
+		{
+			name:    "v0.1",
+			context: FullEventContextV01(types.Timestamp{Time: time.Now()}),
+		},
+		{
+			name:    "v0.2",
+			context: FullEventContextV02(types.Timestamp{Time: time.Now()}),
+		},
+		{
+			name:    "v0.3",
+			context: FullEventContextV03(types.Timestamp{Time: time.Now()}),
+		},
+		{
+			name:    "v1.0",
+			context: FullEventContextV1(types.Timestamp{Time: time.Now()}),
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			initial := test.context
+			require.NoError(t, initial.SetExtension("aaa", "bbb"))
+
+			clone := initial.Clone()
+			require.NoError(t, clone.SetExtension("aaa", "ccc"))
+
+			val, err := initial.GetExtension("aaa")
+			require.NoError(t, err)
+			require.Equal(t, "bbb", val)
 		})
 	}
 }
