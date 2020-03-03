@@ -39,7 +39,7 @@ func TestWithEventDefaulter(t *testing.T) {
 		"two": {
 			c:    &ceClient{},
 			fns:  []EventDefaulter{v2, v3},
-			want: 3,
+			want: 2,
 		},
 		"nil fn": {
 			c:       &ceClient{},
