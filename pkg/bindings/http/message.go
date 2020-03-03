@@ -21,8 +21,9 @@ const ContentType = "Content-Type"
 type Message struct {
 	Header     nethttp.Header
 	BodyReader io.ReadCloser
-	encoding   binding.Encoding
 	OnFinish   func(error) error
+	format     format.Format
+	version    spec.Version
 }
 
 // Check if http.Message implements binding.Message
@@ -35,49 +36,50 @@ func NewMessage(header nethttp.Header, body io.ReadCloser) (*Message, error) {
 	if body != nil {
 		m.BodyReader = body
 	}
-	if ft := format.Lookup(header.Get(ContentType)); ft == nil {
-		m.encoding = binding.EncodingStructured
-	} else if _, err := specs.FindVersion(m.Header.Get); err != nil {
-		m.encoding = binding.EncodingBinary
-	} else {
-		m.encoding = binding.EncodingUnknown
+	if m.format = format.Lookup(header.Get(ContentType)); m.format == nil {
+		m.version, _ = specs.FindVersion(m.Header.Get)
 	}
 	return &m, nil
 }
 
 func (m *Message) Encoding() binding.Encoding {
-	return m.encoding
+	if m.version != nil {
+		return binding.EncodingBinary
+	}
+	if m.format != nil {
+		return binding.EncodingStructured
+	}
+	return binding.EncodingUnknown
 }
 
 func (m *Message) Structured(ctx context.Context, encoder binding.StructuredEncoder) error {
-	if ft := format.Lookup(m.Header.Get(ContentType)); ft == nil {
+	if m.format == nil {
 		return binding.ErrNotStructured
 	} else {
-		return encoder.SetStructuredEvent(ctx, ft, m.BodyReader)
+		return encoder.SetStructuredEvent(ctx, m.format, m.BodyReader)
 	}
 }
 
 func (m *Message) Binary(ctx context.Context, encoder binding.BinaryEncoder) error {
-	version, err := specs.FindVersion(m.Header.Get)
-	if err != nil {
+	if m.version == nil {
 		return binding.ErrNotBinary
 	}
 
-	err = encoder.Start(ctx)
+	err := encoder.Start(ctx)
 	if err != nil {
 		return err
 	}
 
 	for k, v := range m.Header {
 		if strings.HasPrefix(k, prefix) {
-			attr := version.Attribute(k)
+			attr := m.version.Attribute(k)
 			if attr != nil {
 				err = encoder.SetAttribute(attr, v[0])
 			} else {
 				err = encoder.SetExtension(strings.ToLower(strings.TrimPrefix(k, prefix)), v[0])
 			}
 		} else if k == ContentType {
-			err = encoder.SetAttribute(version.AttributeFromKind(spec.DataContentType), v[0])
+			err = encoder.SetAttribute(m.version.AttributeFromKind(spec.DataContentType), v[0])
 		}
 		if err != nil {
 			return err
