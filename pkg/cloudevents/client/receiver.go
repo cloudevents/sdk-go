@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/event"
 	"reflect"
+
+	"github.com/cloudevents/sdk-go/pkg/event"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 )
@@ -32,7 +33,7 @@ type receiverFn struct {
 type ConvertFn func(context.Context, transport.Message, error) (*event.Event, error)
 
 const (
-	inParamUsage  = "expected a function taking either no parameters, one or more of (context.Context, cloudevents.Event, *cloudevents.EventResponse) ordered"
+	inParamUsage  = "expected a function taking either no parameters, one or more of (context.Context, event.Event, *event.EventResponse) ordered"
 	outParamUsage = "expected a function returning either nothing or an error"
 )
 
@@ -50,14 +51,14 @@ var (
 // * func() error
 // * func(context.Context)
 // * func(context.Context) error
-// * func(cloudevents.Event)
-// * func(cloudevents.Event) error
-// * func(context.Context, cloudevents.Event)
-// * func(context.Context, cloudevents.Event) error
-// * func(cloudevents.Event, *cloudevents.EventResponse)
-// * func(cloudevents.Event, *cloudevents.EventResponse) error
-// * func(context.Context, cloudevents.Event, *cloudevents.EventResponse)
-// * func(context.Context, cloudevents.Event, *cloudevents.EventResponse) error
+// * func(event.Event)
+// * func(event.Event) error
+// * func(context.Context, event.Event)
+// * func(context.Context, event.Event) error
+// * func(event.Event, *event.EventResponse)
+// * func(event.Event, *event.EventResponse) error
+// * func(context.Context, event.Event, *event.EventResponse)
+// * func(context.Context, event.Event, *event.EventResponse) error
 //
 func receiver(fn interface{}) (*receiverFn, error) {
 	fnType := reflect.TypeOf(fn)
@@ -101,7 +102,7 @@ func (r *receiverFn) invoke(ctx context.Context, event event.Event, resp *event.
 
 // Verifies that the inputs to a function have a valid signature
 // Valid input is to be [0, all] of
-// context.Context, cloudevents.Event, *cloudevents.EventResponse in this order.
+// context.Context, event.Event, *event.EventResponse in this order.
 func (r *receiverFn) validateInParamSignature(fnType reflect.Type) error {
 	r.hasContextIn = false
 	r.hasEventIn = false
@@ -109,23 +110,23 @@ func (r *receiverFn) validateInParamSignature(fnType reflect.Type) error {
 
 	switch fnType.NumIn() {
 	case 3:
-		// has to be cloudevents.Event, *cloudevents.EventResponse
+		// has to be event.Event, *event.EventResponse
 		if !fnType.In(2).ConvertibleTo(eventResponseType) {
-			return fmt.Errorf("%s; cannot convert parameter 2 from %s to *cloudevents.EventResponse", inParamUsage, fnType.In(2))
+			return fmt.Errorf("%s; cannot convert parameter 2 from %s to *event.EventResponse", inParamUsage, fnType.In(2))
 		} else {
 			r.hasEventResponseIn = true
 		}
 		fallthrough
 	case 2:
-		// can be cloudevents.Event or *cloudevents.EventResponse
+		// can be event.Event or *event.EventResponse
 		if !fnType.In(1).ConvertibleTo(eventResponseType) {
 			if !fnType.In(1).ConvertibleTo(eventType) {
-				return fmt.Errorf("%s; cannot convert parameter 1 from %s to cloudevents.Event or *cloudevents.EventResponse", inParamUsage, fnType.In(1))
+				return fmt.Errorf("%s; cannot convert parameter 1 from %s to event.Event or *event.EventResponse", inParamUsage, fnType.In(1))
 			} else {
 				r.hasEventIn = true
 			}
 		} else if r.hasEventResponseIn {
-			return fmt.Errorf("%s; duplicate parameter of type *cloudevents.EventResponse", inParamUsage)
+			return fmt.Errorf("%s; duplicate parameter of type *event.EventResponse", inParamUsage)
 		} else {
 			r.hasEventResponseIn = true
 		}
@@ -134,14 +135,14 @@ func (r *receiverFn) validateInParamSignature(fnType reflect.Type) error {
 		if !fnType.In(0).ConvertibleTo(contextType) {
 			if !fnType.In(0).ConvertibleTo(eventResponseType) {
 				if !fnType.In(0).ConvertibleTo(eventType) {
-					return fmt.Errorf("%s; cannot convert parameter 0 from %s to context.Context, cloudevents.Event or *cloudevents.EventResponse", inParamUsage, fnType.In(0))
+					return fmt.Errorf("%s; cannot convert parameter 0 from %s to context.Context, event.Event or *event.EventResponse", inParamUsage, fnType.In(0))
 				} else if r.hasEventIn {
-					return fmt.Errorf("%s; duplicate parameter of type cloudevents.Event", inParamUsage)
+					return fmt.Errorf("%s; duplicate parameter of type event.Event", inParamUsage)
 				} else {
 					r.hasEventIn = true
 				}
 			} else if r.hasEventResponseIn {
-				return fmt.Errorf("%s; duplicate parameter of type *cloudevents.EventResponse", inParamUsage)
+				return fmt.Errorf("%s; duplicate parameter of type *event.EventResponse", inParamUsage)
 			} else if r.hasEventIn {
 				return fmt.Errorf("%s; out of order parameter 0 for %s", inParamUsage, fnType.In(1))
 			} else {

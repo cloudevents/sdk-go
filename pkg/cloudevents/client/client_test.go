@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/event"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -12,6 +11,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/cloudevents/sdk-go/pkg/event"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"

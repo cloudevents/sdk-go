@@ -2,8 +2,9 @@ package binding_test
 
 import (
 	"context"
-	"github.com/cloudevents/sdk-go/pkg/event"
 	"testing"
+
+	"github.com/cloudevents/sdk-go/pkg/event"
 
 	"github.com/stretchr/testify/require"
 

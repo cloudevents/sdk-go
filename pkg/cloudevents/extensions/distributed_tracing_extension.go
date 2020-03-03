@@ -2,9 +2,10 @@ package extensions
 
 import (
 	"context"
-	"github.com/cloudevents/sdk-go/pkg/event"
 	"reflect"
 	"strings"
+
+	"github.com/cloudevents/sdk-go/pkg/event"
 
 	"github.com/cloudevents/sdk-go/pkg/types"
 	"github.com/lightstep/tracecontext.go/traceparent"

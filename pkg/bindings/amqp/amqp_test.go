@@ -4,11 +4,12 @@ package amqp
 
 import (
 	"context"
-	"github.com/cloudevents/sdk-go/pkg/event"
 	"io"
 	"net/url"
 	"os"
 	"testing"
+
+	"github.com/cloudevents/sdk-go/pkg/event"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

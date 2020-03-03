@@ -1,8 +1,9 @@
 package spec_test
 
 import (
-	"github.com/cloudevents/sdk-go/pkg/event"
 	"testing"
+
+	"github.com/cloudevents/sdk-go/pkg/event"
 
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
 	"github.com/stretchr/testify/assert"

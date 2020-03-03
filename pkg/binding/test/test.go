@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/event"
 	"reflect"
 	"sync"
 	"testing"
@@ -16,7 +15,7 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
-	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"github.com/cloudevents/sdk-go/pkg/types"
 )
 
@@ -85,7 +84,7 @@ func SendReceive(t *testing.T, ctx context.Context, in binding.Message, s bindin
 	wg.Wait()
 }
 
-func AssertEventContextEquals(t *testing.T, want cloudevents.EventContext, have cloudevents.EventContext) {
+func AssertEventContextEquals(t *testing.T, want event.EventContext, have event.EventContext) {
 	wantVersion, err := spec.VS.Version(want.GetSpecVersion())
 	require.NoError(t, err)
 	haveVersion, err := spec.VS.Version(have.GetSpecVersion())
@@ -99,7 +98,7 @@ func AssertEventContextEquals(t *testing.T, want cloudevents.EventContext, have 
 	require.Equal(t, want.GetExtensions(), have.GetExtensions(), "Extensions")
 }
 
-func AssertEventEquals(t *testing.T, want cloudevents.Event, have cloudevents.Event) {
+func AssertEventEquals(t *testing.T, want event.Event, have event.Event) {
 	AssertEventContextEquals(t, want.Context, have.Context)
 	wantPayload, err := want.DataBytes()
 	assert.NoError(t, err)

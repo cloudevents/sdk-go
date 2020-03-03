@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/event"
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/cloudevents/sdk-go/pkg/event"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/pubsub"
 	"github.com/cloudevents/sdk-go/pkg/types"

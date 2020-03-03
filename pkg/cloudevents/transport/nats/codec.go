@@ -3,6 +3,7 @@ package nats
 import (
 	"context"
 	"fmt"
+
 	"github.com/cloudevents/sdk-go/pkg/event"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"

@@ -9,14 +9,15 @@ import (
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	cloudevents "github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"github.com/cloudevents/sdk-go/pkg/types"
 )
 
 func TestWithFinish(t *testing.T) {
-	var testEvent = cloudevents.Event{
+	var testEvent = event.Event{
 		Data:        []byte(`"data"`),
 		DataEncoded: true,
-		Context: cloudevents.EventContextV1{
+		Context: event.EventContextV1{
 			DataContentType: cloudevents.StringOfApplicationJSON(),
 			Source:          types.URIRef{URL: url.URL{Path: "source"}},
 			ID:              "id",

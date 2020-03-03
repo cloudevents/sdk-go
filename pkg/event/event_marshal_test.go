@@ -3,10 +3,11 @@ package event_test
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/event"
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/cloudevents/sdk-go/pkg/event"
 
 	"github.com/google/go-cmp/cmp"
 

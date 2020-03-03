@@ -3,7 +3,7 @@ package transcoder
 import (
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
-	cloudevents "github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/event"
 )
 
 // Delete cloudevents attribute during the encoding process
@@ -32,7 +32,7 @@ func (a deleteAttributeTranscoderFactory) BinaryTransformer(encoder binding.Bina
 }
 
 func (a deleteAttributeTranscoderFactory) EventTransformer() binding.EventTransformer {
-	return func(event *cloudevents.Event) error {
+	return func(event *event.Event) error {
 		v, err := spec.VS.Version(event.SpecVersion())
 		if err != nil {
 			return err
@@ -60,7 +60,7 @@ func (a deleteExtensionTranscoderFactory) BinaryTransformer(encoder binding.Bina
 }
 
 func (a deleteExtensionTranscoderFactory) EventTransformer() binding.EventTransformer {
-	return func(event *cloudevents.Event) error {
+	return func(event *event.Event) error {
 		return event.Context.SetExtension(a.name, nil)
 	}
 }

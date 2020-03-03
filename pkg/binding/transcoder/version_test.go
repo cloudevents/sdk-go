@@ -11,12 +11,13 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
 	"github.com/cloudevents/sdk-go/pkg/binding/test"
 	cloudevents "github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"github.com/cloudevents/sdk-go/pkg/types"
 )
 
 func TestVersionTranscoder(t *testing.T) {
-	var testEventV02 = cloudevents.Event{
-		Context: cloudevents.EventContextV02{
+	var testEventV02 = event.Event{
+		Context: event.EventContextV02{
 			Source:      types.URLRef{URL: url.URL{Path: "source"}},
 			ContentType: cloudevents.StringOfApplicationJSON(),
 			ID:          "id",

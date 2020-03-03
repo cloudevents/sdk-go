@@ -7,13 +7,13 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
-	cloudevents "github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/event"
 )
 
 type TranscoderTestArgs struct {
 	Name         string
 	InputMessage binding.Message
-	WantEvent    cloudevents.Event
+	WantEvent    event.Event
 	Transformers []binding.TransformerFactory
 }
 
@@ -28,7 +28,7 @@ func RunTranscoderTests(t *testing.T, ctx context.Context, tests []TranscoderTes
 			enc, err := binding.Encode(ctx, tt.InputMessage, &mockStructured, &mockBinary, tt.Transformers)
 			require.NoError(t, err)
 
-			var e cloudevents.Event
+			var e event.Event
 			if enc == binding.EncodingStructured {
 				e, _, err = binding.ToEvent(ctx, &mockStructured)
 				require.NoError(t, err)

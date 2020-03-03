@@ -9,8 +9,9 @@ package format
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/event"
 	"strings"
+
+	"github.com/cloudevents/sdk-go/pkg/event"
 )
 
 // Format marshals and unmarshals structured events to bytes.

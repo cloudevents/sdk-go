@@ -3,15 +3,14 @@ package binding
 import (
 	"bytes"
 	"context"
-	"github.com/cloudevents/sdk-go/pkg/event"
 
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
-	cloudevents "github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/event"
 )
 
-// EventMessage type-converts a cloudevents.Event object to implement Message.
-// This allows local cloudevents.Event objects to be sent directly via Sender.Send()
+// EventMessage type-converts a event.Event object to implement Message.
+// This allows local event.Event objects to be sent directly via Sender.Send()
 //     s.Send(ctx, binding.EventMessage(e))
 type EventMessage event.Event
 
@@ -64,7 +63,7 @@ func (m *EventMessage) SetEvent(e event.Event) error {
 
 var _ Message = (*EventMessage)(nil) // Test it conforms to the interface
 
-func EventContextToBinaryEncoder(c cloudevents.EventContext, b BinaryEncoder) (err error) {
+func EventContextToBinaryEncoder(c event.EventContext, b BinaryEncoder) (err error) {
 	// Pass all attributes
 	var sv spec.Version
 	sv, err = spec.VS.Version(c.GetSpecVersion())

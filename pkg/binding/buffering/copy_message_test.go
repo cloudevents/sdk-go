@@ -3,8 +3,9 @@ package buffering
 import (
 	"context"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/event"
 	"testing"
+
+	"github.com/cloudevents/sdk-go/pkg/event"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

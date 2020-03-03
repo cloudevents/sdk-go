@@ -8,7 +8,7 @@ import (
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/event"
 )
 
 // MockBinaryMessage implements a binary-mode message as a simple struct.
@@ -45,7 +45,7 @@ func (bm *MockBinaryMessage) End() error {
 
 var versions = spec.New()
 
-func NewMockBinaryMessage(e cloudevents.Event) binding.Message {
+func NewMockBinaryMessage(e event.Event) binding.Message {
 	version, err := versions.Version(e.SpecVersion())
 	if err != nil {
 		panic(err)

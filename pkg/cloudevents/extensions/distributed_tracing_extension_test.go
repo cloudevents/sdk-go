@@ -2,10 +2,11 @@ package extensions_test
 
 import (
 	"encoding/hex"
-	"github.com/cloudevents/sdk-go/pkg/event"
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/cloudevents/sdk-go/pkg/event"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/extensions"
 	"github.com/cloudevents/sdk-go/pkg/types"

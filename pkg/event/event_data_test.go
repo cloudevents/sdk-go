@@ -1,9 +1,10 @@
 package event_test
 
 import (
-	"github.com/cloudevents/sdk-go/pkg/event"
 	"strings"
 	"testing"
+
+	"github.com/cloudevents/sdk-go/pkg/event"
 
 	"github.com/cloudevents/sdk-go/pkg/types"
 	"github.com/google/go-cmp/cmp"

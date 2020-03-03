@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/event"
 	nethttp "net/http"
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/cloudevents/sdk-go/pkg/event"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 	"github.com/cloudevents/sdk-go/pkg/types"
@@ -842,8 +843,8 @@ func TestCodecAsMiddleware(t *testing.T) {
 				// TODO: this is commented out because xml does not support maps.
 				//"simple data": {
 				//	codec: http.Codec{Encoding: encoding},
-				//	event: cloudevents.Event{
-				//		Context: &cloudevents.EventContextV01{
+				//	event: event.Event{
+				//		Context: &event.EventContextV01{
 				//			EventType:   "com.example.test",
 				//			Source:      *source,
 				//			EventID:     "ABC-123",
@@ -854,8 +855,8 @@ func TestCodecAsMiddleware(t *testing.T) {
 				//			"b": "banana",
 				//		},
 				//	},
-				//	want: cloudevents.Event{
-				//		Context: &cloudevents.EventContextV01{
+				//	want: event.Event{
+				//		Context: &event.EventContextV01{
 				//			CloudEventsVersion: cloudevents.CloudEventsVersionV01,
 				//			EventType:          "com.example.test",
 				//			Source:             *source,

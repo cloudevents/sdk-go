@@ -2,10 +2,11 @@ package nats_test
 
 import (
 	"context"
-	"github.com/cloudevents/sdk-go/pkg/event"
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/cloudevents/sdk-go/pkg/event"
 
 	"github.com/google/go-cmp/cmp"
 

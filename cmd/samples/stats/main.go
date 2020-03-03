@@ -3,11 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/event"
 	"log"
 	"math/rand"
 	"net/http"
 	"time"
+
+	"github.com/cloudevents/sdk-go/pkg/event"
 
 	"go.opencensus.io/examples/exporter"
 	"go.opencensus.io/trace"

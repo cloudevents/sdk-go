@@ -8,7 +8,7 @@ import (
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
-	cloudevents "github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/event"
 )
 
 // MockStructuredMessage implements a structured-mode message as a simple struct.
@@ -27,7 +27,7 @@ func (s *MockStructuredMessage) SetStructuredEvent(ctx context.Context, format f
 	return nil
 }
 
-func NewMockStructuredMessage(e cloudevents.Event) binding.Message {
+func NewMockStructuredMessage(e event.Event) binding.Message {
 	testEventSerialized, err := format.JSON.Marshal(e)
 	if err != nil {
 		panic(err)

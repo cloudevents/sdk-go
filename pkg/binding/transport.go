@@ -2,8 +2,9 @@ package binding
 
 import (
 	"context"
-	"github.com/cloudevents/sdk-go/pkg/event"
 	"io"
+
+	"github.com/cloudevents/sdk-go/pkg/event"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 )

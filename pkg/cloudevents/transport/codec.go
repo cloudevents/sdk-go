@@ -3,6 +3,7 @@ package transport
 import (
 	"context"
 	"fmt"
+
 	"github.com/cloudevents/sdk-go/pkg/event"
 )
 

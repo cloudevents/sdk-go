@@ -2,10 +2,11 @@ package http_test
 
 import (
 	"context"
-	event2 "github.com/cloudevents/sdk-go/pkg/event"
 	"net/url"
 	"testing"
 	"time"
+
+	event2 "github.com/cloudevents/sdk-go/pkg/event"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 	"github.com/cloudevents/sdk-go/pkg/types"

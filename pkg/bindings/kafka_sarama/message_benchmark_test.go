@@ -6,14 +6,14 @@ import (
 	"context"
 	"testing"
 
-	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/bindings/kafka_sarama"
+	"github.com/cloudevents/sdk-go/pkg/event"
 )
 
 // Avoid DCE
 var M binding.Message
-var Event cloudevents.Event
+var Event event.Event
 var Err error
 
 func BenchmarkNewStructuredMessageWithoutKey(b *testing.B) {

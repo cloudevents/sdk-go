@@ -2,8 +2,9 @@ package client
 
 import (
 	"context"
-	"github.com/cloudevents/sdk-go/pkg/event"
 	"time"
+
+	"github.com/cloudevents/sdk-go/pkg/event"
 
 	"github.com/google/uuid"
 )

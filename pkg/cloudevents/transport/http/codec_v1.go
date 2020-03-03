@@ -3,10 +3,11 @@ package http
 import (
 	"context"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/event"
 	"net/http"
 	"net/textproto"
 	"strings"
+
+	"github.com/cloudevents/sdk-go/pkg/event"
 
 	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
