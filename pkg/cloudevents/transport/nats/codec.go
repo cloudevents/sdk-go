@@ -3,8 +3,8 @@ package nats
 import (
 	"context"
 	"fmt"
+	"github.com/cloudevents/sdk-go/pkg/event"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 )
 
@@ -18,7 +18,7 @@ type Codec struct {
 
 var _ transport.Codec = (*Codec)(nil)
 
-func (c *Codec) Encode(ctx context.Context, e cloudevents.Event) (transport.Message, error) {
+func (c *Codec) Encode(ctx context.Context, e event.Event) (transport.Message, error) {
 	switch c.Encoding {
 	case Default:
 		fallthrough
@@ -42,7 +42,7 @@ func (c *Codec) Encode(ctx context.Context, e cloudevents.Event) (transport.Mess
 	}
 }
 
-func (c *Codec) Decode(ctx context.Context, msg transport.Message) (*cloudevents.Event, error) {
+func (c *Codec) Decode(ctx context.Context, msg transport.Message) (*event.Event, error) {
 	switch c.inspectEncoding(ctx, msg) {
 	case Default:
 		fallthrough

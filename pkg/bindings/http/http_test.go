@@ -2,6 +2,7 @@ package http_test
 
 import (
 	"context"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	nethttp "net/http"
 	"net/http/httptest"
 	"net/url"
@@ -13,13 +14,12 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/test"
 	"github.com/cloudevents/sdk-go/pkg/bindings/http"
-	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 )
 
 func TestSendSkipBinary(t *testing.T) {
 	close, s, r := testSenderReceiver(t)
 	defer close()
-	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn ce.Event) {
+	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
 		eventIn = test.ExToStr(t, eventIn)
 		in := test.NewMockBinaryMessage(eventIn)
 		test.SendReceive(t, binding.WithSkipDirectBinaryEncoding(binding.WithPreferredEventEncoding(context.Background(), binding.EncodingStructured), true), in, s, r, func(out binding.Message) {
@@ -33,7 +33,7 @@ func TestSendSkipBinary(t *testing.T) {
 func TestSendSkipStructured(t *testing.T) {
 	close, s, r := testSenderReceiver(t)
 	defer close()
-	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn ce.Event) {
+	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
 		eventIn = test.ExToStr(t, eventIn)
 		in := test.NewMockStructuredMessage(eventIn)
 		test.SendReceive(t, binding.WithSkipDirectStructuredEncoding(context.Background(), true), in, s, r, func(out binding.Message) {
@@ -47,7 +47,7 @@ func TestSendSkipStructured(t *testing.T) {
 func TestSendBinaryReceiveBinary(t *testing.T) {
 	close, s, r := testSenderReceiver(t)
 	defer close()
-	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn ce.Event) {
+	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
 		eventIn = test.ExToStr(t, eventIn)
 		in := test.NewMockBinaryMessage(eventIn)
 		test.SendReceive(t, context.Background(), in, s, r, func(out binding.Message) {
@@ -61,7 +61,7 @@ func TestSendBinaryReceiveBinary(t *testing.T) {
 func TestSendStructReceiveStruct(t *testing.T) {
 	close, s, r := testSenderReceiver(t)
 	defer close()
-	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn ce.Event) {
+	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
 		eventIn = test.ExToStr(t, eventIn)
 		in := test.NewMockStructuredMessage(eventIn)
 		test.SendReceive(t, context.Background(), in, s, r, func(out binding.Message) {
@@ -75,7 +75,7 @@ func TestSendStructReceiveStruct(t *testing.T) {
 func TestSendEventReceiveBinary(t *testing.T) {
 	close, s, r := testSenderReceiver(t)
 	defer close()
-	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn ce.Event) {
+	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
 		eventIn = test.ExToStr(t, eventIn)
 		in := binding.EventMessage(eventIn)
 		test.SendReceive(t, context.Background(), in, s, r, func(out binding.Message) {

@@ -3,7 +3,7 @@ package transcoder
 import (
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
-	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/event"
 )
 
 // Returns a TransformerFactory that converts the event context version to the specified one.
@@ -24,7 +24,7 @@ func (v versionTranscoderFactory) BinaryTransformer(encoder binding.BinaryEncode
 }
 
 func (v versionTranscoderFactory) EventTransformer() binding.EventTransformer {
-	return func(e *ce.Event) error {
+	return func(e *event.Event) error {
 		e.Context = v.version.Convert(e.Context)
 		return nil
 	}

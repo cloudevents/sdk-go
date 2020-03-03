@@ -1,19 +1,19 @@
 package format_test
 
 import (
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
-	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/cloudevents/sdk-go/pkg/types"
 )
 
 func TestJSON(t *testing.T) {
 	assert := assert.New(t)
-	e := ce.Event{
-		Context: ce.EventContextV03{
+	e := event.Event{
+		Context: event.EventContextV03{
 			Type:   "type",
 			ID:     "id",
 			Source: *types.ParseURLRef("source"),
@@ -25,7 +25,7 @@ func TestJSON(t *testing.T) {
 	assert.NoError(err)
 	assert.Equal(`{"data":"foo","ex":"val","id":"id","source":"source","specversion":"0.3","type":"type"}`, string(b))
 
-	var e2 ce.Event
+	var e2 event.Event
 	assert.NoError(format.JSON.Unmarshal(b, &e2))
 	assert.Equal(e, e2)
 }
@@ -34,15 +34,15 @@ func TestLookup(t *testing.T) {
 	assert := assert.New(t)
 	assert.Nil(format.Lookup("nosuch"))
 
-	f := format.Lookup(ce.ApplicationCloudEventsJSON)
-	assert.Equal(f.MediaType(), ce.ApplicationCloudEventsJSON)
+	f := format.Lookup(event.ApplicationCloudEventsJSON)
+	assert.Equal(f.MediaType(), event.ApplicationCloudEventsJSON)
 	assert.Equal(format.JSON, f)
 }
 
 func TestMarshalUnmarshal(t *testing.T) {
 	assert := assert.New(t)
-	e := ce.Event{
-		Context: ce.EventContextV03{
+	e := event.Event{
+		Context: event.EventContextV03{
 			Type:   "type",
 			ID:     "id",
 			Source: *types.ParseURLRef("source"),
@@ -53,7 +53,7 @@ func TestMarshalUnmarshal(t *testing.T) {
 	assert.NoError(err)
 	assert.Equal(`{"data":"foo","id":"id","source":"source","specversion":"0.3","type":"type"}`, string(b))
 
-	var e2 ce.Event
+	var e2 event.Event
 	assert.NoError(format.Unmarshal(format.JSON.MediaType(), b, &e2))
 	assert.Equal(e, e2)
 
@@ -65,16 +65,16 @@ func TestMarshalUnmarshal(t *testing.T) {
 
 type dummyFormat struct{}
 
-func (dummyFormat) MediaType() string                     { return "dummy" }
-func (dummyFormat) Marshal(ce.Event) ([]byte, error)      { return []byte("dummy!"), nil }
-func (dummyFormat) Unmarshal(b []byte, e *ce.Event) error { e.Data = "undummy!"; return nil }
+func (dummyFormat) MediaType() string                        { return "dummy" }
+func (dummyFormat) Marshal(event.Event) ([]byte, error)      { return []byte("dummy!"), nil }
+func (dummyFormat) Unmarshal(b []byte, e *event.Event) error { e.Data = "undummy!"; return nil }
 
 func TestAdd(t *testing.T) {
 	assert := assert.New(t)
 	format.Add(dummyFormat{})
 	assert.Equal(dummyFormat{}, format.Lookup("dummy"))
 
-	e := ce.Event{}
+	e := event.Event{}
 	b, err := format.Marshal("dummy", e)
 	assert.NoError(err)
 	assert.Equal("dummy!", string(b))

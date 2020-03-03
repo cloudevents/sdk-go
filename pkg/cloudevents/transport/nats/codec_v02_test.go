@@ -2,13 +2,13 @@ package nats_test
 
 import (
 	"context"
+	event2 "github.com/cloudevents/sdk-go/pkg/event"
 	"net/url"
 	"testing"
 	"time"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/nats"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/cloudevents/sdk-go/pkg/types"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -22,14 +22,14 @@ func TestCodecV02_Encode(t *testing.T) {
 
 	testCases := map[string]struct {
 		codec   nats.CodecV02
-		event   cloudevents.Event
+		event   event2.Event
 		want    *nats.Message
 		wantErr error
 	}{
 		"simple v2 default": {
 			codec: nats.CodecV02{},
-			event: cloudevents.Event{
-				Context: cloudevents.EventContextV02{
+			event: event2.Event{
+				Context: event2.EventContextV02{
 					Type:   "com.example.test",
 					Source: *source,
 					ID:     "ABC-123",
@@ -49,13 +49,13 @@ func TestCodecV02_Encode(t *testing.T) {
 		},
 		"full v2 default": {
 			codec: nats.CodecV02{},
-			event: cloudevents.Event{
-				Context: cloudevents.EventContextV02{
+			event: event2.Event{
+				Context: event2.EventContextV02{
 					ID:          "ABC-123",
 					Time:        &now,
 					Type:        "com.example.test",
 					SchemaURL:   schema,
-					ContentType: cloudevents.StringOfApplicationJSON(),
+					ContentType: event2.StringOfApplicationJSON(),
 					Source:      *source,
 					Extensions: map[string]interface{}{
 						"test": "extended",
@@ -86,8 +86,8 @@ func TestCodecV02_Encode(t *testing.T) {
 		},
 		"simple v2 structured": {
 			codec: nats.CodecV02{Encoding: nats.StructuredV02},
-			event: cloudevents.Event{
-				Context: cloudevents.EventContextV02{
+			event: event2.Event{
+				Context: event2.EventContextV02{
 					Type:   "com.example.test",
 					Source: *source,
 					ID:     "ABC-123",
@@ -107,13 +107,13 @@ func TestCodecV02_Encode(t *testing.T) {
 		},
 		"full v2 structured": {
 			codec: nats.CodecV02{Encoding: nats.StructuredV02},
-			event: cloudevents.Event{
-				Context: cloudevents.EventContextV02{
+			event: event2.Event{
+				Context: event2.EventContextV02{
 					ID:          "ABC-123",
 					Time:        &now,
 					Type:        "com.example.test",
 					SchemaURL:   schema,
-					ContentType: cloudevents.StringOfApplicationJSON(),
+					ContentType: event2.StringOfApplicationJSON(),
 					Source:      *source,
 					Extensions: map[string]interface{}{
 						"test": "extended",
@@ -186,7 +186,7 @@ func TestCodecV02_Decode(t *testing.T) {
 	testCases := map[string]struct {
 		codec   nats.CodecV02
 		msg     *nats.Message
-		want    *cloudevents.Event
+		want    *event2.Event
 		wantErr error
 	}{
 		"simple v2 structured": {
@@ -199,9 +199,9 @@ func TestCodecV02_Decode(t *testing.T) {
 					"source":      "http://example.com/source",
 				}),
 			},
-			want: &cloudevents.Event{
-				Context: &cloudevents.EventContextV02{
-					SpecVersion: cloudevents.CloudEventsVersionV02,
+			want: &event2.Event{
+				Context: &event2.EventContextV02{
+					SpecVersion: event2.CloudEventsVersionV02,
 					Type:        "com.example.test",
 					Source:      *source,
 					ID:          "ABC-123",
@@ -225,14 +225,14 @@ func TestCodecV02_Decode(t *testing.T) {
 					"source":    "http://example.com/source",
 				}),
 			},
-			want: &cloudevents.Event{
-				Context: &cloudevents.EventContextV02{
-					SpecVersion: cloudevents.CloudEventsVersionV02,
+			want: &event2.Event{
+				Context: &event2.EventContextV02{
+					SpecVersion: event2.CloudEventsVersionV02,
 					ID:          "ABC-123",
 					Time:        &now,
 					Type:        "com.example.test",
 					SchemaURL:   schema,
-					ContentType: cloudevents.StringOfApplicationJSON(),
+					ContentType: event2.StringOfApplicationJSON(),
 					Source:      *source,
 					Extensions: map[string]interface{}{
 						"test": "extended",

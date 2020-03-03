@@ -3,16 +3,16 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"log"
 	"net/url"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	ceamqp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/amqp"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/cloudevents/sdk-go/pkg/types"
 	"github.com/google/uuid"
 	"pack.ag/amqp"
 )
@@ -55,8 +55,8 @@ type Example struct {
 	Message  string `json:"message"`
 }
 
-func (d *Demo) Send(eventContext cloudevents.EventContext, i int) (context.Context, *cloudevents.Event, error) {
-	event := cloudevents.Event{
+func (d *Demo) Send(eventContext event.EventContext, i int) (context.Context, *event.Event, error) {
+	event := event.Event{
 		Context: eventContext,
 		Data: &Example{
 			Sequence: i,
@@ -92,7 +92,7 @@ func main() {
 
 	for i := 0; i < count; i++ {
 		now := time.Now()
-		ctx := cloudevents.EventContextV03{
+		ctx := event.EventContextV03{
 			ID:              uuid.New().String(),
 			Type:            "com.cloudevents.sample.sent",
 			Time:            &types.Timestamp{Time: now},

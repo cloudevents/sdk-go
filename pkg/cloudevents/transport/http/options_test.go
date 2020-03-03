@@ -3,13 +3,13 @@ package http
 import (
 	"context"
 	"fmt"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"net"
 	"net/http"
 	"net/url"
 	"testing"
 	"time"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 )
@@ -503,7 +503,7 @@ func TestWithEncoding(t *testing.T) {
 
 func TestWithDefaultEncodingSelector(t *testing.T) {
 
-	fn := func(ctx context.Context, e cloudevents.Event) Encoding {
+	fn := func(ctx context.Context, e event.Event) Encoding {
 		return Default
 	}
 

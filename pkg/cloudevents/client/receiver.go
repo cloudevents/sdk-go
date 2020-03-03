@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"reflect"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 )
 
@@ -14,7 +14,7 @@ import (
 // If fn returns an error, EventResponse will not be considered by the client or
 // or transport.
 // This is just an FYI:
-type ReceiveFull func(context.Context, cloudevents.Event, *cloudevents.EventResponse) error
+type ReceiveFull func(context.Context, event.Event, *event.EventResponse) error
 
 type receiverFn struct {
 	numIn   int
@@ -29,7 +29,7 @@ type receiverFn struct {
 
 // ConvertFn defines the signature the client expects to enable conversion
 // delegation.
-type ConvertFn func(context.Context, transport.Message, error) (*cloudevents.Event, error)
+type ConvertFn func(context.Context, transport.Message, error) (*event.Event, error)
 
 const (
 	inParamUsage  = "expected a function taking either no parameters, one or more of (context.Context, cloudevents.Event, *cloudevents.EventResponse) ordered"
@@ -38,8 +38,8 @@ const (
 
 var (
 	contextType       = reflect.TypeOf((*context.Context)(nil)).Elem()
-	eventType         = reflect.TypeOf((*cloudevents.Event)(nil)).Elem()
-	eventResponseType = reflect.TypeOf((*cloudevents.EventResponse)(nil)) // want the ptr type
+	eventType         = reflect.TypeOf((*event.Event)(nil)).Elem()
+	eventResponseType = reflect.TypeOf((*event.EventResponse)(nil)) // want the ptr type
 	errorType         = reflect.TypeOf((*error)(nil)).Elem()
 )
 
@@ -76,7 +76,7 @@ func receiver(fn interface{}) (*receiverFn, error) {
 	return r, nil
 }
 
-func (r *receiverFn) invoke(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error {
+func (r *receiverFn) invoke(ctx context.Context, event event.Event, resp *event.EventResponse) error {
 	args := make([]reflect.Value, 0, r.numIn)
 
 	if r.numIn > 0 {

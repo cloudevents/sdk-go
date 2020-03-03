@@ -2,9 +2,9 @@ package binding
 
 import (
 	"context"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"io"
 
-	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 )
 
@@ -25,7 +25,7 @@ func NewTransportAdapter(s Sender, r Receiver, senderContextDecorators []func(co
 	return &BindingTransport{Sender: s, Receiver: r, SenderContextDecorators: senderContextDecorators}
 }
 
-func (t *BindingTransport) Send(ctx context.Context, e ce.Event) (context.Context, *ce.Event, error) {
+func (t *BindingTransport) Send(ctx context.Context, e event.Event) (context.Context, *event.Event, error) {
 	for _, f := range t.SenderContextDecorators {
 		ctx = f(ctx)
 	}

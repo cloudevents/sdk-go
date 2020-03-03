@@ -2,11 +2,11 @@ package extensions
 
 import (
 	"context"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"reflect"
 	"strings"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/cloudevents/sdk-go/pkg/types"
 	"github.com/lightstep/tracecontext.go/traceparent"
 	"github.com/lightstep/tracecontext.go/tracestate"
 	"go.opencensus.io/trace"
@@ -49,7 +49,7 @@ func (d DistributedTracingExtension) AddTracingAttributes(ec EventTracer) error 
 	return nil
 }
 
-func GetDistributedTracingExtension(event cloudevents.Event) (DistributedTracingExtension, bool) {
+func GetDistributedTracingExtension(event event.Event) (DistributedTracingExtension, bool) {
 	if tp, ok := event.Extensions()[TraceParentExtension]; ok {
 		if tpStr, err := types.ToString(tp); err == nil {
 			var tsStr string

@@ -3,9 +3,9 @@ package client
 import (
 	"context"
 	"fmt"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"sync"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/extensions"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
@@ -16,7 +16,7 @@ import (
 // Client interface defines the runtime contract the CloudEvents client supports.
 type Client interface {
 	// Send will transmit the given event over the client's configured transport.
-	Send(ctx context.Context, event cloudevents.Event) (context.Context, *cloudevents.Event, error)
+	Send(ctx context.Context, event event.Event) (context.Context, *event.Event, error)
 
 	// StartReceiver will register the provided function for callback on receipt
 	// of a cloudevent. It will also start the underlying transport as it has
@@ -65,7 +65,7 @@ func NewDefault() (Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	c, err := New(t, WithTimeNow(), WithUUIDs(), WithDataContentType(cloudevents.ApplicationJSON))
+	c, err := New(t, WithTimeNow(), WithUUIDs(), WithDataContentType(event.ApplicationJSON))
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +88,7 @@ type ceClient struct {
 // Send returns a response event if there is a response or an error if there
 // was an an issue validating the outbound event or the transport returns an
 // error.
-func (c *ceClient) Send(ctx context.Context, event cloudevents.Event) (context.Context, *cloudevents.Event, error) {
+func (c *ceClient) Send(ctx context.Context, event event.Event) (context.Context, *event.Event, error) {
 	ctx, r := observability.NewReporter(ctx, reportSend)
 
 	ctx, span := trace.StartSpan(ctx, clientSpanName, trace.WithSpanKind(trace.SpanKindClient))
@@ -106,7 +106,7 @@ func (c *ceClient) Send(ctx context.Context, event cloudevents.Event) (context.C
 	return rctx, resp, err
 }
 
-func (c *ceClient) obsSend(ctx context.Context, event cloudevents.Event) (context.Context, *cloudevents.Event, error) {
+func (c *ceClient) obsSend(ctx context.Context, event event.Event) (context.Context, *event.Event, error) {
 	// Confirm we have a transport set.
 	if c.transport == nil {
 		return ctx, nil, fmt.Errorf("client not ready, transport not initialized")
@@ -136,7 +136,7 @@ func (c *ceClient) obsSend(ctx context.Context, event cloudevents.Event) (contex
 }
 
 // Receive is called from from the transport on event delivery.
-func (c *ceClient) Receive(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error {
+func (c *ceClient) Receive(ctx context.Context, event event.Event, resp *event.EventResponse) error {
 	ctx, r := observability.NewReporter(ctx, reportReceive)
 
 	var span *trace.Span
@@ -162,7 +162,7 @@ func (c *ceClient) Receive(ctx context.Context, event cloudevents.Event, resp *c
 	return err
 }
 
-func (c *ceClient) obsReceive(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error {
+func (c *ceClient) obsReceive(ctx context.Context, event event.Event, resp *event.EventResponse) error {
 	if c.fn != nil {
 		err := c.fn.invoke(ctx, event, resp)
 
@@ -217,7 +217,7 @@ func (c *ceClient) applyOptions(opts ...Option) error {
 }
 
 // Convert implements transport Converter.Convert.
-func (c *ceClient) Convert(ctx context.Context, m transport.Message, err error) (*cloudevents.Event, error) {
+func (c *ceClient) Convert(ctx context.Context, m transport.Message, err error) (*event.Event, error) {
 	if c.convertFn != nil {
 		return c.convertFn(ctx, m, err)
 	}

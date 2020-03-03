@@ -2,10 +2,10 @@ package spec
 
 import (
 	"fmt"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"time"
 
-	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/cloudevents/sdk-go/pkg/types"
 )
 
 // Kind is a version-independent identifier for a CloudEvent context attribute.
@@ -51,30 +51,30 @@ type Attribute interface {
 	// Version of the spec that this attribute belongs to
 	Version() Version
 	// Get the value of this attribute from an event context
-	Get(ce.EventContextReader) interface{}
+	Get(event.EventContextReader) interface{}
 	// Set the value of this attribute on an event context
-	Set(ce.EventContextWriter, interface{}) error
+	Set(event.EventContextWriter, interface{}) error
 	// Delete this attribute from and event context, when possible
-	Delete(ce.EventContextWriter) error
+	Delete(event.EventContextWriter) error
 }
 
 // accessor provides Kind, Get, Set.
 type accessor interface {
 	Kind() Kind
-	Get(ce.EventContextReader) interface{}
-	Set(ce.EventContextWriter, interface{}) error
-	Delete(ce.EventContextWriter) error
+	Get(event.EventContextReader) interface{}
+	Set(event.EventContextWriter, interface{}) error
+	Delete(event.EventContextWriter) error
 }
 
 var acc = [nAttrs]accessor{
-	&aStr{aKind(ID), ce.EventContextReader.GetID, ce.EventContextWriter.SetID},
-	&aStr{aKind(Source), ce.EventContextReader.GetSource, ce.EventContextWriter.SetSource},
-	&aStr{aKind(SpecVersion), ce.EventContextReader.GetSpecVersion, ce.EventContextWriter.SetSpecVersion},
-	&aStr{aKind(Type), ce.EventContextReader.GetType, ce.EventContextWriter.SetType},
-	&aStr{aKind(DataContentType), ce.EventContextReader.GetDataContentType, ce.EventContextWriter.SetDataContentType},
-	&aStr{aKind(DataSchema), ce.EventContextReader.GetDataSchema, ce.EventContextWriter.SetDataSchema},
-	&aStr{aKind(Subject), ce.EventContextReader.GetSubject, ce.EventContextWriter.SetSubject},
-	&aTime{aKind(Time), ce.EventContextReader.GetTime, ce.EventContextWriter.SetTime},
+	&aStr{aKind(ID), event.EventContextReader.GetID, event.EventContextWriter.SetID},
+	&aStr{aKind(Source), event.EventContextReader.GetSource, event.EventContextWriter.SetSource},
+	&aStr{aKind(SpecVersion), event.EventContextReader.GetSpecVersion, event.EventContextWriter.SetSpecVersion},
+	&aStr{aKind(Type), event.EventContextReader.GetType, event.EventContextWriter.SetType},
+	&aStr{aKind(DataContentType), event.EventContextReader.GetDataContentType, event.EventContextWriter.SetDataContentType},
+	&aStr{aKind(DataSchema), event.EventContextReader.GetDataSchema, event.EventContextWriter.SetDataSchema},
+	&aStr{aKind(Subject), event.EventContextReader.GetSubject, event.EventContextWriter.SetSubject},
+	&aTime{aKind(Time), event.EventContextReader.GetTime, event.EventContextWriter.SetTime},
 }
 
 // aKind implements Kind()
@@ -84,18 +84,18 @@ func (kind aKind) Kind() Kind { return Kind(kind) }
 
 type aStr struct {
 	aKind
-	get func(ce.EventContextReader) string
-	set func(ce.EventContextWriter, string) error
+	get func(event.EventContextReader) string
+	set func(event.EventContextWriter, string) error
 }
 
-func (a *aStr) Get(c ce.EventContextReader) interface{} {
+func (a *aStr) Get(c event.EventContextReader) interface{} {
 	if s := a.get(c); s != "" {
 		return s
 	}
 	return nil // Treat blank as missing
 }
 
-func (a *aStr) Set(c ce.EventContextWriter, v interface{}) error {
+func (a *aStr) Set(c event.EventContextWriter, v interface{}) error {
 	s, err := types.ToString(v)
 	if err != nil {
 		return fmt.Errorf("invalid value for %s: %#v", a.Kind(), v)
@@ -103,24 +103,24 @@ func (a *aStr) Set(c ce.EventContextWriter, v interface{}) error {
 	return a.set(c, s)
 }
 
-func (a *aStr) Delete(c ce.EventContextWriter) error {
+func (a *aStr) Delete(c event.EventContextWriter) error {
 	return a.set(c, "")
 }
 
 type aTime struct {
 	aKind
-	get func(ce.EventContextReader) time.Time
-	set func(ce.EventContextWriter, time.Time) error
+	get func(event.EventContextReader) time.Time
+	set func(event.EventContextWriter, time.Time) error
 }
 
-func (a *aTime) Get(c ce.EventContextReader) interface{} {
+func (a *aTime) Get(c event.EventContextReader) interface{} {
 	if v := a.get(c); !v.IsZero() {
 		return v
 	}
 	return nil // Treat zero time as missing.
 }
 
-func (a *aTime) Set(c ce.EventContextWriter, v interface{}) error {
+func (a *aTime) Set(c event.EventContextWriter, v interface{}) error {
 	t, err := types.ToTime(v)
 	if err != nil {
 		return fmt.Errorf("invalid value for %s: %#v", a.Kind(), v)
@@ -128,6 +128,6 @@ func (a *aTime) Set(c ce.EventContextWriter, v interface{}) error {
 	return a.set(c, t)
 }
 
-func (a *aTime) Delete(c ce.EventContextWriter) error {
+func (a *aTime) Delete(c event.EventContextWriter) error {
 	return a.set(c, time.Time{})
 }

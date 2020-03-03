@@ -3,13 +3,13 @@ package test
 
 import (
 	"fmt"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"net/url"
 	"reflect"
 	"time"
 
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
-	ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/cloudevents/sdk-go/pkg/types"
 )
 
 func strptr(s string) *string { return &s }
@@ -21,9 +21,9 @@ var (
 )
 
 // FullEvent has all context attributes set and JSON string data.
-func FullEvent() ce.Event {
-	e := ce.Event{
-		Context: ce.EventContextV1{
+func FullEvent() event.Event {
+	e := event.Event{
+		Context: event.EventContextV1{
 			Type:            "com.example.FullEvent",
 			Source:          Source,
 			ID:              "full-event",
@@ -48,9 +48,9 @@ func FullEvent() ce.Event {
 }
 
 // MinEvent has only required attributes set.
-func MinEvent() ce.Event {
-	return ce.Event{
-		Context: ce.EventContextV1{
+func MinEvent() event.Event {
+	return event.Event{
+		Context: event.EventContextV1{
 			Type:   "com.example.MinEvent",
 			Source: Source,
 			ID:     "min-event",
@@ -60,10 +60,10 @@ func MinEvent() ce.Event {
 
 // AllVersions returns all versions of each event in events.
 // ID gets a -number suffix so IDs are unique.
-func AllVersions(events []ce.Event) []ce.Event {
+func AllVersions(events []event.Event) []event.Event {
 	versions := spec.New()
 	all := versions.Versions()
-	result := make([]ce.Event, len(events)*len(all))
+	result := make([]event.Event, len(events)*len(all))
 	i := 0
 	for _, e := range events {
 		for _, v := range all {
@@ -78,14 +78,14 @@ func AllVersions(events []ce.Event) []ce.Event {
 
 // Events is a set of test events that should be handled correctly by
 // all event-processing code.
-func Events() []ce.Event {
-	return AllVersions([]ce.Event{FullEvent(), MinEvent()})
+func Events() []event.Event {
+	return AllVersions([]event.Event{FullEvent(), MinEvent()})
 }
 
 // NoExtensions returns a copy of events with no Extensions.
 // Use for testing where extensions are not supported.
-func NoExtensions(events []ce.Event) []ce.Event {
-	result := make([]ce.Event, len(events))
+func NoExtensions(events []event.Event) []event.Event {
+	result := make([]event.Event, len(events))
 	for i, e := range events {
 		result[i] = e
 		result[i].Context = e.Context.Clone()

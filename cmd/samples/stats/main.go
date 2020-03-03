@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"log"
 	"math/rand"
 	"net/http"
@@ -19,11 +20,10 @@ import (
 	"contrib.go.opencensus.io/exporter/prometheus"
 	"go.opencensus.io/stats/view"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	transporthttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/cloudevents/sdk-go/pkg/types"
 )
 
 func main() {
@@ -47,7 +47,7 @@ type Example struct {
 	Message  string `json:"message"`
 }
 
-func gotEvent(event cloudevents.Event) {
+func gotEvent(event event.Event) {
 	data := &Example{}
 	if err := event.DataAs(data); err != nil {
 		fmt.Printf("failed to get data as Example: %s\n", err.Error())
@@ -75,8 +75,8 @@ func mainSender() {
 				Sequence: i,
 				Message:  "Hello, World!",
 			}
-			event := cloudevents.Event{
-				Context: cloudevents.EventContextV02{
+			event := event.Event{
+				Context: event.EventContextV02{
 					Type:   "com.cloudevents.sample.sent",
 					Source: *source,
 				}.AsV02(),
@@ -122,7 +122,7 @@ func mainMetrics() {
 	if err := view.Register(
 		client.LatencyView,
 		transporthttp.LatencyView,
-		cloudevents.EventMarshalLatencyView,
+		event.EventMarshalLatencyView,
 		json.LatencyView,
 		xml.LatencyView,
 		datacodec.LatencyView,

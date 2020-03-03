@@ -4,13 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"net/url"
 	"testing"
 	"time"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/pubsub"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/cloudevents/sdk-go/pkg/types"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -28,14 +28,14 @@ func TestCodecEncode(t *testing.T) {
 
 	testCases := map[string]struct {
 		codec   *pubsub.Codec
-		event   *cloudevents.Event
+		event   *event.Event
 		want    *pubsub.Message
 		wantErr error
 	}{
 		"simple v03 structured": {
 			codec: &pubsub.Codec{Encoding: pubsub.StructuredV03},
-			event: &cloudevents.Event{
-				Context: cloudevents.EventContextV03{
+			event: &event.Event{
+				Context: event.EventContextV03{
 					Type:    "com.example.test",
 					Source:  *source,
 					ID:      "ABC-123",
@@ -44,7 +44,7 @@ func TestCodecEncode(t *testing.T) {
 			},
 			want: &pubsub.Message{
 				Attributes: map[string]string{
-					"Content-Type": cloudevents.ApplicationCloudEventsJSON,
+					"Content-Type": event.ApplicationCloudEventsJSON,
 				},
 				Data: func() []byte {
 					body := map[string]interface{}{
@@ -60,8 +60,8 @@ func TestCodecEncode(t *testing.T) {
 		},
 		"simple v03 binary": {
 			codec: &pubsub.Codec{Encoding: pubsub.BinaryV03},
-			event: &cloudevents.Event{
-				Context: &cloudevents.EventContextV03{
+			event: &event.Event{
+				Context: &event.EventContextV03{
 					Type:    "com.example.test",
 					Source:  *source,
 					ID:      "ABC-123",
@@ -115,14 +115,14 @@ func TestCodecDecode(t *testing.T) {
 	testCases := map[string]struct {
 		codec   *pubsub.Codec
 		msg     *pubsub.Message
-		want    *cloudevents.Event
+		want    *event.Event
 		wantErr error
 	}{
 		"simple v3 structured": {
 			codec: &pubsub.Codec{Encoding: pubsub.StructuredV03},
 			msg: &pubsub.Message{
 				Attributes: map[string]string{
-					"Content-Type": cloudevents.ApplicationCloudEventsJSON,
+					"Content-Type": event.ApplicationCloudEventsJSON,
 				},
 				Data: func() []byte {
 					body := map[string]interface{}{
@@ -135,9 +135,9 @@ func TestCodecDecode(t *testing.T) {
 					return toBytes(body)
 				}(),
 			},
-			want: &cloudevents.Event{
-				Context: &cloudevents.EventContextV03{
-					SpecVersion: cloudevents.CloudEventsVersionV03,
+			want: &event.Event{
+				Context: &event.EventContextV03{
+					SpecVersion: event.CloudEventsVersionV03,
 					Type:        "com.example.test",
 					Source:      *source,
 					ID:          "ABC-123",
@@ -181,14 +181,14 @@ func TestCodecAsMiddleware(t *testing.T) {
 
 		testCases := map[string]struct {
 			codec   *pubsub.Codec
-			event   *cloudevents.Event
-			want    *cloudevents.Event
+			event   *event.Event
+			want    *event.Event
 			wantErr error
 		}{
 			"simple data": {
 				codec: &pubsub.Codec{Encoding: encoding},
-				event: &cloudevents.Event{
-					Context: cloudevents.EventContextV03{
+				event: &event.Event{
+					Context: event.EventContextV03{
 						Type:   "com.example.test",
 						Source: *source,
 						ID:     "ABC-123",
@@ -198,9 +198,9 @@ func TestCodecAsMiddleware(t *testing.T) {
 						"b": "banana",
 					},
 				},
-				want: &cloudevents.Event{
-					Context: &cloudevents.EventContextV03{
-						SpecVersion: cloudevents.CloudEventsVersionV03,
+				want: &event.Event{
+					Context: &event.EventContextV03{
+						SpecVersion: event.CloudEventsVersionV03,
 						Type:        "com.example.test",
 						Source:      *source,
 						ID:          "ABC-123",
@@ -214,8 +214,8 @@ func TestCodecAsMiddleware(t *testing.T) {
 			},
 			"struct data": {
 				codec: &pubsub.Codec{Encoding: encoding},
-				event: &cloudevents.Event{
-					Context: cloudevents.EventContextV03{
+				event: &event.Event{
+					Context: event.EventContextV03{
 						Type:   "com.example.test",
 						Source: *source,
 						ID:     "ABC-123",
@@ -225,9 +225,9 @@ func TestCodecAsMiddleware(t *testing.T) {
 						AString: "testing",
 					},
 				},
-				want: &cloudevents.Event{
-					Context: &cloudevents.EventContextV03{
-						SpecVersion: cloudevents.CloudEventsVersionV03,
+				want: &event.Event{
+					Context: &event.EventContextV03{
+						SpecVersion: event.CloudEventsVersionV03,
 						Type:        "com.example.test",
 						Source:      *source,
 						ID:          "ABC-123",

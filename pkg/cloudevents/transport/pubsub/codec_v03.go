@@ -4,12 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"strings"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/cloudevents/sdk-go/pkg/types"
 )
 
 const (
@@ -24,7 +24,7 @@ type CodecV03 struct {
 
 var _ transport.Codec = (*CodecV03)(nil)
 
-func (v CodecV03) Encode(ctx context.Context, e cloudevents.Event) (transport.Message, error) {
+func (v CodecV03) Encode(ctx context.Context, e event.Event) (transport.Message, error) {
 	encoding := v.DefaultEncoding
 	strEnc := cecontext.EncodingFrom(ctx)
 	if strEnc != "" {
@@ -47,13 +47,13 @@ func (v CodecV03) Encode(ctx context.Context, e cloudevents.Event) (transport.Me
 	}
 }
 
-func (v CodecV03) Decode(ctx context.Context, msg transport.Message) (*cloudevents.Event, error) {
+func (v CodecV03) Decode(ctx context.Context, msg transport.Message) (*event.Event, error) {
 	// only structured is supported as of v0.3
 	switch v.inspectEncoding(ctx, msg) {
 	case StructuredV03:
-		return v.decodeStructured(ctx, cloudevents.CloudEventsVersionV03, msg)
+		return v.decodeStructured(ctx, event.CloudEventsVersionV03, msg)
 	case BinaryV03:
-		event := cloudevents.New(cloudevents.CloudEventsVersionV03)
+		event := event.New(event.CloudEventsVersionV03)
 		return v.decodeBinary(ctx, msg, &event)
 	default:
 		return nil, transport.NewErrMessageEncodingUnknown("v03", TransportName)
@@ -62,20 +62,20 @@ func (v CodecV03) Decode(ctx context.Context, msg transport.Message) (*cloudeven
 
 func (v CodecV03) inspectEncoding(ctx context.Context, msg transport.Message) Encoding {
 	version := msg.CloudEventsVersion()
-	if version != cloudevents.CloudEventsVersionV03 {
+	if version != event.CloudEventsVersionV03 {
 		return Unknown
 	}
 	m, ok := msg.(*Message)
 	if !ok {
 		return Unknown
 	}
-	if m.Attributes[StructuredContentType] == cloudevents.ApplicationCloudEventsJSON {
+	if m.Attributes[StructuredContentType] == event.ApplicationCloudEventsJSON {
 		return StructuredV03
 	}
 	return BinaryV03
 }
 
-func (v CodecV03) encodeBinary(ctx context.Context, e cloudevents.Event) (transport.Message, error) {
+func (v CodecV03) encodeBinary(ctx context.Context, e event.Event) (transport.Message, error) {
 	attributes, err := v.toAttributes(e)
 	if err != nil {
 		return nil, err
@@ -93,7 +93,7 @@ func (v CodecV03) encodeBinary(ctx context.Context, e cloudevents.Event) (transp
 	return msg, nil
 }
 
-func (v CodecV03) toAttributes(e cloudevents.Event) (map[string]string, error) {
+func (v CodecV03) toAttributes(e event.Event) (map[string]string, error) {
 	a := make(map[string]string)
 	a[prefix+"specversion"] = e.SpecVersion()
 	a[prefix+"type"] = e.Type()
@@ -110,7 +110,7 @@ func (v CodecV03) toAttributes(e cloudevents.Event) (map[string]string, error) {
 	if e.DataContentType() != "" {
 		a[prefix+"datacontenttype"] = e.DataContentType()
 	} else {
-		a[prefix+"datacontenttype"] = cloudevents.ApplicationJSON
+		a[prefix+"datacontenttype"] = event.ApplicationJSON
 	}
 
 	if e.Subject() != "" {
@@ -146,7 +146,7 @@ func (v CodecV03) toAttributes(e cloudevents.Event) (map[string]string, error) {
 	return a, nil
 }
 
-func (v CodecV03) decodeBinary(ctx context.Context, msg transport.Message, event *cloudevents.Event) (*cloudevents.Event, error) {
+func (v CodecV03) decodeBinary(ctx context.Context, msg transport.Message, event *event.Event) (*event.Event, error) {
 	m, ok := msg.(*Message)
 	if !ok {
 		return nil, fmt.Errorf("failed to convert transport.Message to pubsub.Message")
@@ -164,7 +164,7 @@ func (v CodecV03) decodeBinary(ctx context.Context, msg transport.Message, event
 	return event, nil
 }
 
-func (v CodecV03) fromAttributes(a map[string]string, event *cloudevents.Event) error {
+func (v CodecV03) fromAttributes(a map[string]string, event *event.Event) error {
 	// Normalize attributes.
 	for k, v := range a {
 		ck := strings.ToLower(k)
