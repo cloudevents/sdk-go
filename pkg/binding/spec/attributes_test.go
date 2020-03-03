@@ -15,7 +15,7 @@ func TestAttributes03(t *testing.T) {
 	assert.NoError(err)
 	subject := v.Attribute("x:subject")
 	assert.Equal(spec.Subject, subject.Kind())
-	assert.Equal("x:subject", subject.Name())
+	assert.Equal("x:subject", subject.PrefixedName())
 
 	c := v.NewContext()
 	assert.Equal("0.3", c.GetSpecVersion())

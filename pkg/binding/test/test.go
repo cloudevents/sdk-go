@@ -93,7 +93,7 @@ func AssertEventContextEquals(t *testing.T, want cloudevents.EventContext, have 
 	require.Equal(t, wantVersion, haveVersion)
 
 	for _, a := range wantVersion.Attributes() {
-		require.Equal(t, a.Get(want), a.Get(have), "Attribute %s does not match: %v != %v", a.Name(), a.Get(want), a.Get(have))
+		require.Equal(t, a.Get(want), a.Get(have), "Attribute %s does not match: %v != %v", a.PrefixedName(), a.Get(want), a.Get(have))
 	}
 
 	require.Equal(t, want.GetExtensions(), have.GetExtensions(), "Extensions")

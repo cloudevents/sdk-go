@@ -46,6 +46,8 @@ func (k Kind) IsRequired() bool { return k < DataContentType }
 // The attribute name is specific to a Version.
 type Attribute interface {
 	Kind() Kind
+	// Name of the attribute with respect to the current spec Version() with prefix
+	PrefixedName() string
 	// Name of the attribute with respect to the current spec Version()
 	Name() string
 	// Version of the spec that this attribute belongs to
