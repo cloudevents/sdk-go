@@ -14,6 +14,7 @@ type TranscoderTestArgs struct {
 	Name         string
 	InputMessage binding.Message
 	WantEvent    event.Event
+	AssertFunc   func(t *testing.T, event event.Event)
 	Transformers []binding.TransformerFactory
 }
 
@@ -39,7 +40,11 @@ func RunTranscoderTests(t *testing.T, ctx context.Context, tests []TranscoderTes
 				t.Fatalf("Unexpected encoding %v", enc)
 			}
 			require.NoError(t, err)
-			AssertEventEquals(t, tt.WantEvent, e)
+			if tt.AssertFunc != nil {
+				tt.AssertFunc(t, e)
+			} else {
+				AssertEventEquals(t, tt.WantEvent, e)
+			}
 		})
 	}
 }
