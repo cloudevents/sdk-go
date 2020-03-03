@@ -2,16 +2,14 @@ package http
 
 import (
 	"context"
+	"net/http"
 	"testing"
-
-	"github.com/cloudevents/sdk-go/pkg/event"
 
 	"github.com/stretchr/testify/require"
 
-	"net/http"
-
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/test"
+	"github.com/cloudevents/sdk-go/pkg/event"
 )
 
 func TestEncodeHttpResponse(t *testing.T) {

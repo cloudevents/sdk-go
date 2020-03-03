@@ -7,13 +7,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cloudevents/sdk-go/pkg/event"
-
 	"github.com/Shopify/sarama"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/test"
+	"github.com/cloudevents/sdk-go/pkg/event"
 )
 
 func TestEncodeKafkaProducerMessage(t *testing.T) {

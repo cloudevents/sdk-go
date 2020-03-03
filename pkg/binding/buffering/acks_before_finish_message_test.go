@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
-	cloudevents "github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/event"
 	"github.com/cloudevents/sdk-go/pkg/types"
 )
@@ -19,7 +18,7 @@ func TestWithAcksBeforeFinish(t *testing.T) {
 		Data:        []byte(`"data"`),
 		DataEncoded: true,
 		Context: event.EventContextV1{
-			DataContentType: cloudevents.StringOfApplicationJSON(),
+			DataContentType: event.StringOfApplicationJSON(),
 			Source:          types.URIRef{URL: url.URL{Path: "source"}},
 			ID:              "id",
 			Type:            "type"}.AsV1(),
@@ -52,7 +51,7 @@ func TestCopyAndWithAcksBeforeFinish(t *testing.T) {
 		Data:        []byte(`"data"`),
 		DataEncoded: true,
 		Context: event.EventContextV1{
-			DataContentType: cloudevents.StringOfApplicationJSON(),
+			DataContentType: event.StringOfApplicationJSON(),
 			Source:          types.URIRef{URL: url.URL{Path: "source"}},
 			ID:              "id",
 			Type:            "type"}.AsV1(),

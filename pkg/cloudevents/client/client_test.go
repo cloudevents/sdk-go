@@ -12,15 +12,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cloudevents/sdk-go/pkg/event"
-
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
-	"github.com/cloudevents/sdk-go/pkg/types"
+	"github.com/google/go-cmp/cmp"
 	"github.com/lightstep/tracecontext.go/traceparent"
 	"go.opencensus.io/trace"
 
-	"github.com/google/go-cmp/cmp"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+	cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+	"github.com/cloudevents/sdk-go/pkg/event"
+	"github.com/cloudevents/sdk-go/pkg/types"
 )
 
 var (

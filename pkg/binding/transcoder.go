@@ -1,6 +1,8 @@
 package binding
 
-import ce "github.com/cloudevents/sdk-go/pkg/cloudevents"
+import (
+	"github.com/cloudevents/sdk-go/pkg/event"
+)
 
 // Implements a transformation process while transferring the event from the Message implementation
 // to the provided encoder
@@ -52,7 +54,7 @@ func (t TransformerFactories) BinaryTransformer(encoder BinaryEncoder) BinaryEnc
 }
 
 func (t TransformerFactories) EventTransformer() EventTransformer {
-	return func(e *ce.Event) error {
+	return func(e *event.Event) error {
 		for _, factory := range t {
 			f := factory.EventTransformer()
 
@@ -67,4 +69,4 @@ func (t TransformerFactories) EventTransformer() EventTransformer {
 	}
 }
 
-type EventTransformer func(*ce.Event) error
+type EventTransformer func(*event.Event) error

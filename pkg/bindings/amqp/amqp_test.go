@@ -9,14 +9,13 @@ import (
 	"os"
 	"testing"
 
-	"github.com/cloudevents/sdk-go/pkg/event"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"pack.ag/amqp"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/test"
+	"github.com/cloudevents/sdk-go/pkg/event"
 )
 
 func TestSendSkipBinary(t *testing.T) {
