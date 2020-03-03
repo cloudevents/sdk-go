@@ -54,9 +54,12 @@ func (b *addUUIDTransformer) SetAttribute(attribute spec.Attribute, value interf
 
 func (b *addUUIDTransformer) End() error {
 	if !b.found {
-		return b.BinaryEncoder.SetAttribute(b.version.AttributeFromKind(spec.ID), uuid.New().String())
+		err := b.BinaryEncoder.SetAttribute(b.version.AttributeFromKind(spec.ID), uuid.New().String())
+		if err != nil {
+			return err
+		}
 	}
-	return nil
+	return b.BinaryEncoder.End()
 }
 
 type addTimeNow struct{}
@@ -97,7 +100,10 @@ func (b *addTimeNowTransformer) SetAttribute(attribute spec.Attribute, value int
 
 func (b *addTimeNowTransformer) End() error {
 	if !b.found {
-		return b.BinaryEncoder.SetAttribute(b.version.AttributeFromKind(spec.Time), types.Timestamp{Time: time.Now()})
+		err := b.BinaryEncoder.SetAttribute(b.version.AttributeFromKind(spec.Time), types.Timestamp{Time: time.Now()})
+		if err != nil {
+			return err
+		}
 	}
-	return nil
+	return b.BinaryEncoder.End()
 }
