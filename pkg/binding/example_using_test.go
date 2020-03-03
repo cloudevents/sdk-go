@@ -6,7 +6,7 @@ import (
 	"io"
 	"strconv"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+	"github.com/cloudevents/sdk-go/pkg/client"
 	"github.com/cloudevents/sdk-go/pkg/event"
 )
 

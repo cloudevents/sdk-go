@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 
 	cloudevents "github.com/cloudevents/sdk-go"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+	"github.com/cloudevents/sdk-go/pkg/client"
 	cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 )
 

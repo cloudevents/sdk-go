@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	ce "github.com/cloudevents/sdk-go"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
+	"github.com/cloudevents/sdk-go/pkg/client"
 	ceamqp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/amqp"
 	amqp "pack.ag/amqp"
 )
