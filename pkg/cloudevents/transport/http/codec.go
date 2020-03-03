@@ -22,12 +22,10 @@ type Codec struct {
 	// DefaultEncodingSelectionFn allows for encoding selection strategies to be injected.
 	DefaultEncodingSelectionFn EncodingSelector
 
-	v01 *CodecV01
 	v02 *CodecV02
 	v03 *CodecV03
 	v1  *CodecV1
 
-	_v01 sync.Once
 	_v02 sync.Once
 	_v03 sync.Once
 	_v1  sync.Once

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/cloudevents/sdk-go"
+	"github.com/cloudevents/sdk-go/pkg/types"
 )
 
 func TestSenderReceiver_binary_v01(t *testing.T) {
@@ -88,7 +89,7 @@ func TestSenderReceiver_structured_v01(t *testing.T) {
 				Header: map[string][]string{
 					"content-type": {"application/cloudevents+json"},
 				},
-				Body:          fmt.Sprintf(`{"data":{"hello":"unittest"},"id":"ABC-123","source":"/unit/test/client","specversion":"1.0","subject":"resource","time":%q,"type":"unit.test.client.sent"}`, now.UTC().Format(time.RFC3339Nano)),
+				Body:          fmt.Sprintf(`{"data":{"hello":"unittest"},"id":"ABC-123","source":"/unit/test/client","specversion":"1.0","subject":"resource","time":%q,"type":"unit.test.client.sent"}`, types.FormatTime(now.UTC())),
 				ContentLength: 182,
 			},
 		},

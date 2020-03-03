@@ -1,8 +1,6 @@
 package event_test
 
 import (
-	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"net/url"
 	"strings"
@@ -23,18 +21,6 @@ func TestGetDataContentType(t *testing.T) {
 		event event.Event
 		want  string
 	}{
-		"min v01, blank": {
-			event: event.Event{
-				Context: MinEventContextV01(),
-			},
-			want: "",
-		},
-		"full v01, json": {
-			event: event.Event{
-				Context: FullEventContextV01(now),
-			},
-			want: "application/json",
-		},
 		"min v02, blank": {
 			event: event.Event{
 				Context: MinEventContextV02(),
@@ -93,18 +79,6 @@ func TestSource(t *testing.T) {
 		event event.Event
 		want  string
 	}{
-		"min v01": {
-			event: event.Event{
-				Context: MinEventContextV01(),
-			},
-			want: source,
-		},
-		"full v01": {
-			event: event.Event{
-				Context: FullEventContextV01(now),
-			},
-			want: source,
-		},
 		"min v02": {
 			event: event.Event{
 				Context: MinEventContextV02(),
@@ -163,18 +137,6 @@ func TestSchemaURL(t *testing.T) {
 		event event.Event
 		want  string
 	}{
-		"min v01, empty schema": {
-			event: event.Event{
-				Context: MinEventContextV01(),
-			},
-			want: "",
-		},
-		"full v01, schema": {
-			event: event.Event{
-				Context: FullEventContextV01(now),
-			},
-			want: schema,
-		},
 		"min v02, empty schema": {
 			event: event.Event{
 				Context: MinEventContextV02(),
@@ -232,97 +194,6 @@ type DataExample struct {
 	ATime   *time.Time                `json:"e,omitempty"`
 }
 
-func TestDataAs(t *testing.T) {
-	now := types.Timestamp{Time: time.Now()}
-
-	testCases := map[string]struct {
-		event   event.Event
-		want    interface{}
-		wantErr error
-	}{
-		"empty": {
-			event: event.Event{
-				Context: MinEventContextV01(),
-			},
-			want: nil,
-		},
-		"json simple": {
-			event: event.Event{
-				Context:     FullEventContextV01(now),
-				Data:        []byte(`eyJhIjoiYXBwbGUiLCJiIjoiYmFuYW5hIn0K`),
-				DataEncoded: true,
-			},
-			want: &map[string]string{
-				"a": "apple",
-				"b": "banana",
-			},
-		},
-		"json complex empty": {
-			event: event.Event{
-				Context:     FullEventContextV01(now),
-				Data:        []byte(`e30K`),
-				DataEncoded: true,
-			},
-			want: &DataExample{},
-		},
-		"json complex filled": {
-			event: event.Event{
-				Context: FullEventContextV01(now),
-				Data: func() []byte {
-					data := &DataExample{
-						AnInt: 42,
-						AMap: map[string]map[string]int{
-							"a": {"1": 1, "2": 2, "3": 3},
-							"z": {"3": 3, "2": 2, "1": 1},
-						},
-						AString: "Hello, World!",
-						ATime:   &now.Time,
-						AnArray: []string{"Anne", "Bob", "Chad"},
-					}
-					j, err := json.Marshal(data)
-					if err != nil {
-						t.Errorf("failed to marshal test data: %s", err.Error())
-					}
-					buf := make([]byte, base64.StdEncoding.EncodedLen(len(j)))
-					base64.StdEncoding.Encode(buf, j)
-					return buf
-				}(),
-				DataEncoded: true,
-			},
-			want: &DataExample{
-				AnInt: 42,
-				AMap: map[string]map[string]int{
-					"a": {"1": 1, "2": 2, "3": 3},
-					"z": {"3": 3, "2": 2, "1": 1},
-				},
-				AString: "Hello, World!",
-				ATime:   &now.Time,
-				AnArray: []string{"Anne", "Bob", "Chad"},
-			},
-		},
-	}
-	for n, tc := range testCases {
-		t.Run(n, func(t *testing.T) {
-
-			got, _ := types.Allocate(tc.want)
-			err := tc.event.DataAs(got)
-
-			if tc.wantErr != nil || err != nil {
-				if diff := cmp.Diff(tc.wantErr, err); diff != "" {
-					t.Errorf("unexpected error (-want, +got) = %v", diff)
-				}
-				return
-			}
-
-			if tc.want != nil {
-				if diff := cmp.Diff(tc.want, got); diff != "" {
-					t.Errorf("unexpected data (-want, +got) = %v", diff)
-				}
-			}
-		})
-	}
-}
-
 func TestValidate(t *testing.T) {
 	now := types.Timestamp{Time: time.Now()}
 
@@ -330,11 +201,6 @@ func TestValidate(t *testing.T) {
 		event event.Event
 		want  []string
 	}{
-		"min valid v0.1": {
-			event: event.Event{
-				Context: MinEventContextV01(),
-			},
-		},
 		"min valid v0.2": {
 			event: event.Event{
 				Context: MinEventContextV02(),
@@ -348,12 +214,6 @@ func TestValidate(t *testing.T) {
 		"min valid v1.0": {
 			event: event.Event{
 				Context: MinEventContextV1(),
-			},
-		},
-		"json valid, v0.1": {
-			event: event.Event{
-				Context: FullEventContextV01(now),
-				Data:    []byte(`{"a":"apple","b":"banana"}`),
 			},
 		},
 		"json valid, v0.2": {
@@ -404,23 +264,6 @@ func TestString(t *testing.T) {
 		event event.Event
 		want  string
 	}{
-		"empty v0.1": {
-			event: event.Event{
-				Context: &event.EventContextV01{},
-			},
-			want: `Validation: invalid
-Validation Error: 
-eventType: MUST be a non-empty string
-cloudEventsVersion: MUST be a non-empty string
-source: REQUIRED
-eventID: MUST be a non-empty string
-Context Attributes,
-  cloudEventsVersion: 
-  eventType: 
-  source: 
-  eventID: 
-`,
-		},
 		"empty v0.2": {
 			event: event.Event{
 				Context: &event.EventContextV02{},
@@ -472,18 +315,6 @@ Context Attributes,
   id: 
 `,
 		},
-		"min v0.1": {
-			event: event.Event{
-				Context: MinEventContextV01(),
-			},
-			want: `Validation: valid
-Context Attributes,
-  cloudEventsVersion: 0.1
-  eventType: com.example.simple
-  source: http://example.com/source
-  eventID: ABC-123
-`,
-		},
 		"min v0.2": {
 			event: event.Event{
 				Context: MinEventContextV02(),
@@ -519,33 +350,6 @@ Context Attributes,
   source: http://example.com/source
   id: ABC-123
 `,
-		},
-		"json simple, v0.1": {
-			event: event.Event{
-				Context: FullEventContextV01(now),
-				Data:    []byte(`{"a":"apple","b":"banana"}`),
-			},
-			want: fmt.Sprintf(`Validation: valid
-Context Attributes,
-  cloudEventsVersion: 0.1
-  eventType: com.example.simple
-  eventTypeVersion: v1alpha1
-  source: http://example.com/source
-  eventID: ABC-123
-  eventTime: %s
-  schemaURL: http://example.com/schema
-  contentType: application/json
-Extensions,
-  anothertest: 1
-  datacontentencoding: base64
-  subject: topic
-  test: extended
-Data,
-  {
-    "a": "apple",
-    "b": "banana"
-  }
-`, now.String()),
 		},
 		"json simple, v0.2": {
 			event: event.Event{
@@ -653,29 +457,6 @@ func TestExtensionAs(t *testing.T) {
 		wantError    bool
 		wantErrorMsg string
 	}{
-		"min v01, no extension": {
-			event: event.Event{
-				Context: MinEventContextV01(),
-			},
-			extension:    "test",
-			wantError:    true,
-			wantErrorMsg: `extension "test" does not exist`,
-		},
-		"full v01, test extension": {
-			event: event.Event{
-				Context: FullEventContextV01(now),
-			},
-			extension: "test",
-			want:      "extended",
-		},
-		"full v01, anothertest extension invalid type": {
-			event: event.Event{
-				Context: FullEventContextV01(now),
-			},
-			extension:    "anothertest",
-			wantError:    true,
-			wantErrorMsg: `invalid type for extension "anothertest"`,
-		},
 		"min v02, no extension": {
 			event: event.Event{
 				Context: MinEventContextV02(),
@@ -771,21 +552,6 @@ func TestExtensions(t *testing.T) {
 		wantError    bool
 		wantErrorMsg string
 	}{
-		"full v01, test extension": {
-			event: event.Event{
-				Context: FullEventContextV01(now),
-			},
-			extension: "test",
-			want:      "extended",
-		},
-		"full v01, anothertest extension invalid type": {
-			event: event.Event{
-				Context: FullEventContextV01(now),
-			},
-			extension:    "anothertest",
-			wantError:    true,
-			wantErrorMsg: "cannot convert 1 to string",
-		},
 		"full v02, test extension": {
 			event: event.Event{
 				Context: FullEventContextV02(now),
@@ -857,17 +623,6 @@ func strptr(s string) *string {
 	return &s
 }
 
-func MinEventContextV01() *event.EventContextV01 {
-	sourceUrl, _ := url.Parse("http://example.com/source")
-	source := &types.URLRef{URL: *sourceUrl}
-
-	return event.EventContextV01{
-		EventType: "com.example.simple",
-		Source:    *source,
-		EventID:   "ABC-123",
-	}.AsV01()
-}
-
 func MinEventContextV02() *event.EventContextV02 {
 	sourceUrl, _ := url.Parse("http://example.com/source")
 	source := &types.URLRef{URL: *sourceUrl}
@@ -899,29 +654,6 @@ func MinEventContextV1() *event.EventContextV1 {
 		Source: *source,
 		ID:     "ABC-123",
 	}.AsV1()
-}
-
-func FullEventContextV01(now types.Timestamp) *event.EventContextV01 {
-	sourceUrl, _ := url.Parse("http://example.com/source")
-	source := &types.URLRef{URL: *sourceUrl}
-
-	schemaUrl, _ := url.Parse("http://example.com/schema")
-	schema := &types.URLRef{URL: *schemaUrl}
-
-	eventContextV01 := event.EventContextV01{
-		EventID:          "ABC-123",
-		EventTime:        &now,
-		EventType:        "com.example.simple",
-		EventTypeVersion: strptr("v1alpha1"),
-		SchemaURL:        schema,
-		ContentType:      event.StringOfApplicationJSON(),
-		Source:           *source,
-	}
-	_ = eventContextV01.SetExtension(event.SubjectKey, "topic")
-	_ = eventContextV01.SetExtension(event.DataContentEncodingKey, event.Base64)
-	_ = eventContextV01.SetExtension("test", "extended")
-	_ = eventContextV01.SetExtension("anothertest", int32(1))
-	return eventContextV01.AsV01()
 }
 
 func FullEventContextV02(now types.Timestamp) *event.EventContextV02 {

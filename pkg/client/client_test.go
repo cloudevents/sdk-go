@@ -92,34 +92,6 @@ func TestClientSend(t *testing.T) {
 		want    *requestValidation
 		wantErr string
 	}{
-		"binary simple v0.1": {
-			c: simpleBinaryClient,
-			event: event.Event{
-				Context: event.EventContextV01{
-					EventType: "unit.test.client",
-					Source:    *types.ParseURLRef("/unit/test/client"),
-					EventTime: &types.Timestamp{Time: now},
-					EventID:   "AABBCCDDEE",
-				}.AsV01(),
-				Data: &map[string]interface{}{
-					"sq":  42,
-					"msg": "hello",
-				},
-			},
-			resp: &http.Response{
-				StatusCode: http.StatusAccepted,
-			},
-			want: &requestValidation{
-				Headers: map[string][]string{
-					"ce-cloudeventsversion": {"0.1"},
-					"ce-eventid":            {"AABBCCDDEE"},
-					"ce-eventtime":          {now.UTC().Format(time.RFC3339Nano)},
-					"ce-eventtype":          {"unit.test.client"},
-					"ce-source":             {"/unit/test/client"},
-				},
-				Body: `{"msg":"hello","sq":42}`,
-			},
-		},
 		"binary simple v0.2": {
 			c: simpleBinaryClient,
 			event: event.Event{
@@ -174,32 +146,6 @@ func TestClientSend(t *testing.T) {
 					"ce-source":      {"/unit/test/client"},
 				},
 				Body: `{"msg":"hello","sq":42}`,
-			},
-		},
-		"structured simple v0.1": {
-			c: simpleStructuredClient,
-			event: event.Event{
-				Context: event.EventContextV01{
-					EventType: "unit.test.client",
-					Source:    *types.ParseURLRef("/unit/test/client"),
-					EventTime: &types.Timestamp{Time: now},
-					EventID:   "AABBCCDDEE",
-				}.AsV01(),
-				Data: &map[string]interface{}{
-					"sq":  42,
-					"msg": "hello",
-				},
-			},
-			resp: &http.Response{
-				StatusCode: http.StatusAccepted,
-			},
-			want: &requestValidation{
-				Headers: map[string][]string{
-					"content-type": {"application/cloudevents+json"},
-				},
-				Body: fmt.Sprintf(`{"cloudEventsVersion":"0.1","data":{"msg":"hello","sq":42},"eventID":"AABBCCDDEE","eventTime":%q,"eventType":"unit.test.client","source":"/unit/test/client"}`,
-					now.UTC().Format(time.RFC3339Nano),
-				),
 			},
 		},
 		"structured simple v0.2": {
@@ -304,11 +250,11 @@ func TestTracingClientSend(t *testing.T) {
 		"send unsampled": {
 			c: simpleTracingBinaryClient,
 			event: event.Event{
-				Context: event.EventContextV01{
-					EventType: "unit.test.client",
-					Source:    *types.ParseURLRef("/unit/test/client"),
-					EventTime: &types.Timestamp{Time: now},
-					EventID:   "AABBCCDDEE",
+				Context: event.EventContextV1{
+					Type:   "unit.test.client",
+					Source: *types.ParseURIRef("/unit/test/client"),
+					Time:   &types.Timestamp{Time: now},
+					ID:     "AABBCCDDEE",
 				}.AsV1(),
 				Data: &map[string]interface{}{
 					"sq":  42,
@@ -323,11 +269,11 @@ func TestTracingClientSend(t *testing.T) {
 		"send sampled": {
 			c: simpleTracingBinaryClient,
 			event: event.Event{
-				Context: event.EventContextV01{
-					EventType: "unit.test.client",
-					Source:    *types.ParseURLRef("/unit/test/client"),
-					EventTime: &types.Timestamp{Time: now},
-					EventID:   "AABBCCDDEE",
+				Context: event.EventContextV1{
+					Type:   "unit.test.client",
+					Source: *types.ParseURIRef("/unit/test/client"),
+					Time:   &types.Timestamp{Time: now},
+					ID:     "AABBCCDDEE",
 				}.AsV1(),
 				Data: &map[string]interface{}{
 					"sq":  42,
@@ -421,33 +367,6 @@ func TestClientReceive(t *testing.T) {
 		want    event.Event
 		wantErr string
 	}{
-		"binary simple v0.1": {
-			optsFn: simpleBinaryOptions,
-			req: &requestValidation{
-				Headers: map[string][]string{
-					"ce-cloudeventsversion": {"0.1"},
-					"ce-eventid":            {"AABBCCDDEE"},
-					"ce-eventtime":          {now.UTC().Format(time.RFC3339Nano)},
-					"ce-eventtype":          {"unit.test.client"},
-					"ce-source":             {"/unit/test/client"},
-					"content-type":          {"application/json"},
-				},
-				Body: `{"msg":"hello","sq":"42"}`,
-			},
-			want: event.Event{
-				Context: event.EventContextV01{
-					EventType:   "unit.test.client",
-					ContentType: event.StringOfApplicationJSON(),
-					Source:      *types.ParseURLRef("/unit/test/client"),
-					EventTime:   &types.Timestamp{Time: now},
-					EventID:     "AABBCCDDEE",
-				}.AsV01(),
-				Data: &map[string]string{
-					"sq":  "42",
-					"msg": "hello",
-				},
-			},
-		},
 		"binary simple v0.2": {
 			optsFn: simpleBinaryOptions,
 			req: &requestValidation{
@@ -496,30 +415,6 @@ func TestClientReceive(t *testing.T) {
 					Time:            &types.Timestamp{Time: now},
 					ID:              "AABBCCDDEE",
 				}.AsV03(),
-				Data: &map[string]string{
-					"sq":  "42",
-					"msg": "hello",
-				},
-			},
-		},
-		"structured simple v0.1": {
-			optsFn: simpleStructuredOptions,
-			req: &requestValidation{
-				Headers: map[string][]string{
-					"content-type": {"application/cloudevents+json"},
-				},
-				Body: fmt.Sprintf(`{"cloudEventsVersion":"0.1","contentType":"application/json","data":{"msg":"hello","sq":"42"},"eventID":"AABBCCDDEE","eventTime":%q,"eventType":"unit.test.client","source":"/unit/test/client"}`,
-					now.UTC().Format(time.RFC3339Nano),
-				),
-			},
-			want: event.Event{
-				Context: event.EventContextV01{
-					EventType:   "unit.test.client",
-					ContentType: event.StringOfApplicationJSON(),
-					Source:      *types.ParseURLRef("/unit/test/client"),
-					EventTime:   &types.Timestamp{Time: now},
-					EventID:     "AABBCCDDEE",
-				}.AsV01(),
 				Data: &map[string]string{
 					"sq":  "42",
 					"msg": "hello",
@@ -682,22 +577,6 @@ func TestTracedClientReceive(t *testing.T) {
 		optsFn func(port int, path string) []cehttp.Option
 		event  event.Event
 	}{
-		"simple binary v1.0": {
-			optsFn: simpleBinaryOptions,
-			event: event.Event{
-				Context: event.EventContextV01{
-					EventType:   "unit.test.client",
-					ContentType: event.StringOfApplicationJSON(),
-					Source:      *types.ParseURLRef("/unit/test/client"),
-					EventTime:   &types.Timestamp{Time: now},
-					EventID:     "AABBCCDDEE",
-				}.AsV1(),
-				Data: &map[string]string{
-					"sq":  "42",
-					"msg": "hello",
-				},
-			},
-		},
 		"simple binary v0.2": {
 			optsFn: simpleBinaryOptions,
 			event: event.Event{

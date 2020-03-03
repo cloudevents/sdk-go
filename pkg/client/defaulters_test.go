@@ -6,11 +6,9 @@ import (
 	"time"
 
 	"github.com/cloudevents/sdk-go/pkg/event"
-
-	"github.com/google/go-cmp/cmp"
 )
 
-var versions = []string{"0.1", "0.2", "0.3", "1.0"}
+var versions = []string{"0.2", "0.3", "1.0"}
 
 func TestDefaultIDToUUIDIfNotSet_empty(t *testing.T) {
 	for _, tc := range versions {
@@ -48,23 +46,15 @@ func TestDefaultIDToUUIDIfNotSet_nil(t *testing.T) {
 }
 
 func TestDefaultIDToUUIDIfNotSetImmutable(t *testing.T) {
-	event := event.Event{
-		Context: &event.EventContextV01{},
-	}
+	e := event.New()
 
-	got := DefaultIDToUUIDIfNotSet(context.TODO(), event)
+	got := DefaultIDToUUIDIfNotSet(context.TODO(), e)
 
-	want := "0.1"
-
-	if diff := cmp.Diff(want, got.SpecVersion()); diff != "" {
-		t.Errorf("unexpected (-want, +got) = %v", diff)
-	}
-
-	if event.Context.AsV01().EventID != "" {
+	if e.ID() != "" {
 		t.Errorf("modified the original event")
 	}
 
-	if got.Context.AsV01().EventID == "" {
+	if got.ID() == "" {
 		t.Errorf("failed to generate an id for event")
 	}
 }
@@ -107,23 +97,15 @@ func TestDefaultTimeToNowIfNotSet_nil(t *testing.T) {
 }
 
 func TestDefaultTimeToNowIfNotSetImmutable(t *testing.T) {
-	event := event.Event{
-		Context: &event.EventContextV01{},
-	}
+	e := event.New()
 
-	got := DefaultTimeToNowIfNotSet(context.TODO(), event)
+	got := DefaultTimeToNowIfNotSet(context.TODO(), e)
 
-	want := "0.1"
-
-	if diff := cmp.Diff(want, got.SpecVersion()); diff != "" {
-		t.Errorf("unexpected (-want, +got) = %v", diff)
-	}
-
-	if event.Context.AsV01().EventTime != nil {
+	if !e.Time().IsZero() {
 		t.Errorf("modified the original event")
 	}
 
-	if got.Context.AsV01().EventTime.IsZero() {
+	if got.Time().IsZero() {
 		t.Errorf("failed to generate a time for event")
 	}
 }

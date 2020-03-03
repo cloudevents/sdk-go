@@ -5,13 +5,13 @@ import (
 	"testing"
 	"time"
 
-	event2 "github.com/cloudevents/sdk-go/pkg/event"
+	event "github.com/cloudevents/sdk-go/pkg/event"
 
 	"github.com/google/go-cmp/cmp"
 )
 
 type ReadWriteTest struct {
-	event     event2.Event
+	event     event.Event
 	set       string
 	want      interface{}
 	corrected interface{} // used in corrected tests.
@@ -20,69 +20,52 @@ type ReadWriteTest struct {
 
 func TestEventRW_SpecVersion(t *testing.T) {
 	testCases := map[string]ReadWriteTest{
-		"empty v01": {
-			event:   event2.New(),
-			want:    "1.0",
-			set:     "0.1",
-			wantErr: "invalid version",
-		},
 		"empty v02": {
-			event:   event2.New(),
+			event:   event.New(),
 			want:    "1.0",
 			set:     "0.2",
 			wantErr: "invalid version",
 		},
 		"empty v03": {
-			event:   event2.New(),
+			event:   event.New(),
 			want:    "1.0",
 			set:     "0.3",
 			wantErr: "invalid version",
 		},
 		"empty v1": {
-			event: event2.New(),
+			event: event.New(),
 			set:   "1.0",
 			want:  "1.0",
 		},
-		"v01": {
-			event: event2.New("0.1"),
-			set:   "0.1",
-			want:  "0.1",
-		},
 		"v02": {
-			event: event2.New("0.2"),
+			event: event.New("0.2"),
 			set:   "0.2",
 			want:  "0.2",
 		},
 		"v03": {
-			event: event2.New("0.3"),
+			event: event.New("0.3"),
 			set:   "0.3",
 			want:  "0.3",
 		},
 		"v1": {
-			event: event2.New("1.0"),
+			event: event.New("1.0"),
 			set:   "1.0",
 			want:  "1.0",
 		},
-		"invalid v01": {
-			event:   event2.New("0.1"),
-			want:    "0.1",
-			set:     "1.1",
-			wantErr: "invalid version",
-		},
 		"invalid v02": {
-			event:   event2.New("0.2"),
+			event:   event.New("0.2"),
 			want:    "0.2",
 			set:     "1.2",
 			wantErr: "invalid version",
 		},
 		"invalid v03": {
-			event:   event2.New("0.3"),
+			event:   event.New("0.3"),
 			want:    "0.3",
 			set:     "1.3",
 			wantErr: "invalid version",
 		},
 		"invalid v1": {
-			event:   event2.New("1.0"),
+			event:   event.New("1.0"),
 			want:    "1.0",
 			set:     "1.3",
 			wantErr: "invalid version",
@@ -103,35 +86,35 @@ func TestEventRW_SpecVersion(t *testing.T) {
 
 func TestEventRW_Type(t *testing.T) {
 	testCases := map[string]ReadWriteTest{
-		"v01": {
-			event: event2.New("0.1"),
-			set:   "type.0.1",
-			want:  "type.0.1",
-		},
 		"v02": {
-			event: event2.New("0.2"),
+			event: event.New("0.2"),
 			set:   "type.0.2",
 			want:  "type.0.2",
 		},
 		"v03": {
-			event: event2.New("0.3"),
+			event: event.New("0.3"),
 			set:   "type.0.3",
 			want:  "type.0.3",
 		},
-		"spaced v01": {
-			event: event2.New("0.1"),
-			set:   "  type.0.1  ",
-			want:  "type.0.1",
+		"v1": {
+			event: event.New("1.0"),
+			set:   "type.1.0",
+			want:  "type.1.0",
 		},
 		"spaced v02": {
-			event: event2.New("0.2"),
+			event: event.New("0.2"),
 			set:   "  type.0.2  ",
 			want:  "type.0.2",
 		},
 		"spaced v03": {
-			event: event2.New("0.3"),
+			event: event.New("0.3"),
 			set:   "   type.0.3   ",
 			want:  "type.0.3",
+		},
+		"spaced v1": {
+			event: event.New("1.0"),
+			set:   "   type.1.0   ",
+			want:  "type.1.0",
 		},
 	}
 	for n, tc := range testCases {
@@ -149,35 +132,35 @@ func TestEventRW_Type(t *testing.T) {
 
 func TestEventRW_ID(t *testing.T) {
 	testCases := map[string]ReadWriteTest{
-		"v01": {
-			event: event2.New("0.1"),
-			set:   "id.0.1",
-			want:  "id.0.1",
-		},
 		"v02": {
-			event: event2.New("0.2"),
+			event: event.New("0.2"),
 			set:   "id.0.2",
 			want:  "id.0.2",
 		},
 		"v03": {
-			event: event2.New("0.3"),
+			event: event.New("0.3"),
 			set:   "id.0.3",
 			want:  "id.0.3",
 		},
-		"spaced v01": {
-			event: event2.New("0.1"),
-			set:   "  id.0.1  ",
-			want:  "id.0.1",
+		"v1": {
+			event: event.New("1.0"),
+			set:   "id.1.0",
+			want:  "id.1.0",
 		},
 		"spaced v02": {
-			event: event2.New("0.2"),
+			event: event.New("0.2"),
 			set:   "  id.0.2  ",
 			want:  "id.0.2",
 		},
 		"spaced v03": {
-			event: event2.New("0.3"),
+			event: event.New("0.3"),
 			set:   "   id.0.3   ",
 			want:  "id.0.3",
+		},
+		"spaced v1": {
+			event: event.New("1.0"),
+			set:   "  id.1.0  ",
+			want:  "id.1.0",
 		},
 	}
 	for n, tc := range testCases {
@@ -195,35 +178,35 @@ func TestEventRW_ID(t *testing.T) {
 
 func TestEventRW_Source(t *testing.T) {
 	testCases := map[string]ReadWriteTest{
-		"v01": {
-			event: event2.New("0.1"),
-			set:   "http://example/",
-			want:  "http://example/",
-		},
 		"v02": {
-			event: event2.New("0.2"),
+			event: event.New("0.2"),
 			set:   "http://example/",
 			want:  "http://example/",
 		},
 		"v03": {
-			event: event2.New("0.3"),
+			event: event.New("0.3"),
 			set:   "http://example/",
 			want:  "http://example/",
 		},
-		"invalid v01": {
-			event:   event2.New("0.1"),
-			set:     "%",
-			want:    "",
-			wantErr: "invalid URL escape",
+		"v1": {
+			event: event.New("1.0"),
+			set:   "http://example/",
+			want:  "http://example/",
 		},
 		"invalid v02": {
-			event:   event2.New("0.2"),
+			event:   event.New("0.2"),
 			set:     "%",
 			want:    "",
 			wantErr: "invalid URL escape",
 		},
 		"invalid v03": {
-			event:   event2.New("0.3"),
+			event:   event.New("0.3"),
+			set:     "%",
+			want:    "",
+			wantErr: "invalid URL escape",
+		},
+		"invalid v1": {
+			event:   event.New("1.0"),
 			set:     "%",
 			want:    "",
 			wantErr: "invalid URL escape",
@@ -245,22 +228,22 @@ func TestEventRW_Source(t *testing.T) {
 // Set will be split on pipe, set1|set2
 func TestEventRW_Corrected_Source(t *testing.T) {
 	testCases := map[string]ReadWriteTest{
-		"corrected v01": {
-			event:     event2.New("0.1"),
-			set:       "%|http://good",
-			want:      "",
-			corrected: "http://good",
-			wantErr:   "invalid URL escape",
-		},
 		"corrected v02": {
-			event:     event2.New("0.2"),
+			event:     event.New("0.2"),
 			set:       "%|http://good",
 			want:      "",
 			corrected: "http://good",
 			wantErr:   "invalid URL escape",
 		},
 		"corrected v03": {
-			event:     event2.New("0.3"),
+			event:     event.New("0.3"),
+			set:       "%|http://good",
+			want:      "",
+			corrected: "http://good",
+			wantErr:   "invalid URL escape",
+		},
+		"corrected v1": {
+			event:     event.New("1.0"),
 			set:       "%|http://good",
 			want:      "",
 			corrected: "http://good",
@@ -294,55 +277,55 @@ func TestEventRW_Corrected_Source(t *testing.T) {
 
 func TestEventRW_Subject(t *testing.T) {
 	testCases := map[string]ReadWriteTest{
-		"v01": {
-			event: event2.New("0.1"),
-			set:   "subject.0.1",
-			want:  "subject.0.1",
-		},
 		"v02": {
-			event: event2.New("0.2"),
+			event: event.New("0.2"),
 			set:   "subject.0.2",
 			want:  "subject.0.2",
 		},
 		"v03": {
-			event: event2.New("0.3"),
+			event: event.New("0.3"),
 			set:   "subject.0.3",
 			want:  "subject.0.3",
 		},
-		"spaced v01": {
-			event: event2.New("0.1"),
-			set:   "  subject.0.1  ",
-			want:  "subject.0.1",
+		"v1": {
+			event: event.New("1.0"),
+			set:   "subject.1.0",
+			want:  "subject.1.0",
 		},
 		"spaced v02": {
-			event: event2.New("0.2"),
+			event: event.New("0.2"),
 			set:   "  subject.0.2  ",
 			want:  "subject.0.2",
 		},
 		"spaced v03": {
-			event: event2.New("0.3"),
+			event: event.New("0.3"),
 			set:   "   subject.0.3   ",
 			want:  "subject.0.3",
 		},
-		"nilled v01": {
-			event: func() event2.Event {
-				e := event2.New("0.1")
-				e.SetSource("should nil")
-				return e
-			}(),
-			want: "",
+		"spaced v1": {
+			event: event.New("1.0"),
+			set:   "  subject.1.0  ",
+			want:  "subject.1.0",
 		},
 		"nilled v02": {
-			event: func() event2.Event {
-				e := event2.New("0.2")
+			event: func() event.Event {
+				e := event.New("0.2")
 				e.SetSource("should nil")
 				return e
 			}(),
 			want: "",
 		},
 		"nilled v03": {
-			event: func() event2.Event {
-				e := event2.New("0.3")
+			event: func() event.Event {
+				e := event.New("0.3")
+				e.SetSource("should nil")
+				return e
+			}(),
+			want: "",
+		},
+		"nilled v1": {
+			event: func() event.Event {
+				e := event.New("1.0")
 				e.SetSource("should nil")
 				return e
 			}(),
@@ -366,40 +349,40 @@ func TestEventRW_Time(t *testing.T) {
 	now := time.Now()
 
 	testCases := map[string]ReadWriteTest{
-		"v01": {
-			event: event2.New("0.1"),
-			set:   "now", // hack
-			want:  now,
-		},
 		"v02": {
-			event: event2.New("0.2"),
+			event: event.New("0.2"),
 			set:   "now", // hack
 			want:  now,
 		},
 		"v03": {
-			event: event2.New("0.3"),
+			event: event.New("0.3"),
 			set:   "now", // hack
 			want:  now,
 		},
-		"nilled v01": {
-			event: func() event2.Event {
-				e := event2.New("0.1")
-				e.SetTime(now)
-				return e
-			}(),
-			want: time.Time{},
+		"v1": {
+			event: event.New("1.0"),
+			set:   "now", // hack
+			want:  now,
 		},
 		"nilled v02": {
-			event: func() event2.Event {
-				e := event2.New("0.2")
+			event: func() event.Event {
+				e := event.New("0.2")
 				e.SetTime(now)
 				return e
 			}(),
 			want: time.Time{},
 		},
 		"nilled v03": {
-			event: func() event2.Event {
-				e := event2.New("0.3")
+			event: func() event.Event {
+				e := event.New("0.3")
+				e.SetTime(now)
+				return e
+			}(),
+			want: time.Time{},
+		},
+		"nilled v1": {
+			event: func() event.Event {
+				e := event.New("1.0")
 				e.SetTime(now)
 				return e
 			}(),
@@ -425,58 +408,58 @@ func TestEventRW_Time(t *testing.T) {
 
 func TestEventRW_SchemaURL(t *testing.T) {
 	testCases := map[string]ReadWriteTest{
-		"v01": {
-			event: event2.New("0.1"),
-			set:   "http://example/",
-			want:  "http://example/",
-		},
 		"v02": {
-			event: event2.New("0.2"),
+			event: event.New("0.2"),
 			set:   "http://example/",
 			want:  "http://example/",
 		},
 		"v03": {
-			event: event2.New("0.3"),
+			event: event.New("0.3"),
 			set:   "http://example/",
 			want:  "http://example/",
 		},
-		"invalid v01": {
-			event:   event2.New("0.1"),
-			set:     "%",
-			want:    "",
-			wantErr: "invalid URL escape",
+		"v1": {
+			event: event.New("1.0"),
+			set:   "http://example/",
+			want:  "http://example/",
 		},
 		"invalid v02": {
-			event:   event2.New("0.2"),
+			event:   event.New("0.2"),
 			set:     "%",
 			want:    "",
 			wantErr: "invalid URL escape",
 		},
 		"invalid v03": {
-			event:   event2.New("0.3"),
+			event:   event.New("0.3"),
 			set:     "%",
 			want:    "",
 			wantErr: "invalid URL escape",
 		},
-		"nilled v01": {
-			event: func() event2.Event {
-				e := event2.New("0.1")
-				e.SetDataSchema("should nil")
-				return e
-			}(),
-			want: "",
+		"invalid v1": {
+			event:   event.New("1.0"),
+			set:     "%",
+			want:    "",
+			wantErr: "invalid URL escape",
 		},
 		"nilled v02": {
-			event: func() event2.Event {
-				e := event2.New("0.2")
+			event: func() event.Event {
+				e := event.New("0.2")
 				e.SetDataSchema("should nil")
 				return e
 			}(),
 			want: "",
 		},
 		"nilled v03": {
-			event: func() event2.Event {
-				e := event2.New("0.3")
+			event: func() event.Event {
+				e := event.New("0.3")
+				e.SetDataSchema("should nil")
+				return e
+			}(),
+			want: "",
+		},
+		"nilled v1": {
+			event: func() event.Event {
+				e := event.New("1.0")
 				e.SetDataSchema("should nil")
 				return e
 			}(),
@@ -498,55 +481,55 @@ func TestEventRW_SchemaURL(t *testing.T) {
 
 func TestEventRW_DataContentType(t *testing.T) {
 	testCases := map[string]ReadWriteTest{
-		"v01": {
-			event: event2.New("0.1"),
-			set:   "application/json",
-			want:  "application/json",
-		},
 		"v02": {
-			event: event2.New("0.2"),
+			event: event.New("0.2"),
 			set:   "application/json",
 			want:  "application/json",
 		},
 		"v03": {
-			event: event2.New("0.3"),
+			event: event.New("0.3"),
 			set:   "application/json",
 			want:  "application/json",
 		},
-		"spaced v01": {
-			event: event2.New("0.1"),
-			set:   "  application/json  ",
+		"v1": {
+			event: event.New("1.0"),
+			set:   "application/json",
 			want:  "application/json",
 		},
 		"spaced v02": {
-			event: event2.New("0.2"),
+			event: event.New("0.2"),
 			set:   "  application/json  ",
 			want:  "application/json",
 		},
 		"spaced v03": {
-			event: event2.New("0.3"),
+			event: event.New("0.3"),
 			set:   "   application/json   ",
 			want:  "application/json",
 		},
-		"nilled v01": {
-			event: func() event2.Event {
-				e := event2.New("0.1")
-				e.SetDataContentType("application/json")
-				return e
-			}(),
-			want: "",
+		"spaced v1": {
+			event: event.New("1.0"),
+			set:   "  application/json  ",
+			want:  "application/json",
 		},
 		"nilled v02": {
-			event: func() event2.Event {
-				e := event2.New("0.2")
+			event: func() event.Event {
+				e := event.New("0.2")
 				e.SetDataContentType("application/json")
 				return e
 			}(),
 			want: "",
 		},
 		"nilled v03": {
-			event: func() event2.Event {
-				e := event2.New("0.3")
+			event: func() event.Event {
+				e := event.New("0.3")
+				e.SetDataContentType("application/json")
+				return e
+			}(),
+			want: "",
+		},
+		"nilled v1": {
+			event: func() event.Event {
+				e := event.New("1.0")
 				e.SetDataContentType("application/json")
 				return e
 			}(),
@@ -568,70 +551,70 @@ func TestEventRW_DataContentType(t *testing.T) {
 
 func TestEventRW_DataContentEncoding(t *testing.T) {
 	testCases := map[string]ReadWriteTest{
-		"v01": {
-			event: event2.New("0.1"),
-			set:   "base64",
-			want:  "base64",
-		},
 		"v02": {
-			event: event2.New("0.2"),
+			event: event.New("0.2"),
 			set:   "base64",
 			want:  "base64",
 		},
 		"v03": {
-			event: event2.New("0.3"),
+			event: event.New("0.3"),
 			set:   "base64",
 			want:  "base64",
 		},
-		"spaced v01": {
-			event: event2.New("0.1"),
-			set:   "  base64  ",
-			want:  "base64",
+		"v1": {
+			event: event.New("1.0"),
+			set:   "base64",
+			want:  "",
 		},
 		"spaced v02": {
-			event: event2.New("0.2"),
+			event: event.New("0.2"),
 			set:   "  base64  ",
 			want:  "base64",
 		},
 		"spaced v03": {
-			event: event2.New("0.3"),
+			event: event.New("0.3"),
 			set:   "   base64   ",
 			want:  "base64",
 		},
-		"cased v01": {
-			event: event2.New("0.1"),
-			set:   "  BaSe64  ",
-			want:  "base64",
+		"spaced v1": {
+			event: event.New("1.0"),
+			set:   "  base64  ",
+			want:  "",
 		},
 		"cased v02": {
-			event: event2.New("0.2"),
+			event: event.New("0.2"),
 			set:   "  BaSe64  ",
 			want:  "base64",
 		},
 		"cased v03": {
-			event: event2.New("0.3"),
+			event: event.New("0.3"),
 			set:   "   BaSe64   ",
 			want:  "base64",
 		},
-		"nilled v01": {
-			event: func() event2.Event {
-				e := event2.New("0.1")
-				e.SetDataContentEncoding("base64")
-				return e
-			}(),
-			want: "",
+		"cased v1": {
+			event: event.New("1.0"),
+			set:   "  BaSe64  ",
+			want:  "",
 		},
 		"nilled v02": {
-			event: func() event2.Event {
-				e := event2.New("0.2")
+			event: func() event.Event {
+				e := event.New("0.2")
 				e.SetDataContentEncoding("base64")
 				return e
 			}(),
 			want: "",
 		},
 		"nilled v03": {
-			event: func() event2.Event {
-				e := event2.New("0.3")
+			event: func() event.Event {
+				e := event.New("0.3")
+				e.SetDataContentEncoding("base64")
+				return e
+			}(),
+			want: "",
+		},
+		"nilled v1": {
+			event: func() event.Event {
+				e := event.New("1.0")
 				e.SetDataContentEncoding("base64")
 				return e
 			}(),
