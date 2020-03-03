@@ -159,7 +159,6 @@ func WithPrefix(prefix string) *Versions {
 		m: map[string]Version{},
 		svnames: []string{
 			prefix + "specversion",
-			prefix + "cloudEventsVersion",
 		},
 		all: []Version{
 			newVersion(prefix, event.EventContextV1{}.AsV1(),

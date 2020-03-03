@@ -8,9 +8,8 @@ import (
 	"testing"
 	"time"
 
-	event2 "github.com/cloudevents/sdk-go/pkg/event"
-
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/nats"
+	event "github.com/cloudevents/sdk-go/pkg/event"
 	"github.com/cloudevents/sdk-go/pkg/types"
 	"github.com/google/go-cmp/cmp"
 )
@@ -21,14 +20,14 @@ func TestCodecEncode(t *testing.T) {
 
 	testCases := map[string]struct {
 		codec   nats.Codec
-		event   event2.Event
+		event   event.Event
 		want    *nats.Message
 		wantErr error
 	}{
 		"simple v02 structured binary": {
 			codec: nats.Codec{Encoding: nats.StructuredV02},
-			event: event2.Event{
-				Context: event2.EventContextV02{
+			event: event.Event{
+				Context: event.EventContextV02{
 					Type:   "com.example.test",
 					Source: *source,
 					ID:     "ABC-123",
@@ -82,7 +81,7 @@ func TestCodecDecode(t *testing.T) {
 	testCases := map[string]struct {
 		codec   nats.Codec
 		msg     *nats.Message
-		want    *event2.Event
+		want    *event.Event
 		wantErr error
 	}{
 		"simple v2 structured": {
@@ -98,9 +97,9 @@ func TestCodecDecode(t *testing.T) {
 					return toBytes(body)
 				}(),
 			},
-			want: &event2.Event{
-				Context: &event2.EventContextV02{
-					SpecVersion: event2.CloudEventsVersionV02,
+			want: &event.Event{
+				Context: &event.EventContextV02{
+					SpecVersion: event.CloudEventsVersionV02,
 					Type:        "com.example.test",
 					Source:      *source,
 					ID:          "ABC-123",
@@ -137,35 +136,35 @@ type DataExample struct {
 
 func TestCodecRoundTrip(t *testing.T) {
 	sourceUrl, _ := url.Parse("http://example.com/source")
-	source := &types.URLRef{URL: *sourceUrl}
+	source := &types.URIRef{URL: *sourceUrl}
 
 	for _, encoding := range []nats.Encoding{nats.StructuredV02} {
 
 		testCases := map[string]struct {
 			codec   nats.Codec
-			event   event2.Event
-			want    event2.Event
+			event   event.Event
+			want    event.Event
 			wantErr error
 		}{
 			"simple data": {
 				codec: nats.Codec{Encoding: encoding},
-				event: event2.Event{
-					Context: event2.EventContextV01{
-						EventType: "com.example.test",
-						Source:    *source,
-						EventID:   "ABC-123",
+				event: event.Event{
+					Context: event.EventContextV1{
+						Type:   "com.example.test",
+						Source: *source,
+						ID:     "ABC-123",
 					}.AsV02(),
 					Data: map[string]string{
 						"a": "apple",
 						"b": "banana",
 					},
 				},
-				want: event2.Event{
-					Context: &event2.EventContextV01{
-						CloudEventsVersion: event2.CloudEventsVersionV01,
-						EventType:          "com.example.test",
-						Source:             *source,
-						EventID:            "ABC-123",
+				want: event.Event{
+					Context: &event.EventContextV1{
+						SpecVersion: event.CloudEventsVersionV1,
+						Type:        "com.example.test",
+						Source:      *source,
+						ID:          "ABC-123",
 					},
 					Data: map[string]interface{}{
 						"a": "apple",
@@ -176,23 +175,23 @@ func TestCodecRoundTrip(t *testing.T) {
 			},
 			"struct data": {
 				codec: nats.Codec{Encoding: encoding},
-				event: event2.Event{
-					Context: event2.EventContextV01{
-						EventType: "com.example.test",
-						Source:    *source,
-						EventID:   "ABC-123",
+				event: event.Event{
+					Context: event.EventContextV1{
+						Type:   "com.example.test",
+						Source: *source,
+						ID:     "ABC-123",
 					}.AsV02(),
 					Data: DataExample{
 						AnInt:   42,
 						AString: "testing",
 					},
 				},
-				want: event2.Event{
-					Context: &event2.EventContextV01{
-						CloudEventsVersion: event2.CloudEventsVersionV01,
-						EventType:          "com.example.test",
-						Source:             *source,
-						EventID:            "ABC-123",
+				want: event.Event{
+					Context: &event.EventContextV1{
+						SpecVersion: event.CloudEventsVersionV1,
+						Type:        "com.example.test",
+						Source:      *source,
+						ID:          "ABC-123",
 					},
 					Data: &DataExample{
 						AnInt:   42,
@@ -242,8 +241,8 @@ func TestCodecRoundTrip(t *testing.T) {
 					return
 				}
 
-				// fix the context back to v01 to test.
-				ctxv1 := got.Context.AsV01()
+				// fix the context back to v1 to test.
+				ctxv1 := got.Context.AsV1()
 				got.Context = ctxv1
 
 				if diff := cmp.Diff(tc.want, *got); diff != "" {
@@ -257,35 +256,35 @@ func TestCodecRoundTrip(t *testing.T) {
 
 func TestCodecAsMiddleware(t *testing.T) {
 	sourceUrl, _ := url.Parse("http://example.com/source")
-	source := &types.URLRef{URL: *sourceUrl}
+	source := &types.URIRef{URL: *sourceUrl}
 
-	for _, encoding := range []nats.Encoding{nats.StructuredV02} {
+	for _, encoding := range []nats.Encoding{nats.StructuredV1} {
 
 		testCases := map[string]struct {
 			codec   nats.Codec
-			event   event2.Event
-			want    event2.Event
+			event   event.Event
+			want    event.Event
 			wantErr error
 		}{
 			"simple data": {
 				codec: nats.Codec{Encoding: encoding},
-				event: event2.Event{
-					Context: event2.EventContextV01{
-						EventType: "com.example.test",
-						Source:    *source,
-						EventID:   "ABC-123",
-					}.AsV02(),
+				event: event.Event{
+					Context: event.EventContextV1{
+						Type:   "com.example.test",
+						Source: *source,
+						ID:     "ABC-123",
+					}.AsV1(),
 					Data: map[string]string{
 						"a": "apple",
 						"b": "banana",
 					},
 				},
-				want: event2.Event{
-					Context: &event2.EventContextV01{
-						CloudEventsVersion: event2.CloudEventsVersionV01,
-						EventType:          "com.example.test",
-						Source:             *source,
-						EventID:            "ABC-123",
+				want: event.Event{
+					Context: &event.EventContextV1{
+						SpecVersion: event.CloudEventsVersionV1,
+						Type:        "com.example.test",
+						Source:      *source,
+						ID:          "ABC-123",
 					},
 					Data: map[string]interface{}{
 						"a": "apple",
@@ -296,23 +295,23 @@ func TestCodecAsMiddleware(t *testing.T) {
 			},
 			"struct data": {
 				codec: nats.Codec{Encoding: encoding},
-				event: event2.Event{
-					Context: event2.EventContextV01{
-						EventType: "com.example.test",
-						Source:    *source,
-						EventID:   "ABC-123",
-					}.AsV02(),
+				event: event.Event{
+					Context: event.EventContextV1{
+						Type:   "com.example.test",
+						Source: *source,
+						ID:     "ABC-123",
+					}.AsV1(),
 					Data: DataExample{
 						AnInt:   42,
 						AString: "testing",
 					},
 				},
-				want: event2.Event{
-					Context: &event2.EventContextV01{
-						CloudEventsVersion: event2.CloudEventsVersionV01,
-						EventType:          "com.example.test",
-						Source:             *source,
-						EventID:            "ABC-123",
+				want: event.Event{
+					Context: &event.EventContextV1{
+						SpecVersion: event.CloudEventsVersionV1,
+						Type:        "com.example.test",
+						Source:      *source,
+						ID:          "ABC-123",
 					},
 					Data: &DataExample{
 						AnInt:   42,
@@ -379,7 +378,7 @@ func TestCodecAsMiddleware(t *testing.T) {
 				}
 
 				// fix the context back to v1 to test.
-				ctxv1 := got.Context.AsV01()
+				ctxv1 := got.Context.AsV1()
 				got.Context = ctxv1
 
 				if diff := cmp.Diff(tc.want, *got); diff != "" {

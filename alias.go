@@ -34,6 +34,7 @@ type EventContextV03 = event.EventContextV03
 
 type Timestamp = types.Timestamp
 type URLRef = types.URLRef
+type URIRef = types.URIRef
 
 // HTTP Transport
 

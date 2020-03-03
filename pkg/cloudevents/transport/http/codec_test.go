@@ -432,16 +432,16 @@ func TestCodecDecode(t *testing.T) {
 			codec: &http.Codec{Encoding: http.BinaryV03},
 			msg: &http.Message{
 				Header: map[string][]string{
-					"CE-CloudEventsVersion": {"0.2"},
-					"CE-EventID":            {"ABC-123"},
-					"CE-EventType":          {"com.example.test"},
-					"CE-Source":             {"http://example.com/source"},
-					"Content-Type":          {"application/json"},
+					"CE-SpecVersion": {"0.2"},
+					"CE-ID":          {"ABC-123"},
+					"CE-Type":        {"com.example.test"},
+					"CE-Source":      {"http://example.com/source"},
+					"Content-Type":   {"application/json"},
 				},
 			},
 			want: &event.Event{
 				Context: &event.EventContextV03{
-					SpecVersion:     event.CloudEventsVersionV02,
+					SpecVersion:     event.CloudEventsVersionV03,
 					Type:            "com.example.test",
 					Source:          *source,
 					ID:              "ABC-123",
@@ -457,10 +457,10 @@ func TestCodecDecode(t *testing.T) {
 				},
 				Body: func() []byte {
 					body := map[string]interface{}{
-						"cloudEventsVersion": "0.2",
-						"eventID":            "ABC-123",
-						"eventType":          "com.example.test",
-						"source":             "http://example.com/source",
+						"specVersion": "0.2",
+						"eventID":     "ABC-123",
+						"eventType":   "com.example.test",
+						"source":      "http://example.com/source",
 					}
 					return toBytes(body)
 				}(),
@@ -643,7 +643,7 @@ func TestCodecRoundTrip(t *testing.T) {
 				}
 
 				// fix the context back to v1 to test.
-				ctxv1 := got.Context.AsV01()
+				ctxv1 := got.Context.AsV1()
 				got.Context = ctxv1
 
 				if diff := cmp.Diff(tc.want, *got); diff != "" {
@@ -658,7 +658,7 @@ func TestCodecRoundTrip(t *testing.T) {
 // Tests v0.3 -> X -> v0.3
 func TestCodecAsMiddleware(t *testing.T) {
 	sourceUrl, _ := url.Parse("http://example.com/source")
-	source := &types.URLRef{URL: *sourceUrl}
+	source := &types.URIRef{URL: *sourceUrl}
 
 	for _, contentType := range []string{"application/json", "application/xml"} {
 		for _, encoding := range []http.Encoding{http.BinaryV02, http.BinaryV03, http.BinaryV1, http.StructuredV02, http.StructuredV03, http.StructuredV1} {
@@ -672,24 +672,24 @@ func TestCodecAsMiddleware(t *testing.T) {
 				"struct data": {
 					codec: &http.Codec{Encoding: encoding},
 					event: event.Event{
-						Context: event.EventContextV03{
+						Context: event.EventContextV1{
 							Type:            "com.example.test",
 							Source:          *source,
 							ID:              "ABC-123",
 							DataContentType: strptr(contentType),
-						}.AsV01(),
+						}.AsV1(),
 						Data: DataExample{
 							AnInt:   42,
 							AString: "testing",
 						},
 					},
 					want: event.Event{
-						Context: &event.EventContextV01{
-							CloudEventsVersion: event.CloudEventsVersionV01,
-							EventType:          "com.example.test",
-							Source:             *source,
-							EventID:            "ABC-123",
-							ContentType:        strptr(contentType),
+						Context: &event.EventContextV1{
+							SpecVersion:     event.CloudEventsVersionV1,
+							Type:            "com.example.test",
+							Source:          *source,
+							ID:              "ABC-123",
+							DataContentType: strptr(contentType),
 						},
 						Data: &DataExample{
 							AnInt:   42,
@@ -756,7 +756,7 @@ func TestCodecAsMiddleware(t *testing.T) {
 					}
 
 					// fix the context back to v1 to test.
-					ctxv1 := got.Context.AsV01()
+					ctxv1 := got.Context.AsV1()
 					got.Context = ctxv1
 
 					if diff := cmp.Diff(tc.want, *got); diff != "" {

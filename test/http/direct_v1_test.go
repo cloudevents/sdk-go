@@ -9,7 +9,7 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/types"
 )
 
-func TestSenderReceiver_binary_v01(t *testing.T) {
+func TestSenderReceiver_binary_v1(t *testing.T) {
 	now := time.Now()
 
 	testCases := DirectTapTestCases{
@@ -58,7 +58,7 @@ func TestSenderReceiver_binary_v01(t *testing.T) {
 	}
 }
 
-func TestSenderReceiver_structured_v01(t *testing.T) {
+func TestSenderReceiver_structured_v1(t *testing.T) {
 	now := time.Now()
 
 	testCases := DirectTapTestCases{
@@ -102,7 +102,7 @@ func TestSenderReceiver_structured_v01(t *testing.T) {
 	}
 }
 
-func TestSenderReceiver_data_base64_v01(t *testing.T) {
+func TestSenderReceiver_data_base64_v1(t *testing.T) {
 	now := time.Now()
 
 	testCases := DirectTapTestCases{

@@ -11,7 +11,7 @@ import (
 func TestVersions(t *testing.T) {
 	assert := tassert.New(t)
 	versions := spec.New()
-	assert.Equal([]string{"specversion", "cloudEventsVersion"}, versions.SpecVersionNames())
+	assert.Equal([]string{"specversion"}, versions.SpecVersionNames())
 
 	want := []string{"1.0", "0.3", "0.2"}
 	all := versions.Versions()

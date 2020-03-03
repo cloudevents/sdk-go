@@ -48,7 +48,7 @@ func _main(args []string, env envConfig) int {
 
 	seq := 0
 	for _, contentType := range []string{"application/json", "application/xml"} {
-		for _, encoding := range []cloudevents.HTTPEncoding{cloudevents.HTTPBinaryV01, cloudevents.HTTPStructuredV01, cloudevents.HTTPBinaryV02, cloudevents.HTTPStructuredV02} {
+		for _, encoding := range []cloudevents.HTTPEncoding{cloudevents.HTTPBinaryV02, cloudevents.HTTPStructuredV02} {
 
 			t, err := cloudevents.NewHTTPTransport(
 				cloudevents.WithTarget(env.Target),
@@ -72,12 +72,12 @@ func _main(args []string, env envConfig) int {
 
 			for i := 0; i < count; i++ {
 				event := cloudevents.Event{
-					Context: cloudevents.EventContextV01{
-						EventID:     uuid.New().String(),
-						EventType:   "com.cloudevents.sample.sent",
-						Source:      cloudevents.URLRef{URL: *source},
-						ContentType: &contentType,
-					}.AsV01(),
+					Context: cloudevents.EventContextV1{
+						ID:              uuid.New().String(),
+						Type:            "com.cloudevents.sample.sent",
+						Source:          cloudevents.URIRef{URL: *source},
+						DataContentType: &contentType,
+					}.AsV1(),
 					Data: &Example{
 						Sequence: i,
 						Message:  message,
