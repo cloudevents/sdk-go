@@ -21,18 +21,6 @@ func TestGetDataContentType(t *testing.T) {
 		event event.Event
 		want  string
 	}{
-		"min v02, blank": {
-			event: event.Event{
-				Context: MinEventContextV02(),
-			},
-			want: "",
-		},
-		"full v02, json": {
-			event: event.Event{
-				Context: FullEventContextV02(now),
-			},
-			want: "application/json",
-		},
 		"min v03, blank": {
 			event: event.Event{
 				Context: MinEventContextV03(),
@@ -79,18 +67,6 @@ func TestSource(t *testing.T) {
 		event event.Event
 		want  string
 	}{
-		"min v02": {
-			event: event.Event{
-				Context: MinEventContextV02(),
-			},
-			want: source,
-		},
-		"full v02": {
-			event: event.Event{
-				Context: FullEventContextV02(now),
-			},
-			want: source,
-		},
 		"min v03": {
 			event: event.Event{
 				Context: MinEventContextV03(),
@@ -137,18 +113,6 @@ func TestSchemaURL(t *testing.T) {
 		event event.Event
 		want  string
 	}{
-		"min v02, empty schema": {
-			event: event.Event{
-				Context: MinEventContextV02(),
-			},
-			want: "",
-		},
-		"full v02, schema": {
-			event: event.Event{
-				Context: FullEventContextV02(now),
-			},
-			want: schema,
-		},
 		"min v03, empty schema": {
 			event: event.Event{
 				Context: MinEventContextV03(),
@@ -201,11 +165,6 @@ func TestValidate(t *testing.T) {
 		event event.Event
 		want  []string
 	}{
-		"min valid v0.2": {
-			event: event.Event{
-				Context: MinEventContextV02(),
-			},
-		},
 		"min valid v0.3": {
 			event: event.Event{
 				Context: MinEventContextV03(),
@@ -214,12 +173,6 @@ func TestValidate(t *testing.T) {
 		"min valid v1.0": {
 			event: event.Event{
 				Context: MinEventContextV1(),
-			},
-		},
-		"json valid, v0.2": {
-			event: event.Event{
-				Context: FullEventContextV02(now),
-				Data:    []byte(`{"a":"apple","b":"banana"}`),
 			},
 		},
 		"json valid, v0.3": {
@@ -264,23 +217,6 @@ func TestString(t *testing.T) {
 		event event.Event
 		want  string
 	}{
-		"empty v0.2": {
-			event: event.Event{
-				Context: &event.EventContextV02{},
-			},
-			want: `Validation: invalid
-Validation Error: 
-type: MUST be a non-empty string
-specversion: MUST be a non-empty string
-source: REQUIRED
-id: MUST be a non-empty string
-Context Attributes,
-  specversion: 
-  type: 
-  source: 
-  id: 
-`,
-		},
 		"empty v0.3": {
 			event: event.Event{
 				Context: &event.EventContextV03{},
@@ -315,18 +251,6 @@ Context Attributes,
   id: 
 `,
 		},
-		"min v0.2": {
-			event: event.Event{
-				Context: MinEventContextV02(),
-			},
-			want: `Validation: valid
-Context Attributes,
-  specversion: 0.2
-  type: com.example.simple
-  source: http://example.com/source
-  id: ABC-123
-`,
-		},
 		"min v0.3": {
 			event: event.Event{
 				Context: MinEventContextV03(),
@@ -350,33 +274,6 @@ Context Attributes,
   source: http://example.com/source
   id: ABC-123
 `,
-		},
-		"json simple, v0.2": {
-			event: event.Event{
-				Context: FullEventContextV02(now),
-				Data:    []byte(`{"a":"apple","b":"banana"}`),
-			},
-			want: fmt.Sprintf(`Validation: valid
-Context Attributes,
-  specversion: 0.2
-  type: com.example.simple
-  source: http://example.com/source
-  id: ABC-123
-  time: %s
-  schemaurl: http://example.com/schema
-  contenttype: application/json
-Extensions,
-  anothertest: 1
-  datacontentencoding: base64
-  eventtypeversion: v1alpha1
-  subject: topic
-  test: extended
-Data,
-  {
-    "a": "apple",
-    "b": "banana"
-  }
-`, now.String()),
 		},
 		"json simple, v0.3": {
 			event: event.Event{
@@ -457,29 +354,6 @@ func TestExtensionAs(t *testing.T) {
 		wantError    bool
 		wantErrorMsg string
 	}{
-		"min v02, no extension": {
-			event: event.Event{
-				Context: MinEventContextV02(),
-			},
-			extension:    "test",
-			wantError:    true,
-			wantErrorMsg: `extension "test" does not exist`,
-		},
-		"full v02, test extension": {
-			event: event.Event{
-				Context: FullEventContextV02(now),
-			},
-			extension: "test",
-			want:      "extended",
-		},
-		"full v02, anothertest extension invalid type": {
-			event: event.Event{
-				Context: FullEventContextV02(now),
-			},
-			extension:    "anothertest",
-			wantError:    true,
-			wantErrorMsg: `invalid type for extension "anothertest"`,
-		},
 		"min v03, no extension": {
 			event: event.Event{
 				Context: MinEventContextV03(),
@@ -552,21 +426,6 @@ func TestExtensions(t *testing.T) {
 		wantError    bool
 		wantErrorMsg string
 	}{
-		"full v02, test extension": {
-			event: event.Event{
-				Context: FullEventContextV02(now),
-			},
-			extension: "test",
-			want:      "extended",
-		},
-		"full v02, anothertest extension invalid type": {
-			event: event.Event{
-				Context: FullEventContextV02(now),
-			},
-			extension:    "anothertest",
-			wantError:    true,
-			wantErrorMsg: "cannot convert 1 to string",
-		},
 		"full v03, test extension": {
 			event: event.Event{
 				Context: FullEventContextV03(now),
@@ -623,17 +482,6 @@ func strptr(s string) *string {
 	return &s
 }
 
-func MinEventContextV02() *event.EventContextV02 {
-	sourceUrl, _ := url.Parse("http://example.com/source")
-	source := &types.URLRef{URL: *sourceUrl}
-
-	return event.EventContextV02{
-		Type:   "com.example.simple",
-		Source: *source,
-		ID:     "ABC-123",
-	}.AsV02()
-}
-
 func MinEventContextV03() *event.EventContextV03 {
 	sourceUrl, _ := url.Parse("http://example.com/source")
 	source := &types.URLRef{URL: *sourceUrl}
@@ -654,32 +502,6 @@ func MinEventContextV1() *event.EventContextV1 {
 		Source: *source,
 		ID:     "ABC-123",
 	}.AsV1()
-}
-
-func FullEventContextV02(now types.Timestamp) *event.EventContextV02 {
-	sourceUrl, _ := url.Parse("http://example.com/source")
-	source := &types.URLRef{URL: *sourceUrl}
-
-	schemaUrl, _ := url.Parse("http://example.com/schema")
-	schema := &types.URLRef{URL: *schemaUrl}
-
-	extensions := make(map[string]interface{})
-	extensions["test"] = "extended"
-	extensions["anothertest"] = int32(1)
-
-	eventContextV02 := event.EventContextV02{
-		ID:          "ABC-123",
-		Time:        &now,
-		Type:        "com.example.simple",
-		SchemaURL:   schema,
-		ContentType: event.StringOfApplicationJSON(),
-		Source:      *source,
-		Extensions:  extensions,
-	}
-	_ = eventContextV02.SetExtension(event.SubjectKey, "topic")
-	_ = eventContextV02.SetExtension(event.DataContentEncodingKey, event.Base64)
-	_ = eventContextV02.SetExtension(event.EventTypeVersionKey, "v1alpha1")
-	return eventContextV02.AsV02()
 }
 
 func FullEventContextV03(now types.Timestamp) *event.EventContextV03 {

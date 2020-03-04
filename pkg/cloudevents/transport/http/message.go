@@ -35,12 +35,12 @@ func (m Message) CloudEventsVersion() string {
 	if m.Header != nil {
 		// Try headers first.
 
-		// v0.2, v0.3, v1.0 cased from the spec
+		// v0.3, v1.0 cased from the spec
 		name := "ce-specversion"
 		if v := m.Header[name]; len(v) == 1 {
 			return v[0]
 		}
-		// v0.2, v0.3, v1.0 canonical casing
+		//v0.3, v1.0 canonical casing
 		name = "ce-specversion"
 		if ver := m.Header.Get(name); ver != "" {
 			return ver
@@ -55,7 +55,7 @@ func (m Message) CloudEventsVersion() string {
 		return ""
 	}
 
-	// v0.2, 0.3, 1.0
+	// 0.3, 1.0
 	if v, ok := raw["specversion"]; ok {
 		var version string
 		if err := json.Unmarshal(v, &version); err != nil {

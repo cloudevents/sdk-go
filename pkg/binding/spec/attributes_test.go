@@ -41,9 +41,9 @@ func TestAttributes03(t *testing.T) {
 	assert.EqualError(err, `invalid value for time: "foo"`)
 }
 
-func TestAttributes02(t *testing.T) {
+func TestAttributes1(t *testing.T) {
 	assert := assert.New(t)
-	v, err := spec.WithPrefix("x:").Version("0.2")
+	v, err := spec.WithPrefix("x:").Version("1.0")
 	assert.NoError(err)
 	c := v.NewContext()
 	id := v.Attribute("x:id")

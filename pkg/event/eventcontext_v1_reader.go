@@ -80,6 +80,9 @@ func (ec EventContextV1) DeprecatedGetDataContentEncoding() string {
 
 // GetExtensions implements EventContextReader.GetExtensions
 func (ec EventContextV1) GetExtensions() map[string]interface{} {
+	if len(ec.Extensions) == 0 {
+		return nil
+	}
 	// For now, convert the extensions of v1.0 to the pre-v1.0 style.
 	ext := make(map[string]interface{}, len(ec.Extensions))
 	for k, v := range ec.Extensions {

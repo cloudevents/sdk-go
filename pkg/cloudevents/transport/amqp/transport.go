@@ -87,11 +87,6 @@ func New(server, queue string, opts ...Option) (*Transport, error) {
 
 func (t *Transport) applyEncoding(amqpSender *amqp.Sender) (binding.Sender, []func(context.Context) context.Context) {
 	switch t.Encoding {
-	case BinaryV02:
-		return bindings_amqp.NewSender(
-			amqpSender,
-			bindings_amqp.WithTranscoder(transcoder.Version(spec.V02)),
-		), []func(context.Context) context.Context{binding.WithForceBinary}
 	case BinaryV03:
 		return bindings_amqp.NewSender(
 			amqpSender,
@@ -102,11 +97,6 @@ func (t *Transport) applyEncoding(amqpSender *amqp.Sender) (binding.Sender, []fu
 			amqpSender,
 			bindings_amqp.WithTranscoder(transcoder.Version(spec.V1)),
 		), []func(context.Context) context.Context{binding.WithForceBinary}
-	case StructuredV02:
-		return bindings_amqp.NewSender(
-			amqpSender,
-			bindings_amqp.WithTranscoder(transcoder.Version(spec.V02)),
-		), []func(context.Context) context.Context{binding.WithForceStructured}
 	case StructuredV03:
 		return bindings_amqp.NewSender(
 			amqpSender,

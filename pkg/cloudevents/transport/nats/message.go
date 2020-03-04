@@ -19,7 +19,7 @@ func (m Message) CloudEventsVersion() string {
 		return ""
 	}
 
-	// v0.2
+	// v0.3, v0.1
 	if v, ok := raw["specversion"]; ok {
 		var version string
 		if err := json.Unmarshal(v, &version); err != nil {

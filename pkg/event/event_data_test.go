@@ -17,11 +17,7 @@ type DataTest struct {
 	wantErr string
 }
 
-func TestEventSetData_Json(t *testing.T) {
-	// All version should be the same, so run through them all.
-
-	versions := []string{event.CloudEventsVersionV02, event.CloudEventsVersionV03}
-
+func TestEventSetData_Jsonv03(t *testing.T) {
 	testCases := map[string]DataTest{
 		"empty": {
 			event: func(version string) event.Event {
@@ -74,24 +70,84 @@ func TestEventSetData_Json(t *testing.T) {
 		},
 	}
 	for n, tc := range testCases {
-		for _, version := range versions {
-			t.Run(n+":"+version, func(t *testing.T) {
-				// Make a versioned event.
-				event := tc.event(version)
+		version := event.CloudEventsVersionV03
+		t.Run(n+":"+version, func(t *testing.T) {
+			// Make a versioned event.
+			e := tc.event(version)
 
-				if tc.set != nil {
-					if err := event.SetData(tc.set); err != nil {
-						t.Errorf("unexpected error, %v", err)
-					}
+			if tc.set != nil {
+				if err := e.SetData(tc.set); err != nil {
+					t.Errorf("unexpected error, %v", err)
 				}
-				got := event.Data
+			}
+			got := e.Data
 
-				as, _ := types.Allocate(tc.set)
+			as, _ := types.Allocate(tc.set)
 
-				err := event.DataAs(&as)
-				validateData(t, tc, got, as, err)
-			})
-		}
+			err := e.DataAs(&as)
+			validateData(t, tc, got, as, err)
+		})
+	}
+}
+
+func TestEventSetData_Jsonv1(t *testing.T) {
+	testCases := map[string]DataTest{
+		"empty": {
+			event: func(version string) event.Event {
+				return event.New(version)
+			},
+			want: nil,
+		},
+		"defaults": {
+			event: func(version string) event.Event {
+				return event.New(version)
+			},
+			set: map[string]interface{}{
+				"hello": "unittest",
+			},
+			want: []byte(`{"hello":"unittest"}`),
+		},
+		"text/json": {
+			event: func(version string) event.Event {
+				e := event.New(version)
+				e.SetDataContentType("text/json")
+				return e
+			},
+			set: map[string]interface{}{
+				"hello": "unittest",
+			},
+			want: []byte(`{"hello":"unittest"}`),
+		},
+		"application/json": {
+			event: func(version string) event.Event {
+				e := event.New(version)
+				e.SetDataContentType("application/json")
+				return e
+			},
+			set: map[string]interface{}{
+				"hello": "unittest",
+			},
+			want: []byte(`{"hello":"unittest"}`),
+		},
+	}
+	for n, tc := range testCases {
+		version := event.CloudEventsVersionV1
+		t.Run(n+":"+version, func(t *testing.T) {
+			// Make a versioned event.
+			e := tc.event(version)
+
+			if tc.set != nil {
+				if err := e.SetData(tc.set); err != nil {
+					t.Errorf("unexpected error, %v", err)
+				}
+			}
+			got := e.Data
+
+			as, _ := types.Allocate(tc.set)
+
+			err := e.DataAs(&as)
+			validateData(t, tc, got, as, err)
+		})
 	}
 }
 
@@ -104,7 +160,7 @@ type XmlExample struct {
 func TestEventSetData_xml(t *testing.T) {
 	// All version should be the same, so run through them all.
 
-	versions := []string{event.CloudEventsVersionV02, event.CloudEventsVersionV03}
+	versions := []string{event.CloudEventsVersionV03, event.CloudEventsVersionV1}
 
 	testCases := map[string]DataTest{
 		"empty": {
@@ -126,7 +182,7 @@ func TestEventSetData_xml(t *testing.T) {
 				AString: "true fact",
 				AnArray: versions,
 			},
-			want: []byte(`<XmlExample><a>42</a><b>true fact</b><c>0.2</c><c>0.3</c></XmlExample>`),
+			want: []byte(`<XmlExample><a>42</a><b>true fact</b><c>0.3</c><c>1.0</c></XmlExample>`),
 		},
 		"application/xml": {
 			event: func(version string) event.Event {
@@ -139,8 +195,37 @@ func TestEventSetData_xml(t *testing.T) {
 				AString: "true fact",
 				AnArray: versions,
 			},
-			want: []byte(`<XmlExample><a>42</a><b>true fact</b><c>0.2</c><c>0.3</c></XmlExample>`),
+			want: []byte(`<XmlExample><a>42</a><b>true fact</b><c>0.3</c><c>1.0</c></XmlExample>`),
 		},
+	}
+	for n, tc := range testCases {
+		for _, version := range versions {
+			t.Run(n+":"+version, func(t *testing.T) {
+				// Make a versioned event.
+				e := tc.event(version)
+
+				if tc.set != nil {
+					if err := e.SetData(tc.set); err != nil {
+						t.Errorf("unexpected error, %v", err)
+					}
+				}
+				got := e.Data
+
+				as, _ := types.Allocate(tc.set)
+
+				err := e.DataAs(&as)
+				validateData(t, tc, got, as, err)
+			})
+		}
+	}
+}
+
+func TestEventSetData_xml_base64(t *testing.T) {
+	// All version should be the same, so run through them all.
+
+	versions := []string{event.CloudEventsVersionV03}
+
+	testCases := map[string]DataTest{
 		"application/xml+base64": {
 			event: func(version string) event.Event {
 				e := event.New(version)
@@ -153,7 +238,7 @@ func TestEventSetData_xml(t *testing.T) {
 				AString: "true fact",
 				AnArray: versions,
 			},
-			want: `PFhtbEV4YW1wbGU+PGE+NDI8L2E+PGI+dHJ1ZSBmYWN0PC9iPjxjPjAuMjwvYz48Yz4wLjM8L2M+PC9YbWxFeGFtcGxlPg==`,
+			want: `PFhtbEV4YW1wbGU+PGE+NDI8L2E+PGI+dHJ1ZSBmYWN0PC9iPjxjPjAuMzwvYz48L1htbEV4YW1wbGU+`,
 		},
 	}
 	for n, tc := range testCases {

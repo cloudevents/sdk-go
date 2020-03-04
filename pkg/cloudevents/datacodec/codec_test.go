@@ -47,8 +47,8 @@ func TestCodecDecode(t *testing.T) {
 		},
 		"application/xml": {
 			contentType: "application/xml",
-			in:          []byte(`<Example><Sequence>7</Sequence><Message>Hello, Structured Encoding v0.2!</Message></Example>`),
-			want:        &Example{Sequence: 7, Message: "Hello, Structured Encoding v0.2!"},
+			in:          []byte(`<Example><Sequence>7</Sequence><Message>Hello, Structured Encoding v1.0!</Message></Example>`),
+			want:        &Example{Sequence: 7, Message: "Hello, Structured Encoding v1.0!"},
 		},
 
 		"custom content type": {
@@ -138,8 +138,8 @@ func TestCodecEncode(t *testing.T) {
 		},
 		"application/xml": {
 			contentType: "application/xml",
-			in:          &Example{Sequence: 7, Message: "Hello, Structured Encoding v0.2!"},
-			want:        []byte(`<Example><Sequence>7</Sequence><Message>Hello, Structured Encoding v0.2!</Message></Example>`),
+			in:          &Example{Sequence: 7, Message: "Hello, Structured Encoding v1.0!"},
+			want:        []byte(`<Example><Sequence>7</Sequence><Message>Hello, Structured Encoding v1.0!</Message></Example>`),
 		},
 
 		"custom content type": {

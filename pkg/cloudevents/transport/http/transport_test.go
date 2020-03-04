@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	event2 "github.com/cloudevents/sdk-go/pkg/event"
+	"github.com/cloudevents/sdk-go/pkg/event"
 
 	cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 	"github.com/cloudevents/sdk-go/pkg/types"
@@ -102,12 +102,12 @@ func TestStableConnectionsToSingleHost(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error creating CloudEvents client %v", err.Error())
 	}
-	event := event2.Event{
-		Context: &event2.EventContextV02{
-			SpecVersion: event2.CloudEventsVersionV02,
+	e := event.Event{
+		Context: &event.EventContextV1{
+			SpecVersion: event.CloudEventsVersionV1,
 			Type:        "test.event",
 			ID:          "abc-123",
-			Source:      *types.ParseURLRef("test"),
+			Source:      *types.ParseURIRef("test"),
 		},
 	}
 
@@ -116,7 +116,7 @@ func TestStableConnectionsToSingleHost(t *testing.T) {
 	duration := 1 * time.Second
 	var sent uint64
 	err = doConcurrently(concurrency, duration, func() error {
-		rctx, _, err := ceClient.Send(ctx, event)
+		rctx, _, err := ceClient.Send(ctx, e)
 		if err != nil {
 			return fmt.Errorf("unexpected error sending CloudEvent: %v", err.Error())
 		}

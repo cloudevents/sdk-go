@@ -94,7 +94,7 @@ func _main(args []string, env envConfig) int {
 
 	for _, contentType := range []string{"application/json", "application/xml"} {
 		// HTTP
-		for _, encoding := range []cloudeventshttp.Encoding{cloudeventshttp.Default, cloudeventshttp.BinaryV02, cloudeventshttp.StructuredV02, cloudeventshttp.BinaryV03, cloudeventshttp.StructuredV03} {
+		for _, encoding := range []cloudeventshttp.Encoding{cloudeventshttp.Default, cloudeventshttp.BinaryV03, cloudeventshttp.StructuredV03} {
 
 			t, err := cloudeventshttp.New(
 				cloudeventshttp.WithTarget(env.HTTPTarget),
@@ -118,7 +118,7 @@ func _main(args []string, env envConfig) int {
 		}
 
 		// NATS
-		for _, encoding := range []cloudeventsnats.Encoding{cloudeventsnats.Default, cloudeventsnats.StructuredV02, cloudeventsnats.StructuredV03} {
+		for _, encoding := range []cloudeventsnats.Encoding{cloudeventsnats.Default, cloudeventsnats.StructuredV03} {
 
 			t, err := cloudeventsnats.New(
 				env.NATSServer,

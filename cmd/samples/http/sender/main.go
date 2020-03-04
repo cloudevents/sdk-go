@@ -48,7 +48,7 @@ func _main(args []string, env envConfig) int {
 
 	seq := 0
 	for _, contentType := range []string{"application/json", "application/xml"} {
-		for _, encoding := range []cloudevents.HTTPEncoding{cloudevents.HTTPBinaryV02, cloudevents.HTTPStructuredV02} {
+		for _, encoding := range []cloudevents.HTTPEncoding{cloudevents.HTTPBinaryV1, cloudevents.HTTPStructuredV1} {
 
 			t, err := cloudevents.NewHTTPTransport(
 				cloudevents.WithTarget(env.Target),

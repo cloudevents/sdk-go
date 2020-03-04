@@ -81,8 +81,6 @@ func (t *Transport) loadCodec() bool {
 		switch t.Encoding {
 		case Default:
 			t.codec = &Codec{}
-		case StructuredV02:
-			t.codec = &CodecV02{Encoding: t.Encoding}
 		case StructuredV03:
 			t.codec = &CodecV03{Encoding: t.Encoding}
 		case StructuredV1:

@@ -98,8 +98,6 @@ func (b *messageToEventBuilder) SetAttribute(attribute spec.Attribute, value int
 			return err
 		}
 		switch str {
-		case event.CloudEventsVersionV02:
-			b.event.Context = b.event.Context.AsV02()
 		case event.CloudEventsVersionV03:
 			b.event.Context = b.event.Context.AsV03()
 		case event.CloudEventsVersionV1:

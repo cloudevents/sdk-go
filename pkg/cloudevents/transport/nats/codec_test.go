@@ -16,7 +16,7 @@ import (
 
 func TestCodecEncode(t *testing.T) {
 	sourceUrl, _ := url.Parse("http://example.com/source")
-	source := &types.URLRef{URL: *sourceUrl}
+	source := &types.URIRef{URL: *sourceUrl}
 
 	testCases := map[string]struct {
 		codec   nats.Codec
@@ -24,19 +24,19 @@ func TestCodecEncode(t *testing.T) {
 		want    *nats.Message
 		wantErr error
 	}{
-		"simple v02 structured binary": {
-			codec: nats.Codec{Encoding: nats.StructuredV02},
+		"simple v1 structured binary": {
+			codec: nats.Codec{Encoding: nats.StructuredV1},
 			event: event.Event{
-				Context: event.EventContextV02{
+				Context: event.EventContextV1{
 					Type:   "com.example.test",
 					Source: *source,
 					ID:     "ABC-123",
-				}.AsV02(),
+				}.AsV1(),
 			},
 			want: &nats.Message{
 				Body: func() []byte {
 					body := map[string]interface{}{
-						"specversion": "0.2",
+						"specversion": "1.0",
 						"id":          "ABC-123",
 						"type":        "com.example.test",
 						"source":      "http://example.com/source",
@@ -76,7 +76,7 @@ func TestCodecEncode(t *testing.T) {
 
 func TestCodecDecode(t *testing.T) {
 	sourceUrl, _ := url.Parse("http://example.com/source")
-	source := &types.URLRef{URL: *sourceUrl}
+	source := &types.URIRef{URL: *sourceUrl}
 
 	testCases := map[string]struct {
 		codec   nats.Codec
@@ -84,12 +84,12 @@ func TestCodecDecode(t *testing.T) {
 		want    *event.Event
 		wantErr error
 	}{
-		"simple v2 structured": {
-			codec: nats.Codec{Encoding: nats.StructuredV02},
+		"simple v1 structured": {
+			codec: nats.Codec{Encoding: nats.StructuredV1},
 			msg: &nats.Message{
 				Body: func() []byte {
 					body := map[string]interface{}{
-						"specversion": "0.2",
+						"specversion": "1.0",
 						"id":          "ABC-123",
 						"type":        "com.example.test",
 						"source":      "http://example.com/source",
@@ -98,8 +98,8 @@ func TestCodecDecode(t *testing.T) {
 				}(),
 			},
 			want: &event.Event{
-				Context: &event.EventContextV02{
-					SpecVersion: event.CloudEventsVersionV02,
+				Context: &event.EventContextV1{
+					SpecVersion: event.CloudEventsVersionV1,
 					Type:        "com.example.test",
 					Source:      *source,
 					ID:          "ABC-123",
@@ -138,7 +138,7 @@ func TestCodecRoundTrip(t *testing.T) {
 	sourceUrl, _ := url.Parse("http://example.com/source")
 	source := &types.URIRef{URL: *sourceUrl}
 
-	for _, encoding := range []nats.Encoding{nats.StructuredV02} {
+	for _, encoding := range []nats.Encoding{nats.StructuredV1} {
 
 		testCases := map[string]struct {
 			codec   nats.Codec
@@ -153,7 +153,7 @@ func TestCodecRoundTrip(t *testing.T) {
 						Type:   "com.example.test",
 						Source: *source,
 						ID:     "ABC-123",
-					}.AsV02(),
+					}.AsV03(),
 					Data: map[string]string{
 						"a": "apple",
 						"b": "banana",
@@ -180,7 +180,7 @@ func TestCodecRoundTrip(t *testing.T) {
 						Type:   "com.example.test",
 						Source: *source,
 						ID:     "ABC-123",
-					}.AsV02(),
+					}.AsV03(),
 					Data: DataExample{
 						AnInt:   42,
 						AString: "testing",

@@ -11,15 +11,13 @@ var _ EventWriter = (*Event)(nil)
 func (e *Event) SetSpecVersion(v string) {
 	if e.Context == nil {
 		switch v {
-		case CloudEventsVersionV02:
-			e.Context = EventContextV02{}.AsV02()
 		case CloudEventsVersionV03:
 			e.Context = EventContextV03{}.AsV03()
 		case CloudEventsVersionV1:
 			e.Context = EventContextV1{}.AsV1()
 		default:
-			e.fieldError("specversion", fmt.Errorf("a valid spec version is required: [%s, %s, %s]",
-				CloudEventsVersionV02, CloudEventsVersionV03, CloudEventsVersionV1))
+			e.fieldError("specversion", fmt.Errorf("a valid spec version is required: [%s, %s]",
+				CloudEventsVersionV03, CloudEventsVersionV1))
 			return
 		}
 		e.fieldOK("specversion")

@@ -111,37 +111,6 @@ func (ec *EventContextV03) cloneExtensions() map[string]interface{} {
 	return new
 }
 
-// AsV02 implements EventContextConverter.AsV02
-func (ec EventContextV03) AsV02() *EventContextV02 {
-	ret := EventContextV02{
-		SpecVersion: CloudEventsVersionV02,
-		ID:          ec.ID,
-		Time:        ec.Time,
-		Type:        ec.Type,
-		SchemaURL:   ec.SchemaURL,
-		ContentType: ec.DataContentType,
-		Source:      ec.Source,
-		Extensions:  make(map[string]interface{}),
-	}
-	// Subject was introduced in 0.3, so put it in an extension for 0.2.
-	if ec.Subject != nil {
-		_ = ret.SetExtension(SubjectKey, *ec.Subject)
-	}
-	// DeprecatedDataContentEncoding was introduced in 0.3, so put it in an extension for 0.2.
-	if ec.DataContentEncoding != nil {
-		_ = ret.SetExtension(DataContentEncodingKey, *ec.DataContentEncoding)
-	}
-	if ec.Extensions != nil {
-		for k, v := range ec.Extensions {
-			ret.Extensions[k] = v
-		}
-	}
-	if len(ret.Extensions) == 0 {
-		ret.Extensions = nil
-	}
-	return &ret
-}
-
 // AsV03 implements EventContextConverter.AsV03
 func (ec EventContextV03) AsV03() *EventContextV03 {
 	ec.SpecVersion = CloudEventsVersionV03
