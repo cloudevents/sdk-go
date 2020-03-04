@@ -30,7 +30,7 @@ func TestAddOrUpdateAttribute(t *testing.T) {
 	eventWithUpdatedValue := test.CopyEventContext(e)
 	eventWithUpdatedValue.SetTime(attributeUpdatedValue.Time)
 
-	transformers := AddOrUpdateAttribute(attributeKind, attributeInitialValue.Time, func(i2 interface{}) (i interface{}, err error) {
+	transformers := SetAttribute(attributeKind, attributeInitialValue.Time, func(i2 interface{}) (i interface{}, err error) {
 		require.NotNil(t, i2)
 		t, err := types.ToTime(i2)
 		if err != nil {
@@ -95,7 +95,7 @@ func TestAddOrUpdateExtension(t *testing.T) {
 	eventWithUpdatedValue := test.CopyEventContext(e)
 	require.NoError(t, eventWithUpdatedValue.Context.SetExtension(extName, exUpdatedValue))
 
-	transformers := AddOrUpdateExtension(extName, extInitialValue, func(i2 interface{}) (i interface{}, err error) {
+	transformers := SetExtension(extName, extInitialValue, func(i2 interface{}) (i interface{}, err error) {
 		require.NotNil(t, i2)
 		str, err := types.Format(i2)
 		if err != nil {
