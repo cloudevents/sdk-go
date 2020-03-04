@@ -11,10 +11,10 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
 	"github.com/cloudevents/sdk-go/pkg/binding/test"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/cloudevents/sdk-go/pkg/types"
 )
 
-func TestAddOrUpdateAttribute(t *testing.T) {
+func TestSetAttribute(t *testing.T) {
 	e := test.MinEvent()
 	e.Context = e.Context.AsV1()
 
@@ -81,7 +81,7 @@ func TestAddOrUpdateAttribute(t *testing.T) {
 }
 
 // Test a common flow: If the metadata is not existing, initialize with a value. Otherwise, update it
-func TestAddOrUpdateExtension(t *testing.T) {
+func TestSetExtension(t *testing.T) {
 	e := test.MinEvent()
 	e.Context = e.Context.AsV1()
 
