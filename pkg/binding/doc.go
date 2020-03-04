@@ -1,3 +1,5 @@
+package binding
+
 /*
 
 Package binding defines interfaces for protocol bindings.
@@ -10,6 +12,25 @@ to allow efficient forwarding and end-to-end reliable delivery between a
 Receiver and a Sender belonging to different bindings. This is useful for
 intermediary applications that route or forward events, but not necessary for
 most "endpoint" applications that emit or consume events.
+
+Messages and Encoding
+
+The core of this package is the Message interface: It defines the visitors for an
+encoded event in structured mode or binary mode.
+The entity who receives a protocol specific data structure representing a message (e.g. an HttpRequest) encapsulates it in a binding.Message implementation using a
+NewMessage method (e.g. http.NewMessage).
+Then the entity that wants to send the binding.Message back on the wire,
+translates it back to the protocol specific data structure (e.g. a Kafka ConsumerMessage), using
+the visitors BinaryEncoder and StructuredEncoder specific to that protocol.
+Binding implementations exposes their visitors
+through a specific Encode function (e.g. kafka.EncodeProducerMessage), in order to simplify the invocation of the
+encoding message.
+
+A message can be converted to an event.Event using ToEvent method. An event.Event can be used as Message casting it to binding.EventMessage.
+
+In order to simplify the encoding process for each protocol, this package provide several utility methods like Encode and RunDirectEncoding.
+
+Messages can be eventually wrapped to change their behaviours and binding their lifecycle, like the binding.FinishMessage. Every Message wrapper implements the MessageWrapper interface
 
 Protocol Bindings
 
@@ -40,4 +61,3 @@ messages to be forwarded without decoding and re-encoding. It also allows any
 Message to be fully decoded and examined as needed.
 
 */
-package binding
