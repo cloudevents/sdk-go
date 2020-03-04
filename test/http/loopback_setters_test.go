@@ -11,7 +11,7 @@ import (
 func TestClientLoopback_setters_binary_json(t *testing.T) {
 	now := time.Now()
 
-	versions := []string{cloudevents.VersionV01, cloudevents.VersionV02, cloudevents.VersionV03}
+	versions := []string{cloudevents.VersionV02, cloudevents.VersionV03, cloudevents.VersionV1}
 
 	testCases := map[string]struct {
 		event  func(string) *cloudevents.Event
@@ -44,14 +44,14 @@ func TestClientLoopback_setters_binary_json(t *testing.T) {
 				return &event
 			},
 			want: map[string]*cloudevents.Event{
-				cloudevents.VersionV01: {
-					Context: cloudevents.EventContextV01{
-						EventID:     "321-CBA",
-						EventType:   "unit.test.client.response",
-						EventTime:   &cloudevents.Timestamp{Time: now},
-						Source:      *cloudevents.ParseURLRef("/unit/test/client"),
-						ContentType: cloudevents.StringOfApplicationJSON(),
-					}.AsV01(),
+				cloudevents.VersionV1: {
+					Context: cloudevents.EventContextV1{
+						ID:              "321-CBA",
+						Type:            "unit.test.client.response",
+						Time:            &cloudevents.Timestamp{Time: now},
+						Source:          *cloudevents.ParseURIRef("/unit/test/client"),
+						DataContentType: cloudevents.StringOfApplicationJSON(),
+					}.AsV1(),
 					Data: map[string]string{"unittest": "response"},
 				},
 				cloudevents.VersionV02: {
@@ -76,16 +76,16 @@ func TestClientLoopback_setters_binary_json(t *testing.T) {
 				},
 			},
 			asSent: map[string]*TapValidation{
-				cloudevents.VersionV01: {
+				cloudevents.VersionV1: {
 					Method: "POST",
 					URI:    "/",
 					Header: map[string][]string{
-						"ce-cloudeventsversion": {"0.1"},
-						"ce-eventid":            {"ABC-123"},
-						"ce-eventtime":          {now.UTC().Format(time.RFC3339Nano)},
-						"ce-eventtype":          {"unit.test.client.sent"},
-						"ce-source":             {"/unit/test/client"},
-						"content-type":          {"application/json"},
+						"ce-specversion": {"1.0"},
+						"ce-id":          {"ABC-123"},
+						"ce-time":        {now.UTC().Format(time.RFC3339Nano)},
+						"ce-type":        {"unit.test.client.sent"},
+						"ce-source":      {"/unit/test/client"},
+						"content-type":   {"application/json"},
 					},
 					Body:          `{"hello":"unittest"}`,
 					ContentLength: 20,
@@ -120,14 +120,14 @@ func TestClientLoopback_setters_binary_json(t *testing.T) {
 				},
 			},
 			asRecv: map[string]*TapValidation{
-				cloudevents.VersionV01: {
+				cloudevents.VersionV1: {
 					Header: map[string][]string{
-						"ce-cloudeventsversion": {"0.1"},
-						"ce-eventid":            {"321-CBA"},
-						"ce-eventtime":          {now.UTC().Format(time.RFC3339Nano)},
-						"ce-eventtype":          {"unit.test.client.response"},
-						"ce-source":             {"/unit/test/client"},
-						"content-type":          {"application/json"},
+						"ce-specversion": {"1.0"},
+						"ce-id":          {"321-CBA"},
+						"ce-time":        {now.UTC().Format(time.RFC3339Nano)},
+						"ce-type":        {"unit.test.client.response"},
+						"ce-source":      {"/unit/test/client"},
+						"content-type":   {"application/json"},
 					},
 					Body:          `{"unittest":"response"}`,
 					Status:        "200 OK",
@@ -184,7 +184,7 @@ func TestClientLoopback_setters_binary_json(t *testing.T) {
 func TestClientLoopback_setters_binary_json_noBody(t *testing.T) {
 	now := time.Now()
 
-	versions := []string{cloudevents.VersionV01, cloudevents.VersionV02, cloudevents.VersionV03}
+	versions := []string{cloudevents.VersionV1, cloudevents.VersionV02, cloudevents.VersionV03}
 
 	testCases := map[string]struct {
 		event  func(string) *cloudevents.Event
@@ -211,14 +211,14 @@ func TestClientLoopback_setters_binary_json_noBody(t *testing.T) {
 				return &event
 			},
 			want: map[string]*cloudevents.Event{
-				cloudevents.VersionV01: {
-					Context: cloudevents.EventContextV01{
-						EventID:     "321-CBA",
-						EventType:   "unit.test.client.response",
-						EventTime:   &cloudevents.Timestamp{Time: now},
-						Source:      *cloudevents.ParseURLRef("/unit/test/client"),
-						ContentType: cloudevents.StringOfApplicationJSON(),
-					}.AsV01(),
+				cloudevents.VersionV1: {
+					Context: cloudevents.EventContextV1{
+						ID:              "321-CBA",
+						Type:            "unit.test.client.response",
+						Time:            &cloudevents.Timestamp{Time: now},
+						Source:          *cloudevents.ParseURIRef("/unit/test/client"),
+						DataContentType: cloudevents.StringOfApplicationJSON(),
+					}.AsV1(),
 					Data: map[string]string{},
 				},
 				cloudevents.VersionV02: {
@@ -243,16 +243,16 @@ func TestClientLoopback_setters_binary_json_noBody(t *testing.T) {
 				},
 			},
 			asSent: map[string]*TapValidation{
-				cloudevents.VersionV01: {
+				cloudevents.VersionV1: {
 					Method: "POST",
 					URI:    "/",
 					Header: map[string][]string{
-						"ce-cloudeventsversion": {"0.1"},
-						"ce-eventid":            {"ABC-123"},
-						"ce-eventtime":          {now.UTC().Format(time.RFC3339Nano)},
-						"ce-eventtype":          {"unit.test.client.sent"},
-						"ce-source":             {"/unit/test/client"},
-						"content-type":          {"application/json"},
+						"ce-specversion": {"1.0"},
+						"ce-id":          {"ABC-123"},
+						"ce-time":        {now.UTC().Format(time.RFC3339Nano)},
+						"ce-type":        {"unit.test.client.sent"},
+						"ce-source":      {"/unit/test/client"},
+						"content-type":   {"application/json"},
 					},
 					ContentLength: 0,
 				},
@@ -284,14 +284,14 @@ func TestClientLoopback_setters_binary_json_noBody(t *testing.T) {
 				},
 			},
 			asRecv: map[string]*TapValidation{
-				cloudevents.VersionV01: {
+				cloudevents.VersionV1: {
 					Header: map[string][]string{
-						"ce-cloudeventsversion": {"0.1"},
-						"ce-eventid":            {"321-CBA"},
-						"ce-eventtime":          {now.UTC().Format(time.RFC3339Nano)},
-						"ce-eventtype":          {"unit.test.client.response"},
-						"ce-source":             {"/unit/test/client"},
-						"content-type":          {"application/json"},
+						"ce-specversion": {"1.0"},
+						"ce-id":          {"321-CBA"},
+						"ce-time":        {now.UTC().Format(time.RFC3339Nano)},
+						"ce-type":        {"unit.test.client.response"},
+						"ce-source":      {"/unit/test/client"},
+						"content-type":   {"application/json"},
 					},
 					Status:        "200 OK",
 					ContentLength: 0,
@@ -345,7 +345,7 @@ func TestClientLoopback_setters_binary_json_noBody(t *testing.T) {
 func TestClientLoopback_setters_structured_json(t *testing.T) {
 	now := time.Now()
 
-	versions := []string{cloudevents.VersionV01, cloudevents.VersionV02, cloudevents.VersionV03}
+	versions := []string{cloudevents.VersionV1, cloudevents.VersionV02, cloudevents.VersionV03}
 
 	testCases := map[string]struct {
 		event  func(string) *cloudevents.Event
@@ -378,14 +378,14 @@ func TestClientLoopback_setters_structured_json(t *testing.T) {
 				return &event
 			},
 			want: map[string]*cloudevents.Event{
-				cloudevents.VersionV01: {
-					Context: cloudevents.EventContextV01{
-						EventID:     "321-CBA",
-						EventType:   "unit.test.client.response",
-						EventTime:   &cloudevents.Timestamp{Time: now},
-						Source:      *cloudevents.ParseURLRef("/unit/test/client"),
-						ContentType: cloudevents.StringOfApplicationJSON(),
-					}.AsV01(),
+				cloudevents.VersionV1: {
+					Context: cloudevents.EventContextV1{
+						ID:              "321-CBA",
+						Type:            "unit.test.client.response",
+						Time:            &cloudevents.Timestamp{Time: now},
+						Source:          *cloudevents.ParseURIRef("/unit/test/client"),
+						DataContentType: cloudevents.StringOfApplicationJSON(),
+					}.AsV1(),
 					Data: map[string]string{"unittest": "response"},
 				},
 				cloudevents.VersionV02: {
@@ -410,13 +410,13 @@ func TestClientLoopback_setters_structured_json(t *testing.T) {
 				},
 			},
 			asSent: map[string]*TapValidation{
-				cloudevents.VersionV01: {
+				cloudevents.VersionV1: {
 					Method: "POST",
 					URI:    "/",
 					Header: map[string][]string{
 						"content-type": {"application/cloudevents+json"},
 					},
-					Body: fmt.Sprintf(`{"cloudEventsVersion":"0.1","contentType":"application/json","data":{"hello":"unittest"},"eventID":"ABC-123","eventTime":%q,"eventType":"unit.test.client.sent","source":"/unit/test/client"}`, now.UTC().Format(time.RFC3339Nano)),
+					Body: fmt.Sprintf(`{"data":{"hello":"unittest"},"datacontenttype":"application/json","id":"ABC-123","source":"/unit/test/client","specversion":"1.0","time":%q,"type":"unit.test.client.sent"}`, now.UTC().Format(time.RFC3339Nano)),
 				},
 				cloudevents.VersionV02: {
 					Method: "POST",
@@ -436,11 +436,12 @@ func TestClientLoopback_setters_structured_json(t *testing.T) {
 				},
 			},
 			asRecv: map[string]*TapValidation{
-				cloudevents.VersionV01: {
+				cloudevents.VersionV1: {
 					Header: map[string][]string{
 						"content-type": {"application/cloudevents+json"},
 					},
-					Body:   fmt.Sprintf(`{"cloudEventsVersion":"0.1","contentType":"application/json","data":{"unittest":"response"},"eventID":"321-CBA","eventTime":%q,"eventType":"unit.test.client.response","source":"/unit/test/client"}`, now.UTC().Format(time.RFC3339Nano)),
+					Body: fmt.Sprintf(`{"data":{"unittest":"response"},"datacontenttype":"application/json","id":"321-CBA","source":"/unit/test/client","specversion":"1.0","time":%q,"type":"unit.test.client.response"}`, now.UTC().Format(time.RFC3339Nano)),
+
 					Status: "200 OK",
 				},
 				cloudevents.VersionV02: {
@@ -486,7 +487,7 @@ func TestClientLoopback_setters_structured_json(t *testing.T) {
 func TestClientLoopback_setters_structured_json_base64(t *testing.T) {
 	now := time.Now()
 
-	versions := []string{cloudevents.VersionV01, cloudevents.VersionV02, cloudevents.VersionV03}
+	versions := []string{cloudevents.VersionV02, cloudevents.VersionV03}
 
 	testCases := map[string]struct {
 		event  func(string) *cloudevents.Event
@@ -521,19 +522,6 @@ func TestClientLoopback_setters_structured_json_base64(t *testing.T) {
 				return &event
 			},
 			want: map[string]*cloudevents.Event{
-				cloudevents.VersionV01: {
-					Context: cloudevents.EventContextV01{
-						EventID:     "321-CBA",
-						EventType:   "unit.test.client.response",
-						EventTime:   &cloudevents.Timestamp{Time: now},
-						Source:      *cloudevents.ParseURLRef("/unit/test/client"),
-						ContentType: cloudevents.StringOfApplicationJSON(),
-						Extensions: map[string]interface{}{
-							"datacontentencoding": "base64",
-						},
-					}.AsV01(),
-					Data: map[string]string{"unittest": "response"},
-				},
 				cloudevents.VersionV02: {
 					Context: cloudevents.EventContextV02{
 						ID:          "321-CBA",
@@ -560,14 +548,6 @@ func TestClientLoopback_setters_structured_json_base64(t *testing.T) {
 				},
 			},
 			asSent: map[string]*TapValidation{
-				cloudevents.VersionV01: {
-					Method: "POST",
-					URI:    "/",
-					Header: map[string][]string{
-						"content-type": {"application/cloudevents+json"},
-					},
-					Body: fmt.Sprintf(`{"cloudEventsVersion":"0.1","contentType":"application/json","data":"eyJoZWxsbyI6InVuaXR0ZXN0In0=","eventID":"ABC-123","eventTime":%q,"eventType":"unit.test.client.sent","extensions":{"datacontentencoding":"base64"},"source":"/unit/test/client"}`, now.UTC().Format(time.RFC3339Nano)),
-				},
 				cloudevents.VersionV02: {
 					Method: "POST",
 					URI:    "/",
@@ -586,13 +566,6 @@ func TestClientLoopback_setters_structured_json_base64(t *testing.T) {
 				},
 			},
 			asRecv: map[string]*TapValidation{
-				cloudevents.VersionV01: {
-					Header: map[string][]string{
-						"content-type": {"application/cloudevents+json"},
-					},
-					Body:   fmt.Sprintf(`{"cloudEventsVersion":"0.1","contentType":"application/json","data":"eyJ1bml0dGVzdCI6InJlc3BvbnNlIn0=","eventID":"321-CBA","eventTime":%q,"eventType":"unit.test.client.response","extensions":{"datacontentencoding":"base64"},"source":"/unit/test/client"}`, now.UTC().Format(time.RFC3339Nano)),
-					Status: "200 OK",
-				},
 				cloudevents.VersionV02: {
 					Header: map[string][]string{
 						"content-type": {"application/cloudevents+json"},

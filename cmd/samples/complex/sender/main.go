@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/client"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	cloudeventshttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
@@ -63,8 +64,8 @@ type Example struct {
 	Message  string `json:"message"`
 }
 
-func (d *Demo) Send() (context.Context, *event.Event, error) {
-	event := event.Event{
+func (d *Demo) Send() (context.Context, *cloudevents.Event, error) {
+	event := cloudevents.Event{
 		Context: d.context(),
 		Data: &Example{
 			Sequence: seq,
@@ -75,12 +76,12 @@ func (d *Demo) Send() (context.Context, *event.Event, error) {
 	return d.Client.Send(context.Background(), event)
 }
 
-func (d *Demo) context() event.EventContext {
-	ctx := event.EventContextV01{
-		EventType:   d.EventType,
-		Source:      types.URLRef{URL: d.Source},
-		ContentType: &d.ContentType,
-	}.AsV01()
+func (d *Demo) context() cloudevents.EventContext {
+	ctx := event.EventContextV1{
+		Type:            d.EventType,
+		Source:          types.URIRef{URL: d.Source},
+		DataContentType: &d.ContentType,
+	}.AsV1()
 	return ctx
 }
 
@@ -93,7 +94,7 @@ func _main(args []string, env envConfig) int {
 
 	for _, contentType := range []string{"application/json", "application/xml"} {
 		// HTTP
-		for _, encoding := range []cloudeventshttp.Encoding{cloudeventshttp.Default, cloudeventshttp.BinaryV01, cloudeventshttp.StructuredV01, cloudeventshttp.BinaryV02, cloudeventshttp.StructuredV02, cloudeventshttp.BinaryV03, cloudeventshttp.StructuredV03} {
+		for _, encoding := range []cloudeventshttp.Encoding{cloudeventshttp.Default, cloudeventshttp.BinaryV02, cloudeventshttp.StructuredV02, cloudeventshttp.BinaryV03, cloudeventshttp.StructuredV03} {
 
 			t, err := cloudeventshttp.New(
 				cloudeventshttp.WithTarget(env.HTTPTarget),

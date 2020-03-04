@@ -28,7 +28,7 @@ func (e Event) MarshalJSON() ([]byte, error) {
 	var err error
 
 	switch e.SpecVersion() {
-	case CloudEventsVersionV01, CloudEventsVersionV02, CloudEventsVersionV03:
+	case CloudEventsVersionV02, CloudEventsVersionV03:
 		b, err = JsonEncodeLegacy(e)
 	case CloudEventsVersionV1:
 		b, err = JsonEncode(e)
@@ -61,8 +61,6 @@ func (e *Event) UnmarshalJSON(b []byte) error {
 
 	var err error
 	switch version {
-	case CloudEventsVersionV01:
-		err = e.JsonDecodeV01(b, raw)
 	case CloudEventsVersionV02:
 		err = e.JsonDecodeV02(b, raw)
 	case CloudEventsVersionV03:
@@ -84,15 +82,6 @@ func (e *Event) UnmarshalJSON(b []byte) error {
 }
 
 func versionFromRawMessage(raw map[string]json.RawMessage) string {
-	// v0.1
-	if v, ok := raw["cloudEventsVersion"]; ok {
-		var version string
-		if err := json.Unmarshal(v, &version); err != nil {
-			return ""
-		}
-		return version
-	}
-
 	// v0.2 and after
 	if v, ok := raw["specversion"]; ok {
 		var version string
@@ -129,11 +118,7 @@ func jsonEncode(ctx EventContextReader, data []byte, isBase64 bool) ([]byte, err
 	var b map[string]json.RawMessage
 	var err error
 
-	if ctx.GetSpecVersion() == CloudEventsVersionV01 {
-		b, err = marshalEventLegacy(ctx)
-	} else {
-		b, err = marshalEvent(ctx, ctx.GetExtensions())
-	}
+	b, err = marshalEvent(ctx, ctx.GetExtensions())
 	if err != nil {
 		return nil, err
 	}
@@ -177,26 +162,6 @@ func jsonEncode(ctx EventContextReader, data []byte, isBase64 bool) ([]byte, err
 	}
 
 	return body, nil
-}
-
-// JsonDecodeV01 takes in the byte representation of a version 0.1 structured json CloudEvent and returns a
-// cloudevent.Event or an error if there are parsing errors.
-func (e *Event) JsonDecodeV01(body []byte, raw map[string]json.RawMessage) error {
-	ec := EventContextV01{}
-	if err := json.Unmarshal(body, &ec); err != nil {
-		return err
-	}
-
-	var data interface{}
-	if d, ok := raw["data"]; ok {
-		data = []byte(d)
-	}
-
-	e.Context = &ec
-	e.Data = data
-	e.DataEncoded = data != nil
-
-	return nil
 }
 
 // JsonDecodeV02 takes in the byte representation of a version 0.2 structured json CloudEvent and returns a
@@ -351,20 +316,6 @@ func (e *Event) JsonDecodeV1(body []byte, raw map[string]json.RawMessage) error 
 	e.DataEncoded = data != nil
 
 	return nil
-}
-
-func marshalEventLegacy(event interface{}) (map[string]json.RawMessage, error) {
-	b, err := json.Marshal(event)
-	if err != nil {
-		return nil, err
-	}
-
-	brm := map[string]json.RawMessage{}
-	if err := json.Unmarshal(b, &brm); err != nil {
-		return nil, err
-	}
-
-	return brm, nil
 }
 
 func marshalEvent(event interface{}, extensions map[string]interface{}) (map[string]json.RawMessage, error) {

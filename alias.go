@@ -27,7 +27,6 @@ type EventResponse = event.EventResponse
 
 type EventContext = event.EventContext
 type EventContextV1 = event.EventContextV1
-type EventContextV01 = event.EventContextV01
 type EventContextV02 = event.EventContextV02
 type EventContextV03 = event.EventContextV03
 
@@ -35,6 +34,7 @@ type EventContextV03 = event.EventContextV03
 
 type Timestamp = types.Timestamp
 type URLRef = types.URLRef
+type URIRef = types.URIRef
 
 // HTTP Transport
 
@@ -56,7 +56,6 @@ const (
 	// Event Versions
 
 	VersionV1  = event.CloudEventsVersionV1
-	VersionV01 = event.CloudEventsVersionV01
 	VersionV02 = event.CloudEventsVersionV02
 	VersionV03 = event.CloudEventsVersionV03
 
@@ -65,8 +64,6 @@ const (
 	HTTPBinaryV1      = http.BinaryV1
 	HTTPStructuredV1  = http.StructuredV1
 	HTTPBatchedV1     = http.BatchedV1
-	HTTPBinaryV01     = http.BinaryV01
-	HTTPStructuredV01 = http.StructuredV01
 	HTTPBinaryV02     = http.BinaryV02
 	HTTPStructuredV02 = http.StructuredV02
 	HTTPBinaryV03     = http.BinaryV03

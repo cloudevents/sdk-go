@@ -39,17 +39,6 @@ func TestAddTracingAttributes_Scenario1(t *testing.T) {
 	}
 
 	var eventContextVersions = map[string]values{
-		"EventContextV01": {
-			context: event.EventContextV01{
-				EventID:     "ABC-123",
-				EventTime:   &now,
-				EventType:   "com.example.test",
-				SchemaURL:   schema,
-				ContentType: event.StringOfApplicationJSON(),
-				Source:      *source,
-			},
-			want: map[string]interface{}{"traceparent": st.TraceParent, "tracestate": st.TraceState},
-		},
 		"EventContextV02": {
 			context: event.EventContextV02{
 				ID:          "ABC-123",
@@ -85,17 +74,6 @@ func TestAddTracingAttributes_Scenario2(t *testing.T) {
 	}
 
 	var eventContextVersions = map[string]values{
-		"EventContextV01": {
-			context: event.EventContextV01{
-				EventID:     "ABC-123",
-				EventTime:   &now,
-				EventType:   "com.example.test",
-				SchemaURL:   schema,
-				ContentType: event.StringOfApplicationJSON(),
-				Source:      *source,
-			},
-			want: map[string]interface{}{"traceparent": st.TraceParent},
-		},
 		"EventContextV02": {
 			context: event.EventContextV02{
 				ID:          "ABC-123",
@@ -129,17 +107,6 @@ func TestAddTracingAttributes_Scenario3(t *testing.T) {
 	var st = extensions.DistributedTracingExtension{}
 
 	var eventContextVersions = map[string]values{
-		"EventContextV01": {
-			context: event.EventContextV01{
-				EventID:     "ABC-123",
-				EventTime:   &now,
-				EventType:   "com.example.test",
-				SchemaURL:   schema,
-				ContentType: event.StringOfApplicationJSON(),
-				Source:      *source,
-			},
-			want: map[string]interface{}(nil),
-		},
 		"EventContextV02": {
 			context: event.EventContextV02{
 				ID:          "ABC-123",
@@ -175,17 +142,6 @@ func TestAddTracingAttributes_Scenario4(t *testing.T) {
 	}
 
 	var eventContextVersions = map[string]values{
-		"EventContextV01": {
-			context: event.EventContextV01{
-				EventID:     "ABC-123",
-				EventTime:   &now,
-				EventType:   "com.example.test",
-				SchemaURL:   schema,
-				ContentType: event.StringOfApplicationJSON(),
-				Source:      *source,
-			},
-			want: map[string]interface{}(nil),
-		},
 		"EventContextV02": {
 			context: event.EventContextV02{
 				ID:          "ABC-123",
@@ -218,10 +174,6 @@ func TestAddTracingAttributes_Scenario4(t *testing.T) {
 func testAddTracingAttributesFunc(t *testing.T, st extensions.DistributedTracingExtension, ecv values, ces string) {
 	var e event.Event
 	switch ces {
-	case "EventContextV01":
-		ectx := ecv.context.(event.EventContextV01).AsV01()
-		st.AddTracingAttributes(ectx)
-		e = event.Event{Context: ectx, Data: &Data{Message: "Hello world"}}
 	case "EventContextV02":
 		ectx := ecv.context.(event.EventContextV02).AsV02()
 		st.AddTracingAttributes(ectx)

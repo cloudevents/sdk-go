@@ -91,13 +91,13 @@ func _main(args []string, env envConfig) int {
 
 		for i := 0; i < count; i++ {
 			now := time.Now()
-			ctx := event.EventContextV01{
-				EventID:     uuid.New().String(),
-				EventType:   "com.cloudevents.sample.sent",
-				EventTime:   &types.Timestamp{Time: now},
-				Source:      types.URLRef{URL: d.Source},
-				ContentType: &contentType,
-			}.AsV01()
+			ctx := event.EventContextV1{
+				ID:              uuid.New().String(),
+				Type:            "com.cloudevents.sample.sent",
+				Time:            &types.Timestamp{Time: now},
+				Source:          types.URIRef{URL: d.Source},
+				DataContentType: &contentType,
+			}.AsV1()
 			if _, _, err := d.Send(ctx, seq); err != nil {
 				log.Printf("failed to send: %v", err)
 				return 1

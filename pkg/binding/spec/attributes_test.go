@@ -69,22 +69,6 @@ func TestAttributes02(t *testing.T) {
 	assert.EqualError(err, "invalid value for time: \"foo\"")
 }
 
-func TestAttributes01(t *testing.T) {
-	assert := assert.New(t)
-	v, err := spec.WithPrefix("x:").Version("0.1")
-	assert.NoError(err)
-	c := v.NewContext()
-	contentType := v.Attribute("x:contentType")
-	assert.Equal(spec.DataContentType, contentType.Kind())
-	assert.NoError(contentType.Set(c, "foobar"))
-	s := contentType.Get(c)
-	assert.Equal("foobar", s)
-	assert.Equal("foobar", c.GetDataContentType())
-
-	nosuch := v.Attribute("x:subject")
-	assert.Nil(nosuch)
-}
-
 func TestAttributesBadVersions(t *testing.T) {
 	assert := assert.New(t)
 	v, err := spec.WithPrefix("x:").Version("0.x")

@@ -20,7 +20,7 @@ type DataTest struct {
 func TestEventSetData_Json(t *testing.T) {
 	// All version should be the same, so run through them all.
 
-	versions := []string{event.CloudEventsVersionV01, event.CloudEventsVersionV02, event.CloudEventsVersionV03}
+	versions := []string{event.CloudEventsVersionV02, event.CloudEventsVersionV03}
 
 	testCases := map[string]DataTest{
 		"empty": {
@@ -104,7 +104,7 @@ type XmlExample struct {
 func TestEventSetData_xml(t *testing.T) {
 	// All version should be the same, so run through them all.
 
-	versions := []string{event.CloudEventsVersionV01, event.CloudEventsVersionV02, event.CloudEventsVersionV03}
+	versions := []string{event.CloudEventsVersionV02, event.CloudEventsVersionV03}
 
 	testCases := map[string]DataTest{
 		"empty": {
@@ -126,7 +126,7 @@ func TestEventSetData_xml(t *testing.T) {
 				AString: "true fact",
 				AnArray: versions,
 			},
-			want: []byte(`<XmlExample><a>42</a><b>true fact</b><c>0.1</c><c>0.2</c><c>0.3</c></XmlExample>`),
+			want: []byte(`<XmlExample><a>42</a><b>true fact</b><c>0.2</c><c>0.3</c></XmlExample>`),
 		},
 		"application/xml": {
 			event: func(version string) event.Event {
@@ -139,7 +139,7 @@ func TestEventSetData_xml(t *testing.T) {
 				AString: "true fact",
 				AnArray: versions,
 			},
-			want: []byte(`<XmlExample><a>42</a><b>true fact</b><c>0.1</c><c>0.2</c><c>0.3</c></XmlExample>`),
+			want: []byte(`<XmlExample><a>42</a><b>true fact</b><c>0.2</c><c>0.3</c></XmlExample>`),
 		},
 		"application/xml+base64": {
 			event: func(version string) event.Event {
@@ -153,25 +153,25 @@ func TestEventSetData_xml(t *testing.T) {
 				AString: "true fact",
 				AnArray: versions,
 			},
-			want: `PFhtbEV4YW1wbGU+PGE+NDI8L2E+PGI+dHJ1ZSBmYWN0PC9iPjxjPjAuMTwvYz48Yz4wLjI8L2M+PGM+MC4zPC9jPjwvWG1sRXhhbXBsZT4=`,
+			want: `PFhtbEV4YW1wbGU+PGE+NDI8L2E+PGI+dHJ1ZSBmYWN0PC9iPjxjPjAuMjwvYz48Yz4wLjM8L2M+PC9YbWxFeGFtcGxlPg==`,
 		},
 	}
 	for n, tc := range testCases {
 		for _, version := range versions {
 			t.Run(n+":"+version, func(t *testing.T) {
 				// Make a versioned event.
-				event := tc.event(version)
+				e := tc.event(version)
 
 				if tc.set != nil {
-					if err := event.SetData(tc.set); err != nil {
+					if err := e.SetData(tc.set); err != nil {
 						t.Errorf("unexpected error, %v", err)
 					}
 				}
-				got := event.Data
+				got := e.Data
 
 				as, _ := types.Allocate(tc.set)
 
-				err := event.DataAs(&as)
+				err := e.DataAs(&as)
 				validateData(t, tc, got, as, err)
 			})
 		}

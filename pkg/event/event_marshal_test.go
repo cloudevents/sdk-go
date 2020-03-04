@@ -41,53 +41,6 @@ func TestMarshal(t *testing.T) {
 			event:   event.Event{},
 			wantErr: strptr("json: error calling MarshalJSON for type event.Event: every event conforming to the CloudEvents specification MUST include a context"),
 		},
-		"struct data v0.1": {
-			event: event.Event{
-				Context: event.EventContextV01{
-					EventType:        "com.example.test",
-					Source:           *source,
-					SchemaURL:        schema,
-					EventTypeVersion: strptr("version1"),
-					EventID:          "ABC-123",
-					EventTime:        &now,
-					ContentType:      event.StringOfApplicationJSON(),
-				}.AsV01(),
-				Data: DataExample{
-					AnInt:   42,
-					AString: "testing",
-				},
-			},
-			eventExtensions: map[string]interface{}{
-				"exbool":   true,
-				"exint":    int32(42),
-				"exstring": "exstring",
-				"exbinary": []byte{0, 1, 2, 3},
-				"exurl":    source,
-				"extime":   &now,
-			},
-			want: toBytes(map[string]interface{}{
-				"cloudEventsVersion": "0.1",
-				"contentType":        "application/json",
-				"data": map[string]interface{}{
-					"a": 42,
-					"b": "testing",
-				},
-				"eventID":          "ABC-123",
-				"eventTime":        now.Format(time.RFC3339Nano),
-				"eventType":        "com.example.test",
-				"eventTypeVersion": "version1",
-				"extensions": map[string]interface{}{
-					"exbool":   true,
-					"exint":    42,
-					"exstring": "exstring",
-					"exbinary": "AAECAw==",
-					"exurl":    "http://example.com/source",
-					"extime":   now.Format(time.RFC3339Nano),
-				},
-				"schemaURL": "http://example.com/schema",
-				"source":    "http://example.com/source",
-			}),
-		},
 		"struct data v0.2": {
 			event: event.Event{
 				Context: event.EventContextV02{
@@ -449,55 +402,6 @@ func TestUnmarshal(t *testing.T) {
 		want    *event.Event
 		wantErr error
 	}{
-		"struct data v0.1": {
-			body: toBytes(map[string]interface{}{
-				"cloudEventsVersion": "0.1",
-				"contentType":        "application/json",
-				"data": map[string]interface{}{
-					"a": 42,
-					"b": "testing",
-				},
-				"eventID":          "ABC-123",
-				"eventTime":        now.Format(time.RFC3339Nano),
-				"eventType":        "com.example.test",
-				"eventTypeVersion": "version1",
-				"extensions": map[string]interface{}{
-					"exbool":   true,
-					"exint":    42,
-					"exstring": "exstring",
-					"exbinary": "AAECAw==",
-					"exurl":    "http://example.com/source",
-					"extime":   now.Format(time.RFC3339Nano),
-				},
-				"schemaURL": "http://example.com/schema",
-				"source":    "http://example.com/source",
-			}),
-			want: &event.Event{
-				Context: event.EventContextV01{
-					EventType:        "com.example.test",
-					Source:           *source,
-					SchemaURL:        schema,
-					EventTypeVersion: strptr("version1"),
-					EventID:          "ABC-123",
-					EventTime:        &now,
-					ContentType:      event.StringOfApplicationJSON(),
-					Extensions: map[string]interface{}{
-						"exbool":   true, // Boolean should be preserved
-						"exint":    float64(42),
-						"exstring": "exstring",
-						// Since byte, url and time are encoded as string, the unmarshal should just convert them to string
-						"exbinary": "AAECAw==",
-						"exurl":    "http://example.com/source",
-						"extime":   now.Format(time.RFC3339Nano),
-					},
-				}.AsV01(),
-				Data: toBytes(DataExample{
-					AnInt:   42,
-					AString: "testing",
-				}),
-				DataEncoded: true,
-			},
-		},
 		"struct data v0.2": {
 			body: toBytes(map[string]interface{}{
 				"specversion": "0.2",
