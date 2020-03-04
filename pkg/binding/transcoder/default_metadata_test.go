@@ -10,7 +10,7 @@ import (
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/test"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
+	"github.com/cloudevents/sdk-go/pkg/event"
 )
 
 func TestAddUUID(t *testing.T) {
@@ -21,7 +21,7 @@ func TestAddUUID(t *testing.T) {
 
 	eventWithId := test.MinEvent()
 
-	assertUUID := func(t *testing.T, ev cloudevents.Event) {
+	assertUUID := func(t *testing.T, ev event.Event) {
 		require.NotZero(t, ev.Context.GetID())
 		_, err := uuid.Parse(ev.Context.GetID())
 		require.NoError(t, err)
@@ -70,7 +70,7 @@ func TestAddTimeNow(t *testing.T) {
 	eventWithTime := test.MinEvent()
 	eventWithTime.SetTime(time.Now().Add(2 * time.Hour).UTC())
 
-	assertTimeNow := func(t *testing.T, ev cloudevents.Event) {
+	assertTimeNow := func(t *testing.T, ev event.Event) {
 		require.False(t, ev.Context.GetTime().IsZero())
 	}
 

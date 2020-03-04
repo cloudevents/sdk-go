@@ -7,8 +7,8 @@ import (
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/cloudevents/sdk-go/pkg/event"
+	"github.com/cloudevents/sdk-go/pkg/types"
 )
 
 var (
@@ -30,7 +30,7 @@ func (a addUUID) BinaryTransformer(encoder binding.BinaryEncoder) binding.Binary
 }
 
 func (a addUUID) EventTransformer() binding.EventTransformer {
-	return func(event *cloudevents.Event) error {
+	return func(event *event.Event) error {
 		if event.Context.GetID() == "" {
 			return event.Context.SetID(uuid.New().String())
 		}
@@ -76,7 +76,7 @@ func (a addTimeNow) BinaryTransformer(encoder binding.BinaryEncoder) binding.Bin
 }
 
 func (a addTimeNow) EventTransformer() binding.EventTransformer {
-	return func(event *cloudevents.Event) error {
+	return func(event *event.Event) error {
 		if event.Context.GetTime().IsZero() {
 			return event.Context.SetTime(time.Now())
 		}
