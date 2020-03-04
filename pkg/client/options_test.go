@@ -11,13 +11,13 @@ import (
 
 func TestWithEventDefaulter(t *testing.T) {
 
-	v2 := func(ctx context.Context, event event.Event) event.Event {
-		event.Context = event.Context.AsV02()
+	v03 := func(ctx context.Context, event event.Event) event.Event {
+		event.Context = event.Context.AsV03()
 		return event
 	}
 
-	v3 := func(ctx context.Context, event event.Event) event.Event {
-		event.Context = event.Context.AsV03()
+	v1 := func(ctx context.Context, event event.Event) event.Event {
+		event.Context = event.Context.AsV1()
 		return event
 	}
 
@@ -33,12 +33,12 @@ func TestWithEventDefaulter(t *testing.T) {
 		},
 		"one": {
 			c:    &ceClient{},
-			fns:  []EventDefaulter{v2},
+			fns:  []EventDefaulter{v1},
 			want: 1,
 		},
 		"two": {
 			c:    &ceClient{},
-			fns:  []EventDefaulter{v2, v3},
+			fns:  []EventDefaulter{v03, v1},
 			want: 2,
 		},
 		"nil fn": {

@@ -57,7 +57,7 @@ func gotEvent(event event.Event) {
 	fmt.Printf("%s: %d - %q\n", event.Context.GetType(), data.Sequence, data.Message)
 }
 
-var source = types.ParseURLRef("https://github.com/cloudevents/sdk-go/cmd/samples/sender")
+var source = types.ParseURIRef("https://github.com/cloudevents/sdk-go/cmd/samples/sender")
 
 func mainSender() {
 	ctx := cecontext.WithTarget(context.Background(), "http://localhost:8181/")
@@ -73,20 +73,20 @@ func mainSender() {
 				Sequence: i,
 				Message:  "Hello, World!",
 			}
-			event := event.Event{
-				Context: event.EventContextV02{
+			e := event.Event{
+				Context: event.EventContextV1{
 					Type:   "com.cloudevents.sample.sent",
 					Source: *source,
-				}.AsV02(),
+				}.AsV1(),
 				Data: data,
 			}
 
-			if _, resp, err := c.Send(ctx, event); err != nil {
+			if _, resp, err := c.Send(ctx, e); err != nil {
 				log.Printf("failed to send: %v", err)
 			} else if resp != nil {
 				fmt.Printf("got back a response event of type %s", resp.Context.GetType())
 			} else {
-				log.Printf("%s: %d - %s", event.Context.GetType(), data.Sequence, data.Message)
+				log.Printf("%s: %d - %s", e.Context.GetType(), data.Sequence, data.Message)
 			}
 			time.Sleep(2000 * time.Millisecond)
 		}

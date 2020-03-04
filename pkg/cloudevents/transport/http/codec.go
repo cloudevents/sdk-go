@@ -21,12 +21,9 @@ type Codec struct {
 
 	// DefaultEncodingSelectionFn allows for encoding selection strategies to be injected.
 	DefaultEncodingSelectionFn EncodingSelector
+	v03                        *CodecV03
+	v1                         *CodecV1
 
-	v02 *CodecV02
-	v03 *CodecV03
-	v1  *CodecV1
-
-	_v02 sync.Once
 	_v03 sync.Once
 	_v1  sync.Once
 }
@@ -36,11 +33,6 @@ var _ transport.Codec = (*Codec)(nil)
 
 func (c *Codec) loadCodec(encoding Encoding) (transport.Codec, error) {
 	switch encoding {
-	case BinaryV02, StructuredV02:
-		c._v02.Do(func() {
-			c.v02 = &CodecV02{DefaultEncoding: c.Encoding}
-		})
-		return c.v02, nil
 	case BinaryV03, StructuredV03, BatchedV03:
 		c._v03.Do(func() {
 			c.v03 = &CodecV03{DefaultEncoding: c.Encoding}
@@ -75,11 +67,11 @@ func (c *Codec) Decode(ctx context.Context, msg transport.Message) (*event.Event
 	if err != nil {
 		return nil, err
 	}
-	event, err := codec.Decode(ctx, msg)
+	e, err := codec.Decode(ctx, msg)
 	if err != nil {
 		return nil, err
 	}
-	return c.convertEvent(event)
+	return c.convertEvent(e)
 }
 
 // Give the context back as the user expects
@@ -90,10 +82,6 @@ func (c *Codec) convertEvent(event *event.Event) (*event.Event, error) {
 
 	switch c.Encoding {
 	case Default:
-		return event, nil
-	case BinaryV02, StructuredV02:
-		ca := event.Context.AsV02()
-		event.Context = ca
 		return event, nil
 	case BinaryV03, StructuredV03, BatchedV03:
 		ca := event.Context.AsV03()
@@ -119,13 +107,6 @@ func (c *Codec) inspectEncoding(ctx context.Context, msg transport.Message) Enco
 	// Try v0.3.
 	_, _ = c.loadCodec(BinaryV03)
 	encoding = c.v03.inspectEncoding(ctx, msg)
-	if encoding != Unknown {
-		return encoding
-	}
-
-	// Try v0.2.
-	_, _ = c.loadCodec(BinaryV02)
-	encoding = c.v02.inspectEncoding(ctx, msg)
 	if encoding != Unknown {
 		return encoding
 	}

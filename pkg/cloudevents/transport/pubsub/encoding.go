@@ -39,7 +39,7 @@ const (
 // which binary encoding to use based on spec version of the event.
 func DefaultBinaryEncodingSelectionStrategy(ctx context.Context, e event.Event) Encoding {
 	switch e.SpecVersion() {
-	case event.CloudEventsVersionV02, event.CloudEventsVersionV03:
+	case event.CloudEventsVersionV03:
 		return BinaryV03
 	case event.CloudEventsVersionV1:
 		return BinaryV1
@@ -52,7 +52,7 @@ func DefaultBinaryEncodingSelectionStrategy(ctx context.Context, e event.Event) 
 // for which structured encoding to use based on spec version of the event.
 func DefaultStructuredEncodingSelectionStrategy(ctx context.Context, e event.Event) Encoding {
 	switch e.SpecVersion() {
-	case event.CloudEventsVersionV02, event.CloudEventsVersionV03:
+	case event.CloudEventsVersionV03:
 		return StructuredV03
 	case event.CloudEventsVersionV1:
 		return StructuredV1
@@ -84,7 +84,6 @@ func (e Encoding) String() string {
 func (e Encoding) Version() string {
 	switch e {
 
-	// Version 0.2
 	// Version 0.3
 	case Default, BinaryV03, StructuredV03:
 		return "v0.3"

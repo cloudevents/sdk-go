@@ -23,9 +23,11 @@ var now = types.Timestamp{Time: time.Now().UTC()}
 
 var sourceUrl, _ = url.Parse("http://example.com/source")
 var source = &types.URLRef{URL: *sourceUrl}
+var sourceUri = &types.URIRef{URL: *sourceUrl}
 
 var schemaUrl, _ = url.Parse("http://example.com/schema")
 var schema = &types.URLRef{URL: *schemaUrl}
+var schemaUri = &types.URI{URL: *schemaUrl}
 
 type values struct {
 	context interface{}
@@ -39,14 +41,14 @@ func TestAddTracingAttributes_Scenario1(t *testing.T) {
 	}
 
 	var eventContextVersions = map[string]values{
-		"EventContextV02": {
-			context: event.EventContextV02{
-				ID:          "ABC-123",
-				Time:        &now,
-				Type:        "com.example.test",
-				SchemaURL:   schema,
-				ContentType: event.StringOfApplicationJSON(),
-				Source:      *source,
+		"EventContextV1": {
+			context: event.EventContextV1{
+				ID:              "ABC-123",
+				Time:            &now,
+				Type:            "com.example.test",
+				DataSchema:      schemaUri,
+				DataContentType: event.StringOfApplicationJSON(),
+				Source:          *sourceUri,
 			},
 			want: map[string]interface{}{"traceparent": st.TraceParent, "tracestate": st.TraceState},
 		},
@@ -74,14 +76,14 @@ func TestAddTracingAttributes_Scenario2(t *testing.T) {
 	}
 
 	var eventContextVersions = map[string]values{
-		"EventContextV02": {
-			context: event.EventContextV02{
-				ID:          "ABC-123",
-				Time:        &now,
-				Type:        "com.example.test",
-				SchemaURL:   schema,
-				ContentType: event.StringOfApplicationJSON(),
-				Source:      *source,
+		"EventContextV1": {
+			context: event.EventContextV1{
+				ID:              "ABC-123",
+				Time:            &now,
+				Type:            "com.example.test",
+				DataSchema:      schemaUri,
+				DataContentType: event.StringOfApplicationJSON(),
+				Source:          *sourceUri,
 			},
 			want: map[string]interface{}{"traceparent": st.TraceParent},
 		},
@@ -107,14 +109,14 @@ func TestAddTracingAttributes_Scenario3(t *testing.T) {
 	var st = extensions.DistributedTracingExtension{}
 
 	var eventContextVersions = map[string]values{
-		"EventContextV02": {
-			context: event.EventContextV02{
-				ID:          "ABC-123",
-				Time:        &now,
-				Type:        "com.example.test",
-				SchemaURL:   schema,
-				ContentType: event.StringOfApplicationJSON(),
-				Source:      *source,
+		"EventContextV1": {
+			context: event.EventContextV1{
+				ID:              "ABC-123",
+				Time:            &now,
+				Type:            "com.example.test",
+				DataSchema:      schemaUri,
+				DataContentType: event.StringOfApplicationJSON(),
+				Source:          *sourceUri,
 			},
 			want: map[string]interface{}(nil),
 		},
@@ -142,14 +144,14 @@ func TestAddTracingAttributes_Scenario4(t *testing.T) {
 	}
 
 	var eventContextVersions = map[string]values{
-		"EventContextV02": {
-			context: event.EventContextV02{
-				ID:          "ABC-123",
-				Time:        &now,
-				Type:        "com.example.test",
-				SchemaURL:   schema,
-				ContentType: event.StringOfApplicationJSON(),
-				Source:      *source,
+		"EventContextV1": {
+			context: event.EventContextV1{
+				ID:              "ABC-123",
+				Time:            &now,
+				Type:            "com.example.test",
+				DataSchema:      schemaUri,
+				DataContentType: event.StringOfApplicationJSON(),
+				Source:          *sourceUri,
 			},
 			want: map[string]interface{}(nil),
 		},
@@ -174,8 +176,8 @@ func TestAddTracingAttributes_Scenario4(t *testing.T) {
 func testAddTracingAttributesFunc(t *testing.T, st extensions.DistributedTracingExtension, ecv values, ces string) {
 	var e event.Event
 	switch ces {
-	case "EventContextV02":
-		ectx := ecv.context.(event.EventContextV02).AsV02()
+	case "EventContextV1":
+		ectx := ecv.context.(event.EventContextV1).AsV1()
 		st.AddTracingAttributes(ectx)
 		e = event.Event{Context: ectx, Data: &Data{Message: "Hello world"}}
 	case "EventContextV03":

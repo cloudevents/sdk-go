@@ -8,7 +8,7 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/event"
 )
 
-var versions = []string{"0.2", "0.3", "1.0"}
+var versions = []string{"0.3", "1.0"}
 
 func TestDefaultIDToUUIDIfNotSet_empty(t *testing.T) {
 	for _, tc := range versions {

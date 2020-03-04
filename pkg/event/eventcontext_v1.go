@@ -114,12 +114,6 @@ func (ec *EventContextV1) cloneExtensions() map[string]interface{} {
 	return new
 }
 
-// AsV02 implements EventContextConverter.AsV02
-func (ec EventContextV1) AsV02() *EventContextV02 {
-	ecv3 := ec.AsV03()
-	return ecv3.AsV02()
-}
-
 // AsV03 implements EventContextConverter.AsV03
 func (ec EventContextV1) AsV03() *EventContextV03 {
 	ret := EventContextV03{

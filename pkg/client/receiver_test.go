@@ -69,7 +69,7 @@ func TestReceiverFnInvoke_1(t *testing.T) {
 	key := struct{}{}
 	wantCtx := context.WithValue(context.TODO(), key, "UNIT TEST")
 	wantEvent := event.Event{
-		Context: &event.EventContextV02{
+		Context: &event.EventContextV1{
 			ID: "UNIT TEST",
 		},
 	}
@@ -105,7 +105,7 @@ func TestReceiverFnInvoke_2(t *testing.T) {
 	key := struct{}{}
 	ctx := context.WithValue(context.TODO(), key, "UNIT TEST")
 	wantEvent := event.Event{
-		Context: &event.EventContextV02{
+		Context: &event.EventContextV1{
 			ID: "UNIT TEST",
 		},
 	}
@@ -136,7 +136,7 @@ func TestReceiverFnInvoke_3(t *testing.T) {
 	key := struct{}{}
 	ctx := context.WithValue(context.TODO(), key, "UNIT TEST")
 	wantEvent := event.Event{
-		Context: &event.EventContextV02{
+		Context: &event.EventContextV1{
 			ID: "UNIT TEST",
 		},
 	}
@@ -167,7 +167,7 @@ func TestReceiverFnInvoke_4(t *testing.T) {
 	key := struct{}{}
 	ctx := context.WithValue(context.TODO(), key, "UNIT TEST")
 	e := event.Event{
-		Context: &event.EventContextV02{
+		Context: &event.EventContextV1{
 			ID: "UNIT TEST",
 		},
 	}
@@ -195,7 +195,7 @@ func TestReceiverFnInvoke_5(t *testing.T) {
 	key := struct{}{}
 	ctx := context.WithValue(context.TODO(), key, "UNIT TEST")
 	e := event.Event{
-		Context: &event.EventContextV02{
+		Context: &event.EventContextV1{
 			ID: "UNIT TEST",
 		},
 	}
@@ -219,7 +219,7 @@ func TestReceiverFnInvoke_6(t *testing.T) {
 	key := struct{}{}
 	ctx := context.WithValue(context.TODO(), key, "UNIT TEST")
 	e := event.Event{
-		Context: &event.EventContextV02{
+		Context: &event.EventContextV1{
 			ID: "UNIT TEST",
 		},
 	}

@@ -183,16 +183,6 @@ func WithPrefix(prefix string) *Versions {
 				attr("time", Time),
 				attr("datacontenttype", DataContentType),
 			),
-			newVersion(prefix, event.EventContextV02{}.AsV02(),
-				func(c event.EventContextConverter) event.EventContext { return c.AsV02() },
-				attr("specversion", SpecVersion),
-				attr("type", Type),
-				attr("source", Source),
-				attr("schemaurl", DataSchema),
-				attr("id", ID),
-				attr("time", Time),
-				attr("contenttype", DataContentType),
-			),
 		},
 	}
 	for _, v := range vs.all {
@@ -207,14 +197,12 @@ func New() *Versions { return WithPrefix("") }
 // Built-in un-prefixed versions.
 var (
 	VS  *Versions
-	V02 Version
 	V03 Version
 	V1  Version
 )
 
 func init() {
 	VS = New()
-	V02, _ = VS.Version("0.2")
 	V03, _ = VS.Version("0.3")
 	V1, _ = VS.Version("1.0")
 }

@@ -22,7 +22,7 @@ type Message struct {
 func (m Message) CloudEventsVersion() string {
 	// Check as Binary encoding first.
 	if m.Attributes != nil {
-		// Binary v0.3:
+		// Binary v0.3, v1.0:
 		if s := m.Attributes[prefix+"specversion"]; s != "" {
 			return s
 		}
@@ -34,7 +34,7 @@ func (m Message) CloudEventsVersion() string {
 		return ""
 	}
 
-	// structured v0.3
+	// structured v0.3, v0.1
 	if v, ok := raw["specversion"]; ok {
 		var version string
 		if err := json.Unmarshal(v, &version); err != nil {

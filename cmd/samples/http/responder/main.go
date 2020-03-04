@@ -43,10 +43,10 @@ func gotEvent(ctx context.Context, event cloudevents.Event, resp *cloudevents.Ev
 
 	if data.Sequence%3 == 0 {
 		r := cloudevents.Event{
-			Context: cloudevents.EventContextV02{
-				Source: *cloudevents.ParseURLRef("/mod3"),
+			Context: cloudevents.EventContextV1{
+				Source: *cloudevents.ParseURIRef("/mod3"),
 				Type:   "samples.http.mod3",
-			}.AsV02(),
+			}.AsV1(),
 			Data: Example{
 				Sequence: data.Sequence,
 				Message:  "mod 3!",

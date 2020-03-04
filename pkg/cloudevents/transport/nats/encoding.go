@@ -6,8 +6,6 @@ type Encoding int32
 const (
 	// Default allows NATS transport implementation to pick.
 	Default Encoding = iota
-	// StructuredV02 is Structured CloudEvents spec v0.2.
-	StructuredV02
 	// StructuredV03 is Structured CloudEvents spec v0.3.
 	StructuredV03
 	// StructuredV1 is Structured CloudEvents spec v1.0.
@@ -23,7 +21,7 @@ func (e Encoding) String() string {
 		return "Default Encoding " + e.Version()
 
 	// Structured
-	case StructuredV02, StructuredV03, StructuredV1:
+	case StructuredV03, StructuredV1:
 		return "Structured Encoding " + e.Version()
 
 	default:
@@ -35,18 +33,12 @@ func (e Encoding) String() string {
 func (e Encoding) Version() string {
 	switch e {
 
-	// Version 0.2
-	case Default: // <-- Move when a new default is wanted.
-		fallthrough
-	case StructuredV02:
-		return "v0.2"
-
 	// Version 0.3
 	case StructuredV03:
 		return "v0.3"
 
 	// Version 1.0
-	case StructuredV1:
+	case StructuredV1, Default:
 		return "v1.0"
 
 	// Unknown

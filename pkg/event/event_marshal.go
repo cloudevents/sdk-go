@@ -28,7 +28,7 @@ func (e Event) MarshalJSON() ([]byte, error) {
 	var err error
 
 	switch e.SpecVersion() {
-	case CloudEventsVersionV02, CloudEventsVersionV03:
+	case CloudEventsVersionV03:
 		b, err = JsonEncodeLegacy(e)
 	case CloudEventsVersionV1:
 		b, err = JsonEncode(e)
@@ -61,8 +61,6 @@ func (e *Event) UnmarshalJSON(b []byte) error {
 
 	var err error
 	switch version {
-	case CloudEventsVersionV02:
-		err = e.JsonDecodeV02(b, raw)
 	case CloudEventsVersionV03:
 		err = e.JsonDecodeV03(b, raw)
 	case CloudEventsVersionV1:
@@ -162,51 +160,6 @@ func jsonEncode(ctx EventContextReader, data []byte, isBase64 bool) ([]byte, err
 	}
 
 	return body, nil
-}
-
-// JsonDecodeV02 takes in the byte representation of a version 0.2 structured json CloudEvent and returns a
-// cloudevent.Event or an error if there are parsing errors.
-func (e *Event) JsonDecodeV02(body []byte, raw map[string]json.RawMessage) error {
-	ec := EventContextV02{}
-	if err := json.Unmarshal(body, &ec); err != nil {
-		return err
-	}
-
-	// TODO: could use reflection to get these.
-	delete(raw, "specversion")
-	delete(raw, "type")
-	delete(raw, "source")
-	delete(raw, "id")
-	delete(raw, "time")
-	delete(raw, "schemaurl")
-	delete(raw, "contenttype")
-
-	var data interface{}
-	if d, ok := raw["data"]; ok {
-		data = []byte(d)
-	}
-	delete(raw, "data")
-
-	if len(raw) > 0 {
-		extensions := make(map[string]interface{}, len(raw))
-		ec.Extensions = extensions
-		for k, v := range raw {
-			k = strings.ToLower(k)
-			var tmp interface{}
-			if err := json.Unmarshal(v, &tmp); err != nil {
-				return err
-			}
-			if err := ec.SetExtension(k, tmp); err != nil {
-				return errors2.Wrap(err, "Cannot set extension with key "+k)
-			}
-		}
-	}
-
-	e.Context = &ec
-	e.Data = data
-	e.DataEncoded = data != nil
-
-	return nil
 }
 
 // JsonDecodeV03 takes in the byte representation of a version 0.3 structured json CloudEvent and returns a

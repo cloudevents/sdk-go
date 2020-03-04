@@ -88,11 +88,6 @@ type EventContextWriter interface {
 // EventContextConverter are the methods that allow for event version
 // conversion.
 type EventContextConverter interface {
-	// AsV02 provides a translation from whatever the "native" encoding of the
-	// CloudEvent was to the equivalent in v0.2 field names, moving fields to or
-	// from extensions as necessary.
-	AsV02() *EventContextV02
-
 	// AsV03 provides a translation from whatever the "native" encoding of the
 	// CloudEvent was to the equivalent in v0.3 field names, moving fields to or
 	// from extensions as necessary.

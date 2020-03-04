@@ -16,11 +16,6 @@ type EncodingSelector func(context.Context, event.Event) Encoding
 const (
 	// Default
 	Default Encoding = iota
-	// BinaryV02 is Binary CloudEvents spec v0.2.
-	BinaryV02
-	// StructuredV02 is Structured CloudEvents spec v0.2.
-	StructuredV02
-	// BinaryV03 is Binary CloudEvents spec v0.3.
 	BinaryV03
 	// StructuredV03 is Structured CloudEvents spec v0.3.
 	StructuredV03
@@ -64,8 +59,6 @@ func ContextBasedEncodingSelectionStrategy(ctx context.Context, e event.Event) E
 // which binary encoding to use based on spec version of the event.
 func DefaultBinaryEncodingSelectionStrategy(ctx context.Context, e event.Event) Encoding {
 	switch e.SpecVersion() {
-	case event.CloudEventsVersionV02:
-		return BinaryV02
 	case event.CloudEventsVersionV03:
 		return BinaryV03
 	case event.CloudEventsVersionV1:
@@ -79,8 +72,6 @@ func DefaultBinaryEncodingSelectionStrategy(ctx context.Context, e event.Event) 
 // for which structured encoding to use based on spec version of the event.
 func DefaultStructuredEncodingSelectionStrategy(ctx context.Context, e event.Event) Encoding {
 	switch e.SpecVersion() {
-	case event.CloudEventsVersionV02:
-		return StructuredV02
 	case event.CloudEventsVersionV03:
 		return StructuredV03
 	case event.CloudEventsVersionV1:
@@ -97,11 +88,11 @@ func (e Encoding) String() string {
 		return "Default Encoding " + e.Version()
 
 	// Binary
-	case BinaryV02, BinaryV03, BinaryV1:
+	case BinaryV03, BinaryV1:
 		return "Binary Encoding " + e.Version()
 
 	// Structured
-	case StructuredV02, StructuredV03, StructuredV1:
+	case StructuredV03, StructuredV1:
 		return "Structured Encoding " + e.Version()
 
 	// Batched
@@ -118,10 +109,6 @@ func (e Encoding) Version() string {
 	switch e {
 	case Default:
 		return "Default"
-
-	// Version 0.2
-	case BinaryV02, StructuredV02:
-		return "v0.2"
 
 	// Version 0.3
 	case BinaryV03, StructuredV03, BatchedV03:
@@ -142,12 +129,6 @@ func (e Encoding) Codec() string {
 	switch e {
 	case Default:
 		return "default"
-
-	// Version 0.2
-	case BinaryV02:
-		return "binary/v0.2"
-	case StructuredV02:
-		return "structured/v0.2"
 
 	// Version 0.3
 	case BinaryV03:
@@ -176,9 +157,9 @@ func (e Encoding) Name() string {
 	switch e {
 	case Default:
 		return Binary
-	case BinaryV02, BinaryV03, BinaryV1:
+	case BinaryV03, BinaryV1:
 		return Binary
-	case StructuredV02, StructuredV03, StructuredV1:
+	case StructuredV03, StructuredV1:
 		return Structured
 	case BatchedV03, BatchedV1:
 		return Batched

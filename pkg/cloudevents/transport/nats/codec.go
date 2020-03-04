@@ -12,7 +12,6 @@ import (
 type Codec struct {
 	Encoding Encoding
 
-	v02 *CodecV02
 	v03 *CodecV03
 	v1  *CodecV1
 }
@@ -21,19 +20,12 @@ var _ transport.Codec = (*Codec)(nil)
 
 func (c *Codec) Encode(ctx context.Context, e event.Event) (transport.Message, error) {
 	switch c.Encoding {
-	case Default:
-		fallthrough
-	case StructuredV02:
-		if c.v02 == nil {
-			c.v02 = &CodecV02{Encoding: c.Encoding}
-		}
-		return c.v02.Encode(ctx, e)
 	case StructuredV03:
 		if c.v03 == nil {
 			c.v03 = &CodecV03{Encoding: c.Encoding}
 		}
 		return c.v03.Encode(ctx, e)
-	case StructuredV1:
+	case StructuredV1, Default:
 		if c.v1 == nil {
 			c.v1 = &CodecV1{Encoding: c.Encoding}
 		}
@@ -45,19 +37,12 @@ func (c *Codec) Encode(ctx context.Context, e event.Event) (transport.Message, e
 
 func (c *Codec) Decode(ctx context.Context, msg transport.Message) (*event.Event, error) {
 	switch c.inspectEncoding(ctx, msg) {
-	case Default:
-		fallthrough
-	case StructuredV02:
-		if c.v02 == nil {
-			c.v02 = &CodecV02{Encoding: c.Encoding}
-		}
-		return c.v02.Decode(ctx, msg)
 	case StructuredV03:
 		if c.v03 == nil {
 			c.v03 = &CodecV03{Encoding: c.Encoding}
 		}
 		return c.v03.Decode(ctx, msg)
-	case StructuredV1:
+	case StructuredV1, Default:
 		if c.v1 == nil {
 			c.v1 = &CodecV1{Encoding: c.Encoding}
 		}
@@ -83,15 +68,6 @@ func (c *Codec) inspectEncoding(ctx context.Context, msg transport.Message) Enco
 	}
 	// Try v0.3.
 	encoding = c.v03.inspectEncoding(ctx, msg)
-	if encoding != Unknown {
-		return encoding
-	}
-
-	if c.v02 == nil {
-		c.v02 = &CodecV02{Encoding: c.Encoding}
-	}
-	// Try v0.2.
-	encoding = c.v02.inspectEncoding(ctx, msg)
 	if encoding != Unknown {
 		return encoding
 	}
