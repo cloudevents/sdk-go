@@ -18,8 +18,6 @@ func TestSetAttribute(t *testing.T) {
 	e := test.MinEvent()
 	e.Context = e.Context.AsV1()
 
-	e.Context.AsV01().EventTime = nil
-
 	attributeKind := spec.Time
 	attributeInitialValue := types.Timestamp{Time: time.Now().UTC()}
 	attributeUpdatedValue := types.Timestamp{Time: attributeInitialValue.Add(1 * time.Hour)}
