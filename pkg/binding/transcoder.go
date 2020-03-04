@@ -43,8 +43,8 @@ func (t TransformerFactories) BinaryTransformer(encoder BinaryEncoder) BinaryEnc
 		return nil
 	}
 	res := encoder
-	for _, b := range t {
-		if new := b.BinaryTransformer(res); new != nil {
+	for i, _ := range t {
+		if new := t[len(t)-i-1].BinaryTransformer(res); new != nil {
 			res = new
 		} else {
 			return nil // Binary not supported!

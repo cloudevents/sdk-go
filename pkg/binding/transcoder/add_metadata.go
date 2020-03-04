@@ -92,9 +92,12 @@ func (b *setAttributeTransformer) SetAttribute(attribute spec.Attribute, value i
 
 func (b *setAttributeTransformer) End() error {
 	if !b.found {
-		return b.BinaryEncoder.SetAttribute(b.version.AttributeFromKind(b.attributeKind), b.value)
+		err := b.BinaryEncoder.SetAttribute(b.version.AttributeFromKind(b.attributeKind), b.value)
+		if err != nil {
+			return err
+		}
 	}
-	return nil
+	return b.BinaryEncoder.End()
 }
 
 type setExtensionTransformer struct {
@@ -113,7 +116,10 @@ func (b *setExtensionTransformer) SetExtension(name string, value interface{}) e
 
 func (b *setExtensionTransformer) End() error {
 	if !b.found {
-		return b.BinaryEncoder.SetExtension(b.name, b.value)
+		err := b.BinaryEncoder.SetExtension(b.name, b.value)
+		if err != nil {
+			return err
+		}
 	}
-	return nil
+	return b.BinaryEncoder.End()
 }
