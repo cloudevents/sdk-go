@@ -36,7 +36,7 @@ func (m EventMessage) Binary(ctx context.Context, b BinaryEncoder) (err error) {
 	if err != nil {
 		return err
 	}
-	err = EventContextToBinaryEncoder(m.Context, b)
+	err = eventContextToBinaryEncoder(m.Context, b)
 	if err != nil {
 		return err
 	}
@@ -63,7 +63,7 @@ func (m *EventMessage) SetEvent(e event.Event) error {
 
 var _ Message = (*EventMessage)(nil) // Test it conforms to the interface
 
-func EventContextToBinaryEncoder(c event.EventContext, b BinaryEncoder) (err error) {
+func eventContextToBinaryEncoder(c event.EventContext, b BinaryEncoder) (err error) {
 	// Pass all attributes
 	var sv spec.Version
 	sv, err = spec.VS.Version(c.GetSpecVersion())

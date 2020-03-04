@@ -30,6 +30,11 @@ Binding implementations exposes their visitors
 through a specific Encode function (e.g. kafka.EncodeProducerMessage), in order to simplify the invocation of the
 encoding message.
 
+The encoding process can be customized in order to mutate the final result with binding.TransformerFactory. A bunch of these are provided directly by the binding/transcoder module.
+
+Usually binding.Message implementations can be encoded only one time, because the encoding process drain the message itself.
+In order to consume a message several times, the binding/buffering module provides several APIs to buffer the message in order to visit it more times.
+
 A message can be converted to an event.Event using ToEvent method. An event.Event can be used as Message casting it to binding.EventMessage.
 
 In order to simplify the encoding process for each protocol, this package provide several utility methods like binding.Encode and binding.RunDirectEncoding. The binding.Encode method tries to preserve the structured/binary encoding, in order to be as much efficient as possible.
@@ -46,5 +51,9 @@ and sends them.
 Message and ExactlyOnceMessage provide methods to allow acknowledgments to
 propagate when a reliable messages is forwarded from a Receiver to a Sender.
 QoS 0 (unreliable), 1 (at-least-once) and 2 (exactly-once) are supported.
+
+Transport
+
+A binding implementation providing Sender and Receiver implementations can be used as a Transport through the BindingTransport adapter.
 
 */

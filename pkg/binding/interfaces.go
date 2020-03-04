@@ -17,7 +17,7 @@ const (
 	EncodingBinary Encoding = iota
 	// Structured encoding as specified in https://github.com/cloudevents/spec/blob/master/spec.md#message
 	EncodingStructured
-	// Message is an instance of EventMessage or it contains it nested (through MessageWrapper)
+	// Message is an instance of EventMessage or it contains EventMessage nested (through MessageWrapper)
 	EncodingEvent
 	// When the encoding is unknown (which means that the message is a non-event)
 	EncodingUnknown
@@ -45,9 +45,9 @@ var ErrUnknownEncoding = errors.New("unknown Message encoding")
 // The Message interface supports QoS 0 and 1, the ExactlyOnceMessage interface
 // supports QoS 2
 //
-// The Structured and Binary methods provide optional optimized transfer of an event
-// to a Sender, they may not be implemented by all Message instances. A Sender should
-// try each method of interest and fall back to ToEvent() if none are supported.
+// The Structured and Binary methods allows to perform an optimized encoding of a Message
+// to a specific data structure. A Sender should try each method of interest and fall back to ToEvent() if none are supported.
+// For encoding a message, look at binding.Encode function.
 //
 type Message interface {
 	// Return the type of the message Encoding.
@@ -55,28 +55,27 @@ type Message interface {
 	Encoding() Encoding
 
 	// Structured transfers a structured-mode event to a StructuredEncoder.
-	// Returns ErrNotStructured if message is not in structured mode.
+	// It must return ErrNotStructured if message is not in structured mode.
 	//
-	// Returns a different err if something wrong happened while trying to read the structured event
-	// In this case, the caller must Finish the message with appropriate error
+	// Returns a different err if something wrong happened while trying to read the structured event.
+	// In this case, the caller must Finish the message with appropriate error.
 	//
 	// This allows Senders to avoid re-encoding messages that are
 	// already in suitable structured form.
 	Structured(context.Context, StructuredEncoder) error
 
 	// Binary transfers a binary-mode event to an BinaryEncoder.
-	// Returns ErrNotBinary if message is not in binary mode.
+	// It must return ErrNotBinary if message is not in binary mode.
 	//
 	// Returns a different err if something wrong happened while trying to read the binary event
 	// In this case, the caller must Finish the message with appropriate error
 	//
-	// Allows Senders to forward a binary message without allocating an
-	// intermediate Event.
+	// This allows Senders to avoid re-encoding messages that are
+	// already in suitable binary form.
 	Binary(context.Context, BinaryEncoder) error
 
 	// Finish *must* be called when message from a Receiver can be forgotten by
-	// the receiver. Sender.Send() calls Finish() when the message is sent.  A QoS
-	// 1 sender should not call Finish() until it gets an acknowledgment of
+	// the receiver. A QoS 1 sender should not call Finish() until it gets an acknowledgment of
 	// receipt on the underlying transport.  For QoS 2 see ExactlyOnceMessage.
 	//
 	// Passing a non-nil err indicates sending or processing failed.
@@ -94,7 +93,7 @@ var ErrNotBinary = errors.New("message is not in binary mode")
 // StructuredEncoder is used to visit a structured Message and generate a new representation.
 //
 // Protocols that supports structured encoding should implement this interface to implement direct
-// structured -> structured transfer and event -> binary.
+// structured to structured encoding and event to structured encoding.
 type StructuredEncoder interface {
 	// Event receives an io.Reader for the whole event.
 	SetStructuredEvent(ctx context.Context, format format.Format, event io.Reader) error
@@ -103,7 +102,7 @@ type StructuredEncoder interface {
 // BinaryEncoder is used to visit a binary Message and generate a new representation.
 //
 // Protocols that supports binary encoding should implement this interface to implement direct
-// binary -> binary transfer and event -> binary.
+// binary to binary encoding and event to binary encoding.
 //
 // Start() and End() methods are invoked every time this BinaryEncoder implementation is used to visit a Message
 type BinaryEncoder interface {
@@ -113,17 +112,17 @@ type BinaryEncoder interface {
 	// Set a standard attribute.
 	//
 	// The value can either be the correct golang type for the attribute, or a canonical
-	// string encoding. See package cloudevents/types
+	// string encoding. See package types to perform the needed conversions
 	SetAttribute(attribute spec.Attribute, value interface{}) error
 
 	// Set an extension attribute.
 	//
 	// The value can either be the correct golang type for the attribute, or a canonical
-	// string encoding. See package cloudevents/types
+	// string encoding. See package types to perform the needed conversions
 	SetExtension(name string, value interface{}) error
 
 	// SetData receives an io.Reader for the data attribute.
-	// io.Reader could be empty, meaning that message payload is empty
+	// io.Reader is not invoked when the data attribute is empty
 	SetData(data io.Reader) error
 
 	// End method is invoked only after the whole encoding process ends successfully.
@@ -179,10 +178,6 @@ type Sender interface {
 	// m.Finish() is called when sending is finished: expected acknowledgments (or
 	// errors) have been received, the Sender is no longer holding any state for
 	// the message. m.Finish() may be called during or after Send().
-	//
-	// To support optimized forwading of structured-mode messages, Send()
-	// should use the encoding returned by m.Structured() if there is one.
-	// Otherwise m.Event() can be encoded as per the binding's rules.
 	Send(ctx context.Context, m Message) error
 }
 
