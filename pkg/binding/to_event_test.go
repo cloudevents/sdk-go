@@ -64,7 +64,7 @@ func TestToEvent(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt // Don't use range variable in Run() scope
 		t.Run(tt.name, func(t *testing.T) {
-			got, encoding, err := binding.ToEvent(context.Background(), tt.message)
+			got, encoding, err := binding.ToEvent(context.Background(), tt.message, nil)
 			require.NoError(t, err)
 			require.Equal(t, tt.encoding, encoding)
 			test.AssertEventEquals(t, test.ExToStr(t, tt.want), test.ExToStr(t, got))

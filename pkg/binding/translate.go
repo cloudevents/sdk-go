@@ -2,7 +2,6 @@ package binding
 
 import (
 	"context"
-	"errors"
 
 	"github.com/cloudevents/sdk-go/pkg/event"
 )
@@ -13,14 +12,14 @@ const (
 	PREFERRED_EVENT_ENCODING        = "PREFERRED_EVENT_ENCODING"
 )
 
-// Invokes the encoders. createRootStructuredEncoder and createRootBinaryEncoder could be null if the protocol doesn't support it
+// Invokes the encoders. structuredEncoder and binaryEncoder could be nil if the protocol doesn't support it
 //
 // Returns:
-// * EncodingStructured, nil if message was structured and correctly translated to Event
-// * EncodingBinary, nil if message was binary and correctly translated to Event
-// * EncodingStructured, err if message was structured but error happened during translation
-// * BinaryEncoding, err if message was binary but error happened during translation
-// * EncodingUnknown, ErrUnknownEncoding if message is not recognized
+// * EncodingStructured, nil if message is correctly encoded in structured encoding
+// * EncodingBinary, nil if message is correctly encoded in binary encoding
+// * EncodingStructured, err if message was structured but error happened during the encoding
+// * EncodingBinary, err if message was binary but error happened during the encoding
+// * EncodingUnknown, ErrUnknownEncoding if message is not a structured or a binary Message
 func RunDirectEncoding(
 	ctx context.Context,
 	message Message,
@@ -58,17 +57,16 @@ func RunDirectEncoding(
 }
 
 // This is the full algorithm to encode a Message using transformers:
-// 1. It first tries direct encoding using RunEncoders
-// 2. If no direct encoding is possible, it goes through ToEvent to generate an event representation
-// 3. Using the encoders previously defined
+// 1. It first tries direct encoding using RunDirectEncoding
+// 2. If no direct encoding is possible, it uses ToEvent to generate an Event representation
+// 3. From the Event, the message is encoded back to the provided structured or binary encoders
 // You can tweak the encoding process using the context decorators WithForceStructured, WithForceStructured, etc.
-// This function guarantees that transformers are invoked only one time during the encoding process.
+// This function guarantees that the provided transformers are invoked only once during the encoding process.
 // Returns:
-// * EncodingStructured, nil if message was structured and correctly translated to Event
-// * EncodingBinary, nil if message was binary and correctly translated to Event
-// * EncodingStructured, err if message was structured but error happened during translation
-// * BinaryEncoding, err if message was binary but error happened during translation
-// * EncodingUnknown, ErrUnknownEncoding if message is not recognized
+// * EncodingStructured, nil if message is correctly encoded in structured encoding
+// * EncodingBinary, nil if message is correctly encoded in binary encoding
+// * EncodingUnknown, ErrUnknownEncoding if message.Encoding() == EncodingUnknown
+// * _, err if error happened during the encoding
 func Encode(
 	ctx context.Context,
 	message Message,
@@ -111,7 +109,7 @@ func Encode(
 		}
 	}
 
-	return enc, errors.New("cannot find a suitable encoder to use from EventMessage")
+	return EncodingUnknown, ErrUnknownEncoding
 }
 
 // Skip direct structured to structured encoding during the encoding process
@@ -139,6 +137,7 @@ func WithForceBinary(ctx context.Context) context.Context {
 	return context.WithValue(context.WithValue(ctx, PREFERRED_EVENT_ENCODING, EncodingBinary), SKIP_DIRECT_STRUCTURED_ENCODING, true)
 }
 
+// Get a configuration value from the provided context
 func GetOrDefaultFromCtx(ctx context.Context, key string, def interface{}) interface{} {
 	if val := ctx.Value(key); val != nil {
 		return val
