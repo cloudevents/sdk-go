@@ -21,13 +21,17 @@ type Sender struct {
 }
 
 func NewSender(client *http.Client, target *url.URL, options ...SenderOptionFunc) binding.Sender {
-	s := &Sender{Client: client, Target: target, transformerFactories: make(binding.TransformerFactories, 0)}
+	s := &Sender{Client: client, Target: target, transformers: make(binding.TransformerFactories, 0)}
 	for _, o := range options {
 		o(s)
 	}
 	return s
 }
 
+// Confirm Sender implements binding.Requester
+var _ binding.Requester = (*Sender)(nil)
+
+// Send implements binding.Sender
 func (s *Sender) Send(ctx context.Context, m binding.Message) (err error) {
 	defer func() { _ = m.Finish(err) }()
 	if s.Client == nil || s.Target == nil {
@@ -54,7 +58,8 @@ func (s *Sender) Send(ctx context.Context, m binding.Message) (err error) {
 	return
 }
 
-func (r *Sender) Request(ctx context.Context, m binding.Message) (binding.Receiver, error) {
+// Request implements binding.Requester
+func (r *Sender) Request(ctx context.Context, m binding.Message) (binding.Message, error) {
 	var err error
 	defer func() { _ = m.Finish(err) }()
 	if r.Client == nil || r.Target == nil {
@@ -68,7 +73,7 @@ func (r *Sender) Request(ctx context.Context, m binding.Message) (binding.Receiv
 	}
 	req = req.WithContext(ctx)
 
-	if err = EncodeHttpRequest(ctx, m, req, r.transformerFactories); err != nil {
+	if err = EncodeHttpRequest(ctx, m, req, r.transformers); err != nil {
 		return nil, err
 	}
 	resp, err := r.Client.Do(req)
@@ -79,15 +84,5 @@ func (r *Sender) Request(ctx context.Context, m binding.Message) (binding.Receiv
 		return nil, fmt.Errorf("%d %s", resp.StatusCode, nethttp.StatusText(resp.StatusCode))
 	}
 
-	msg, err := NewMessage(resp.Header, resp.Body)
-	return &cachedReceiver{Message: msg, Error: err}, err
-}
-
-type cachedReceiver struct {
-	Message binding.Message
-	Error   error
-}
-
-func (r *cachedReceiver) Receive(ctx context.Context) (binding.Message, error) {
-	return r.Message, r.Error
+	return NewMessage(resp.Header, resp.Body), nil
 }
