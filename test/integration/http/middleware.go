@@ -2,9 +2,10 @@ package http
 
 import (
 	"context"
-	"github.com/google/uuid"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/google/uuid"
 
 	cloudevents "github.com/cloudevents/sdk-go"
 	cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
