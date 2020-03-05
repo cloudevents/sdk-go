@@ -104,7 +104,8 @@ func (t *Transport) Send(ctx context.Context, e event.Event) (context.Context, *
 		}
 		re, _, err := binding.ToEvent(ctx, msg)
 		if err != nil {
-			return ctx, nil, err
+			cecontext.LoggerFrom(ctx).Warnw("failed to convert message to event, this could be ok.", zap.Error(err))
+			return ctx, nil, nil
 		}
 		return ctx, &re, nil
 	}
