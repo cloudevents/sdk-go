@@ -23,8 +23,7 @@ type Requester interface {
 	Sender
 
 	// Request sends m like Sender.Send() but also arranges to receive a response.
-	// The returned Receiver is used to receive the response.
-	Request(ctx context.Context, m Message) (Receiver, error)
+	Request(ctx context.Context, m Message) (Message, error)
 }
 
 // SendCloser is a Sender that can be closed.
