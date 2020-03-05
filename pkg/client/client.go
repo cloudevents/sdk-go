@@ -22,6 +22,11 @@ import (
 // Client interface defines the runtime contract the CloudEvents client supports.
 type Client interface {
 	// Send will transmit the given event over the client's configured transport.
+	// result is a function pointer. Valid result fn signatures are:
+	// * func()
+	// * func(context.Context)
+	// * func(*event.Event)
+	// * func(context.Context, *event.Event)
 	Send(ctx context.Context, event event.Event, result ...interface{}) error
 
 	// StartReceiver will register the provided function for callback on receipt

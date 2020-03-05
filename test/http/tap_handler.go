@@ -18,23 +18,23 @@ type TapValidation struct {
 	ContentLength int64
 }
 
-type tapHandler struct {
-	handler http.Handler
+type TapHandler struct {
+	Handler http.Handler
 
-	req  map[string]TapValidation
-	resp map[string]TapValidation
+	Req  map[string]TapValidation
+	Resp map[string]TapValidation
 }
 
-func NewTap() *tapHandler {
-	return &tapHandler{
-		req:  make(map[string]TapValidation, 10),
-		resp: make(map[string]TapValidation, 10),
+func NewTap() *TapHandler {
+	return &TapHandler{
+		Req:  make(map[string]TapValidation, 10),
+		Resp: make(map[string]TapValidation, 10),
 	}
 }
 
 // To help with debug, if needed.
-func printTap(t *testing.T, tap *tapHandler, testID string) {
-	if r, ok := tap.req[testID]; ok {
+func printTap(t *testing.T, tap *TapHandler, testID string) {
+	if r, ok := tap.Req[testID]; ok {
 		t.Log("tap request ", r.URI, r.Method)
 		if r.ContentLength > 0 {
 			t.Log(" .body: ", r.Body)
@@ -53,7 +53,7 @@ func printTap(t *testing.T, tap *tapHandler, testID string) {
 		}
 	}
 
-	if r, ok := tap.resp[testID]; ok {
+	if r, ok := tap.Resp[testID]; ok {
 		t.Log("tap response.status: ", r.Status)
 		if r.ContentLength > 0 {
 			t.Log(" .body: ", r.Body)
@@ -78,13 +78,13 @@ func printTap(t *testing.T, tap *tapHandler, testID string) {
 var _ = printTap
 
 const (
-	unitTestIDKey = "Test-Ce-Id"
+	UnitTestIDKey = "Test-Ce-Id"
 )
 
-func (t *tapHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (t *TapHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
-	id := r.Header.Get(unitTestIDKey)
+	id := r.Header.Get(UnitTestIDKey)
 
 	// Make a copy of the request.
 	body, err := ioutil.ReadAll(r.Body)
@@ -94,7 +94,7 @@ func (t *tapHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Set the body back
 	r.Body = ioutil.NopCloser(bytes.NewReader(body))
 
-	t.req[id] = TapValidation{
+	t.Req[id] = TapValidation{
 		Method:        r.Method,
 		URI:           r.RequestURI,
 		Header:        copyHeaders(r.Header),
@@ -102,13 +102,13 @@ func (t *tapHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		ContentLength: r.ContentLength,
 	}
 
-	if t.handler == nil {
+	if t.Handler == nil {
 		w.WriteHeader(500)
 		return
 	}
 
 	rec := httptest.NewRecorder()
-	t.handler.ServeHTTP(rec, r)
+	t.Handler.ServeHTTP(rec, r)
 
 	resp := rec.Result()
 	for k, vs := range resp.Header {
@@ -123,7 +123,7 @@ func (t *tapHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(body)
 	_ = resp.Body.Close()
 
-	t.resp[id] = TapValidation{
+	t.Resp[id] = TapValidation{
 		Status:        resp.Status,
 		Header:        copyHeaders(resp.Header),
 		Body:          string(body),

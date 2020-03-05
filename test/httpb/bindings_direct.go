@@ -1,7 +1,9 @@
-package http
+package httpb
 
 import (
 	"context"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/httpb"
+	"github.com/cloudevents/sdk-go/test/http"
 	"net/http/httptest"
 	"testing"
 	"time"
@@ -9,7 +11,6 @@ import (
 	"github.com/google/uuid"
 
 	cloudevents "github.com/cloudevents/sdk-go"
-	cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 )
 
 // Direct Test:
@@ -19,26 +20,17 @@ import (
 // Obj is an event of a version.
 // Client is a set to binary or
 
-type DirectTapTest struct {
-	Now    time.Time
-	Event  *cloudevents.Event
-	Want   *cloudevents.Event
-	AsSent *TapValidation
-}
-
-type DirectTapTestCases map[string]DirectTapTest
-
-func ClientDirect(t *testing.T, tc DirectTapTest, topts ...cehttp.Option) {
-	tap := NewTap()
+func ClientBindingsDirect(t *testing.T, tc http.DirectTapTest, topts ...httpb.Option) {
+	tap := http.NewTap()
 	server := httptest.NewServer(tap)
 	defer server.Close()
 
 	if len(topts) == 0 {
-		topts = append(topts, cloudevents.WithBinaryEncoding())
+		topts = append(topts, httpb.WithBinaryEncoding())
 	}
-	topts = append(topts, cloudevents.WithTarget(server.URL))
-	topts = append(topts, cloudevents.WithPort(0)) // random port
-	transport, err := cloudevents.NewHTTPTransport(
+	topts = append(topts, httpb.WithTarget(server.URL))
+	topts = append(topts, httpb.WithPort(0)) // random port
+	transport, err := httpb.New(
 		topts...,
 	)
 	if err != nil {
@@ -49,7 +41,7 @@ func ClientDirect(t *testing.T, tc DirectTapTest, topts ...cehttp.Option) {
 
 	ce, err := cloudevents.NewClient(
 		transport,
-		cloudevents.WithEventDefaulter(AlwaysThen(tc.Now)),
+		cloudevents.WithEventDefaulter(http.AlwaysThen(tc.Now)),
 		cloudevents.WithoutTracePropagation(),
 	)
 	if err != nil {
@@ -57,7 +49,7 @@ func ClientDirect(t *testing.T, tc DirectTapTest, topts ...cehttp.Option) {
 	}
 
 	testID := uuid.New().String()
-	ctx := cloudevents.ContextWithHeader(context.Background(), UnitTestIDKey, testID)
+	ctx := cloudevents.ContextWithHeader(context.Background(), http.UnitTestIDKey, testID)
 
 	recvCtx, recvCancel := context.WithTimeout(ctx, time.Second*5)
 	defer recvCancel()
@@ -80,9 +72,9 @@ func ClientDirect(t *testing.T, tc DirectTapTest, topts ...cehttp.Option) {
 	// Wait until the receiver is done.
 	<-recvCtx.Done()
 
-	AssertEventEqualityExact(t, "event", tc.Want, got)
+	http.AssertEventEqualityExact(t, "event", tc.Want, got)
 
 	if req, ok := tap.Req[testID]; ok {
-		AssertTappedEquality(t, "http request", tc.AsSent, &req)
+		http.AssertTappedEquality(t, "http request", tc.AsSent, &req)
 	}
 }

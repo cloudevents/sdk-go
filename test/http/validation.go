@@ -32,7 +32,7 @@ func toBytes(body map[string]interface{}) []byte {
 	return b
 }
 
-func assertEventEqualityExact(t *testing.T, ctx string, expected, actual *cloudevents.Event) {
+func AssertEventEqualityExact(t *testing.T, ctx string, expected, actual *cloudevents.Event) {
 	if diff := cmp.Diff(expected, actual, cmpopts.IgnoreFields(cloudevents.Event{}, "Data", "DataEncoded", "DataBinary")); diff != "" {
 		t.Errorf("Unexpected difference in %s (-want, +got): %v", ctx, diff)
 	}
@@ -44,7 +44,7 @@ func assertEventEqualityExact(t *testing.T, ctx string, expected, actual *cloude
 	}
 }
 
-func assertEventEquality(t *testing.T, ctx string, expected, actual *cloudevents.Event) {
+func AssertEventEquality(t *testing.T, ctx string, expected, actual *cloudevents.Event) {
 	if diff := cmp.Diff(expected, actual, cmpopts.IgnoreFields(cloudevents.Event{}, "Data", "DataEncoded", "DataBinary")); diff != "" {
 		t.Errorf("Unexpected difference in %s (-want, +got): %v", ctx, diff)
 	}
@@ -61,7 +61,7 @@ func assertEventEquality(t *testing.T, ctx string, expected, actual *cloudevents
 	}
 }
 
-func assertTappedEquality(t *testing.T, ctx string, expected, actual *TapValidation) {
+func AssertTappedEquality(t *testing.T, ctx string, expected, actual *TapValidation) {
 	canonicalizeHeaders(expected, actual)
 	if diff := cmp.Diff(expected, actual, cmpopts.IgnoreFields(TapValidation{}, "ContentLength")); diff != "" {
 		t.Errorf("Unexpected difference in %s (-want, +got): %v", ctx, diff)

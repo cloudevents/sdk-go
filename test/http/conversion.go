@@ -70,7 +70,7 @@ func ClientConversion(t *testing.T, tc ConversionTest, topts ...cehttp.Option) {
 		t.Fatal(err)
 	}
 
-	tap.handler = trans
+	tap.Handler = trans
 
 	ce, err := cloudevents.NewClient(
 		trans,
@@ -86,7 +86,7 @@ func ClientConversion(t *testing.T, tc ConversionTest, topts ...cehttp.Option) {
 	recvCtx, recvCancel := context.WithCancel(context.Background())
 	go func() {
 		t.Log(ce.StartReceiver(recvCtx, func(got cloudevents.Event) {
-			assertEventEquality(t, "got event", tc.want, &got)
+			AssertEventEquality(t, "got event", tc.want, &got)
 		}))
 	}()
 
@@ -99,7 +99,7 @@ func ClientConversion(t *testing.T, tc ConversionTest, topts ...cehttp.Option) {
 		t.Fatal(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set(unitTestIDKey, testID)
+	req.Header.Set(UnitTestIDKey, testID)
 	got, err := http.DefaultClient.Do(req)
 	if err != nil {
 		t.Fatal(err)
@@ -108,11 +108,11 @@ func ClientConversion(t *testing.T, tc ConversionTest, topts ...cehttp.Option) {
 
 	recvCancel()
 
-	if req, ok := tap.req[testID]; ok {
-		assertTappedEquality(t, "http request", tc.asSent, &req)
+	if req, ok := tap.Req[testID]; ok {
+		AssertTappedEquality(t, "http request", tc.asSent, &req)
 	}
 
-	if resp, ok := tap.resp[testID]; ok {
-		assertTappedEquality(t, "http response", tc.asRecv, &resp)
+	if resp, ok := tap.Resp[testID]; ok {
+		AssertTappedEquality(t, "http response", tc.asRecv, &resp)
 	}
 }

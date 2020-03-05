@@ -1,8 +1,10 @@
-package http
+package httpb
 
 import (
 	"context"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/httpb"
 	"github.com/cloudevents/sdk-go/pkg/event"
+	"github.com/cloudevents/sdk-go/test/http"
 	"net/http/httptest"
 	"testing"
 	"time"
@@ -11,7 +13,6 @@ import (
 
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/client"
-	cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 )
 
 // Loopback Test:
@@ -35,23 +36,23 @@ type TapTest struct {
 	event  *cloudevents.Event
 	resp   *cloudevents.Event
 	want   *cloudevents.Event
-	asSent *TapValidation
-	asRecv *TapValidation
+	asSent *http.TapValidation
+	asRecv *http.TapValidation
 }
 
 type TapTestCases map[string]TapTest
 
-func ClientLoopback(t *testing.T, tc TapTest, topts ...cehttp.Option) {
-	tap := NewTap()
+func ClientLoopback(t *testing.T, tc TapTest, topts ...httpb.Option) {
+	tap := http.NewTap()
 	server := httptest.NewServer(tap)
 	defer server.Close()
 
 	if len(topts) == 0 {
-		topts = append(topts, cloudevents.WithBinaryEncoding())
+		topts = append(topts, httpb.WithBinaryEncoding())
 	}
-	topts = append(topts, cloudevents.WithTarget(server.URL))
-	topts = append(topts, cloudevents.WithPort(0)) // random port
-	transport, err := cloudevents.NewHTTPTransport(
+	topts = append(topts, httpb.WithTarget(server.URL))
+	topts = append(topts, httpb.WithPort(0)) // random port
+	transport, err := httpb.New(
 		topts...,
 	)
 	if err != nil {
@@ -70,7 +71,7 @@ func ClientLoopback(t *testing.T, tc TapTest, topts ...cehttp.Option) {
 	}
 
 	testID := uuid.New().String()
-	ctx := cloudevents.ContextWithHeader(context.Background(), UnitTestIDKey, testID)
+	ctx := cloudevents.ContextWithHeader(context.Background(), http.UnitTestIDKey, testID)
 
 	recvCtx, recvCancel := context.WithCancel(context.Background())
 
@@ -94,13 +95,13 @@ func ClientLoopback(t *testing.T, tc TapTest, topts ...cehttp.Option) {
 
 	recvCancel()
 
-	AssertEventEquality(t, "response event", tc.want, got)
+	http.AssertEventEquality(t, "response event", tc.want, got)
 
 	if req, ok := tap.Req[testID]; ok {
-		AssertTappedEquality(t, "http request", tc.asSent, &req)
+		http.AssertTappedEquality(t, "http request", tc.asSent, &req)
 	}
 
 	if resp, ok := tap.Resp[testID]; ok {
-		AssertTappedEquality(t, "http response", tc.asRecv, &resp)
+		http.AssertTappedEquality(t, "http response", tc.asRecv, &resp)
 	}
 }

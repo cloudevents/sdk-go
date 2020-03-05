@@ -37,6 +37,9 @@ type Transport struct {
 
 	consumer transport.Receiver
 
+	// The encoding used to select the codec for outbound events.
+	Encoding Encoding
+
 	// ShutdownTimeout defines the timeout given to the http.Server when calling Shutdown.
 	// If nil, DefaultShutdownTimeout is used.
 	ShutdownTimeout *time.Duration
@@ -54,10 +57,9 @@ type Transport struct {
 	listener          net.Listener
 	server            *nethttp.Server
 	handlerRegistered bool
-}
 
-// Option is the function signature required to be considered an http.Option.
-type Option func(*Transport) error
+	Target *url.URL
+}
 
 func New(opts ...Option) (*Transport, error) {
 	t := &Transport{}
@@ -68,15 +70,13 @@ func New(opts ...Option) (*Transport, error) {
 	// TODO: this is all hard coded and whatnot...
 	if t.sender == nil {
 		client := nethttp.DefaultClient
-		target, _ := url.Parse("http://localhost:8080")
-		t.sender = http.NewSender(client, target)
+		t.sender = http.NewSender(client, t.Target) // TODO: Sender does not support dynamic update of target.
 	}
 
 	// TODO: Not sure we need both the requester and sender.
 	if t.requester == nil {
 		client := nethttp.DefaultClient
-		target, _ := url.Parse("http://localhost:8080")
-		t.requester = http.NewRequester(client, target)
+		t.requester = http.NewRequester(client, t.Target) // TODO: requester does not support dynamic update of target.
 	}
 
 	return t, nil
@@ -94,6 +94,13 @@ func (t *Transport) applyOptions(opts ...Option) error {
 // Send implements Transport.Send
 func (t *Transport) Send(ctx context.Context, e event.Event) (context.Context, *event.Event, error) {
 	msg := binding.EventMessage(e)
+
+	switch t.Encoding {
+	case Default, Binary:
+		ctx = binding.WithForceBinary(ctx)
+	case Structured:
+		ctx = binding.WithForceStructured(ctx)
+	}
 
 	if rec, err := t.requester.Request(ctx, msg); err != nil {
 		return ctx, nil, err
@@ -146,7 +153,7 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 
 	if !t.handlerRegistered {
 		// handler.Handle might panic if the user tries to use the same path as the sdk.
-		t.Handler.Handle(t.GetPath(), t.receiver)
+		t.Handler.Handle(t.GetPath(), t)
 		t.handlerRegistered = true
 	}
 
@@ -216,6 +223,10 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 	case err := <-errChan:
 		return err
 	}
+}
+
+func (t *Transport) ServeHTTP(rw nethttp.ResponseWriter, req *nethttp.Request) {
+	t.receiver.ServeHTTP(rw, req)
 }
 
 // TODO: this is not what we want to use long term. For PoC.

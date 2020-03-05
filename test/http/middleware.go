@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"github.com/google/uuid"
 	"net/http/httptest"
 	"testing"
@@ -27,7 +28,7 @@ func ClientMiddleware(t *testing.T, tc TapTest, topts ...cehttp.Option) {
 		t.Fatal(err)
 	}
 
-	tap.handler = transport
+	tap.Handler = transport
 
 	ce, err := cloudevents.NewClient(
 		transport,
@@ -39,7 +40,7 @@ func ClientMiddleware(t *testing.T, tc TapTest, topts ...cehttp.Option) {
 	}
 
 	testID := uuid.New().String()
-	ctx := cloudevents.ContextWithHeader(context.Background(), unitTestIDKey, testID)
+	ctx := cloudevents.ContextWithHeader(context.Background(), UnitTestIDKey, testID)
 
 	recvCtx, recvCancel := context.WithCancel(context.Background())
 
@@ -51,20 +52,23 @@ func ClientMiddleware(t *testing.T, tc TapTest, topts ...cehttp.Option) {
 		}
 	}()
 
-	_, got, err := ce.Send(ctx, *tc.event)
+	var got *cloudevents.Event
+	err = ce.Send(ctx, *tc.event, func(e *event.Event) {
+		got = e
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	recvCancel()
 
-	assertEventEquality(t, "response event", tc.want, got)
+	AssertEventEquality(t, "response event", tc.want, got)
 
-	if req, ok := tap.req[testID]; ok {
-		assertTappedEquality(t, "http request", tc.asSent, &req)
+	if req, ok := tap.Req[testID]; ok {
+		AssertTappedEquality(t, "http request", tc.asSent, &req)
 	}
 
-	if resp, ok := tap.resp[testID]; ok {
-		assertTappedEquality(t, "http response", tc.asRecv, &resp)
+	if resp, ok := tap.Resp[testID]; ok {
+		AssertTappedEquality(t, "http response", tc.asRecv, &resp)
 	}
 }
