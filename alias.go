@@ -83,7 +83,7 @@ var (
 
 	// Client Creation
 
-	NewClient        = client.New
+	NewClient        = client.NewWithTransport
 	NewDefaultClient = client.NewDefault
 
 	// Client Options

@@ -17,7 +17,7 @@ func TestTransportSend(t *testing.T) {
 	transport := binding.NewTransportAdapter(binding.ChanSender(messageChannel), binding.ChanReceiver(messageChannel), nil)
 	ev := test.MinEvent()
 
-	c, err := client.New(transport)
+	c, err := client.NewWithTransport(transport)
 	require.NoError(t, err)
 
 	_, _, err = c.Send(context.Background(), ev)
@@ -34,7 +34,7 @@ func TestTransportReceive(t *testing.T) {
 	transport := binding.NewTransportAdapter(binding.ChanSender(messageChannel), binding.ChanReceiver(messageChannel), nil)
 	ev := test.MinEvent()
 
-	c, err := client.New(transport)
+	c, err := client.NewWithTransport(transport)
 	require.NoError(t, err)
 
 	messageChannel <- binding.EventMessage(ev)

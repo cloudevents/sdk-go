@@ -14,7 +14,7 @@ const count = 3 // Example ends after this many events.
 
 // The sender uses the cloudevents.Client API, not the transport APIs directly.
 func runSender(w io.Writer) error {
-	c, err := client.New(NewExTransport(nil, w), client.WithoutTracePropagation())
+	c, err := client.NewWithTransport(NewExTransport(nil, w), client.WithoutTracePropagation())
 	if err != nil {
 		return err
 	}
@@ -44,7 +44,7 @@ func runReceiver(r io.Reader) error {
 		}
 		return nil
 	}
-	c, err := client.New(NewExTransport(r, nil), client.WithoutTracePropagation())
+	c, err := client.NewWithTransport(NewExTransport(r, nil), client.WithoutTracePropagation())
 	if err != nil {
 		return err
 	}

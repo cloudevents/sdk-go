@@ -31,8 +31,9 @@ const (
 
 // Transport acts as both a http client and a http handler.
 type Transport struct {
-	sender   binding.Sender
-	receiver *http.Receiver // implements binding.Receiver
+	sender    binding.Sender
+	requester binding.Requester
+	receiver  *http.Receiver // implements binding.Receiver
 
 	consumer transport.Receiver
 
@@ -64,10 +65,18 @@ func New(opts ...Option) (*Transport, error) {
 		return nil, err
 	}
 
+	// TODO: this is all hard coded and whatnot...
 	if t.sender == nil {
 		client := nethttp.DefaultClient
 		target, _ := url.Parse("http://localhost:8080")
 		t.sender = http.NewSender(client, target)
+	}
+
+	// TODO: Not sure we need both the requester and sender.
+	if t.requester == nil {
+		client := nethttp.DefaultClient
+		target, _ := url.Parse("http://localhost:8080")
+		t.requester = http.NewRequester(client, target)
 	}
 
 	return t, nil
@@ -86,11 +95,19 @@ func (t *Transport) applyOptions(opts ...Option) error {
 func (t *Transport) Send(ctx context.Context, e event.Event) (context.Context, *event.Event, error) {
 	msg := binding.EventMessage(e)
 
-	if err := t.sender.Send(ctx, msg); err != nil {
+	if rec, err := t.requester.Request(ctx, msg); err != nil {
 		return ctx, nil, err
+	} else {
+		msg, err := rec.Receive(ctx)
+		if err != nil {
+			return ctx, nil, err
+		}
+		re, _, err := binding.ToEvent(ctx, msg)
+		if err != nil {
+			return ctx, nil, err
+		}
+		return ctx, &re, nil
 	}
-
-	return ctx, nil, nil
 }
 
 // SetReceiver implements Transport.SetReceiver

@@ -41,6 +41,7 @@ var (
 	contextType       = reflect.TypeOf((*context.Context)(nil)).Elem()
 	eventType         = reflect.TypeOf((*event.Event)(nil)).Elem()
 	eventResponseType = reflect.TypeOf((*event.EventResponse)(nil)) // want the ptr type
+	eventTypePtr      = reflect.TypeOf((*event.Event)(nil))         // want the ptr type
 	errorType         = reflect.TypeOf((*error)(nil)).Elem()
 )
 

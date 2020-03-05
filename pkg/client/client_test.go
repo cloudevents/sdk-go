@@ -43,7 +43,7 @@ func simpleBinaryClient(target string) client.Client {
 		return nil
 	}
 
-	c, err := client.New(t, client.WithoutTracePropagation())
+	c, err := client.NewWithTransport(t, client.WithoutTracePropagation())
 	if err != nil {
 		return nil
 	}
@@ -59,7 +59,7 @@ func simpleTracingBinaryClient(target string) client.Client {
 		return nil
 	}
 
-	c, err := client.New(t)
+	c, err := client.NewWithTransport(t)
 	if err != nil {
 		return nil
 	}
@@ -75,7 +75,7 @@ func simpleStructuredClient(target string) client.Client {
 		return nil
 	}
 
-	c, err := client.New(t, client.WithoutTracePropagation())
+	c, err := client.NewWithTransport(t, client.WithoutTracePropagation())
 	if err != nil {
 		return nil
 	}
@@ -159,7 +159,7 @@ func TestClientSend(t *testing.T) {
 
 			c := tc.c(server.URL)
 
-			_, _, err := c.Send(context.TODO(), tc.event) // TODO: update test with new returned event and returned context
+			err := c.Send(context.TODO(), tc.event) // TODO: update test with new returned event and returned context
 			if tc.wantErr != "" {
 				if err == nil {
 					t.Fatalf("failed to return expected error, got nil")
@@ -254,7 +254,7 @@ func TestTracingClientSend(t *testing.T) {
 			ctx, span := trace.StartSpan(context.TODO(), "test-span", trace.WithSampler(sampler))
 			sc := span.SpanContext()
 
-			_, _, err := c.Send(ctx, tc.event)
+			err := c.Send(ctx, tc.event)
 			span.End()
 
 			if err != nil {
@@ -376,7 +376,7 @@ func TestClientReceive(t *testing.T) {
 					t.Errorf("failed to make http transport %s", err.Error())
 				}
 
-				c, err := client.New(tp)
+				c, err := client.NewWithTransport(tp)
 				if err != nil {
 					t.Errorf("failed to make client %s", err.Error())
 				}
@@ -498,7 +498,7 @@ func TestTracedClientReceive(t *testing.T) {
 				t.Errorf("failed to make http transport %s", err.Error())
 			}
 
-			c, err := client.New(tp)
+			c, err := client.NewWithTransport(tp)
 			if err != nil {
 				t.Errorf("failed to make client %s", err.Error())
 			}
@@ -521,7 +521,7 @@ func TestTracedClientReceive(t *testing.T) {
 			client := simpleBinaryClient(target)
 
 			ctx, span := trace.StartSpan(context.TODO(), "test-span")
-			_, _, err = client.Send(ctx, tc.event)
+			err = client.Send(ctx, tc.event)
 			span.End()
 
 			if err != nil {

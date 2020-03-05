@@ -39,7 +39,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to create AMQP transport: %v", err)
 	}
-	c, err := client.New(t)
+	c, err := client.NewWithTransport(t)
 	if err != nil {
 		log.Fatalf("Failed to create client: %v", err)
 	}

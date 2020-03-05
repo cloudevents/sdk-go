@@ -147,7 +147,7 @@ func _main(args []string, env envConfig) int {
 
 func doDemo(t transport.Transport, eventType, message, contentType string, source url.URL) error {
 
-	c, err := client.New(t,
+	c, err := client.NewWithTransport(t,
 		client.WithUUIDs(),
 		client.WithTimeNow(),
 	)

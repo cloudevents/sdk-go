@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 
@@ -14,10 +15,14 @@ import (
 	"go.opencensus.io/trace"
 )
 
+// Client.Sent.Result: TODO
+// func(context.Context, *event.Event)
+//
+
 // Client interface defines the runtime contract the CloudEvents client supports.
 type Client interface {
 	// Send will transmit the given event over the client's configured transport.
-	Send(ctx context.Context, event event.Event) (context.Context, *event.Event, error)
+	Send(ctx context.Context, event event.Event, result ...interface{}) error
 
 	// StartReceiver will register the provided function for callback on receipt
 	// of a cloudevent. It will also start the underlying transport as it has
@@ -27,23 +32,20 @@ type Client interface {
 	// * func()
 	// * func() error
 	// * func(context.Context)
-	// * func(context.Context) error
+	// * func(context.Context) event.Result
 	// * func(event.Event)
-	// * func(event.Event) error
+	// * func(event.Event) event.Result
 	// * func(context.Context, event.Event)
-	// * func(context.Context, event.Event) error
-	// * func(event.Event, *event.EventResponse)
-	// * func(event.Event, *event.EventResponse) error
-	// * func(context.Context, event.Event, *event.EventResponse)
-	// * func(context.Context, event.Event, *event.EventResponse) error
+	// * func(context.Context, event.Event) event.Result
 	// Note: if fn returns an error, it is treated as a critical and
-	// EventResponse will not be processed.
+	// result.Response will not be processed.
+	// event.Result is a wrapped error that could be non-fatal. TODO:: more detail on this.
 	StartReceiver(ctx context.Context, fn interface{}) error
 }
 
-// New produces a new client with the provided transport object and applied
+// NewWithTransport produces a new client with the provided transport object and applied
 // client options.
-func New(t transport.Transport, opts ...Option) (Client, error) {
+func NewWithTransport(t transport.Transport, opts ...Option) (Client, error) {
 	c := &ceClient{
 		transport: t,
 	}
@@ -51,6 +53,17 @@ func New(t transport.Transport, opts ...Option) (Client, error) {
 		return nil, err
 	}
 	t.SetReceiver(c)
+	return c, nil
+}
+
+// NewWithTransport produces a new client with the provided transport object and applied
+// client options.
+func New(opts ...Option) (Client, error) {
+	c := &ceClient{}
+	if err := c.applyOptions(opts...); err != nil {
+		return nil, err
+	}
+	// t.SetReceiver(c) <-- TODO
 	return c, nil
 }
 
@@ -66,7 +79,7 @@ func NewDefault() (Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	c, err := New(t, WithTimeNow(), WithUUIDs(), WithDataContentType(event.ApplicationJSON))
+	c, err := NewWithTransport(t, WithTimeNow(), WithUUIDs(), WithDataContentType(event.ApplicationJSON))
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +102,7 @@ type ceClient struct {
 // Send returns a response event if there is a response or an error if there
 // was an an issue validating the outbound event or the transport returns an
 // error.
-func (c *ceClient) Send(ctx context.Context, event event.Event) (context.Context, *event.Event, error) {
+func (c *ceClient) Send(ctx context.Context, event event.Event, results ...interface{}) error {
 	ctx, r := observability.NewReporter(ctx, reportSend)
 
 	ctx, span := trace.StartSpan(ctx, clientSpanName, trace.WithSpanKind(trace.SpanKindClient))
@@ -98,13 +111,28 @@ func (c *ceClient) Send(ctx context.Context, event event.Event) (context.Context
 		span.AddAttributes(eventTraceAttributes(event.Context)...)
 	}
 
+	var fn *resultsFn
+	if results != nil {
+		if len(results) != 1 {
+			return errors.New("only one results function is allowed")
+		}
+		var err error
+		fn, err = parseResultsFn(results[0])
+		if err != nil {
+			return err
+		}
+	}
+
 	rctx, resp, err := c.obsSend(ctx, event)
 	if err != nil {
 		r.Error()
 	} else {
 		r.OK()
 	}
-	return rctx, resp, err
+	if fn != nil {
+		fn.invoke(rctx, resp)
+	}
+	return err
 }
 
 func (c *ceClient) obsSend(ctx context.Context, event event.Event) (context.Context, *event.Event, error) {

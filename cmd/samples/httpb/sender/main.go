@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/event"
 	"log"
 
@@ -26,17 +25,18 @@ func main() {
 		e := cloudevents.NewEvent()
 		e.SetType("com.cloudevents.sample.sent")
 		e.SetSource("https://github.com/cloudevents/sdk-go/cmd/samples/httpb/sender")
-		_ = e.SetData(map[string]string{
-			"sequence": fmt.Sprintf("%d", i),
-			"message":  "Hello, World!",
+		_ = e.SetData(map[string]interface{}{
+			"id":      i,
+			"message": "Hello, World!",
 		})
 
-		if _, resp, err := c.Send(ctx, e); err != nil {
+		err := c.Send(ctx, e, func(ctx context.Context, e *event.Event) {
+			log.Printf("Got a result: %s", e)
+		})
+		if err != nil {
 			log.Printf("failed to send: %v", err)
-		} else if resp != nil {
-			fmt.Printf("got back a response: \n%s", resp)
 		} else {
-			log.Printf("send: %d", i)
+			log.Printf("sent: %d", i)
 		}
 	}
 }

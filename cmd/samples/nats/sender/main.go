@@ -77,7 +77,7 @@ func _main(args []string, env envConfig) int {
 			log.Printf("failed to create nats transport, %s", err.Error())
 			return 1
 		}
-		c, err := client.New(t)
+		c, err := client.NewWithTransport(t)
 		if err != nil {
 			log.Printf("failed to create client, %s", err.Error())
 			return 1

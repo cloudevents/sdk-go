@@ -76,7 +76,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to create pubsub transport, %s", err.Error())
 	}
-	c, err := client.New(t)
+	c, err := client.NewWithTransport(t)
 	if err != nil {
 		log.Fatalf("failed to create client, %s", err.Error())
 	}
