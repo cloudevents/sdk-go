@@ -43,27 +43,27 @@ func BenchmarkNewBinaryMessageWithKey(b *testing.B) {
 func BenchmarkNewStructuredMessageWithoutKeyToEvent(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		M, Err = kafka_sarama.NewMessageFromConsumerMessage(kafka_sarama.StructuredConsumerMessageWithoutKey)
-		Event, _, Err = binding.ToEvent(context.TODO(), M)
+		Event, _, Err = binding.ToEvent(context.TODO(), M, nil)
 	}
 }
 
 func BenchmarkNewStructuredMessageWithKeyToEvent(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		M, Err = kafka_sarama.NewMessageFromConsumerMessage(kafka_sarama.StructuredConsumerMessageWithKey)
-		Event, _, Err = binding.ToEvent(context.TODO(), M)
+		Event, _, Err = binding.ToEvent(context.TODO(), M, nil)
 	}
 }
 
 func BenchmarkNewBinaryMessageWithoutKeyToEvent(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		M, Err = kafka_sarama.NewMessageFromConsumerMessage(kafka_sarama.BinaryConsumerMessageWithoutKey)
-		Event, _, Err = binding.ToEvent(context.TODO(), M)
+		Event, _, Err = binding.ToEvent(context.TODO(), M, nil)
 	}
 }
 
 func BenchmarkNewBinaryMessageWithKeyToEvent(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		M, Err = kafka_sarama.NewMessageFromConsumerMessage(kafka_sarama.BinaryConsumerMessageWithKey)
-		Event, _, Err = binding.ToEvent(context.TODO(), M)
+		Event, _, Err = binding.ToEvent(context.TODO(), M, nil)
 	}
 }
