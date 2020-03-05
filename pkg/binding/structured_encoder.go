@@ -1,0 +1,10 @@
+package binding
+
+// StructuredEncoder is used to visit a structured Message and generate a new representation.
+//
+// Protocols that supports structured encoding should implement this interface to implement direct
+// structured to structured encoding and event to structured encoding.
+type StructuredEncoder interface {
+	// Event receives an io.Reader for the whole event.
+	SetStructuredEvent(ctx context.Context, format format.Format, event io.Reader) error
+}
