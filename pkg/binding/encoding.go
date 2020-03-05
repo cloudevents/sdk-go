@@ -1,5 +1,7 @@
 package binding
 
+import "errors"
+
 // Encoding enum specifies the type of encodings supported by binding interfaces
 type Encoding int
 

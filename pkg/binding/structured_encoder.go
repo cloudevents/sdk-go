@@ -1,5 +1,12 @@
 package binding
 
+import (
+	"context"
+	"io"
+
+	"github.com/cloudevents/sdk-go/pkg/binding/format"
+)
+
 // StructuredEncoder is used to visit a structured Message and generate a new representation.
 //
 // Protocols that supports structured encoding should implement this interface to implement direct
