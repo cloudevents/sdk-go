@@ -23,11 +23,14 @@ var (
 )
 
 // Message implements binding.Message by wrapping an *amqp.Message.
+// This message *can* be read several times safely
 type Message struct {
 	AMQP     *amqp.Message
 	encoding binding.Encoding
 }
 
+// Wrap an *amqp.Message in a binding.Message.
+// The returned message *can* be read several times safely
 func NewMessage(message *amqp.Message) *Message {
 	if message.Properties != nil && format.IsFormat(message.Properties.ContentType) {
 		return &Message{AMQP: message, encoding: binding.EncodingStructured}
@@ -41,7 +44,6 @@ func NewMessage(message *amqp.Message) *Message {
 	}
 }
 
-// Check if amqp.Message implements binding.Message
 var _ binding.Message = (*Message)(nil)
 
 func (m *Message) Encoding() binding.Encoding {

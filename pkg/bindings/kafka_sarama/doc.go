@@ -1,4 +1,5 @@
-// Package kafka implements the Kafka CloudEvents binding.
 package kafka_sarama
 
-// TODO(slinkydeveloper)
+/*
+Module kafka_sarama implements a Kafka binding using github.com/Shopify/sarama module
+*/

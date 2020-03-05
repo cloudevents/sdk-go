@@ -8,33 +8,33 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/binding"
 )
 
-// Sender wraps an amqp.Sender as a binding.Sender
-type Sender struct {
-	AMQP *amqp.Sender
-
-	transformerFactories binding.TransformerFactories
+// sender wraps an amqp.Sender as a binding.Sender
+type sender struct {
+	amqp         *amqp.Sender
+	transformers binding.TransformerFactories
 }
 
-func (s *Sender) Send(ctx context.Context, in binding.Message) error {
+func (s *sender) Send(ctx context.Context, in binding.Message) error {
 	var err error
 	defer func() { _ = in.Finish(err) }()
 	if m, ok := in.(*Message); ok { // Already an AMQP message.
-		return s.AMQP.Send(ctx, m.AMQP)
+		return s.amqp.Send(ctx, m.AMQP)
 	}
 
 	var amqpMessage amqp.Message
-	err = EncodeAMQPMessage(ctx, in, &amqpMessage, s.transformerFactories)
+	err = EncodeAMQPMessage(ctx, in, &amqpMessage, s.transformers)
 	if err != nil {
 		return err
 	}
 
-	return s.AMQP.Send(ctx, &amqpMessage)
+	return s.amqp.Send(ctx, &amqpMessage)
 }
 
-func (s *Sender) Close(ctx context.Context) error { return s.AMQP.Close(ctx) }
+func (s *sender) Close(ctx context.Context) error { return s.amqp.Close(ctx) }
 
-func NewSender(amqpClient *amqp.Sender, options ...SenderOptionFunc) binding.Sender {
-	s := &Sender{AMQP: amqpClient, transformerFactories: make(binding.TransformerFactories, 0)}
+// Create a new Sender which wraps an amqp.Sender in a binding.Sender
+func NewSender(amqpSender *amqp.Sender, options ...SenderOptionFunc) binding.Sender {
+	s := &sender{amqp: amqpSender, transformers: make(binding.TransformerFactories, 0)}
 	for _, o := range options {
 		o(s)
 	}

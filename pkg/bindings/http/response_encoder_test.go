@@ -54,14 +54,14 @@ func TestEncodeHttpResponse(t *testing.T) {
 				eventIn = test.ExToStr(t, eventIn)
 				messageIn := tt.messageFactory(eventIn)
 
-				err := EncodeHttpResponse(tt.context, messageIn, res, binding.TransformerFactories{})
+				err := EncodeHttpResponse(tt.context, messageIn, res, nil)
 				require.NoError(t, err)
 
 				//Little hack to go back to Message
-				messageOut, err := NewMessage(res.Header, res.Body)
+				messageOut := NewMessageFromHttpResponse(res)
 				require.NoError(t, err)
 
-				eventOut, encoding, err := binding.ToEvent(context.TODO(), messageOut)
+				eventOut, encoding, err := binding.ToEvent(context.TODO(), messageOut, nil)
 				require.Equal(t, encoding, tt.expectedEncoding)
 				test.AssertEventEquals(t, eventIn, eventOut)
 			})

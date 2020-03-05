@@ -12,18 +12,18 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/types"
 )
 
-// Fill the provided res with the message m.
-// Using context you can tweak the encoding processing (more details on binding.Translate documentation).
-func EncodeHttpResponse(ctx context.Context, m binding.Message, res *http.Response, transformerFactories binding.TransformerFactories) error {
-	structuredEncoder := (*httpResponseEncoder)(res)
-	binaryEncoder := (*httpResponseEncoder)(res)
+// Fill the provided httpResponse with the message m.
+// Using context you can tweak the encoding processing (more details on binding.Encode documentation).
+func EncodeHttpResponse(ctx context.Context, m binding.Message, httpResponse *http.Response, transformers binding.TransformerFactories) error {
+	structuredEncoder := (*httpResponseEncoder)(httpResponse)
+	binaryEncoder := (*httpResponseEncoder)(httpResponse)
 
 	_, err := binding.Encode(
 		ctx,
 		m,
 		structuredEncoder,
 		binaryEncoder,
-		transformerFactories,
+		transformers,
 	)
 	return err
 }

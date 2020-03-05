@@ -28,7 +28,7 @@ var (
 	StructuredConsumerMessageWithoutKey = &sarama.ConsumerMessage{
 		Value: test.MustJSON(e),
 		Headers: []*sarama.RecordHeader{{
-			Key:   []byte(ContentType),
+			Key:   []byte(contentTypeHeader),
 			Value: []byte(cloudevents.ApplicationCloudEventsJSON),
 		}},
 	}
@@ -36,7 +36,7 @@ var (
 		Key:   []byte("aaa"),
 		Value: test.MustJSON(e),
 		Headers: []*sarama.RecordHeader{{
-			Key:   []byte(ContentType),
+			Key:   []byte(contentTypeHeader),
 			Value: []byte(cloudevents.ApplicationCloudEventsJSON),
 		}},
 	}

@@ -123,7 +123,7 @@ func TestEncodeKafkaProducerMessage(t *testing.T) {
 					require.Equal(t, []byte("bla"), key)
 				}
 
-				messageOut, err := NewMessageFromRaw(key, value, string(headers[ContentType]), headers)
+				messageOut, err := NewMessage(key, value, string(headers[contentTypeHeader]), headers)
 				require.NoError(t, err)
 
 				eventOut, encoding, err := binding.ToEvent(context.TODO(), messageOut)

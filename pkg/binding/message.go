@@ -25,9 +25,7 @@ import "context"
 // to a specific data structure. A Sender should try each method of interest and fall back to ToEvent() if none are supported.
 // For encoding a message, look at binding.Encode function.
 //
-// Most binding.Message implementations can be encoded only one time, because the encoding process drain the message itself.
-// In order to consume a message several times,
-// the binding/buffering module provides several APIs to buffer the Message in order to visit it more times.
+// Every binding.Message implementation must specify if the message can be accessed one or more times.
 //
 // When a Message can be forgotten by the entity who produced the message, Message.Finish() *must* be invoked.
 type Message interface {

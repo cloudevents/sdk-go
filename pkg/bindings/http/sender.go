@@ -10,13 +10,14 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/binding"
 )
 
+// Sender implements binding.Sender wrapping a nethttp.Client and a target URL
 type Sender struct {
 	// Client is the HTTP client used to send events as HTTP requests
 	Client *http.Client
 	// Target is the URL to send event requests to.
 	Target *url.URL
 
-	transformerFactories binding.TransformerFactories
+	transformers binding.TransformerFactories
 }
 
 func (s *Sender) Send(ctx context.Context, m binding.Message) (err error) {
@@ -32,7 +33,7 @@ func (s *Sender) Send(ctx context.Context, m binding.Message) (err error) {
 	}
 	req = req.WithContext(ctx)
 
-	if err = EncodeHttpRequest(ctx, m, req, s.transformerFactories); err != nil {
+	if err = EncodeHttpRequest(ctx, m, req, s.transformers); err != nil {
 		return
 	}
 	resp, err := s.Client.Do(req)
@@ -45,8 +46,9 @@ func (s *Sender) Send(ctx context.Context, m binding.Message) (err error) {
 	return
 }
 
+// Returns a binding.Sender wrapping a nethttp.Client and a target URL
 func NewSender(client *http.Client, target *url.URL, options ...SenderOptionFunc) binding.Sender {
-	s := &Sender{Client: client, Target: target, transformerFactories: make(binding.TransformerFactories, 0)}
+	s := &Sender{Client: client, Target: target, transformers: make(binding.TransformerFactories, 0)}
 	for _, o := range options {
 		o(s)
 	}

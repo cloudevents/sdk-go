@@ -105,7 +105,7 @@ func testSenderReceiver(t testing.TB, senderOptions ...SenderOptionFunc) (io.Clo
 	require.NoError(t, err)
 	s, err := ss.NewSender(amqp.LinkTargetAddress(a))
 	require.NoError(t, err)
-	return c, NewSender(s, senderOptions...), &Receiver{r}
+	return c, NewSender(s, senderOptions...), &receiver{r}
 }
 
 func BenchmarkSendReceive(b *testing.B) {
