@@ -52,11 +52,7 @@ func (m EventMessage) Binary(ctx context.Context, b BinaryEncoder) (err error) {
 
 func eventContextToBinaryEncoder(c event.EventContext, b BinaryEncoder) (err error) {
 	// Pass all attributes
-	var sv spec.Version
-	sv, err = spec.VS.Version(c.GetSpecVersion())
-	if err != nil {
-		return err
-	}
+	sv := spec.VS.Version(c.GetSpecVersion())
 	for _, a := range sv.Attributes() {
 		value := a.Get(c)
 		if value != nil {

@@ -1,7 +1,6 @@
 package spec
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/cloudevents/sdk-go/pkg/event"
@@ -35,44 +34,27 @@ type Version interface {
 
 // Versions contains all known versions with the same attribute prefix.
 type Versions struct {
-	prefix  string
-	all     []Version
-	m       map[string]Version
-	svnames []string
+	prefix string
+	all    []Version
+	m      map[string]Version
 }
 
 // Versions returns the list of all known versions, most recent first.
 func (vs *Versions) Versions() []Version { return vs.all }
 
 // Version returns the named version.
-func (vs *Versions) Version(name string) (Version, error) {
-	if v := vs.m[name]; v != nil {
-		return v, nil
-	}
-	return nil, fmt.Errorf("invalid spec version %#v", name)
+func (vs *Versions) Version(name string) Version {
+	return vs.m[name]
 }
 
 // Latest returns the latest Version
 func (vs *Versions) Latest() Version { return vs.all[0] }
 
-// SpecVersionNames returns distinct names of the specversion
-// attribute used in all versions, newest first.
-// Names are prefixed.
-func (vs *Versions) SpecVersionNames() []string { return vs.svnames }
+// PrefixedSpecVersionName returns the specversion attribute PrefixedName
+func (vs *Versions) PrefixedSpecVersionName() string { return vs.prefix + "specversion" }
 
 // Prefix is the lowercase attribute name prefix.
 func (vs *Versions) Prefix() string { return vs.prefix }
-
-// FindVersion calls getAttr with known (prefixed) spec-version attribute names
-// till it finds a valid version.
-func (vs *Versions) FindVersion(getAttr func(string) string) (Version, error) {
-	for _, sv := range vs.svnames {
-		if v, err := vs.Version(getAttr(sv)); err == nil {
-			return v, nil
-		}
-	}
-	return nil, fmt.Errorf("CloudEvents spec-version not found")
-}
 
 type attribute struct {
 	accessor
@@ -156,10 +138,8 @@ func WithPrefix(prefix string) *Versions {
 		return &attribute{accessor: acc[kind], name: name}
 	}
 	vs := &Versions{
-		m: map[string]Version{},
-		svnames: []string{
-			prefix + "specversion",
-		},
+		m:      map[string]Version{},
+		prefix: prefix,
 		all: []Version{
 			newVersion(prefix, event.EventContextV1{}.AsV1(),
 				func(c event.EventContextConverter) event.EventContext { return c.AsV1() },
@@ -203,6 +183,6 @@ var (
 
 func init() {
 	VS = New()
-	V03, _ = VS.Version("0.3")
-	V1, _ = VS.Version("1.0")
+	V03 = VS.Version("0.3")
+	V1 = VS.Version("1.0")
 }

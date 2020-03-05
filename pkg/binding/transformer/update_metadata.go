@@ -1,6 +1,8 @@
 package transformer
 
 import (
+	"fmt"
+
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
 	"github.com/cloudevents/sdk-go/pkg/event"
@@ -35,9 +37,9 @@ func (a updateAttributeTranscoderFactory) BinaryTransformer(encoder binding.Bina
 
 func (a updateAttributeTranscoderFactory) EventTransformer() binding.EventTransformer {
 	return func(event *event.Event) error {
-		v, err := spec.VS.Version(event.SpecVersion())
-		if err != nil {
-			return err
+		v := spec.VS.Version(event.SpecVersion())
+		if v == nil {
+			return fmt.Errorf("spec version %s invalid", event.SpecVersion())
 		}
 		if val := v.AttributeFromKind(a.attributeKind).Get(event.Context); val != nil {
 			newVal, err := a.updater(val)

@@ -21,10 +21,7 @@ type MockBinaryMessage struct {
 
 // Create a new MockBinaryMessage starting from an event.Event. Panics in case of error
 func MustCreateMockBinaryMessage(e event.Event) binding.Message {
-	version, err := spec.VS.Version(e.SpecVersion())
-	if err != nil {
-		panic(err)
-	}
+	version := spec.VS.Version(e.SpecVersion())
 
 	m := MockBinaryMessage{
 		Metadata:   make(map[spec.Attribute]interface{}),
@@ -42,6 +39,7 @@ func MustCreateMockBinaryMessage(e event.Event) binding.Message {
 		m.Extensions[k] = v
 	}
 
+	var err error
 	m.Body, err = e.DataBytes()
 	if err != nil {
 		panic(err)
