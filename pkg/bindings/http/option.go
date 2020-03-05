@@ -9,3 +9,5 @@ func WithTranscoder(factory binding.TransformerFactory) SenderOptionFunc {
 		sender.transformerFactories = append(sender.transformerFactories, factory)
 	}
 }
+
+type RequesterOptionFunc func(requester *Requester)
