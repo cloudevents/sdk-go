@@ -1,5 +1,3 @@
-// +build kafka
-
 package kafka_sarama
 
 import (

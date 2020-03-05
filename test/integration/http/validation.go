@@ -6,9 +6,10 @@ import (
 	"strings"
 	"testing"
 
-	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+
+	cloudevents "github.com/cloudevents/sdk-go"
 )
 
 var (

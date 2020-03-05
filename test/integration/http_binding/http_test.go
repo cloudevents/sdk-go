@@ -1,4 +1,4 @@
-package http_test
+package http_binding_test
 
 import (
 	"context"
