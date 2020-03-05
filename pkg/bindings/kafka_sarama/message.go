@@ -46,7 +46,7 @@ func NewMessageFromConsumerMessage(cm *sarama.ConsumerMessage) (binding.Message,
 		if k == contentTypeHeader {
 			contentType = string(r.Value)
 		}
-		headers[strings.ToLower(string(r.Key))] = r.Value
+		headers[k] = r.Value
 	}
 	return NewMessage(cm.Key, cm.Value, contentType, headers)
 }
@@ -76,9 +76,7 @@ func NewMessage(key []byte, value []byte, contentType string, headers map[string
 				format:      ft,
 			}, nil
 		}
-	} else if v, err := specs.FindVersion(func(s string) string {
-		return string(headers[strings.ToLower(s)])
-	}); err == nil {
+	} else if v := specs.Version(string(headers[specs.PrefixedSpecVersionName()])); v != nil {
 		return &Message{
 			Key:         key,
 			Value:       value,
@@ -129,7 +127,7 @@ func (m *Message) Binary(ctx context.Context, encoder binding.BinaryEncoder) err
 			if attr != nil {
 				err = encoder.SetAttribute(attr, string(v))
 			} else {
-				err = encoder.SetExtension(strings.ToLower(strings.TrimPrefix(k, prefix)), string(v))
+				err = encoder.SetExtension(strings.TrimPrefix(k, prefix), string(v))
 			}
 		} else if k == contentTypeHeader {
 			err = encoder.SetAttribute(m.version.AttributeFromKind(spec.DataContentType), string(v))

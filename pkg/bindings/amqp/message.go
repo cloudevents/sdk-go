@@ -34,10 +34,7 @@ type Message struct {
 func NewMessage(message *amqp.Message) *Message {
 	if message.Properties != nil && format.IsFormat(message.Properties.ContentType) {
 		return &Message{AMQP: message, encoding: binding.EncodingStructured}
-	} else if _, err := specs.FindVersion(func(k string) string {
-		s, _ := message.ApplicationProperties[k].(string)
-		return s
-	}); err == nil {
+	} else if sv := getSpecVersion(message); sv != nil {
 		return &Message{AMQP: message, encoding: binding.EncodingBinary}
 	} else {
 		return &Message{AMQP: message, encoding: binding.EncodingUnknown}
@@ -45,6 +42,15 @@ func NewMessage(message *amqp.Message) *Message {
 }
 
 var _ binding.Message = (*Message)(nil)
+
+func getSpecVersion(message *amqp.Message) spec.Version {
+	if sv, ok := message.ApplicationProperties[specs.PrefixedSpecVersionName()]; ok {
+		if svs, ok := sv.(string); ok {
+			return specs.Version(svs)
+		}
+	}
+	return nil
+}
 
 func (m *Message) Encoding() binding.Encoding {
 	return m.encoding
@@ -61,15 +67,12 @@ func (m *Message) Binary(ctx context.Context, encoder binding.BinaryEncoder) err
 	if len(m.AMQP.ApplicationProperties) == 0 {
 		return errors.New("AMQP CloudEvents message has no application properties")
 	}
-	version, err := specs.FindVersion(func(k string) string {
-		s, _ := m.AMQP.ApplicationProperties[k].(string)
-		return s
-	})
-	if err != nil {
-		return err
+	version := getSpecVersion(m.AMQP)
+	if version == nil {
+		return binding.ErrNotBinary
 	}
 
-	err = encoder.Start(ctx)
+	err := encoder.Start(ctx)
 	if err != nil {
 		return err
 	}

@@ -76,10 +76,10 @@ func SendReceive(t *testing.T, ctx context.Context, in binding.Message, s bindin
 
 // Assert two event.Event context are equals
 func AssertEventContextEquals(t *testing.T, want event.EventContext, have event.EventContext) {
-	wantVersion, err := spec.VS.Version(want.GetSpecVersion())
-	require.NoError(t, err)
-	haveVersion, err := spec.VS.Version(have.GetSpecVersion())
-	require.NoError(t, err)
+	wantVersion := spec.VS.Version(want.GetSpecVersion())
+	require.NotNil(t, wantVersion)
+	haveVersion := spec.VS.Version(have.GetSpecVersion())
+	require.NotNil(t, haveVersion)
 	require.Equal(t, wantVersion, haveVersion)
 
 	for _, a := range wantVersion.Attributes() {
