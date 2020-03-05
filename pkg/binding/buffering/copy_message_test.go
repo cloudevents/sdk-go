@@ -28,25 +28,25 @@ func TestCopyMessage(t *testing.T) {
 			{
 				name:     "From structured with payload/" + test.NameOf(v),
 				encoding: binding.EncodingStructured,
-				message:  test.NewMockStructuredMessage(v),
+				message:  test.MustCreateMockStructuredMessage(v),
 				want:     v,
 			},
 			{
 				name:     "From structured without payload/" + test.NameOf(v),
 				encoding: binding.EncodingStructured,
-				message:  test.NewMockStructuredMessage(v),
+				message:  test.MustCreateMockStructuredMessage(v),
 				want:     v,
 			},
 			{
 				name:     "From binary with payload/" + test.NameOf(v),
 				encoding: binding.EncodingBinary,
-				message:  test.NewMockBinaryMessage(v),
+				message:  test.MustCreateMockBinaryMessage(v),
 				want:     v,
 			},
 			{
 				name:     "From binary without payload/" + test.NameOf(v),
 				encoding: binding.EncodingBinary,
-				message:  test.NewMockBinaryMessage(v),
+				message:  test.MustCreateMockBinaryMessage(v),
 				want:     v,
 			},
 			{
@@ -70,11 +70,11 @@ func TestCopyMessage(t *testing.T) {
 			message := binding.WithFinish(tt.message, func(err error) {
 				finished = true
 			})
-			cpy, err := CopyMessage(context.Background(), message)
+			cpy, err := CopyMessage(context.Background(), message, nil)
 			require.NoError(t, err)
 			// The copy can be read any number of times
 			for i := 0; i < 3; i++ {
-				got, encoding, err := binding.ToEvent(context.Background(), cpy)
+				got, encoding, err := binding.ToEvent(context.Background(), cpy, nil)
 				assert.NoError(t, err)
 				require.Equal(t, tt.encoding, encoding)
 				test.AssertEventEquals(t, test.ExToStr(t, tt.want), test.ExToStr(t, got))
@@ -87,11 +87,11 @@ func TestCopyMessage(t *testing.T) {
 			message := binding.WithFinish(tt.message, func(err error) {
 				finished = true
 			})
-			cpy, err := BufferMessage(context.Background(), message)
+			cpy, err := BufferMessage(context.Background(), message, nil)
 			require.NoError(t, err)
 			// The copy can be read any number of times
 			for i := 0; i < 3; i++ {
-				got, encoding, err := binding.ToEvent(context.Background(), cpy)
+				got, encoding, err := binding.ToEvent(context.Background(), cpy, nil)
 				assert.NoError(t, err)
 				require.Equal(t, tt.encoding, encoding)
 				test.AssertEventEquals(t, test.ExToStr(t, tt.want), test.ExToStr(t, got))

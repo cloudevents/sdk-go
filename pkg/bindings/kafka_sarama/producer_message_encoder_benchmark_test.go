@@ -36,10 +36,10 @@ func init() {
 	eventWithKey = test.FullEvent()
 	eventWithKey.SetExtension("key", "aaaaaa")
 
-	structuredMessageWithoutKey = test.NewMockStructuredMessage(eventWithoutKey)
-	structuredMessageWithKey = test.NewMockStructuredMessage(eventWithKey)
-	binaryMessageWithoutKey = test.NewMockBinaryMessage(eventWithoutKey)
-	binaryMessageWithKey = test.NewMockBinaryMessage(eventWithKey)
+	structuredMessageWithoutKey = test.MustCreateMockStructuredMessage(eventWithoutKey)
+	structuredMessageWithKey = test.MustCreateMockStructuredMessage(eventWithKey)
+	binaryMessageWithoutKey = test.MustCreateMockBinaryMessage(eventWithoutKey)
+	binaryMessageWithKey = test.MustCreateMockBinaryMessage(eventWithKey)
 }
 
 func BenchmarkEncodeStructuredMessageSkipKey(b *testing.B) {

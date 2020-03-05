@@ -19,7 +19,7 @@ var (
 	structuredConsumerMessageWithoutKey = &sarama.ConsumerMessage{
 		Value: test.MustJSON(e),
 		Headers: []*sarama.RecordHeader{{
-			Key:   []byte(kafka_sarama.ContentType),
+			Key:   []byte("Content-Type"),
 			Value: []byte(cloudevents.ApplicationCloudEventsJSON),
 		}},
 	}
@@ -27,7 +27,7 @@ var (
 		Key:   []byte("aaa"),
 		Value: test.MustJSON(e),
 		Headers: []*sarama.RecordHeader{{
-			Key:   []byte(kafka_sarama.ContentType),
+			Key:   []byte("Content-Type"),
 			Value: []byte(cloudevents.ApplicationCloudEventsJSON),
 		}},
 	}
@@ -79,7 +79,7 @@ var Err error
 
 func BenchmarkStructuredWithKey(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		M, Err = kafka_sarama.NewMessage(structuredConsumerMessageWithKey)
+		M, Err = kafka_sarama.NewMessageFromConsumerMessage(structuredConsumerMessageWithKey)
 		Req, Err = nethttp.NewRequest("POST", "http://localhost", nil)
 		Err = http.EncodeHttpRequest(context.TODO(), M, Req, binding.TransformerFactories{})
 	}
@@ -87,7 +87,7 @@ func BenchmarkStructuredWithKey(b *testing.B) {
 
 func BenchmarkStructuredWithoutKey(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		M, Err = kafka_sarama.NewMessage(structuredConsumerMessageWithoutKey)
+		M, Err = kafka_sarama.NewMessageFromConsumerMessage(structuredConsumerMessageWithoutKey)
 		Req, Err = nethttp.NewRequest("POST", "http://localhost", nil)
 		Err = http.EncodeHttpRequest(context.TODO(), M, Req, binding.TransformerFactories{})
 	}
@@ -95,7 +95,7 @@ func BenchmarkStructuredWithoutKey(b *testing.B) {
 
 func BenchmarkBinaryWithKey(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		M, Err = kafka_sarama.NewMessage(binaryConsumerMessageWithKey)
+		M, Err = kafka_sarama.NewMessageFromConsumerMessage(binaryConsumerMessageWithKey)
 		Req, Err = nethttp.NewRequest("POST", "http://localhost", nil)
 		Err = http.EncodeHttpRequest(context.TODO(), M, Req, binding.TransformerFactories{})
 	}
@@ -103,7 +103,7 @@ func BenchmarkBinaryWithKey(b *testing.B) {
 
 func BenchmarkBinaryWithoutKey(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		M, Err = kafka_sarama.NewMessage(binaryConsumerMessageWithoutKey)
+		M, Err = kafka_sarama.NewMessageFromConsumerMessage(binaryConsumerMessageWithoutKey)
 		Req, Err = nethttp.NewRequest("POST", "http://localhost", nil)
 		Err = http.EncodeHttpRequest(context.TODO(), M, Req, binding.TransformerFactories{})
 	}

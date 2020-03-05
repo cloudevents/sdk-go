@@ -96,7 +96,7 @@ func pipeLoopMulti(r *http.Receiver, sendCtx context.Context, endCtx context.Con
 			if err != nil {
 				continue
 			}
-			copiedMessage, err := buffering.BufferMessage(context.TODO(), m)
+			copiedMessage, err := buffering.BufferMessage(context.TODO(), m, nil)
 			if err != nil {
 				continue
 			}

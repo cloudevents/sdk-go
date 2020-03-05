@@ -7,7 +7,7 @@ import (
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
-	"github.com/cloudevents/sdk-go/pkg/binding/transcoder"
+	"github.com/cloudevents/sdk-go/pkg/binding/transformer"
 	bindings_amqp "github.com/cloudevents/sdk-go/pkg/bindings/amqp"
 	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
@@ -90,22 +90,22 @@ func (t *Transport) applyEncoding(amqpSender *amqp.Sender) (binding.Sender, []fu
 	case BinaryV03:
 		return bindings_amqp.NewSender(
 			amqpSender,
-			bindings_amqp.WithTranscoder(transcoder.Version(spec.V03)),
+			bindings_amqp.WithTransformer(transformer.Version(spec.V03)),
 		), []func(context.Context) context.Context{binding.WithForceBinary}
 	case BinaryV1:
 		return bindings_amqp.NewSender(
 			amqpSender,
-			bindings_amqp.WithTranscoder(transcoder.Version(spec.V1)),
+			bindings_amqp.WithTransformer(transformer.Version(spec.V1)),
 		), []func(context.Context) context.Context{binding.WithForceBinary}
 	case StructuredV03:
 		return bindings_amqp.NewSender(
 			amqpSender,
-			bindings_amqp.WithTranscoder(transcoder.Version(spec.V03)),
+			bindings_amqp.WithTransformer(transformer.Version(spec.V03)),
 		), []func(context.Context) context.Context{binding.WithForceStructured}
 	case StructuredV1:
 		return bindings_amqp.NewSender(
 			amqpSender,
-			bindings_amqp.WithTranscoder(transcoder.Version(spec.V1)),
+			bindings_amqp.WithTransformer(transformer.Version(spec.V1)),
 		), []func(context.Context) context.Context{binding.WithForceStructured}
 	}
 	return bindings_amqp.NewSender(amqpSender), []func(context.Context) context.Context{}
@@ -141,7 +141,7 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	t.BindingTransport.Receiver = &bindings_amqp.Receiver{AMQP: receiver}
+	t.BindingTransport.Receiver = bindings_amqp.NewReceiver(receiver)
 	return t.BindingTransport.StartReceiver(ctx)
 }
 

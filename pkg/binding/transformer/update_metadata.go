@@ -1,4 +1,4 @@
-package transcoder
+package transformer
 
 import (
 	"github.com/cloudevents/sdk-go/pkg/binding"
@@ -6,12 +6,12 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/event"
 )
 
-// Update cloudevents attribute (if present) using the provided function during the encoding process
+// Update cloudevents attribute (if present) using the provided function
 func UpdateAttribute(attributeKind spec.Kind, updater func(interface{}) (interface{}, error)) binding.TransformerFactory {
 	return updateAttributeTranscoderFactory{attributeKind: attributeKind, updater: updater}
 }
 
-// Update cloudevents extension (if present) using the provided function during the encoding process
+// Update cloudevents extension (if present) using the provided function
 func UpdateExtension(name string, updater func(interface{}) (interface{}, error)) binding.TransformerFactory {
 	return updateExtensionTranscoderFactory{name: name, updater: updater}
 }

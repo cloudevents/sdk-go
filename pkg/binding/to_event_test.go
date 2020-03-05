@@ -26,25 +26,25 @@ func TestToEvent(t *testing.T) {
 			{
 				name:     "From mock structured with payload/" + test.NameOf(v),
 				encoding: binding.EncodingStructured,
-				message:  test.NewMockStructuredMessage(v),
+				message:  test.MustCreateMockStructuredMessage(v),
 				want:     v,
 			},
 			{
 				name:     "From mock structured without payload/" + test.NameOf(v),
 				encoding: binding.EncodingStructured,
-				message:  test.NewMockStructuredMessage(v),
+				message:  test.MustCreateMockStructuredMessage(v),
 				want:     v,
 			},
 			{
 				name:     "From mock binary with payload/" + test.NameOf(v),
 				encoding: binding.EncodingBinary,
-				message:  test.NewMockBinaryMessage(v),
+				message:  test.MustCreateMockBinaryMessage(v),
 				want:     v,
 			},
 			{
 				name:     "From mock binary without payload/" + test.NameOf(v),
 				encoding: binding.EncodingBinary,
-				message:  test.NewMockBinaryMessage(v),
+				message:  test.MustCreateMockBinaryMessage(v),
 				want:     v,
 			},
 			{
@@ -64,7 +64,7 @@ func TestToEvent(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt // Don't use range variable in Run() scope
 		t.Run(tt.name, func(t *testing.T) {
-			got, encoding, err := binding.ToEvent(context.Background(), tt.message)
+			got, encoding, err := binding.ToEvent(context.Background(), tt.message, nil)
 			require.NoError(t, err)
 			require.Equal(t, tt.encoding, encoding)
 			test.AssertEventEquals(t, test.ExToStr(t, tt.want), test.ExToStr(t, got))

@@ -12,12 +12,14 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/types"
 )
 
+// Generic error when a conversion of a Message to an Event fails
 var ErrCannotConvertToEvent = errors.New("cannot convert message to event")
 
-// Translates a Message with a valid Structured or Binary representation to an Event
-// The TransformerFactories **aren't invoked** during the transformation to event,
-// but after the event instance is generated
-func ToEvent(ctx context.Context, message Message, transformers ...TransformerFactory) (e event.Event, encoding Encoding, err error) {
+// Translates a Message with a valid Structured or Binary representation to an Event.
+// This function returns the Event generated from the Message and the original encoding of the message or
+// an error that points the conversion error.
+// transformers can be nil and this function guarantees that they are invoked only once during the encoding process.
+func ToEvent(ctx context.Context, message Message, transformers TransformerFactories) (e event.Event, encoding Encoding, err error) {
 	e = event.New()
 
 	messageEncoding := message.Encoding()
@@ -26,7 +28,7 @@ func ToEvent(ctx context.Context, message Message, transformers ...TransformerFa
 			if em, ok := m.(EventMessage); ok {
 				e = event.Event(em)
 				encoding = EncodingEvent
-				err = TransformerFactories(transformers).EventTransformer()(&e)
+				err = transformers.EventTransformer()(&e)
 				return
 			}
 			if mw, ok := m.(MessageWrapper); ok {
@@ -50,7 +52,7 @@ func ToEvent(ctx context.Context, message Message, transformers ...TransformerFa
 	if err != nil {
 		return e, encoding, err
 	}
-	err = TransformerFactories(transformers).EventTransformer()(&e)
+	err = transformers.EventTransformer()(&e)
 	return
 }
 

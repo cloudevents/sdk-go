@@ -49,17 +49,7 @@ func EachMessage(t *testing.T, messages []binding.Message, f func(*testing.T, bi
 	}
 }
 
-// Canonical converts all attributes to canonical string form for comparisons.
-func Canonical(t *testing.T, c event.EventContext) {
-	t.Helper()
-	for k, v := range c.GetExtensions() {
-		s, err := types.Format(v)
-		require.NoError(t, err, "extension[%q]=%#v: %v", k, v, err)
-		assert.NoError(t, c.SetExtension(k, s))
-	}
-}
-
-// SendReceive does, s.Send(in) and returns r.Receive().
+// SendReceive does s.Send(in), then it receives the message in r.Receive() and executes outAssert
 // Halt test on error.
 func SendReceive(t *testing.T, ctx context.Context, in binding.Message, s binding.Sender, r binding.Receiver, outAssert func(binding.Message)) {
 	t.Helper()
@@ -84,6 +74,7 @@ func SendReceive(t *testing.T, ctx context.Context, in binding.Message, s bindin
 	wg.Wait()
 }
 
+// Assert two event.Event context are equals
 func AssertEventContextEquals(t *testing.T, want event.EventContext, have event.EventContext) {
 	wantVersion, err := spec.VS.Version(want.GetSpecVersion())
 	require.NoError(t, err)
@@ -98,6 +89,7 @@ func AssertEventContextEquals(t *testing.T, want event.EventContext, have event.
 	require.Equal(t, want.GetExtensions(), have.GetExtensions(), "Extensions")
 }
 
+// Assert two event.Event are equals
 func AssertEventEquals(t *testing.T, want event.Event, have event.Event) {
 	AssertEventContextEquals(t, want.Context, have.Context)
 	wantPayload, err := want.DataBytes()
@@ -107,7 +99,9 @@ func AssertEventEquals(t *testing.T, want event.Event, have event.Event) {
 	assert.Equal(t, wantPayload, havePayload)
 }
 
+// Returns a copy of the event.Event where all extensions are converted to strings. Fails the test if conversion fails
 func ExToStr(t *testing.T, e event.Event) event.Event {
+	out := CopyEventContext(e)
 	for k, v := range e.Extensions() {
 		var vParsed interface{}
 		var err error
@@ -115,16 +109,17 @@ func ExToStr(t *testing.T, e event.Event) event.Event {
 		switch v.(type) {
 		case json.RawMessage:
 			err = json.Unmarshal(v.(json.RawMessage), &vParsed)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 		default:
 			vParsed, err = types.Format(v)
 			require.NoError(t, err)
 		}
-		e.SetExtension(k, vParsed)
+		out.SetExtension(k, vParsed)
 	}
-	return e
+	return out
 }
 
+// Must marshal the event.Event to JSON structured representation
 func MustJSON(e event.Event) []byte {
 	b, err := format.JSON.Marshal(e)
 	if err != nil {
@@ -133,15 +128,17 @@ func MustJSON(e event.Event) []byte {
 	return b
 }
 
+// Must convert the Message to event.Event
 func MustToEvent(ctx context.Context, m binding.Message) (e event.Event, encoding binding.Encoding) {
 	var err error
-	e, encoding, err = binding.ToEvent(ctx, m)
+	e, encoding, err = binding.ToEvent(ctx, m, nil)
 	if err != nil {
 		panic(err)
 	}
 	return
 }
 
+// Returns a copy of the event.Event with only the event.EventContext copied
 func CopyEventContext(e event.Event) event.Event {
 	newE := event.Event{}
 	newE.Context = e.Context.Clone()
