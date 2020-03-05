@@ -1,5 +1,3 @@
-// +build kafka
-
 package kafka_sarama_test
 
 import (
@@ -36,36 +34,36 @@ func init() {
 	eventWithKey = test.FullEvent()
 	eventWithKey.SetExtension("key", "aaaaaa")
 
-	structuredMessageWithoutKey = test.NewMockStructuredMessage(eventWithoutKey)
-	structuredMessageWithKey = test.NewMockStructuredMessage(eventWithKey)
-	binaryMessageWithoutKey = test.NewMockBinaryMessage(eventWithoutKey)
-	binaryMessageWithKey = test.NewMockBinaryMessage(eventWithKey)
+	structuredMessageWithoutKey = test.MustCreateMockStructuredMessage(eventWithoutKey)
+	structuredMessageWithKey = test.MustCreateMockStructuredMessage(eventWithKey)
+	binaryMessageWithoutKey = test.MustCreateMockBinaryMessage(eventWithoutKey)
+	binaryMessageWithKey = test.MustCreateMockBinaryMessage(eventWithKey)
 }
 
 func BenchmarkEncodeStructuredMessageSkipKey(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		ProducerMessage = &sarama.ProducerMessage{}
-		Err = kafka_sarama.EncodeKafkaProducerMessage(ctxSkipKey, structuredMessageWithoutKey, ProducerMessage, binding.TransformerFactories{})
+		Err = kafka_sarama.EncodeKafkaProducerMessage(ctxSkipKey, structuredMessageWithoutKey, ProducerMessage, nil)
 	}
 }
 
 func BenchmarkEncodeStructuredMessage(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		ProducerMessage = &sarama.ProducerMessage{}
-		Err = kafka_sarama.EncodeKafkaProducerMessage(ctx, structuredMessageWithKey, ProducerMessage, binding.TransformerFactories{})
+		Err = kafka_sarama.EncodeKafkaProducerMessage(ctx, structuredMessageWithKey, ProducerMessage, nil)
 	}
 }
 
 func BenchmarkEncodeBinaryMessageSkipKey(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		ProducerMessage = &sarama.ProducerMessage{}
-		Err = kafka_sarama.EncodeKafkaProducerMessage(ctxSkipKey, binaryMessageWithoutKey, ProducerMessage, binding.TransformerFactories{})
+		Err = kafka_sarama.EncodeKafkaProducerMessage(ctxSkipKey, binaryMessageWithoutKey, ProducerMessage, nil)
 	}
 }
 
 func BenchmarkEncodeBinaryMessage(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		ProducerMessage = &sarama.ProducerMessage{}
-		Err = kafka_sarama.EncodeKafkaProducerMessage(ctx, binaryMessageWithKey, ProducerMessage, binding.TransformerFactories{})
+		Err = kafka_sarama.EncodeKafkaProducerMessage(ctx, binaryMessageWithKey, ProducerMessage, nil)
 	}
 }

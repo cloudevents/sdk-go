@@ -1,4 +1,4 @@
-package http_test
+package http_binding_test
 
 import (
 	"context"
@@ -22,7 +22,7 @@ func TestSendSkipBinary(t *testing.T) {
 	defer close()
 	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
 		eventIn = test.ExToStr(t, eventIn)
-		in := test.NewMockBinaryMessage(eventIn)
+		in := test.MustCreateMockBinaryMessage(eventIn)
 		test.SendReceive(t, binding.WithSkipDirectBinaryEncoding(binding.WithPreferredEventEncoding(context.Background(), binding.EncodingStructured), true), in, s, r, func(out binding.Message) {
 			eventOut, encoding := test.MustToEvent(context.Background(), out)
 			assert.Equal(t, encoding, binding.EncodingStructured)
@@ -36,7 +36,7 @@ func TestSendSkipStructured(t *testing.T) {
 	defer close()
 	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
 		eventIn = test.ExToStr(t, eventIn)
-		in := test.NewMockStructuredMessage(eventIn)
+		in := test.MustCreateMockStructuredMessage(eventIn)
 		test.SendReceive(t, binding.WithSkipDirectStructuredEncoding(context.Background(), true), in, s, r, func(out binding.Message) {
 			eventOut, encoding := test.MustToEvent(context.Background(), out)
 			assert.Equal(t, encoding, binding.EncodingBinary)
@@ -50,7 +50,7 @@ func TestSendBinaryReceiveBinary(t *testing.T) {
 	defer close()
 	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
 		eventIn = test.ExToStr(t, eventIn)
-		in := test.NewMockBinaryMessage(eventIn)
+		in := test.MustCreateMockBinaryMessage(eventIn)
 		test.SendReceive(t, context.Background(), in, s, r, func(out binding.Message) {
 			eventOut, encoding := test.MustToEvent(context.Background(), out)
 			assert.Equal(t, encoding, binding.EncodingBinary)
@@ -64,7 +64,7 @@ func TestSendStructReceiveStruct(t *testing.T) {
 	defer close()
 	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
 		eventIn = test.ExToStr(t, eventIn)
-		in := test.NewMockStructuredMessage(eventIn)
+		in := test.MustCreateMockStructuredMessage(eventIn)
 		test.SendReceive(t, context.Background(), in, s, r, func(out binding.Message) {
 			eventOut, encoding := test.MustToEvent(context.Background(), out)
 			assert.Equal(t, encoding, binding.EncodingStructured)

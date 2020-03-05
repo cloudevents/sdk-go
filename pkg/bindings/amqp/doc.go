@@ -1,6 +1,5 @@
-/*
-Package amqp implements an AMQP binding.
-*/
 package amqp
 
-// TODO(slinkydeveloper)
+/*
+Module amqp implements an AMQP binding using pack.ag/amqp module
+*/

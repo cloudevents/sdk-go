@@ -74,7 +74,7 @@ func BenchmarkStructured(b *testing.B) {
 		tempReq, _ := nethttp.NewRequest("POST", "http://localhost", nil)
 		Err = http.EncodeHttpRequest(context.TODO(), binding.EventMessage(eventWithKey), tempReq, binding.TransformerFactories{})
 
-		M, Err = http.NewMessage(tempReq.Header, tempReq.Body)
+		M = http.NewMessageFromHttpRequest(tempReq)
 		Req, Err = nethttp.NewRequest("POST", "http://localhost", nil)
 		producerMessage := &sarama.ProducerMessage{}
 		Err = kafka_sarama.EncodeKafkaProducerMessage(ctx, M, producerMessage, binding.TransformerFactories{})
@@ -93,7 +93,7 @@ func BenchmarkStructuredSkipKey(b *testing.B) {
 		tempReq, _ := nethttp.NewRequest("POST", "http://localhost", nil)
 		Err = http.EncodeHttpRequest(context.TODO(), binding.EventMessage(eventWithoutKey), tempReq, binding.TransformerFactories{})
 
-		M, Err = http.NewMessage(tempReq.Header, tempReq.Body)
+		M = http.NewMessageFromHttpRequest(tempReq)
 		Req, Err = nethttp.NewRequest("POST", "http://localhost", nil)
 		producerMessage := &sarama.ProducerMessage{}
 		Err = kafka_sarama.EncodeKafkaProducerMessage(ctxSkipKey, M, producerMessage, binding.TransformerFactories{})
@@ -112,7 +112,7 @@ func BenchmarkBinary(b *testing.B) {
 		tempReq, _ := nethttp.NewRequest("POST", "http://localhost", nil)
 		Err = http.EncodeHttpRequest(context.TODO(), binding.EventMessage(eventWithKey), tempReq, binding.TransformerFactories{})
 
-		M, Err = http.NewMessage(tempReq.Header, tempReq.Body)
+		M = http.NewMessageFromHttpRequest(tempReq)
 		Req, Err = nethttp.NewRequest("POST", "http://localhost", nil)
 		producerMessage := &sarama.ProducerMessage{}
 		Err = kafka_sarama.EncodeKafkaProducerMessage(ctx, M, producerMessage, binding.TransformerFactories{})
@@ -131,7 +131,7 @@ func BenchmarkBinarySkipKey(b *testing.B) {
 		tempReq, _ := nethttp.NewRequest("POST", "http://localhost", nil)
 		Err = http.EncodeHttpRequest(context.TODO(), binding.EventMessage(eventWithoutKey), tempReq, binding.TransformerFactories{})
 
-		M, Err = http.NewMessage(tempReq.Header, tempReq.Body)
+		M = http.NewMessageFromHttpRequest(tempReq)
 		Req, Err = nethttp.NewRequest("POST", "http://localhost", nil)
 		producerMessage := &sarama.ProducerMessage{}
 		Err = kafka_sarama.EncodeKafkaProducerMessage(ctxSkipKey, M, producerMessage, binding.TransformerFactories{})

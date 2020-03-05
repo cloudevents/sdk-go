@@ -1,5 +1,3 @@
-// +build kafka
-
 package kafka_sarama
 
 import (
@@ -26,14 +24,14 @@ func TestEncodeKafkaProducerMessage(t *testing.T) {
 		{
 			name:             "Structured to Structured with Skip key",
 			context:          context.TODO(),
-			messageFactory:   func(e event.Event) binding.Message { return test.NewMockStructuredMessage(e) },
+			messageFactory:   func(e event.Event) binding.Message { return test.MustCreateMockStructuredMessage(e) },
 			expectedEncoding: binding.EncodingStructured,
 			skipKey:          true,
 		},
 		{
 			name:             "Binary to Binary with Skip key",
 			context:          context.TODO(),
-			messageFactory:   func(e event.Event) binding.Message { return test.NewMockBinaryMessage(e) },
+			messageFactory:   func(e event.Event) binding.Message { return test.MustCreateMockBinaryMessage(e) },
 			expectedEncoding: binding.EncodingBinary,
 			skipKey:          true,
 		},
@@ -54,14 +52,14 @@ func TestEncodeKafkaProducerMessage(t *testing.T) {
 		{
 			name:             "Structured to Structured",
 			context:          binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingStructured),
-			messageFactory:   func(e event.Event) binding.Message { return test.NewMockStructuredMessage(e) },
+			messageFactory:   func(e event.Event) binding.Message { return test.MustCreateMockStructuredMessage(e) },
 			expectedEncoding: binding.EncodingEvent,
 			skipKey:          false,
 		},
 		{
 			name:             "Binary to Binary",
 			context:          context.TODO(),
-			messageFactory:   func(e event.Event) binding.Message { return test.NewMockBinaryMessage(e) },
+			messageFactory:   func(e event.Event) binding.Message { return test.MustCreateMockBinaryMessage(e) },
 			expectedEncoding: binding.EncodingBinary,
 			skipKey:          false,
 		},
@@ -98,7 +96,7 @@ func TestEncodeKafkaProducerMessage(t *testing.T) {
 				eventIn = test.ExToStr(t, eventIn)
 				messageIn := tt.messageFactory(eventIn)
 
-				err := EncodeKafkaProducerMessage(ctx, messageIn, kafkaMessage, binding.TransformerFactories{})
+				err := EncodeKafkaProducerMessage(ctx, messageIn, kafkaMessage, nil)
 				require.NoError(t, err)
 
 				//Little hack to go back to Message
@@ -123,10 +121,10 @@ func TestEncodeKafkaProducerMessage(t *testing.T) {
 					require.Equal(t, []byte("bla"), key)
 				}
 
-				messageOut, err := NewMessageFromRaw(key, value, string(headers[ContentType]), headers)
+				messageOut, err := NewMessage(key, value, string(headers[contentTypeHeader]), headers)
 				require.NoError(t, err)
 
-				eventOut, encoding, err := binding.ToEvent(context.TODO(), messageOut)
+				eventOut, encoding, err := binding.ToEvent(context.TODO(), messageOut, nil)
 				require.NoError(t, err)
 				require.Equal(t, tt.expectedEncoding, encoding)
 				test.AssertEventEquals(t, eventIn, eventOut)

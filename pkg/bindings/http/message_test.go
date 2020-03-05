@@ -41,9 +41,8 @@ func TestNewMessage(t *testing.T) {
 				req := httptest.NewRequest("POST", "http://localhost", nil)
 				require.NoError(t, EncodeHttpRequest(ctx, binding.EventMessage(eventIn), req, binding.TransformerFactories{}))
 
-				got, err := NewMessage(req.Header, req.Body)
+				got := NewMessageFromHttpRequest(req)
 				require.Equal(t, tt.encoding, got.Encoding())
-				require.NoError(t, err)
 			})
 		})
 	}
@@ -54,8 +53,7 @@ func TestNewMessageUnknown(t *testing.T) {
 		req := httptest.NewRequest("POST", "http://localhost", bytes.NewReader([]byte("{}")))
 		req.Header.Add("content-type", "application/json")
 
-		got, err := NewMessage(req.Header, req.Body)
+		got := NewMessageFromHttpRequest(req)
 		require.Equal(t, binding.EncodingUnknown, got.Encoding())
-		require.NoError(t, err)
 	})
 }

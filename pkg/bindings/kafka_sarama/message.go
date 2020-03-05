@@ -5,6 +5,8 @@ import (
 	"context"
 	"strings"
 
+	"github.com/pkg/errors"
+
 	ce "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
@@ -13,13 +15,15 @@ import (
 	"github.com/Shopify/sarama"
 )
 
-const prefix = "ce_"
+const (
+	prefix            = "ce_"
+	contentTypeHeader = "content-type"
+)
 
 var specs = spec.WithPrefix(prefix)
 
-const ContentType = "content-type"
-
-// Message holds a sarama ConsumerMessage.
+// Message holds a Kafka Message.
+// This message *can* be read several times safely
 type Message struct {
 	Key, Value  []byte
 	Headers     map[string][]byte
@@ -31,31 +35,35 @@ type Message struct {
 // Check if http.Message implements binding.Message
 var _ binding.Message = (*Message)(nil)
 
-// NewMessage returns a Message with data from body.
-// Reads and closes body.
-func NewMessage(cm *sarama.ConsumerMessage) (binding.Message, error) {
+// Returns a binding.Message that holds the provided ConsumerMessage.
+// The returned binding.Message *can* be read several times safely
+// This function *doesn't* guarantee that the returned binding.Message is always a kafka_sarama.Message instance
+func NewMessageFromConsumerMessage(cm *sarama.ConsumerMessage) (binding.Message, error) {
 	var contentType string
 	headers := make(map[string][]byte, len(cm.Headers))
 	for _, r := range cm.Headers {
 		k := strings.ToLower(string(r.Key))
-		if k == ContentType {
+		if k == contentTypeHeader {
 			contentType = string(r.Value)
 		}
-		headers[strings.ToLower(string(r.Key))] = r.Value
+		headers[k] = r.Value
 	}
-	return NewMessageFromRaw(cm.Key, cm.Value, contentType, headers)
+	return NewMessage(cm.Key, cm.Value, contentType, headers)
 }
 
-func NewMessageFromRaw(key []byte, value []byte, contentType string, headers map[string][]byte) (binding.Message, error) {
+// Returns a binding.Message that holds the provided kafka message components.
+// The returned binding.Message *can* be read several times safely
+// This function *doesn't* guarantee that the returned binding.Message is always a kafka_sarama.Message instance
+func NewMessage(key []byte, value []byte, contentType string, headers map[string][]byte) (binding.Message, error) {
 	if ft := format.Lookup(contentType); ft != nil {
-		// if the message is structured and has a key,
+		// If the message is structured and has a key,
 		// then it's cheaper to go through event message
 		// because we need to add the key as extension
 		if key != nil {
 			event := ce.Event{}
 			err := ft.Unmarshal(value, &event)
 			if err != nil {
-				return nil, err
+				return nil, errors.Wrap(err, "Error while trying to convert the kafka message to event")
 			}
 			event.SetExtension("key", string(key))
 			return binding.EventMessage(event), nil
@@ -68,9 +76,7 @@ func NewMessageFromRaw(key []byte, value []byte, contentType string, headers map
 				format:      ft,
 			}, nil
 		}
-	} else if v, err := specs.FindVersion(func(s string) string {
-		return string(headers[strings.ToLower(s)])
-	}); err == nil {
+	} else if v := specs.Version(string(headers[specs.PrefixedSpecVersionName()])); v != nil {
 		return &Message{
 			Key:         key,
 			Value:       value,
@@ -121,9 +127,9 @@ func (m *Message) Binary(ctx context.Context, encoder binding.BinaryEncoder) err
 			if attr != nil {
 				err = encoder.SetAttribute(attr, string(v))
 			} else {
-				err = encoder.SetExtension(strings.ToLower(strings.TrimPrefix(k, prefix)), string(v))
+				err = encoder.SetExtension(strings.TrimPrefix(k, prefix), string(v))
 			}
-		} else if k == ContentType {
+		} else if k == contentTypeHeader {
 			err = encoder.SetAttribute(m.version.AttributeFromKind(spec.DataContentType), string(v))
 		}
 		if err != nil {

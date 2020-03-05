@@ -8,10 +8,12 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/event"
 )
 
-// BindingTransport implements transport.Transport using a Sender and Receiver.
+// BindingTransport adapts the transport.Transport interface to binding.Sender and binding.Receiver.
+// This adapter doesn't support the request/response model
 type BindingTransport struct {
-	Sender                  Sender
-	Receiver                Receiver
+	Sender   Sender
+	Receiver Receiver
+	// SenderContextDecorators can be used to decorate the context passed to the Sender.Send() method
 	SenderContextDecorators []func(context.Context) context.Context
 	handler                 transport.Receiver
 }
@@ -54,7 +56,7 @@ func (t *BindingTransport) handle(ctx context.Context, m Message) (err error) {
 			err = err2
 		}
 	}()
-	e, _, err := ToEvent(ctx, m)
+	e, _, err := ToEvent(ctx, m, nil)
 	if err != nil {
 		return err
 	}

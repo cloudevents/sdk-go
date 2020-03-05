@@ -1,4 +1,4 @@
-package transcoder
+package transformer
 
 import (
 	"github.com/cloudevents/sdk-go/pkg/binding"
@@ -6,7 +6,7 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/event"
 )
 
-// Returns a TransformerFactory that converts the event context version to the specified one.
+// Converts the event context version to the specified one.
 func Version(version spec.Version) binding.TransformerFactory {
 	return versionTranscoderFactory{version: version}
 }

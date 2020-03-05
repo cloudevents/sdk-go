@@ -15,28 +15,30 @@ type msgErr struct {
 	err error
 }
 
-// Receiver for CloudEvents as HTTP requests.
-// Implements http.Handler, To receive messages, associate it with a http.Server.
+// Receiver for CloudEvents as HTTP requests which implements nethttp.Handler.
+// To receive messages, associate it with a nethttp.Server.
 type Receiver struct {
 	incoming chan msgErr
 }
 
-// ServeHTTP implements http.Handler.
+// ServeHTTP implements nethttp.Handler.
 // Blocks until Message.Finish is called.
 func (r *Receiver) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	m, err := NewMessage(req.Header, req.Body)
-	if err != nil {
-		r.incoming <- msgErr{nil, err}
+	var err error
+	m := NewMessageFromHttpRequest(req)
+	if m.Encoding() == binding.EncodingUnknown {
+		r.incoming <- msgErr{nil, binding.ErrUnknownEncoding}
 	}
 	done := make(chan error)
-	m.OnFinish = func(err error) error { done <- err; return nil }
+	m.onFinish = func(err error) error { done <- err; return nil }
 	r.incoming <- msgErr{m, err} // Send to Receive()
 	if err = <-done; err != nil {
 		nethttp.Error(rw, fmt.Sprintf("cannot forward CloudEvent: %v", err), http.StatusInternalServerError)
 	}
 }
 
-// NewReceiver creates a receiver
+// NewReceiver creates a Receiver which implements nethttp.Handler.
+// To receive messages, associate it with a nethttp.Server.
 func NewReceiver() *Receiver {
 	return &Receiver{incoming: make(chan msgErr)}
 }

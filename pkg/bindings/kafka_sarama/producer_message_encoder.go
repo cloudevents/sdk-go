@@ -18,8 +18,15 @@ const (
 	SKIP_KEY_EXTENSION = "SKIP_KEY_EXTENSION"
 )
 
+// Skip the key extension while encoding to Kafka ProducerMessage
+func WithSkipKeyExtension(ctx context.Context) context.Context {
+	return context.WithValue(ctx, SKIP_KEY_EXTENSION, true)
+}
+
 // Fill the provided producerMessage with the message m.
-// Using context you can tweak the encoding processing (more details on binding.Translate documentation).
+// Using context you can tweak the encoding processing (more details on binding.Encode documentation).
+// You can skip the key extension handling decorating the context using WithSkipKeyExtension:
+// https://github.com/cloudevents/spec/blob/master/kafka-protocol-binding.md#31-key-attribute
 func EncodeKafkaProducerMessage(ctx context.Context, m binding.Message, producerMessage *sarama.ProducerMessage, transformerFactories binding.TransformerFactories) error {
 	skipKey := binding.GetOrDefaultFromCtx(ctx, SKIP_KEY_EXTENSION, false).(bool)
 
@@ -90,7 +97,7 @@ type kafkaProducerMessageEncoder struct {
 
 func (b *kafkaProducerMessageEncoder) SetStructuredEvent(ctx context.Context, format format.Format, event io.Reader) error {
 	b.Headers = []sarama.RecordHeader{{
-		Key:   []byte(ContentType),
+		Key:   []byte(contentTypeHeader),
 		Value: []byte(format.MediaType()),
 	}}
 
@@ -132,7 +139,7 @@ func (b *kafkaProducerMessageEncoder) SetAttribute(attribute spec.Attribute, val
 	}
 
 	if attribute.Kind() == spec.DataContentType {
-		b.Headers = append(b.Headers, sarama.RecordHeader{Key: []byte(ContentType), Value: []byte(s)})
+		b.Headers = append(b.Headers, sarama.RecordHeader{Key: []byte(contentTypeHeader), Value: []byte(s)})
 	} else {
 		b.Headers = append(b.Headers, sarama.RecordHeader{Key: []byte(prefix + attribute.Name()), Value: []byte(s)})
 	}
@@ -164,7 +171,3 @@ func (b *kafkaProducerMessageEncoder) SetExtension(name string, value interface{
 
 var _ binding.StructuredEncoder = (*kafkaProducerMessageEncoder)(nil) // Test it conforms to the interface
 var _ binding.BinaryEncoder = (*kafkaProducerMessageEncoder)(nil)     // Test it conforms to the interface
-
-func WithSkipKeyExtension(ctx context.Context) context.Context {
-	return context.WithValue(ctx, SKIP_KEY_EXTENSION, true)
-}

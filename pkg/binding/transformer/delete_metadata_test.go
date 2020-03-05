@@ -1,4 +1,4 @@
-package transcoder
+package transformer
 
 import (
 	"context"
@@ -23,16 +23,16 @@ func TestDeleteAttribute(t *testing.T) {
 	noSubjectEvent := test.CopyEventContext(withSubjectEvent)
 	require.NoError(t, noSubjectEvent.Context.SetSubject(""))
 
-	test.RunTranscoderTests(t, context.Background(), []test.TranscoderTestArgs{
+	test.RunTransformerTests(t, context.Background(), []test.TransformerTestArgs{
 		{
 			Name:         "Remove subject from Mock Structured message",
-			InputMessage: test.NewMockStructuredMessage(test.CopyEventContext(withSubjectEvent)),
+			InputMessage: test.MustCreateMockStructuredMessage(test.CopyEventContext(withSubjectEvent)),
 			WantEvent:    noSubjectEvent,
 			Transformers: binding.TransformerFactories{DeleteAttribute(spec.Subject)},
 		},
 		{
 			Name:         "Remove subject from Mock Binary message",
-			InputMessage: test.NewMockBinaryMessage(test.CopyEventContext(withSubjectEvent)),
+			InputMessage: test.MustCreateMockBinaryMessage(test.CopyEventContext(withSubjectEvent)),
 			WantEvent:    noSubjectEvent,
 			Transformers: binding.TransformerFactories{DeleteAttribute(spec.Subject)},
 		},
@@ -44,13 +44,13 @@ func TestDeleteAttribute(t *testing.T) {
 		},
 		{
 			Name:         "Remove time from Mock Structured message",
-			InputMessage: test.NewMockStructuredMessage(test.CopyEventContext(withTimeEvent)),
+			InputMessage: test.MustCreateMockStructuredMessage(test.CopyEventContext(withTimeEvent)),
 			WantEvent:    test.CopyEventContext(withSubjectEvent),
 			Transformers: binding.TransformerFactories{DeleteAttribute(spec.Time)},
 		},
 		{
 			Name:         "Remove time from Mock Binary message",
-			InputMessage: test.NewMockBinaryMessage(test.CopyEventContext(withTimeEvent)),
+			InputMessage: test.MustCreateMockBinaryMessage(test.CopyEventContext(withTimeEvent)),
 			WantEvent:    test.CopyEventContext(withSubjectEvent),
 			Transformers: binding.TransformerFactories{DeleteAttribute(spec.Time)},
 		},
@@ -62,13 +62,13 @@ func TestDeleteAttribute(t *testing.T) {
 		},
 		{
 			Name:         "Do nothing with Mock Structured message",
-			InputMessage: test.NewMockStructuredMessage(test.CopyEventContext(withSubjectEvent)),
+			InputMessage: test.MustCreateMockStructuredMessage(test.CopyEventContext(withSubjectEvent)),
 			WantEvent:    test.CopyEventContext(withSubjectEvent),
 			Transformers: binding.TransformerFactories{DeleteAttribute(spec.Time)},
 		},
 		{
 			Name:         "Do nothing with Mock Binary message",
-			InputMessage: test.NewMockBinaryMessage(test.CopyEventContext(withSubjectEvent)),
+			InputMessage: test.MustCreateMockBinaryMessage(test.CopyEventContext(withSubjectEvent)),
 			WantEvent:    test.CopyEventContext(withSubjectEvent),
 			Transformers: binding.TransformerFactories{DeleteAttribute(spec.Time)},
 		},
@@ -90,16 +90,16 @@ func TestDeleteExtension(t *testing.T) {
 	expectedEventWithExtension := test.CopyEventContext(e)
 	require.NoError(t, expectedEventWithExtension.Context.SetExtension(extName, extValue))
 
-	test.RunTranscoderTests(t, context.Background(), []test.TranscoderTestArgs{
+	test.RunTransformerTests(t, context.Background(), []test.TransformerTestArgs{
 		{
 			Name:         "No change to Mock Structured message",
-			InputMessage: test.NewMockStructuredMessage(test.CopyEventContext(expectedEventWithExtension)),
+			InputMessage: test.MustCreateMockStructuredMessage(test.CopyEventContext(expectedEventWithExtension)),
 			WantEvent:    test.CopyEventContext(expectedEventWithExtension),
 			Transformers: binding.TransformerFactories{DeleteExtension("ccc")},
 		},
 		{
 			Name:         "No change to Mock Binary message",
-			InputMessage: test.NewMockBinaryMessage(test.CopyEventContext(expectedEventWithExtension)),
+			InputMessage: test.MustCreateMockBinaryMessage(test.CopyEventContext(expectedEventWithExtension)),
 			WantEvent:    test.CopyEventContext(expectedEventWithExtension),
 			Transformers: binding.TransformerFactories{DeleteExtension("ccc")},
 		},
@@ -111,13 +111,13 @@ func TestDeleteExtension(t *testing.T) {
 		},
 		{
 			Name:         "Delete extension 'aaa' from Mock Structured message",
-			InputMessage: test.NewMockStructuredMessage(test.CopyEventContext(expectedEventWithExtension)),
+			InputMessage: test.MustCreateMockStructuredMessage(test.CopyEventContext(expectedEventWithExtension)),
 			WantEvent:    test.CopyEventContext(e),
 			Transformers: binding.TransformerFactories{DeleteExtension(extName)},
 		},
 		{
 			Name:         "Delete extension 'aaa' from Mock Binary message",
-			InputMessage: test.NewMockBinaryMessage(test.CopyEventContext(expectedEventWithExtension)),
+			InputMessage: test.MustCreateMockBinaryMessage(test.CopyEventContext(expectedEventWithExtension)),
 			WantEvent:    test.CopyEventContext(e),
 			Transformers: binding.TransformerFactories{DeleteExtension(extName)},
 		},

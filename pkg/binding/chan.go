@@ -6,10 +6,10 @@ import (
 	"io"
 )
 
-// ChanSender implements Sender by sending on a channel.
+// ChanSender implements Sender by sending Messages on a channel.
 type ChanSender chan<- Message
 
-// ChanReceiver implements Receiver by receiving from a channel.
+// ChanReceiver implements Receiver by receiving Messages from a channel.
 type ChanReceiver <-chan Message
 
 func (s ChanSender) Send(ctx context.Context, m Message) (err error) {

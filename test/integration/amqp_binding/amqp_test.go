@@ -1,6 +1,4 @@
-// +build amqp
-
-package amqp
+package amqp_binding
 
 import (
 	"context"
@@ -15,6 +13,7 @@ import (
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/test"
+	amqp2 "github.com/cloudevents/sdk-go/pkg/bindings/amqp"
 	"github.com/cloudevents/sdk-go/pkg/event"
 )
 
@@ -23,7 +22,7 @@ func TestSendSkipBinary(t *testing.T) {
 	defer c.Close()
 	test.EachEvent(t, test.Events(), func(t *testing.T, e event.Event) {
 		eventIn := test.ExToStr(t, e)
-		in := test.NewMockBinaryMessage(eventIn)
+		in := test.MustCreateMockBinaryMessage(eventIn)
 		test.SendReceive(t, binding.WithSkipDirectBinaryEncoding(binding.WithPreferredEventEncoding(context.Background(), binding.EncodingStructured), true), in, s, r, func(out binding.Message) {
 			eventOut, encoding := test.MustToEvent(context.TODO(), out)
 			assert.Equal(t, encoding, binding.EncodingStructured)
@@ -37,7 +36,7 @@ func TestSendSkipStructured(t *testing.T) {
 	defer c.Close()
 	test.EachEvent(t, test.Events(), func(t *testing.T, e event.Event) {
 		eventIn := test.ExToStr(t, e)
-		in := test.NewMockStructuredMessage(eventIn)
+		in := test.MustCreateMockStructuredMessage(eventIn)
 		test.SendReceive(t, binding.WithSkipDirectStructuredEncoding(context.Background(), true), in, s, r, func(out binding.Message) {
 			eventOut, encoding := test.MustToEvent(context.Background(), out)
 			assert.Equal(t, encoding, binding.EncodingBinary)
@@ -99,13 +98,13 @@ func testClient(t testing.TB) (client *amqp.Client, session *amqp.Session, addr 
 	return client, session, addr
 }
 
-func testSenderReceiver(t testing.TB, senderOptions ...SenderOptionFunc) (io.Closer, binding.Sender, binding.Receiver) {
+func testSenderReceiver(t testing.TB, senderOptions ...amqp2.SenderOptionFunc) (io.Closer, binding.Sender, binding.Receiver) {
 	c, ss, a := testClient(t)
 	r, err := ss.NewReceiver(amqp.LinkSourceAddress(a))
 	require.NoError(t, err)
 	s, err := ss.NewSender(amqp.LinkTargetAddress(a))
 	require.NoError(t, err)
-	return c, NewSender(s, senderOptions...), &Receiver{r}
+	return c, amqp2.NewSender(s, senderOptions...), amqp2.NewReceiver(r)
 }
 
 func BenchmarkSendReceive(b *testing.B) {

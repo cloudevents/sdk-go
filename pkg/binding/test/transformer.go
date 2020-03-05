@@ -10,7 +10,7 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/event"
 )
 
-type TranscoderTestArgs struct {
+type TransformerTestArgs struct {
 	Name         string
 	InputMessage binding.Message
 	WantEvent    event.Event
@@ -18,7 +18,7 @@ type TranscoderTestArgs struct {
 	Transformers []binding.TransformerFactory
 }
 
-func RunTranscoderTests(t *testing.T, ctx context.Context, tests []TranscoderTestArgs) {
+func RunTransformerTests(t *testing.T, ctx context.Context, tests []TransformerTestArgs) {
 	for _, tt := range tests {
 		tt := tt // Don't use range variable inside scope
 		t.Run(tt.Name, func(t *testing.T) {
@@ -31,10 +31,10 @@ func RunTranscoderTests(t *testing.T, ctx context.Context, tests []TranscoderTes
 
 			var e event.Event
 			if enc == binding.EncodingStructured {
-				e, _, err = binding.ToEvent(ctx, &mockStructured)
+				e, _, err = binding.ToEvent(ctx, &mockStructured, nil)
 				require.NoError(t, err)
 			} else if enc == binding.EncodingBinary {
-				e, _, err = binding.ToEvent(ctx, &mockBinary)
+				e, _, err = binding.ToEvent(ctx, &mockBinary, nil)
 				require.NoError(t, err)
 			} else {
 				t.Fatalf("Unexpected encoding %v", enc)

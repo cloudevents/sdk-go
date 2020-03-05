@@ -7,11 +7,11 @@ import (
 	"pack.ag/amqp"
 )
 
-// Receiver wraps an amqp.Receiver as a binding.Receiver
-type Receiver struct{ AMQP *amqp.Receiver }
+// receiver wraps an amqp.Receiver as a binding.Receiver
+type receiver struct{ amqp *amqp.Receiver }
 
-func (r *Receiver) Receive(ctx context.Context) (binding.Message, error) {
-	m, err := r.AMQP.Receive(ctx)
+func (r *receiver) Receive(ctx context.Context) (binding.Message, error) {
+	m, err := r.amqp.Receive(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -19,4 +19,9 @@ func (r *Receiver) Receive(ctx context.Context) (binding.Message, error) {
 	return NewMessage(m), nil
 }
 
-func (r *Receiver) Close(ctx context.Context) error { return r.AMQP.Close(ctx) }
+func (r *receiver) Close(ctx context.Context) error { return r.amqp.Close(ctx) }
+
+// Create a new Receiver which wraps an amqp.Receiver in a binding.Receiver
+func NewReceiver(amqp *amqp.Receiver) binding.Receiver {
+	return &receiver{amqp: amqp}
+}

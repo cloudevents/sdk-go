@@ -6,13 +6,12 @@ import (
 
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
 	"github.com/google/go-cmp/cmp"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAttributes03(t *testing.T) {
-	assert := assert.New(t)
-	v, err := spec.WithPrefix("x:").Version("0.3")
-	assert.NoError(err)
+	assert := require.New(t)
+	v := spec.WithPrefix("x:").Version("0.3")
 	subject := v.Attribute("x:subject")
 	assert.Equal(spec.Subject, subject.Kind())
 	assert.Equal("x:subject", subject.PrefixedName())
@@ -35,16 +34,15 @@ func TestAttributes03(t *testing.T) {
 	nosuch := v.Attribute("nosuch")
 	assert.Nil(nosuch)
 
-	err = subject.Set(c, 1)
+	err := subject.Set(c, 1)
 	assert.EqualError(err, "invalid value for subject: 1")
 	err = atime.Set(c, "foo")
 	assert.EqualError(err, `invalid value for time: "foo"`)
 }
 
 func TestAttributes1(t *testing.T) {
-	assert := assert.New(t)
-	v, err := spec.WithPrefix("x:").Version("1.0")
-	assert.NoError(err)
+	assert := require.New(t)
+	v := spec.WithPrefix("x:").Version("1.0")
 	c := v.NewContext()
 	id := v.Attribute("x:id")
 	assert.NoError(id.Set(c, "foobar"))
@@ -63,15 +61,14 @@ func TestAttributes1(t *testing.T) {
 	nosuch := v.Attribute("nosuch")
 	assert.Nil(nosuch)
 
-	err = id.Set(c, 1)
+	err := id.Set(c, 1)
 	assert.EqualError(err, "invalid value for id: 1")
 	err = atime.Set(c, "foo")
 	assert.EqualError(err, "invalid value for time: \"foo\"")
 }
 
 func TestAttributesBadVersions(t *testing.T) {
-	assert := assert.New(t)
-	v, err := spec.WithPrefix("x:").Version("0.x")
+	assert := require.New(t)
+	v := spec.WithPrefix("x:").Version("0.x")
 	assert.Nil(v)
-	assert.EqualError(err, `invalid spec version "0.x"`)
 }

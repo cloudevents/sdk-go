@@ -6,10 +6,11 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/binding"
 )
 
-// BufferMessage does the same than CopyMessage and it also bounds the original Message
-// lifecycle to the newly created message: calling Finish() on the returned message calls m.Finish()
-func BufferMessage(ctx context.Context, m binding.Message, transformers ...binding.TransformerFactory) (binding.Message, error) {
-	result, err := CopyMessage(ctx, m, transformers...)
+// BufferMessage works the same as CopyMessage and it also bounds the original Message
+// lifecycle to the newly created message: calling Finish() on the returned message calls m.Finish().
+// transformers can be nil and this function guarantees that they are invoked only once during the encoding process.
+func BufferMessage(ctx context.Context, m binding.Message, transformers binding.TransformerFactories) (binding.Message, error) {
+	result, err := CopyMessage(ctx, m, transformers)
 	if err != nil {
 		return nil, err
 	}
@@ -17,16 +18,17 @@ func BufferMessage(ctx context.Context, m binding.Message, transformers ...bindi
 }
 
 // CopyMessage reads m once and creates an in-memory copy depending on the encoding of m.
-// The returned copy is not dependent on any transport and can be read many times.
-// When the copy can be forgot, the copied message must be finished with Finish() message to release the memory
-func CopyMessage(ctx context.Context, m binding.Message, transformers ...binding.TransformerFactory) (binding.Message, error) {
+// The returned copy is not dependent on any transport and can be visited many times.
+// When the copy can be forgot, the copied message must be finished with Finish() message to release the memory.
+// transformers can be nil and this function guarantees that they are invoked only once during the encoding process.
+func CopyMessage(ctx context.Context, m binding.Message, transformers binding.TransformerFactories) (binding.Message, error) {
 	originalMessageEncoding := m.Encoding()
 
 	if originalMessageEncoding == binding.EncodingUnknown {
 		return nil, binding.ErrUnknownEncoding
 	}
 	if originalMessageEncoding == binding.EncodingEvent {
-		e, _, err := binding.ToEvent(ctx, m, transformers...)
+		e, _, err := binding.ToEvent(ctx, m, transformers)
 		if err != nil {
 			return nil, err
 		}
@@ -42,7 +44,7 @@ func CopyMessage(ctx context.Context, m binding.Message, transformers ...binding
 	} else if encoding == binding.EncodingBinary {
 		return &bm, err
 	} else {
-		e, _, err := binding.ToEvent(ctx, m, transformers...)
+		e, _, err := binding.ToEvent(ctx, m, transformers)
 		if err != nil {
 			return nil, err
 		}

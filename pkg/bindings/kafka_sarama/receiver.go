@@ -14,6 +14,8 @@ type msgErr struct {
 	err error
 }
 
+// Receiver which implements sarama.ConsumerGroupHandler
+// After the first invocation of Receiver.Receive(), the sarama.ConsumerGroup is created and started.
 type Receiver struct {
 	incoming chan msgErr
 
@@ -21,6 +23,17 @@ type Receiver struct {
 	topic               string
 	groupId             string
 	saramaConsumerGroup sarama.ConsumerGroup
+}
+
+// NewReceiver creates a Receiver which implements sarama.ConsumerGroupHandler
+// After the first invocation of Receiver.Receive(), the sarama.ConsumerGroup is created and started.
+func NewReceiver(client sarama.Client, groupId string, topic string) *Receiver {
+	return &Receiver{
+		incoming: make(chan msgErr),
+		client:   client,
+		groupId:  groupId,
+		topic:    topic,
+	}
 }
 
 func (r *Receiver) Setup(sess sarama.ConsumerGroupSession) error {
@@ -33,7 +46,7 @@ func (r *Receiver) Cleanup(sarama.ConsumerGroupSession) error {
 
 func (r *Receiver) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	for message := range claim.Messages() {
-		m, err := NewMessage(message)
+		m, err := NewMessageFromConsumerMessage(message)
 
 		if err != nil {
 			r.incoming <- msgErr{err: err}
@@ -45,15 +58,6 @@ func (r *Receiver) ConsumeClaim(session sarama.ConsumerGroupSession, claim saram
 
 	}
 	return nil
-}
-
-func NewReceiver(client sarama.Client, groupId string, topic string) *Receiver {
-	return &Receiver{
-		incoming: make(chan msgErr),
-		client:   client,
-		groupId:  groupId,
-		topic:    topic,
-	}
 }
 
 func (r *Receiver) Receive(ctx context.Context) (binding.Message, error) {

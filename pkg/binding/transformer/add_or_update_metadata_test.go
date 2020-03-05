@@ -1,4 +1,4 @@
-package transcoder
+package transformer
 
 import (
 	"context"
@@ -38,16 +38,16 @@ func TestSetAttribute(t *testing.T) {
 		return t.Add(1 * time.Hour), nil
 	})
 
-	test.RunTranscoderTests(t, context.Background(), []test.TranscoderTestArgs{
+	test.RunTransformerTests(t, context.Background(), []test.TransformerTestArgs{
 		{
 			Name:         "Add time to Mock Structured message",
-			InputMessage: test.NewMockStructuredMessage(e),
+			InputMessage: test.MustCreateMockStructuredMessage(e),
 			WantEvent:    eventWithInitialValue,
 			Transformers: transformers,
 		},
 		{
 			Name:         "Add time to Mock Binary message",
-			InputMessage: test.NewMockBinaryMessage(e),
+			InputMessage: test.MustCreateMockBinaryMessage(e),
 			WantEvent:    eventWithInitialValue,
 			Transformers: transformers,
 		},
@@ -59,13 +59,13 @@ func TestSetAttribute(t *testing.T) {
 		},
 		{
 			Name:         "Update time in Mock Structured message",
-			InputMessage: test.NewMockStructuredMessage(eventWithInitialValue),
+			InputMessage: test.MustCreateMockStructuredMessage(eventWithInitialValue),
 			WantEvent:    eventWithUpdatedValue,
 			Transformers: transformers,
 		},
 		{
 			Name:         "Update time in Mock Binary message",
-			InputMessage: test.NewMockBinaryMessage(eventWithInitialValue),
+			InputMessage: test.MustCreateMockBinaryMessage(eventWithInitialValue),
 			WantEvent:    eventWithUpdatedValue,
 			Transformers: transformers,
 		},
@@ -108,16 +108,16 @@ func TestSetExtension(t *testing.T) {
 		return strconv.Itoa(n), nil
 	})
 
-	test.RunTranscoderTests(t, context.Background(), []test.TranscoderTestArgs{
+	test.RunTransformerTests(t, context.Background(), []test.TransformerTestArgs{
 		{
 			Name:         "Add exnum to Mock Structured message",
-			InputMessage: test.NewMockStructuredMessage(e),
+			InputMessage: test.MustCreateMockStructuredMessage(e),
 			WantEvent:    eventWithInitialValue,
 			Transformers: transformers,
 		},
 		{
 			Name:         "Add exnum to Mock Binary message",
-			InputMessage: test.NewMockBinaryMessage(e),
+			InputMessage: test.MustCreateMockBinaryMessage(e),
 			WantEvent:    eventWithInitialValue,
 			Transformers: transformers,
 		},
@@ -129,13 +129,13 @@ func TestSetExtension(t *testing.T) {
 		},
 		{
 			Name:         "Update exnum in Mock Structured message",
-			InputMessage: test.NewMockStructuredMessage(eventWithInitialValue),
+			InputMessage: test.MustCreateMockStructuredMessage(eventWithInitialValue),
 			WantEvent:    eventWithUpdatedValue,
 			Transformers: transformers,
 		},
 		{
 			Name:         "Update exnum in Mock Binary message",
-			InputMessage: test.NewMockBinaryMessage(eventWithInitialValue),
+			InputMessage: test.MustCreateMockBinaryMessage(eventWithInitialValue),
 			WantEvent:    eventWithUpdatedValue,
 			Transformers: transformers,
 		},

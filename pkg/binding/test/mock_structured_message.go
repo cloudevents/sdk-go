@@ -12,22 +12,14 @@ import (
 )
 
 // MockStructuredMessage implements a structured-mode message as a simple struct.
+// MockStructuredMessage implements both the binding.Message interface and the binding.StructuredEncoder
 type MockStructuredMessage struct {
 	Format format.Format
 	Bytes  []byte
 }
 
-func (s *MockStructuredMessage) SetStructuredEvent(ctx context.Context, format format.Format, event io.Reader) (err error) {
-	s.Format = format
-	s.Bytes, err = ioutil.ReadAll(event)
-	if err != nil {
-		return
-	}
-
-	return nil
-}
-
-func NewMockStructuredMessage(e event.Event) binding.Message {
+// Create a new MockStructuredMessage starting from an event.Event. Panics in case of error
+func MustCreateMockStructuredMessage(e event.Event) binding.Message {
 	testEventSerialized, err := format.JSON.Marshal(e)
 	if err != nil {
 		panic(err)
@@ -52,5 +44,15 @@ func (bm *MockStructuredMessage) Encoding() binding.Encoding {
 
 func (s *MockStructuredMessage) Finish(error) error { return nil }
 
-var _ binding.Message = (*MockStructuredMessage)(nil) // Test it conforms to the interface
+func (s *MockStructuredMessage) SetStructuredEvent(ctx context.Context, format format.Format, event io.Reader) (err error) {
+	s.Format = format
+	s.Bytes, err = ioutil.ReadAll(event)
+	if err != nil {
+		return
+	}
+
+	return nil
+}
+
+var _ binding.Message = (*MockStructuredMessage)(nil)
 var _ binding.StructuredEncoder = (*MockStructuredMessage)(nil)

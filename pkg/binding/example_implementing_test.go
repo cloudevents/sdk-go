@@ -13,23 +13,11 @@ import (
 )
 
 // ExMessage is a json.RawMessage, a byte slice containing a JSON encoded event.
-// It implements binding.MockStructuredMessage
-//
-// Note: a good binding implementation should provide an easy way to convert
-// between the Message implementation and the "native" message format.
-// In this case it's as simple as:
-//
-//    native = ExMessage(impl)
-//    impl = json.RawMessage(native)
-//
-// For example in a HTTP binding it should be easy to convert between
-// the HTTP binding.Message implementation and net/http.Request and
-// Response types.  There are no interfaces for this conversion as it
-// requires the use of unknown types.
+// It implements binding.Message
 type ExMessage json.RawMessage
 
-func (m ExMessage) GetParent() binding.Message {
-	return nil
+func NewMessage(m json.RawMessage) binding.Message {
+	return ExMessage(m)
 }
 
 func (m ExMessage) Encoding() binding.Encoding {
@@ -49,8 +37,7 @@ func (m ExMessage) Finish(error) error { return nil }
 var _ binding.Message = (*ExMessage)(nil)
 
 // ExSender sends by writing JSON encoded events to an io.Writer
-// ExSender supports transcoding
-// ExSender implements directly StructuredEncoder & EventEncoder
+// ExSender implements directly StructuredEncoder in order to perform the conversion
 type ExSender struct {
 	encoder      *json.Encoder
 	transformers binding.TransformerFactories
@@ -61,8 +48,8 @@ func NewExSender(w io.Writer, factories ...binding.TransformerFactory) binding.S
 }
 
 func (s *ExSender) Send(ctx context.Context, m binding.Message) error {
-	// Encode tries the various encodings, starting with provided root encoder factories.
-	// If a sender doesn't support a specific encoding, a null root encoder factory could be provided.
+	// Encode tries to perform the encoding directly, otherwise
+	// It fallbacks to converting to event.Event and then convert back to the provided encoders
 	_, err := binding.Encode(
 		ctx,
 		m,
@@ -86,8 +73,6 @@ func (s *ExSender) SetStructuredEvent(ctx context.Context, f format.Format, even
 	}
 }
 
-func (s *ExSender) Close(context.Context) error { return nil }
-
 var _ binding.Sender = (*ExSender)(nil)
 var _ binding.StructuredEncoder = (*ExSender)(nil)
 
@@ -108,7 +93,3 @@ func (r *ExReceiver) Close(context.Context) error { return nil }
 func NewExTransport(r io.Reader, w io.Writer) transport.Transport {
 	return binding.NewTransportAdapter(NewExSender(w), NewExReceiver(r), []func(ctx context.Context) context.Context{})
 }
-
-// Example of implementing a transport including a simple message type,
-// and a transport sender and receiver.
-func Example_implementing() {}
