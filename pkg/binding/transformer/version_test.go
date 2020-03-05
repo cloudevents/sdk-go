@@ -1,4 +1,4 @@
-package transcoder
+package transformer
 
 import (
 	"context"
@@ -33,16 +33,16 @@ func TestVersionTranscoder(t *testing.T) {
 	err = testEventV1.SetData(data)
 	require.NoError(t, err)
 
-	test.RunTranscoderTests(t, context.Background(), []test.TranscoderTestArgs{
+	test.RunTransformerTests(t, context.Background(), []test.TransformerTestArgs{
 		{
 			Name:         "V03 -> V1 with Mock Structured message",
-			InputMessage: test.NewMockStructuredMessage(test.CopyEventContext(testEventV03)),
+			InputMessage: test.MustCreateMockStructuredMessage(test.CopyEventContext(testEventV03)),
 			WantEvent:    test.CopyEventContext(testEventV1),
 			Transformers: binding.TransformerFactories{Version(spec.V1)},
 		},
 		{
 			Name:         "V03 -> V1 with Mock Binary message",
-			InputMessage: test.NewMockBinaryMessage(test.CopyEventContext(testEventV03)),
+			InputMessage: test.MustCreateMockBinaryMessage(test.CopyEventContext(testEventV03)),
 			WantEvent:    test.CopyEventContext(testEventV1),
 			Transformers: binding.TransformerFactories{Version(spec.V1)},
 		},

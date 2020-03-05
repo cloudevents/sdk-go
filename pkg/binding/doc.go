@@ -33,7 +33,7 @@ encoding message.
 The encoding process can be customized in order to mutate the final result with binding.TransformerFactory. A bunch of these are provided directly by the binding/transcoder module.
 
 Usually binding.Message implementations can be encoded only one time, because the encoding process drain the message itself.
-In order to consume a message several times, the binding/buffering module provides several APIs to buffer the message in order to visit it more times.
+In order to consume a message several times, the binding/buffering module provides several APIs to buffer the Message.
 
 A message can be converted to an event.Event using ToEvent method. An event.Event can be used as Message casting it to binding.EventMessage.
 

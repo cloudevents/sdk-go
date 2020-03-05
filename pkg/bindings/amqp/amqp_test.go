@@ -23,7 +23,7 @@ func TestSendSkipBinary(t *testing.T) {
 	defer c.Close()
 	test.EachEvent(t, test.Events(), func(t *testing.T, e event.Event) {
 		eventIn := test.ExToStr(t, e)
-		in := test.NewMockBinaryMessage(eventIn)
+		in := test.MustCreateMockBinaryMessage(eventIn)
 		test.SendReceive(t, binding.WithSkipDirectBinaryEncoding(binding.WithPreferredEventEncoding(context.Background(), binding.EncodingStructured), true), in, s, r, func(out binding.Message) {
 			eventOut, encoding := test.MustToEvent(context.TODO(), out)
 			assert.Equal(t, encoding, binding.EncodingStructured)
@@ -37,7 +37,7 @@ func TestSendSkipStructured(t *testing.T) {
 	defer c.Close()
 	test.EachEvent(t, test.Events(), func(t *testing.T, e event.Event) {
 		eventIn := test.ExToStr(t, e)
-		in := test.NewMockStructuredMessage(eventIn)
+		in := test.MustCreateMockStructuredMessage(eventIn)
 		test.SendReceive(t, binding.WithSkipDirectStructuredEncoding(context.Background(), true), in, s, r, func(out binding.Message) {
 			eventOut, encoding := test.MustToEvent(context.Background(), out)
 			assert.Equal(t, encoding, binding.EncodingBinary)

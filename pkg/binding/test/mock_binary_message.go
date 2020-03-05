@@ -12,41 +12,16 @@ import (
 )
 
 // MockBinaryMessage implements a binary-mode message as a simple struct.
+// MockBinaryMessage implements both the binding.Message interface and the binding.BinaryEncoder
 type MockBinaryMessage struct {
 	Metadata   map[spec.Attribute]interface{}
 	Extensions map[string]interface{}
 	Body       []byte
 }
 
-func (bm *MockBinaryMessage) Start(ctx context.Context) error {
-	bm.Metadata = make(map[spec.Attribute]interface{})
-	bm.Extensions = make(map[string]interface{})
-	return nil
-}
-
-func (bm *MockBinaryMessage) SetAttribute(attribute spec.Attribute, value interface{}) error {
-	bm.Metadata[attribute] = value
-	return nil
-}
-
-func (bm *MockBinaryMessage) SetExtension(name string, value interface{}) error {
-	bm.Extensions[name] = value
-	return nil
-}
-
-func (bm *MockBinaryMessage) SetData(data io.Reader) (err error) {
-	bm.Body, err = ioutil.ReadAll(data)
-	return err
-}
-
-func (bm *MockBinaryMessage) End() error {
-	return nil
-}
-
-var versions = spec.New()
-
-func NewMockBinaryMessage(e event.Event) binding.Message {
-	version, err := versions.Version(e.SpecVersion())
+// Create a new MockBinaryMessage starting from an event.Event. Panics in case of error
+func MustCreateMockBinaryMessage(e event.Event) binding.Message {
+	version, err := spec.VS.Version(e.SpecVersion())
 	if err != nil {
 		panic(err)
 	}
@@ -73,10 +48,6 @@ func NewMockBinaryMessage(e event.Event) binding.Message {
 	}
 
 	return &m
-}
-
-func (bm *MockBinaryMessage) GetParent() binding.Message {
-	return nil
 }
 
 func (bm *MockBinaryMessage) Structured(context.Context, binding.StructuredEncoder) error {
@@ -115,5 +86,30 @@ func (bm *MockBinaryMessage) Encoding() binding.Encoding {
 
 func (bm *MockBinaryMessage) Finish(error) error { return nil }
 
-var _ binding.Message = (*MockBinaryMessage)(nil) // Test it conforms to the interface
+func (bm *MockBinaryMessage) Start(ctx context.Context) error {
+	bm.Metadata = make(map[spec.Attribute]interface{})
+	bm.Extensions = make(map[string]interface{})
+	return nil
+}
+
+func (bm *MockBinaryMessage) SetAttribute(attribute spec.Attribute, value interface{}) error {
+	bm.Metadata[attribute] = value
+	return nil
+}
+
+func (bm *MockBinaryMessage) SetExtension(name string, value interface{}) error {
+	bm.Extensions[name] = value
+	return nil
+}
+
+func (bm *MockBinaryMessage) SetData(data io.Reader) (err error) {
+	bm.Body, err = ioutil.ReadAll(data)
+	return err
+}
+
+func (bm *MockBinaryMessage) End() error {
+	return nil
+}
+
+var _ binding.Message = (*MockBinaryMessage)(nil)
 var _ binding.BinaryEncoder = (*MockBinaryMessage)(nil)

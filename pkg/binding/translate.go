@@ -12,7 +12,8 @@ const (
 	PREFERRED_EVENT_ENCODING        = "PREFERRED_EVENT_ENCODING"
 )
 
-// Invokes the encoders. structuredEncoder and binaryEncoder could be nil if the protocol doesn't support it
+// Invokes the encoders. structuredEncoder and binaryEncoder could be nil if the protocol doesn't support it.
+// transformers can be nil and this function guarantees that they are invoked only once during the encoding process.
 //
 // Returns:
 // * EncodingStructured, nil if message is correctly encoded in structured encoding
@@ -25,11 +26,11 @@ func RunDirectEncoding(
 	message Message,
 	structuredEncoder StructuredEncoder,
 	binaryEncoder BinaryEncoder,
-	factories TransformerFactories,
+	transformers TransformerFactories,
 ) (Encoding, error) {
 	if structuredEncoder != nil && !GetOrDefaultFromCtx(ctx, SKIP_DIRECT_STRUCTURED_ENCODING, false).(bool) {
 		// Wrap the transformers in the structured builder
-		structuredEncoder = factories.StructuredTransformer(structuredEncoder)
+		structuredEncoder = transformers.StructuredTransformer(structuredEncoder)
 
 		// StructuredTransformer could return nil if one of transcoders doesn't support
 		// direct structured transcoding
@@ -43,7 +44,7 @@ func RunDirectEncoding(
 	}
 
 	if binaryEncoder != nil && !GetOrDefaultFromCtx(ctx, SKIP_DIRECT_BINARY_ENCODING, false).(bool) {
-		binaryEncoder = factories.BinaryTransformer(binaryEncoder)
+		binaryEncoder = transformers.BinaryTransformer(binaryEncoder)
 		if binaryEncoder != nil {
 			if err := message.Binary(ctx, binaryEncoder); err == nil {
 				return EncodingBinary, nil
@@ -61,7 +62,7 @@ func RunDirectEncoding(
 // 2. If no direct encoding is possible, it uses ToEvent to generate an Event representation
 // 3. From the Event, the message is encoded back to the provided structured or binary encoders
 // You can tweak the encoding process using the context decorators WithForceStructured, WithForceStructured, etc.
-// This function guarantees that the provided transformers are invoked only once during the encoding process.
+// transformers can be nil and this function guarantees that they are invoked only once during the encoding process.
 // Returns:
 // * EncodingStructured, nil if message is correctly encoded in structured encoding
 // * EncodingBinary, nil if message is correctly encoded in binary encoding

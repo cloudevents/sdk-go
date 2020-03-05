@@ -26,25 +26,25 @@ func TestToEvent(t *testing.T) {
 			{
 				name:     "From mock structured with payload/" + test.NameOf(v),
 				encoding: binding.EncodingStructured,
-				message:  test.NewMockStructuredMessage(v),
+				message:  test.MustCreateMockStructuredMessage(v),
 				want:     v,
 			},
 			{
 				name:     "From mock structured without payload/" + test.NameOf(v),
 				encoding: binding.EncodingStructured,
-				message:  test.NewMockStructuredMessage(v),
+				message:  test.MustCreateMockStructuredMessage(v),
 				want:     v,
 			},
 			{
 				name:     "From mock binary with payload/" + test.NameOf(v),
 				encoding: binding.EncodingBinary,
-				message:  test.NewMockBinaryMessage(v),
+				message:  test.MustCreateMockBinaryMessage(v),
 				want:     v,
 			},
 			{
 				name:     "From mock binary without payload/" + test.NameOf(v),
 				encoding: binding.EncodingBinary,
-				message:  test.NewMockBinaryMessage(v),
+				message:  test.MustCreateMockBinaryMessage(v),
 				want:     v,
 			},
 			{

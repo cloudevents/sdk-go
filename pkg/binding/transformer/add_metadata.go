@@ -1,4 +1,4 @@
-package transcoder
+package transformer
 
 import (
 	"github.com/cloudevents/sdk-go/pkg/binding"

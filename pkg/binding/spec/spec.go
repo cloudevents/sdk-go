@@ -16,7 +16,10 @@ type Version interface {
 	Prefix() string
 	// Attribute looks up a prefixed attribute name (case insensitive).
 	// Returns nil if not found.
-	Attribute(name string) Attribute
+	Attribute(prefixedName string) Attribute
+	// Attribute looks up the attribute from kind.
+	// Returns nil if not found.
+	AttributeFromKind(kind Kind) Attribute
 	// Attributes returns all the context attributes for this version.
 	Attributes() []Attribute
 	// NewContext returns a new context for this version.
@@ -28,9 +31,6 @@ type Version interface {
 	// Name is case insensitive.
 	// Does nothing if name does not start with prefix.
 	SetAttribute(context event.EventContextWriter, name string, value interface{}) error
-	// Attribute looks up the attribute from kind.
-	// Returns nil if not found.
-	AttributeFromKind(kind Kind) Attribute
 }
 
 // Versions contains all known versions with the same attribute prefix.

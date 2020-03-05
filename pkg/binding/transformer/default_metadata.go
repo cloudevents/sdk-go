@@ -1,4 +1,4 @@
-package transcoder
+package transformer
 
 import (
 	"time"
@@ -12,7 +12,9 @@ import (
 )
 
 var (
-	AddUUID    binding.TransformerFactory = addUUID{}
+	// Sets the cloudevents id attribute (if missing) to a UUID.New()
+	AddUUID binding.TransformerFactory = addUUID{}
+	// Sets the cloudevents time attribute (if missing) to time.Now()
 	AddTimeNow binding.TransformerFactory = addTimeNow{}
 )
 

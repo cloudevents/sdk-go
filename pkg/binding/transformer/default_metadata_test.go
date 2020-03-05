@@ -1,4 +1,4 @@
-package transcoder
+package transformer
 
 import (
 	"context"
@@ -27,16 +27,16 @@ func TestAddUUID(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	test.RunTranscoderTests(t, context.Background(), []test.TranscoderTestArgs{
+	test.RunTransformerTests(t, context.Background(), []test.TransformerTestArgs{
 		{
 			Name:         "No change to id to Mock Structured message",
-			InputMessage: test.NewMockStructuredMessage(test.CopyEventContext(eventWithId)),
+			InputMessage: test.MustCreateMockStructuredMessage(test.CopyEventContext(eventWithId)),
 			WantEvent:    test.CopyEventContext(eventWithId),
 			Transformers: []binding.TransformerFactory{AddUUID},
 		},
 		{
 			Name:         "No change to id to Mock Binary message",
-			InputMessage: test.NewMockBinaryMessage(test.CopyEventContext(eventWithId)),
+			InputMessage: test.MustCreateMockBinaryMessage(test.CopyEventContext(eventWithId)),
 			WantEvent:    test.CopyEventContext(eventWithId),
 			Transformers: []binding.TransformerFactory{AddUUID},
 		},
@@ -48,7 +48,7 @@ func TestAddUUID(t *testing.T) {
 		},
 		{
 			Name:         "Add UUID to Mock Binary message",
-			InputMessage: test.NewMockBinaryMessage(test.CopyEventContext(eventWithoutId)),
+			InputMessage: test.MustCreateMockBinaryMessage(test.CopyEventContext(eventWithoutId)),
 			AssertFunc:   assertUUID,
 			Transformers: []binding.TransformerFactory{AddUUID},
 		},
@@ -74,16 +74,16 @@ func TestAddTimeNow(t *testing.T) {
 		require.False(t, ev.Context.GetTime().IsZero())
 	}
 
-	test.RunTranscoderTests(t, context.Background(), []test.TranscoderTestArgs{
+	test.RunTransformerTests(t, context.Background(), []test.TransformerTestArgs{
 		{
 			Name:         "No change to time to Mock Structured message",
-			InputMessage: test.NewMockStructuredMessage(test.CopyEventContext(eventWithTime)),
+			InputMessage: test.MustCreateMockStructuredMessage(test.CopyEventContext(eventWithTime)),
 			WantEvent:    test.CopyEventContext(eventWithTime),
 			Transformers: []binding.TransformerFactory{AddTimeNow},
 		},
 		{
 			Name:         "No change to time to Mock Binary message",
-			InputMessage: test.NewMockBinaryMessage(test.CopyEventContext(eventWithTime)),
+			InputMessage: test.MustCreateMockBinaryMessage(test.CopyEventContext(eventWithTime)),
 			WantEvent:    test.CopyEventContext(eventWithTime),
 			Transformers: []binding.TransformerFactory{AddTimeNow},
 		},
@@ -95,7 +95,7 @@ func TestAddTimeNow(t *testing.T) {
 		},
 		{
 			Name:         "Add time.Now() to Mock Binary message",
-			InputMessage: test.NewMockBinaryMessage(test.CopyEventContext(eventWithoutTime)),
+			InputMessage: test.MustCreateMockBinaryMessage(test.CopyEventContext(eventWithoutTime)),
 			AssertFunc:   assertTimeNow,
 			Transformers: []binding.TransformerFactory{AddTimeNow},
 		},

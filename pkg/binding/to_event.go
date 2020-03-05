@@ -15,11 +15,10 @@ import (
 // Generic error when a conversion of a Message to an Event fails
 var ErrCannotConvertToEvent = errors.New("cannot convert message to event")
 
-// Translates a Message with a valid Structured or Binary representation to an Event
-// The transformers aren't invoked during the transformation to event,
-// but after the event instance is generated.
+// Translates a Message with a valid Structured or Binary representation to an Event.
 // This function returns the Event generated from the Message and the original encoding of the message or
-// an error that points the conversion error
+// an error that points the conversion error.
+// transformers can be nil and this function guarantees that they are invoked only once during the encoding process.
 func ToEvent(ctx context.Context, message Message, transformers TransformerFactories) (e event.Event, encoding Encoding, err error) {
 	e = event.New()
 

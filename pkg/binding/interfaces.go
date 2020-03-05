@@ -49,6 +49,11 @@ var ErrUnknownEncoding = errors.New("unknown Message encoding")
 // to a specific data structure. A Sender should try each method of interest and fall back to ToEvent() if none are supported.
 // For encoding a message, look at binding.Encode function.
 //
+// Most binding.Message implementations can be encoded only one time, because the encoding process drain the message itself.
+// In order to consume a message several times,
+// the binding/buffering module provides several APIs to buffer the Message in order to visit it more times.
+//
+// When a Message can be forgotten by the entity who produced the message, Message.Finish() *must* be invoked.
 type Message interface {
 	// Return the type of the message Encoding.
 	// The encoding should be preferably computed when the message is constructed.
@@ -77,6 +82,9 @@ type Message interface {
 	// Finish *must* be called when message from a Receiver can be forgotten by
 	// the receiver. A QoS 1 sender should not call Finish() until it gets an acknowledgment of
 	// receipt on the underlying transport.  For QoS 2 see ExactlyOnceMessage.
+	//
+	// Note that, depending on the Message implementation, forgetting to Finish the message
+	// could produce memory/resources leaks!
 	//
 	// Passing a non-nil err indicates sending or processing failed.
 	// A non-nil return indicates that the message was not accepted
@@ -186,6 +194,8 @@ type Sender interface {
 // Optional interface that may be implemented by protocols that support
 // request/response correlation.
 type Requester interface {
+	Sender
+
 	// Request sends m like Sender.Send() but also arranges to receive a response.
 	// The returned Receiver is used to receive the response.
 	Request(ctx context.Context, m Message) (Receiver, error)

@@ -22,13 +22,13 @@ func TestEncodeHttpResponse(t *testing.T) {
 		{
 			name:             "Structured to Structured",
 			context:          context.TODO(),
-			messageFactory:   test.NewMockStructuredMessage,
+			messageFactory:   test.MustCreateMockStructuredMessage,
 			expectedEncoding: binding.EncodingStructured,
 		},
 		{
 			name:             "Binary to Binary",
 			context:          context.TODO(),
-			messageFactory:   test.NewMockBinaryMessage,
+			messageFactory:   test.MustCreateMockBinaryMessage,
 			expectedEncoding: binding.EncodingBinary,
 		},
 		{

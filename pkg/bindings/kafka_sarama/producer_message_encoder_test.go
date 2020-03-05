@@ -26,14 +26,14 @@ func TestEncodeKafkaProducerMessage(t *testing.T) {
 		{
 			name:             "Structured to Structured with Skip key",
 			context:          context.TODO(),
-			messageFactory:   func(e event.Event) binding.Message { return test.NewMockStructuredMessage(e) },
+			messageFactory:   func(e event.Event) binding.Message { return test.MustCreateMockStructuredMessage(e) },
 			expectedEncoding: binding.EncodingStructured,
 			skipKey:          true,
 		},
 		{
 			name:             "Binary to Binary with Skip key",
 			context:          context.TODO(),
-			messageFactory:   func(e event.Event) binding.Message { return test.NewMockBinaryMessage(e) },
+			messageFactory:   func(e event.Event) binding.Message { return test.MustCreateMockBinaryMessage(e) },
 			expectedEncoding: binding.EncodingBinary,
 			skipKey:          true,
 		},
@@ -54,14 +54,14 @@ func TestEncodeKafkaProducerMessage(t *testing.T) {
 		{
 			name:             "Structured to Structured",
 			context:          binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingStructured),
-			messageFactory:   func(e event.Event) binding.Message { return test.NewMockStructuredMessage(e) },
+			messageFactory:   func(e event.Event) binding.Message { return test.MustCreateMockStructuredMessage(e) },
 			expectedEncoding: binding.EncodingEvent,
 			skipKey:          false,
 		},
 		{
 			name:             "Binary to Binary",
 			context:          context.TODO(),
-			messageFactory:   func(e event.Event) binding.Message { return test.NewMockBinaryMessage(e) },
+			messageFactory:   func(e event.Event) binding.Message { return test.MustCreateMockBinaryMessage(e) },
 			expectedEncoding: binding.EncodingBinary,
 			skipKey:          false,
 		},
