@@ -14,10 +14,6 @@ import (
 //     s.Send(ctx, binding.EventMessage(e))
 type EventMessage event.Event
 
-func (m EventMessage) GetParent() Message {
-	return nil
-}
-
 func (m EventMessage) Encoding() Encoding {
 	return EncodingEvent
 }
@@ -54,15 +50,6 @@ func (m EventMessage) Binary(ctx context.Context, b BinaryEncoder) (err error) {
 	return b.End()
 }
 
-func (EventMessage) Finish(error) error { return nil }
-
-func (m *EventMessage) SetEvent(e event.Event) error {
-	*m = EventMessage(e)
-	return nil
-}
-
-var _ Message = (*EventMessage)(nil) // Test it conforms to the interface
-
 func eventContextToBinaryEncoder(c event.EventContext, b BinaryEncoder) (err error) {
 	// Pass all attributes
 	var sv spec.Version
@@ -88,3 +75,7 @@ func eventContextToBinaryEncoder(c event.EventContext, b BinaryEncoder) (err err
 	}
 	return nil
 }
+
+func (EventMessage) Finish(error) error { return nil }
+
+var _ Message = (*EventMessage)(nil) // Test it conforms to the interface
