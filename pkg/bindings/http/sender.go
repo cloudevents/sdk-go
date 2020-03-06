@@ -20,16 +20,12 @@ type Sender struct {
 	transformers binding.TransformerFactories
 }
 
-func NewRequester(client *http.Client, target *url.URL, options ...SenderOptionFunc) binding.Requester {
+func NewSender(client *http.Client, target *url.URL, options ...SenderOptionFunc) binding.Sender {
 	s := &Sender{Client: client, Target: target, transformers: make(binding.TransformerFactories, 0)}
 	for _, o := range options {
 		o(s)
 	}
 	return s
-}
-
-func NewSender(client *http.Client, target *url.URL, options ...SenderOptionFunc) binding.Sender {
-	return NewRequester(client, target, options...)
 }
 
 // Confirm Sender implements binding.Requester
