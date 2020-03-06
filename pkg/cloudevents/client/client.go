@@ -121,6 +121,7 @@ func (c *ceClient) obsSend(ctx context.Context, event cloudevents.Event) (contex
 	// Set distributed tracing extension.
 	if !c.disableTracePropagation {
 		if span := trace.FromContext(ctx); span != nil {
+			event.Context = event.Context.Clone()
 			if err := extensions.FromSpanContext(span.SpanContext()).AddTracingAttributes(event.Context); err != nil {
 				return ctx, nil, fmt.Errorf("error setting distributed tracing extension: %w", err)
 			}
