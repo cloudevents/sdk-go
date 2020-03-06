@@ -93,22 +93,27 @@ func (t *Transport) loadCodec() bool {
 }
 
 // Send implements Transport.Send
-func (t *Transport) Send(ctx context.Context, event event.Event) (context.Context, *event.Event, error) {
+func (t *Transport) Send(ctx context.Context, event event.Event) error {
 	// TODO populate response context properly.
 	if ok := t.loadCodec(); !ok {
-		return ctx, nil, fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
+		return fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
 	}
 
 	msg, err := t.codec.Encode(ctx, event)
 	if err != nil {
-		return ctx, nil, err
+		return err
 	}
 
 	if m, ok := msg.(*Message); ok {
-		return ctx, nil, t.Conn.Publish(t.Subject, m.Body)
+		return t.Conn.Publish(t.Subject, m.Body)
 	}
 
-	return ctx, nil, fmt.Errorf("failed to encode Event into a Message")
+	return fmt.Errorf("failed to encode Event into a Message")
+}
+
+// Request implements Transport.Request
+func (t *Transport) Request(ctx context.Context, event event.Event) (*event.Event, error) {
+	return nil, fmt.Errorf("Transport.Request is not supported for NATS")
 }
 
 // SetReceiver implements Transport.SetReceiver
@@ -152,10 +157,10 @@ func (t *Transport) StartReceiver(ctx context.Context) (err error) {
 		msg := &Message{
 			Body: m.Data,
 		}
-		event, err := t.codec.Decode(ctx, msg)
+		e, err := t.codec.Decode(ctx, msg)
 		// If codec returns and error, try with the converter if it is set.
 		if err != nil && t.HasConverter() {
-			event, err = t.Converter.Convert(ctx, msg, err)
+			e, err = t.Converter.Convert(ctx, msg, err)
 		}
 		if err != nil {
 			logger.Errorw("failed to decode message", zap.Error(err)) // TODO: create an error channel to pass this up
@@ -163,7 +168,7 @@ func (t *Transport) StartReceiver(ctx context.Context) (err error) {
 		}
 		// TODO: I do not know enough about NATS to implement reply.
 		// For now, NATS does not support reply.
-		if err := t.Receiver.Receive(context.TODO(), *event, nil); err != nil {
+		if err := t.Receiver.Receive(context.TODO(), *e, nil); err != nil {
 			logger.Warnw("nats receiver return err", zap.Error(err))
 		}
 	})

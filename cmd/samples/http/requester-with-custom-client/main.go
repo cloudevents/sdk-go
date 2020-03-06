@@ -112,7 +112,7 @@ func _main(args []string, env envConfig) int {
 					},
 				}
 
-				if _, resp, err := c.Send(context.Background(), event); err != nil {
+				if resp, err := c.Request(context.Background(), event); err != nil {
 					log.Printf("failed to send: %v", err)
 				} else if resp != nil {
 					fmt.Printf("Response:\n%s\n", resp)

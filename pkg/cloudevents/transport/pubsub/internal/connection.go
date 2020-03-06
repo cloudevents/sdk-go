@@ -7,8 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cloudevents/sdk-go/pkg/event"
-
 	"cloud.google.com/go/pubsub"
 	pscontext "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/pubsub/context"
 )
@@ -185,15 +183,15 @@ func (c *Connection) DeleteSubscription(ctx context.Context) error {
 }
 
 // Publish
-func (c *Connection) Publish(ctx context.Context, msg *pubsub.Message) (*event.Event, error) {
+func (c *Connection) Publish(ctx context.Context, msg *pubsub.Message) error {
 	topic, err := c.getOrCreateTopic(ctx)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	r := topic.Publish(ctx, msg)
 	_, err = r.Get(ctx)
-	return nil, err
+	return err
 }
 
 // Start

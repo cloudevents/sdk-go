@@ -40,6 +40,7 @@ const (
 	datacontenttypeAttr = "cloudevents.datacontenttype"
 
 	reportSend observed = iota
+	reportRequest
 	reportReceive
 )
 
@@ -48,6 +49,8 @@ func (o observed) MethodName() string {
 	switch o {
 	case reportSend:
 		return "send"
+	case reportRequest:
+		return "request"
 	case reportReceive:
 		return "receive"
 	default:

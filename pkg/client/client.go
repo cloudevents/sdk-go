@@ -17,7 +17,11 @@ import (
 // Client interface defines the runtime contract the CloudEvents client supports.
 type Client interface {
 	// Send will transmit the given event over the client's configured transport.
-	Send(ctx context.Context, event event.Event) (context.Context, *event.Event, error)
+	Send(ctx context.Context, event event.Event) error
+
+	// Request will transmit the given event over the client's configured
+	// transport and return any response event.
+	Request(ctx context.Context, event event.Event) (*event.Event, error)
 
 	// StartReceiver will register the provided function for callback on receipt
 	// of a cloudevent. It will also start the underlying transport as it has
@@ -85,11 +89,10 @@ type ceClient struct {
 	disableTracePropagation bool
 }
 
-// Send transmits the provided event on a preconfigured Transport.
-// Send returns a response event if there is a response or an error if there
-// was an an issue validating the outbound event or the transport returns an
-// error.
-func (c *ceClient) Send(ctx context.Context, event event.Event) (context.Context, *event.Event, error) {
+// Send transmits the provided event on a preconfigured Transport. Send returns
+// an error if there was an an issue validating the outbound event or the
+// transport returns an error.
+func (c *ceClient) Send(ctx context.Context, event event.Event) error {
 	ctx, r := observability.NewReporter(ctx, reportSend)
 
 	ctx, span := trace.StartSpan(ctx, clientSpanName, trace.WithSpanKind(trace.SpanKindClient))
@@ -98,19 +101,19 @@ func (c *ceClient) Send(ctx context.Context, event event.Event) (context.Context
 		span.AddAttributes(eventTraceAttributes(event.Context)...)
 	}
 
-	rctx, resp, err := c.obsSend(ctx, event)
+	err := c.obsSend(ctx, event)
 	if err != nil {
 		r.Error()
 	} else {
 		r.OK()
 	}
-	return rctx, resp, err
+	return err
 }
 
-func (c *ceClient) obsSend(ctx context.Context, event event.Event) (context.Context, *event.Event, error) {
+func (c *ceClient) obsSend(ctx context.Context, event event.Event) error {
 	// Confirm we have a transport set.
 	if c.transport == nil {
-		return ctx, nil, fmt.Errorf("client not ready, transport not initialized")
+		return fmt.Errorf("client not ready, transport not initialized")
 	}
 	// Apply the defaulter chain to the incoming event.
 	if len(c.eventDefaulterFns) > 0 {
@@ -124,17 +127,68 @@ func (c *ceClient) obsSend(ctx context.Context, event event.Event) (context.Cont
 		if span := trace.FromContext(ctx); span != nil {
 			event.Context = event.Context.Clone()
 			if err := extensions.FromSpanContext(span.SpanContext()).AddTracingAttributes(event.Context); err != nil {
-				return ctx, nil, fmt.Errorf("error setting distributed tracing extension: %w", err)
+				return fmt.Errorf("error setting distributed tracing extension: %w", err)
 			}
 		}
 	}
 
 	// Validate the event conforms to the CloudEvents Spec.
 	if err := event.Validate(); err != nil {
-		return ctx, nil, err
+		return err
 	}
 	// Send the event over the transport.
 	return c.transport.Send(ctx, event)
+}
+
+// Request transmits the provided event on a preconfigured Transport. Request
+// returns a response event if there is a response or an error if there was an
+// an issue validating the outbound event or the transport returns an error.
+func (c *ceClient) Request(ctx context.Context, event event.Event) (*event.Event, error) {
+	ctx, r := observability.NewReporter(ctx, reportSend)
+
+	ctx, span := trace.StartSpan(ctx, clientSpanName, trace.WithSpanKind(trace.SpanKindClient))
+	defer span.End()
+	if span.IsRecordingEvents() {
+		span.AddAttributes(eventTraceAttributes(event.Context)...)
+	}
+
+	resp, err := c.obsRequest(ctx, event)
+	if err != nil {
+		r.Error()
+	} else {
+		r.OK()
+	}
+	return resp, err
+}
+
+func (c *ceClient) obsRequest(ctx context.Context, event event.Event) (*event.Event, error) {
+	// Confirm we have a transport set.
+	if c.transport == nil {
+		return nil, fmt.Errorf("client not ready, transport not initialized")
+	}
+	// Apply the defaulter chain to the incoming event.
+	if len(c.eventDefaulterFns) > 0 {
+		for _, fn := range c.eventDefaulterFns {
+			event = fn(ctx, event)
+		}
+	}
+
+	// Set distributed tracing extension.
+	if !c.disableTracePropagation {
+		if span := trace.FromContext(ctx); span != nil {
+			event.Context = event.Context.Clone()
+			if err := extensions.FromSpanContext(span.SpanContext()).AddTracingAttributes(event.Context); err != nil {
+				return nil, fmt.Errorf("error setting distributed tracing extension: %w", err)
+			}
+		}
+	}
+
+	// Validate the event conforms to the CloudEvents Spec.
+	if err := event.Validate(); err != nil {
+		return nil, err
+	}
+	// Send the event over the transport.
+	return c.transport.Request(ctx, event)
 }
 
 // Receive is called from from the transport on event delivery.

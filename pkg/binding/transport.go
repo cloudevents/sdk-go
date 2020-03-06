@@ -2,6 +2,7 @@ package binding
 
 import (
 	"context"
+	"errors"
 	"io"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
@@ -27,11 +28,15 @@ func NewTransportAdapter(s Sender, r Receiver, senderContextDecorators []func(co
 	return &BindingTransport{Sender: s, Receiver: r, SenderContextDecorators: senderContextDecorators}
 }
 
-func (t *BindingTransport) Send(ctx context.Context, e event.Event) (context.Context, *event.Event, error) {
+func (t *BindingTransport) Send(ctx context.Context, e event.Event) error {
 	for _, f := range t.SenderContextDecorators {
 		ctx = f(ctx)
 	}
-	return ctx, nil, t.Sender.Send(ctx, EventMessage(e))
+	return t.Sender.Send(ctx, EventMessage(e))
+}
+
+func (t *BindingTransport) Request(ctx context.Context, e event.Event) (*event.Event, error) {
+	return nil, errors.New("Transport.Request is not yet supported by binding transport.")
 }
 
 func (t *BindingTransport) SetReceiver(r transport.Receiver) { t.handler = r }

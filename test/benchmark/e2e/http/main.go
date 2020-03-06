@@ -157,7 +157,7 @@ func dispatchReceiver(clients []cloudevents.Client, outputSenders int) transport
 		for i := 0; i < outputSenders; i++ {
 			wg.Add(1)
 			go func(client cloudevents.Client) {
-				_, _, _ = client.Send(ctx, e)
+				_ = client.Send(ctx, e)
 				wg.Done()
 			}(clients[i])
 		}

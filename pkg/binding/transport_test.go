@@ -20,7 +20,7 @@ func TestTransportSend(t *testing.T) {
 	c, err := client.New(transport, client.WithoutTracePropagation())
 	require.NoError(t, err)
 
-	_, _, err = c.Send(context.Background(), ev)
+	err = c.Send(context.Background(), ev)
 	require.NoError(t, err)
 
 	result := <-messageChannel
