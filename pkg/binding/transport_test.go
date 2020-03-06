@@ -16,7 +16,7 @@ func TestTransportSend(t *testing.T) {
 	transport := binding.NewTransportAdapter(binding.ChanSender(messageChannel), binding.ChanReceiver(messageChannel), nil)
 	ev := test.MinEvent()
 
-	client, err := cloudevents.NewClient(transport)
+	client, err := cloudevents.NewClient(transport, cloudevents.WithoutTracePropagation())
 	require.NoError(t, err)
 
 	_, _, err = client.Send(context.Background(), ev)
