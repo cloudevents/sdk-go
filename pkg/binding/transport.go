@@ -56,7 +56,7 @@ func (t *BindingTransport) handle(ctx context.Context, m Message) (err error) {
 			err = err2
 		}
 	}()
-	e, _, err := ToEvent(ctx, m, nil)
+	e, err := ToEvent(ctx, m, nil)
 	if err != nil {
 		return err
 	}

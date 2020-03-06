@@ -129,13 +129,10 @@ func MustJSON(e event.Event) []byte {
 }
 
 // Must convert the Message to event.Event
-func MustToEvent(ctx context.Context, m binding.Message) (e event.Event, encoding binding.Encoding) {
-	var err error
-	e, encoding, err = binding.ToEvent(ctx, m, nil)
-	if err != nil {
-		panic(err)
-	}
-	return
+func MustToEvent(t *testing.T, ctx context.Context, m binding.Message) event.Event {
+	e, err := binding.ToEvent(ctx, m, nil)
+	require.NoError(t, err)
+	return e
 }
 
 // Returns a copy of the event.Event with only the event.EventContext copied

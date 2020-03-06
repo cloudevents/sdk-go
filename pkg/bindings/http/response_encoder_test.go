@@ -59,10 +59,9 @@ func TestEncodeHttpResponse(t *testing.T) {
 
 				//Little hack to go back to Message
 				messageOut := NewMessageFromHttpResponse(res)
-				require.NoError(t, err)
+				require.Equal(t, tt.expectedEncoding, messageOut.Encoding())
 
-				eventOut, encoding, err := binding.ToEvent(context.TODO(), messageOut, nil)
-				require.Equal(t, encoding, tt.expectedEncoding)
+				eventOut, err := binding.ToEvent(context.TODO(), messageOut, nil)
 				test.AssertEventEquals(t, eventIn, eventOut)
 			})
 		})
