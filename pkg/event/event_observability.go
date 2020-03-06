@@ -3,7 +3,7 @@ package event
 import (
 	"fmt"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
+	"github.com/cloudevents/sdk-go/pkg/observability"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 )

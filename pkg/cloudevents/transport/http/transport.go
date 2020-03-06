@@ -20,8 +20,8 @@ import (
 	"go.uber.org/zap"
 
 	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
+	"github.com/cloudevents/sdk-go/pkg/observability"
 )
 
 // Transport adheres to transport.Transport.

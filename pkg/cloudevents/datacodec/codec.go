@@ -7,7 +7,7 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec/json"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec/text"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec/xml"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
+	"github.com/cloudevents/sdk-go/pkg/observability"
 )
 
 // Decoder is the expected function signature for decoding `in` to `out`. What
