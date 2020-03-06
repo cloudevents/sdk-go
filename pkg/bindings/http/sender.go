@@ -84,5 +84,5 @@ func (r *Sender) Request(ctx context.Context, m binding.Message) (binding.Messag
 		return nil, fmt.Errorf("%d %s", resp.StatusCode, nethttp.StatusText(resp.StatusCode))
 	}
 
-	return NewMessage(resp.Header, resp.Body), nil
+	return NewMessageFromHttpResponse(resp), nil
 }
