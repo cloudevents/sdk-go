@@ -20,6 +20,18 @@ type Sender struct {
 	transformers binding.TransformerFactories
 }
 
+func NewSender(client *http.Client, target *url.URL, options ...SenderOptionFunc) binding.Sender {
+	s := &Sender{Client: client, Target: target, transformers: make(binding.TransformerFactories, 0)}
+	for _, o := range options {
+		o(s)
+	}
+	return s
+}
+
+// Confirm Sender implements binding.Requester
+var _ binding.Requester = (*Sender)(nil)
+
+// Send implements binding.Sender
 func (s *Sender) Send(ctx context.Context, m binding.Message) (err error) {
 	defer func() { _ = m.Finish(err) }()
 	if s.Client == nil || s.Target == nil {
@@ -46,11 +58,31 @@ func (s *Sender) Send(ctx context.Context, m binding.Message) (err error) {
 	return
 }
 
-// Returns a binding.Sender wrapping a nethttp.Client and a target URL
-func NewSender(client *http.Client, target *url.URL, options ...SenderOptionFunc) binding.Sender {
-	s := &Sender{Client: client, Target: target, transformers: make(binding.TransformerFactories, 0)}
-	for _, o := range options {
-		o(s)
+// Request implements binding.Requester
+func (r *Sender) Request(ctx context.Context, m binding.Message) (binding.Message, error) {
+	var err error
+	defer func() { _ = m.Finish(err) }()
+	if r.Client == nil || r.Target == nil {
+		return nil, fmt.Errorf("not initialized: %#v", r)
 	}
-	return s
+
+	var req *http.Request
+	req, err = http.NewRequest("POST", r.Target.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+
+	if err = EncodeHttpRequest(ctx, m, req, r.transformers); err != nil {
+		return nil, err
+	}
+	resp, err := r.Client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode/100 != 2 {
+		return nil, fmt.Errorf("%d %s", resp.StatusCode, nethttp.StatusText(resp.StatusCode))
+	}
+
+	return NewMessageFromHttpResponse(resp), nil
 }
