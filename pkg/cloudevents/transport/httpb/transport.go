@@ -52,7 +52,7 @@ type Transport struct {
 	server            *nethttp.Server
 	handlerRegistered bool
 	middleware        []Middleware
-	Target            *url.URL
+	Target            *url.URL // TODO this is here just to allow the options to mutate it.
 }
 
 func New(opts ...Option) (*Transport, error) {
@@ -64,7 +64,7 @@ func New(opts ...Option) (*Transport, error) {
 
 	if t.Requester == nil {
 		client := nethttp.DefaultClient
-		t.Requester = http.NewRequester(client, t.Target) // TODO: requester does not support dynamic update of target.
+		t.Requester = http.NewRequester(client, t.Target)
 	}
 
 	return t, nil
