@@ -91,5 +91,5 @@ func (r *ExReceiver) Close(context.Context) error { return nil }
 // NewExTransport returns a transport.Transport which is implemented by
 // an ExSender and an ExReceiver
 func NewExTransport(r io.Reader, w io.Writer) transport.Transport {
-	return binding.NewTransportAdapter(NewExSender(w), NewExReceiver(r), []func(ctx context.Context) context.Context{})
+	return binding.NewSendingTransport(NewExSender(w), NewExReceiver(r), []func(ctx context.Context) context.Context{})
 }

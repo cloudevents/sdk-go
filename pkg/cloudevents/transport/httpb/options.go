@@ -3,6 +3,7 @@ package httpb
 import (
 	"fmt"
 	"net"
+	nethttp "net/http"
 	"net/url"
 	"strings"
 	"time"
@@ -226,23 +227,23 @@ func WithPath(path string) Option {
 }
 
 //
-//// Middleware is a function that takes an existing http.Handler and wraps it in middleware,
-//// returning the wrapped http.Handler.
-//type Middleware func(next nethttp.Handler) nethttp.Handler
-//
-//// WithMiddleware adds an HTTP middleware to the transport. It may be specified multiple times.
-//// Middleware is applied to everything before it. For example
-//// `NewClient(WithMiddleware(foo), WithMiddleware(bar))` would result in `bar(foo(original))`.
-//func WithMiddleware(middleware Middleware) Option {
-//	return func(t *Transport) error {
-//		if t == nil {
-//			return fmt.Errorf("http middleware option can not set nil transport")
-//		}
-//		t.middleware = append(t.middleware, middleware)
-//		return nil
-//	}
-//}
-//
+// Middleware is a function that takes an existing http.Handler and wraps it in middleware,
+// returning the wrapped http.Handler.
+type Middleware func(next nethttp.Handler) nethttp.Handler
+
+// WithMiddleware adds an HTTP middleware to the transport. It may be specified multiple times.
+// Middleware is applied to everything before it. For example
+// `NewClient(WithMiddleware(foo), WithMiddleware(bar))` would result in `bar(foo(original))`.
+func WithMiddleware(middleware Middleware) Option {
+	return func(t *Transport) error {
+		if t == nil {
+			return fmt.Errorf("http middleware option can not set nil transport")
+		}
+		t.middleware = append(t.middleware, middleware)
+		return nil
+	}
+}
+
 //// WithLongPollTarget sets the receivers URL to perform long polling after
 //// StartReceiver is called.
 //func WithLongPollTarget(targetUrl string) Option {

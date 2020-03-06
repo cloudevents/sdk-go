@@ -5,11 +5,8 @@ import (
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/bindings/http"
-	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/plugin/ochttp/propagation/tracecontext"
-	"go.uber.org/zap"
-	"io"
 	"net"
 	nethttp "net/http"
 	"net/url"
@@ -31,10 +28,7 @@ const (
 
 // Transport acts as both a http client and a http handler.
 type Transport struct {
-	sender    binding.Sender
-	requester binding.Requester
-	receiver  *http.Receiver // implements binding.Receiver
-
+	binding.BindingTransport
 	consumer transport.Receiver
 
 	// The encoding used to select the codec for outbound events.
@@ -57,26 +51,20 @@ type Transport struct {
 	listener          net.Listener
 	server            *nethttp.Server
 	handlerRegistered bool
-
-	Target *url.URL
+	middleware        []Middleware
+	Target            *url.URL
 }
 
 func New(opts ...Option) (*Transport, error) {
+
 	t := &Transport{}
 	if err := t.applyOptions(opts...); err != nil {
 		return nil, err
 	}
 
-	// TODO: this is all hard coded and whatnot...
-	if t.sender == nil {
+	if t.Requester == nil {
 		client := nethttp.DefaultClient
-		t.sender = http.NewSender(client, t.Target) // TODO: Sender does not support dynamic update of target.
-	}
-
-	// TODO: Not sure we need both the requester and sender.
-	if t.requester == nil {
-		client := nethttp.DefaultClient
-		t.requester = http.NewRequester(client, t.Target) // TODO: requester does not support dynamic update of target.
+		t.Requester = http.NewRequester(client, t.Target) // TODO: requester does not support dynamic update of target.
 	}
 
 	return t, nil
@@ -93,8 +81,6 @@ func (t *Transport) applyOptions(opts ...Option) error {
 
 // Send implements Transport.Send
 func (t *Transport) Send(ctx context.Context, e event.Event) (context.Context, *event.Event, error) {
-	msg := binding.EventMessage(e)
-
 	switch t.Encoding {
 	case Default, Binary:
 		ctx = binding.WithForceBinary(ctx)
@@ -102,20 +88,7 @@ func (t *Transport) Send(ctx context.Context, e event.Event) (context.Context, *
 		ctx = binding.WithForceStructured(ctx)
 	}
 
-	if rec, err := t.requester.Request(ctx, msg); err != nil {
-		return ctx, nil, err
-	} else {
-		msg, err := rec.Receive(ctx)
-		if err != nil {
-			return ctx, nil, err
-		}
-		re, _, err := binding.ToEvent(ctx, msg)
-		if err != nil {
-			cecontext.LoggerFrom(ctx).Warnw("failed to convert message to event, this could be ok.", zap.Error(err))
-			return ctx, nil, nil
-		}
-		return ctx, &re, nil
-	}
+	return t.BindingTransport.Send(ctx, e)
 }
 
 // SetReceiver implements Transport.SetReceiver
@@ -123,29 +96,11 @@ func (t *Transport) SetReceiver(r transport.Receiver) {
 	t.consumer = r
 }
 
-// SetConverter implements Transport.SetConverter
-func (t *Transport) SetConverter(c transport.Converter) {
-	// TODO: implement converter
-	panic("not implemented")
-}
-
-// HasConverter implements Transport.HasConverter
-func (t *Transport) HasConverter() bool {
-	// TODO: implement converter
-	return false
-}
-
 // StartReceiver implements Transport.StartReceiver
 // NOTE: This is a blocking call.
 func (t *Transport) StartReceiver(ctx context.Context) error {
 	t.reMu.Lock()
 	defer t.reMu.Unlock()
-
-	logger := cecontext.LoggerFrom(ctx)
-
-	if t.receiver == nil {
-		t.receiver = http.NewReceiver()
-	}
 
 	if t.Handler == nil {
 		t.Handler = nethttp.NewServeMux()
@@ -167,8 +122,7 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 		Handler: &ochttp.Handler{
 			Propagation: &tracecontext.HTTPFormat{},
 			// TODO: support middleware
-			//Handler:        attachMiddleware(t.Handler, t.middleware),
-			Handler:        t.Handler,
+			Handler:        attachMiddleware(t.Handler, t.middleware),
 			FormatSpanName: formatSpanName,
 		},
 	}
@@ -185,25 +139,8 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 	}()
 
 	go func() {
-		for {
-			msg, err := t.receiver.Receive(ctx)
-			if err == io.EOF {
-				// shut it down.
-				errChan <- err
-				break
-			} else if err != nil {
-				logger.Errorw("failed to receive:", zap.Error(err))
-				continue
-			}
-			e, _, err := binding.ToEvent(ctx, msg)
-
-			// TODO: response is not supported in PoC.
-			_, err = t.invokeReceiver(ctx, e)
-
-			err = msg.Finish(err)
-			if err != nil {
-				logger.Errorw("failed to Finish message: ", zap.Error(err))
-			}
+		if err := t.BindingTransport.StartReceiver(ctx); err != nil {
+			errChan <- err
 		}
 	}()
 
@@ -226,72 +163,9 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 }
 
 func (t *Transport) ServeHTTP(rw nethttp.ResponseWriter, req *nethttp.Request) {
-	t.receiver.ServeHTTP(rw, req)
-}
-
-// TODO: this is not what we want to use long term. For PoC.
-// Response is an http transport response.
-type Response struct {
-	StatusCode int
-	Message
-}
-
-// Message is an http transport message.
-type Message struct {
-	Header nethttp.Header
-	Body   []byte
-}
-
-func (t *Transport) invokeReceiver(ctx context.Context, e event.Event) (*Response, error) {
-	logger := cecontext.LoggerFrom(ctx)
-	if t.consumer != nil {
-		// Note: http does not use eventResp.Reason
-		eventResp := event.EventResponse{}
-		resp := Response{}
-
-		err := t.consumer.Receive(ctx, e, &eventResp)
-		if err != nil {
-			logger.Warnw("got an error from receiver fn", zap.Error(err))
-			resp.StatusCode = nethttp.StatusInternalServerError
-			return &resp, err
-		}
-
-		// TODO: response is not supported in the PoC.
-		//if eventResp.Event != nil {
-		//	if t.loadCodec(ctx) {
-		//		if m, err := t.codec.Encode(ctx, *eventResp.Event); err != nil {
-		//			logger.Errorw("failed to encode response from receiver fn", zap.Error(err))
-		//		} else if msg, ok := m.(*Message); ok {
-		//			resp.Message = *msg
-		//		}
-		//	} else {
-		//		logger.Error("failed to load codec")
-		//		resp.StatusCode = http.StatusInternalServerError
-		//		return &resp, err
-		//	}
-		//	// Look for a transport response context
-		//	var trx *TransportResponseContext
-		//	if ptrTrx, ok := eventResp.Context.(*TransportResponseContext); ok {
-		//		// found a *TransportResponseContext, use it.
-		//		trx = ptrTrx
-		//	} else if realTrx, ok := eventResp.Context.(TransportResponseContext); ok {
-		//		// found a TransportResponseContext, make it a pointer.
-		//		trx = &realTrx
-		//	}
-		//	// If we found a TransportResponseContext, use it.
-		//	if trx != nil && trx.Header != nil && len(trx.Header) > 0 {
-		//		copyHeadersEnsure(trx.Header, &resp.Message.Header)
-		//	}
-		//}
-
-		if eventResp.Status != 0 {
-			resp.StatusCode = eventResp.Status
-		} else {
-			resp.StatusCode = nethttp.StatusAccepted // default is 202 - Accepted
-		}
-		return &resp, err
+	if s, ok := t.BindingTransport.Receiver.(*http.Receiver); ok {
+		s.ServeHTTP(rw, req)
 	}
-	return nil, nil
 }
 
 // HasTracePropagation implements Transport.HasTracePropagation
@@ -353,4 +227,12 @@ func (t *Transport) GetPath() string {
 		return path
 	}
 	return "/" // default
+}
+
+// attachMiddleware attaches the HTTP middleware to the specified handler.
+func attachMiddleware(h nethttp.Handler, middleware []Middleware) nethttp.Handler {
+	for _, m := range middleware {
+		h = m(h)
+	}
+	return h
 }
