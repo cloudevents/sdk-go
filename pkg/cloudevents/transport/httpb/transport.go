@@ -29,7 +29,6 @@ const (
 // Transport acts as both a http client and a http handler.
 type Transport struct {
 	binding.BindingTransport
-	consumer transport.Receiver
 
 	// The encoding used to select the codec for outbound events.
 	Encoding Encoding
@@ -67,6 +66,10 @@ func New(opts ...Option) (*Transport, error) {
 		t.Requester = http.NewRequester(client, t.Target)
 	}
 
+	if t.Receiver == nil {
+		t.Receiver = http.NewReceiver()
+	}
+
 	return t, nil
 }
 
@@ -89,11 +92,6 @@ func (t *Transport) Send(ctx context.Context, e event.Event) (context.Context, *
 	}
 
 	return t.BindingTransport.Send(ctx, e)
-}
-
-// SetReceiver implements Transport.SetReceiver
-func (t *Transport) SetReceiver(r transport.Receiver) {
-	t.consumer = r
 }
 
 // StartReceiver implements Transport.StartReceiver
@@ -120,8 +118,7 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 	t.server = &nethttp.Server{
 		Addr: addr.String(),
 		Handler: &ochttp.Handler{
-			Propagation: &tracecontext.HTTPFormat{},
-			// TODO: support middleware
+			Propagation:    &tracecontext.HTTPFormat{},
 			Handler:        attachMiddleware(t.Handler, t.middleware),
 			FormatSpanName: formatSpanName,
 		},

@@ -88,6 +88,11 @@ func (t *BindingTransport) handle(ctx context.Context, m Message) (err error) {
 			err = err2
 		}
 	}()
+
+	if t.handler == nil {
+		return
+	}
+
 	e, _, err := ToEvent(ctx, m, nil)
 	if err != nil {
 		return err
@@ -96,7 +101,8 @@ func (t *BindingTransport) handle(ctx context.Context, m Message) (err error) {
 	if err := t.handler.Receive(ctx, e, &eventResp); err != nil {
 		return err
 	}
-	// TODO: do something with eventResp
+
+	// TODO: do something with eventResp. This is not possible with bindings today.
 	return nil
 
 }

@@ -76,10 +76,11 @@ func (s *Sender) Request(ctx context.Context, m binding.Message) (binding.Messag
 }
 
 func (s *Sender) makeRequest(ctx context.Context) *http.Request {
-	// TODO: support custom headers from context.
-	req := http.Request{
-		//Header: HeaderFrom(ctx),
-	}.WithContext(ctx)
+	// TODO: support custom headers from context?
+	req := &http.Request{
+		Header: make(http.Header),
+		// TODO: HeaderFrom(ctx),
+	}
 
 	if s.RequestTemplate != nil {
 		req.Method = s.RequestTemplate.Method
@@ -93,7 +94,7 @@ func (s *Sender) makeRequest(ctx context.Context) *http.Request {
 	if target := cecontext.TargetFrom(ctx); target != nil {
 		req.URL = target
 	}
-	return req
+	return req.WithContext(ctx)
 }
 
 // Ensure to is a non-nil map before copying

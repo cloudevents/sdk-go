@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/httpb"
 	"log"
 	"os"
 
@@ -12,8 +13,8 @@ import (
 
 type envConfig struct {
 	// Port on which to listen for cloudevents
-	Port int    `envconfig:"RCV_PORT" default:"8080"`
-	Path string `envconfig:"RCV_PATH" default:"/"`
+	//Port int    `envconfig:"RCV_PORT" default:"8080"`
+	//Path string `envconfig:"RCV_PATH" default:"/"`
 }
 
 func main() {
@@ -24,13 +25,11 @@ func main() {
 	}
 	ctx := context.Background()
 
-	t, err := cloudevents.NewHTTPTransport(
-		cloudevents.WithPort(env.Port),
-		cloudevents.WithPath(env.Path),
-	)
+	t, err := httpb.New()
 	if err != nil {
-		log.Fatalf("failed to create transport: %s", err.Error())
+		log.Fatalf("failed to create transport, %v", err)
 	}
+
 	c, err := cloudevents.NewClient(t,
 		cloudevents.WithUUIDs(),
 		cloudevents.WithTimeNow(),
@@ -39,16 +38,15 @@ func main() {
 		log.Fatalf("failed to create client: %s", err.Error())
 	}
 
+	log.Printf("listening on :%d%s\n", t.GetPort(), t.GetPath())
 	if err := c.StartReceiver(ctx, gotEvent); err != nil {
 		log.Fatalf("failed to start receiver: %s", err.Error())
 	}
-
-	log.Printf("listening on :%d%s\n", env.Port, env.Path)
-	<-ctx.Done()
 }
 
-func gotEvent(ctx context.Context, event cloudevents.Event) error {
+func gotEvent(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error {
 	fmt.Printf("Got Event: %+v\n", event)
 
+	resp.RespondWith(200, &event)
 	return nil
 }
