@@ -9,6 +9,10 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/event"
 )
 
+const (
+	FORMAT_EVENT_STRUCTURED = "FORMAT_EVENT_STRUCTURED"
+)
+
 // EventMessage type-converts a event.Event object to implement Message.
 // This allows local event.Event objects to be sent directly via Sender.Send()
 //     s.Send(ctx, binding.EventMessage(e))
@@ -19,12 +23,12 @@ func (m EventMessage) Encoding() Encoding {
 }
 
 func (m EventMessage) Structured(ctx context.Context, builder StructuredEncoder) error {
-	// TODO here only json is supported, should we support other message encodings?
-	b, err := format.JSON.Marshal(event.Event(m))
+	f := GetOrDefaultFromCtx(ctx, FORMAT_EVENT_STRUCTURED, format.JSON).(format.Format)
+	b, err := f.Marshal(event.Event(m))
 	if err != nil {
 		return err
 	}
-	return builder.SetStructuredEvent(ctx, format.JSON, bytes.NewReader(b))
+	return builder.SetStructuredEvent(ctx, f, bytes.NewReader(b))
 }
 
 func (m EventMessage) Binary(ctx context.Context, b BinaryEncoder) (err error) {
@@ -75,3 +79,8 @@ func eventContextToBinaryEncoder(c event.EventContext, b BinaryEncoder) (err err
 func (EventMessage) Finish(error) error { return nil }
 
 var _ Message = (*EventMessage)(nil) // Test it conforms to the interface
+
+// Configure which format to use when marshalling the event to structured mode
+func UseFormatForEvent(ctx context.Context, f format.Format) context.Context {
+	return context.WithValue(ctx, FORMAT_EVENT_STRUCTURED, f)
+}
