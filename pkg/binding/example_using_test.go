@@ -81,7 +81,7 @@ func runIntermediary(r io.Reader, w io.WriteCloser) error {
 // receive messages.  the transport.  Only the intermediary example
 // actually uses the transport APIs for efficiency and reliability in
 // forwarding events.
-func ExampleReceiver_using() {
+func Exampl_using() {
 	r1, w1 := io.Pipe() // The sender-to-intermediary pipe
 	r2, w2 := io.Pipe() // The intermediary-to-receiver pipe
 
