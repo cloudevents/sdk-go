@@ -28,7 +28,7 @@ type Receiver struct {
 func (r *Receiver) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	var err error
 	m := NewMessageFromHttpRequest(req)
-	if m.Encoding() == binding.EncodingUnknown {
+	if m.ReadEncoding() == binding.EncodingUnknown {
 		r.incoming <- msgErr{nil, binding.ErrUnknownEncoding}
 	}
 	done := make(chan error)

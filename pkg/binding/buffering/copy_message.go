@@ -22,7 +22,7 @@ func BufferMessage(ctx context.Context, m binding.Message, transformers binding.
 // When the copy can be forgot, the copied message must be finished with Finish() message to release the memory.
 // transformers can be nil and this function guarantees that they are invoked only once during the encoding process.
 func CopyMessage(ctx context.Context, m binding.Message, transformers binding.TransformerFactories) (binding.Message, error) {
-	originalMessageEncoding := m.Encoding()
+	originalMessageEncoding := m.ReadEncoding()
 
 	if originalMessageEncoding == binding.EncodingUnknown {
 		return nil, binding.ErrUnknownEncoding
@@ -38,7 +38,7 @@ func CopyMessage(ctx context.Context, m binding.Message, transformers binding.Tr
 	sm := structBufferedMessage{}
 	bm := binaryBufferedMessage{}
 
-	encoding, err := binding.RunDirectEncoding(ctx, m, &sm, &bm, transformers)
+	encoding, err := binding.DirectWrite(ctx, m, &sm, &bm, transformers)
 	if encoding == binding.EncodingStructured {
 		return &sm, err
 	} else if encoding == binding.EncodingBinary {

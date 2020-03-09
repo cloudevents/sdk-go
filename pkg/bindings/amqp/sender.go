@@ -22,7 +22,7 @@ func (s *sender) Send(ctx context.Context, in binding.Message) error {
 	}
 
 	var amqpMessage amqp.Message
-	err = EncodeAMQPMessage(ctx, in, &amqpMessage, s.transformers)
+	err = WriteAMQPMessage(ctx, in, &amqpMessage, s.transformers)
 	if err != nil {
 		return err
 	}

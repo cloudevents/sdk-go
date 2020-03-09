@@ -12,7 +12,7 @@ import (
 )
 
 // MockStructuredMessage implements a structured-mode message as a simple struct.
-// MockStructuredMessage implements both the binding.Message interface and the binding.StructuredEncoder
+// MockStructuredMessage implements both the binding.Message interface and the binding.StructuredWriter
 type MockStructuredMessage struct {
 	Format format.Format
 	Bytes  []byte
@@ -26,15 +26,15 @@ func MustCreateMockStructuredMessage(e event.Event) binding.Message {
 	}
 }
 
-func (s *MockStructuredMessage) Structured(ctx context.Context, b binding.StructuredEncoder) error {
+func (s *MockStructuredMessage) ReadStructured(ctx context.Context, b binding.StructuredWriter) error {
 	return b.SetStructuredEvent(ctx, s.Format, bytes.NewReader(s.Bytes))
 }
 
-func (s *MockStructuredMessage) Binary(context.Context, binding.BinaryEncoder) error {
+func (s *MockStructuredMessage) ReadBinary(context.Context, binding.BinaryWriter) error {
 	return binding.ErrNotBinary
 }
 
-func (bm *MockStructuredMessage) Encoding() binding.Encoding {
+func (bm *MockStructuredMessage) ReadEncoding() binding.Encoding {
 	return binding.EncodingStructured
 }
 
@@ -51,4 +51,4 @@ func (s *MockStructuredMessage) SetStructuredEvent(ctx context.Context, format f
 }
 
 var _ binding.Message = (*MockStructuredMessage)(nil)
-var _ binding.StructuredEncoder = (*MockStructuredMessage)(nil)
+var _ binding.StructuredWriter = (*MockStructuredMessage)(nil)

@@ -24,17 +24,17 @@ func (m *structBufferedMessage) GetParent() binding.Message {
 	return nil
 }
 
-func (m *structBufferedMessage) Encoding() binding.Encoding {
+func (m *structBufferedMessage) ReadEncoding() binding.Encoding {
 	return binding.EncodingStructured
 }
 
-// Structured copies structured data to a StructuredEncoder
-func (m *structBufferedMessage) Structured(ctx context.Context, enc binding.StructuredEncoder) error {
+// Structured copies structured data to a StructuredWriter
+func (m *structBufferedMessage) ReadStructured(ctx context.Context, enc binding.StructuredWriter) error {
 	return enc.SetStructuredEvent(ctx, m.Format, bytes.NewReader(m.Bytes.B))
 }
 
 // Binary returns ErrNotBinary
-func (m structBufferedMessage) Binary(context.Context, binding.BinaryEncoder) error {
+func (m structBufferedMessage) ReadBinary(context.Context, binding.BinaryWriter) error {
 	return binding.ErrNotBinary
 }
 
@@ -53,5 +53,5 @@ func (m *structBufferedMessage) SetStructuredEvent(ctx context.Context, format f
 	return nil
 }
 
-var _ binding.Message = (*structBufferedMessage)(nil)           // Test it conforms to the interface
-var _ binding.StructuredEncoder = (*structBufferedMessage)(nil) // Test it conforms to the interface
+var _ binding.Message = (*structBufferedMessage)(nil)          // Test it conforms to the interface
+var _ binding.StructuredWriter = (*structBufferedMessage)(nil) // Test it conforms to the interface

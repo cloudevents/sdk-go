@@ -14,16 +14,16 @@ import (
 )
 
 // Write out to the the provided httpResponseWriter with the message m.
-// Using context you can tweak the encoding processing (more details on binding.Encode documentation).
+// Using context you can tweak the encoding processing (more details on binding.Write documentation).
 func EncodeHttpResponseWriter(ctx context.Context, m binding.Message, rw http.ResponseWriter, transformers binding.TransformerFactories) error {
-	structuredEncoder := &httpResponseWriterEncoder{rw: rw}
-	binaryEncoder := &httpResponseWriterEncoder{rw: rw}
+	structuredWriter := &httpResponseWriterEncoder{rw: rw}
+	binaryWriter := &httpResponseWriterEncoder{rw: rw}
 
-	_, err := binding.Encode(
+	_, err := binding.Write(
 		ctx,
 		m,
-		structuredEncoder,
-		binaryEncoder,
+		structuredWriter,
+		binaryWriter,
 		transformers,
 	)
 	return err
@@ -82,5 +82,5 @@ func (b *httpResponseWriterEncoder) SetExtension(name string, value interface{})
 	return nil
 }
 
-var _ binding.StructuredEncoder = (*httpResponseEncoder)(nil) // Test it conforms to the interface
-var _ binding.BinaryEncoder = (*httpResponseEncoder)(nil)     // Test it conforms to the interface
+var _ binding.StructuredWriter = (*httpResponseEncoder)(nil) // Test it conforms to the interface
+var _ binding.BinaryWriter = (*httpResponseEncoder)(nil)     // Test it conforms to the interface

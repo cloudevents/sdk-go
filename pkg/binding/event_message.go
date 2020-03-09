@@ -18,11 +18,11 @@ const (
 //     s.Send(ctx, binding.EventMessage(e))
 type EventMessage event.Event
 
-func (m EventMessage) Encoding() Encoding {
+func (m EventMessage) ReadEncoding() Encoding {
 	return EncodingEvent
 }
 
-func (m EventMessage) Structured(ctx context.Context, builder StructuredEncoder) error {
+func (m EventMessage) ReadStructured(ctx context.Context, builder StructuredWriter) error {
 	f := GetOrDefaultFromCtx(ctx, FORMAT_EVENT_STRUCTURED, format.JSON).(format.Format)
 	b, err := f.Marshal(event.Event(m))
 	if err != nil {
@@ -31,12 +31,12 @@ func (m EventMessage) Structured(ctx context.Context, builder StructuredEncoder)
 	return builder.SetStructuredEvent(ctx, f, bytes.NewReader(b))
 }
 
-func (m EventMessage) Binary(ctx context.Context, b BinaryEncoder) (err error) {
+func (m EventMessage) ReadBinary(ctx context.Context, b BinaryWriter) (err error) {
 	err = b.Start(ctx)
 	if err != nil {
 		return err
 	}
-	err = eventContextToBinaryEncoder(m.Context, b)
+	err = eventContextToBinaryWriter(m.Context, b)
 	if err != nil {
 		return err
 	}
@@ -54,7 +54,7 @@ func (m EventMessage) Binary(ctx context.Context, b BinaryEncoder) (err error) {
 	return b.End()
 }
 
-func eventContextToBinaryEncoder(c event.EventContext, b BinaryEncoder) (err error) {
+func eventContextToBinaryWriter(c event.EventContext, b BinaryWriter) (err error) {
 	// Pass all attributes
 	sv := spec.VS.Version(c.GetSpecVersion())
 	for _, a := range sv.Attributes() {

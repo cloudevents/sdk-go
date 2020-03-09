@@ -24,19 +24,19 @@ func WithSkipKeyExtension(ctx context.Context) context.Context {
 }
 
 // Fill the provided producerMessage with the message m.
-// Using context you can tweak the encoding processing (more details on binding.Encode documentation).
+// Using context you can tweak the encoding processing (more details on binding.Write documentation).
 // You can skip the key extension handling decorating the context using WithSkipKeyExtension:
 // https://github.com/cloudevents/spec/blob/master/kafka-protocol-binding.md#31-key-attribute
-func EncodeKafkaProducerMessage(ctx context.Context, m binding.Message, producerMessage *sarama.ProducerMessage, transformerFactories binding.TransformerFactories) error {
+func WriteKafkaProducerMessage(ctx context.Context, m binding.Message, producerMessage *sarama.ProducerMessage, transformerFactories binding.TransformerFactories) error {
 	skipKey := binding.GetOrDefaultFromCtx(ctx, SKIP_KEY_EXTENSION, false).(bool)
 
 	if skipKey {
-		enc := &kafkaProducerMessageEncoder{
+		enc := &kafkaProducerMessageWriter{
 			producerMessage,
 			skipKey,
 		}
 
-		_, err := binding.Encode(
+		_, err := binding.Write(
 			ctx,
 			m,
 			enc,
@@ -46,15 +46,15 @@ func EncodeKafkaProducerMessage(ctx context.Context, m binding.Message, producer
 		return err
 	}
 
-	enc := m.Encoding()
+	enc := m.ReadEncoding()
 	var err error
 	// Skip direct encoding if the event is an event message
 	if enc == binding.EncodingBinary {
-		encoder := &kafkaProducerMessageEncoder{
+		encoder := &kafkaProducerMessageWriter{
 			producerMessage,
 			skipKey,
 		}
-		enc, err = binding.RunDirectEncoding(ctx, m, nil, encoder, transformerFactories)
+		enc, err = binding.DirectWrite(ctx, m, nil, encoder, transformerFactories)
 		if enc != binding.EncodingUnknown {
 			// Message directly encoded binary -> binary, nothing else to do here
 			return err
@@ -78,24 +78,24 @@ func EncodeKafkaProducerMessage(ctx context.Context, m binding.Message, producer
 
 	eventMessage := binding.EventMessage(e)
 
-	encoder := &kafkaProducerMessageEncoder{
+	encoder := &kafkaProducerMessageWriter{
 		producerMessage,
 		skipKey,
 	}
 
 	if binding.GetOrDefaultFromCtx(ctx, binding.PREFERRED_EVENT_ENCODING, binding.EncodingBinary).(binding.Encoding) == binding.EncodingStructured {
-		return eventMessage.Structured(ctx, encoder)
+		return eventMessage.ReadStructured(ctx, encoder)
 	} else {
-		return eventMessage.Binary(ctx, encoder)
+		return eventMessage.ReadBinary(ctx, encoder)
 	}
 }
 
-type kafkaProducerMessageEncoder struct {
+type kafkaProducerMessageWriter struct {
 	*sarama.ProducerMessage
 	skipKey bool
 }
 
-func (b *kafkaProducerMessageEncoder) SetStructuredEvent(ctx context.Context, format format.Format, event io.Reader) error {
+func (b *kafkaProducerMessageWriter) SetStructuredEvent(ctx context.Context, format format.Format, event io.Reader) error {
 	b.Headers = []sarama.RecordHeader{{
 		Key:   []byte(contentTypeHeader),
 		Value: []byte(format.MediaType()),
@@ -111,16 +111,16 @@ func (b *kafkaProducerMessageEncoder) SetStructuredEvent(ctx context.Context, fo
 	return nil
 }
 
-func (b *kafkaProducerMessageEncoder) Start(ctx context.Context) error {
+func (b *kafkaProducerMessageWriter) Start(ctx context.Context) error {
 	b.Headers = []sarama.RecordHeader{}
 	return nil
 }
 
-func (b *kafkaProducerMessageEncoder) End() error {
+func (b *kafkaProducerMessageWriter) End() error {
 	return nil
 }
 
-func (b *kafkaProducerMessageEncoder) SetData(reader io.Reader) error {
+func (b *kafkaProducerMessageWriter) SetData(reader io.Reader) error {
 	var buf bytes.Buffer
 	_, err := io.Copy(&buf, reader)
 	if err != nil {
@@ -131,7 +131,7 @@ func (b *kafkaProducerMessageEncoder) SetData(reader io.Reader) error {
 	return nil
 }
 
-func (b *kafkaProducerMessageEncoder) SetAttribute(attribute spec.Attribute, value interface{}) error {
+func (b *kafkaProducerMessageWriter) SetAttribute(attribute spec.Attribute, value interface{}) error {
 	// Everything is a string here
 	s, err := types.Format(value)
 	if err != nil {
@@ -146,7 +146,7 @@ func (b *kafkaProducerMessageEncoder) SetAttribute(attribute spec.Attribute, val
 	return nil
 }
 
-func (b *kafkaProducerMessageEncoder) SetExtension(name string, value interface{}) error {
+func (b *kafkaProducerMessageWriter) SetExtension(name string, value interface{}) error {
 	if !b.skipKey && name == "key" {
 		if v, ok := value.([]byte); ok {
 			b.Key = sarama.ByteEncoder(v)
@@ -169,5 +169,5 @@ func (b *kafkaProducerMessageEncoder) SetExtension(name string, value interface{
 	return nil
 }
 
-var _ binding.StructuredEncoder = (*kafkaProducerMessageEncoder)(nil) // Test it conforms to the interface
-var _ binding.BinaryEncoder = (*kafkaProducerMessageEncoder)(nil)     // Test it conforms to the interface
+var _ binding.StructuredWriter = (*kafkaProducerMessageWriter)(nil) // Test it conforms to the interface
+var _ binding.BinaryWriter = (*kafkaProducerMessageWriter)(nil)     // Test it conforms to the interface

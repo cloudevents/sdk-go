@@ -20,14 +20,14 @@ var (
 
 type addUUID struct{}
 
-func (a addUUID) StructuredTransformer(binding.StructuredEncoder) binding.StructuredEncoder {
+func (a addUUID) StructuredTransformer(binding.StructuredWriter) binding.StructuredWriter {
 	return nil
 }
 
-func (a addUUID) BinaryTransformer(encoder binding.BinaryEncoder) binding.BinaryEncoder {
+func (a addUUID) BinaryTransformer(encoder binding.BinaryWriter) binding.BinaryWriter {
 	return &addUUIDTransformer{
-		BinaryEncoder: encoder,
-		found:         false,
+		BinaryWriter: encoder,
+		found:        false,
 	}
 }
 
@@ -41,7 +41,7 @@ func (a addUUID) EventTransformer() binding.EventTransformer {
 }
 
 type addUUIDTransformer struct {
-	binding.BinaryEncoder
+	binding.BinaryWriter
 	version spec.Version
 	found   bool
 }
@@ -51,29 +51,29 @@ func (b *addUUIDTransformer) SetAttribute(attribute spec.Attribute, value interf
 		b.found = true
 	}
 	b.version = attribute.Version()
-	return b.BinaryEncoder.SetAttribute(attribute, value)
+	return b.BinaryWriter.SetAttribute(attribute, value)
 }
 
 func (b *addUUIDTransformer) End() error {
 	if !b.found {
-		err := b.BinaryEncoder.SetAttribute(b.version.AttributeFromKind(spec.ID), uuid.New().String())
+		err := b.BinaryWriter.SetAttribute(b.version.AttributeFromKind(spec.ID), uuid.New().String())
 		if err != nil {
 			return err
 		}
 	}
-	return b.BinaryEncoder.End()
+	return b.BinaryWriter.End()
 }
 
 type addTimeNow struct{}
 
-func (a addTimeNow) StructuredTransformer(binding.StructuredEncoder) binding.StructuredEncoder {
+func (a addTimeNow) StructuredTransformer(binding.StructuredWriter) binding.StructuredWriter {
 	return nil
 }
 
-func (a addTimeNow) BinaryTransformer(encoder binding.BinaryEncoder) binding.BinaryEncoder {
+func (a addTimeNow) BinaryTransformer(encoder binding.BinaryWriter) binding.BinaryWriter {
 	return &addTimeNowTransformer{
-		BinaryEncoder: encoder,
-		found:         false,
+		BinaryWriter: encoder,
+		found:        false,
 	}
 }
 
@@ -87,7 +87,7 @@ func (a addTimeNow) EventTransformer() binding.EventTransformer {
 }
 
 type addTimeNowTransformer struct {
-	binding.BinaryEncoder
+	binding.BinaryWriter
 	version spec.Version
 	found   bool
 }
@@ -97,15 +97,15 @@ func (b *addTimeNowTransformer) SetAttribute(attribute spec.Attribute, value int
 		b.found = true
 	}
 	b.version = attribute.Version()
-	return b.BinaryEncoder.SetAttribute(attribute, value)
+	return b.BinaryWriter.SetAttribute(attribute, value)
 }
 
 func (b *addTimeNowTransformer) End() error {
 	if !b.found {
-		err := b.BinaryEncoder.SetAttribute(b.version.AttributeFromKind(spec.Time), types.Timestamp{Time: time.Now()})
+		err := b.BinaryWriter.SetAttribute(b.version.AttributeFromKind(spec.Time), types.Timestamp{Time: time.Now()})
 		if err != nil {
 			return err
 		}
 	}
-	return b.BinaryEncoder.End()
+	return b.BinaryWriter.End()
 }

@@ -20,15 +20,15 @@ func NewMessage(m json.RawMessage) binding.Message {
 	return ExMessage(m)
 }
 
-func (m ExMessage) Encoding() binding.Encoding {
+func (m ExMessage) ReadEncoding() binding.Encoding {
 	return binding.EncodingStructured
 }
 
-func (m ExMessage) Structured(ctx context.Context, b binding.StructuredEncoder) error {
+func (m ExMessage) ReadStructured(ctx context.Context, b binding.StructuredWriter) error {
 	return b.SetStructuredEvent(ctx, format.JSON, bytes.NewReader(m))
 }
 
-func (m ExMessage) Binary(context.Context, binding.BinaryEncoder) error {
+func (m ExMessage) ReadBinary(context.Context, binding.BinaryWriter) error {
 	return binding.ErrNotBinary
 }
 
@@ -37,7 +37,7 @@ func (m ExMessage) Finish(error) error { return nil }
 var _ binding.Message = (*ExMessage)(nil)
 
 // ExSender sends by writing JSON encoded events to an io.Writer
-// ExSender implements directly StructuredEncoder in order to perform the conversion
+// ExSender implements directly StructuredWriter in order to perform the conversion
 type ExSender struct {
 	encoder      *json.Encoder
 	transformers binding.TransformerFactories
@@ -48,9 +48,9 @@ func NewExSender(w io.Writer, factories ...binding.TransformerFactory) binding.S
 }
 
 func (s *ExSender) Send(ctx context.Context, m binding.Message) error {
-	// Encode tries to perform the encoding directly, otherwise
+	// Write tries to perform the encoding directly, otherwise
 	// It fallbacks to converting to event.Event and then convert back to the provided encoders
-	_, err := binding.Encode(
+	_, err := binding.Write(
 		ctx,
 		m,
 		s,
@@ -74,7 +74,7 @@ func (s *ExSender) SetStructuredEvent(ctx context.Context, f format.Format, even
 }
 
 var _ binding.Sender = (*ExSender)(nil)
-var _ binding.StructuredEncoder = (*ExSender)(nil)
+var _ binding.StructuredWriter = (*ExSender)(nil)
 
 // ExReceiver receives by reading JSON encoded events from an io.Reader
 type ExReceiver struct{ decoder *json.Decoder }

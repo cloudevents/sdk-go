@@ -22,13 +22,13 @@ type deleteAttributeTranscoderFactory struct {
 	attributeKind spec.Kind
 }
 
-func (a deleteAttributeTranscoderFactory) StructuredTransformer(binding.StructuredEncoder) binding.StructuredEncoder {
+func (a deleteAttributeTranscoderFactory) StructuredTransformer(binding.StructuredWriter) binding.StructuredWriter {
 	return nil
 }
 
-func (a deleteAttributeTranscoderFactory) BinaryTransformer(encoder binding.BinaryEncoder) binding.BinaryEncoder {
+func (a deleteAttributeTranscoderFactory) BinaryTransformer(encoder binding.BinaryWriter) binding.BinaryWriter {
 	return &deleteAttributeTransformer{
-		BinaryEncoder: encoder,
+		BinaryWriter:  encoder,
 		attributeKind: a.attributeKind,
 	}
 }
@@ -50,14 +50,14 @@ type deleteExtensionTranscoderFactory struct {
 	name string
 }
 
-func (a deleteExtensionTranscoderFactory) StructuredTransformer(binding.StructuredEncoder) binding.StructuredEncoder {
+func (a deleteExtensionTranscoderFactory) StructuredTransformer(binding.StructuredWriter) binding.StructuredWriter {
 	return nil
 }
 
-func (a deleteExtensionTranscoderFactory) BinaryTransformer(encoder binding.BinaryEncoder) binding.BinaryEncoder {
+func (a deleteExtensionTranscoderFactory) BinaryTransformer(encoder binding.BinaryWriter) binding.BinaryWriter {
 	return &deleteExtensionTransformer{
-		BinaryEncoder: encoder,
-		name:          a.name,
+		BinaryWriter: encoder,
+		name:         a.name,
 	}
 }
 
@@ -68,7 +68,7 @@ func (a deleteExtensionTranscoderFactory) EventTransformer() binding.EventTransf
 }
 
 type deleteAttributeTransformer struct {
-	binding.BinaryEncoder
+	binding.BinaryWriter
 	attributeKind spec.Kind
 }
 
@@ -76,11 +76,11 @@ func (b *deleteAttributeTransformer) SetAttribute(attribute spec.Attribute, valu
 	if attribute.Kind() == b.attributeKind {
 		return nil
 	}
-	return b.BinaryEncoder.SetAttribute(attribute, value)
+	return b.BinaryWriter.SetAttribute(attribute, value)
 }
 
 type deleteExtensionTransformer struct {
-	binding.BinaryEncoder
+	binding.BinaryWriter
 	name string
 }
 
@@ -88,5 +88,5 @@ func (b *deleteExtensionTransformer) SetExtension(name string, value interface{}
 	if b.name == name {
 		return nil
 	}
-	return b.BinaryEncoder.SetExtension(name, value)
+	return b.BinaryWriter.SetExtension(name, value)
 }

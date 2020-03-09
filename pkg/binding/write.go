@@ -12,7 +12,7 @@ const (
 	PREFERRED_EVENT_ENCODING        = "PREFERRED_EVENT_ENCODING"
 )
 
-// Invokes the encoders. structuredEncoder and binaryEncoder could be nil if the protocol doesn't support it.
+// Invokes the encoders. structuredWriter and binaryWriter could be nil if the protocol doesn't support it.
 // transformers can be nil and this function guarantees that they are invoked only once during the encoding process.
 //
 // Returns:
@@ -21,21 +21,21 @@ const (
 // * EncodingStructured, err if message was structured but error happened during the encoding
 // * EncodingBinary, err if message was binary but error happened during the encoding
 // * EncodingUnknown, ErrUnknownEncoding if message is not a structured or a binary Message
-func RunDirectEncoding(
+func DirectWrite(
 	ctx context.Context,
-	message Message,
-	structuredEncoder StructuredEncoder,
-	binaryEncoder BinaryEncoder,
+	message MessageReader,
+	structuredWriter StructuredWriter,
+	binaryWriter BinaryWriter,
 	transformers TransformerFactories,
 ) (Encoding, error) {
-	if structuredEncoder != nil && !GetOrDefaultFromCtx(ctx, SKIP_DIRECT_STRUCTURED_ENCODING, false).(bool) {
+	if structuredWriter != nil && !GetOrDefaultFromCtx(ctx, SKIP_DIRECT_STRUCTURED_ENCODING, false).(bool) {
 		// Wrap the transformers in the structured builder
-		structuredEncoder = transformers.StructuredTransformer(structuredEncoder)
+		structuredWriter = transformers.StructuredTransformer(structuredWriter)
 
 		// StructuredTransformer could return nil if one of transcoders doesn't support
 		// direct structured transcoding
-		if structuredEncoder != nil {
-			if err := message.Structured(ctx, structuredEncoder); err == nil {
+		if structuredWriter != nil {
+			if err := message.ReadStructured(ctx, structuredWriter); err == nil {
 				return EncodingStructured, nil
 			} else if err != ErrNotStructured {
 				return EncodingStructured, err
@@ -43,10 +43,10 @@ func RunDirectEncoding(
 		}
 	}
 
-	if binaryEncoder != nil && !GetOrDefaultFromCtx(ctx, SKIP_DIRECT_BINARY_ENCODING, false).(bool) {
-		binaryEncoder = transformers.BinaryTransformer(binaryEncoder)
-		if binaryEncoder != nil {
-			if err := message.Binary(ctx, binaryEncoder); err == nil {
+	if binaryWriter != nil && !GetOrDefaultFromCtx(ctx, SKIP_DIRECT_BINARY_ENCODING, false).(bool) {
+		binaryWriter = transformers.BinaryTransformer(binaryWriter)
+		if binaryWriter != nil {
+			if err := message.ReadBinary(ctx, binaryWriter); err == nil {
 				return EncodingBinary, nil
 			} else if err != ErrNotBinary {
 				return EncodingBinary, err
@@ -58,7 +58,7 @@ func RunDirectEncoding(
 }
 
 // This is the full algorithm to encode a Message using transformers:
-// 1. It first tries direct encoding using RunDirectEncoding
+// 1. It first tries direct encoding using DirectWrite
 // 2. If no direct encoding is possible, it uses ToEvent to generate an Event representation
 // 3. From the Event, the message is encoded back to the provided structured or binary encoders
 // You can tweak the encoding process using the context decorators WithForceStructured, WithForceStructured, etc.
@@ -66,20 +66,20 @@ func RunDirectEncoding(
 // Returns:
 // * EncodingStructured, nil if message is correctly encoded in structured encoding
 // * EncodingBinary, nil if message is correctly encoded in binary encoding
-// * EncodingUnknown, ErrUnknownEncoding if message.Encoding() == EncodingUnknown
+// * EncodingUnknown, ErrUnknownEncoding if message.ReadEncoding() == EncodingUnknown
 // * _, err if error happened during the encoding
-func Encode(
+func Write(
 	ctx context.Context,
-	message Message,
-	structuredEncoder StructuredEncoder,
-	binaryEncoder BinaryEncoder,
+	message MessageReader,
+	structuredWriter StructuredWriter,
+	binaryWriter BinaryWriter,
 	transformers TransformerFactories,
 ) (Encoding, error) {
-	enc := message.Encoding()
+	enc := message.ReadEncoding()
 	var err error
 	// Skip direct encoding if the event is an event message
 	if enc != EncodingEvent {
-		enc, err = RunDirectEncoding(ctx, message, structuredEncoder, binaryEncoder, transformers)
+		enc, err = DirectWrite(ctx, message, structuredWriter, binaryWriter, transformers)
 		if enc != EncodingUnknown {
 			// Message directly encoded, nothing else to do here
 			return enc, err
@@ -95,18 +95,18 @@ func Encode(
 	message = EventMessage(e)
 
 	if GetOrDefaultFromCtx(ctx, PREFERRED_EVENT_ENCODING, EncodingBinary).(Encoding) == EncodingStructured {
-		if structuredEncoder != nil {
-			return EncodingStructured, message.Structured(ctx, structuredEncoder)
+		if structuredWriter != nil {
+			return EncodingStructured, message.ReadStructured(ctx, structuredWriter)
 		}
-		if binaryEncoder != nil {
-			return EncodingBinary, message.Binary(ctx, binaryEncoder)
+		if binaryWriter != nil {
+			return EncodingBinary, message.ReadBinary(ctx, binaryWriter)
 		}
 	} else {
-		if binaryEncoder != nil {
-			return EncodingBinary, message.Binary(ctx, binaryEncoder)
+		if binaryWriter != nil {
+			return EncodingBinary, message.ReadBinary(ctx, binaryWriter)
 		}
-		if structuredEncoder != nil {
-			return EncodingStructured, message.Structured(ctx, structuredEncoder)
+		if structuredWriter != nil {
+			return EncodingStructured, message.ReadStructured(ctx, structuredWriter)
 		}
 	}
 

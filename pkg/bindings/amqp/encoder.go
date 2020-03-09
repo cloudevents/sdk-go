@@ -14,24 +14,24 @@ import (
 )
 
 // Fill the provided amqpMessage with the message m.
-// Using context you can tweak the encoding processing (more details on binding.Encode documentation).
-func EncodeAMQPMessage(ctx context.Context, m binding.Message, amqpMessage *amqp.Message, transformers binding.TransformerFactories) error {
-	structuredEncoder := (*amqpMessageEncoder)(amqpMessage)
-	binaryEncoder := (*amqpMessageEncoder)(amqpMessage)
+// Using context you can tweak the encoding processing (more details on binding.Write documentation).
+func WriteAMQPMessage(ctx context.Context, m binding.Message, amqpMessage *amqp.Message, transformers binding.TransformerFactories) error {
+	structuredWriter := (*amqpMessageWriter)(amqpMessage)
+	binaryWriter := (*amqpMessageWriter)(amqpMessage)
 
-	_, err := binding.Encode(
+	_, err := binding.Write(
 		ctx,
 		m,
-		structuredEncoder,
-		binaryEncoder,
+		structuredWriter,
+		binaryWriter,
 		transformers,
 	)
 	return err
 }
 
-type amqpMessageEncoder amqp.Message
+type amqpMessageWriter amqp.Message
 
-func (b *amqpMessageEncoder) SetStructuredEvent(ctx context.Context, format format.Format, event io.Reader) error {
+func (b *amqpMessageWriter) SetStructuredEvent(ctx context.Context, format format.Format, event io.Reader) error {
 	val, err := ioutil.ReadAll(event)
 	if err != nil {
 		return err
@@ -41,17 +41,17 @@ func (b *amqpMessageEncoder) SetStructuredEvent(ctx context.Context, format form
 	return nil
 }
 
-func (b *amqpMessageEncoder) Start(ctx context.Context) error {
+func (b *amqpMessageWriter) Start(ctx context.Context) error {
 	b.Properties = &amqp.MessageProperties{}
 	b.ApplicationProperties = make(map[string]interface{})
 	return nil
 }
 
-func (b *amqpMessageEncoder) End() error {
+func (b *amqpMessageWriter) End() error {
 	return nil
 }
 
-func (b *amqpMessageEncoder) SetData(reader io.Reader) error {
+func (b *amqpMessageWriter) SetData(reader io.Reader) error {
 	data, err := ioutil.ReadAll(reader)
 	if err != nil {
 		return err
@@ -60,7 +60,7 @@ func (b *amqpMessageEncoder) SetData(reader io.Reader) error {
 	return nil
 }
 
-func (b *amqpMessageEncoder) SetAttribute(attribute spec.Attribute, value interface{}) error {
+func (b *amqpMessageWriter) SetAttribute(attribute spec.Attribute, value interface{}) error {
 	if attribute.Kind() == spec.DataContentType {
 		s, err := types.Format(value)
 		if err != nil {
@@ -77,7 +77,7 @@ func (b *amqpMessageEncoder) SetAttribute(attribute spec.Attribute, value interf
 	return nil
 }
 
-func (b *amqpMessageEncoder) SetExtension(name string, value interface{}) error {
+func (b *amqpMessageWriter) SetExtension(name string, value interface{}) error {
 	v, err := safeAMQPPropertiesUnwrap(value)
 	if err != nil {
 		return err
@@ -86,5 +86,5 @@ func (b *amqpMessageEncoder) SetExtension(name string, value interface{}) error 
 	return nil
 }
 
-var _ binding.BinaryEncoder = (*amqpMessageEncoder)(nil)     // Test it conforms to the interface
-var _ binding.StructuredEncoder = (*amqpMessageEncoder)(nil) // Test it conforms to the interface
+var _ binding.BinaryWriter = (*amqpMessageWriter)(nil)     // Test it conforms to the interface
+var _ binding.StructuredWriter = (*amqpMessageWriter)(nil) // Test it conforms to the interface

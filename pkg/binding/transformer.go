@@ -11,10 +11,10 @@ import (
 // returning nil to the respective factory method.
 type TransformerFactory interface {
 	// Can return nil if the transformation doesn't support structured encoding directly
-	StructuredTransformer(encoder StructuredEncoder) StructuredEncoder
+	StructuredTransformer(encoder StructuredWriter) StructuredWriter
 
 	// Can return nil if the transformation doesn't support binary encoding directly
-	BinaryTransformer(encoder BinaryEncoder) BinaryEncoder
+	BinaryTransformer(encoder BinaryWriter) BinaryWriter
 
 	// Can return nil if the transformation doesn't support events
 	EventTransformer() EventTransformer
@@ -23,7 +23,7 @@ type TransformerFactory interface {
 // Utility type alias to manage multiple TransformerFactory
 type TransformerFactories []TransformerFactory
 
-func (t TransformerFactories) StructuredTransformer(encoder StructuredEncoder) StructuredEncoder {
+func (t TransformerFactories) StructuredTransformer(encoder StructuredWriter) StructuredWriter {
 	if encoder == nil {
 		return nil
 	}
@@ -40,7 +40,7 @@ func (t TransformerFactories) StructuredTransformer(encoder StructuredEncoder) S
 	return res
 }
 
-func (t TransformerFactories) BinaryTransformer(encoder BinaryEncoder) BinaryEncoder {
+func (t TransformerFactories) BinaryTransformer(encoder BinaryWriter) BinaryWriter {
 	if encoder == nil {
 		return nil
 	}

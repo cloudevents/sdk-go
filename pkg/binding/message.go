@@ -2,6 +2,35 @@ package binding
 
 import "context"
 
+// The ReadStructured and ReadBinary methods allows to perform an optimized encoding of a Message to a specific data structure.
+// A Sender should try each method of interest and fall back to binding.ToEvent() if none are supported.
+// An out of the box algorithm is provided for writing a message: binding.Write().
+type MessageReader interface {
+	// Return the type of the message Encoding.
+	// The encoding should be preferably computed when the message is constructed.
+	ReadEncoding() Encoding
+
+	// ReadStructured transfers a structured-mode event to a StructuredWriter.
+	// It must return ErrNotStructured if message is not in structured mode.
+	//
+	// Returns a different err if something wrong happened while trying to read the structured event.
+	// In this case, the caller must Finish the message with appropriate error.
+	//
+	// This allows Senders to avoid re-encoding messages that are
+	// already in suitable structured form.
+	ReadStructured(context.Context, StructuredWriter) error
+
+	// ReadBinary transfers a binary-mode event to an BinaryWriter.
+	// It must return ErrNotBinary if message is not in binary mode.
+	//
+	// Returns a different err if something wrong happened while trying to read the binary event
+	// In this case, the caller must Finish the message with appropriate error
+	//
+	// This allows Senders to avoid re-encoding messages that are
+	// already in suitable binary form.
+	ReadBinary(context.Context, BinaryWriter) error
+}
+
 // Message is the interface to a binding-specific message containing an event.
 //
 // Reliable Delivery
@@ -21,37 +50,11 @@ import "context"
 // The Message interface supports QoS 0 and 1, the ExactlyOnceMessage interface
 // supports QoS 2
 //
-// The Structured and Binary methods allows to perform an optimized encoding of a Message
-// to a specific data structure. A Sender should try each method of interest and fall back to ToEvent() if none are supported.
-// For encoding a message, look at binding.Encode function.
-//
-// Every binding.Message implementation must specify if the message can be accessed one or more times.
+// Message includes the MessageReader interface to read messages. Every binding.Message implementation *must* specify if the message can be accessed one or more times.
 //
 // When a Message can be forgotten by the entity who produced the message, Message.Finish() *must* be invoked.
 type Message interface {
-	// Return the type of the message Encoding.
-	// The encoding should be preferably computed when the message is constructed.
-	Encoding() Encoding
-
-	// Structured transfers a structured-mode event to a StructuredEncoder.
-	// It must return ErrNotStructured if message is not in structured mode.
-	//
-	// Returns a different err if something wrong happened while trying to read the structured event.
-	// In this case, the caller must Finish the message with appropriate error.
-	//
-	// This allows Senders to avoid re-encoding messages that are
-	// already in suitable structured form.
-	Structured(context.Context, StructuredEncoder) error
-
-	// Binary transfers a binary-mode event to an BinaryEncoder.
-	// It must return ErrNotBinary if message is not in binary mode.
-	//
-	// Returns a different err if something wrong happened while trying to read the binary event
-	// In this case, the caller must Finish the message with appropriate error
-	//
-	// This allows Senders to avoid re-encoding messages that are
-	// already in suitable binary form.
-	Binary(context.Context, BinaryEncoder) error
+	MessageReader
 
 	// Finish *must* be called when message from a Receiver can be forgotten by
 	// the receiver. A QoS 1 sender should not call Finish() until it gets an acknowledgment of

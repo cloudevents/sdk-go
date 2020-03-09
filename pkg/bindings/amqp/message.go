@@ -52,18 +52,18 @@ func getSpecVersion(message *amqp.Message) spec.Version {
 	return nil
 }
 
-func (m *Message) Encoding() binding.Encoding {
+func (m *Message) ReadEncoding() binding.Encoding {
 	return m.encoding
 }
 
-func (m *Message) Structured(ctx context.Context, encoder binding.StructuredEncoder) error {
+func (m *Message) ReadStructured(ctx context.Context, encoder binding.StructuredWriter) error {
 	if m.AMQP.Properties != nil && format.IsFormat(m.AMQP.Properties.ContentType) {
 		return encoder.SetStructuredEvent(ctx, format.Lookup(m.AMQP.Properties.ContentType), bytes.NewReader(m.AMQP.GetData()))
 	}
 	return binding.ErrNotStructured
 }
 
-func (m *Message) Binary(ctx context.Context, encoder binding.BinaryEncoder) error {
+func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) error {
 	if len(m.AMQP.ApplicationProperties) == 0 {
 		return errors.New("AMQP CloudEvents message has no application properties")
 	}

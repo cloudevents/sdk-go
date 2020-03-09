@@ -35,15 +35,15 @@ func (m *binaryBufferedMessage) GetParent() binding.Message {
 	return nil
 }
 
-func (m *binaryBufferedMessage) Encoding() binding.Encoding {
+func (m *binaryBufferedMessage) ReadEncoding() binding.Encoding {
 	return binding.EncodingBinary
 }
 
-func (m *binaryBufferedMessage) Structured(context.Context, binding.StructuredEncoder) error {
+func (m *binaryBufferedMessage) ReadStructured(context.Context, binding.StructuredWriter) error {
 	return binding.ErrNotStructured
 }
 
-func (m *binaryBufferedMessage) Binary(ctx context.Context, b binding.BinaryEncoder) (err error) {
+func (m *binaryBufferedMessage) ReadBinary(ctx context.Context, b binding.BinaryWriter) (err error) {
 	err = b.Start(ctx)
 	if err != nil {
 		return
@@ -103,4 +103,4 @@ func (b *binaryBufferedMessage) SetExtension(name string, value interface{}) err
 }
 
 var _ binding.Message = (*binaryBufferedMessage)(nil) // Test it conforms to the interface
-var _ binding.BinaryEncoder = (*binaryBufferedMessage)(nil)
+var _ binding.BinaryWriter = (*binaryBufferedMessage)(nil)
