@@ -10,8 +10,8 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/event"
 
 	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
+	"github.com/cloudevents/sdk-go/pkg/observability"
 	"github.com/cloudevents/sdk-go/pkg/types"
 )
 

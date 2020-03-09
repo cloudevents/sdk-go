@@ -3,13 +3,12 @@ package client
 import (
 	"context"
 	"fmt"
+	"github.com/cloudevents/sdk-go/pkg/observability"
 	"sync"
 
-	"github.com/cloudevents/sdk-go/pkg/event"
-
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"github.com/cloudevents/sdk-go/pkg/extensions"
 	"go.opencensus.io/trace"
 )
