@@ -35,14 +35,9 @@ func (r *Receiver) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	m.OnFinish = func(err error) error {
 		//status := http.StatusNoContent
 		if m.resp != nil {
-			if err := EncodeHttpResponseWriter(context.Background(), m.resp, rw, r.transformers); err != nil {
-				//		status = http.StatusBadRequest
-			} else {
-				//		status = http.StatusAccepted
-			}
+			err := EncodeHttpResponseWriter(context.Background(), m.resp, rw, r.transformers)
+			_ = m.resp.Finish(err)
 		}
-		//rw.WriteHeader(status)
-		_ = m.resp.Finish(err)
 		m.resp = nil
 		done <- err
 		return nil
