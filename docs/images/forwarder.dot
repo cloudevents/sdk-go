@@ -1,0 +1,9 @@
+digraph {
+    rankdir=LR;
+
+    Forwarder[shape=box]
+
+    downstream -> Forwarder;
+
+    Forwarder -> upstream;
+}

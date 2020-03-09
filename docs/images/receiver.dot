@@ -1,0 +1,6 @@
+digraph {
+    rankdir=LR;
+
+    Receiver[shape=box]
+    downstream -> Receiver;
+}

@@ -1,0 +1,7 @@
+digraph {
+    rankdir=LR;
+
+    Sender[shape=box]
+
+    Sender -> upstream;
+}

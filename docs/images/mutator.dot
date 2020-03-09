@@ -1,0 +1,7 @@
+digraph {
+    rankdir=LR;
+
+    Mutator[shape=box]
+
+    Mutator -> upstream[dir=both];
+}
