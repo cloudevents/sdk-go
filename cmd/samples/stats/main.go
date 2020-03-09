@@ -16,11 +16,11 @@ import (
 
 	"github.com/cloudevents/sdk-go/pkg/client"
 	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec/json"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec/xml"
 	transporthttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 	"github.com/cloudevents/sdk-go/pkg/event"
+	"github.com/cloudevents/sdk-go/pkg/event/datacodec"
+	"github.com/cloudevents/sdk-go/pkg/event/datacodec/json"
+	"github.com/cloudevents/sdk-go/pkg/event/datacodec/xml"
 	"github.com/cloudevents/sdk-go/pkg/types"
 )
 

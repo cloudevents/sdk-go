@@ -79,4 +79,4 @@ See pkg/binding/doc.go for more details.
 [transport.transport]: ../pkg/cloudevents/transport/transport.go
 [transport.message]: ../pkg/cloudevents/transport/message.go
 [transport.codec]: ../pkg/cloudevents/transport/codec.go
-[datacodec.codec]: ../pkg/cloudevents/datacodec/codec.go
+[datacodec.codec]: ../pkg/event/datacodec/codec.go
