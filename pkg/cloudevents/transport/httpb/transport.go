@@ -172,8 +172,8 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 }
 
 func (t *Transport) ServeHTTP(rw nethttp.ResponseWriter, req *nethttp.Request) {
-	if s, ok := t.BindingTransport.Receiver.(*http.Receiver); ok {
-		s.ServeHTTP(rw, req)
+	if r, ok := t.BindingTransport.Receiver.(*http.Receiver); ok {
+		r.ServeHTTP(rw, req)
 	}
 }
 

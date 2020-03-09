@@ -87,6 +87,14 @@ type ExactlyOnceMessage interface {
 	Received(settle func(error))
 }
 
+// ResponseMessage
+type ResponseMessage interface {
+	Message
+
+	// Response
+	Response(context.Context, Message)
+}
+
 // Message Wrapper interface is used to walk through a decorated Message and unwrap it.
 type MessageWrapper interface {
 	Message

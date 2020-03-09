@@ -2,13 +2,18 @@ package event
 
 // EventResponse represents the canonical representation of a Response to a
 // CloudEvent from a receiver. Response implementation is Transport dependent.
+// Deprecated: handle the protocol directly.
 type EventResponse struct {
+	// Deprecated: handle the protocol directly.
 	Status int
-	Event  *Event
+	// Deprecated: handle the protocol directly.
+	Event *Event
+	// Deprecated: handle the protocol directly.
 	Reason string
 	// Context is transport specific struct to allow for controlling transport
 	// response details.
 	// For example, see http.TransportResponseContext.
+	// Deprecated: handle the protocol directly.
 	Context interface{}
 }
 

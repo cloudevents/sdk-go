@@ -61,15 +61,15 @@ func (t *BindingTransport) Request(ctx context.Context, e event.Event) (*event.E
 	// If provided a requester, use it to do request/response.
 	var resp *event.Event
 	msg, err := t.Requester.Request(ctx, EventMessage(e))
+	defer func() {
+		if err := msg.Finish(err); err != nil {
+			cecontext.LoggerFrom(ctx).Warnw("failed calling message.Finish", zap.Error(err))
+		}
+	}()
 	if err == nil {
 		if rs, err := ToEvent(ctx, msg, nil); err != nil {
-			cecontext.LoggerFrom(ctx).Warnw("failed calling ToEvent", zap.Error(err))
+			cecontext.LoggerFrom(ctx).Warnw("failed calling ToEvent", zap.Error(err), zap.Any("resp", msg))
 		} else {
-			defer func() {
-				if err := msg.Finish(err); err == nil {
-					cecontext.LoggerFrom(ctx).Warnw("failed calling message.Finish", zap.Error(err))
-				}
-			}()
 			resp = &rs
 		}
 	}
@@ -114,9 +114,14 @@ func (t *BindingTransport) handle(ctx context.Context, m Message) (err error) {
 		return err
 	}
 
-	// TODO: do something with eventResp. This is not possible with bindings today.
-	return nil
+	if eventResp.Event != nil {
+		// TODO: this does not give control over the http response code at the moment.
+		if rs, ok := m.(ResponseMessage); ok {
+			rs.Response(ctx, EventMessage(*eventResp.Event))
+		}
+	}
 
+	return nil
 }
 
 func (t *BindingTransport) SetConverter(c transport.Converter) {
