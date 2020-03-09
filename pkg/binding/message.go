@@ -21,9 +21,9 @@ import "context"
 // The Message interface supports QoS 0 and 1, the ExactlyOnceMessage interface
 // supports QoS 2
 //
-// The Structured and Binary methods allows to perform an optimized encoding of a Message
+// The ReadStructured and ReadBinary methods allows to perform an optimized encoding of a Message
 // to a specific data structure. A Sender should try each method of interest and fall back to ToEvent() if none are supported.
-// For encoding a message, look at binding.Encode function.
+// For encoding a message, look at binding.Write function.
 //
 // Every binding.Message implementation must specify if the message can be accessed one or more times.
 //
@@ -33,7 +33,7 @@ type Message interface {
 	// The encoding should be preferably computed when the message is constructed.
 	Encoding() Encoding
 
-	// Structured transfers a structured-mode event to a StructuredEncoder.
+	// ReadStructured transfers a structured-mode event to a StructuredWriter.
 	// It must return ErrNotStructured if message is not in structured mode.
 	//
 	// Returns a different err if something wrong happened while trying to read the structured event.
@@ -41,9 +41,9 @@ type Message interface {
 	//
 	// This allows Senders to avoid re-encoding messages that are
 	// already in suitable structured form.
-	Structured(context.Context, StructuredEncoder) error
+	ReadStructured(context.Context, StructuredWriter) error
 
-	// Binary transfers a binary-mode event to an BinaryEncoder.
+	// ReadBinary transfers a binary-mode event to an BinaryWriter.
 	// It must return ErrNotBinary if message is not in binary mode.
 	//
 	// Returns a different err if something wrong happened while trying to read the binary event
@@ -51,7 +51,7 @@ type Message interface {
 	//
 	// This allows Senders to avoid re-encoding messages that are
 	// already in suitable binary form.
-	Binary(context.Context, BinaryEncoder) error
+	ReadBinary(context.Context, BinaryWriter) error
 
 	// Finish *must* be called when message from a Receiver can be forgotten by
 	// the receiver. A QoS 1 sender should not call Finish() until it gets an acknowledgment of

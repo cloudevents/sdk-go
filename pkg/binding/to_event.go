@@ -41,7 +41,7 @@ func ToEvent(ctx context.Context, message Message, transformers TransformerFacto
 	}
 
 	encoder := &messageToEventBuilder{event: &e}
-	_, err = RunDirectEncoding(
+	_, err = DirectWrite(
 		context.TODO(),
 		message,
 		encoder,
@@ -59,8 +59,8 @@ type messageToEventBuilder struct {
 	event *event.Event
 }
 
-var _ StructuredEncoder = (*messageToEventBuilder)(nil)
-var _ BinaryEncoder = (*messageToEventBuilder)(nil)
+var _ StructuredWriter = (*messageToEventBuilder)(nil)
+var _ BinaryWriter = (*messageToEventBuilder)(nil)
 
 func (b *messageToEventBuilder) SetStructuredEvent(ctx context.Context, format format.Format, event io.Reader) error {
 	var buf bytes.Buffer

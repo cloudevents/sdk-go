@@ -15,12 +15,12 @@ type versionTranscoderFactory struct {
 	version spec.Version
 }
 
-func (v versionTranscoderFactory) StructuredTransformer(binding.StructuredEncoder) binding.StructuredEncoder {
+func (v versionTranscoderFactory) StructuredTransformer(binding.StructuredWriter) binding.StructuredWriter {
 	return nil // Not supported, must fallback to EventTransformer!
 }
 
-func (v versionTranscoderFactory) BinaryTransformer(encoder binding.BinaryEncoder) binding.BinaryEncoder {
-	return binaryVersionTransformer{BinaryEncoder: encoder, version: v.version}
+func (v versionTranscoderFactory) BinaryTransformer(encoder binding.BinaryWriter) binding.BinaryWriter {
+	return binaryVersionTransformer{BinaryWriter: encoder, version: v.version}
 }
 
 func (v versionTranscoderFactory) EventTransformer() binding.EventTransformer {
@@ -31,14 +31,14 @@ func (v versionTranscoderFactory) EventTransformer() binding.EventTransformer {
 }
 
 type binaryVersionTransformer struct {
-	binding.BinaryEncoder
+	binding.BinaryWriter
 	version spec.Version
 }
 
 func (b binaryVersionTransformer) SetAttribute(attribute spec.Attribute, value interface{}) error {
 	if attribute.Kind() == spec.SpecVersion {
-		return b.BinaryEncoder.SetAttribute(b.version.AttributeFromKind(spec.SpecVersion), b.version.String())
+		return b.BinaryWriter.SetAttribute(b.version.AttributeFromKind(spec.SpecVersion), b.version.String())
 	}
 	attributeInDifferentVersion := b.version.AttributeFromKind(attribute.Kind())
-	return b.BinaryEncoder.SetAttribute(attributeInDifferentVersion, value)
+	return b.BinaryWriter.SetAttribute(attributeInDifferentVersion, value)
 }

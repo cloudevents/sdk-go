@@ -12,7 +12,7 @@ import (
 )
 
 // MockBinaryMessage implements a binary-mode message as a simple struct.
-// MockBinaryMessage implements both the binding.Message interface and the binding.BinaryEncoder
+// MockBinaryMessage implements both the binding.Message interface and the binding.BinaryWriter
 type MockBinaryMessage struct {
 	Metadata   map[spec.Attribute]interface{}
 	Extensions map[string]interface{}
@@ -48,11 +48,11 @@ func MustCreateMockBinaryMessage(e event.Event) binding.Message {
 	return &m
 }
 
-func (bm *MockBinaryMessage) Structured(context.Context, binding.StructuredEncoder) error {
+func (bm *MockBinaryMessage) ReadStructured(context.Context, binding.StructuredWriter) error {
 	return binding.ErrNotStructured
 }
 
-func (bm *MockBinaryMessage) Binary(ctx context.Context, b binding.BinaryEncoder) error {
+func (bm *MockBinaryMessage) ReadBinary(ctx context.Context, b binding.BinaryWriter) error {
 	err := b.Start(ctx)
 	if err != nil {
 		return err
@@ -110,4 +110,4 @@ func (bm *MockBinaryMessage) End() error {
 }
 
 var _ binding.Message = (*MockBinaryMessage)(nil)
-var _ binding.BinaryEncoder = (*MockBinaryMessage)(nil)
+var _ binding.BinaryWriter = (*MockBinaryMessage)(nil)

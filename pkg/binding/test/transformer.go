@@ -26,7 +26,7 @@ func RunTransformerTests(t *testing.T, ctx context.Context, tests []TransformerT
 			mockStructured := MockStructuredMessage{}
 			mockBinary := MockBinaryMessage{}
 
-			enc, err := binding.Encode(ctx, tt.InputMessage, &mockStructured, &mockBinary, tt.Transformers)
+			enc, err := binding.Write(ctx, tt.InputMessage, &mockStructured, &mockBinary, tt.Transformers)
 			require.NoError(t, err)
 
 			var e event.Event

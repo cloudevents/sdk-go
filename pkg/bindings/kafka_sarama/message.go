@@ -104,14 +104,14 @@ func (m *Message) Encoding() binding.Encoding {
 	return binding.EncodingUnknown
 }
 
-func (m *Message) Structured(ctx context.Context, encoder binding.StructuredEncoder) error {
+func (m *Message) ReadStructured(ctx context.Context, encoder binding.StructuredWriter) error {
 	if m.format != nil {
 		return encoder.SetStructuredEvent(ctx, m.format, bytes.NewReader(m.Value))
 	}
 	return binding.ErrNotStructured
 }
 
-func (m *Message) Binary(ctx context.Context, encoder binding.BinaryEncoder) error {
+func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) error {
 	if m.version == nil {
 		return binding.ErrNotBinary
 	}

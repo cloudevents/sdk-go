@@ -23,13 +23,13 @@ type updateAttributeTranscoderFactory struct {
 	updater       func(interface{}) (interface{}, error)
 }
 
-func (a updateAttributeTranscoderFactory) StructuredTransformer(binding.StructuredEncoder) binding.StructuredEncoder {
+func (a updateAttributeTranscoderFactory) StructuredTransformer(binding.StructuredWriter) binding.StructuredWriter {
 	return nil
 }
 
-func (a updateAttributeTranscoderFactory) BinaryTransformer(encoder binding.BinaryEncoder) binding.BinaryEncoder {
+func (a updateAttributeTranscoderFactory) BinaryTransformer(encoder binding.BinaryWriter) binding.BinaryWriter {
 	return &updateAttributeTransformer{
-		BinaryEncoder: encoder,
+		BinaryWriter:  encoder,
 		attributeKind: a.attributeKind,
 		updater:       a.updater,
 	}
@@ -61,15 +61,15 @@ type updateExtensionTranscoderFactory struct {
 	updater func(interface{}) (interface{}, error)
 }
 
-func (a updateExtensionTranscoderFactory) StructuredTransformer(binding.StructuredEncoder) binding.StructuredEncoder {
+func (a updateExtensionTranscoderFactory) StructuredTransformer(binding.StructuredWriter) binding.StructuredWriter {
 	return nil
 }
 
-func (a updateExtensionTranscoderFactory) BinaryTransformer(encoder binding.BinaryEncoder) binding.BinaryEncoder {
+func (a updateExtensionTranscoderFactory) BinaryTransformer(encoder binding.BinaryWriter) binding.BinaryWriter {
 	return &updateExtensionTransformer{
-		BinaryEncoder: encoder,
-		name:          a.name,
-		updater:       a.updater,
+		BinaryWriter: encoder,
+		name:         a.name,
+		updater:      a.updater,
 	}
 }
 
@@ -87,7 +87,7 @@ func (a updateExtensionTranscoderFactory) EventTransformer() binding.EventTransf
 }
 
 type updateAttributeTransformer struct {
-	binding.BinaryEncoder
+	binding.BinaryWriter
 	attributeKind spec.Kind
 	updater       func(interface{}) (interface{}, error)
 }
@@ -99,15 +99,15 @@ func (b *updateAttributeTransformer) SetAttribute(attribute spec.Attribute, valu
 			return err
 		}
 		if newVal != nil {
-			return b.BinaryEncoder.SetAttribute(attribute, newVal)
+			return b.BinaryWriter.SetAttribute(attribute, newVal)
 		}
 		return nil
 	}
-	return b.BinaryEncoder.SetAttribute(attribute, value)
+	return b.BinaryWriter.SetAttribute(attribute, value)
 }
 
 type updateExtensionTransformer struct {
-	binding.BinaryEncoder
+	binding.BinaryWriter
 	name    string
 	updater func(interface{}) (interface{}, error)
 }
@@ -119,9 +119,9 @@ func (b *updateExtensionTransformer) SetExtension(name string, value interface{}
 			return err
 		}
 		if newVal != nil {
-			return b.BinaryEncoder.SetExtension(name, newVal)
+			return b.BinaryWriter.SetExtension(name, newVal)
 		}
 		return nil
 	}
-	return b.BinaryEncoder.SetExtension(name, value)
+	return b.BinaryWriter.SetExtension(name, value)
 }

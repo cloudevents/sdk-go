@@ -7,11 +7,11 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
 )
 
-// StructuredEncoder is used to visit a structured Message and generate a new representation.
+// StructuredWriter is used to visit a structured Message and generate a new representation.
 //
 // Protocols that supports structured encoding should implement this interface to implement direct
 // structured to structured encoding and event to structured encoding.
-type StructuredEncoder interface {
+type StructuredWriter interface {
 	// Event receives an io.Reader for the whole event.
 	SetStructuredEvent(ctx context.Context, format format.Format, event io.Reader) error
 }

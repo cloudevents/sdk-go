@@ -38,7 +38,7 @@ func CopyMessage(ctx context.Context, m binding.Message, transformers binding.Tr
 	sm := structBufferedMessage{}
 	bm := binaryBufferedMessage{}
 
-	encoding, err := binding.RunDirectEncoding(ctx, m, &sm, &bm, transformers)
+	encoding, err := binding.DirectWrite(ctx, m, &sm, &bm, transformers)
 	if encoding == binding.EncodingStructured {
 		return &sm, err
 	} else if encoding == binding.EncodingBinary {

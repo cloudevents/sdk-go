@@ -37,7 +37,7 @@ func NewSender(client sarama.Client, topic string, options ...SenderOptionFunc) 
 func (s *Sender) Send(ctx context.Context, m binding.Message) error {
 	kafkaMessage := sarama.ProducerMessage{Topic: s.topic}
 
-	if err := EncodeKafkaProducerMessage(ctx, m, &kafkaMessage, s.transformers); err != nil {
+	if err := WriteKafkaProducerMessage(ctx, m, &kafkaMessage, s.transformers); err != nil {
 		return err
 	}
 

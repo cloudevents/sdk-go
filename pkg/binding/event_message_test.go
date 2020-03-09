@@ -38,7 +38,7 @@ func TestStructuredModeCustomFormat(t *testing.T) {
 	enc := test.MockStructuredMessage{}
 	message := binding.EventMessage(e)
 
-	err := message.Structured(ctx, &enc)
+	err := message.ReadStructured(ctx, &enc)
 	require.NoError(t, err)
 	require.Equal(t, &format, enc.Format)
 }

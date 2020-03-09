@@ -61,7 +61,7 @@ func (s *Sender) Request(ctx context.Context, m binding.Message) (binding.Messag
 		return nil, fmt.Errorf("not initialized: %#v", s)
 	}
 
-	if err = EncodeHttpRequest(ctx, m, req, s.transformers); err != nil {
+	if err = WriteHttpRequest(ctx, m, req, s.transformers); err != nil {
 		return nil, err
 	}
 	resp, err := s.Client.Do(req)

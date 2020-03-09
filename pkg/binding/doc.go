@@ -15,7 +15,7 @@ most "endpoint" applications that emit or consume events.
 
 Protocol Bindings
 
-A protocol binding usually implements a Message, a Sender and Receiver, a StructuredEncoder and a BinaryEncoder (depending on the supported encodings of the protocol) and an Encode method.
+A protocol binding usually implements a Message, a Sender and Receiver, a StructuredWriter and a BinaryWriter (depending on the supported encodings of the protocol) and an Write method.
 
 Messages and Encoding
 
@@ -25,9 +25,9 @@ The entity who receives a protocol specific data structure representing a messag
 NewMessage method (e.g. http.NewMessage).
 Then the entity that wants to send the binding.Message back on the wire,
 translates it back to the protocol specific data structure (e.g. a Kafka ConsumerMessage), using
-the visitors BinaryEncoder and StructuredEncoder specific to that protocol.
+the visitors BinaryWriter and StructuredWriter specific to that protocol.
 Binding implementations exposes their visitors
-through a specific Encode function (e.g. kafka.EncodeProducerMessage), in order to simplify the invocation of the
+through a specific Write function (e.g. kafka.EncodeProducerMessage), in order to simplify the invocation of the
 encoding message.
 
 The encoding process can be customized in order to mutate the final result with binding.TransformerFactory. A bunch of these are provided directly by the binding/transcoder module.
@@ -37,7 +37,7 @@ In order to consume a message several times, the binding/buffering module provid
 
 A message can be converted to an event.Event using ToEvent method. An event.Event can be used as Message casting it to binding.EventMessage.
 
-In order to simplify the encoding process for each protocol, this package provide several utility methods like binding.Encode and binding.RunDirectEncoding. The binding.Encode method tries to preserve the structured/binary encoding, in order to be as much efficient as possible.
+In order to simplify the encoding process for each protocol, this package provide several utility methods like binding.Write and binding.DirectWrite. The binding.Write method tries to preserve the structured/binary encoding, in order to be as much efficient as possible.
 
 Messages can be eventually wrapped to change their behaviours and binding their lifecycle, like the binding.FinishMessage. Every Message wrapper implements the MessageWrapper interface
 
@@ -45,7 +45,7 @@ Sender and Receiver
 
 A Receiver receives protocol specific messages and wraps them to into binding.Message implementations.
 
-A Sender converts arbitrary Message implementations to a protocol-specific form using the protocol specific Encode method
+A Sender converts arbitrary Message implementations to a protocol-specific form using the protocol specific Write method
 and sends them.
 
 Message and ExactlyOnceMessage provide methods to allow acknowledgments to
