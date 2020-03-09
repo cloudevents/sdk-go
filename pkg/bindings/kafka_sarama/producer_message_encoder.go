@@ -61,7 +61,7 @@ func WriteKafkaProducerMessage(ctx context.Context, m binding.Message, producerM
 		}
 	}
 
-	var e ce.Event
+	var e *ce.Event
 	e, err = binding.ToEvent(ctx, m, transformerFactories)
 	if err != nil {
 		return err
@@ -76,7 +76,7 @@ func WriteKafkaProducerMessage(ctx context.Context, m binding.Message, producerM
 		producerMessage.Key = sarama.StringEncoder(s)
 	}
 
-	eventMessage := binding.EventMessage(e)
+	eventMessage := binding.EventMessage(*e)
 
 	encoder := &kafkaProducerMessageWriter{
 		producerMessage,

@@ -77,3 +77,21 @@ Mutator, when a Producer or Intermediary blocks on a response from a Consumer, r
 
 
 
+---
+
+# For Integrators
+
+To leverage the SDK, the following interfaces need to be considered:
+
+Event -> Message -> bits
+
+bits -> Message -> Event
+
+bit -> Message -> bits
+
+
+
+
+
+
+

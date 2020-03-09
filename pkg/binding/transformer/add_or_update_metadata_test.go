@@ -12,6 +12,8 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
 	"github.com/cloudevents/sdk-go/pkg/binding/test"
 	"github.com/cloudevents/sdk-go/pkg/types"
+
+	. "github.com/cloudevents/sdk-go/pkg/bindings/test"
 )
 
 func TestSetAttribute(t *testing.T) {
@@ -38,7 +40,7 @@ func TestSetAttribute(t *testing.T) {
 		return t.Add(1 * time.Hour), nil
 	})
 
-	test.RunTransformerTests(t, context.Background(), []test.TransformerTestArgs{
+	RunTransformerTests(t, context.Background(), []TransformerTestArgs{
 		{
 			Name:         "Add time to Mock Structured message",
 			InputMessage: test.MustCreateMockStructuredMessage(e),
@@ -108,7 +110,7 @@ func TestSetExtension(t *testing.T) {
 		return strconv.Itoa(n), nil
 	})
 
-	test.RunTransformerTests(t, context.Background(), []test.TransformerTestArgs{
+	RunTransformerTests(t, context.Background(), []TransformerTestArgs{
 		{
 			Name:         "Add exnum to Mock Structured message",
 			InputMessage: test.MustCreateMockStructuredMessage(e),

@@ -1,6 +1,9 @@
-package binding
+package bindings
 
-import "context"
+import (
+	"context"
+	"github.com/cloudevents/sdk-go/pkg/binding"
+)
 
 // Sender sends messages.
 type Sender interface {
@@ -12,7 +15,7 @@ type Sender interface {
 	// m.Finish() is called when sending is finished: expected acknowledgments (or
 	// errors) have been received, the Sender is no longer holding any state for
 	// the message. m.Finish() may be called during or after Send().
-	Send(ctx context.Context, m Message) error
+	Send(ctx context.Context, m binding.Message) error
 }
 
 // Requester sends a message and receives a response
@@ -23,7 +26,7 @@ type Requester interface {
 	Sender
 
 	// Request sends m like Sender.Send() but also arranges to receive a response.
-	Request(ctx context.Context, m Message) (Message, error)
+	Request(ctx context.Context, m binding.Message) (binding.Message, error)
 }
 
 // SendCloser is a Sender that can be closed.

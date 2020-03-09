@@ -7,13 +7,14 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/binding/test"
+	. "github.com/cloudevents/sdk-go/pkg/binding/test"
+	. "github.com/cloudevents/sdk-go/pkg/bindings/test"
 )
 
 func TestEvent(t *testing.T) {
 	assert := assert.New(t)
 
-	e := test.FullEvent()
+	e := FullEvent()
 	assert.Equal("1.0", e.SpecVersion())
 	assert.Equal("com.example.FullEvent", e.Type())
 	assert.Equal(true, e.DataEncoded)
@@ -22,7 +23,7 @@ func TestEvent(t *testing.T) {
 	assert.NoError(err)
 	assert.Equal("hello", s)
 
-	e = test.MinEvent()
+	e = MinEvent()
 	assert.Equal("1.0", e.SpecVersion())
 	assert.Equal("com.example.MinEvent", e.Type())
 	assert.Nil(e.Data)
@@ -37,13 +38,13 @@ func (d dummySR) Receive(ctx context.Context) (binding.Message, error)    { retu
 func TestSendReceive(t *testing.T) {
 	sr := make(dummySR)
 	allIn := []binding.Message{}
-	for _, e := range test.Events() {
+	for _, e := range Events() {
 		allIn = append(allIn, binding.EventMessage(e))
 	}
 
 	var allOut []binding.Message
-	test.EachMessage(t, allIn, func(t *testing.T, in binding.Message) {
-		test.SendReceive(t, context.Background(), in, sr, sr, func(out binding.Message) {
+	EachMessage(t, allIn, func(t *testing.T, in binding.Message) {
+		SendReceive(t, context.Background(), in, sr, sr, func(out binding.Message) {
 			assert.Equal(t, in, out)
 			allOut = append(allOut, out)
 		})

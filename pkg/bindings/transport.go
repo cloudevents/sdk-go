@@ -1,8 +1,9 @@
-package binding
+package bindings
 
 import (
 	"context"
 	"errors"
+	"github.com/cloudevents/sdk-go/pkg/binding"
 	"io"
 
 	"go.uber.org/zap"
@@ -47,7 +48,7 @@ func (t *BindingTransport) Send(ctx context.Context, e event.Event) error {
 	for _, f := range t.SenderContextDecorators {
 		ctx = f(ctx)
 	}
-	return t.Sender.Send(ctx, EventMessage(e))
+	return t.Sender.Send(ctx, binding.EventMessage(e))
 }
 
 func (t *BindingTransport) Request(ctx context.Context, e event.Event) (*event.Event, error) {
@@ -60,17 +61,17 @@ func (t *BindingTransport) Request(ctx context.Context, e event.Event) (*event.E
 
 	// If provided a requester, use it to do request/response.
 	var resp *event.Event
-	msg, err := t.Requester.Request(ctx, EventMessage(e))
+	msg, err := t.Requester.Request(ctx, binding.EventMessage(e))
 	defer func() {
 		if err := msg.Finish(err); err != nil {
 			cecontext.LoggerFrom(ctx).Warnw("failed calling message.Finish", zap.Error(err))
 		}
 	}()
 	if err == nil {
-		if rs, err := ToEvent(ctx, msg, nil); err != nil {
+		if rs, err := binding.ToEvent(ctx, msg, nil); err != nil {
 			cecontext.LoggerFrom(ctx).Warnw("failed calling ToEvent", zap.Error(err), zap.Any("resp", msg))
 		} else {
-			resp = &rs
+			resp = rs
 		}
 	}
 	return resp, err
@@ -94,7 +95,7 @@ func (t *BindingTransport) StartReceiver(ctx context.Context) error {
 	}
 }
 
-func (t *BindingTransport) handle(ctx context.Context, m Message) (err error) {
+func (t *BindingTransport) handle(ctx context.Context, m binding.Message) (err error) {
 	defer func() {
 		if err2 := m.Finish(err); err2 == nil {
 			err = err2
@@ -105,19 +106,19 @@ func (t *BindingTransport) handle(ctx context.Context, m Message) (err error) {
 		return
 	}
 
-	e, err := ToEvent(ctx, m, nil)
+	e, err := binding.ToEvent(ctx, m, nil)
 	if err != nil {
 		return err
 	}
 	eventResp := event.EventResponse{}
-	if err := t.handler.Receive(ctx, e, &eventResp); err != nil {
+	if err := t.handler.Receive(ctx, *e, &eventResp); err != nil {
 		return err
 	}
 
 	if eventResp.Event != nil {
 		// TODO: this does not give control over the http response code at the moment.
-		if rs, ok := m.(ResponseMessage); ok {
-			rs.Response(ctx, EventMessage(*eventResp.Event))
+		if rs, ok := m.(binding.ResponseMessage); ok {
+			rs.Response(ctx, binding.EventMessage(*eventResp.Event))
 		}
 	}
 

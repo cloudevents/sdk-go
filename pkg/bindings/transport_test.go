@@ -1,4 +1,4 @@
-package binding_test
+package bindings_test
 
 import (
 	"context"
@@ -8,13 +8,14 @@ import (
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/test"
+	"github.com/cloudevents/sdk-go/pkg/bindings"
 	client "github.com/cloudevents/sdk-go/pkg/client"
 	"github.com/cloudevents/sdk-go/pkg/event"
 )
 
 func TestTransportSend(t *testing.T) {
 	messageChannel := make(chan binding.Message, 1)
-	transport := binding.NewSendingTransport(binding.ChanSender(messageChannel), binding.ChanReceiver(messageChannel), nil)
+	transport := bindings.NewSendingTransport(binding.ChanSender(messageChannel), binding.ChanReceiver(messageChannel), nil)
 	ev := test.MinEvent()
 
 	c, err := client.New(transport, client.WithoutTracePropagation())
@@ -31,7 +32,7 @@ func TestTransportSend(t *testing.T) {
 func TestTransportReceive(t *testing.T) {
 	messageChannel := make(chan binding.Message, 1)
 	eventReceivedChannel := make(chan event.Event, 1)
-	transport := binding.NewSendingTransport(binding.ChanSender(messageChannel), binding.ChanReceiver(messageChannel), nil)
+	transport := bindings.NewSendingTransport(binding.ChanSender(messageChannel), binding.ChanReceiver(messageChannel), nil)
 	ev := test.MinEvent()
 
 	c, err := client.New(transport)

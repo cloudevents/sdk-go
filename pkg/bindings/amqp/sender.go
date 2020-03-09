@@ -2,7 +2,7 @@ package amqp
 
 import (
 	"context"
-
+	"github.com/cloudevents/sdk-go/pkg/bindings"
 	"pack.ag/amqp"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
@@ -33,7 +33,7 @@ func (s *sender) Send(ctx context.Context, in binding.Message) error {
 func (s *sender) Close(ctx context.Context) error { return s.amqp.Close(ctx) }
 
 // Create a new Sender which wraps an amqp.Sender in a binding.Sender
-func NewSender(amqpSender *amqp.Sender, options ...SenderOptionFunc) binding.Sender {
+func NewSender(amqpSender *amqp.Sender, options ...SenderOptionFunc) bindings.Sender {
 	s := &sender{amqp: amqpSender, transformers: make(binding.TransformerFactories, 0)}
 	for _, o := range options {
 		o(s)

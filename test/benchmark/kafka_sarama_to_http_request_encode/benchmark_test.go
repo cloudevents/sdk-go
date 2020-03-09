@@ -2,6 +2,7 @@ package kafka_sarama_to_http_request_encode
 
 import (
 	"context"
+	test2 "github.com/cloudevents/sdk-go/pkg/binding/test"
 	nethttp "net/http"
 	"testing"
 
@@ -17,7 +18,7 @@ import (
 var (
 	e                                   = test.FullEvent()
 	structuredConsumerMessageWithoutKey = &sarama.ConsumerMessage{
-		Value: test.MustJSON(e),
+		Value: test2.MustJSON(e),
 		Headers: []*sarama.RecordHeader{{
 			Key:   []byte("Content-Type"),
 			Value: []byte(cloudevents.ApplicationCloudEventsJSON),
@@ -25,7 +26,7 @@ var (
 	}
 	structuredConsumerMessageWithKey = &sarama.ConsumerMessage{
 		Key:   []byte("aaa"),
-		Value: test.MustJSON(e),
+		Value: test2.MustJSON(e),
 		Headers: []*sarama.RecordHeader{{
 			Key:   []byte("Content-Type"),
 			Value: []byte(cloudevents.ApplicationCloudEventsJSON),

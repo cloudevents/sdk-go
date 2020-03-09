@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/cloudevents/sdk-go/pkg/binding"
+	"github.com/cloudevents/sdk-go/pkg/bindings"
 	"github.com/cloudevents/sdk-go/pkg/bindings/http"
 	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/plugin/ochttp/propagation/tracecontext"
@@ -28,7 +29,7 @@ const (
 
 // Transport acts as both a http client and a http handler.
 type Transport struct {
-	binding.BindingTransport
+	bindings.BindingTransport
 
 	// The encoding used to select the codec for outbound events.
 	Encoding Encoding

@@ -2,17 +2,19 @@ package test
 
 import (
 	"context"
+	"github.com/cloudevents/sdk-go/pkg/bindings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
+	. "github.com/cloudevents/sdk-go/pkg/binding/test"
 )
 
 // Simple send/receive benchmark.
 // Requires a sender and receiver that are connected to each other.
-func BenchmarkSendReceive(b *testing.B, s binding.Sender, r binding.Receiver) {
+func BenchmarkSendReceive(b *testing.B, s bindings.Sender, r bindings.Receiver) {
 	m := binding.EventMessage(FullEvent())
 	ctx := context.Background()
 	b.ResetTimer() // Don't count setup.

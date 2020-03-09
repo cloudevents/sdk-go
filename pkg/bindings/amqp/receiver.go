@@ -2,8 +2,8 @@ package amqp
 
 import (
 	"context"
-
 	"github.com/cloudevents/sdk-go/pkg/binding"
+	"github.com/cloudevents/sdk-go/pkg/bindings"
 	"pack.ag/amqp"
 )
 
@@ -22,6 +22,6 @@ func (r *receiver) Receive(ctx context.Context) (binding.Message, error) {
 func (r *receiver) Close(ctx context.Context) error { return r.amqp.Close(ctx) }
 
 // Create a new Receiver which wraps an amqp.Receiver in a binding.Receiver
-func NewReceiver(amqp *amqp.Receiver) binding.Receiver {
+func NewReceiver(amqp *amqp.Receiver) bindings.Receiver {
 	return &receiver{amqp: amqp}
 }
