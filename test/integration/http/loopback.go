@@ -83,7 +83,7 @@ func ClientLoopback(t *testing.T, tc TapTest, topts ...cehttp.Option) {
 		}
 	}()
 
-	_, got, err := ce.Send(ctx, *tc.event)
+	got, err := ce.Request(ctx, *tc.event)
 	if err != nil {
 		t.Fatal(err)
 	}

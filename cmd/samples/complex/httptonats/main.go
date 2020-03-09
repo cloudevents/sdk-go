@@ -53,7 +53,7 @@ func (r *Receiver) Receive(event event.Event) error {
 
 	fmt.Printf("forwarding...")
 
-	if _, _, err := r.Client.Send(context.Background(), event); err != nil {
+	if err := r.Client.Send(context.Background(), event); err != nil {
 		fmt.Printf("forwarding failed: %s", err.Error())
 	}
 

@@ -9,7 +9,8 @@ import (
 // Transport is the interface for transport sender to send the converted Message
 // over the underlying transport.
 type Transport interface {
-	Send(context.Context, event.Event) (context.Context, *event.Event, error)
+	Send(context.Context, event.Event) error
+	Request(context.Context, event.Event) (*event.Event, error)
 
 	SetReceiver(Receiver)
 	StartReceiver(context.Context) error
