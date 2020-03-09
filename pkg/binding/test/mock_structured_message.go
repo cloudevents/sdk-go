@@ -20,12 +20,8 @@ type MockStructuredMessage struct {
 
 // Create a new MockStructuredMessage starting from an event.Event. Panics in case of error
 func MustCreateMockStructuredMessage(e event.Event) binding.Message {
-	testEventSerialized, err := format.JSON.Marshal(e)
-	if err != nil {
-		panic(err)
-	}
 	return &MockStructuredMessage{
-		Bytes:  testEventSerialized,
+		Bytes:  MustJSON(e),
 		Format: format.JSON,
 	}
 }

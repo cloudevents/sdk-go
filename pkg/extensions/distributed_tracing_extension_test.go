@@ -8,7 +8,7 @@ import (
 
 	"github.com/cloudevents/sdk-go/pkg/event"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/extensions"
+	"github.com/cloudevents/sdk-go/pkg/extensions"
 	"github.com/cloudevents/sdk-go/pkg/types"
 	"github.com/google/go-cmp/cmp"
 	"go.opencensus.io/trace"

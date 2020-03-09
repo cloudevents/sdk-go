@@ -12,10 +12,9 @@ import (
 )
 
 type toEventTestCase struct {
-	name     string
-	encoding binding.Encoding
-	message  binding.Message
-	want     event.Event
+	name    string
+	message binding.Message
+	want    event.Event
 }
 
 func TestToEvent(t *testing.T) {
@@ -24,49 +23,42 @@ func TestToEvent(t *testing.T) {
 	for _, v := range test.Events() {
 		tests = append(tests, []toEventTestCase{
 			{
-				name:     "From mock structured with payload/" + test.NameOf(v),
-				encoding: binding.EncodingStructured,
-				message:  test.MustCreateMockStructuredMessage(v),
-				want:     v,
+				name:    "From mock structured with payload/" + test.NameOf(v),
+				message: test.MustCreateMockStructuredMessage(v),
+				want:    v,
 			},
 			{
-				name:     "From mock structured without payload/" + test.NameOf(v),
-				encoding: binding.EncodingStructured,
-				message:  test.MustCreateMockStructuredMessage(v),
-				want:     v,
+				name:    "From mock structured without payload/" + test.NameOf(v),
+				message: test.MustCreateMockStructuredMessage(v),
+				want:    v,
 			},
 			{
-				name:     "From mock binary with payload/" + test.NameOf(v),
-				encoding: binding.EncodingBinary,
-				message:  test.MustCreateMockBinaryMessage(v),
-				want:     v,
+				name:    "From mock binary with payload/" + test.NameOf(v),
+				message: test.MustCreateMockBinaryMessage(v),
+				want:    v,
 			},
 			{
-				name:     "From mock binary without payload/" + test.NameOf(v),
-				encoding: binding.EncodingBinary,
-				message:  test.MustCreateMockBinaryMessage(v),
-				want:     v,
+				name:    "From mock binary without payload/" + test.NameOf(v),
+				message: test.MustCreateMockBinaryMessage(v),
+				want:    v,
 			},
 			{
-				name:     "From event with payload/" + test.NameOf(v),
-				encoding: binding.EncodingEvent,
-				message:  binding.EventMessage(v),
-				want:     v,
+				name:    "From event with payload/" + test.NameOf(v),
+				message: binding.EventMessage(v),
+				want:    v,
 			},
 			{
-				name:     "From event without payload/" + test.NameOf(v),
-				encoding: binding.EncodingEvent,
-				message:  binding.EventMessage(v),
-				want:     v,
+				name:    "From event without payload/" + test.NameOf(v),
+				message: binding.EventMessage(v),
+				want:    v,
 			},
 		}...)
 	}
 	for _, tt := range tests {
 		tt := tt // Don't use range variable in Run() scope
 		t.Run(tt.name, func(t *testing.T) {
-			got, encoding, err := binding.ToEvent(context.Background(), tt.message, nil)
+			got, err := binding.ToEvent(context.Background(), tt.message, nil)
 			require.NoError(t, err)
-			require.Equal(t, tt.encoding, encoding)
 			test.AssertEventEquals(t, test.ExToStr(t, tt.want), test.ExToStr(t, got))
 		})
 	}

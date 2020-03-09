@@ -159,7 +159,7 @@ func TestClientSend(t *testing.T) {
 
 			c := tc.c(server.URL)
 
-			_, _, err := c.Send(context.TODO(), tc.event) // TODO: update test with new returned event and returned context
+			err := c.Send(context.TODO(), tc.event)
 			if tc.wantErr != "" {
 				if err == nil {
 					t.Fatalf("failed to return expected error, got nil")
@@ -254,7 +254,7 @@ func TestTracingClientSend(t *testing.T) {
 			ctx, span := trace.StartSpan(context.TODO(), "test-span", trace.WithSampler(sampler))
 			sc := span.SpanContext()
 
-			_, _, err := c.Send(ctx, tc.event)
+			err := c.Send(ctx, tc.event)
 			span.End()
 
 			if err != nil {
@@ -521,7 +521,7 @@ func TestTracedClientReceive(t *testing.T) {
 			client := simpleBinaryClient(target)
 
 			ctx, span := trace.StartSpan(context.TODO(), "test-span")
-			_, _, err = client.Send(ctx, tc.event)
+			err = client.Send(ctx, tc.event)
 			span.End()
 
 			if err != nil {

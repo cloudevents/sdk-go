@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec/json"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec/text"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec/xml"
+	"github.com/cloudevents/sdk-go/pkg/event/datacodec/json"
+	"github.com/cloudevents/sdk-go/pkg/event/datacodec/text"
+	"github.com/cloudevents/sdk-go/pkg/event/datacodec/xml"
 	"github.com/cloudevents/sdk-go/pkg/observability"
 )
 

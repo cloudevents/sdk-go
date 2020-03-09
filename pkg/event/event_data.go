@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/datacodec"
+	"github.com/cloudevents/sdk-go/pkg/event/datacodec"
 )
 
 // Data is special. Break it out into it's own file.

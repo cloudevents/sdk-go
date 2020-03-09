@@ -38,7 +38,7 @@ type Example struct {
 }
 
 func _main(args []string, env envConfig) int {
-	source, err := url.Parse("https://github.com/cloudevents/sdk-go/cmd/samples/sender")
+	source, err := url.Parse("https://github.com/cloudevents/sdk-go/cmd/samples/requester")
 	if err != nil {
 		log.Printf("failed to parse source url, %v", err)
 		return 1
@@ -84,8 +84,8 @@ func _main(args []string, env envConfig) int {
 					},
 				}
 
-				if _, resp, err := c.Send(ctx, event); err != nil {
-					log.Printf("failed to send: %v", err)
+				if resp, err := c.Request(ctx, event); err != nil {
+					log.Printf("failed to request: %v", err)
 				} else if resp != nil {
 					fmt.Printf("Response:\n%s\n", resp)
 					fmt.Printf("Got Event Response Context: %+v\n", resp.Context)

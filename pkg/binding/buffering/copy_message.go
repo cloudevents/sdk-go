@@ -28,7 +28,7 @@ func CopyMessage(ctx context.Context, m binding.Message, transformers binding.Tr
 		return nil, binding.ErrUnknownEncoding
 	}
 	if originalMessageEncoding == binding.EncodingEvent {
-		e, _, err := binding.ToEvent(ctx, m, transformers)
+		e, err := binding.ToEvent(ctx, m, transformers)
 		if err != nil {
 			return nil, err
 		}
@@ -44,7 +44,7 @@ func CopyMessage(ctx context.Context, m binding.Message, transformers binding.Tr
 	} else if encoding == binding.EncodingBinary {
 		return &bm, err
 	} else {
-		e, _, err := binding.ToEvent(ctx, m, transformers)
+		e, err := binding.ToEvent(ctx, m, transformers)
 		if err != nil {
 			return nil, err
 		}

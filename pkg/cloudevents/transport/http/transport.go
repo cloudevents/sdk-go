@@ -170,18 +170,30 @@ func copyHeadersEnsure(from http.Header, to *http.Header) {
 }
 
 // Send implements Transport.Send
-func (t *Transport) Send(ctx context.Context, event event2.Event) (context.Context, *event2.Event, error) {
+func (t *Transport) Send(ctx context.Context, event event2.Event) error {
 	ctx, r := observability.NewReporter(ctx, reportSend)
-	rctx, resp, err := t.obsSend(ctx, event)
+	_, err := t.obsSendRequest(ctx, event)
 	if err != nil {
 		r.Error()
 	} else {
 		r.OK()
 	}
-	return rctx, resp, err
+	return err
 }
 
-func (t *Transport) obsSend(ctx context.Context, event event2.Event) (context.Context, *event2.Event, error) {
+// Send implements Transport.Request
+func (t *Transport) Request(ctx context.Context, event event2.Event) (*event2.Event, error) {
+	ctx, r := observability.NewReporter(ctx, reportSend)
+	resp, err := t.obsSendRequest(ctx, event)
+	if err != nil {
+		r.Error()
+	} else {
+		r.OK()
+	}
+	return resp, err
+}
+
+func (t *Transport) obsSendRequest(ctx context.Context, event event2.Event) (*event2.Event, error) {
 	req := http.Request{
 		Header: HeaderFrom(ctx),
 	}
@@ -199,12 +211,12 @@ func (t *Transport) obsSend(ctx context.Context, event event2.Event) (context.Co
 	}
 
 	if ok := t.loadCodec(ctx); !ok {
-		return WithTransportContext(ctx, NewTransportContextFromResponse(nil)), nil, fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
+		return nil, fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
 	}
 
 	msg, err := t.codec.Encode(ctx, event)
 	if err != nil {
-		return WithTransportContext(ctx, NewTransportContextFromResponse(nil)), nil, err
+		return nil, err
 	}
 
 	if m, ok := msg.(*Message); ok {
@@ -213,10 +225,9 @@ func (t *Transport) obsSend(ctx context.Context, event event2.Event) (context.Co
 		if client == nil {
 			client = &http.Client{Transport: t.transport}
 		}
-		return httpDo(ctx, client, &req, func(resp *http.Response, err error) (context.Context, *event2.Event, error) {
-			rctx := WithTransportContext(ctx, NewTransportContextFromResponse(resp))
+		return httpDo(ctx, client, &req, func(resp *http.Response, err error) (*event2.Event, error) {
 			if err != nil {
-				return rctx, nil, err
+				return nil, err
 			}
 			defer resp.Body.Close()
 
@@ -237,19 +248,19 @@ func (t *Transport) obsSend(ctx context.Context, event event2.Event) (context.Co
 					}
 				}
 				if isErr {
-					return rctx, nil, err
+					return nil, err
 				}
 				if handled {
-					return rctx, nil, nil
+					return nil, nil
 				}
 			}
 			if accepted(resp) {
-				return rctx, respEvent, nil
+				return respEvent, nil
 			}
-			return rctx, respEvent, fmt.Errorf("error sending cloudevent: %s", resp.Status)
+			return respEvent, fmt.Errorf("error sending cloudevent: %s", resp.Status)
 		})
 	}
-	return WithTransportContext(ctx, NewTransportContextFromResponse(nil)), nil, fmt.Errorf("failed to encode Event into a Message")
+	return nil, fmt.Errorf("failed to encode Event into a Message")
 }
 
 func (t *Transport) MessageToEvent(ctx context.Context, msg *Message) (*event2.Event, error) {
@@ -485,19 +496,19 @@ type eventError struct {
 	err   error
 }
 
-func httpDo(ctx context.Context, client *http.Client, req *http.Request, fn func(*http.Response, error) (context.Context, *event2.Event, error)) (context.Context, *event2.Event, error) {
+func httpDo(ctx context.Context, client *http.Client, req *http.Request, fn func(*http.Response, error) (*event2.Event, error)) (*event2.Event, error) {
 	// Run the HTTP request in a goroutine and pass the response to fn.
 	c := make(chan eventError, 1)
 	req = req.WithContext(ctx)
 	go func() {
-		rctx, event, err := fn(client.Do(req))
-		c <- eventError{ctx: rctx, event: event, err: err}
+		event, err := fn(client.Do(req))
+		c <- eventError{event: event, err: err}
 	}()
 	select {
 	case <-ctx.Done():
-		return ctx, nil, ctx.Err()
+		return nil, ctx.Err()
 	case ee := <-c:
-		return ee.ctx, ee.event, ee.err
+		return ee.event, ee.err
 	}
 }
 
