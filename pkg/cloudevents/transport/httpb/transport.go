@@ -83,7 +83,7 @@ func (t *Transport) applyOptions(opts ...Option) error {
 }
 
 // Send implements Transport.Send
-func (t *Transport) Send(ctx context.Context, e event.Event) (context.Context, *event.Event, error) {
+func (t *Transport) Send(ctx context.Context, e event.Event) error {
 	switch t.Encoding {
 	case Default, Binary:
 		ctx = binding.WithForceBinary(ctx)
@@ -92,6 +92,18 @@ func (t *Transport) Send(ctx context.Context, e event.Event) (context.Context, *
 	}
 
 	return t.BindingTransport.Send(ctx, e)
+}
+
+// Request implements Transport.Request
+func (t *Transport) Request(ctx context.Context, e event.Event) (*event.Event, error) {
+	switch t.Encoding {
+	case Default, Binary:
+		ctx = binding.WithForceBinary(ctx)
+	case Structured:
+		ctx = binding.WithForceStructured(ctx)
+	}
+
+	return t.BindingTransport.Request(ctx, e)
 }
 
 // StartReceiver implements Transport.StartReceiver

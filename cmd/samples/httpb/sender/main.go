@@ -30,7 +30,7 @@ func main() {
 			"message": "Hello, World!",
 		})
 
-		_, _, err := c.Send(ctx, e)
+		err := c.Send(ctx, e)
 		if err != nil {
 			log.Printf("failed to send: %v", err)
 		} else {

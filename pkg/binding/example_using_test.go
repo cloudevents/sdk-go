@@ -62,17 +62,16 @@ func runReceiver(r io.Reader) error {
 //
 func runIntermediary(r io.Reader, w io.WriteCloser) error {
 	defer w.Close()
-	for {
-		receiver := NewExReceiver(r)
-		sender := NewExSender(w)
-		for i := 0; i < count; i++ {
-			if m, err := receiver.Receive(context.TODO()); err != nil {
-				return err
-			} else if err := sender.Send(context.TODO(), m); err != nil {
-				return err
-			}
+	receiver := NewExReceiver(r)
+	sender := NewExSender(w)
+	for i := 0; i < count; i++ {
+		if m, err := receiver.Receive(context.TODO()); err != nil {
+			return err
+		} else if err := sender.Send(context.TODO(), m); err != nil {
+			return err
 		}
 	}
+	return nil
 }
 
 // This example shows how to use a transport in sender, receiver,
