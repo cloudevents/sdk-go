@@ -55,15 +55,15 @@ type Example struct {
 	Message  string `json:"message"`
 }
 
-func (d *Demo) Send(eventContext event.EventContext, i int) (context.Context, *event.Event, error) {
-	event := event.Event{
+func (d *Demo) Send(eventContext event.EventContext, i int) error {
+	e := event.Event{
 		Context: eventContext,
 		Data: &Example{
 			Sequence: i,
 			Message:  d.Message,
 		},
 	}
-	return d.Client.Send(context.Background(), event)
+	return d.Client.Send(context.Background(), e)
 }
 
 func main() {
@@ -99,7 +99,7 @@ func main() {
 			Source:          types.URLRef{URL: d.Source},
 			DataContentType: &contentType,
 		}.AsV03()
-		if _, _, err := d.Send(ctx, seq); err != nil {
+		if err := d.Send(ctx, seq); err != nil {
 			log.Fatalf("Failed to send: %v", err)
 		}
 		seq++

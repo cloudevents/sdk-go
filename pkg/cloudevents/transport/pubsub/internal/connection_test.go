@@ -59,7 +59,7 @@ func TestPublishCreateTopic(t *testing.T) {
 		ID:   "msg-id-1",
 		Data: []byte("msg-data-1"),
 	}
-	if _, err := psconn.Publish(ctx, msg); err != nil {
+	if err := psconn.Publish(ctx, msg); err != nil {
 		t.Errorf("failed to publish message: %v", err)
 	}
 
@@ -180,7 +180,7 @@ func TestPublishReceiveRoundtrip(t *testing.T) {
 		data := fmt.Sprintf("data-%d", i)
 		wantMsgs[data] = data
 
-		if _, err := psconn.Publish(ctx, &pubsub.Message{Data: []byte(data)}); err != nil {
+		if err := psconn.Publish(ctx, &pubsub.Message{Data: []byte(data)}); err != nil {
 			t.Errorf("failed to publish message: %v", err)
 		}
 		wg.Add(1)

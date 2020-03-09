@@ -1,8 +1,8 @@
 package client
 
 import (
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
 	"github.com/cloudevents/sdk-go/pkg/event"
+	"github.com/cloudevents/sdk-go/pkg/observability"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/trace"
@@ -40,6 +40,7 @@ const (
 	datacontenttypeAttr = "cloudevents.datacontenttype"
 
 	reportSend observed = iota
+	reportRequest
 	reportReceive
 )
 
@@ -48,6 +49,8 @@ func (o observed) MethodName() string {
 	switch o {
 	case reportSend:
 		return "send"
+	case reportRequest:
+		return "request"
 	case reportReceive:
 		return "receive"
 	default:

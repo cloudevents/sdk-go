@@ -2,10 +2,12 @@ package binding
 
 import (
 	"context"
-	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
-	"go.uber.org/zap"
+	"errors"
 	"io"
 
+	"go.uber.org/zap"
+
+	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	"github.com/cloudevents/sdk-go/pkg/event"
 )
@@ -38,19 +40,29 @@ func NewSendingTransport(s Sender, rx Receiver, senderContextDecorators []func(c
 	return &BindingTransport{Sender: s, Receiver: rx, SenderContextDecorators: senderContextDecorators}
 }
 
-func (t *BindingTransport) Send(ctx context.Context, e event.Event) (context.Context, *event.Event, error) {
+func (t *BindingTransport) Send(ctx context.Context, e event.Event) error {
+	if t.Sender == nil {
+		return errors.New("sender not set")
+	}
+	for _, f := range t.SenderContextDecorators {
+		ctx = f(ctx)
+	}
+	return t.Sender.Send(ctx, EventMessage(e))
+}
+
+func (t *BindingTransport) Request(ctx context.Context, e event.Event) (*event.Event, error) {
+	if t.Requester == nil {
+		return nil, errors.New("requester not set")
+	}
 	for _, f := range t.SenderContextDecorators {
 		ctx = f(ctx)
 	}
 
-	if t.Sender != nil {
-		return ctx, nil, t.Sender.Send(ctx, EventMessage(e))
-	}
 	// If provided a requester, use it to do request/response.
 	var resp *event.Event
 	msg, err := t.Requester.Request(ctx, EventMessage(e))
 	if err == nil {
-		if rs, _, err := ToEvent(ctx, msg, nil); err != nil {
+		if rs, err := ToEvent(ctx, msg, nil); err != nil {
 			cecontext.LoggerFrom(ctx).Warnw("failed calling ToEvent", zap.Error(err))
 		} else {
 			defer func() {
@@ -61,7 +73,7 @@ func (t *BindingTransport) Send(ctx context.Context, e event.Event) (context.Con
 			resp = &rs
 		}
 	}
-	return ctx, resp, err
+	return resp, err
 }
 
 func (t *BindingTransport) SetReceiver(r transport.Receiver) {
@@ -93,7 +105,7 @@ func (t *BindingTransport) handle(ctx context.Context, m Message) (err error) {
 		return
 	}
 
-	e, _, err := ToEvent(ctx, m, nil)
+	e, err := ToEvent(ctx, m, nil)
 	if err != nil {
 		return err
 	}

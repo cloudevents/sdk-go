@@ -72,7 +72,7 @@ func ClientDirect(t *testing.T, tc DirectTapTest, topts ...cehttp.Option) {
 		}
 	}()
 
-	_, _, err = ce.Send(ctx, *tc.event)
+	err = ce.Send(ctx, *tc.event)
 	if err != nil {
 		t.Fatal(err)
 	}

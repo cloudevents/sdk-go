@@ -8,15 +8,11 @@ import (
 	"github.com/cloudevents/sdk-go"
 )
 
-var source = cloudevents.ParseURLRef("https://github.com/cloudevents/sdk-go/cmd/samples/sender")
-
 // Basic data struct.
 type Example struct {
 	Sequence int    `json:"id"`
 	Message  string `json:"message"`
 }
-
-var subject = "this_thing"
 
 func main() {
 	ctx := cloudevents.ContextWithTarget(context.Background(), "http://localhost:8080/")
@@ -33,16 +29,21 @@ func main() {
 			Sequence: i,
 			Message:  "Hello, World!",
 		}
-		event := cloudevents.Event{
-			Context: cloudevents.EventContextV03{
-				Type:    "com.cloudevents.sample.sent",
-				Source:  *source,
-				Subject: &subject,
-			}.AsV03(),
-			Data: data,
+
+		var version string
+		switch i % 2 {
+		case 0:
+			version = cloudevents.VersionV03
+		case 1:
+			version = cloudevents.VersionV1
 		}
 
-		if _, resp, err := c.Send(ctx, event); err != nil {
+		event := cloudevents.NewEvent(version)
+		event.SetType("com.cloudevents.sample.sent")
+		event.SetSource("https://github.com/cloudevents/sdk-go/cmd/samples/sender")
+		event.Data = data
+
+		if resp, err := c.Request(ctx, event); err != nil {
 			log.Printf("failed to send: %v", err)
 		} else if resp != nil {
 			fmt.Printf("got back a response: \n%s", resp)

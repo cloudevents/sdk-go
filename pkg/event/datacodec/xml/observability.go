@@ -1,23 +1,23 @@
-package datacodec
+package xml
 
 import (
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/observability"
+	"github.com/cloudevents/sdk-go/pkg/observability"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 )
 
 var (
-	// LatencyMs measures the latency in milliseconds for the CloudEvents generic
-	// codec data methods.
-	LatencyMs = stats.Float64("cloudevents.io/sdk-go/datacodec/latency", "The latency in milliseconds for the CloudEvents generic data codec methods.", "ms")
+	// LatencyMs measures the latency in milliseconds for the CloudEvents xml data
+	// codec methods.
+	LatencyMs = stats.Float64("cloudevents.io/sdk-go/datacodec/xml/latency", "The latency in milliseconds for the CloudEvents xml data codec methods.", "ms")
 )
 
 var (
-	// LatencyView is an OpenCensus view that shows data codec method latency.
+	// LatencyView is an OpenCensus view that shows data codec xml method latency.
 	LatencyView = &view.View{
-		Name:        "datacodec/latency",
+		Name:        "datacodec/xml/latency",
 		Measure:     LatencyMs,
-		Description: "The distribution of latency inside of the generic data codec for CloudEvents.",
+		Description: "The distribution of latency inside of the xml data codec for CloudEvents.",
 		Aggregation: view.Distribution(0, .01, .1, 1, 10, 100, 1000, 10000),
 		TagKeys:     observability.LatencyTags(),
 	}

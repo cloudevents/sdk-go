@@ -52,7 +52,7 @@ type Example struct {
 	Message  string `json:"message"`
 }
 
-func (d *Demo) Send(eventContext event.EventContext, i int) (context.Context, *event.Event, error) {
+func (d *Demo) Send(eventContext event.EventContext, i int) error {
 	event := event.Event{
 		Context: eventContext,
 		Data: &Example{
@@ -98,7 +98,7 @@ func _main(args []string, env envConfig) int {
 				Source:          types.URIRef{URL: d.Source},
 				DataContentType: &contentType,
 			}.AsV1()
-			if _, _, err := d.Send(ctx, seq); err != nil {
+			if err := d.Send(ctx, seq); err != nil {
 				log.Printf("failed to send: %v", err)
 				return 1
 			}

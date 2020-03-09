@@ -177,10 +177,10 @@ func (t *Transport) getOrCreateConnection(ctx context.Context, topic, subscripti
 }
 
 // Send implements Transport.Send
-func (t *Transport) Send(ctx context.Context, event event.Event) (context.Context, *event.Event, error) {
+func (t *Transport) Send(ctx context.Context, event event.Event) error {
 	// TODO populate response context properly.
 	if ok := t.loadCodec(ctx); !ok {
-		return ctx, nil, fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
+		return fmt.Errorf("unknown encoding set on transport: %d", t.Encoding)
 	}
 
 	topic := cecontext.TopicFrom(ctx)
@@ -192,18 +192,23 @@ func (t *Transport) Send(ctx context.Context, event event.Event) (context.Contex
 
 	msg, err := t.codec.Encode(ctx, event)
 	if err != nil {
-		return ctx, nil, err
+		return err
 	}
 
 	if m, ok := msg.(*Message); ok {
-		respEvent, err := conn.Publish(ctx, &pubsub.Message{
+		err := conn.Publish(ctx, &pubsub.Message{
 			Attributes: m.Attributes,
 			Data:       m.Data,
 		})
-		return ctx, respEvent, err
+		return err
 	}
 
-	return ctx, nil, fmt.Errorf("failed to encode Event into a Message")
+	return fmt.Errorf("failed to encode Event into a Message")
+}
+
+// Request implements Transport.Request
+func (t *Transport) Request(ctx context.Context, event event.Event) (*event.Event, error) {
+	return nil, fmt.Errorf("Transport.Request is not supported for Pub/Sub")
 }
 
 // SetReceiver implements Transport.SetReceiver

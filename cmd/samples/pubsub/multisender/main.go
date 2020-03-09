@@ -66,7 +66,7 @@ func main() {
 			Message:  "HELLO " + topic,
 		})
 
-		_, _, err = c.Send(ctx, event)
+		err = c.Send(ctx, event)
 
 		if err != nil {
 			log.Printf("failed to send: %v", err)
