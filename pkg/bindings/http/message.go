@@ -16,6 +16,7 @@ const prefix = "Ce-"
 var specs = spec.WithPrefix(prefix)
 
 const ContentType = "Content-Type"
+const ContentLength = "Content-Length"
 
 // Message holds the Header and Body of a HTTP Request or Response.
 // The Message instance *must* be constructed from NewMessage function.
@@ -23,9 +24,11 @@ const ContentType = "Content-Type"
 type Message struct {
 	Header     nethttp.Header
 	BodyReader io.ReadCloser
-	onFinish   func(error) error
-	format     format.Format
-	version    spec.Version
+	OnFinish   func(error) error
+
+	format  format.Format
+	version spec.Version
+	resp    binding.Message
 }
 
 // Check if http.Message implements binding.Message
@@ -110,12 +113,20 @@ func (m *Message) Binary(ctx context.Context, encoder binding.BinaryEncoder) err
 	return encoder.End()
 }
 
+func (m *Message) Response(ctx context.Context, resp binding.Message) {
+	// TODO: this should fail if not in request mode.
+	m.resp = resp
+}
+
 func (m *Message) Finish(err error) error {
 	if m.BodyReader != nil {
 		_ = m.BodyReader.Close()
 	}
-	if m.onFinish != nil {
-		return m.onFinish(err)
+	if m.OnFinish != nil {
+		return m.OnFinish(err)
+	}
+	if m.resp != nil {
+		return m.resp.Finish(err)
 	}
 	return nil
 }

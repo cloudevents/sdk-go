@@ -14,7 +14,7 @@ import (
 
 func TestTransportSend(t *testing.T) {
 	messageChannel := make(chan binding.Message, 1)
-	transport := binding.NewTransportAdapter(binding.ChanSender(messageChannel), binding.ChanReceiver(messageChannel), nil)
+	transport := binding.NewSendingTransport(binding.ChanSender(messageChannel), binding.ChanReceiver(messageChannel), nil)
 	ev := test.MinEvent()
 
 	c, err := client.New(transport, client.WithoutTracePropagation())
@@ -31,7 +31,7 @@ func TestTransportSend(t *testing.T) {
 func TestTransportReceive(t *testing.T) {
 	messageChannel := make(chan binding.Message, 1)
 	eventReceivedChannel := make(chan event.Event, 1)
-	transport := binding.NewTransportAdapter(binding.ChanSender(messageChannel), binding.ChanReceiver(messageChannel), nil)
+	transport := binding.NewSendingTransport(binding.ChanSender(messageChannel), binding.ChanReceiver(messageChannel), nil)
 	ev := test.MinEvent()
 
 	c, err := client.New(transport)

@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"fmt"
+	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	"net/http"
 	nethttp "net/http"
 	"net/url"
@@ -14,69 +15,56 @@ import (
 type Sender struct {
 	// Client is the HTTP client used to send events as HTTP requests
 	Client *http.Client
-	// Target is the URL to send event requests to.
-	Target *url.URL
+
+	// RequestTemplate is the base http request that is used for http.Do.
+	// Only .Method, .URL, .Close, and .Header is considered.
+	// If not set, Req.Method defaults to POST.
+	// Req.URL or context.WithTarget(url) are required for sending.
+	RequestTemplate *http.Request
 
 	transformers binding.TransformerFactories
 }
 
-func NewSender(client *http.Client, target *url.URL, options ...SenderOptionFunc) binding.Sender {
-	s := &Sender{Client: client, Target: target, transformers: make(binding.TransformerFactories, 0)}
+func NewRequester(client *http.Client, target *url.URL, options ...SenderOptionFunc) binding.Requester {
+	s := &Sender{
+		Client:          client,
+		RequestTemplate: &http.Request{Method: http.MethodPost, URL: target},
+		transformers:    make(binding.TransformerFactories, 0),
+	}
 	for _, o := range options {
 		o(s)
 	}
 	return s
 }
 
+func NewSender(client *http.Client, target *url.URL, options ...SenderOptionFunc) binding.Sender {
+	return NewRequester(client, target, options...)
+}
+
 // Confirm Sender implements binding.Requester
 var _ binding.Requester = (*Sender)(nil)
 
 // Send implements binding.Sender
-func (s *Sender) Send(ctx context.Context, m binding.Message) (err error) {
-	defer func() { _ = m.Finish(err) }()
-	if s.Client == nil || s.Target == nil {
-		return fmt.Errorf("not initialized: %#v", s)
-	}
-
-	var req *http.Request
-	req, err = http.NewRequest("POST", s.Target.String(), nil)
-	if err != nil {
-		return
-	}
-	req = req.WithContext(ctx)
-
-	if err = EncodeHttpRequest(ctx, m, req, s.transformers); err != nil {
-		return
-	}
-	resp, err := s.Client.Do(req)
-	if err != nil {
-		return
-	}
-	if resp.StatusCode/100 != 2 {
-		return fmt.Errorf("%d %s", resp.StatusCode, nethttp.StatusText(resp.StatusCode))
-	}
-	return
+func (s *Sender) Send(ctx context.Context, m binding.Message) error {
+	_, err := s.Request(ctx, m)
+	return err
 }
 
 // Request implements binding.Requester
-func (r *Sender) Request(ctx context.Context, m binding.Message) (binding.Message, error) {
+func (s *Sender) Request(ctx context.Context, m binding.Message) (binding.Message, error) {
 	var err error
 	defer func() { _ = m.Finish(err) }()
-	if r.Client == nil || r.Target == nil {
-		return nil, fmt.Errorf("not initialized: %#v", r)
+
+	req := s.makeRequest(ctx)
+
+	if s.Client == nil || req == nil || req.URL == nil {
+		return nil, fmt.Errorf("not initialized: %#v", s)
 	}
 
-	var req *http.Request
-	req, err = http.NewRequest("POST", r.Target.String(), nil)
-	if err != nil {
+	if err = EncodeHttpRequest(ctx, m, req, s.transformers); err != nil {
 		return nil, err
 	}
-	req = req.WithContext(ctx)
-
-	if err = EncodeHttpRequest(ctx, m, req, r.transformers); err != nil {
-		return nil, err
-	}
-	resp, err := r.Client.Do(req)
+	resp, err := s.Client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -84,5 +72,48 @@ func (r *Sender) Request(ctx context.Context, m binding.Message) (binding.Messag
 		return nil, fmt.Errorf("%d %s", resp.StatusCode, nethttp.StatusText(resp.StatusCode))
 	}
 
-	return NewMessageFromHttpResponse(resp), nil
+	return NewMessage(resp.Header, resp.Body), nil
+}
+
+func (s *Sender) makeRequest(ctx context.Context) *http.Request {
+	// TODO: support custom headers from context?
+	req := &http.Request{
+		Header: make(http.Header),
+		// TODO: HeaderFrom(ctx),
+	}
+
+	if s.RequestTemplate != nil {
+		req.Method = s.RequestTemplate.Method
+		req.URL = s.RequestTemplate.URL
+		req.Close = s.RequestTemplate.Close
+		req.Host = s.RequestTemplate.Host
+		copyHeadersEnsure(s.RequestTemplate.Header, &req.Header)
+	}
+
+	// Override the default request with target from context.
+	if target := cecontext.TargetFrom(ctx); target != nil {
+		req.URL = target
+	}
+	return req.WithContext(ctx)
+}
+
+// Ensure to is a non-nil map before copying
+func copyHeadersEnsure(from http.Header, to *http.Header) {
+	if len(from) > 0 {
+		if *to == nil {
+			*to = http.Header{}
+		}
+		copyHeaders(from, *to)
+	}
+}
+
+func copyHeaders(from, to http.Header) {
+	if from == nil || to == nil {
+		return
+	}
+	for header, values := range from {
+		for _, value := range values {
+			to.Add(header, value)
+		}
+	}
 }
