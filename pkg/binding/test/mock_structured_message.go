@@ -34,7 +34,7 @@ func (s *MockStructuredMessage) ReadBinary(context.Context, binding.BinaryWriter
 	return binding.ErrNotBinary
 }
 
-func (bm *MockStructuredMessage) Encoding() binding.Encoding {
+func (bm *MockStructuredMessage) ReadEncoding() binding.Encoding {
 	return binding.EncodingStructured
 }
 

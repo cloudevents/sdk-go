@@ -2,36 +2,13 @@ package binding
 
 import "context"
 
-// Message is the interface to a binding-specific message containing an event.
-//
-// Reliable Delivery
-//
-// There are 3 reliable qualities of service for messages:
-//
-// 0/at-most-once/unreliable: messages can be dropped silently.
-//
-// 1/at-least-once: messages are not dropped without signaling an error
-// to the sender, but they may be duplicated in the event of a re-send.
-//
-// 2/exactly-once: messages are never dropped (without error) or
-// duplicated, as long as both sending and receiving ends maintain
-// some binding-specific delivery state. Whether this is persisted
-// depends on the configuration of the binding implementations.
-//
-// The Message interface supports QoS 0 and 1, the ExactlyOnceMessage interface
-// supports QoS 2
-//
-// The ReadStructured and ReadBinary methods allows to perform an optimized encoding of a Message
-// to a specific data structure. A Sender should try each method of interest and fall back to ToEvent() if none are supported.
-// For encoding a message, look at binding.Write function.
-//
-// Every binding.Message implementation must specify if the message can be accessed one or more times.
-//
-// When a Message can be forgotten by the entity who produced the message, Message.Finish() *must* be invoked.
-type Message interface {
+// The ReadStructured and ReadBinary methods allows to perform an optimized encoding of a Message to a specific data structure.
+// A Sender should try each method of interest and fall back to binding.ToEvent() if none are supported.
+// An out of the box algorithm is provided for writing a message: binding.Write().
+type MessageReader interface {
 	// Return the type of the message Encoding.
 	// The encoding should be preferably computed when the message is constructed.
-	Encoding() Encoding
+	ReadEncoding() Encoding
 
 	// ReadStructured transfers a structured-mode event to a StructuredWriter.
 	// It must return ErrNotStructured if message is not in structured mode.
@@ -52,6 +29,32 @@ type Message interface {
 	// This allows Senders to avoid re-encoding messages that are
 	// already in suitable binary form.
 	ReadBinary(context.Context, BinaryWriter) error
+}
+
+// Message is the interface to a binding-specific message containing an event.
+//
+// Reliable Delivery
+//
+// There are 3 reliable qualities of service for messages:
+//
+// 0/at-most-once/unreliable: messages can be dropped silently.
+//
+// 1/at-least-once: messages are not dropped without signaling an error
+// to the sender, but they may be duplicated in the event of a re-send.
+//
+// 2/exactly-once: messages are never dropped (without error) or
+// duplicated, as long as both sending and receiving ends maintain
+// some binding-specific delivery state. Whether this is persisted
+// depends on the configuration of the binding implementations.
+//
+// The Message interface supports QoS 0 and 1, the ExactlyOnceMessage interface
+// supports QoS 2
+//
+// Message includes the MessageReader interface to read messages. Every binding.Message implementation *must* specify if the message can be accessed one or more times.
+//
+// When a Message can be forgotten by the entity who produced the message, Message.Finish() *must* be invoked.
+type Message interface {
+	MessageReader
 
 	// Finish *must* be called when message from a Receiver can be forgotten by
 	// the receiver. A QoS 1 sender should not call Finish() until it gets an acknowledgment of

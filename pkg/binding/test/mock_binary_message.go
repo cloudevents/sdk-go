@@ -78,7 +78,7 @@ func (bm *MockBinaryMessage) ReadBinary(ctx context.Context, b binding.BinaryWri
 	return b.End()
 }
 
-func (bm *MockBinaryMessage) Encoding() binding.Encoding {
+func (bm *MockBinaryMessage) ReadEncoding() binding.Encoding {
 	return binding.EncodingBinary
 }
 

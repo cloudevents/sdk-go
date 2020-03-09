@@ -52,7 +52,7 @@ func getSpecVersion(message *amqp.Message) spec.Version {
 	return nil
 }
 
-func (m *Message) Encoding() binding.Encoding {
+func (m *Message) ReadEncoding() binding.Encoding {
 	return m.encoding
 }
 

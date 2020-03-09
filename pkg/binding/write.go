@@ -23,7 +23,7 @@ const (
 // * EncodingUnknown, ErrUnknownEncoding if message is not a structured or a binary Message
 func DirectWrite(
 	ctx context.Context,
-	message Message,
+	message MessageReader,
 	structuredWriter StructuredWriter,
 	binaryWriter BinaryWriter,
 	transformers TransformerFactories,
@@ -66,16 +66,16 @@ func DirectWrite(
 // Returns:
 // * EncodingStructured, nil if message is correctly encoded in structured encoding
 // * EncodingBinary, nil if message is correctly encoded in binary encoding
-// * EncodingUnknown, ErrUnknownEncoding if message.Encoding() == EncodingUnknown
+// * EncodingUnknown, ErrUnknownEncoding if message.ReadEncoding() == EncodingUnknown
 // * _, err if error happened during the encoding
 func Write(
 	ctx context.Context,
-	message Message,
+	message MessageReader,
 	structuredWriter StructuredWriter,
 	binaryWriter BinaryWriter,
 	transformers TransformerFactories,
 ) (Encoding, error) {
-	enc := message.Encoding()
+	enc := message.ReadEncoding()
 	var err error
 	// Skip direct encoding if the event is an event message
 	if enc != EncodingEvent {

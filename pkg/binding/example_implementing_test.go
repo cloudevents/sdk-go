@@ -20,7 +20,7 @@ func NewMessage(m json.RawMessage) binding.Message {
 	return ExMessage(m)
 }
 
-func (m ExMessage) Encoding() binding.Encoding {
+func (m ExMessage) ReadEncoding() binding.Encoding {
 	return binding.EncodingStructured
 }
 

@@ -94,7 +94,7 @@ func NewMessage(key []byte, value []byte, contentType string, headers map[string
 	}, nil
 }
 
-func (m *Message) Encoding() binding.Encoding {
+func (m *Message) ReadEncoding() binding.Encoding {
 	if m.version != nil {
 		return binding.EncodingBinary
 	}

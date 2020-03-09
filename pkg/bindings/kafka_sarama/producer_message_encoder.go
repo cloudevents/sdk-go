@@ -46,7 +46,7 @@ func WriteKafkaProducerMessage(ctx context.Context, m binding.Message, producerM
 		return err
 	}
 
-	enc := m.Encoding()
+	enc := m.ReadEncoding()
 	var err error
 	// Skip direct encoding if the event is an event message
 	if enc == binding.EncodingBinary {

@@ -42,7 +42,7 @@ func TestNewMessage(t *testing.T) {
 				require.NoError(t, WriteHttpRequest(ctx, binding.EventMessage(eventIn), req, binding.TransformerFactories{}))
 
 				got := NewMessageFromHttpRequest(req)
-				require.Equal(t, tt.encoding, got.Encoding())
+				require.Equal(t, tt.encoding, got.ReadEncoding())
 			})
 		})
 	}
@@ -54,6 +54,6 @@ func TestNewMessageUnknown(t *testing.T) {
 		req.Header.Add("content-type", "application/json")
 
 		got := NewMessageFromHttpRequest(req)
-		require.Equal(t, binding.EncodingUnknown, got.Encoding())
+		require.Equal(t, binding.EncodingUnknown, got.ReadEncoding())
 	})
 }

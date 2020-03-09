@@ -76,7 +76,7 @@ func TestCopyMessage(t *testing.T) {
 			for i := 0; i < 3; i++ {
 				got, err := binding.ToEvent(context.Background(), cpy, nil)
 				assert.NoError(t, err)
-				require.Equal(t, tt.encoding, cpy.Encoding())
+				require.Equal(t, tt.encoding, cpy.ReadEncoding())
 				test.AssertEventEquals(t, test.ExToStr(t, tt.want), test.ExToStr(t, got))
 			}
 			require.NoError(t, cpy.Finish(nil))
@@ -93,7 +93,7 @@ func TestCopyMessage(t *testing.T) {
 			for i := 0; i < 3; i++ {
 				got, err := binding.ToEvent(context.Background(), cpy, nil)
 				assert.NoError(t, err)
-				require.Equal(t, tt.encoding, cpy.Encoding())
+				require.Equal(t, tt.encoding, cpy.ReadEncoding())
 				test.AssertEventEquals(t, test.ExToStr(t, tt.want), test.ExToStr(t, got))
 			}
 			require.NoError(t, cpy.Finish(nil))

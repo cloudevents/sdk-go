@@ -35,7 +35,7 @@ func (m *binaryBufferedMessage) GetParent() binding.Message {
 	return nil
 }
 
-func (m *binaryBufferedMessage) Encoding() binding.Encoding {
+func (m *binaryBufferedMessage) ReadEncoding() binding.Encoding {
 	return binding.EncodingBinary
 }
 

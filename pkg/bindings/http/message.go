@@ -59,7 +59,7 @@ func NewMessageFromHttpResponse(req *nethttp.Response) *Message {
 	return NewMessage(req.Header, req.Body)
 }
 
-func (m *Message) Encoding() binding.Encoding {
+func (m *Message) ReadEncoding() binding.Encoding {
 	if m.version != nil {
 		return binding.EncodingBinary
 	}

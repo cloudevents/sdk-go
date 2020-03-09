@@ -18,7 +18,7 @@ const (
 //     s.Send(ctx, binding.EventMessage(e))
 type EventMessage event.Event
 
-func (m EventMessage) Encoding() Encoding {
+func (m EventMessage) ReadEncoding() Encoding {
 	return EncodingEvent
 }
 

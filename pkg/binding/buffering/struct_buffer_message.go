@@ -24,7 +24,7 @@ func (m *structBufferedMessage) GetParent() binding.Message {
 	return nil
 }
 
-func (m *structBufferedMessage) Encoding() binding.Encoding {
+func (m *structBufferedMessage) ReadEncoding() binding.Encoding {
 	return binding.EncodingStructured
 }
 
