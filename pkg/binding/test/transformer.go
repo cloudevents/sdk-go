@@ -31,10 +31,10 @@ func RunTransformerTests(t *testing.T, ctx context.Context, tests []TransformerT
 
 			var e event.Event
 			if enc == binding.EncodingStructured {
-				e, _, err = binding.ToEvent(ctx, &mockStructured, nil)
+				e, err = binding.ToEvent(ctx, &mockStructured, nil)
 				require.NoError(t, err)
 			} else if enc == binding.EncodingBinary {
-				e, _, err = binding.ToEvent(ctx, &mockBinary, nil)
+				e, err = binding.ToEvent(ctx, &mockBinary, nil)
 				require.NoError(t, err)
 			} else {
 				t.Fatalf("Unexpected encoding %v", enc)

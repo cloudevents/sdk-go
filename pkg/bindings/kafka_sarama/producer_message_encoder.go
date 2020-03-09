@@ -62,7 +62,7 @@ func EncodeKafkaProducerMessage(ctx context.Context, m binding.Message, producer
 	}
 
 	var e ce.Event
-	e, _, err = binding.ToEvent(ctx, m, transformerFactories)
+	e, err = binding.ToEvent(ctx, m, transformerFactories)
 	if err != nil {
 		return err
 	}

@@ -24,8 +24,8 @@ func TestSendSkipBinary(t *testing.T) {
 		eventIn := test.ExToStr(t, e)
 		in := test.MustCreateMockBinaryMessage(eventIn)
 		test.SendReceive(t, binding.WithSkipDirectBinaryEncoding(binding.WithPreferredEventEncoding(context.Background(), binding.EncodingStructured), true), in, s, r, func(out binding.Message) {
-			eventOut, encoding := test.MustToEvent(context.TODO(), out)
-			assert.Equal(t, encoding, binding.EncodingStructured)
+			eventOut := test.MustToEvent(t, context.TODO(), out)
+			assert.Equal(t, out.Encoding(), binding.EncodingStructured)
 			test.AssertEventEquals(t, eventIn, test.ExToStr(t, eventOut))
 		})
 	})
@@ -38,8 +38,8 @@ func TestSendSkipStructured(t *testing.T) {
 		eventIn := test.ExToStr(t, e)
 		in := test.MustCreateMockStructuredMessage(eventIn)
 		test.SendReceive(t, binding.WithSkipDirectStructuredEncoding(context.Background(), true), in, s, r, func(out binding.Message) {
-			eventOut, encoding := test.MustToEvent(context.Background(), out)
-			assert.Equal(t, encoding, binding.EncodingBinary)
+			eventOut := test.MustToEvent(t, context.Background(), out)
+			assert.Equal(t, out.Encoding(), binding.EncodingBinary)
 			test.AssertEventEquals(t, eventIn, test.ExToStr(t, eventOut))
 		})
 	})
@@ -52,8 +52,8 @@ func TestSendEventReceiveStruct(t *testing.T) {
 		eventIn := test.ExToStr(t, e)
 		in := binding.EventMessage(eventIn)
 		test.SendReceive(t, binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingStructured), in, s, r, func(out binding.Message) {
-			eventOut, encoding := test.MustToEvent(context.Background(), out)
-			assert.Equal(t, encoding, binding.EncodingStructured)
+			eventOut := test.MustToEvent(t, context.Background(), out)
+			assert.Equal(t, out.Encoding(), binding.EncodingStructured)
 			test.AssertEventEquals(t, eventIn, test.ExToStr(t, eventOut))
 		})
 	})
@@ -66,8 +66,8 @@ func TestSendEventReceiveBinary(t *testing.T) {
 		eventIn := test.ExToStr(t, e)
 		in := binding.EventMessage(eventIn)
 		test.SendReceive(t, context.Background(), in, s, r, func(out binding.Message) {
-			eventOut, encoding := test.MustToEvent(context.Background(), out)
-			assert.Equal(t, encoding, binding.EncodingBinary)
+			eventOut := test.MustToEvent(t, context.Background(), out)
+			assert.Equal(t, out.Encoding(), binding.EncodingBinary)
 			test.AssertEventEquals(t, eventIn, test.ExToStr(t, eventOut))
 		})
 	})
