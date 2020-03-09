@@ -10,7 +10,9 @@ import (
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
-	"github.com/cloudevents/sdk-go/pkg/binding/test"
+	test "github.com/cloudevents/sdk-go/pkg/binding/test"
+
+	. "github.com/cloudevents/sdk-go/pkg/bindings/test"
 )
 
 func TestUpdateAttribute(t *testing.T) {
@@ -36,7 +38,7 @@ func TestUpdateAttribute(t *testing.T) {
 	updatedTimeEvent := test.CopyEventContext(withTimeEvent)
 	require.NoError(t, updatedTimeEvent.Context.SetTime(timestamp.Add(3*time.Hour)))
 
-	test.RunTransformerTests(t, context.Background(), []test.TransformerTestArgs{
+	RunTransformerTests(t, context.Background(), []TransformerTestArgs{
 		{
 			Name:         "Update subject in Mock Structured message",
 			InputMessage: test.MustCreateMockStructuredMessage(test.CopyEventContext(withSubjectEvent)),
@@ -111,7 +113,7 @@ func TestUpdateExtension(t *testing.T) {
 	updatedExtensionEvent := test.CopyEventContext(e)
 	require.NoError(t, updatedExtensionEvent.Context.SetExtension("aaa", strings.ToUpper("bbb")))
 
-	test.RunTransformerTests(t, context.Background(), []test.TransformerTestArgs{
+	RunTransformerTests(t, context.Background(), []TransformerTestArgs{
 		{
 			Name:         "No change in Mock Structured message",
 			InputMessage: test.MustCreateMockStructuredMessage(test.CopyEventContext(e)),

@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"fmt"
+	"github.com/cloudevents/sdk-go/pkg/bindings"
 	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
 	"net/http"
 	nethttp "net/http"
@@ -25,7 +26,7 @@ type Sender struct {
 	transformers binding.TransformerFactories
 }
 
-func NewRequester(client *http.Client, target *url.URL, options ...SenderOptionFunc) binding.Requester {
+func NewRequester(client *http.Client, target *url.URL, options ...SenderOptionFunc) bindings.Requester {
 	s := &Sender{
 		Client:          client,
 		RequestTemplate: &http.Request{Method: http.MethodPost, URL: target},
@@ -37,12 +38,12 @@ func NewRequester(client *http.Client, target *url.URL, options ...SenderOptionF
 	return s
 }
 
-func NewSender(client *http.Client, target *url.URL, options ...SenderOptionFunc) binding.Sender {
+func NewSender(client *http.Client, target *url.URL, options ...SenderOptionFunc) bindings.Sender {
 	return NewRequester(client, target, options...)
 }
 
 // Confirm Sender implements binding.Requester
-var _ binding.Requester = (*Sender)(nil)
+var _ bindings.Requester = (*Sender)(nil)
 
 // Send implements binding.Sender
 func (s *Sender) Send(ctx context.Context, m binding.Message) error {

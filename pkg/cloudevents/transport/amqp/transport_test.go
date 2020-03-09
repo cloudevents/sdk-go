@@ -4,6 +4,7 @@ package amqp_test
 
 import (
 	"context"
+	test2 "github.com/cloudevents/sdk-go/pkg/binding/test"
 	"net/url"
 	"os"
 	"testing"
@@ -11,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
-	"github.com/cloudevents/sdk-go/pkg/binding/test"
+	"github.com/cloudevents/sdk-go/pkg/bindings/test"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/amqp"
 	"github.com/cloudevents/sdk-go/pkg/event"
@@ -85,11 +86,11 @@ func TestSendReceive(t *testing.T) {
 	ctx := context.Background()
 	tester := newTester(t, nil, nil)
 	defer tester.Close()
-	test.EachEvent(t, test.Events(), func(t *testing.T, e event.Event) {
+	test2.EachEvent(t, test.Events(), func(t *testing.T, e event.Event) {
 		_, _, err := tester.s.Send(ctx, e)
 		require.NoError(t, err)
 		got := <-tester.got
-		test.AssertEventEquals(t, exurl(e), got.(event.Event))
+		test2.AssertEventEquals(t, exurl(e), got.(event.Event))
 	})
 }
 
@@ -99,11 +100,11 @@ func TestWithEncoding(t *testing.T) {
 	defer tester.Close()
 	// FIXME(alanconway) problem with JSON round-tripping extensions
 	events := test.NoExtensions(test.Events())
-	test.EachEvent(t, events, func(t *testing.T, e event.Event) {
+	test2.EachEvent(t, events, func(t *testing.T, e event.Event) {
 		_, _, err := tester.s.Send(ctx, e)
 		require.NoError(t, err)
 		got := <-tester.got
 		e.Context = spec.V03.Convert(e.Context)
-		test.AssertEventEquals(t, exurl(e), got.(event.Event))
+		test2.AssertEventEquals(t, exurl(e), got.(event.Event))
 	})
 }

@@ -1,6 +1,9 @@
-package binding
+package bindings
 
-import "context"
+import (
+	"context"
+	"github.com/cloudevents/sdk-go/pkg/binding"
+)
 
 // Receiver receives messages.
 type Receiver interface {
@@ -8,7 +11,7 @@ type Receiver interface {
 	//
 	// A non-nil error means the receiver is closed.
 	// io.EOF means it closed cleanly, any other value indicates an error.
-	Receive(ctx context.Context) (Message, error)
+	Receive(ctx context.Context) (binding.Message, error)
 }
 
 // ReceiveCloser is a Receiver that can be closed.

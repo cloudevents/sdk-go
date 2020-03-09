@@ -2,6 +2,8 @@ package http_binding_test
 
 import (
 	"context"
+	test2 "github.com/cloudevents/sdk-go/pkg/binding/test"
+	"github.com/cloudevents/sdk-go/pkg/bindings"
 	nethttp "net/http"
 	"net/http/httptest"
 	"net/url"
@@ -13,20 +15,20 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/binding/test"
 	"github.com/cloudevents/sdk-go/pkg/bindings/http"
+	"github.com/cloudevents/sdk-go/pkg/bindings/test"
 )
 
 func TestSendSkipBinary(t *testing.T) {
 	close, s, r := testSenderReceiver(t)
 	defer close()
-	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
-		eventIn = test.ExToStr(t, eventIn)
+	test2.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
+		eventIn = test2.ExToStr(t, eventIn)
 		in := test.MustCreateMockBinaryMessage(eventIn)
-		test.SendReceive(t, binding.WithSkipDirectBinaryEncoding(binding.WithPreferredEventEncoding(context.Background(), binding.EncodingStructured), true), in, s, r, func(out binding.Message) {
-			eventOut := test.MustToEvent(t, context.Background(), out)
+		test2.SendReceive(t, binding.WithSkipDirectBinaryEncoding(binding.WithPreferredEventEncoding(context.Background(), binding.EncodingStructured), true), in, s, r, func(out binding.Message) {
+			eventOut := test2.MustToEvent(t, context.Background(), out)
 			assert.Equal(t, binding.EncodingStructured, out.ReadEncoding())
-			test.AssertEventEquals(t, eventIn, test.ExToStr(t, eventOut))
+			test2.AssertEventEquals(t, eventIn, test2.ExToStr(t, eventOut))
 		})
 	})
 }
@@ -34,13 +36,13 @@ func TestSendSkipBinary(t *testing.T) {
 func TestSendSkipStructured(t *testing.T) {
 	close, s, r := testSenderReceiver(t)
 	defer close()
-	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
-		eventIn = test.ExToStr(t, eventIn)
+	test2.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
+		eventIn = test2.ExToStr(t, eventIn)
 		in := test.MustCreateMockStructuredMessage(eventIn)
-		test.SendReceive(t, binding.WithSkipDirectStructuredEncoding(context.Background(), true), in, s, r, func(out binding.Message) {
-			eventOut := test.MustToEvent(t, context.Background(), out)
+		test2.SendReceive(t, binding.WithSkipDirectStructuredEncoding(context.Background(), true), in, s, r, func(out binding.Message) {
+			eventOut := test2.MustToEvent(t, context.Background(), out)
 			assert.Equal(t, binding.EncodingBinary, out.ReadEncoding())
-			test.AssertEventEquals(t, eventIn, test.ExToStr(t, eventOut))
+			test2.AssertEventEquals(t, eventIn, test2.ExToStr(t, eventOut))
 		})
 	})
 }
@@ -48,13 +50,13 @@ func TestSendSkipStructured(t *testing.T) {
 func TestSendBinaryReceiveBinary(t *testing.T) {
 	close, s, r := testSenderReceiver(t)
 	defer close()
-	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
-		eventIn = test.ExToStr(t, eventIn)
+	test2.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
+		eventIn = test2.ExToStr(t, eventIn)
 		in := test.MustCreateMockBinaryMessage(eventIn)
-		test.SendReceive(t, context.Background(), in, s, r, func(out binding.Message) {
-			eventOut := test.MustToEvent(t, context.Background(), out)
+		test2.SendReceive(t, context.Background(), in, s, r, func(out binding.Message) {
+			eventOut := test2.MustToEvent(t, context.Background(), out)
 			assert.Equal(t, binding.EncodingBinary, out.ReadEncoding())
-			test.AssertEventEquals(t, eventIn, test.ExToStr(t, eventOut))
+			test2.AssertEventEquals(t, eventIn, test2.ExToStr(t, eventOut))
 		})
 	})
 }
@@ -62,13 +64,13 @@ func TestSendBinaryReceiveBinary(t *testing.T) {
 func TestSendStructReceiveStruct(t *testing.T) {
 	close, s, r := testSenderReceiver(t)
 	defer close()
-	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
-		eventIn = test.ExToStr(t, eventIn)
+	test2.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
+		eventIn = test2.ExToStr(t, eventIn)
 		in := test.MustCreateMockStructuredMessage(eventIn)
-		test.SendReceive(t, context.Background(), in, s, r, func(out binding.Message) {
-			eventOut := test.MustToEvent(t, context.Background(), out)
+		test2.SendReceive(t, context.Background(), in, s, r, func(out binding.Message) {
+			eventOut := test2.MustToEvent(t, context.Background(), out)
 			require.Equal(t, binding.EncodingStructured, out.ReadEncoding())
-			test.AssertEventEquals(t, eventIn, test.ExToStr(t, eventOut))
+			test2.AssertEventEquals(t, eventIn, test2.ExToStr(t, eventOut))
 		})
 	})
 }
@@ -76,18 +78,18 @@ func TestSendStructReceiveStruct(t *testing.T) {
 func TestSendEventReceiveBinary(t *testing.T) {
 	close, s, r := testSenderReceiver(t)
 	defer close()
-	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
-		eventIn = test.ExToStr(t, eventIn)
+	test2.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
+		eventIn = test2.ExToStr(t, eventIn)
 		in := binding.EventMessage(eventIn)
-		test.SendReceive(t, context.Background(), in, s, r, func(out binding.Message) {
-			eventOut := test.MustToEvent(t, context.Background(), out)
+		test2.SendReceive(t, context.Background(), in, s, r, func(out binding.Message) {
+			eventOut := test2.MustToEvent(t, context.Background(), out)
 			require.Equal(t, binding.EncodingBinary, out.ReadEncoding())
-			test.AssertEventEquals(t, eventIn, test.ExToStr(t, eventOut))
+			test2.AssertEventEquals(t, eventIn, test2.ExToStr(t, eventOut))
 		})
 	})
 }
 
-func testSenderReceiver(t testing.TB, options ...http.SenderOptionFunc) (func(), binding.Sender, binding.Receiver) {
+func testSenderReceiver(t testing.TB, options ...http.SenderOptionFunc) (func(), bindings.Sender, bindings.Receiver) {
 	r := http.NewReceiver() // Parameters? Capacity, sync.
 	srv := httptest.NewServer(r)
 	u, err := url.Parse(srv.URL)

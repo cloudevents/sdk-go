@@ -127,7 +127,7 @@ func TestEncodeKafkaProducerMessage(t *testing.T) {
 
 				eventOut, err := binding.ToEvent(context.TODO(), messageOut, nil)
 				require.NoError(t, err)
-				test.AssertEventEquals(t, eventIn, eventOut)
+				test.AssertEventEquals(t, eventIn, *eventOut)
 			})
 		})
 	}

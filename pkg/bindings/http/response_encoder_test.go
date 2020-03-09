@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	test2 "github.com/cloudevents/sdk-go/pkg/binding/test"
 	"net/http"
 	"testing"
 
@@ -45,13 +46,13 @@ func TestEncodeHttpResponse(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		test.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
+		test2.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
 			t.Run(tt.name, func(t *testing.T) {
 				res := &http.Response{
 					Header: make(http.Header),
 				}
 
-				eventIn = test.ExToStr(t, eventIn)
+				eventIn = test2.ExToStr(t, eventIn)
 				messageIn := tt.messageFactory(eventIn)
 
 				err := EncodeHttpResponse(tt.context, messageIn, res, nil)
@@ -62,7 +63,7 @@ func TestEncodeHttpResponse(t *testing.T) {
 				require.Equal(t, tt.expectedEncoding, messageOut.ReadEncoding())
 
 				eventOut, err := binding.ToEvent(context.TODO(), messageOut, nil)
-				test.AssertEventEquals(t, eventIn, eventOut)
+				test2.AssertEventEquals(t, eventIn, *eventOut)
 			})
 		})
 	}

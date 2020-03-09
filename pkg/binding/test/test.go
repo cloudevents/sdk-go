@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
-	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -47,31 +46,6 @@ func EachMessage(t *testing.T, messages []binding.Message, f func(*testing.T, bi
 		in := m
 		t.Run(NameOf(in), func(t *testing.T) { f(t, in) })
 	}
-}
-
-// SendReceive does s.Send(in), then it receives the message in r.Receive() and executes outAssert
-// Halt test on error.
-func SendReceive(t *testing.T, ctx context.Context, in binding.Message, s binding.Sender, r binding.Receiver, outAssert func(binding.Message)) {
-	t.Helper()
-	wg := sync.WaitGroup{}
-	wg.Add(2)
-
-	go func() {
-		defer wg.Done()
-		out, recvErr := r.Receive(ctx)
-		require.NoError(t, recvErr)
-		outAssert(out)
-		finishErr := out.Finish(nil)
-		require.NoError(t, finishErr)
-	}()
-
-	go func() {
-		defer wg.Done()
-		err := s.Send(ctx, in)
-		require.NoError(t, err)
-	}()
-
-	wg.Wait()
 }
 
 // Assert two event.Event context are equals
@@ -132,7 +106,7 @@ func MustJSON(e event.Event) []byte {
 func MustToEvent(t *testing.T, ctx context.Context, m binding.Message) event.Event {
 	e, err := binding.ToEvent(ctx, m, nil)
 	require.NoError(t, err)
-	return e
+	return *e
 }
 
 // Returns a copy of the event.Event with only the event.EventContext copied

@@ -86,13 +86,13 @@ func Write(
 		}
 	}
 
-	var e event.Event
+	var e *event.Event
 	e, err = ToEvent(ctx, message, transformers)
 	if err != nil {
 		return enc, err
 	}
 
-	message = EventMessage(e)
+	message = EventMessage(*e)
 
 	if GetOrDefaultFromCtx(ctx, PREFERRED_EVENT_ENCODING, EncodingBinary).(Encoding) == EncodingStructured {
 		if structuredWriter != nil {

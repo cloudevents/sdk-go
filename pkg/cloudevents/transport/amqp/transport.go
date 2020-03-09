@@ -2,7 +2,7 @@ package amqp
 
 import (
 	"context"
-
+	"github.com/cloudevents/sdk-go/pkg/bindings"
 	"pack.ag/amqp"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
@@ -22,7 +22,7 @@ const (
 )
 
 type Transport struct {
-	binding.BindingTransport
+	bindings.BindingTransport
 	connOpts         []amqp.ConnOption
 	sessionOpts      []amqp.SessionOption
 	senderLinkOpts   []amqp.LinkOption
@@ -85,7 +85,7 @@ func New(server, queue string, opts ...Option) (*Transport, error) {
 	return t, nil
 }
 
-func (t *Transport) applyEncoding(amqpSender *amqp.Sender) (binding.Sender, []func(context.Context) context.Context) {
+func (t *Transport) applyEncoding(amqpSender *amqp.Sender) (bindings.Sender, []func(context.Context) context.Context) {
 	switch t.Encoding {
 	case BinaryV03:
 		return bindings_amqp.NewSender(

@@ -15,7 +15,7 @@ import (
 
 // Avoid DCE
 var M binding.Message
-var Event event.Event
+var Event *event.Event
 var Err error
 
 var (

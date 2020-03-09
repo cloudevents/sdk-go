@@ -12,21 +12,23 @@ import (
 	"pack.ag/amqp"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/binding/test"
-	amqp2 "github.com/cloudevents/sdk-go/pkg/bindings/amqp"
+	. "github.com/cloudevents/sdk-go/pkg/binding/test"
+	"github.com/cloudevents/sdk-go/pkg/bindings"
+	amqpb "github.com/cloudevents/sdk-go/pkg/bindings/amqp"
+	"github.com/cloudevents/sdk-go/pkg/bindings/test"
 	"github.com/cloudevents/sdk-go/pkg/event"
 )
 
 func TestSendSkipBinary(t *testing.T) {
 	c, s, r := testSenderReceiver(t)
 	defer c.Close()
-	test.EachEvent(t, test.Events(), func(t *testing.T, e event.Event) {
-		eventIn := test.ExToStr(t, e)
-		in := test.MustCreateMockBinaryMessage(eventIn)
+	EachEvent(t, Events(), func(t *testing.T, e event.Event) {
+		eventIn := ExToStr(t, e)
+		in := MustCreateMockBinaryMessage(eventIn)
 		test.SendReceive(t, binding.WithSkipDirectBinaryEncoding(binding.WithPreferredEventEncoding(context.Background(), binding.EncodingStructured), true), in, s, r, func(out binding.Message) {
-			eventOut := test.MustToEvent(t, context.TODO(), out)
+			eventOut := MustToEvent(t, context.TODO(), out)
 			assert.Equal(t, out.ReadEncoding(), binding.EncodingStructured)
-			test.AssertEventEquals(t, eventIn, test.ExToStr(t, eventOut))
+			AssertEventEquals(t, eventIn, ExToStr(t, eventOut))
 		})
 	})
 }
@@ -34,13 +36,13 @@ func TestSendSkipBinary(t *testing.T) {
 func TestSendSkipStructured(t *testing.T) {
 	c, s, r := testSenderReceiver(t)
 	defer c.Close()
-	test.EachEvent(t, test.Events(), func(t *testing.T, e event.Event) {
-		eventIn := test.ExToStr(t, e)
-		in := test.MustCreateMockStructuredMessage(eventIn)
+	EachEvent(t, Events(), func(t *testing.T, e event.Event) {
+		eventIn := ExToStr(t, e)
+		in := MustCreateMockStructuredMessage(eventIn)
 		test.SendReceive(t, binding.WithSkipDirectStructuredEncoding(context.Background(), true), in, s, r, func(out binding.Message) {
-			eventOut := test.MustToEvent(t, context.Background(), out)
+			eventOut := MustToEvent(t, context.Background(), out)
 			assert.Equal(t, out.ReadEncoding(), binding.EncodingBinary)
-			test.AssertEventEquals(t, eventIn, test.ExToStr(t, eventOut))
+			AssertEventEquals(t, eventIn, ExToStr(t, eventOut))
 		})
 	})
 }
@@ -48,13 +50,13 @@ func TestSendSkipStructured(t *testing.T) {
 func TestSendEventReceiveStruct(t *testing.T) {
 	c, s, r := testSenderReceiver(t)
 	defer c.Close()
-	test.EachEvent(t, test.Events(), func(t *testing.T, e event.Event) {
-		eventIn := test.ExToStr(t, e)
+	EachEvent(t, Events(), func(t *testing.T, e event.Event) {
+		eventIn := ExToStr(t, e)
 		in := binding.EventMessage(eventIn)
 		test.SendReceive(t, binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingStructured), in, s, r, func(out binding.Message) {
-			eventOut := test.MustToEvent(t, context.Background(), out)
+			eventOut := MustToEvent(t, context.Background(), out)
 			assert.Equal(t, out.ReadEncoding(), binding.EncodingStructured)
-			test.AssertEventEquals(t, eventIn, test.ExToStr(t, eventOut))
+			AssertEventEquals(t, eventIn, ExToStr(t, eventOut))
 		})
 	})
 }
@@ -62,13 +64,13 @@ func TestSendEventReceiveStruct(t *testing.T) {
 func TestSendEventReceiveBinary(t *testing.T) {
 	c, s, r := testSenderReceiver(t)
 	defer c.Close()
-	test.EachEvent(t, test.Events(), func(t *testing.T, e event.Event) {
-		eventIn := test.ExToStr(t, e)
+	EachEvent(t, Events(), func(t *testing.T, e event.Event) {
+		eventIn := ExToStr(t, e)
 		in := binding.EventMessage(eventIn)
 		test.SendReceive(t, context.Background(), in, s, r, func(out binding.Message) {
-			eventOut := test.MustToEvent(t, context.Background(), out)
+			eventOut := MustToEvent(t, context.Background(), out)
 			assert.Equal(t, out.ReadEncoding(), binding.EncodingBinary)
-			test.AssertEventEquals(t, eventIn, test.ExToStr(t, eventOut))
+			AssertEventEquals(t, eventIn, ExToStr(t, eventOut))
 		})
 	})
 }
@@ -98,13 +100,13 @@ func testClient(t testing.TB) (client *amqp.Client, session *amqp.Session, addr 
 	return client, session, addr
 }
 
-func testSenderReceiver(t testing.TB, senderOptions ...amqp2.SenderOptionFunc) (io.Closer, binding.Sender, binding.Receiver) {
+func testSenderReceiver(t testing.TB, senderOptions ...amqpb.SenderOptionFunc) (io.Closer, bindings.Sender, bindings.Receiver) {
 	c, ss, a := testClient(t)
 	r, err := ss.NewReceiver(amqp.LinkSourceAddress(a))
 	require.NoError(t, err)
 	s, err := ss.NewSender(amqp.LinkTargetAddress(a))
 	require.NoError(t, err)
-	return c, amqp2.NewSender(s, senderOptions...), amqp2.NewReceiver(r)
+	return c, amqpb.NewSender(s, senderOptions...), amqpb.NewReceiver(r)
 }
 
 func BenchmarkSendReceive(b *testing.B) {
