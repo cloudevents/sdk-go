@@ -34,5 +34,4 @@ func gotEvent(ctx context.Context, event cloudevents.Event) {
 	}
 
 	fmt.Printf("%s", event)
-	fmt.Printf("%s\n", cloudevents.HTTPTransportContextFrom(ctx))
 }

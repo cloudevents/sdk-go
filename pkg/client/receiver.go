@@ -6,9 +6,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/event"
-
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
 )
 
 // Receive is the signature of a fn to be invoked for incoming cloudevents.
@@ -30,7 +29,7 @@ type receiverFn struct {
 
 // ConvertFn defines the signature the client expects to enable conversion
 // delegation.
-type ConvertFn func(context.Context, transport.Message, error) (*event.Event, error)
+type ConvertFn func(context.Context, binding.Message, error) (*event.Event, error)
 
 const (
 	inParamUsage  = "expected a function taking either no parameters, one or more of (context.Context, event.Event, *event.EventResponse) ordered"

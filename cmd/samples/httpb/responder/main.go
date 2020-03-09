@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/httpb"
+	"github.com/cloudevents/sdk-go/pkg/transport/httpb"
 	"log"
 	"os"
 

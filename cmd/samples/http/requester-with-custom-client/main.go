@@ -74,7 +74,7 @@ func _main(args []string, env envConfig) int {
 
 	seq := 0
 	for _, dataContentType := range []string{"application/json", "application/xml"} {
-		for _, encoding := range []cloudevents.HTTPEncoding{cloudevents.HTTPBinaryV03, cloudevents.HTTPStructuredV03} {
+		for _, encoding := range []cloudevents.HTTPEncoding{cloudevents.HTTPBinaryEncoding, cloudevents.HTTPStructuredEncoding} {
 
 			t, err := cloudevents.NewHTTPTransport(
 				cloudevents.WithTarget(env.Target),
@@ -96,7 +96,7 @@ func _main(args []string, env envConfig) int {
 				return 1
 			}
 
-			message := fmt.Sprintf("Hello, %s!", encoding)
+			message := fmt.Sprintf("Hello, %d!", encoding)
 
 			for i := 0; i < count; i++ {
 				event := cloudevents.Event{

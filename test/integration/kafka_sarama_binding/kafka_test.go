@@ -3,7 +3,7 @@ package kafka_sarama_binding
 import (
 	"context"
 	test2 "github.com/cloudevents/sdk-go/pkg/binding/test"
-	"github.com/cloudevents/sdk-go/pkg/bindings"
+	bindings "github.com/cloudevents/sdk-go/pkg/transport"
 	"os"
 	"strings"
 	"testing"
@@ -14,9 +14,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/bindings/kafka_sarama"
-	"github.com/cloudevents/sdk-go/pkg/bindings/test"
 	"github.com/cloudevents/sdk-go/pkg/event"
+	"github.com/cloudevents/sdk-go/pkg/transport/kafka_sarama"
+	"github.com/cloudevents/sdk-go/pkg/transport/test"
 )
 
 const (

@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"github.com/cloudevents/sdk-go"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/httpb"
+	"github.com/cloudevents/sdk-go/pkg/transport/httpb"
 )
 
 func main() {

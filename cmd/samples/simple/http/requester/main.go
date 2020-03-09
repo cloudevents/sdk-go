@@ -17,8 +17,6 @@ type Example struct {
 func main() {
 	ctx := cloudevents.ContextWithTarget(context.Background(), "http://localhost:8080/")
 
-	ctx = cloudevents.ContextWithHeader(ctx, "demo", "header value")
-
 	c, err := cloudevents.NewDefaultClient()
 	if err != nil {
 		log.Fatalf("failed to create client, %v", err)

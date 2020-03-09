@@ -2,6 +2,7 @@ package amqp_binding
 
 import (
 	"context"
+	amqp2 "github.com/cloudevents/sdk-go/pkg/transport/amqp"
 	"io"
 	"net/url"
 	"os"
@@ -13,10 +14,9 @@ import (
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	. "github.com/cloudevents/sdk-go/pkg/binding/test"
-	"github.com/cloudevents/sdk-go/pkg/bindings"
-	amqpb "github.com/cloudevents/sdk-go/pkg/bindings/amqp"
-	"github.com/cloudevents/sdk-go/pkg/bindings/test"
 	"github.com/cloudevents/sdk-go/pkg/event"
+	bindings "github.com/cloudevents/sdk-go/pkg/transport"
+	"github.com/cloudevents/sdk-go/pkg/transport/test"
 )
 
 func TestSendSkipBinary(t *testing.T) {
@@ -100,13 +100,13 @@ func testClient(t testing.TB) (client *amqp.Client, session *amqp.Session, addr 
 	return client, session, addr
 }
 
-func testSenderReceiver(t testing.TB, senderOptions ...amqpb.SenderOptionFunc) (io.Closer, bindings.Sender, bindings.Receiver) {
+func testSenderReceiver(t testing.TB, senderOptions ...amqp2.SenderOptionFunc) (io.Closer, bindings.Sender, bindings.Receiver) {
 	c, ss, a := testClient(t)
 	r, err := ss.NewReceiver(amqp.LinkSourceAddress(a))
 	require.NoError(t, err)
 	s, err := ss.NewSender(amqp.LinkTargetAddress(a))
 	require.NoError(t, err)
-	return c, amqpb.NewSender(s, senderOptions...), amqpb.NewReceiver(r)
+	return c, amqp2.NewSender(s, senderOptions...), amqp2.NewReceiver(r)
 }
 
 func BenchmarkSendReceive(b *testing.B) {

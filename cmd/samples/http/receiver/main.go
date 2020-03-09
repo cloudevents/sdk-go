@@ -38,8 +38,6 @@ func gotEvent(ctx context.Context, event cloudevents.Event) error {
 	}
 	fmt.Printf("Got Data: %+v\n", data)
 
-	fmt.Printf("Got Transport Context: %+v\n", cloudevents.HTTPTransportContextFrom(ctx))
-
 	fmt.Printf("----------------------------\n")
 	return nil
 }

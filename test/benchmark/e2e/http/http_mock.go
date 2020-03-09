@@ -2,7 +2,7 @@ package main
 
 import (
 	"bytes"
-	"github.com/cloudevents/sdk-go/pkg/bindings"
+	bindings "github.com/cloudevents/sdk-go/pkg/transport"
 	"io"
 	"io/ioutil"
 	nethttp "net/http"
@@ -10,8 +10,7 @@ import (
 	"net/url"
 
 	cloudevents "github.com/cloudevents/sdk-go"
-	"github.com/cloudevents/sdk-go/pkg/bindings/http"
-	cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+	cehttp "github.com/cloudevents/sdk-go/pkg/transport/httpb"
 )
 
 type RoundTripFunc func(req *nethttp.Request) *nethttp.Response

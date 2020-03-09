@@ -12,7 +12,7 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/types"
 
 	. "github.com/cloudevents/sdk-go/pkg/binding/test"
-	. "github.com/cloudevents/sdk-go/pkg/bindings/test"
+	. "github.com/cloudevents/sdk-go/pkg/transport/test"
 )
 
 func TestAddAttribute(t *testing.T) {

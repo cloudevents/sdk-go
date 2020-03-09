@@ -1,5 +1,0 @@
-package amqp
-
-/*
-Module amqp implements an AMQP binding using pack.ag/amqp module
-*/

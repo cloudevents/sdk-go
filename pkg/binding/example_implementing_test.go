@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/cloudevents/sdk-go/pkg/bindings"
+	bindings "github.com/cloudevents/sdk-go/pkg/transport"
+	bindings2 "github.com/cloudevents/sdk-go/pkg/transport/bindings"
 	"io"
 	"io/ioutil"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
+	"github.com/cloudevents/sdk-go/pkg/transport"
 )
 
 // ExMessage is a json.RawMessage, a byte slice containing a JSON encoded event.
@@ -92,5 +93,5 @@ func (r *ExReceiver) Close(context.Context) error { return nil }
 // NewExTransport returns a transport.Transport which is implemented by
 // an ExSender and an ExReceiver
 func NewExTransport(r io.Reader, w io.Writer) transport.Transport {
-	return bindings.NewSendingTransport(NewExSender(w), NewExReceiver(r), []func(ctx context.Context) context.Context{})
+	return bindings2.NewSendingTransport(NewExSender(w), NewExReceiver(r), []func(ctx context.Context) context.Context{})
 }

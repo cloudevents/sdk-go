@@ -44,16 +44,13 @@ func _main(args []string, env envConfig) int {
 		return 1
 	}
 
-	ctx := cloudevents.ContextWithEncoding(context.Background(), cloudevents.Structured)
-
 	seq := 0
 	for _, contentType := range []string{"application/json", "application/xml"} {
-		for _, encoding := range []cloudevents.HTTPEncoding{cloudevents.HTTPBinaryV1, cloudevents.HTTPStructuredV1} {
+		for _, encoding := range []cloudevents.HTTPEncoding{cloudevents.HTTPBinaryEncoding, cloudevents.HTTPStructuredEncoding} {
 
 			t, err := cloudevents.NewHTTPTransport(
 				cloudevents.WithTarget(env.Target),
 				cloudevents.WithEncoding(encoding),
-				//cloudevents.WithContextBasedEncoding(), // toggle this or WithEncoding to see context based encoding work.
 			)
 			if err != nil {
 				log.Printf("failed to create transport, %v", err)
@@ -68,7 +65,7 @@ func _main(args []string, env envConfig) int {
 				return 1
 			}
 
-			message := fmt.Sprintf("Hello, %s!", encoding)
+			message := fmt.Sprintf("Hello, %d!", encoding)
 
 			for i := 0; i < count; i++ {
 				event := cloudevents.Event{
@@ -84,7 +81,7 @@ func _main(args []string, env envConfig) int {
 					},
 				}
 
-				if resp, err := c.Request(ctx, event); err != nil {
+				if resp, err := c.Request(context.Background(), event); err != nil {
 					log.Printf("failed to request: %v", err)
 				} else if resp != nil {
 					fmt.Printf("Response:\n%s\n", resp)

@@ -19,8 +19,8 @@ import (
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/buffering"
-	"github.com/cloudevents/sdk-go/pkg/bindings/http"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
+	"github.com/cloudevents/sdk-go/pkg/transport"
+	"github.com/cloudevents/sdk-go/pkg/transport/httpb"
 	"github.com/cloudevents/sdk-go/test/benchmark/e2e"
 )
 
@@ -152,7 +152,7 @@ func benchmarkReceiverSender(cases []e2e.BenchmarkCase, requestFactory func([]by
 }
 
 func dispatchReceiver(clients []cloudevents.Client, outputSenders int) transport.Receiver {
-	return transport.ReceiveFunc(func(ctx context.Context, e cloudevents.Event, er *cloudevents.EventResponse) error {
+	return transport.DeliveryFunc(func(ctx context.Context, e cloudevents.Event, er *cloudevents.EventResponse) error {
 		var wg sync.WaitGroup
 		for i := 0; i < outputSenders; i++ {
 			wg.Add(1)

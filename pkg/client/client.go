@@ -3,13 +3,14 @@ package client
 import (
 	"context"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/observability"
 	"sync"
 
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/event"
 	"github.com/cloudevents/sdk-go/pkg/extensions"
+	"github.com/cloudevents/sdk-go/pkg/observability"
+	"github.com/cloudevents/sdk-go/pkg/transport"
+	"github.com/cloudevents/sdk-go/pkg/transport/httpb"
 	"go.opencensus.io/trace"
 )
 
@@ -53,7 +54,7 @@ func New(t transport.Transport, opts ...Option) (Client, error) {
 	if err := c.applyOptions(opts...); err != nil {
 		return nil, err
 	}
-	t.SetReceiver(c)
+	t.SetDelivery(c)
 	return c, nil
 }
 
@@ -65,7 +66,7 @@ func New(t transport.Transport, opts ...Option) (Client, error) {
 // client options are also applied to the client, all outbound events will have
 // a time and id set if not already present.
 func NewDefault() (Client, error) {
-	t, err := http.New(http.WithBinaryEncoding())
+	t, err := httpb.New(httpb.WithEncoding(httpb.Binary))
 	if err != nil {
 		return nil, err
 	}
@@ -190,13 +191,13 @@ func (c *ceClient) obsRequest(ctx context.Context, event event.Event) (*event.Ev
 	return c.transport.Request(ctx, event)
 }
 
-// Receive is called from from the transport on event delivery.
-func (c *ceClient) Receive(ctx context.Context, event event.Event, resp *event.EventResponse) error {
+// Delivery is called from from the transport on event delivery.
+func (c *ceClient) Delivery(ctx context.Context, e event.Event, resp *event.EventResponse) error {
 	ctx, r := observability.NewReporter(ctx, reportReceive)
 
 	var span *trace.Span
 	if !c.transport.HasTracePropagation() {
-		if ext, ok := extensions.GetDistributedTracingExtension(event); ok {
+		if ext, ok := extensions.GetDistributedTracingExtension(e); ok {
 			ctx, span = ext.StartChildSpan(ctx, clientSpanName, trace.WithSpanKind(trace.SpanKindServer))
 		}
 	}
@@ -205,10 +206,10 @@ func (c *ceClient) Receive(ctx context.Context, event event.Event, resp *event.E
 	}
 	defer span.End()
 	if span.IsRecordingEvents() {
-		span.AddAttributes(eventTraceAttributes(event.Context)...)
+		span.AddAttributes(eventTraceAttributes(e.Context)...)
 	}
 
-	err := c.obsReceive(ctx, event, resp)
+	err := c.obsDelivery(ctx, e, resp)
 	if err != nil {
 		r.Error()
 	} else {
@@ -217,9 +218,9 @@ func (c *ceClient) Receive(ctx context.Context, event event.Event, resp *event.E
 	return err
 }
 
-func (c *ceClient) obsReceive(ctx context.Context, event event.Event, resp *event.EventResponse) error {
+func (c *ceClient) obsDelivery(ctx context.Context, e event.Event, resp *event.EventResponse) error {
 	if c.fn != nil {
-		err := c.fn.invoke(ctx, event, resp)
+		err := c.fn.invoke(ctx, e, resp)
 
 		// Apply the defaulter chain to the outgoing event.
 		if err == nil && resp != nil && resp.Event != nil && len(c.eventDefaulterFns) > 0 {
@@ -272,7 +273,7 @@ func (c *ceClient) applyOptions(opts ...Option) error {
 }
 
 // Convert implements transport Converter.Convert.
-func (c *ceClient) Convert(ctx context.Context, m transport.Message, err error) (*event.Event, error) {
+func (c *ceClient) Convert(ctx context.Context, m binding.Message, err error) (*event.Event, error) {
 	if c.convertFn != nil {
 		return c.convertFn(ctx, m, err)
 	}

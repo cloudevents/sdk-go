@@ -8,16 +8,16 @@ import (
 	"github.com/google/uuid"
 
 	cloudevents "github.com/cloudevents/sdk-go"
-	cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+	"github.com/cloudevents/sdk-go/pkg/transport/httpb"
 )
 
-func ClientMiddleware(t *testing.T, tc TapTest, topts ...cehttp.Option) {
+func ClientMiddleware(t *testing.T, tc TapTest, topts ...httpb.Option) {
 	tap := NewTap()
 	server := httptest.NewServer(tap)
 	defer server.Close()
 
 	if len(topts) == 0 {
-		topts = append(topts, cloudevents.WithBinaryEncoding())
+		topts = append(topts, cloudevents.WithEncoding(cloudevents.HTTPBinaryEncoding))
 	}
 	topts = append(topts, cloudevents.WithTarget(server.URL))
 	topts = append(topts, cloudevents.WithPort(0)) // random port
@@ -40,7 +40,7 @@ func ClientMiddleware(t *testing.T, tc TapTest, topts ...cehttp.Option) {
 	}
 
 	testID := uuid.New().String()
-	ctx := cloudevents.ContextWithHeader(context.Background(), unitTestIDKey, testID)
+	tc.event.SetExtension(unitTestIDKey, testID)
 
 	recvCtx, recvCancel := context.WithCancel(context.Background())
 
@@ -52,7 +52,7 @@ func ClientMiddleware(t *testing.T, tc TapTest, topts ...cehttp.Option) {
 		}
 	}()
 
-	got, err := ce.Request(ctx, *tc.event)
+	got, err := ce.Request(context.Background(), *tc.event)
 	if err != nil {
 		t.Fatal(err)
 	}

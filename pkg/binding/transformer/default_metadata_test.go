@@ -12,7 +12,7 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/binding/test"
 	"github.com/cloudevents/sdk-go/pkg/event"
 
-	. "github.com/cloudevents/sdk-go/pkg/bindings/test"
+	. "github.com/cloudevents/sdk-go/pkg/transport/test"
 )
 
 func TestAddUUID(t *testing.T) {

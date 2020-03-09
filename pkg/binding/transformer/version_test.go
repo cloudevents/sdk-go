@@ -13,7 +13,7 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/event"
 	"github.com/cloudevents/sdk-go/pkg/types"
 
-	. "github.com/cloudevents/sdk-go/pkg/bindings/test"
+	. "github.com/cloudevents/sdk-go/pkg/transport/test"
 )
 
 func TestVersionTranscoder(t *testing.T) {
