@@ -16,11 +16,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cloudevents/sdk-go/pkg/event"
+
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/buffering"
-	"github.com/cloudevents/sdk-go/pkg/bindings/http"
 	"github.com/cloudevents/sdk-go/pkg/transport"
+	http "github.com/cloudevents/sdk-go/pkg/transport/http"
 	"github.com/cloudevents/sdk-go/test/benchmark/e2e"
 )
 
@@ -151,8 +153,16 @@ func benchmarkReceiverSender(cases []e2e.BenchmarkCase, requestFactory func([]by
 	return results
 }
 
-func dispatchReceiver(clients []cloudevents.Client, outputSenders int) transport.Receiver {
-	return transport.DeliveryFunc(func(ctx context.Context, e cloudevents.Event, er *cloudevents.EventResponse) error {
+type benchDelivery struct {
+	fn transport.DeliveryFunc
+}
+
+func (b *benchDelivery) Delivery(ctx context.Context, e event.Event, er *event.EventResponse) error {
+	return b.fn(ctx, e, er)
+}
+
+func dispatchReceiver(clients []cloudevents.Client, outputSenders int) transport.Delivery {
+	return &benchDelivery{fn: func(ctx context.Context, e cloudevents.Event, er *cloudevents.EventResponse) error {
 		var wg sync.WaitGroup
 		for i := 0; i < outputSenders; i++ {
 			wg.Add(1)
@@ -164,7 +174,7 @@ func dispatchReceiver(clients []cloudevents.Client, outputSenders int) transport
 		wg.Wait()
 		er.RespondWith(200, nil)
 		return nil
-	})
+	}}
 }
 
 func benchmarkClient(cases []e2e.BenchmarkCase, requestFactory func([]byte) *nethttp.Request) e2e.BenchmarkResults {
@@ -181,7 +191,7 @@ func benchmarkClient(cases []e2e.BenchmarkCase, requestFactory func([]byte) *net
 			senderClients[i], _ = MockedClient()
 		}
 
-		mockedReceiverTransport.SetReceiver(dispatchReceiver(senderClients, c.OutputSenders))
+		mockedReceiverTransport.SetDelivery(dispatchReceiver(senderClients, c.OutputSenders))
 
 		buffer := make([]byte, c.PayloadSize)
 		fillRandom(buffer, random)

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/cloudevents/sdk-go/pkg/transport/httpb"
+	"github.com/cloudevents/sdk-go/pkg/transport/http"
 
 	cloudevents "github.com/cloudevents/sdk-go"
 )
@@ -13,7 +13,7 @@ import (
 func main() {
 	ctx := context.Background()
 
-	t, err := httpb.New()
+	t, err := http.New()
 	if err != nil {
 		log.Fatalf("failed to create transport, %v", err)
 	}

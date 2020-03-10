@@ -1,4 +1,4 @@
-package httpb
+package http
 
 import "github.com/cloudevents/sdk-go/pkg/binding"
 

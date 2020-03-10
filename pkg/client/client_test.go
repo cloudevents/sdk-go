@@ -18,7 +18,7 @@ import (
 
 	"github.com/cloudevents/sdk-go/pkg/client"
 	"github.com/cloudevents/sdk-go/pkg/event"
-	cehttp "github.com/cloudevents/sdk-go/pkg/transport/httpb"
+	cehttp "github.com/cloudevents/sdk-go/pkg/transport/http"
 	"github.com/cloudevents/sdk-go/pkg/types"
 )
 

@@ -10,7 +10,7 @@ import (
 
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/client"
-	cehttp "github.com/cloudevents/sdk-go/pkg/transport/httpb"
+	cehttp "github.com/cloudevents/sdk-go/pkg/transport/http"
 )
 
 // Loopback Test:

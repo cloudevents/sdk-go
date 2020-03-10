@@ -10,7 +10,7 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/context"
 	"github.com/cloudevents/sdk-go/pkg/event"
 	"github.com/cloudevents/sdk-go/pkg/observability"
-	"github.com/cloudevents/sdk-go/pkg/transport/httpb"
+	"github.com/cloudevents/sdk-go/pkg/transport/http"
 	"github.com/cloudevents/sdk-go/pkg/types"
 )
 
@@ -39,10 +39,10 @@ type URIRef = types.URIRef
 
 // HTTP Transport
 
-type HTTPOption httpb.Option
+type HTTPOption http.Option
 
 type HTTPTransport = http.Transport
-type HTTPEncoding = httpb.Encoding
+type HTTPEncoding = http.Encoding
 
 const (
 	// Encoding
@@ -58,8 +58,8 @@ const (
 	VersionV1  = event.CloudEventsVersionV1
 	VersionV03 = event.CloudEventsVersionV03
 
-	HTTPBinaryEncoding     = httpb.Binary
-	HTTPStructuredEncoding = httpb.Structured
+	HTTPBinaryEncoding     = http.Binary
+	HTTPStructuredEncoding = http.Structured
 )
 
 var (
@@ -108,18 +108,18 @@ var (
 
 	// HTTP Transport
 
-	NewHTTPTransport = httpb.New
+	NewHTTPTransport = http.New
 
 	// HTTP Transport Options
 
-	WithTarget             = httpb.WithTarget
-	WitHHeader             = httpb.WithHeader
-	WithShutdownTimeout    = httpb.WithShutdownTimeout
-	WithEncoding           = httpb.WithEncoding
-	WithStructuredEncoding = httpb.WithStructuredEncoding
-	WithPort               = httpb.WithPort
-	WithPath               = httpb.WithPath
-	WithMiddleware         = httpb.WithMiddleware
-	WithListener           = httpb.WithListener
-	WithHTTPTransport      = httpb.WithHTTPTransport
+	WithTarget             = http.WithTarget
+	WitHHeader             = http.WithHeader
+	WithShutdownTimeout    = http.WithShutdownTimeout
+	WithEncoding           = http.WithEncoding
+	WithStructuredEncoding = http.WithStructuredEncoding
+	WithPort               = http.WithPort
+	WithPath               = http.WithPath
+	WithMiddleware         = http.WithMiddleware
+	WithListener           = http.WithListener
+	WithHTTPTransport      = http.WithHTTPTransport
 )

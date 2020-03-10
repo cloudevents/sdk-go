@@ -10,7 +10,7 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/extensions"
 	"github.com/cloudevents/sdk-go/pkg/observability"
 	"github.com/cloudevents/sdk-go/pkg/transport"
-	"github.com/cloudevents/sdk-go/pkg/transport/httpb"
+	"github.com/cloudevents/sdk-go/pkg/transport/http"
 	"go.opencensus.io/trace"
 )
 
@@ -66,7 +66,7 @@ func New(t transport.Transport, opts ...Option) (Client, error) {
 // client options are also applied to the client, all outbound events will have
 // a time and id set if not already present.
 func NewDefault() (Client, error) {
-	t, err := httpb.New(httpb.WithEncoding(httpb.Binary))
+	t, err := http.New(http.WithEncoding(http.Binary))
 	if err != nil {
 		return nil, err
 	}

@@ -13,7 +13,7 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/event"
 	bindings "github.com/cloudevents/sdk-go/pkg/transport"
-	http "github.com/cloudevents/sdk-go/pkg/transport/httpb"
+	http "github.com/cloudevents/sdk-go/pkg/transport/http"
 	test "github.com/cloudevents/sdk-go/pkg/transport/test"
 
 	. "github.com/cloudevents/sdk-go/pkg/binding/test"

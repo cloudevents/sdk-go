@@ -1,4 +1,4 @@
-package httpb
+package http
 
 // Encoding to use for HTTP transport.
 type Encoding int32

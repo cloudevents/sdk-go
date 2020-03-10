@@ -8,10 +8,10 @@ import (
 	"github.com/google/uuid"
 
 	cloudevents "github.com/cloudevents/sdk-go"
-	"github.com/cloudevents/sdk-go/pkg/transport/httpb"
+	"github.com/cloudevents/sdk-go/pkg/transport/http"
 )
 
-func ClientMiddleware(t *testing.T, tc TapTest, topts ...httpb.Option) {
+func ClientMiddleware(t *testing.T, tc TapTest, topts ...http.Option) {
 	tap := NewTap()
 	server := httptest.NewServer(tap)
 	defer server.Close()

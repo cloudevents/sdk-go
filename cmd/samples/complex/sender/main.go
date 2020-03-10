@@ -12,7 +12,7 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/client"
 	"github.com/cloudevents/sdk-go/pkg/event"
 	"github.com/cloudevents/sdk-go/pkg/transport"
-	cloudeventshttp "github.com/cloudevents/sdk-go/pkg/transport/httpb"
+	cloudeventshttp "github.com/cloudevents/sdk-go/pkg/transport/http"
 	cloudeventsnats "github.com/cloudevents/sdk-go/pkg/transport/nats"
 	"github.com/cloudevents/sdk-go/pkg/types"
 	"github.com/kelseyhightower/envconfig"
