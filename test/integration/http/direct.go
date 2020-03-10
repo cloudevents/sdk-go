@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 
 	cloudevents "github.com/cloudevents/sdk-go"
-	cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+	cehttp "github.com/cloudevents/sdk-go/pkg/transport/http"
 )
 
 // Direct Test:
@@ -34,7 +34,7 @@ func ClientDirect(t *testing.T, tc DirectTapTest, topts ...cehttp.Option) {
 	defer server.Close()
 
 	if len(topts) == 0 {
-		topts = append(topts, cloudevents.WithBinaryEncoding())
+		topts = append(topts, cloudevents.WithEncoding(cloudevents.HTTPBinaryEncoding))
 	}
 	topts = append(topts, cloudevents.WithTarget(server.URL))
 	topts = append(topts, cloudevents.WithPort(0)) // random port
@@ -57,14 +57,15 @@ func ClientDirect(t *testing.T, tc DirectTapTest, topts ...cehttp.Option) {
 	}
 
 	testID := uuid.New().String()
-	ctx := cloudevents.ContextWithHeader(context.Background(), unitTestIDKey, testID)
+	tc.event.SetExtension(unitTestIDKey, testID)
 
-	recvCtx, recvCancel := context.WithTimeout(ctx, time.Second*5)
+	recvCtx, recvCancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer recvCancel()
 
 	var got *cloudevents.Event
 	go func() {
 		if err := ce.StartReceiver(recvCtx, func(event cloudevents.Event) {
+			event.SetExtension(unitTestIDKey, nil)
 			got = &event
 			recvCancel()
 		}); err != nil {
@@ -72,7 +73,7 @@ func ClientDirect(t *testing.T, tc DirectTapTest, topts ...cehttp.Option) {
 		}
 	}()
 
-	err = ce.Send(ctx, *tc.event)
+	err = ce.Send(context.Background(), *tc.event)
 	if err != nil {
 		t.Fatal(err)
 	}

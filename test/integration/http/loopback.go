@@ -10,7 +10,7 @@ import (
 
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/client"
-	cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+	cehttp "github.com/cloudevents/sdk-go/pkg/transport/http"
 )
 
 // Loopback Test:
@@ -46,7 +46,7 @@ func ClientLoopback(t *testing.T, tc TapTest, topts ...cehttp.Option) {
 	defer server.Close()
 
 	if len(topts) == 0 {
-		topts = append(topts, cloudevents.WithBinaryEncoding())
+		topts = append(topts, cloudevents.WithEncoding(cloudevents.HTTPBinaryEncoding))
 	}
 	topts = append(topts, cloudevents.WithTarget(server.URL))
 	topts = append(topts, cloudevents.WithPort(0)) // random port
@@ -69,8 +69,6 @@ func ClientLoopback(t *testing.T, tc TapTest, topts ...cehttp.Option) {
 	}
 
 	testID := uuid.New().String()
-	ctx := cloudevents.ContextWithHeader(context.Background(), unitTestIDKey, testID)
-
 	recvCtx, recvCancel := context.WithCancel(context.Background())
 
 	go func() {
@@ -83,7 +81,8 @@ func ClientLoopback(t *testing.T, tc TapTest, topts ...cehttp.Option) {
 		}
 	}()
 
-	got, err := ce.Request(ctx, *tc.event)
+	tc.event.SetExtension(unitTestIDKey, testID)
+	got, err := ce.Request(context.Background(), *tc.event)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -8,10 +8,11 @@ import (
 	"net/http/httptest"
 	"net/url"
 
+	bindings "github.com/cloudevents/sdk-go/pkg/transport"
+	http "github.com/cloudevents/sdk-go/pkg/transport/http"
+
 	cloudevents "github.com/cloudevents/sdk-go"
-	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/bindings/http"
-	cehttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+	cehttp "github.com/cloudevents/sdk-go/pkg/transport/http"
 )
 
 type RoundTripFunc func(req *nethttp.Request) *nethttp.Response
@@ -26,7 +27,7 @@ func NewTestClient(fn RoundTripFunc) *nethttp.Client {
 	}
 }
 
-func MockedSender(options ...http.SenderOptionFunc) binding.Sender {
+func MockedSender(options ...http.SenderOptionFunc) bindings.Sender {
 	u, _ := url.Parse("http://localhost")
 	return http.NewSender(NewTestClient(func(req *nethttp.Request) *nethttp.Response {
 		return &nethttp.Response{

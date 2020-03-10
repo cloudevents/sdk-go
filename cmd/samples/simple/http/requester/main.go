@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/cloudevents/sdk-go"
+	cloudevents "github.com/cloudevents/sdk-go"
 )
 
 // Basic data struct.
@@ -16,8 +16,6 @@ type Example struct {
 
 func main() {
 	ctx := cloudevents.ContextWithTarget(context.Background(), "http://localhost:8080/")
-
-	ctx = cloudevents.ContextWithHeader(ctx, "demo", "header value")
 
 	c, err := cloudevents.NewDefaultClient()
 	if err != nil {

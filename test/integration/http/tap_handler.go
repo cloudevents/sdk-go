@@ -78,13 +78,14 @@ func printTap(t *testing.T, tap *tapHandler, testID string) {
 var _ = printTap
 
 const (
-	unitTestIDKey = "Test-Ce-Id"
+	unitTestIDKey = "unittestid"
 )
 
 func (t *tapHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
-	id := r.Header.Get(unitTestIDKey)
+	id := r.Header.Get("ce-" + unitTestIDKey)
+	r.Header.Del("ce-" + unitTestIDKey)
 
 	// Make a copy of the request.
 	body, err := ioutil.ReadAll(r.Body)

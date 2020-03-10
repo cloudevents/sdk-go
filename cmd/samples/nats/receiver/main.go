@@ -7,8 +7,8 @@ import (
 	"os"
 
 	"github.com/cloudevents/sdk-go/pkg/client"
-	cloudeventsnats "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/nats"
 	"github.com/cloudevents/sdk-go/pkg/event"
+	cloudeventsnats "github.com/cloudevents/sdk-go/pkg/transport/nats"
 	"github.com/kelseyhightower/envconfig"
 )
 
@@ -26,7 +26,22 @@ func main() {
 		log.Printf("[ERROR] Failed to process env var: %s", err)
 		os.Exit(1)
 	}
-	os.Exit(_main(os.Args[1:], env))
+	ctx := context.Background()
+
+	t, err := cloudeventsnats.New(env.NATSServer, env.Subject)
+	if err != nil {
+		log.Fatalf("failed to create nats transport, %s", err.Error())
+	}
+	c, err := client.New(t)
+	if err != nil {
+		log.Fatalf("failed to create client, %s", err.Error())
+	}
+
+	for {
+		if err := c.StartReceiver(ctx, receive); err != nil {
+			log.Printf("failed to start nats receiver, %s", err.Error())
+		}
+	}
 }
 
 type Example struct {
@@ -45,25 +60,4 @@ func receive(ctx context.Context, event event.Event, resp *event.EventResponse) 
 
 	fmt.Printf("----------------------------\n")
 	return nil
-}
-
-func _main(args []string, env envConfig) int {
-	ctx := context.Background()
-
-	t, err := cloudeventsnats.New(env.NATSServer, env.Subject)
-	if err != nil {
-		log.Fatalf("failed to create nats transport, %s", err.Error())
-	}
-	c, err := client.New(t)
-	if err != nil {
-		log.Fatalf("failed to create client, %s", err.Error())
-	}
-
-	if err := c.StartReceiver(ctx, receive); err != nil {
-		log.Fatalf("failed to start nats receiver, %s", err.Error())
-	}
-
-	// Wait until done.
-	<-ctx.Done()
-	return 0
 }

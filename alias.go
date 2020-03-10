@@ -5,10 +5,10 @@ package cloudevents
 
 import (
 	"github.com/cloudevents/sdk-go/pkg/client"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/context"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+	"github.com/cloudevents/sdk-go/pkg/context"
 	"github.com/cloudevents/sdk-go/pkg/event"
 	"github.com/cloudevents/sdk-go/pkg/observability"
+	"github.com/cloudevents/sdk-go/pkg/transport/http"
 	"github.com/cloudevents/sdk-go/pkg/types"
 )
 
@@ -38,9 +38,8 @@ type URIRef = types.URIRef
 // HTTP Transport
 
 type HTTPOption http.Option
+
 type HTTPTransport = http.Transport
-type HTTPTransportContext = http.TransportContext
-type HTTPTransportResponseContext = http.TransportResponseContext
 type HTTPEncoding = http.Encoding
 
 const (
@@ -57,19 +56,8 @@ const (
 	VersionV1  = event.CloudEventsVersionV1
 	VersionV03 = event.CloudEventsVersionV03
 
-	// HTTP Transport Encodings
-
-	HTTPBinaryV1      = http.BinaryV1
-	HTTPStructuredV1  = http.StructuredV1
-	HTTPBatchedV1     = http.BatchedV1
-	HTTPBinaryV03     = http.BinaryV03
-	HTTPStructuredV03 = http.StructuredV03
-	HTTPBatchedV03    = http.BatchedV03
-
-	// Context HTTP Transport Encodings
-
-	Binary     = http.Binary
-	Structured = http.Structured
+	HTTPBinaryEncoding     = http.Binary
+	HTTPStructuredEncoding = http.Structured
 )
 
 var (
@@ -91,7 +79,6 @@ var (
 	WithEventDefaulter      = client.WithEventDefaulter
 	WithUUIDs               = client.WithUUIDs
 	WithTimeNow             = client.WithTimeNow
-	WithConverterFn         = client.WithConverterFn
 	WithDataContentType     = client.WithDataContentType
 	WithoutTracePropagation = client.WithoutTracePropagation
 
@@ -123,24 +110,14 @@ var (
 
 	// HTTP Transport Options
 
-	WithTarget               = http.WithTarget
-	WithMethod               = http.WithMethod
-	WitHHeader               = http.WithHeader
-	WithShutdownTimeout      = http.WithShutdownTimeout
-	WithEncoding             = http.WithEncoding
-	WithContextBasedEncoding = http.WithContextBasedEncoding
-	WithBinaryEncoding       = http.WithBinaryEncoding
-	WithStructuredEncoding   = http.WithStructuredEncoding
-	WithPort                 = http.WithPort
-	WithPath                 = http.WithPath
-	WithMiddleware           = http.WithMiddleware
-	WithLongPollTarget       = http.WithLongPollTarget
-	WithListener             = http.WithListener
-	WithHTTPTransport        = http.WithHTTPTransport
-
-	// HTTP Context
-
-	HTTPTransportContextFrom = http.TransportContextFrom
-	ContextWithHeader        = http.ContextWithHeader
-	SetContextHeaders        = http.SetContextHeaders
+	WithTarget             = http.WithTarget
+	WitHHeader             = http.WithHeader
+	WithShutdownTimeout    = http.WithShutdownTimeout
+	WithEncoding           = http.WithEncoding
+	WithStructuredEncoding = http.WithStructuredEncoding
+	WithPort               = http.WithPort
+	WithPath               = http.WithPath
+	WithMiddleware         = http.WithMiddleware
+	WithListener           = http.WithListener
+	WithHTTPTransport      = http.WithHTTPTransport
 )

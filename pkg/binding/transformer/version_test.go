@@ -9,7 +9,7 @@ import (
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
-	"github.com/cloudevents/sdk-go/pkg/binding/test"
+	test "github.com/cloudevents/sdk-go/pkg/binding/test"
 	"github.com/cloudevents/sdk-go/pkg/event"
 	"github.com/cloudevents/sdk-go/pkg/types"
 )

@@ -5,19 +5,21 @@ import (
 	nethttp "net/http"
 	"testing"
 
+	test2 "github.com/cloudevents/sdk-go/pkg/binding/test"
+
 	"github.com/Shopify/sarama"
 
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/test"
-	"github.com/cloudevents/sdk-go/pkg/bindings/http"
-	"github.com/cloudevents/sdk-go/pkg/bindings/kafka_sarama"
+	"github.com/cloudevents/sdk-go/pkg/transport/http"
+	"github.com/cloudevents/sdk-go/pkg/transport/kafka_sarama"
 )
 
 var (
 	e                                   = test.FullEvent()
 	structuredConsumerMessageWithoutKey = &sarama.ConsumerMessage{
-		Value: test.MustJSON(e),
+		Value: test2.MustJSON(e),
 		Headers: []*sarama.RecordHeader{{
 			Key:   []byte("Content-Type"),
 			Value: []byte(cloudevents.ApplicationCloudEventsJSON),
@@ -25,7 +27,7 @@ var (
 	}
 	structuredConsumerMessageWithKey = &sarama.ConsumerMessage{
 		Key:   []byte("aaa"),
-		Value: test.MustJSON(e),
+		Value: test2.MustJSON(e),
 		Headers: []*sarama.RecordHeader{{
 			Key:   []byte("Content-Type"),
 			Value: []byte(cloudevents.ApplicationCloudEventsJSON),

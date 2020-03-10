@@ -7,9 +7,12 @@ import (
 	"io"
 	"io/ioutil"
 
+	bindings "github.com/cloudevents/sdk-go/pkg/transport"
+	bindings2 "github.com/cloudevents/sdk-go/pkg/transport/bindings"
+
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
+	"github.com/cloudevents/sdk-go/pkg/transport"
 )
 
 // ExMessage is a json.RawMessage, a byte slice containing a JSON encoded event.
@@ -43,7 +46,7 @@ type ExSender struct {
 	transformers binding.TransformerFactories
 }
 
-func NewExSender(w io.Writer, factories ...binding.TransformerFactory) binding.Sender {
+func NewExSender(w io.Writer, factories ...binding.TransformerFactory) bindings.Sender {
 	return &ExSender{encoder: json.NewEncoder(w), transformers: factories}
 }
 
@@ -73,13 +76,13 @@ func (s *ExSender) SetStructuredEvent(ctx context.Context, f format.Format, even
 	}
 }
 
-var _ binding.Sender = (*ExSender)(nil)
+var _ bindings.Sender = (*ExSender)(nil)
 var _ binding.StructuredWriter = (*ExSender)(nil)
 
 // ExReceiver receives by reading JSON encoded events from an io.Reader
 type ExReceiver struct{ decoder *json.Decoder }
 
-func NewExReceiver(r io.Reader) binding.Receiver { return &ExReceiver{json.NewDecoder(r)} }
+func NewExReceiver(r io.Reader) bindings.Receiver { return &ExReceiver{json.NewDecoder(r)} }
 
 func (r *ExReceiver) Receive(context.Context) (binding.Message, error) {
 	var rm json.RawMessage
@@ -91,5 +94,5 @@ func (r *ExReceiver) Close(context.Context) error { return nil }
 // NewExTransport returns a transport.Transport which is implemented by
 // an ExSender and an ExReceiver
 func NewExTransport(r io.Reader, w io.Writer) transport.Transport {
-	return binding.NewSendingTransport(NewExSender(w), NewExReceiver(r), []func(ctx context.Context) context.Context{})
+	return bindings2.NewSendingTransport(NewExSender(w), NewExReceiver(r), []func(ctx context.Context) context.Context{})
 }

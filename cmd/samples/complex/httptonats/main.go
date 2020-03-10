@@ -7,9 +7,9 @@ import (
 	"os"
 
 	"github.com/cloudevents/sdk-go/pkg/client"
-	cloudeventshttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
-	cloudeventsnats "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/nats"
 	"github.com/cloudevents/sdk-go/pkg/event"
+	cloudeventshttp "github.com/cloudevents/sdk-go/pkg/transport/http"
+	cloudeventsnats "github.com/cloudevents/sdk-go/pkg/transport/nats"
 	"github.com/kelseyhightower/envconfig"
 )
 

@@ -10,7 +10,7 @@ import (
 
 	ce "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/client"
-	ceamqp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/amqp"
+	ceamqp "github.com/cloudevents/sdk-go/pkg/transport/amqp"
 	amqp "pack.ag/amqp"
 )
 

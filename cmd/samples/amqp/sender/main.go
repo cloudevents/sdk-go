@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/cloudevents/sdk-go/pkg/client"
-	ceamqp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/amqp"
 	"github.com/cloudevents/sdk-go/pkg/event"
+	ceamqp "github.com/cloudevents/sdk-go/pkg/transport/amqp"
 	"github.com/cloudevents/sdk-go/pkg/types"
 	"github.com/google/uuid"
 	"pack.ag/amqp"

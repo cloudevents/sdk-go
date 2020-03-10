@@ -29,7 +29,7 @@ func RunTransformerTests(t *testing.T, ctx context.Context, tests []TransformerT
 			enc, err := binding.Write(ctx, tt.InputMessage, &mockStructured, &mockBinary, tt.Transformers)
 			require.NoError(t, err)
 
-			var e event.Event
+			var e *event.Event
 			if enc == binding.EncodingStructured {
 				e, err = binding.ToEvent(ctx, &mockStructured, nil)
 				require.NoError(t, err)
@@ -41,9 +41,9 @@ func RunTransformerTests(t *testing.T, ctx context.Context, tests []TransformerT
 			}
 			require.NoError(t, err)
 			if tt.AssertFunc != nil {
-				tt.AssertFunc(t, e)
+				tt.AssertFunc(t, *e)
 			} else {
-				AssertEventEquals(t, tt.WantEvent, e)
+				AssertEventEquals(t, tt.WantEvent, *e)
 			}
 		})
 	}

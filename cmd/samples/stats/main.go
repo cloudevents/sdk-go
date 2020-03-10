@@ -15,8 +15,7 @@ import (
 	"go.opencensus.io/zpages"
 
 	"github.com/cloudevents/sdk-go/pkg/client"
-	cecontext "github.com/cloudevents/sdk-go/pkg/cloudevents/context"
-	transporthttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
+	cecontext "github.com/cloudevents/sdk-go/pkg/context"
 	"github.com/cloudevents/sdk-go/pkg/event"
 	"github.com/cloudevents/sdk-go/pkg/event/datacodec"
 	"github.com/cloudevents/sdk-go/pkg/event/datacodec/json"
@@ -119,7 +118,7 @@ func mainMetrics() {
 	// Register the views
 	if err := view.Register(
 		client.LatencyView,
-		transporthttp.LatencyView,
+		//transporthttp.LatencyView, // TODO: add back http metrics.
 		event.EventMarshalLatencyView,
 		json.LatencyView,
 		xml.LatencyView,

@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/cloudevents/sdk-go/pkg/client"
-	cloudeventsnats "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/nats"
 	"github.com/cloudevents/sdk-go/pkg/event"
+	cloudeventsnats "github.com/cloudevents/sdk-go/pkg/transport/nats"
 	"github.com/cloudevents/sdk-go/pkg/types"
 	"github.com/google/uuid"
 	"github.com/kelseyhightower/envconfig"
@@ -53,14 +53,14 @@ type Example struct {
 }
 
 func (d *Demo) Send(eventContext event.EventContext, i int) error {
-	event := event.Event{
+	e := event.Event{
 		Context: eventContext,
 		Data: &Example{
 			Sequence: i,
 			Message:  d.Message,
 		},
 	}
-	return d.Client.Send(context.Background(), event)
+	return d.Client.Send(context.Background(), e)
 }
 
 func _main(args []string, env envConfig) int {

@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	test2 "github.com/cloudevents/sdk-go/pkg/binding/test"
+
 	"github.com/stretchr/testify/require"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
@@ -23,32 +25,32 @@ func TestToEvent(t *testing.T) {
 	for _, v := range test.Events() {
 		tests = append(tests, []toEventTestCase{
 			{
-				name:    "From mock structured with payload/" + test.NameOf(v),
+				name:    "From mock structured with payload/" + test2.NameOf(v),
 				message: test.MustCreateMockStructuredMessage(v),
 				want:    v,
 			},
 			{
-				name:    "From mock structured without payload/" + test.NameOf(v),
+				name:    "From mock structured without payload/" + test2.NameOf(v),
 				message: test.MustCreateMockStructuredMessage(v),
 				want:    v,
 			},
 			{
-				name:    "From mock binary with payload/" + test.NameOf(v),
+				name:    "From mock binary with payload/" + test2.NameOf(v),
 				message: test.MustCreateMockBinaryMessage(v),
 				want:    v,
 			},
 			{
-				name:    "From mock binary without payload/" + test.NameOf(v),
+				name:    "From mock binary without payload/" + test2.NameOf(v),
 				message: test.MustCreateMockBinaryMessage(v),
 				want:    v,
 			},
 			{
-				name:    "From event with payload/" + test.NameOf(v),
+				name:    "From event with payload/" + test2.NameOf(v),
 				message: binding.EventMessage(v),
 				want:    v,
 			},
 			{
-				name:    "From event without payload/" + test.NameOf(v),
+				name:    "From event without payload/" + test2.NameOf(v),
 				message: binding.EventMessage(v),
 				want:    v,
 			},
@@ -59,7 +61,7 @@ func TestToEvent(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := binding.ToEvent(context.Background(), tt.message, nil)
 			require.NoError(t, err)
-			test.AssertEventEquals(t, test.ExToStr(t, tt.want), test.ExToStr(t, got))
+			test2.AssertEventEquals(t, test2.ExToStr(t, tt.want), test2.ExToStr(t, *got))
 		})
 	}
 }

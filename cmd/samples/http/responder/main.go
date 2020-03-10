@@ -4,10 +4,9 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 
-	"github.com/cloudevents/sdk-go"
+	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/kelseyhightower/envconfig"
 )
 
@@ -38,7 +37,6 @@ func gotEvent(ctx context.Context, event cloudevents.Event, resp *cloudevents.Ev
 		fmt.Printf("Got Data Error: %s\n", err.Error())
 	}
 	fmt.Printf("Got Data: %+v\n", data)
-	fmt.Printf("Got Transport Context: %+v\n", cloudevents.HTTPTransportContextFrom(ctx))
 	fmt.Printf("----------------------------\n")
 
 	if data.Sequence%3 == 0 {
@@ -53,14 +51,6 @@ func gotEvent(ctx context.Context, event cloudevents.Event, resp *cloudevents.Ev
 			},
 		}
 		resp.RespondWith(200, &r)
-		resp.Context = &cloudevents.HTTPTransportResponseContext{
-			Header: func() http.Header {
-				h := http.Header{}
-				h.Set("sample", "magic header")
-				h.Set("mod", "3")
-				return h
-			}(),
-		}
 		return nil
 	}
 

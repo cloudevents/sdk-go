@@ -2,16 +2,17 @@ package main
 
 import (
 	"context"
-	"github.com/cloudevents/sdk-go/pkg/event"
 	"log"
 
-	"github.com/cloudevents/sdk-go"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/httpb"
+	"github.com/cloudevents/sdk-go/pkg/event"
+
+	cloudevents "github.com/cloudevents/sdk-go"
+	"github.com/cloudevents/sdk-go/pkg/transport/http"
 )
 
 func main() {
 	ctx := cloudevents.ContextWithTarget(context.Background(), "http://localhost:8080/")
-	t, err := httpb.New()
+	t, err := http.New()
 	if err != nil {
 		log.Fatalf("failed to create transport, %v", err)
 	}

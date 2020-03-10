@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/binding/test"
+	. "github.com/cloudevents/sdk-go/pkg/binding/test"
 	"github.com/cloudevents/sdk-go/pkg/event"
 )
 
@@ -23,40 +23,40 @@ type copyMessageTestCase struct {
 func TestCopyMessage(t *testing.T) {
 	tests := []copyMessageTestCase{}
 
-	for _, v := range test.Events() {
+	for _, v := range Events() {
 		tests = append(tests, []copyMessageTestCase{
 			{
-				name:     "From structured with payload/" + test.NameOf(v),
+				name:     "From structured with payload/" + NameOf(v),
 				encoding: binding.EncodingStructured,
-				message:  test.MustCreateMockStructuredMessage(v),
+				message:  MustCreateMockStructuredMessage(v),
 				want:     v,
 			},
 			{
-				name:     "From structured without payload/" + test.NameOf(v),
+				name:     "From structured without payload/" + NameOf(v),
 				encoding: binding.EncodingStructured,
-				message:  test.MustCreateMockStructuredMessage(v),
+				message:  MustCreateMockStructuredMessage(v),
 				want:     v,
 			},
 			{
-				name:     "From binary with payload/" + test.NameOf(v),
+				name:     "From binary with payload/" + NameOf(v),
 				encoding: binding.EncodingBinary,
-				message:  test.MustCreateMockBinaryMessage(v),
+				message:  MustCreateMockBinaryMessage(v),
 				want:     v,
 			},
 			{
-				name:     "From binary without payload/" + test.NameOf(v),
+				name:     "From binary without payload/" + NameOf(v),
 				encoding: binding.EncodingBinary,
-				message:  test.MustCreateMockBinaryMessage(v),
+				message:  MustCreateMockBinaryMessage(v),
 				want:     v,
 			},
 			{
-				name:     "From event with payload/" + test.NameOf(v),
+				name:     "From event with payload/" + NameOf(v),
 				encoding: binding.EncodingEvent,
 				message:  binding.EventMessage(v),
 				want:     v,
 			},
 			{
-				name:     "From event without payload/" + test.NameOf(v),
+				name:     "From event without payload/" + NameOf(v),
 				encoding: binding.EncodingEvent,
 				message:  binding.EventMessage(v),
 				want:     v,
@@ -77,7 +77,7 @@ func TestCopyMessage(t *testing.T) {
 				got, err := binding.ToEvent(context.Background(), cpy, nil)
 				assert.NoError(t, err)
 				require.Equal(t, tt.encoding, cpy.ReadEncoding())
-				test.AssertEventEquals(t, test.ExToStr(t, tt.want), test.ExToStr(t, got))
+				AssertEventEquals(t, ExToStr(t, tt.want), ExToStr(t, *got))
 			}
 			require.NoError(t, cpy.Finish(nil))
 			require.Equal(t, false, finished)
@@ -94,7 +94,7 @@ func TestCopyMessage(t *testing.T) {
 				got, err := binding.ToEvent(context.Background(), cpy, nil)
 				assert.NoError(t, err)
 				require.Equal(t, tt.encoding, cpy.ReadEncoding())
-				test.AssertEventEquals(t, test.ExToStr(t, tt.want), test.ExToStr(t, got))
+				AssertEventEquals(t, ExToStr(t, tt.want), ExToStr(t, *got))
 			}
 			require.NoError(t, cpy.Finish(nil))
 			require.Equal(t, true, finished)

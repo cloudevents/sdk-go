@@ -10,10 +10,10 @@ import (
 
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/client"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport"
-	cloudeventshttp "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
-	cloudeventsnats "github.com/cloudevents/sdk-go/pkg/cloudevents/transport/nats"
 	"github.com/cloudevents/sdk-go/pkg/event"
+	"github.com/cloudevents/sdk-go/pkg/transport"
+	cloudeventshttp "github.com/cloudevents/sdk-go/pkg/transport/http"
+	cloudeventsnats "github.com/cloudevents/sdk-go/pkg/transport/nats"
 	"github.com/cloudevents/sdk-go/pkg/types"
 	"github.com/kelseyhightower/envconfig"
 )
@@ -94,7 +94,7 @@ func _main(args []string, env envConfig) int {
 
 	for _, contentType := range []string{"application/json", "application/xml"} {
 		// HTTP
-		for _, encoding := range []cloudeventshttp.Encoding{cloudeventshttp.Default, cloudeventshttp.BinaryV03, cloudeventshttp.StructuredV03} {
+		for _, encoding := range []cloudeventshttp.Encoding{cloudeventshttp.Default, cloudeventshttp.Binary, cloudeventshttp.Structured} {
 
 			t, err := cloudeventshttp.New(
 				cloudeventshttp.WithTarget(env.HTTPTarget),
@@ -108,7 +108,7 @@ func _main(args []string, env envConfig) int {
 			if err := doDemo(
 				t,
 				"com.cloudevents.sample.http.sent",
-				fmt.Sprintf("Hello, %s using %s!", encoding, contentType),
+				fmt.Sprintf("Hello %d, using %s!", encoding, contentType),
 				contentType,
 				*source,
 			); err != nil {

@@ -21,10 +21,10 @@ type Version interface {
 	AttributeFromKind(kind Kind) Attribute
 	// Attributes returns all the context attributes for this version.
 	Attributes() []Attribute
-	// NewContext returns a new context for this version.
-	NewContext() event.EventContext
 	// Convert translates a context to this version.
 	Convert(event.EventContextConverter) event.EventContext
+	// NewContext returns a new context for this version.
+	NewContext() event.EventContext
 	// SetAttribute sets named attribute to value.
 	//
 	// Name is case insensitive.
