@@ -2,9 +2,10 @@ package nats
 
 import (
 	"context"
-	"github.com/nats-io/nats.go"
 	"io"
 	"io/ioutil"
+
+	"github.com/nats-io/nats.go"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/format"

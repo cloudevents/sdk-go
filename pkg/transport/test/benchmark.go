@@ -2,8 +2,9 @@ package test
 
 import (
 	"context"
-	bindings "github.com/cloudevents/sdk-go/pkg/transport"
 	"testing"
+
+	bindings "github.com/cloudevents/sdk-go/pkg/transport"
 
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/sync/errgroup"

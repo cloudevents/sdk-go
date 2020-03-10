@@ -2,15 +2,15 @@ package kafka_sarama_to_http_request_encode
 
 import (
 	"context"
-	test2 "github.com/cloudevents/sdk-go/pkg/binding/test"
 	nethttp "net/http"
 	"testing"
+
+	test2 "github.com/cloudevents/sdk-go/pkg/binding/test"
 
 	"github.com/Shopify/sarama"
 
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/transport/httpb"
 	"github.com/cloudevents/sdk-go/pkg/transport/kafka_sarama"
 	"github.com/cloudevents/sdk-go/pkg/transport/test"
 )

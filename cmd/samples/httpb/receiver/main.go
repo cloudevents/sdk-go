@@ -3,10 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/transport/httpb"
 	"log"
 
-	"github.com/cloudevents/sdk-go"
+	"github.com/cloudevents/sdk-go/pkg/transport/httpb"
+
+	cloudevents "github.com/cloudevents/sdk-go"
 )
 
 func main() {

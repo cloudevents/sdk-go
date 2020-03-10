@@ -2,10 +2,11 @@ package nats
 
 import (
 	"context"
+	"time"
+
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/transport"
 	"github.com/nats-io/nats.go"
-	"time"
 )
 
 var _ transport.Receiver

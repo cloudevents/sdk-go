@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	bindings "github.com/cloudevents/sdk-go/pkg/transport"
-	bindings2 "github.com/cloudevents/sdk-go/pkg/transport/bindings"
 	"io"
 	"io/ioutil"
+
+	bindings "github.com/cloudevents/sdk-go/pkg/transport"
+	bindings2 "github.com/cloudevents/sdk-go/pkg/transport/bindings"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/format"

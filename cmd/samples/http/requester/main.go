@@ -8,7 +8,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/cloudevents/sdk-go"
+	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/google/uuid"
 	"github.com/kelseyhightower/envconfig"
 )

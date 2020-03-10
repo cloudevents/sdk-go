@@ -2,8 +2,9 @@ package bindings_test
 
 import (
 	"context"
-	bindings2 "github.com/cloudevents/sdk-go/pkg/transport/bindings"
 	"testing"
+
+	bindings2 "github.com/cloudevents/sdk-go/pkg/transport/bindings"
 
 	"github.com/stretchr/testify/require"
 

@@ -1,9 +1,10 @@
 package nats
 
 import (
-	"github.com/cloudevents/sdk-go/pkg/transport/bindings"
 	"testing"
 	"time"
+
+	"github.com/cloudevents/sdk-go/pkg/transport/bindings"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"

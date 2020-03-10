@@ -2,11 +2,12 @@ package kafka_sarama_binding
 
 import (
 	"context"
-	test2 "github.com/cloudevents/sdk-go/pkg/binding/test"
-	bindings "github.com/cloudevents/sdk-go/pkg/transport"
 	"os"
 	"strings"
 	"testing"
+
+	test2 "github.com/cloudevents/sdk-go/pkg/binding/test"
+	bindings "github.com/cloudevents/sdk-go/pkg/transport"
 
 	"github.com/Shopify/sarama"
 	"github.com/google/uuid"

@@ -3,9 +3,10 @@ package bindings
 import (
 	"context"
 	"errors"
+	"io"
+
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	bindings "github.com/cloudevents/sdk-go/pkg/transport"
-	"io"
 
 	"go.uber.org/zap"
 

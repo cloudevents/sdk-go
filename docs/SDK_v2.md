@@ -65,17 +65,17 @@ Receiver, when a Consumer is accepting events.
 
 ### Forwarder
 
-Forwarder, when a Intermediary accepts an event only after it has successfully continued the message to one or more Consumers.
+Forwarder, when a Intermediary accepts an event only after it has successfully
+continued the message to one or more Consumers.
 
 ![forwarder](./images/forwarder.svg "Forwarder")
 
 ### Mutator
 
-Mutator, when a Producer or Intermediary blocks on a response from a Consumer, replacing the original Event.
+Mutator, when a Producer or Intermediary blocks on a response from a Consumer,
+replacing the original Event.
 
 ![mutator](./images/mutator.svg "Mutator")
-
-
 
 ---
 
@@ -88,10 +88,3 @@ Event -> Message -> bits
 bits -> Message -> Event
 
 bit -> Message -> bits
-
-
-
-
-
-
-

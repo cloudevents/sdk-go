@@ -9,7 +9,6 @@ import (
 
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/transport/httpb"
 	"github.com/cloudevents/sdk-go/pkg/transport/kafka_sarama"
 	"github.com/cloudevents/sdk-go/pkg/transport/test"
 )

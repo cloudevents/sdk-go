@@ -2,11 +2,12 @@ package amqp_binding
 
 import (
 	"context"
-	amqp2 "github.com/cloudevents/sdk-go/pkg/transport/amqp"
 	"io"
 	"net/url"
 	"os"
 	"testing"
+
+	amqp2 "github.com/cloudevents/sdk-go/pkg/transport/amqp"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

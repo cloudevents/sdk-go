@@ -2,12 +2,14 @@ package main
 
 import (
 	"bytes"
-	bindings "github.com/cloudevents/sdk-go/pkg/transport"
 	"io"
 	"io/ioutil"
 	nethttp "net/http"
 	"net/http/httptest"
 	"net/url"
+
+	"github.com/cloudevents/sdk-go/pkg/bindings/http"
+	bindings "github.com/cloudevents/sdk-go/pkg/transport"
 
 	cloudevents "github.com/cloudevents/sdk-go"
 	cehttp "github.com/cloudevents/sdk-go/pkg/transport/httpb"

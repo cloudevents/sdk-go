@@ -2,10 +2,11 @@ package main
 
 import (
 	"context"
-	"github.com/cloudevents/sdk-go/pkg/event"
 	"log"
 
-	"github.com/cloudevents/sdk-go"
+	"github.com/cloudevents/sdk-go/pkg/event"
+
+	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/transport/httpb"
 )
 

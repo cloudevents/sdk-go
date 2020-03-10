@@ -3,11 +3,12 @@ package httpb
 import (
 	"context"
 	"fmt"
-	cecontext "github.com/cloudevents/sdk-go/pkg/context"
-	bindings "github.com/cloudevents/sdk-go/pkg/transport"
 	"net/http"
 	nethttp "net/http"
 	"net/url"
+
+	cecontext "github.com/cloudevents/sdk-go/pkg/context"
+	bindings "github.com/cloudevents/sdk-go/pkg/transport"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
 )
