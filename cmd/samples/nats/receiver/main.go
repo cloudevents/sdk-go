@@ -32,7 +32,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to create nats transport, %s", err.Error())
 	}
-	c, err := client.New(t)
+	c, err := client.New(t.Transport())
 	if err != nil {
 		log.Fatalf("failed to create client, %s", err.Error())
 	}
