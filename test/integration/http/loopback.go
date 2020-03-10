@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+
 	"net/http/httptest"
 	"testing"
 	"time"
@@ -40,24 +41,40 @@ type TapTest struct {
 
 type TapTestCases map[string]TapTest
 
-func ClientLoopback(t *testing.T, tc TapTest, topts ...cehttp.Option) {
+func ClientLoopback(t *testing.T, tc TapTest, opts ...interface{}) {
 	tap := NewTap()
 	server := httptest.NewServer(tap)
 	defer server.Close()
 
-	if len(topts) == 0 {
-		topts = append(topts, cloudevents.WithEncoding(cloudevents.HTTPBinaryEncoding))
+	topts := make([]cehttp.Option, 0)
+	popts := make([]cehttp.ProtocolOption, 0)
+	for _, v := range opts {
+		switch o := v.(type) {
+		case cehttp.Option:
+			topts = append(topts, o)
+		case cehttp.ProtocolOption:
+			popts = append(popts, o)
+		}
 	}
-	topts = append(topts, cloudevents.WithTarget(server.URL))
-	topts = append(topts, cloudevents.WithPort(0)) // random port
-	transport, err := cloudevents.NewHTTPTransport(
-		topts...,
-	)
+
+	popts = append(popts, cloudevents.WithTarget(server.URL))
+
+	protocol, err := cloudevents.NewHTTPProtocol(popts...)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	tap.handler = transport
+	if len(topts) == 0 {
+		topts = append(topts, cloudevents.WithEncoding(cloudevents.HTTPBinaryEncoding))
+	}
+	topts = append(topts, cloudevents.WithPort(0)) // random port
+
+	transport, err := cloudevents.NewHTTPTransport(protocol, topts...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tap.handler = protocol
 
 	ce, err := cloudevents.NewClient(
 		transport,

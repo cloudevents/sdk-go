@@ -96,12 +96,17 @@ func _main(args []string, env envConfig) int {
 		// HTTP
 		for _, encoding := range []cloudeventshttp.Encoding{cloudeventshttp.Default, cloudeventshttp.Binary, cloudeventshttp.Structured} {
 
-			t, err := cloudeventshttp.New(
-				cloudeventshttp.WithTarget(env.HTTPTarget),
+			p, err := cloudeventshttp.NewProtocol(cloudeventshttp.WithTarget(env.HTTPTarget))
+			if err != nil {
+				log.Printf("failed to create protocol, %v", err)
+				return 1
+			}
+
+			t, err := cloudeventshttp.New(p,
 				cloudeventshttp.WithEncoding(encoding),
 			)
 			if err != nil {
-				log.Printf("failed to create client, %v", err)
+				log.Printf("failed to create transport, %v", err)
 				return 1
 			}
 

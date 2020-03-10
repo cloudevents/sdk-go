@@ -4,30 +4,19 @@ import (
 	"context"
 	"fmt"
 	"net"
-	nethttp "net/http"
-	"net/url"
+	"net/http"
 	"strings"
 	"sync"
 	"time"
-
-	"go.opencensus.io/plugin/ochttp"
-	"go.opencensus.io/plugin/ochttp/propagation/tracecontext"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/event"
 	"github.com/cloudevents/sdk-go/pkg/transport"
 	"github.com/cloudevents/sdk-go/pkg/transport/bindings"
+	"go.opencensus.io/plugin/ochttp"
+	"go.opencensus.io/plugin/ochttp/propagation/tracecontext"
 )
 
-// Transport adheres to transport.Transport.
-var _ transport.Transport = (*Transport)(nil)
-
-const (
-	// DefaultShutdownTimeout defines the default timeout given to the http.Server when calling Shutdown.
-	DefaultShutdownTimeout = time.Minute * 1
-)
-
-// Transport acts as both a http client and a http handler.
 type Transport struct {
 	bindings.BindingTransport
 
@@ -46,38 +35,40 @@ type Transport struct {
 	// Receive Mutex
 	reMu sync.Mutex
 	// Handler is the handler the http Server will use. Use this to reuse the
-	// http server. If nil, the Transport will create a one.
-	Handler           *nethttp.ServeMux
+	// http server. If nil, the Protocol will create a one.
+	Handler           *http.ServeMux
 	listener          net.Listener
-	transport         nethttp.RoundTripper // TODO: use this.
-	server            *nethttp.Server
+	transport         http.RoundTripper // TODO: use this.
+	server            *http.Server
 	handlerRegistered bool
 	middleware        []Middleware
-	Target            *url.URL         // TODO: this is here just to allow the options to mutate it.
-	RequestTemplate   *nethttp.Request // TODO: this is here just to allow the options to mutate it.
+
+	protocol *Protocol
 }
 
-func New(opts ...Option) (*Transport, error) {
+func New(p *Protocol, opts ...Option) (*Transport, error) {
 	t := &Transport{}
 	if err := t.applyOptions(opts...); err != nil {
 		return nil, err
 	}
 
-	if t.Requester == nil {
-		client := nethttp.DefaultClient
-		t.Requester = NewRequester(client, t.Target)
-	}
+	t.Sender = p
+	t.Requester = p
+	t.Receiver = p
+	t.protocol = p
 
-	if t.Sender == nil {
-		client := nethttp.DefaultClient
-		t.Sender = NewSender(client, t.Target)
-	}
-
-	if t.Receiver == nil {
-		t.Receiver = NewReceiver()
+	if t.ShutdownTimeout == nil {
+		timeout := DefaultShutdownTimeout
+		t.ShutdownTimeout = &timeout
 	}
 
 	return t, nil
+}
+
+// Protocol returns a CloudEvents transport.Protocol.
+// Deprecated: This is for legacy transition until client uses Sender/Receiver directly.
+func (t *Transport) Transport() transport.Transport {
+	return t
 }
 
 func (t *Transport) applyOptions(opts ...Option) error {
@@ -113,6 +104,11 @@ func (t *Transport) Request(ctx context.Context, e event.Event) (*event.Event, e
 	return t.BindingTransport.Request(ctx, e)
 }
 
+// HasTracePropagation implements Protocol.HasTracePropagation
+func (t *Transport) HasTracePropagation() bool {
+	return false
+}
+
 // StartReceiver implements Transport.StartReceiver
 // NOTE: This is a blocking call.
 func (t *Transport) StartReceiver(ctx context.Context) error {
@@ -120,12 +116,12 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 	defer t.reMu.Unlock()
 
 	if t.Handler == nil {
-		t.Handler = nethttp.NewServeMux()
+		t.Handler = http.NewServeMux()
 	}
 
 	if !t.handlerRegistered {
 		// handler.Handle might panic if the user tries to use the same path as the sdk.
-		t.Handler.Handle(t.GetPath(), t)
+		t.Handler.Handle(t.GetPath(), t.protocol)
 		t.handlerRegistered = true
 	}
 
@@ -134,7 +130,7 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 		return err
 	}
 
-	t.server = &nethttp.Server{
+	t.server = &http.Server{
 		Addr: addr.String(),
 		Handler: &ochttp.Handler{
 			Propagation:    &tracecontext.HTTPFormat{},
@@ -164,10 +160,7 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 	select {
 	case <-ctx.Done():
 		// Try a gracefully shutdown.
-		timeout := DefaultShutdownTimeout
-		if t.ShutdownTimeout != nil {
-			timeout = *t.ShutdownTimeout
-		}
+		timeout := *t.ShutdownTimeout
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
 		err := t.server.Shutdown(ctx)
@@ -176,17 +169,6 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 	case err := <-errChan:
 		return err
 	}
-}
-
-func (t *Transport) ServeHTTP(rw nethttp.ResponseWriter, req *nethttp.Request) {
-	if r, ok := t.BindingTransport.Receiver.(*Receiver); ok {
-		r.ServeHTTP(rw, req)
-	}
-}
-
-// HasTracePropagation implements Transport.HasTracePropagation
-func (t *Transport) HasTracePropagation() bool {
-	return false
 }
 
 // GetPort returns the listening port.
@@ -200,7 +182,7 @@ func (t *Transport) GetPort() int {
 	return -1
 }
 
-func formatSpanName(r *nethttp.Request) string {
+func formatSpanName(r *http.Request) string {
 	return "cloudevents.http." + r.URL.Path
 }
 
@@ -246,7 +228,7 @@ func (t *Transport) GetPath() string {
 }
 
 // attachMiddleware attaches the HTTP middleware to the specified handler.
-func attachMiddleware(h nethttp.Handler, middleware []Middleware) nethttp.Handler {
+func attachMiddleware(h http.Handler, middleware []Middleware) http.Handler {
 	for _, m := range middleware {
 		h = m(h)
 	}

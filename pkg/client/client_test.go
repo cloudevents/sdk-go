@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -35,8 +36,13 @@ var (
 )
 
 func simpleBinaryClient(target string) client.Client {
-	t, err := cehttp.New(
-		cehttp.WithTarget(target),
+	p, err := cehttp.NewProtocol(cehttp.WithTarget(target))
+	if err != nil {
+		log.Printf("failed to create protocol, %v", err)
+		return nil
+	}
+
+	t, err := cehttp.New(p,
 		cehttp.WithBinaryEncoding(),
 	)
 	if err != nil {
@@ -51,8 +57,13 @@ func simpleBinaryClient(target string) client.Client {
 }
 
 func simpleTracingBinaryClient(target string) client.Client {
-	t, err := cehttp.New(
-		cehttp.WithTarget(target),
+	p, err := cehttp.NewProtocol(cehttp.WithTarget(target))
+	if err != nil {
+		log.Printf("failed to create protocol, %v", err)
+		return nil
+	}
+
+	t, err := cehttp.New(p,
 		cehttp.WithBinaryEncoding(),
 	)
 	if err != nil {
@@ -67,8 +78,13 @@ func simpleTracingBinaryClient(target string) client.Client {
 }
 
 func simpleStructuredClient(target string) client.Client {
-	t, err := cehttp.New(
-		cehttp.WithTarget(target),
+	p, err := cehttp.NewProtocol(cehttp.WithTarget(target))
+	if err != nil {
+		log.Printf("failed to create protocol, %v", err)
+		return nil
+	}
+
+	t, err := cehttp.New(p,
 		cehttp.WithStructuredEncoding(),
 	)
 	if err != nil {
@@ -371,7 +387,12 @@ func TestClientReceive(t *testing.T) {
 
 				events := make(chan event.Event)
 
-				tp, err := cehttp.New(tc.optsFn(0, path)...)
+				p, err := cehttp.NewProtocol()
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				tp, err := cehttp.New(p, tc.optsFn(0, path)...)
 				if err != nil {
 					t.Errorf("failed to make http transport %s", err.Error())
 				}
@@ -495,7 +516,12 @@ func TestTracedClientReceive(t *testing.T) {
 		t.Run(n, func(t *testing.T) {
 			spanContexts := make(chan trace.SpanContext)
 
-			tp, err := cehttp.New(tc.optsFn(0, "")...)
+			p, err := cehttp.NewProtocol()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			tp, err := cehttp.New(p, tc.optsFn(0, "")...)
 			if err != nil {
 				t.Errorf("failed to make http transport %s", err.Error())
 			}
