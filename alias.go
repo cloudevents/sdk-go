@@ -4,8 +4,6 @@ package cloudevents
 // the number of imports for simple HTTP clients.
 
 import (
-	"net/http"
-
 	"github.com/cloudevents/sdk-go/pkg/client"
 	"github.com/cloudevents/sdk-go/pkg/context"
 	"github.com/cloudevents/sdk-go/pkg/event"

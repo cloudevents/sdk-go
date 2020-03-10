@@ -12,8 +12,6 @@ import (
 	test "github.com/cloudevents/sdk-go/pkg/binding/test"
 	"github.com/cloudevents/sdk-go/pkg/event"
 	"github.com/cloudevents/sdk-go/pkg/types"
-
-	. "github.com/cloudevents/sdk-go/pkg/transport/test"
 )
 
 func TestVersionTranscoder(t *testing.T) {
@@ -35,7 +33,7 @@ func TestVersionTranscoder(t *testing.T) {
 	err = testEventV1.SetData(data)
 	require.NoError(t, err)
 
-	RunTransformerTests(t, context.Background(), []TransformerTestArgs{
+	test.RunTransformerTests(t, context.Background(), []test.TransformerTestArgs{
 		{
 			Name:         "V03 -> V1 with Mock Structured message",
 			InputMessage: test.MustCreateMockStructuredMessage(test.CopyEventContext(testEventV03)),

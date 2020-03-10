@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cloudevents/sdk-go"
+	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/types"
 )
 
@@ -103,6 +103,8 @@ func TestSenderReceiver_structured_v1(t *testing.T) {
 }
 
 func TestSenderReceiver_data_base64_v1(t *testing.T) {
+	t.Skip("TODO: bindings does not yet support base64")
+
 	now := time.Now()
 
 	testCases := DirectTapTestCases{

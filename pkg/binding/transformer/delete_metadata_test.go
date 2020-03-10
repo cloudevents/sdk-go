@@ -11,7 +11,7 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
 	"github.com/cloudevents/sdk-go/pkg/binding/test"
 
-	. "github.com/cloudevents/sdk-go/pkg/transport/test"
+	. "github.com/cloudevents/sdk-go/pkg/binding/test"
 )
 
 func TestDeleteAttribute(t *testing.T) {

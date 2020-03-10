@@ -65,6 +65,7 @@ func ClientDirect(t *testing.T, tc DirectTapTest, topts ...cehttp.Option) {
 	var got *cloudevents.Event
 	go func() {
 		if err := ce.StartReceiver(recvCtx, func(event cloudevents.Event) {
+			event.SetExtension(unitTestIDKey, nil)
 			got = &event
 			recvCancel()
 		}); err != nil {

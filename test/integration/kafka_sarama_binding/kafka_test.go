@@ -6,16 +6,15 @@ import (
 	"strings"
 	"testing"
 
-	test2 "github.com/cloudevents/sdk-go/pkg/binding/test"
-	bindings "github.com/cloudevents/sdk-go/pkg/transport"
-
 	"github.com/Shopify/sarama"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
+	. "github.com/cloudevents/sdk-go/pkg/binding/test"
 	"github.com/cloudevents/sdk-go/pkg/event"
+	bindings "github.com/cloudevents/sdk-go/pkg/transport"
 	"github.com/cloudevents/sdk-go/pkg/transport/kafka_sarama"
 	"github.com/cloudevents/sdk-go/pkg/transport/test"
 )
@@ -27,15 +26,15 @@ const (
 func TestSendStructuredMessageToStructuredWithKey(t *testing.T) {
 	close, s, r := testSenderReceiver(t)
 	defer close()
-	test2.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
-		eventIn = test2.ExToStr(t, eventIn)
+	EachEvent(t, Events(), func(t *testing.T, eventIn event.Event) {
+		eventIn = ExToStr(t, eventIn)
 		require.NoError(t, eventIn.Context.SetExtension("key", "aaa"))
 
-		in := test.MustCreateMockStructuredMessage(eventIn)
-		test2.SendReceive(t, binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingStructured), in, s, r, func(out binding.Message) {
-			eventOut := test2.MustToEvent(t, context.Background(), out)
+		in := MustCreateMockStructuredMessage(eventIn)
+		test.SendReceive(t, binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingStructured), in, s, r, func(out binding.Message) {
+			eventOut := MustToEvent(t, context.Background(), out)
 			assert.Equal(t, binding.EncodingEvent, out.ReadEncoding())
-			test2.AssertEventEquals(t, eventIn, test2.ExToStr(t, eventOut))
+			AssertEventEquals(t, eventIn, ExToStr(t, eventOut))
 		})
 	})
 }
@@ -43,14 +42,14 @@ func TestSendStructuredMessageToStructuredWithKey(t *testing.T) {
 func TestSendStructuredMessageToStructuredWithoutKey(t *testing.T) {
 	close, s, r := testSenderReceiver(t)
 	defer close()
-	test2.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
-		eventIn = test2.ExToStr(t, eventIn)
+	EachEvent(t, Events(), func(t *testing.T, eventIn event.Event) {
+		eventIn = ExToStr(t, eventIn)
 
-		in := test.MustCreateMockStructuredMessage(eventIn)
-		test2.SendReceive(t, binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingStructured), in, s, r, func(out binding.Message) {
-			eventOut := test2.MustToEvent(t, context.Background(), out)
+		in := MustCreateMockStructuredMessage(eventIn)
+		test.SendReceive(t, binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingStructured), in, s, r, func(out binding.Message) {
+			eventOut := MustToEvent(t, context.Background(), out)
 			assert.Equal(t, binding.EncodingStructured, out.ReadEncoding())
-			test2.AssertEventEquals(t, eventIn, test2.ExToStr(t, eventOut))
+			AssertEventEquals(t, eventIn, ExToStr(t, eventOut))
 		})
 	})
 }
@@ -58,15 +57,15 @@ func TestSendStructuredMessageToStructuredWithoutKey(t *testing.T) {
 func TestSendBinaryMessageToBinaryWithKey(t *testing.T) {
 	close, s, r := testSenderReceiver(t)
 	defer close()
-	test2.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
-		eventIn = test2.ExToStr(t, eventIn)
+	EachEvent(t, Events(), func(t *testing.T, eventIn event.Event) {
+		eventIn = ExToStr(t, eventIn)
 		require.NoError(t, eventIn.Context.SetExtension("key", "aaa"))
 
-		in := test.MustCreateMockBinaryMessage(eventIn)
-		test2.SendReceive(t, binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingBinary), in, s, r, func(out binding.Message) {
-			eventOut := test2.MustToEvent(t, context.Background(), out)
+		in := MustCreateMockBinaryMessage(eventIn)
+		test.SendReceive(t, binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingBinary), in, s, r, func(out binding.Message) {
+			eventOut := MustToEvent(t, context.Background(), out)
 			assert.Equal(t, binding.EncodingBinary, out.ReadEncoding())
-			test2.AssertEventEquals(t, eventIn, test2.ExToStr(t, eventOut))
+			AssertEventEquals(t, eventIn, ExToStr(t, eventOut))
 		})
 	})
 }
@@ -74,14 +73,14 @@ func TestSendBinaryMessageToBinaryWithKey(t *testing.T) {
 func TestSendBinaryMessageToBinaryWithoutKey(t *testing.T) {
 	close, s, r := testSenderReceiver(t)
 	defer close()
-	test2.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
-		eventIn = test2.ExToStr(t, eventIn)
+	EachEvent(t, Events(), func(t *testing.T, eventIn event.Event) {
+		eventIn = ExToStr(t, eventIn)
 
-		in := test.MustCreateMockBinaryMessage(eventIn)
-		test2.SendReceive(t, binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingBinary), in, s, r, func(out binding.Message) {
-			eventOut := test2.MustToEvent(t, context.Background(), out)
+		in := MustCreateMockBinaryMessage(eventIn)
+		test.SendReceive(t, binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingBinary), in, s, r, func(out binding.Message) {
+			eventOut := MustToEvent(t, context.Background(), out)
 			assert.Equal(t, binding.EncodingBinary, out.ReadEncoding())
-			test2.AssertEventEquals(t, eventIn, test2.ExToStr(t, eventOut))
+			AssertEventEquals(t, eventIn, ExToStr(t, eventOut))
 		})
 	})
 }

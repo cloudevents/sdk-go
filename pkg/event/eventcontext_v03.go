@@ -82,6 +82,10 @@ func (ec *EventContextV03) SetExtension(name string, value interface{}) error {
 	}
 	if value == nil {
 		delete(ec.Extensions, name)
+		if len(ec.Extensions) == 0 {
+			ec.Extensions = nil
+		}
+		return nil
 	} else {
 		v, err := types.Validate(value)
 		if err == nil {
@@ -89,7 +93,6 @@ func (ec *EventContextV03) SetExtension(name string, value interface{}) error {
 		}
 		return err
 	}
-	return nil
 }
 
 // Clone implements EventContextConverter.Clone
