@@ -243,3 +243,42 @@ func TestIncompatible(t *testing.T) {
 	x.err(struct{ i int }{i: 9}, "invalid CloudEvents value: struct { i int }{i:9}")
 	x.err((*int32)(nil), "invalid CloudEvents value: (*int32)(nil)")
 }
+
+func TestCloneTimestamp(t *testing.T) {
+	original := types.Timestamp{time.Now()}
+	cloned := types.Clone(original).(types.Timestamp)
+
+	require.Equal(t, original, cloned)
+	require.NotSame(t, original, cloned)
+	require.NotSame(t, original.Time, cloned.Time)
+}
+
+func TestCloneTimestampPointer(t *testing.T) {
+	original := &types.Timestamp{time.Now()}
+	cloned := types.Clone(original).(*types.Timestamp)
+
+	require.Equal(t, original, cloned)
+	require.NotSame(t, original, cloned)
+	require.NotSame(t, original.Time, cloned.Time)
+}
+
+func TestCloneTime(t *testing.T) {
+	original := time.Now()
+	cloned := types.Clone(original).(types.Timestamp)
+
+	require.Equal(t, original, cloned.Time)
+	require.NotSame(t, original, cloned.Time)
+}
+
+func TestCloneTimePointer(t *testing.T) {
+	original := time.Now()
+	cloned := types.Clone(&original).(*types.Timestamp)
+
+	require.Equal(t, &original, &cloned.Time)
+	require.NotSame(t, &original, &cloned.Time)
+}
+
+func TestCloneNil(t *testing.T) {
+	cloned := types.Clone(nil)
+	require.Nil(t, cloned)
+}
