@@ -16,7 +16,7 @@ require (
 	github.com/nats-io/nats-server/v2 v2.1.2
 	github.com/nats-io/nats.go v1.9.1
 	github.com/pkg/errors v0.8.1
-	github.com/stretchr/testify v1.4.0
+	github.com/stretchr/testify v1.5.1
 	github.com/valyala/bytebufferpool v1.0.0
 	go.opencensus.io v0.22.0
 	go.uber.org/atomic v1.4.0 // indirect

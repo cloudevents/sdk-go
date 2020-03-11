@@ -123,16 +123,15 @@ func (t *BindingTransport) handle(ctx context.Context, m binding.Message, respFn
 	if err != nil {
 		return err
 	}
-	eventResp := event.EventResponse{}
-	if err := t.handler.Delivery(ctx, *e, &eventResp); err != nil {
-		return err
-	}
 
-	if eventResp.Event != nil {
-		// TODO: this does not give control over the http response code at the moment.
-		if respFn != nil {
-			return respFn(ctx, (*binding.EventMessage)(eventResp.Event))
+	resp, result := t.handler.Delivery(ctx, *e)
+	if respFn != nil {
+		var rm binding.Message
+		if resp != nil {
+			rm = (*binding.EventMessage)(resp)
 		}
+
+		return respFn(ctx, rm, result)
 	}
 
 	return nil

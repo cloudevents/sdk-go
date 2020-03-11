@@ -30,15 +30,15 @@ type Client interface {
 	// * func()
 	// * func() error
 	// * func(context.Context)
-	// * func(context.Context) event.Response
+	// * func(context.Context) event.Result
 	// * func(event.Event)
-	// * func(event.Event) event.Response
+	// * func(event.Event) event.Result
 	// * func(context.Context, event.Event)
-	// * func(context.Context, event.Event) event.Response
-	// * func(event.Event, *event.EventResponse)
-	// * func(event.Event, *event.EventResponse) event.Response
-	// * func(context.Context, event.Event, *event.EventResponse)
-	// * func(context.Context, event.Event, *event.EventResponse) event.Response
+	// * func(context.Context, event.Event) event.Result
+	// * func(event.Event) *event.Event
+	// * func(event.Event) (*event.Event, event.Result)
+	// * func(context.Context, event.Event) *event.Event
+	// * func(context.Context, event.Event) (*event.Event, event.Result)
 	// Note: if fn returns an error, it is treated as a critical and
 	// EventResponse will not be processed.
 	StartReceiver(ctx context.Context, fn interface{}) error
@@ -193,7 +193,7 @@ func (c *ceClient) obsRequest(ctx context.Context, event event.Event) (*event.Ev
 }
 
 // Delivery is called from from the transport on event delivery.
-func (c *ceClient) Delivery(ctx context.Context, e event.Event, resp *event.EventResponse) error {
+func (c *ceClient) Delivery(ctx context.Context, e event.Event) (*event.Event, event.Result) {
 	ctx, r := observability.NewReporter(ctx, reportReceive)
 
 	var span *trace.Span
@@ -210,32 +210,32 @@ func (c *ceClient) Delivery(ctx context.Context, e event.Event, resp *event.Even
 		span.AddAttributes(eventTraceAttributes(e.Context)...)
 	}
 
-	err := c.obsDelivery(ctx, e, resp)
-	if err != nil {
+	resp, result := c.obsDelivery(ctx, e)
+	if result != nil { // TODO: test result for Ack/Nack
 		r.Error()
 	} else {
 		r.OK()
 	}
-	return err
+	return resp, result
 }
 
-func (c *ceClient) obsDelivery(ctx context.Context, e event.Event, resp *event.EventResponse) error {
+func (c *ceClient) obsDelivery(ctx context.Context, e event.Event) (*event.Event, event.Result) {
 	if c.fn != nil {
-		err := c.fn.invoke(ctx, e, resp)
+		resp, err := c.fn.invoke(ctx, e)
 
 		// Apply the defaulter chain to the outgoing event.
-		if err == nil && resp != nil && resp.Event != nil && len(c.eventDefaulterFns) > 0 {
+		if err == nil && resp != nil && len(c.eventDefaulterFns) > 0 {
 			for _, fn := range c.eventDefaulterFns {
-				*resp.Event = fn(ctx, *resp.Event)
+				*resp = fn(ctx, *resp)
 			}
 			// Validate the event conforms to the CloudEvents Spec.
-			if err := resp.Event.Validate(); err != nil {
-				return fmt.Errorf("cloudevent validation failed on response event: %v", err)
+			if verr := resp.Validate(); verr != nil {
+				return nil, fmt.Errorf("cloudevent validation failed on response event: %v, %w", verr, err)
 			}
 		}
-		return err
+		return resp, err
 	}
-	return nil
+	return nil, nil
 }
 
 // StartReceiver sets up the given fn to handle Receive.

@@ -71,7 +71,7 @@ func TestCopyMessage(t *testing.T) {
 		if tt.message != nil {
 			inputMessage = tt.message
 		} else {
-			e := CopyEventContext(tt.event)
+			e := tt.event.Clone()
 			inputMessage = binding.ToEventMessage(&e)
 		}
 

@@ -6,29 +6,29 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/event"
 )
 
-// NewResponse returns a fully populated http Response that should be used as
-// a event.Response.
-func NewResponse(status int, messageFmt string, args ...interface{}) event.Response {
-	return &Response{
+// NewResult returns a fully populated http Result that should be used as
+// a event.Result.
+func NewResult(status int, messageFmt string, args ...interface{}) event.Result {
+	return &Result{
 		Status: status,
 		Format: messageFmt,
 		Args:   args,
 	}
 }
 
-// Response wraps the fields required to make adjustments for http Responses.
-type Response struct {
+// Result wraps the fields required to make adjustments for http Responses.
+type Result struct {
 	Status int
 	Format string
 	Args   []interface{}
 }
 
-// make sure Response implements error.
-var _ error = (*Response)(nil)
+// make sure Result implements error.
+var _ error = (*Result)(nil)
 
-// Is returns if the target error is a Response type checking target.
-func (e *Response) Is(target error) bool {
-	if _, ok := target.(*Response); ok {
+// Is returns if the target error is a Result type checking target.
+func (e *Result) Is(target error) bool {
+	if _, ok := target.(*Result); ok {
 		return true
 	}
 	// Allow for wrapped errors.
@@ -38,6 +38,6 @@ func (e *Response) Is(target error) bool {
 
 // Error returns the string that is formed by using the format string with the
 // provided args.
-func (e *Response) Error() string {
+func (e *Result) Error() string {
 	return fmt.Sprintf(e.Format, e.Args...)
 }

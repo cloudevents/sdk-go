@@ -87,9 +87,9 @@ var (
 	// Event Creation
 
 	NewEvent    = event.New
-	NewResponse = event.NewResponse
+	NewResponse = event.NewResult
 
-	NewHTTPResponse = http.NewResponse
+	NewHTTPResponse = http.NewResult
 
 	// Tracing
 

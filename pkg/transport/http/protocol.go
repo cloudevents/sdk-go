@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"fmt"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"github.com/cloudevents/sdk-go/pkg/transport"
 	"io"
 	"net/http"
@@ -138,7 +139,7 @@ func (p *Protocol) Receive(ctx context.Context) (binding.Message, error) {
 	// No-op the response.
 	defer func() {
 		if fn != nil {
-			_ = fn(ctx, nil)
+			_ = fn(ctx, nil, nil)
 		}
 	}()
 	return msg, err
@@ -177,15 +178,18 @@ func (p *Protocol) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		return nil
 	}
 
-	var fn transport.ResponseFn = func(ctx context.Context, resp binding.Message) error {
+	var fn transport.ResponseFn = func(ctx context.Context, resp binding.Message, re event.Result) error {
 		if resp != nil {
-			return WriteResponseWriter(ctx, resp, rw, p.transformers)
+			err := WriteResponseWriter(ctx, resp, re, rw, p.transformers)
+			return resp.Finish(err)
 		}
+
 		return nil
 	}
 
 	p.incoming <- msgErr{msg: m, respFn: fn, err: err} // Send to Respond()
 	if err = <-done; err != nil {
+		fmt.Println("attempting to write an error out on response writer:", err)
 		http.Error(rw, fmt.Sprintf("cannot forward CloudEvent: %v", err), http.StatusInternalServerError)
 	}
 }

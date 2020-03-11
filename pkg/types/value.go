@@ -138,6 +138,49 @@ func Validate(v interface{}) (interface{}, error) {
 	return nil, fmt.Errorf("invalid CloudEvents value: %#v", v)
 }
 
+// Clone v clones a CloudEvents attribute value, which is one of the valid types:
+//     bool, int32, string, []byte, types.URI, types.URIRef, types.Timestamp
+// Returns the same type
+// Panics if the type is not valid
+func Clone(v interface{}) interface{} {
+	if v == nil {
+		return nil
+	}
+	switch v := v.(type) {
+	case bool, int32, string, nil:
+		return v // Already a CloudEvents type, no validation needed.
+	case []byte:
+		clone := make([]byte, len(v))
+		copy(clone, v)
+		return v
+	case url.URL:
+		return URI{v}
+	case *url.URL:
+		return &URI{*v}
+	case URIRef:
+		return v
+	case *URIRef:
+		return &URIRef{v.URL}
+	case URI:
+		return v
+	case *URI:
+		return &URI{v.URL}
+	case URLRef:
+		return URLRef{v.URL}
+	case *URLRef:
+		return &URLRef{v.URL}
+	case time.Time:
+		return Timestamp{v}
+	case *time.Time:
+		return &Timestamp{*v}
+	case Timestamp:
+		return v
+	case *Timestamp:
+		return &Timestamp{v.Time}
+	}
+	panic(fmt.Errorf("invalid CloudEvents value: %#v", v))
+}
+
 // ToBool accepts a bool value or canonical "true"/"false" string.
 func ToBool(v interface{}) (bool, error) {
 	v, err := Validate(v)
