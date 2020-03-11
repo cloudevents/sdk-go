@@ -21,7 +21,7 @@ const (
 // an Event message, you should copy it before
 type EventMessage event.Event
 
-func NewEventMessage(e *event.Event) Message {
+func ToEventMessage(e *event.Event) Message {
 	return (*EventMessage)(e)
 }
 
