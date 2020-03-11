@@ -1,11 +1,14 @@
 package event_test
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/cloudevents/sdk-go/pkg/event"
 
@@ -548,4 +551,32 @@ func FullEventContextV1(now types.Timestamp) *event.EventContextV1 {
 	_ = eventContextV1.SetExtension(event.EventTypeVersionKey, "v1alpha1")
 	_ = eventContextV1.SetExtension(event.DataContentEncodingKey, event.Base64)
 	return eventContextV1.AsV1()
+}
+
+func TestEvent_Clone(t *testing.T) {
+	original := event.Event{
+		Context: FullEventContextV1(types.Timestamp{Time: time.Now()}),
+	}
+	original.FieldErrors = map[string]error{
+		"id": errors.New("an error"),
+	}
+	require.NoError(t, original.SetData("aaa"))
+
+	clone := original.Clone()
+
+	require.Equal(t, original.Context, clone.Context)
+	require.NotSame(t, original.Context, clone.Context)
+	require.Equal(t, original.Data, clone.Data)
+	require.NotSame(t, original.Data, clone.Data)
+
+	require.Equal(t, original.DataEncoded, clone.DataEncoded)
+	require.Equal(t, original.DataBinary, clone.DataBinary)
+
+	require.Equal(t, original.FieldErrors, clone.FieldErrors)
+	require.NotSame(t, original.FieldErrors, clone.FieldErrors)
+
+	require.NoError(t, clone.SetData("bbb"))
+
+	require.Equal(t, []byte("\"aaa\""), original.Data)
+	require.Equal(t, []byte("\"bbb\""), clone.Data)
 }

@@ -23,10 +23,10 @@ func TestSetAttribute(t *testing.T) {
 	attributeInitialValue := types.Timestamp{Time: time.Now().UTC()}
 	attributeUpdatedValue := types.Timestamp{Time: attributeInitialValue.Add(1 * time.Hour)}
 
-	eventWithInitialValue := test.CopyEventContext(e)
+	eventWithInitialValue := e.Clone()
 	eventWithInitialValue.SetTime(attributeInitialValue.Time)
 
-	eventWithUpdatedValue := test.CopyEventContext(e)
+	eventWithUpdatedValue := e.Clone()
 	eventWithUpdatedValue.SetTime(attributeUpdatedValue.Time)
 
 	transformers := SetAttribute(attributeKind, attributeInitialValue.Time, func(i2 interface{}) (i interface{}, err error) {
@@ -88,10 +88,10 @@ func TestSetExtension(t *testing.T) {
 	extInitialValue := "1"
 	exUpdatedValue := "2"
 
-	eventWithInitialValue := test.CopyEventContext(e)
+	eventWithInitialValue := e.Clone()
 	require.NoError(t, eventWithInitialValue.Context.SetExtension(extName, extInitialValue))
 
-	eventWithUpdatedValue := test.CopyEventContext(e)
+	eventWithUpdatedValue := e.Clone()
 	require.NoError(t, eventWithUpdatedValue.Context.SetExtension(extName, exUpdatedValue))
 
 	transformers := SetExtension(extName, extInitialValue, func(i2 interface{}) (i interface{}, err error) {

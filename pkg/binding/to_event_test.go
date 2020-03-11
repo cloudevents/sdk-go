@@ -62,7 +62,7 @@ func TestToEvent(t *testing.T) {
 			if tt.message != nil {
 				inputMessage = tt.message
 			} else {
-				e := test.CopyEventContext(tt.event)
+				e := tt.event.Clone()
 				inputMessage = binding.ToEventMessage(&e)
 			}
 			got, err := binding.ToEvent(context.Background(), inputMessage, nil)

@@ -9,7 +9,8 @@ import (
 
 // Event represents the canonical representation of a CloudEvent.
 type Event struct {
-	Context     EventContext
+	Context EventContext
+	// Data can be a string or a []byte
 	Data        interface{}
 	DataEncoded bool
 	DataBinary  bool
@@ -129,4 +130,39 @@ func (e Event) String() string {
 		b.WriteString("\n")
 	}
 	return b.String()
+}
+
+func (e Event) Clone() Event {
+	new := Event{}
+	new.Context = e.Context.Clone()
+	new.DataBinary = e.DataBinary
+	new.DataEncoded = e.DataEncoded
+	new.Data = e.cloneData()
+	new.FieldErrors = e.cloneFieldErrors()
+	return new
+}
+
+func (e Event) cloneData() interface{} {
+	if e.Data == nil {
+		return nil
+	} else if bytes, ok := e.Data.([]byte); ok {
+		new := make([]byte, len(bytes))
+		copy(new, bytes)
+		return new
+	} else if s, ok := e.Data.(string); ok {
+		return s // Strings are immutable!
+	} else {
+		panic("Invalid value in Event.Data field")
+	}
+}
+
+func (e Event) cloneFieldErrors() map[string]error {
+	if e.FieldErrors == nil {
+		return nil
+	}
+	newFE := make(map[string]error, len(e.FieldErrors))
+	for k, v := range e.FieldErrors {
+		newFE[k] = v
+	}
+	return newFE
 }
