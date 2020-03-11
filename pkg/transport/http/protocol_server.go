@@ -55,6 +55,7 @@ func New(p *Protocol, opts ...Option) (*Transport, error) {
 	t.Sender = p
 	t.Requester = p
 	t.Receiver = p
+	t.Responder = p
 	t.protocol = p
 
 	if t.ShutdownTimeout == nil {

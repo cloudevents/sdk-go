@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"fmt"
+	"github.com/cloudevents/sdk-go/pkg/transport"
 	"io"
 	"net/http"
 	"net/url"
@@ -133,16 +134,32 @@ func copyHeaders(from, to http.Header) {
 // Returns non-nil error if the incoming HTTP request fails to parse as a CloudEvent
 // Returns io.EOF if the receiver is closed.
 func (p *Protocol) Receive(ctx context.Context) (binding.Message, error) {
-	msgErr, ok := <-p.incoming
+	msg, fn, err := p.Respond(ctx)
+	// No-op the response.
+	defer func() {
+		if fn != nil {
+			_ = fn(ctx, nil)
+		}
+	}()
+	return msg, err
+}
+
+// Respond receives the next incoming HTTP request as a CloudEvent and waits
+// for the response callback to invoked before continuing.
+// Returns non-nil error if the incoming HTTP request fails to parse as a CloudEvent
+// Returns io.EOF if the receiver is closed.
+func (p *Protocol) Respond(ctx context.Context) (binding.Message, transport.ResponseFn, error) {
+	in, ok := <-p.incoming
 	if !ok {
-		return nil, io.EOF
+		return nil, nil, io.EOF
 	}
-	return msgErr.msg, msgErr.err
+	return in.msg, in.respFn, in.err
 }
 
 type msgErr struct {
-	msg *Message
-	err error
+	msg    *Message
+	respFn transport.ResponseFn
+	err    error
 }
 
 // ServeHTTP implements http.Handler.
@@ -151,19 +168,23 @@ func (p *Protocol) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	var err error
 	m := NewMessageFromHttpRequest(req)
 	if m.ReadEncoding() == binding.EncodingUnknown {
-		p.incoming <- msgErr{nil, binding.ErrUnknownEncoding}
+		p.incoming <- msgErr{msg: nil, err: binding.ErrUnknownEncoding}
 	}
 	done := make(chan error)
+
 	m.OnFinish = func(err error) error {
-		if m.resp != nil {
-			err := WriteHttpResponseWriter(context.Background(), m.resp, rw, p.transformers)
-			_ = m.resp.Finish(err)
-		}
-		m.resp = nil
 		done <- err
 		return nil
 	}
-	p.incoming <- msgErr{m, err} // Send to Receive()
+
+	var fn transport.ResponseFn = func(ctx context.Context, resp binding.Message) error {
+		if resp != nil {
+			return WriteHttpResponseWriter(ctx, resp, rw, p.transformers)
+		}
+		return nil
+	}
+
+	p.incoming <- msgErr{msg: m, respFn: fn, err: err} // Send to Respond()
 	if err = <-done; err != nil {
 		http.Error(rw, fmt.Sprintf("cannot forward CloudEvent: %v", err), http.StatusInternalServerError)
 	}
