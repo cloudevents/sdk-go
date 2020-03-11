@@ -16,11 +16,12 @@ import (
 
 type ClientOption client.Option
 type Client = client.Client
-type ConvertFn = client.ConvertFn
 
 // Event
 
 type Event = event.Event
+
+// Deprecated:
 type EventResponse = event.EventResponse
 
 // Context
@@ -85,7 +86,10 @@ var (
 
 	// Event Creation
 
-	NewEvent = event.New
+	NewEvent    = event.New
+	NewResponse = event.NewResponse
+
+	NewHTTPResponse = http.NewResponse
 
 	// Tracing
 
@@ -113,7 +117,7 @@ var (
 	// HTTP Protocol Options
 
 	WithTarget             = http.WithTarget
-	WitHHeader             = http.WithHeader
+	WithHeader             = http.WithHeader
 	WithShutdownTimeout    = http.WithShutdownTimeout
 	WithEncoding           = http.WithEncoding
 	WithStructuredEncoding = http.WithStructuredEncoding

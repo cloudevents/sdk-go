@@ -14,11 +14,13 @@ func TestReceiverFnValidTypes(t *testing.T) {
 	for name, fn := range map[string]interface{}{
 		"no in, no out":                           func() {},
 		"no in, error out":                        func() error { return nil },
+		"no in, response out":                     func() event.Response { return nil },
 		"ctx in, no out":                          func(context.Context) {},
 		"ctx, Event in, no out":                   func(context.Context, event.Event) {},
 		"ctx, EventResponse in, no out":           func(context.Context, *event.EventResponse) {},
 		"ctx, Event, EventResponse in, no out":    func(context.Context, event.Event, *event.EventResponse) {},
 		"ctx in, error out":                       func(context.Context) error { return nil },
+		"ctx in, response out":                    func(context.Context) event.Response { return nil },
 		"ctx, Event in, error out":                func(context.Context, event.Event) error { return nil },
 		"ctx, EventResponse in, error out":        func(context.Context, *event.EventResponse) error { return nil },
 		"ctx, Event, EventResponse in, error out": func(context.Context, event.Event, *event.EventResponse) error { return nil },
@@ -26,8 +28,10 @@ func TestReceiverFnValidTypes(t *testing.T) {
 		"EventResponse in, no out":                func(*event.EventResponse) {},
 		"Event, EventResponse in, no out":         func(event.Event, *event.EventResponse) {},
 		"Event in, error out":                     func(event.Event) error { return nil },
+		"Event in, response out":                  func(event.Event) event.Response { return nil },
 		"EventResponse in, error out":             func(*event.EventResponse) error { return nil },
 		"Event, EventResponse in, error out":      func(event.Event, *event.EventResponse) error { return nil },
+		"Event, EventResponse in, response out":   func(event.Event, *event.EventResponse) event.Response { return nil },
 	} {
 		t.Run(name, func(t *testing.T) {
 			if _, err := receiver(fn); err != nil {

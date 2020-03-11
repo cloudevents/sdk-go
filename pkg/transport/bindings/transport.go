@@ -116,7 +116,7 @@ func (t *BindingTransport) handle(ctx context.Context, m binding.Message, respFn
 	}()
 
 	if t.handler == nil {
-		return
+		return nil
 	}
 
 	e, err := binding.ToEvent(ctx, m, nil)

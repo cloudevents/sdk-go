@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"log"
 	"os"
 
@@ -50,9 +51,9 @@ func main() {
 	}
 }
 
-func gotEvent(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error {
+func gotEvent(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) event.Response {
 	fmt.Printf("Got Event: %+v\n", event)
 
 	resp.RespondWith(200, &event)
-	return nil
+	return cloudevents.NewHTTPResponse(206, "accept")
 }

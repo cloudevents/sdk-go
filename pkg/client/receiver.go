@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/event"
 )
 
@@ -14,7 +13,7 @@ import (
 // If fn returns an error, EventResponse will not be considered by the client or
 // or transport.
 // This is just an FYI:
-type ReceiveFull func(context.Context, event.Event, *event.EventResponse) error
+type ReceiveFull func(context.Context, event.Event, *event.EventResponse) event.Response
 
 type receiverFn struct {
 	numIn   int
@@ -24,12 +23,8 @@ type receiverFn struct {
 	hasEventIn         bool
 	hasEventResponseIn bool
 
-	hasErrorOut bool
+	hasResponseOut bool
 }
-
-// ConvertFn defines the signature the client expects to enable conversion
-// delegation.
-type ConvertFn func(context.Context, binding.Message, error) (*event.Event, error)
 
 const (
 	inParamUsage  = "expected a function taking either no parameters, one or more of (context.Context, event.Event, *event.EventResponse) ordered"
@@ -40,7 +35,7 @@ var (
 	contextType       = reflect.TypeOf((*context.Context)(nil)).Elem()
 	eventType         = reflect.TypeOf((*event.Event)(nil)).Elem()
 	eventResponseType = reflect.TypeOf((*event.EventResponse)(nil)) // want the ptr type
-	errorType         = reflect.TypeOf((*error)(nil)).Elem()
+	responseType      = reflect.TypeOf((*error)(nil)).Elem()
 )
 
 // receiver creates a receiverFn wrapper class that is used by the client to
@@ -49,15 +44,15 @@ var (
 // * func()
 // * func() error
 // * func(context.Context)
-// * func(context.Context) error
+// * func(context.Context) event.Response
 // * func(event.Event)
-// * func(event.Event) error
+// * func(event.Event) event.Response
 // * func(context.Context, event.Event)
-// * func(context.Context, event.Event) error
+// * func(context.Context, event.Event) event.Response
 // * func(event.Event, *event.EventResponse)
-// * func(event.Event, *event.EventResponse) error
+// * func(event.Event, *event.EventResponse) event.Response
 // * func(context.Context, event.Event, *event.EventResponse)
-// * func(context.Context, event.Event, *event.EventResponse) error
+// * func(context.Context, event.Event, *event.EventResponse) event.Response
 //
 func receiver(fn interface{}) (*receiverFn, error) {
 	fnType := reflect.TypeOf(fn)
@@ -76,7 +71,7 @@ func receiver(fn interface{}) (*receiverFn, error) {
 	return r, nil
 }
 
-func (r *receiverFn) invoke(ctx context.Context, event event.Event, resp *event.EventResponse) error {
+func (r *receiverFn) invoke(ctx context.Context, event event.Event, resp *event.EventResponse) event.Response {
 	args := make([]reflect.Value, 0, r.numIn)
 
 	if r.numIn > 0 {
@@ -91,7 +86,7 @@ func (r *receiverFn) invoke(ctx context.Context, event event.Event, resp *event.
 		}
 	}
 	v := r.fnValue.Call(args)
-	if r.hasErrorOut && len(v) >= 1 {
+	if r.hasResponseOut && len(v) >= 1 {
 		if err, ok := v[0].Interface().(error); ok {
 			return err
 		}
@@ -162,15 +157,15 @@ func (r *receiverFn) validateInParamSignature(fnType reflect.Type) error {
 // Valid output signatures:
 // (), (error)
 func (r *receiverFn) validateOutParamSignature(fnType reflect.Type) error {
-	r.hasErrorOut = false
+	r.hasResponseOut = false
 	switch fnType.NumOut() {
 	case 1:
 		paramNo := fnType.NumOut() - 1
 		paramType := fnType.Out(paramNo)
-		if !paramType.ConvertibleTo(errorType) {
-			return fmt.Errorf("%s; cannot convert return type %d from %s to error", outParamUsage, paramNo, paramType)
+		if !paramType.ConvertibleTo(responseType) {
+			return fmt.Errorf("%s; cannot convert return type %d from %s to event.Response", outParamUsage, paramNo, paramType)
 		} else {
-			r.hasErrorOut = true
+			r.hasResponseOut = true
 		}
 		fallthrough
 	case 0:
