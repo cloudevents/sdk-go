@@ -67,7 +67,7 @@ func benchmarkBaseline(cases []e2e.BenchmarkCase, requestFactory func([]byte) *n
 	return results
 }
 
-func pipeLoopDirect(r *http.Receiver, sendCtx context.Context, endCtx context.Context, opts ...http.SenderOptionFunc) {
+func pipeLoopDirect(r *http.Protocol, sendCtx context.Context, endCtx context.Context, opts ...http.ProtocolOption) {
 	s := MockedSender(opts...)
 	var err error
 	var m binding.Message
@@ -85,7 +85,7 @@ func pipeLoopDirect(r *http.Receiver, sendCtx context.Context, endCtx context.Co
 	}
 }
 
-func pipeLoopMulti(r *http.Receiver, sendCtx context.Context, endCtx context.Context, outputSenders int, opts ...http.SenderOptionFunc) {
+func pipeLoopMulti(r *http.Protocol, sendCtx context.Context, endCtx context.Context, outputSenders int, opts ...http.ProtocolOption) {
 	s := MockedSender(opts...)
 	var err error
 	var m binding.Message
@@ -120,7 +120,10 @@ func benchmarkReceiverSender(cases []e2e.BenchmarkCase, requestFactory func([]by
 		fmt.Printf("%+v\n", c)
 
 		ctx, cancel := context.WithCancel(context.TODO())
-		receiver := http.NewReceiver()
+		receiver, err := http.NewProtocol()
+		if err != nil {
+			panic(err)
+		}
 
 		// Spawn dispatchers
 		for i := 0; i < c.Parallelism; i++ {
@@ -184,11 +187,11 @@ func benchmarkClient(cases []e2e.BenchmarkCase, requestFactory func([]byte) *net
 	for _, c := range cases {
 		fmt.Printf("%+v\n", c)
 
-		_, mockedReceiverTransport := MockedClient()
+		_, mockedReceiverProtocol, mockedReceiverTransport := MockedClient()
 
 		senderClients := make([]cloudevents.Client, c.OutputSenders)
 		for i := 0; i < c.OutputSenders; i++ {
-			senderClients[i], _ = MockedClient()
+			senderClients[i], _, _ = MockedClient()
 		}
 
 		mockedReceiverTransport.SetDelivery(dispatchReceiver(senderClients, c.OutputSenders))
@@ -202,7 +205,7 @@ func benchmarkClient(cases []e2e.BenchmarkCase, requestFactory func([]byte) *net
 			b.RunParallel(func(pb *testing.PB) {
 				for pb.Next() {
 					w := httptest.NewRecorder()
-					mockedReceiverTransport.ServeHTTP(w, requestFactory(buffer))
+					mockedReceiverProtocol.ServeHTTP(w, requestFactory(buffer))
 				}
 			})
 		})

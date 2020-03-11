@@ -76,7 +76,12 @@ func _main(args []string, env envConfig) int {
 
 	r := &Receiver{Client: nc}
 
-	t, err := cloudeventshttp.New(
+	p, err := cloudeventshttp.NewProtocol()
+	if err != nil {
+		log.Fatalf("failed to create protocol: %s", err.Error())
+	}
+
+	t, err := cloudeventshttp.New(p,
 		cloudeventshttp.WithPort(env.Port),
 	)
 	if err != nil {

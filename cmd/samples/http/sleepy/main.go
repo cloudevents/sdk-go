@@ -43,7 +43,12 @@ func gotEvent(event cloudevents.Event) error {
 }
 
 func _main(args []string, env envConfig) int {
-	t, err := cloudevents.NewHTTPTransport(
+	p, err := cloudevents.NewHTTPProtocol()
+	if err != nil {
+		log.Fatalf("failed to create protocol: %s", err.Error())
+	}
+
+	t, err := cloudevents.NewHTTPTransport(p,
 		cloudevents.WithPort(env.Port),
 		cloudevents.WithPath(env.Path),
 	)

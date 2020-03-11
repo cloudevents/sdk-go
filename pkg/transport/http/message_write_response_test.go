@@ -56,7 +56,7 @@ func TestEncodeHttpResponse(t *testing.T) {
 				eventIn = test2.ExToStr(t, eventIn)
 				messageIn := tt.messageFactory(eventIn)
 
-				err := EncodeHttpResponse(tt.context, messageIn, res, nil)
+				err := WriteHttpResponse(tt.context, messageIn, res, nil)
 				require.NoError(t, err)
 
 				//Little hack to go back to Message

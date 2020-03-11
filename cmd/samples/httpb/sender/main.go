@@ -12,7 +12,13 @@ import (
 
 func main() {
 	ctx := cloudevents.ContextWithTarget(context.Background(), "http://localhost:8080/")
-	t, err := http.New()
+
+	p, err := cloudevents.NewHTTPProtocol()
+	if err != nil {
+		log.Fatalf("failed to create protocol: %s", err.Error())
+	}
+
+	t, err := http.New(p)
 	if err != nil {
 		log.Fatalf("failed to create transport, %v", err)
 	}

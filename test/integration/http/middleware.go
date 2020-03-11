@@ -11,24 +11,39 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/transport/http"
 )
 
-func ClientMiddleware(t *testing.T, tc TapTest, topts ...http.Option) {
+func ClientMiddleware(t *testing.T, tc TapTest, opts ...interface{}) {
 	tap := NewTap()
 	server := httptest.NewServer(tap)
 	defer server.Close()
 
-	if len(topts) == 0 {
-		topts = append(topts, cloudevents.WithEncoding(cloudevents.HTTPBinaryEncoding))
+	topts := make([]http.Option, 0)
+	popts := make([]http.ProtocolOption, 0)
+	for _, v := range opts {
+		switch o := v.(type) {
+		case http.Option:
+			topts = append(topts, o)
+		case http.ProtocolOption:
+			popts = append(popts, o)
+		}
 	}
-	topts = append(topts, cloudevents.WithTarget(server.URL))
-	topts = append(topts, cloudevents.WithPort(0)) // random port
-	transport, err := cloudevents.NewHTTPTransport(
-		topts...,
-	)
+
+	popts = append(popts, cloudevents.WithTarget(server.URL))
+
+	protocol, err := cloudevents.NewHTTPProtocol(popts...)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	tap.handler = transport
+	if len(topts) == 0 {
+		topts = append(topts, cloudevents.WithEncoding(cloudevents.HTTPBinaryEncoding))
+	}
+	topts = append(topts, cloudevents.WithPort(0)) // random port
+	transport, err := cloudevents.NewHTTPTransport(protocol, topts...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tap.handler = protocol
 
 	ce, err := cloudevents.NewClient(
 		transport,
