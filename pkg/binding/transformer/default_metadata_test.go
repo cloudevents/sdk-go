@@ -45,7 +45,7 @@ func TestAddUUID(t *testing.T) {
 		{
 			Name:         "No change to id to Event message",
 			InputEvent:   eventWithId,
-			WantEvent:    test.CopyEventContext(eventWithId),
+			WantEvent:    eventWithId,
 			Transformers: []binding.TransformerFactory{AddUUID},
 		},
 		{
@@ -92,7 +92,7 @@ func TestAddTimeNow(t *testing.T) {
 		{
 			Name:         "No change to time to Event message",
 			InputEvent:   eventWithTime,
-			WantEvent:    test.CopyEventContext(eventWithTime),
+			WantEvent:    eventWithTime,
 			Transformers: []binding.TransformerFactory{AddTimeNow},
 		},
 		{

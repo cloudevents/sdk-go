@@ -53,7 +53,7 @@ func TestEncodeHttpResponse(t *testing.T) {
 					Header: make(http.Header),
 				}
 
-				eventIn = test.CopyEventContext(test2.ExToStr(t, eventIn))
+				eventIn = test2.ExToStr(t, eventIn)
 				messageIn := tt.messageFactory(eventIn)
 
 				err := WriteResponse(tt.context, messageIn, res, nil)

@@ -28,7 +28,7 @@ func RunTransformerTests(t *testing.T, ctx context.Context, tests []TransformerT
 			if tt.InputMessage != nil {
 				inputMessage = tt.InputMessage
 			} else {
-				e := CopyEventContext(tt.InputEvent)
+				e := tt.InputEvent.Clone()
 				inputMessage = (*binding.EventMessage)(&e)
 			}
 

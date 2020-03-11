@@ -52,7 +52,7 @@ func TestUpdateAttribute(t *testing.T) {
 		{
 			Name:         "Update subject in Event message",
 			InputEvent:   withSubjectEvent,
-			WantEvent:    CopyEventContext(updatedSubjectEvent),
+			WantEvent:    updatedSubjectEvent,
 			Transformers: binding.TransformerFactories{UpdateAttribute(spec.Subject, subjectUpdateFunc)},
 		},
 		{
@@ -70,7 +70,7 @@ func TestUpdateAttribute(t *testing.T) {
 		{
 			Name:         "Update time in Event message",
 			InputEvent:   withTimeEvent,
-			WantEvent:    CopyEventContext(updatedTimeEvent),
+			WantEvent:    updatedTimeEvent,
 			Transformers: binding.TransformerFactories{UpdateAttribute(spec.Time, timeUpdateFunc)},
 		},
 		{
@@ -92,7 +92,7 @@ func TestUpdateAttribute(t *testing.T) {
 		{
 			Name:       "Do nothing with Event message",
 			InputEvent: withSubjectEvent,
-			WantEvent:  CopyEventContext(withSubjectEvent),
+			WantEvent:  withSubjectEvent,
 			Transformers: binding.TransformerFactories{UpdateAttribute(spec.DataContentType, func(i interface{}) (interface{}, error) {
 				return "text/plain", nil
 			})},
@@ -127,13 +127,13 @@ func TestUpdateExtension(t *testing.T) {
 		{
 			Name:         "No change in Event message",
 			InputEvent:   e,
-			WantEvent:    CopyEventContext(e),
+			WantEvent:    e,
 			Transformers: binding.TransformerFactories{UpdateExtension("ccc", updateFunc)},
 		},
 		{
 			Name:         "Update extension 'aaa' in Mock Structured message",
 			InputEvent:   e,
-			WantEvent:    CopyEventContext(updatedExtensionEvent),
+			WantEvent:    updatedExtensionEvent,
 			Transformers: binding.TransformerFactories{UpdateExtension("aaa", updateFunc)},
 		},
 		{
@@ -145,7 +145,7 @@ func TestUpdateExtension(t *testing.T) {
 		{
 			Name:         "Update extension 'aaa' in Event message",
 			InputEvent:   e,
-			WantEvent:    CopyEventContext(updatedExtensionEvent),
+			WantEvent:    updatedExtensionEvent,
 			Transformers: binding.TransformerFactories{UpdateExtension("aaa", updateFunc)},
 		},
 	})
