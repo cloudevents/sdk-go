@@ -4,8 +4,6 @@ import (
 	"context"
 	"testing"
 
-	test2 "github.com/cloudevents/sdk-go/pkg/binding/test"
-
 	"github.com/stretchr/testify/require"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
@@ -16,6 +14,7 @@ import (
 type toEventTestCase struct {
 	name    string
 	message binding.Message
+	event   event.Event
 	want    event.Event
 }
 
@@ -25,43 +24,50 @@ func TestToEvent(t *testing.T) {
 	for _, v := range test.Events() {
 		tests = append(tests, []toEventTestCase{
 			{
-				name:    "From mock structured with payload/" + test2.NameOf(v),
+				name:    "From mock structured with payload/" + test.NameOf(v),
 				message: test.MustCreateMockStructuredMessage(v),
 				want:    v,
 			},
 			{
-				name:    "From mock structured without payload/" + test2.NameOf(v),
+				name:    "From mock structured without payload/" + test.NameOf(v),
 				message: test.MustCreateMockStructuredMessage(v),
 				want:    v,
 			},
 			{
-				name:    "From mock binary with payload/" + test2.NameOf(v),
+				name:    "From mock binary with payload/" + test.NameOf(v),
 				message: test.MustCreateMockBinaryMessage(v),
 				want:    v,
 			},
 			{
-				name:    "From mock binary without payload/" + test2.NameOf(v),
+				name:    "From mock binary without payload/" + test.NameOf(v),
 				message: test.MustCreateMockBinaryMessage(v),
 				want:    v,
 			},
 			{
-				name:    "From event with payload/" + test2.NameOf(v),
-				message: (*binding.EventMessage)(&v),
-				want:    v,
+				name:  "From event with payload/" + test.NameOf(v),
+				event: v,
+				want:  v,
 			},
 			{
-				name:    "From event without payload/" + test2.NameOf(v),
-				message: (*binding.EventMessage)(&v),
-				want:    v,
+				name:  "From event without payload/" + test.NameOf(v),
+				event: v,
+				want:  v,
 			},
 		}...)
 	}
 	for _, tt := range tests {
 		tt := tt // Don't use range variable in Run() scope
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := binding.ToEvent(context.Background(), tt.message, nil)
+			var inputMessage binding.Message
+			if tt.message != nil {
+				inputMessage = tt.message
+			} else {
+				e := test.CopyEventContext(tt.event)
+				inputMessage = binding.ToEventMessage(&e)
+			}
+			got, err := binding.ToEvent(context.Background(), inputMessage, nil)
 			require.NoError(t, err)
-			test2.AssertEventEquals(t, test2.ExToStr(t, tt.want), test2.ExToStr(t, *got))
+			test.AssertEventEquals(t, test.ExToStr(t, tt.want), test.ExToStr(t, *got))
 		})
 	}
 }
