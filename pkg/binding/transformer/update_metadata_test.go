@@ -51,7 +51,7 @@ func TestUpdateAttribute(t *testing.T) {
 		},
 		{
 			Name:         "Update subject in Event message",
-			InputMessage: binding.EventMessage(CopyEventContext(withSubjectEvent)),
+			InputEvent:   withSubjectEvent,
 			WantEvent:    CopyEventContext(updatedSubjectEvent),
 			Transformers: binding.TransformerFactories{UpdateAttribute(spec.Subject, subjectUpdateFunc)},
 		},
@@ -69,7 +69,7 @@ func TestUpdateAttribute(t *testing.T) {
 		},
 		{
 			Name:         "Update time in Event message",
-			InputMessage: binding.EventMessage(CopyEventContext(withTimeEvent)),
+			InputEvent:   withTimeEvent,
 			WantEvent:    CopyEventContext(updatedTimeEvent),
 			Transformers: binding.TransformerFactories{UpdateAttribute(spec.Time, timeUpdateFunc)},
 		},
@@ -90,9 +90,9 @@ func TestUpdateAttribute(t *testing.T) {
 			})},
 		},
 		{
-			Name:         "Do nothing with Event message",
-			InputMessage: binding.EventMessage(CopyEventContext(withSubjectEvent)),
-			WantEvent:    CopyEventContext(withSubjectEvent),
+			Name:       "Do nothing with Event message",
+			InputEvent: withSubjectEvent,
+			WantEvent:  CopyEventContext(withSubjectEvent),
 			Transformers: binding.TransformerFactories{UpdateAttribute(spec.DataContentType, func(i interface{}) (interface{}, error) {
 				return "text/plain", nil
 			})},
@@ -126,13 +126,13 @@ func TestUpdateExtension(t *testing.T) {
 		},
 		{
 			Name:         "No change in Event message",
-			InputMessage: binding.EventMessage(CopyEventContext(e)),
+			InputEvent:   e,
 			WantEvent:    CopyEventContext(e),
 			Transformers: binding.TransformerFactories{UpdateExtension("ccc", updateFunc)},
 		},
 		{
 			Name:         "Update extension 'aaa' in Mock Structured message",
-			InputMessage: MustCreateMockStructuredMessage(CopyEventContext(e)),
+			InputEvent:   e,
 			WantEvent:    CopyEventContext(updatedExtensionEvent),
 			Transformers: binding.TransformerFactories{UpdateExtension("aaa", updateFunc)},
 		},
@@ -144,7 +144,7 @@ func TestUpdateExtension(t *testing.T) {
 		},
 		{
 			Name:         "Update extension 'aaa' in Event message",
-			InputMessage: binding.EventMessage(CopyEventContext(e)),
+			InputEvent:   e,
 			WantEvent:    CopyEventContext(updatedExtensionEvent),
 			Transformers: binding.TransformerFactories{UpdateExtension("aaa", updateFunc)},
 		},

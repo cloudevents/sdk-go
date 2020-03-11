@@ -59,14 +59,18 @@ func New(t transport.Transport, opts ...Option) (Client, error) {
 }
 
 // NewDefault provides the good defaults for the common case using an HTTP
-// Transport client. The http transport has had WithBinaryEncoding http
+// Protocol client. The http transport has had WithBinaryEncoding http
 // transport option applied to it. The client will always send Binary
 // encoding but will inspect the outbound event context and match the version.
 // The WithTimeNow, WithUUIDs and WithDataContentType("application/json")
 // client options are also applied to the client, all outbound events will have
 // a time and id set if not already present.
 func NewDefault() (Client, error) {
-	t, err := http.New(http.WithEncoding(http.Binary))
+	p, err := http.NewProtocol()
+	if err != nil {
+		return nil, err
+	}
+	t, err := http.New(p, http.WithEncoding(http.Binary))
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +93,7 @@ type ceClient struct {
 	disableTracePropagation bool
 }
 
-// Send transmits the provided event on a preconfigured Transport. Send returns
+// Send transmits the provided event on a preconfigured Protocol. Send returns
 // an error if there was an an issue validating the outbound event or the
 // transport returns an error.
 func (c *ceClient) Send(ctx context.Context, event event.Event) error {
@@ -140,7 +144,7 @@ func (c *ceClient) obsSend(ctx context.Context, event event.Event) error {
 	return c.transport.Send(ctx, event)
 }
 
-// Request transmits the provided event on a preconfigured Transport. Request
+// Request transmits the provided event on a preconfigured Protocol. Request
 // returns a response event if there is a response or an error if there was an
 // an issue validating the outbound event or the transport returns an error.
 func (c *ceClient) Request(ctx context.Context, event event.Event) (*event.Event, error) {

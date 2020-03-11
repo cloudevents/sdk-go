@@ -66,7 +66,7 @@ func NewMessage(key []byte, value []byte, contentType string, headers map[string
 				return nil, errors.Wrap(err, "Error while trying to convert the kafka message to event")
 			}
 			event.SetExtension("key", string(key))
-			return binding.EventMessage(event), nil
+			return (*binding.EventMessage)(&event), nil
 		} else {
 			return &Message{
 				Key:         key,

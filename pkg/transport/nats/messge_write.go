@@ -11,9 +11,9 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
 )
 
-// Fill the provided amqpMessage with the message m.
+// Fill the provided natsMessage with the bindings.Message m.
 // Using context you can tweak the encoding processing (more details on binding.Write documentation).
-func WriteNATSMessage(ctx context.Context, m binding.Message, natsMessage *nats.Msg, transformers binding.TransformerFactories) error {
+func WriteMessage(ctx context.Context, m binding.Message, natsMessage *nats.Msg, transformers binding.TransformerFactories) error {
 	structuredWriter := (*natsMessageWriter)(natsMessage)
 
 	_, err := binding.Write(

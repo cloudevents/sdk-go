@@ -28,7 +28,6 @@ type Message struct {
 
 	format  format.Format
 	version spec.Version
-	resp    binding.Message
 }
 
 // Check if http.Message implements binding.Message
@@ -113,20 +112,12 @@ func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) 
 	return encoder.End()
 }
 
-func (m *Message) Response(ctx context.Context, resp binding.Message) {
-	// TODO: this should fail if not in request mode.
-	m.resp = resp
-}
-
 func (m *Message) Finish(err error) error {
 	if m.BodyReader != nil {
 		_ = m.BodyReader.Close()
 	}
 	if m.OnFinish != nil {
 		return m.OnFinish(err)
-	}
-	if m.resp != nil {
-		return m.resp.Finish(err)
 	}
 	return nil
 }

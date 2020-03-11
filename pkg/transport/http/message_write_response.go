@@ -14,9 +14,9 @@ import (
 
 // Fill the provided httpResponse with the message m.
 // Using context you can tweak the encoding processing (more details on binding.Write documentation).
-func EncodeHttpResponse(ctx context.Context, m binding.Message, httpResponse *http.Response, transformers binding.TransformerFactories) error {
-	structuredWriter := (*httpResponseEncoder)(httpResponse)
-	binaryWriter := (*httpResponseEncoder)(httpResponse)
+func WriteHttpResponse(ctx context.Context, m binding.Message, httpResponse *http.Response, transformers binding.TransformerFactories) error {
+	structuredWriter := (*httpResponseWriter)(httpResponse)
+	binaryWriter := (*httpResponseWriter)(httpResponse)
 
 	_, err := binding.Write(
 		ctx,
@@ -28,28 +28,28 @@ func EncodeHttpResponse(ctx context.Context, m binding.Message, httpResponse *ht
 	return err
 }
 
-type httpResponseEncoder http.Response
+type httpResponseWriter http.Response
 
-func (b *httpResponseEncoder) SetStructuredEvent(ctx context.Context, format format.Format, event io.Reader) error {
+func (b *httpResponseWriter) SetStructuredEvent(ctx context.Context, format format.Format, event io.Reader) error {
 	b.Header.Set(ContentType, format.MediaType())
 	b.Body = ioutil.NopCloser(event)
 	return nil
 }
 
-func (b *httpResponseEncoder) Start(ctx context.Context) error {
+func (b *httpResponseWriter) Start(ctx context.Context) error {
 	return nil
 }
 
-func (b *httpResponseEncoder) End() error {
+func (b *httpResponseWriter) End() error {
 	return nil
 }
 
-func (b *httpResponseEncoder) SetData(reader io.Reader) error {
+func (b *httpResponseWriter) SetData(reader io.Reader) error {
 	b.Body = ioutil.NopCloser(reader)
 	return nil
 }
 
-func (b *httpResponseEncoder) SetAttribute(attribute spec.Attribute, value interface{}) error {
+func (b *httpResponseWriter) SetAttribute(attribute spec.Attribute, value interface{}) error {
 	// Http headers, everything is a string!
 	s, err := types.Format(value)
 	if err != nil {
@@ -64,7 +64,7 @@ func (b *httpResponseEncoder) SetAttribute(attribute spec.Attribute, value inter
 	return nil
 }
 
-func (b *httpResponseEncoder) SetExtension(name string, value interface{}) error {
+func (b *httpResponseWriter) SetExtension(name string, value interface{}) error {
 	// Http headers, everything is a string!
 	s, err := types.Format(value)
 	if err != nil {
@@ -74,5 +74,5 @@ func (b *httpResponseEncoder) SetExtension(name string, value interface{}) error
 	return nil
 }
 
-var _ binding.StructuredWriter = (*httpResponseEncoder)(nil) // Test it conforms to the interface
-var _ binding.BinaryWriter = (*httpResponseEncoder)(nil)     // Test it conforms to the interface
+var _ binding.StructuredWriter = (*httpResponseWriter)(nil) // Test it conforms to the interface
+var _ binding.BinaryWriter = (*httpResponseWriter)(nil)     // Test it conforms to the interface

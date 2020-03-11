@@ -96,12 +96,17 @@ func _main(args []string, env envConfig) int {
 		// HTTP
 		for _, encoding := range []cloudeventshttp.Encoding{cloudeventshttp.Default, cloudeventshttp.Binary, cloudeventshttp.Structured} {
 
-			t, err := cloudeventshttp.New(
-				cloudeventshttp.WithTarget(env.HTTPTarget),
+			p, err := cloudeventshttp.NewProtocol(cloudeventshttp.WithTarget(env.HTTPTarget))
+			if err != nil {
+				log.Printf("failed to create protocol, %v", err)
+				return 1
+			}
+
+			t, err := cloudeventshttp.New(p,
 				cloudeventshttp.WithEncoding(encoding),
 			)
 			if err != nil {
-				log.Printf("failed to create client, %v", err)
+				log.Printf("failed to create transport, %v", err)
 				return 1
 			}
 
@@ -118,27 +123,23 @@ func _main(args []string, env envConfig) int {
 		}
 
 		// NATS
-		for _, encoding := range []cloudeventsnats.Encoding{cloudeventsnats.Default, cloudeventsnats.StructuredV03} {
-
-			t, err := cloudeventsnats.New(
-				env.NATSServer,
-				env.Subject,
-				cloudeventsnats.WithEncoding(encoding),
-			)
-			if err != nil {
-				log.Printf("failed to create client, %v", err)
-				return 1
-			}
-			if err := doDemo(
-				t,
-				"com.cloudevents.sample.nats.sent",
-				fmt.Sprintf("Hello, %s using %s!", encoding, contentType),
-				contentType,
-				*source,
-			); err != nil {
-				log.Printf("failed to do nats demo: %v, %s", err, contentType)
-				return 1
-			}
+		t, err := cloudeventsnats.New(
+			env.NATSServer,
+			env.Subject,
+		)
+		if err != nil {
+			log.Printf("failed to create client, %v", err)
+			return 1
+		}
+		if err := doDemo(
+			t.Transport(),
+			"com.cloudevents.sample.nats.sent",
+			fmt.Sprintf("Hello NATS, using %s!", contentType),
+			contentType,
+			*source,
+		); err != nil {
+			log.Printf("failed to do nats demo: %v, %s", err, contentType)
+			return 1
 		}
 	}
 
@@ -146,7 +147,6 @@ func _main(args []string, env envConfig) int {
 }
 
 func doDemo(t transport.Transport, eventType, message, contentType string, source url.URL) error {
-
 	c, err := client.New(t,
 		client.WithUUIDs(),
 		client.WithTimeNow(),

@@ -8,7 +8,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
 	"github.com/cloudevents/sdk-go/pkg/binding/test"
 	"github.com/cloudevents/sdk-go/pkg/types"
@@ -55,7 +54,7 @@ func TestSetAttribute(t *testing.T) {
 		},
 		{
 			Name:         "Add time to Event message",
-			InputMessage: binding.EventMessage(test.CopyEventContext(e)),
+			InputEvent:   e,
 			WantEvent:    eventWithInitialValue,
 			Transformers: transformers,
 		},
@@ -73,7 +72,7 @@ func TestSetAttribute(t *testing.T) {
 		},
 		{
 			Name:         "Update time in Event message",
-			InputMessage: binding.EventMessage(test.CopyEventContext(eventWithInitialValue)),
+			InputEvent:   eventWithInitialValue,
 			WantEvent:    eventWithUpdatedValue,
 			Transformers: transformers,
 		},
@@ -125,7 +124,7 @@ func TestSetExtension(t *testing.T) {
 		},
 		{
 			Name:         "Add exnum to Event message",
-			InputMessage: binding.EventMessage(test.CopyEventContext(e)),
+			InputEvent:   e,
 			WantEvent:    eventWithInitialValue,
 			Transformers: transformers,
 		},
@@ -143,7 +142,7 @@ func TestSetExtension(t *testing.T) {
 		},
 		{
 			Name:         "Update exnum in Event message",
-			InputMessage: binding.EventMessage(test.CopyEventContext(eventWithInitialValue)),
+			InputEvent:   eventWithInitialValue,
 			WantEvent:    eventWithUpdatedValue,
 			Transformers: transformers,
 		},

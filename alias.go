@@ -35,15 +35,16 @@ type Timestamp = types.Timestamp
 type URLRef = types.URLRef
 type URIRef = types.URIRef
 
-// HTTP Transport
+// HTTP Protocol
 
 type HTTPOption http.Option
+type HTTPProtocolOption http.ProtocolOption
 
-type HTTPTransport = http.Transport
+type HTTPTransport = http.Protocol
 type HTTPEncoding = http.Encoding
 
 const (
-	// Encoding
+	// ReadEncoding
 
 	ApplicationXML                  = event.ApplicationXML
 	ApplicationJSON                 = event.ApplicationJSON
@@ -104,11 +105,12 @@ var (
 	ParseURIRef    = types.ParseURIRef
 	ParseURI       = types.ParseURI
 
-	// HTTP Transport
+	// HTTP Protocol
 
 	NewHTTPTransport = http.New
+	NewHTTPProtocol  = http.NewProtocol
 
-	// HTTP Transport Options
+	// HTTP Protocol Options
 
 	WithTarget             = http.WithTarget
 	WitHHeader             = http.WithHeader

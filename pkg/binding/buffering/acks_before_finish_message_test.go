@@ -25,7 +25,7 @@ func TestWithAcksBeforeFinish(t *testing.T) {
 	}
 
 	finishCalled := false
-	finishMessage := binding.WithFinish(binding.EventMessage(testEvent), func(err error) {
+	finishMessage := binding.WithFinish((*binding.EventMessage)(&testEvent), func(err error) {
 		finishCalled = true
 	})
 
@@ -58,7 +58,7 @@ func TestCopyAndWithAcksBeforeFinish(t *testing.T) {
 	}
 
 	finishCalled := false
-	finishMessage := binding.WithFinish(binding.EventMessage(testEvent), func(err error) {
+	finishMessage := binding.WithFinish((*binding.EventMessage)(&testEvent), func(err error) {
 		finishCalled = true
 	})
 

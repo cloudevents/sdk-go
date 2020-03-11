@@ -9,15 +9,18 @@ import (
 	"time"
 )
 
+// ProtocolOption is the function signature required to be considered an http.ProtocolOption.
+type ProtocolOption func(*Protocol) error
+
 // Option is the function signature required to be considered an http.Option.
 type Option func(*Transport) error
 
 // WithTarget sets the outbound recipient of cloudevents when using an HTTP
 // request.
-func WithTarget(targetUrl string) Option {
-	return func(t *Transport) error {
-		if t == nil {
-			return fmt.Errorf("http target option can not set nil transport")
+func WithTarget(targetUrl string) ProtocolOption {
+	return func(p *Protocol) error {
+		if p == nil {
+			return fmt.Errorf("http protocol option can not set nil protocol")
 		}
 		targetUrl = strings.TrimSpace(targetUrl)
 		if targetUrl != "" {
@@ -28,15 +31,14 @@ func WithTarget(targetUrl string) Option {
 				return fmt.Errorf("http target option failed to parse target url: %s", err.Error())
 			}
 
-			t.Target = target
-			// TODO: it might make sense to go back to using an http request that is pre-built to allow customization.
-			//
-			//if t.Req == nil {
-			//	t.Req = &nethttp.Request{
-			//		Method: nethttp.MethodPost,
-			//	}
-			//}
-			//t.Req.URL = target
+			p.Target = target
+
+			if p.RequestTemplate == nil {
+				p.RequestTemplate = &nethttp.Request{
+					Method: nethttp.MethodPost,
+				}
+			}
+			p.RequestTemplate.URL = target
 
 			return nil
 		}
@@ -46,20 +48,20 @@ func WithTarget(targetUrl string) Option {
 
 // WithHeader sets an additional default outbound header for all cloudevents
 // when using an HTTP request.
-func WithHeader(key, value string) Option {
-	return func(t *Transport) error {
-		if t == nil {
+func WithHeader(key, value string) ProtocolOption {
+	return func(p *Protocol) error {
+		if p == nil {
 			return fmt.Errorf("http header option can not set nil transport")
 		}
 		key = strings.TrimSpace(key)
 		if key != "" {
-			if t.RequestTemplate == nil {
-				t.RequestTemplate = &nethttp.Request{}
+			if p.RequestTemplate == nil {
+				p.RequestTemplate = &nethttp.Request{}
 			}
-			if t.RequestTemplate.Header == nil {
-				t.RequestTemplate.Header = nethttp.Header{}
+			if p.RequestTemplate.Header == nil {
+				p.RequestTemplate.Header = nethttp.Header{}
 			}
-			t.RequestTemplate.Header.Add(key, value)
+			p.RequestTemplate.Header.Add(key, value)
 			return nil
 		}
 		return fmt.Errorf("http header option was empty string")

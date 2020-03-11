@@ -2,7 +2,6 @@ package http_binding_test
 
 import (
 	"context"
-	nethttp "net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
@@ -80,7 +79,7 @@ func TestSendEventReceiveBinary(t *testing.T) {
 	defer close()
 	EachEvent(t, Events(), func(t *testing.T, eventIn event.Event) {
 		eventIn = ExToStr(t, eventIn)
-		in := binding.EventMessage(eventIn)
+		in := (*binding.EventMessage)(&eventIn)
 		test.SendReceive(t, context.Background(), in, s, r, func(out binding.Message) {
 			eventOut := MustToEvent(t, context.Background(), out)
 			require.Equal(t, binding.EncodingBinary, out.ReadEncoding())
@@ -89,13 +88,14 @@ func TestSendEventReceiveBinary(t *testing.T) {
 	})
 }
 
-func testSenderReceiver(t testing.TB, options ...http.SenderOptionFunc) (func(), bindings.Sender, bindings.Receiver) {
-	r := http.NewReceiver() // Parameters? Capacity, sync.
-	srv := httptest.NewServer(r)
+func testSenderReceiver(t testing.TB, options ...http.ProtocolOption) (func(), bindings.Sender, bindings.Receiver) {
+	p, err := http.NewProtocol(options...)
+	require.NoError(t, err)
+	srv := httptest.NewServer(p)
 	u, err := url.Parse(srv.URL)
 	require.NoError(t, err)
-	s := http.NewSender(&nethttp.Client{}, u, options...) // Capacity, sync etc.
-	return func() { srv.Close() }, s, r
+	p.Target = u
+	return func() { srv.Close() }, p, p
 }
 
 func BenchmarkSendReceive(b *testing.B) {

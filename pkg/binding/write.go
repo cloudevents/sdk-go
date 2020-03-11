@@ -92,7 +92,7 @@ func Write(
 		return enc, err
 	}
 
-	message = EventMessage(*e)
+	message = (*EventMessage)(e)
 
 	if GetOrDefaultFromCtx(ctx, PREFERRED_EVENT_ENCODING, EncodingBinary).(Encoding) == EncodingStructured {
 		if structuredWriter != nil {

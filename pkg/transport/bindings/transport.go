@@ -21,6 +21,7 @@ type BindingTransport struct {
 	Sender    bindings.Sender
 	Requester bindings.Requester
 	Receiver  bindings.Receiver
+	Responder bindings.Responder
 	// SenderContextDecorators can be used to decorate the context passed to the Sender.Send() method
 	SenderContextDecorators []func(context.Context) context.Context
 	handler                 transport.Delivery
@@ -49,7 +50,7 @@ func (t *BindingTransport) Send(ctx context.Context, e event.Event) error {
 	for _, f := range t.SenderContextDecorators {
 		ctx = f(ctx)
 	}
-	return t.Sender.Send(ctx, binding.EventMessage(e))
+	return t.Sender.Send(ctx, (*binding.EventMessage)(&e))
 }
 
 func (t *BindingTransport) Request(ctx context.Context, e event.Event) (*event.Event, error) {
@@ -62,7 +63,7 @@ func (t *BindingTransport) Request(ctx context.Context, e event.Event) (*event.E
 
 	// If provided a requester, use it to do request/response.
 	var resp *event.Event
-	msg, err := t.Requester.Request(ctx, binding.EventMessage(e))
+	msg, err := t.Requester.Request(ctx, (*binding.EventMessage)(&e))
 	defer func() {
 		if err := msg.Finish(err); err != nil {
 			cecontext.LoggerFrom(ctx).Warnw("failed calling message.Finish", zap.Error(err))
@@ -82,21 +83,32 @@ func (t *BindingTransport) SetDelivery(r transport.Delivery) {
 	t.handler = r
 }
 
+// Legacy Transport StartReceiver is really start Responder.
 func (t *BindingTransport) StartReceiver(ctx context.Context) error {
+	var msg binding.Message
+	var err error
+	var respFn transport.ResponseFn
 	for {
-		msg, err := t.Receiver.Receive(ctx)
+		if t.Responder != nil {
+			msg, respFn, err = t.Responder.Respond(ctx)
+		} else if t.Receiver != nil {
+			msg, err = t.Receiver.Receive(ctx)
+		} else {
+			return errors.New("responder and receiver not set")
+		}
+
 		if err == io.EOF { // Normal close
 			return nil
 		} else if err != nil {
 			return err
 		}
-		if err := t.handle(ctx, msg); err != nil {
+		if err := t.handle(ctx, msg, respFn); err != nil {
 			return err
 		}
 	}
 }
 
-func (t *BindingTransport) handle(ctx context.Context, m binding.Message) (err error) {
+func (t *BindingTransport) handle(ctx context.Context, m binding.Message, respFn transport.ResponseFn) (err error) {
 	defer func() {
 		if err2 := m.Finish(err); err2 == nil {
 			err = err2
@@ -118,8 +130,8 @@ func (t *BindingTransport) handle(ctx context.Context, m binding.Message) (err e
 
 	if eventResp.Event != nil {
 		// TODO: this does not give control over the http response code at the moment.
-		if rs, ok := m.(binding.ResponseMessage); ok {
-			rs.Response(ctx, binding.EventMessage(*eventResp.Event))
+		if respFn != nil {
+			return respFn(ctx, (*binding.EventMessage)(eventResp.Event))
 		}
 	}
 
