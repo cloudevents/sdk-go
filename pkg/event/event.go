@@ -143,7 +143,9 @@ func (e Event) Clone() Event {
 }
 
 func (e Event) cloneData() interface{} {
-	if bytes, ok := e.Data.([]byte); ok {
+	if e.Data == nil {
+		return nil
+	} else if bytes, ok := e.Data.([]byte); ok {
 		new := make([]byte, len(bytes))
 		copy(new, bytes)
 		return new
