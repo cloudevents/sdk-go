@@ -21,9 +21,6 @@ type Client = client.Client
 
 type Event = event.Event
 
-// Deprecated:
-type EventResponse = event.EventResponse
-
 // Context
 
 type EventContext = event.EventContext

@@ -44,9 +44,9 @@ type tester struct {
 	got  chan interface{} // ce.Event or error
 }
 
-func (t *tester) Delivery(_ context.Context, e event.Event, _ *event.EventResponse) error {
+func (t *tester) Delivery(_ context.Context, e event.Event) (*event.Event, event.Result) {
 	t.got <- e
-	return nil
+	return nil, nil
 }
 
 func (t *tester) Close() {

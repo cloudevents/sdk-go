@@ -160,12 +160,12 @@ type benchDelivery struct {
 	fn transport.DeliveryFunc
 }
 
-func (b *benchDelivery) Delivery(ctx context.Context, e event.Event, er *event.EventResponse) error {
-	return b.fn(ctx, e, er)
+func (b *benchDelivery) Delivery(ctx context.Context, e event.Event) (*event.Event, event.Result) {
+	return b.fn(ctx, e)
 }
 
 func dispatchReceiver(clients []cloudevents.Client, outputSenders int) transport.Delivery {
-	return &benchDelivery{fn: func(ctx context.Context, e cloudevents.Event, er *cloudevents.EventResponse) error {
+	return &benchDelivery{fn: func(ctx context.Context, e cloudevents.Event) (*cloudevents.Event, error) {
 		var wg sync.WaitGroup
 		for i := 0; i < outputSenders; i++ {
 			wg.Add(1)
@@ -175,8 +175,7 @@ func dispatchReceiver(clients []cloudevents.Client, outputSenders int) transport
 			}(clients[i])
 		}
 		wg.Wait()
-		er.RespondWith(200, nil)
-		return nil
+		return nil, nil
 	}}
 }
 

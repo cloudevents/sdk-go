@@ -49,7 +49,7 @@ type Example struct {
 	Message  string `json:"message"`
 }
 
-func receive(ctx context.Context, event event.Event, resp *event.EventResponse) error {
+func receive(ctx context.Context, event event.Event) error {
 	fmt.Printf("Got Event Context: %+v\n", event.Context)
 
 	data := &Example{}

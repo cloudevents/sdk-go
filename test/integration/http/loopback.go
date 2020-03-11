@@ -89,10 +89,8 @@ func ClientLoopback(t *testing.T, tc TapTest, opts ...interface{}) {
 	recvCtx, recvCancel := context.WithCancel(context.Background())
 
 	go func() {
-		if err := ce.StartReceiver(recvCtx, func(resp *cloudevents.EventResponse) {
-			if tc.resp != nil {
-				resp.RespondWith(200, tc.resp)
-			}
+		if err := ce.StartReceiver(recvCtx, func() *cloudevents.Event {
+			return tc.resp
 		}); err != nil {
 			t.Log(err)
 		}

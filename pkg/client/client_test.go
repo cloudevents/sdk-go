@@ -533,11 +533,11 @@ func TestTracedClientReceive(t *testing.T) {
 
 			ctx, cancel := context.WithCancel(context.TODO())
 			go func() {
-				err = c.StartReceiver(ctx, func(ctx context.Context, event event.Event, resp *event.EventResponse) error {
+				err = c.StartReceiver(ctx, func(ctx context.Context, event event.Event) (*event.Event, event.Result) {
 					go func() {
 						spanContexts <- trace.FromContext(ctx).SpanContext()
 					}()
-					return nil
+					return nil, nil
 				})
 				if err != nil {
 					t.Errorf("failed to start receiver %s", err.Error())

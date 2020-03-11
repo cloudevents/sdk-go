@@ -39,8 +39,6 @@ type Client interface {
 	// * func(event.Event) (*event.Event, event.Result)
 	// * func(context.Context, event.Event) *event.Event
 	// * func(context.Context, event.Event) (*event.Event, event.Result)
-	// Note: if fn returns an error, it is treated as a critical and
-	// EventResponse will not be processed.
 	StartReceiver(ctx context.Context, fn interface{}) error
 }
 
