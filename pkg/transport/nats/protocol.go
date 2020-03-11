@@ -75,7 +75,7 @@ func (t *Protocol) applyOptions(opts ...Option) error {
 // Send implements Sender.Send
 func (t *Protocol) Send(ctx context.Context, in binding.Message) error {
 	msg := &nats.Msg{}
-	if err := WriteMessage(ctx, in, msg, t.Transformers); err != nil {
+	if err := WriteMsg(ctx, in, msg, t.Transformers); err != nil {
 		return err
 	}
 	msg.Subject = t.Subject

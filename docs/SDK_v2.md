@@ -101,7 +101,7 @@ Client --> Transport (via TransportBinding) -> Protocol (implements Sender, Rece
 `Write<DataStructure>` functions read a `binding.Message` and write what is
 found into the [3pl][3pl] data structure. For example, `nats.WriteMsg` writes
 the message into a `nats.Msg`, or `http.WriteRequest` writes message into a
-`http.Reqest`.
+`http.Request`.
 
 Protocol is the thinnest wrapper for the [3pl][3pl] to implement Sender and
 Receiver.

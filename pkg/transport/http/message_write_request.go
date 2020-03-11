@@ -14,7 +14,7 @@ import (
 
 // Fill the provided httpRequest with the message m.
 // Using context you can tweak the encoding processing (more details on binding.Write documentation).
-func WriteHttpRequest(ctx context.Context, m binding.Message, httpRequest *http.Request, transformers binding.TransformerFactories) error {
+func WriteRequest(ctx context.Context, m binding.Message, httpRequest *http.Request, transformers binding.TransformerFactories) error {
 	structuredWriter := (*httpRequestWriter)(httpRequest)
 	binaryWriter := (*httpRequestWriter)(httpRequest)
 

@@ -69,7 +69,7 @@ func (p *Protocol) Request(ctx context.Context, m binding.Message) (binding.Mess
 		return nil, fmt.Errorf("not initialized: %#v", p)
 	}
 
-	if err = WriteHttpRequest(ctx, m, req, p.transformers); err != nil {
+	if err = WriteRequest(ctx, m, req, p.transformers); err != nil {
 		return nil, err
 	}
 	resp, err := p.Client.Do(req)
@@ -179,7 +179,7 @@ func (p *Protocol) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 	var fn transport.ResponseFn = func(ctx context.Context, resp binding.Message) error {
 		if resp != nil {
-			return WriteHttpResponseWriter(ctx, resp, rw, p.transformers)
+			return WriteResponseWriter(ctx, resp, rw, p.transformers)
 		}
 		return nil
 	}

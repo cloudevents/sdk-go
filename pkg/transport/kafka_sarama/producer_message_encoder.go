@@ -27,7 +27,7 @@ func WithSkipKeyExtension(ctx context.Context) context.Context {
 // Using context you can tweak the encoding processing (more details on binding.Write documentation).
 // You can skip the key extension handling decorating the context using WithSkipKeyExtension:
 // https://github.com/cloudevents/spec/blob/master/kafka-protocol-binding.md#31-key-attribute
-func WriteKafkaProducerMessage(ctx context.Context, m binding.Message, producerMessage *sarama.ProducerMessage, transformerFactories binding.TransformerFactories) error {
+func WriteProducerMessage(ctx context.Context, m binding.Message, producerMessage *sarama.ProducerMessage, transformerFactories binding.TransformerFactories) error {
 	skipKey := binding.GetOrDefaultFromCtx(ctx, SKIP_KEY_EXTENSION, false).(bool)
 
 	if skipKey {

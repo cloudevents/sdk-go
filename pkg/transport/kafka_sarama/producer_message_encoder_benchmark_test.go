@@ -43,27 +43,27 @@ func init() {
 func BenchmarkEncodeStructuredMessageSkipKey(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		ProducerMessage = &sarama.ProducerMessage{}
-		Err = kafka_sarama.WriteKafkaProducerMessage(ctxSkipKey, structuredMessageWithoutKey, ProducerMessage, nil)
+		Err = kafka_sarama.WriteProducerMessage(ctxSkipKey, structuredMessageWithoutKey, ProducerMessage, nil)
 	}
 }
 
 func BenchmarkEncodeStructuredMessage(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		ProducerMessage = &sarama.ProducerMessage{}
-		Err = kafka_sarama.WriteKafkaProducerMessage(ctx, structuredMessageWithKey, ProducerMessage, nil)
+		Err = kafka_sarama.WriteProducerMessage(ctx, structuredMessageWithKey, ProducerMessage, nil)
 	}
 }
 
 func BenchmarkEncodeBinaryMessageSkipKey(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		ProducerMessage = &sarama.ProducerMessage{}
-		Err = kafka_sarama.WriteKafkaProducerMessage(ctxSkipKey, binaryMessageWithoutKey, ProducerMessage, nil)
+		Err = kafka_sarama.WriteProducerMessage(ctxSkipKey, binaryMessageWithoutKey, ProducerMessage, nil)
 	}
 }
 
 func BenchmarkEncodeBinaryMessage(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		ProducerMessage = &sarama.ProducerMessage{}
-		Err = kafka_sarama.WriteKafkaProducerMessage(ctx, binaryMessageWithKey, ProducerMessage, nil)
+		Err = kafka_sarama.WriteProducerMessage(ctx, binaryMessageWithKey, ProducerMessage, nil)
 	}
 }
