@@ -39,13 +39,13 @@ func TestUpdateAttribute(t *testing.T) {
 	RunTransformerTests(t, context.Background(), []TransformerTestArgs{
 		{
 			Name:         "Update subject in Mock Structured message",
-			InputMessage: test.MustCreateMockStructuredMessage(withSubjectEvent.Clone()),
+			InputMessage: MustCreateMockStructuredMessage(withSubjectEvent.Clone()),
 			WantEvent:    updatedSubjectEvent.Clone(),
 			Transformers: binding.TransformerFactories{UpdateAttribute(spec.Subject, subjectUpdateFunc)},
 		},
 		{
 			Name:         "Update subject in Mock Binary message",
-			InputMessage: test.MustCreateMockBinaryMessage(withSubjectEvent.Clone()),
+			InputMessage: MustCreateMockBinaryMessage(withSubjectEvent.Clone()),
 			WantEvent:    updatedSubjectEvent.Clone(),
 			Transformers: binding.TransformerFactories{UpdateAttribute(spec.Subject, subjectUpdateFunc)},
 		},
@@ -57,13 +57,13 @@ func TestUpdateAttribute(t *testing.T) {
 		},
 		{
 			Name:         "Update time in Mock Structured message",
-			InputMessage: test.MustCreateMockStructuredMessage(withTimeEvent.Clone()),
+			InputMessage: MustCreateMockStructuredMessage(withTimeEvent.Clone()),
 			WantEvent:    updatedTimeEvent.Clone(),
 			Transformers: binding.TransformerFactories{UpdateAttribute(spec.Time, timeUpdateFunc)},
 		},
 		{
 			Name:         "Update time in Mock Binary message",
-			InputMessage: test.MustCreateMockBinaryMessage(withTimeEvent.Clone()),
+			InputMessage: MustCreateMockBinaryMessage(withTimeEvent.Clone()),
 			WantEvent:    updatedTimeEvent.Clone(),
 			Transformers: binding.TransformerFactories{UpdateAttribute(spec.Time, timeUpdateFunc)},
 		},
@@ -75,7 +75,7 @@ func TestUpdateAttribute(t *testing.T) {
 		},
 		{
 			Name:         "Do nothing with Mock Structured message",
-			InputMessage: test.MustCreateMockStructuredMessage(withSubjectEvent.Clone()),
+			InputMessage: MustCreateMockStructuredMessage(withSubjectEvent.Clone()),
 			WantEvent:    withSubjectEvent.Clone(),
 			Transformers: binding.TransformerFactories{UpdateAttribute(spec.DataContentType, func(i interface{}) (interface{}, error) {
 				return "text/plain", nil
@@ -83,7 +83,7 @@ func TestUpdateAttribute(t *testing.T) {
 		},
 		{
 			Name:         "Do nothing with Mock Binary message",
-			InputMessage: test.MustCreateMockBinaryMessage(withSubjectEvent.Clone()),
+			InputMessage: MustCreateMockBinaryMessage(withSubjectEvent.Clone()),
 			WantEvent:    withSubjectEvent.Clone(),
 			Transformers: binding.TransformerFactories{UpdateAttribute(spec.DataContentType, func(i interface{}) (interface{}, error) {
 				return "text/plain", nil
@@ -114,13 +114,13 @@ func TestUpdateExtension(t *testing.T) {
 	RunTransformerTests(t, context.Background(), []TransformerTestArgs{
 		{
 			Name:         "No change in Mock Structured message",
-			InputMessage: test.MustCreateMockStructuredMessage(e.Clone()),
+			InputMessage: MustCreateMockStructuredMessage(e.Clone()),
 			WantEvent:    e.Clone(),
 			Transformers: binding.TransformerFactories{UpdateExtension("ccc", updateFunc)},
 		},
 		{
 			Name:         "No change in Mock Binary message",
-			InputMessage: test.MustCreateMockBinaryMessage(e.Clone()),
+			InputMessage: MustCreateMockBinaryMessage(e.Clone()),
 			WantEvent:    e.Clone(),
 			Transformers: binding.TransformerFactories{UpdateExtension("ccc", updateFunc)},
 		},
@@ -138,7 +138,7 @@ func TestUpdateExtension(t *testing.T) {
 		},
 		{
 			Name:         "Update extension 'aaa' in Mock Binary message",
-			InputMessage: test.MustCreateMockBinaryMessage(e.Clone()),
+			InputMessage: MustCreateMockBinaryMessage(e.Clone()),
 			WantEvent:    updatedExtensionEvent.Clone(),
 			Transformers: binding.TransformerFactories{UpdateExtension("aaa", updateFunc)},
 		},

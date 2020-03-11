@@ -30,13 +30,13 @@ func TestAddAttribute(t *testing.T) {
 	RunTransformerTests(t, context.Background(), []TransformerTestArgs{
 		{
 			Name:         "No change to id to Mock Structured message",
-			InputMessage: test.MustCreateMockStructuredMessage(e.Clone()),
+			InputMessage: MustCreateMockStructuredMessage(e.Clone()),
 			WantEvent:    e.Clone(),
 			Transformers: binding.TransformerFactories{AddAttribute(spec.ID, "new-id")},
 		},
 		{
 			Name:         "No change to id to Mock Binary message",
-			InputMessage: test.MustCreateMockBinaryMessage(e.Clone()),
+			InputMessage: MustCreateMockBinaryMessage(e.Clone()),
 			WantEvent:    e.Clone(),
 			Transformers: binding.TransformerFactories{AddAttribute(spec.ID, "new-id")},
 		},
@@ -48,13 +48,13 @@ func TestAddAttribute(t *testing.T) {
 		},
 		{
 			Name:         "Add subject to Mock Structured message",
-			InputMessage: test.MustCreateMockStructuredMessage(e.Clone()),
+			InputMessage: MustCreateMockStructuredMessage(e.Clone()),
 			WantEvent:    expectedEventWithSubject,
 			Transformers: binding.TransformerFactories{AddAttribute(spec.Subject, subject)},
 		},
 		{
 			Name:         "Add subject to Mock Binary message",
-			InputMessage: test.MustCreateMockBinaryMessage(e.Clone()),
+			InputMessage: MustCreateMockBinaryMessage(e.Clone()),
 			WantEvent:    expectedEventWithSubject,
 			Transformers: binding.TransformerFactories{AddAttribute(spec.Subject, subject)},
 		},
@@ -66,13 +66,13 @@ func TestAddAttribute(t *testing.T) {
 		},
 		{
 			Name:         "Add time to Mock Structured message",
-			InputMessage: test.MustCreateMockStructuredMessage(e.Clone()),
+			InputMessage: MustCreateMockStructuredMessage(e.Clone()),
 			WantEvent:    expectedEventWithTime,
 			Transformers: binding.TransformerFactories{AddAttribute(spec.Time, timestamp)},
 		},
 		{
 			Name:         "Add time to Mock Binary message",
-			InputMessage: test.MustCreateMockBinaryMessage(e.Clone()),
+			InputMessage: MustCreateMockBinaryMessage(e.Clone()),
 			WantEvent:    expectedEventWithTime,
 			Transformers: binding.TransformerFactories{AddAttribute(spec.Time, timestamp)},
 		},
@@ -97,13 +97,13 @@ func TestAddExtension(t *testing.T) {
 	RunTransformerTests(t, context.Background(), []TransformerTestArgs{
 		{
 			Name:         "No change to extension 'aaa' to Mock Structured message",
-			InputMessage: test.MustCreateMockStructuredMessage(expectedEventWithExtension.Clone()),
+			InputMessage: MustCreateMockStructuredMessage(expectedEventWithExtension.Clone()),
 			WantEvent:    expectedEventWithExtension.Clone(),
 			Transformers: binding.TransformerFactories{AddExtension(extName, extValue)},
 		},
 		{
 			Name:         "No change to extension 'aaa' to Mock Binary message",
-			InputMessage: test.MustCreateMockBinaryMessage(expectedEventWithExtension.Clone()),
+			InputMessage: MustCreateMockBinaryMessage(expectedEventWithExtension.Clone()),
 			WantEvent:    expectedEventWithExtension.Clone(),
 			Transformers: binding.TransformerFactories{AddExtension(extName, extValue)},
 		},
@@ -115,13 +115,13 @@ func TestAddExtension(t *testing.T) {
 		},
 		{
 			Name:         "Add extension 'aaa' to Mock Structured message",
-			InputMessage: test.MustCreateMockStructuredMessage(e.Clone()),
+			InputMessage: MustCreateMockStructuredMessage(e.Clone()),
 			WantEvent:    expectedEventWithExtension.Clone(),
 			Transformers: binding.TransformerFactories{AddExtension(extName, extValue)},
 		},
 		{
 			Name:         "Add extension 'aaa' to Mock Binary message",
-			InputMessage: test.MustCreateMockBinaryMessage(e.Clone()),
+			InputMessage: MustCreateMockBinaryMessage(e.Clone()),
 			WantEvent:    expectedEventWithExtension.Clone(),
 			Transformers: binding.TransformerFactories{AddExtension(extName, extValue)},
 		},
