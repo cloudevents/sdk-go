@@ -95,12 +95,13 @@ bit -> Message -> bits
 ## Interfaces (Current pre-v2)
 
 ```
-Client --> Transport (via TransportBinding) -> Protocol (implements Sender, Receiver)* -> Message Writers
+Client --> Transport (via TransportBinding) -> Protocol (implements Sender, Receiver)* -> Write<DataStructure>
 ```
 
-Message Writers read a Message and write what is found into a intermediate
-object that is defined by the [3pl][3pl]. For example, this would ne a nats.Msg
-or http.Request.
+`Write<DataStructure>` functions read a `binding.Message` and write what is
+found into the [3pl][3pl] data structure. For example, `nats.WriteMsg` writes
+the message into a `nats.Msg`, or `http.WriteRequest` writes message into a
+`http.Reqest`.
 
 Protocol is the thinnest wrapper for the [3pl][3pl] to implement Sender and
 Receiver.
