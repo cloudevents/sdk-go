@@ -39,7 +39,7 @@ func TestSendReceive(t *testing.T) {
 	sr := make(dummySR)
 	allIn := []binding.Message{}
 	for _, e := range Events() {
-		allIn = append(allIn, binding.EventMessage(e))
+		allIn = append(allIn, binding.NewEventMessage(&e))
 	}
 
 	var allOut []binding.Message

@@ -52,13 +52,13 @@ func TestCopyMessage(t *testing.T) {
 			{
 				name:     "From event with payload/" + NameOf(v),
 				encoding: binding.EncodingEvent,
-				message:  binding.EventMessage(v),
+				message:  (*binding.EventMessage)(&v),
 				want:     v,
 			},
 			{
 				name:     "From event without payload/" + NameOf(v),
 				encoding: binding.EncodingEvent,
-				message:  binding.EventMessage(v),
+				message:  (*binding.EventMessage)(&v),
 				want:     v,
 			},
 		}...)

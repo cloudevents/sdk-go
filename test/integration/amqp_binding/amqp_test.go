@@ -53,7 +53,7 @@ func TestSendEventReceiveStruct(t *testing.T) {
 	defer c.Close()
 	EachEvent(t, Events(), func(t *testing.T, e event.Event) {
 		eventIn := ExToStr(t, e)
-		in := binding.EventMessage(eventIn)
+		in := (*binding.EventMessage)(&eventIn)
 		test.SendReceive(t, binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingStructured), in, s, r, func(out binding.Message) {
 			eventOut := MustToEvent(t, context.Background(), out)
 			assert.Equal(t, out.ReadEncoding(), binding.EncodingStructured)
@@ -67,7 +67,7 @@ func TestSendEventReceiveBinary(t *testing.T) {
 	defer c.Close()
 	EachEvent(t, Events(), func(t *testing.T, e event.Event) {
 		eventIn := ExToStr(t, e)
-		in := binding.EventMessage(eventIn)
+		in := (*binding.EventMessage)(&eventIn)
 		test.SendReceive(t, context.Background(), in, s, r, func(out binding.Message) {
 			eventOut := MustToEvent(t, context.Background(), out)
 			assert.Equal(t, out.ReadEncoding(), binding.EncodingBinary)

@@ -27,7 +27,7 @@ func TestTransportSend(t *testing.T) {
 
 	result := <-messageChannel
 
-	test.AssertEventEquals(t, ev, event.Event(result.(binding.EventMessage)))
+	test.AssertEventEquals(t, ev, event.Event(*(result.(*binding.EventMessage))))
 }
 
 func TestTransportReceive(t *testing.T) {
@@ -39,7 +39,7 @@ func TestTransportReceive(t *testing.T) {
 	c, err := client.New(transport)
 	require.NoError(t, err)
 
-	messageChannel <- binding.EventMessage(ev)
+	messageChannel <- (*binding.EventMessage)(&ev)
 
 	go func() {
 		err = c.StartReceiver(context.Background(), func(event event.Event) {

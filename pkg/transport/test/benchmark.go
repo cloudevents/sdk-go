@@ -16,7 +16,8 @@ import (
 // Simple send/receive benchmark.
 // Requires a sender and receiver that are connected to each other.
 func BenchmarkSendReceive(b *testing.B, s bindings.Sender, r bindings.Receiver) {
-	m := binding.EventMessage(FullEvent())
+	e := FullEvent()
+	m := (*binding.EventMessage)(&e)
 	ctx := context.Background()
 	b.ResetTimer() // Don't count setup.
 	for i := 0; i < b.N; i++ {

@@ -13,7 +13,7 @@ type Format interface {
 	// MediaType identifies the format
 	MediaType() string
 	// Marshal event to bytes
-	Marshal(event.Event) ([]byte, error)
+	Marshal(*event.Event) ([]byte, error)
 	// Unmarshal bytes to event
 	Unmarshal([]byte, *event.Event) error
 }
@@ -23,7 +23,7 @@ type Format interface {
 type UnknownFormat string
 
 func (uf UnknownFormat) MediaType() string                    { return string(uf) }
-func (uf UnknownFormat) Marshal(event.Event) ([]byte, error)  { return nil, unknown(uf.MediaType()) }
+func (uf UnknownFormat) Marshal(*event.Event) ([]byte, error) { return nil, unknown(uf.MediaType()) }
 func (uf UnknownFormat) Unmarshal([]byte, *event.Event) error { return unknown(uf.MediaType()) }
 
 // Prefix for event-format media types.
@@ -39,7 +39,7 @@ type jsonFmt struct{}
 
 func (jsonFmt) MediaType() string { return event.ApplicationCloudEventsJSON }
 
-func (jsonFmt) Marshal(e event.Event) ([]byte, error) { return json.Marshal(e) }
+func (jsonFmt) Marshal(e *event.Event) ([]byte, error) { return json.Marshal(e) }
 func (jsonFmt) Unmarshal(b []byte, e *event.Event) error {
 	err := json.Unmarshal(b, e)
 	if err != nil {
@@ -81,7 +81,7 @@ func unknown(mediaType string) error {
 func Add(f Format) { formats[f.MediaType()] = f }
 
 // Marshal an event to bytes using the mediaType event format.
-func Marshal(mediaType string, e event.Event) ([]byte, error) {
+func Marshal(mediaType string, e *event.Event) ([]byte, error) {
 	if f := formats[mediaType]; f != nil {
 		return f.Marshal(e)
 	}

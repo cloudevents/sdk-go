@@ -16,22 +16,29 @@ const (
 // EventMessage type-converts a event.Event object to implement Message.
 // This allows local event.Event objects to be sent directly via Sender.Send()
 //     s.Send(ctx, binding.EventMessage(e))
+// When an event is wrapped into a EventMessage, the original event could be
+// potentially mutated. If you need to use the Event again, after wrapping it into
+// an Event message, you should copy it before
 type EventMessage event.Event
 
-func (m EventMessage) ReadEncoding() Encoding {
+func NewEventMessage(e *event.Event) Message {
+	return (*EventMessage)(e)
+}
+
+func (m *EventMessage) ReadEncoding() Encoding {
 	return EncodingEvent
 }
 
-func (m EventMessage) ReadStructured(ctx context.Context, builder StructuredWriter) error {
+func (m *EventMessage) ReadStructured(ctx context.Context, builder StructuredWriter) error {
 	f := GetOrDefaultFromCtx(ctx, FORMAT_EVENT_STRUCTURED, format.JSON).(format.Format)
-	b, err := f.Marshal(event.Event(m))
+	b, err := f.Marshal((*event.Event)(m))
 	if err != nil {
 		return err
 	}
 	return builder.SetStructuredEvent(ctx, f, bytes.NewReader(b))
 }
 
-func (m EventMessage) ReadBinary(ctx context.Context, b BinaryWriter) (err error) {
+func (m *EventMessage) ReadBinary(ctx context.Context, b BinaryWriter) (err error) {
 	err = b.Start(ctx)
 	if err != nil {
 		return err
@@ -41,7 +48,7 @@ func (m EventMessage) ReadBinary(ctx context.Context, b BinaryWriter) (err error
 		return err
 	}
 	// Pass the body
-	body, err := (*event.Event)(&m).DataBytes()
+	body, err := (*event.Event)(m).DataBytes()
 	if err != nil {
 		return err
 	}
@@ -76,7 +83,7 @@ func eventContextToBinaryWriter(c event.EventContext, b BinaryWriter) (err error
 	return nil
 }
 
-func (EventMessage) Finish(error) error { return nil }
+func (*EventMessage) Finish(error) error { return nil }
 
 var _ Message = (*EventMessage)(nil) // Test it conforms to the interface
 

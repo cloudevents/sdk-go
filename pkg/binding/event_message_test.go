@@ -20,8 +20,8 @@ func (m *mockFormat) MediaType() string {
 	return "application/cool-mediatype"
 }
 
-func (m *mockFormat) Marshal(have event.Event) ([]byte, error) {
-	test.AssertEventEquals(m.t, m.expectedEvent, have)
+func (m *mockFormat) Marshal(have *event.Event) ([]byte, error) {
+	test.AssertEventEquals(m.t, m.expectedEvent, *have)
 	return []byte{}, nil
 }
 

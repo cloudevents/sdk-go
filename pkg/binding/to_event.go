@@ -23,12 +23,12 @@ func ToEvent(ctx context.Context, message MessageReader, transformers Transforme
 	messageEncoding := message.ReadEncoding()
 	if messageEncoding == EncodingEvent {
 		for m := message; m != nil; {
-			if em, ok := m.(EventMessage); ok {
-				e := event.Event(em)
-				if err := transformers.EventTransformer()(&e); err != nil {
+			if em, ok := m.(*EventMessage); ok {
+				e := (*event.Event)(em)
+				if err := transformers.EventTransformer()(e); err != nil {
 					return nil, err
 				}
-				return &e, nil
+				return e, nil
 			}
 			if mw, ok := m.(MessageWrapper); ok {
 				m = mw.GetWrappedMessage()

@@ -36,13 +36,13 @@ func TestEncodeHttpResponse(t *testing.T) {
 		{
 			name:             "Event to Structured",
 			context:          binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingStructured),
-			messageFactory:   func(e event.Event) binding.Message { return binding.EventMessage(e) },
+			messageFactory:   func(e event.Event) binding.Message { return binding.NewEventMessage(&e) },
 			expectedEncoding: binding.EncodingStructured,
 		},
 		{
 			name:             "Event to Binary",
 			context:          binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingBinary),
-			messageFactory:   func(e event.Event) binding.Message { return binding.EventMessage(e) },
+			messageFactory:   func(e event.Event) binding.Message { return binding.NewEventMessage(&e) },
 			expectedEncoding: binding.EncodingBinary,
 		},
 	}
@@ -53,7 +53,7 @@ func TestEncodeHttpResponse(t *testing.T) {
 					Header: make(http.Header),
 				}
 
-				eventIn = test2.ExToStr(t, eventIn)
+				eventIn = test.CopyEventContext(test2.ExToStr(t, eventIn))
 				messageIn := tt.messageFactory(eventIn)
 
 				err := WriteHttpResponse(tt.context, messageIn, res, nil)

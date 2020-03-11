@@ -46,12 +46,12 @@ func TestToEvent(t *testing.T) {
 			},
 			{
 				name:    "From event with payload/" + test2.NameOf(v),
-				message: binding.EventMessage(v),
+				message: (*binding.EventMessage)(&v),
 				want:    v,
 			},
 			{
 				name:    "From event without payload/" + test2.NameOf(v),
-				message: binding.EventMessage(v),
+				message: (*binding.EventMessage)(&v),
 				want:    v,
 			},
 		}...)

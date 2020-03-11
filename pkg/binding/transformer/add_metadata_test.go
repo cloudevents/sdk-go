@@ -42,7 +42,7 @@ func TestAddAttribute(t *testing.T) {
 		},
 		{
 			Name:         "No change to id to Event message",
-			InputMessage: binding.EventMessage(CopyEventContext(e)),
+			InputEvent:   e,
 			WantEvent:    CopyEventContext(e),
 			Transformers: binding.TransformerFactories{AddAttribute(spec.ID, "new-id")},
 		},
@@ -60,7 +60,7 @@ func TestAddAttribute(t *testing.T) {
 		},
 		{
 			Name:         "Add subject to Event message",
-			InputMessage: binding.EventMessage(CopyEventContext(e)),
+			InputEvent:   e,
 			WantEvent:    expectedEventWithSubject,
 			Transformers: binding.TransformerFactories{AddAttribute(spec.Subject, subject)},
 		},
@@ -78,7 +78,7 @@ func TestAddAttribute(t *testing.T) {
 		},
 		{
 			Name:         "Add time to Event message",
-			InputMessage: binding.EventMessage(CopyEventContext(e)),
+			InputEvent:   e,
 			WantEvent:    expectedEventWithTime,
 			Transformers: binding.TransformerFactories{AddAttribute(spec.Time, timestamp)},
 		},
@@ -109,7 +109,7 @@ func TestAddExtension(t *testing.T) {
 		},
 		{
 			Name:         "No change to extension 'aaa' to Event message",
-			InputMessage: binding.EventMessage(CopyEventContext(expectedEventWithExtension)),
+			InputEvent:   expectedEventWithExtension,
 			WantEvent:    CopyEventContext(expectedEventWithExtension),
 			Transformers: binding.TransformerFactories{AddExtension(extName, extValue)},
 		},
@@ -127,7 +127,7 @@ func TestAddExtension(t *testing.T) {
 		},
 		{
 			Name:         "Add extension 'aaa' to Event message",
-			InputMessage: binding.EventMessage(CopyEventContext(e)),
+			InputEvent:   e,
 			WantEvent:    CopyEventContext(expectedEventWithExtension),
 			Transformers: binding.TransformerFactories{AddExtension(extName, extValue)},
 		},

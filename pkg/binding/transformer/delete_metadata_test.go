@@ -40,7 +40,7 @@ func TestDeleteAttribute(t *testing.T) {
 		},
 		{
 			Name:         "Remove subject from Event message",
-			InputMessage: binding.EventMessage(test.CopyEventContext(withSubjectEvent)),
+			InputEvent:   withSubjectEvent,
 			WantEvent:    noSubjectEvent,
 			Transformers: binding.TransformerFactories{DeleteAttribute(spec.Subject)},
 		},
@@ -58,7 +58,7 @@ func TestDeleteAttribute(t *testing.T) {
 		},
 		{
 			Name:         "Remove time from Event message",
-			InputMessage: binding.EventMessage(test.CopyEventContext(withTimeEvent)),
+			InputEvent:   withTimeEvent,
 			WantEvent:    test.CopyEventContext(withSubjectEvent),
 			Transformers: binding.TransformerFactories{DeleteAttribute(spec.Time)},
 		},
@@ -76,7 +76,7 @@ func TestDeleteAttribute(t *testing.T) {
 		},
 		{
 			Name:         "Do nothing with Event message",
-			InputMessage: binding.EventMessage(test.CopyEventContext(withSubjectEvent)),
+			InputEvent:   withSubjectEvent,
 			WantEvent:    test.CopyEventContext(withSubjectEvent),
 			Transformers: binding.TransformerFactories{DeleteAttribute(spec.Time)},
 		},
@@ -107,7 +107,7 @@ func TestDeleteExtension(t *testing.T) {
 		},
 		{
 			Name:         "No change to Event message",
-			InputMessage: binding.EventMessage(test.CopyEventContext(expectedEventWithExtension)),
+			InputEvent:   expectedEventWithExtension,
 			WantEvent:    test.CopyEventContext(expectedEventWithExtension),
 			Transformers: binding.TransformerFactories{DeleteExtension("ccc")},
 		},
@@ -125,7 +125,7 @@ func TestDeleteExtension(t *testing.T) {
 		},
 		{
 			Name:         "Delete extension 'aaa' from Event message",
-			InputMessage: binding.EventMessage(test.CopyEventContext(expectedEventWithExtension)),
+			InputEvent:   expectedEventWithExtension,
 			WantEvent:    test.CopyEventContext(e),
 			Transformers: binding.TransformerFactories{DeleteExtension(extName)},
 		},
