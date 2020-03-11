@@ -138,7 +138,7 @@ func (e Event) Clone() Event {
 	new.DataBinary = e.DataBinary
 	new.DataEncoded = e.DataEncoded
 	new.Data = e.cloneData()
-	new.FieldErrors = e.FieldErrors
+	new.FieldErrors = e.cloneFieldErrors()
 	return new
 }
 
@@ -154,4 +154,15 @@ func (e Event) cloneData() interface{} {
 	} else {
 		panic("Invalid value in Event.Data field")
 	}
+}
+
+func (e Event) cloneFieldErrors() map[string]error {
+	if e.FieldErrors == nil {
+		return nil
+	}
+	newFE := make(map[string]error, len(e.FieldErrors))
+	for k, v := range e.FieldErrors {
+		newFE[k] = v
+	}
+	return newFE
 }

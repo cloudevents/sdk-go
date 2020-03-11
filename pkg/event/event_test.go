@@ -1,6 +1,7 @@
 package event_test
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"strings"
@@ -556,6 +557,9 @@ func TestEvent_Clone(t *testing.T) {
 	original := event.Event{
 		Context: FullEventContextV1(types.Timestamp{Time: time.Now()}),
 	}
+	original.FieldErrors = map[string]error{
+		"id": errors.New("an error"),
+	}
 	require.NoError(t, original.SetData("aaa"))
 
 	clone := original.Clone()
@@ -567,7 +571,9 @@ func TestEvent_Clone(t *testing.T) {
 
 	require.Equal(t, original.DataEncoded, clone.DataEncoded)
 	require.Equal(t, original.DataBinary, clone.DataBinary)
+
 	require.Equal(t, original.FieldErrors, clone.FieldErrors)
+	require.NotSame(t, original.FieldErrors, clone.FieldErrors)
 
 	require.NoError(t, clone.SetData("bbb"))
 
