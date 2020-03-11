@@ -75,7 +75,7 @@ func AssertEventEquals(t *testing.T, want event.Event, have event.Event) {
 
 // Returns a copy of the event.Event where all extensions are converted to strings. Fails the test if conversion fails
 func ExToStr(t *testing.T, e event.Event) event.Event {
-	out := CopyEventContext(e)
+	out := e.Clone()
 	for k, v := range e.Extensions() {
 		var vParsed interface{}
 		var err error
@@ -107,14 +107,4 @@ func MustToEvent(t *testing.T, ctx context.Context, m binding.Message) event.Eve
 	e, err := binding.ToEvent(ctx, m, nil)
 	require.NoError(t, err)
 	return *e
-}
-
-// Returns a copy of the event.Event with only the event.EventContext copied
-func CopyEventContext(e event.Event) event.Event {
-	newE := event.Event{}
-	newE.Context = e.Context.Clone()
-	newE.DataEncoded = e.DataEncoded
-	newE.Data = e.Data
-	newE.DataBinary = e.DataBinary
-	return newE
 }

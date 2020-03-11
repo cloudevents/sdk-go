@@ -36,14 +36,14 @@ func TestVersionTranscoder(t *testing.T) {
 	test.RunTransformerTests(t, context.Background(), []test.TransformerTestArgs{
 		{
 			Name:         "V03 -> V1 with Mock Structured message",
-			InputMessage: test.MustCreateMockStructuredMessage(test.CopyEventContext(testEventV03)),
-			WantEvent:    test.CopyEventContext(testEventV1),
+			InputMessage: test.MustCreateMockStructuredMessage(testEventV03.Clone()),
+			WantEvent:    testEventV1.Clone(),
 			Transformers: binding.TransformerFactories{Version(spec.V1)},
 		},
 		{
 			Name:         "V03 -> V1 with Mock Binary message",
-			InputMessage: test.MustCreateMockBinaryMessage(test.CopyEventContext(testEventV03)),
-			WantEvent:    test.CopyEventContext(testEventV1),
+			InputMessage: test.MustCreateMockBinaryMessage(testEventV03.Clone()),
+			WantEvent:    testEventV1.Clone(),
 			Transformers: binding.TransformerFactories{Version(spec.V1)},
 		},
 		{

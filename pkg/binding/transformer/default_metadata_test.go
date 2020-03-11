@@ -32,14 +32,14 @@ func TestAddUUID(t *testing.T) {
 	RunTransformerTests(t, context.Background(), []TransformerTestArgs{
 		{
 			Name:         "No change to id to Mock Structured message",
-			InputMessage: test.MustCreateMockStructuredMessage(test.CopyEventContext(eventWithId)),
-			WantEvent:    test.CopyEventContext(eventWithId),
+			InputMessage: test.MustCreateMockStructuredMessage(eventWithId.Clone()),
+			WantEvent:    eventWithId.Clone(),
 			Transformers: []binding.TransformerFactory{AddUUID},
 		},
 		{
 			Name:         "No change to id to Mock Binary message",
-			InputMessage: test.MustCreateMockBinaryMessage(test.CopyEventContext(eventWithId)),
-			WantEvent:    test.CopyEventContext(eventWithId),
+			InputMessage: test.MustCreateMockBinaryMessage(eventWithId.Clone()),
+			WantEvent:    eventWithId.Clone(),
 			Transformers: []binding.TransformerFactory{AddUUID},
 		},
 		{
@@ -50,7 +50,7 @@ func TestAddUUID(t *testing.T) {
 		},
 		{
 			Name:         "Add UUID to Mock Binary message",
-			InputMessage: test.MustCreateMockBinaryMessage(test.CopyEventContext(eventWithoutId)),
+			InputMessage: test.MustCreateMockBinaryMessage(eventWithoutId.Clone()),
 			AssertFunc:   assertUUID,
 			Transformers: []binding.TransformerFactory{AddUUID},
 		},
@@ -79,14 +79,14 @@ func TestAddTimeNow(t *testing.T) {
 	RunTransformerTests(t, context.Background(), []TransformerTestArgs{
 		{
 			Name:         "No change to time to Mock Structured message",
-			InputMessage: test.MustCreateMockStructuredMessage(test.CopyEventContext(eventWithTime)),
-			WantEvent:    test.CopyEventContext(eventWithTime),
+			InputMessage: test.MustCreateMockStructuredMessage(eventWithTime.Clone()),
+			WantEvent:    eventWithTime.Clone(),
 			Transformers: []binding.TransformerFactory{AddTimeNow},
 		},
 		{
 			Name:         "No change to time to Mock Binary message",
-			InputMessage: test.MustCreateMockBinaryMessage(test.CopyEventContext(eventWithTime)),
-			WantEvent:    test.CopyEventContext(eventWithTime),
+			InputMessage: test.MustCreateMockBinaryMessage(eventWithTime.Clone()),
+			WantEvent:    eventWithTime.Clone(),
 			Transformers: []binding.TransformerFactory{AddTimeNow},
 		},
 		{
@@ -97,7 +97,7 @@ func TestAddTimeNow(t *testing.T) {
 		},
 		{
 			Name:         "Add time.Now() to Mock Binary message",
-			InputMessage: test.MustCreateMockBinaryMessage(test.CopyEventContext(eventWithoutTime)),
+			InputMessage: test.MustCreateMockBinaryMessage(eventWithoutTime.Clone()),
 			AssertFunc:   assertTimeNow,
 			Transformers: []binding.TransformerFactory{AddTimeNow},
 		},
