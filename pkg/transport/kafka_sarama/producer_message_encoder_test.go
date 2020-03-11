@@ -96,7 +96,7 @@ func TestEncodeKafkaProducerMessage(t *testing.T) {
 				eventIn = test.ExToStr(t, eventIn)
 				messageIn := tt.messageFactory(eventIn)
 
-				err := WriteKafkaProducerMessage(ctx, messageIn, kafkaMessage, nil)
+				err := WriteProducerMessage(ctx, messageIn, kafkaMessage, nil)
 				require.NoError(t, err)
 
 				//Little hack to go back to Message

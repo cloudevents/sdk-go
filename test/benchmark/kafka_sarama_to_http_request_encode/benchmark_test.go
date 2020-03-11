@@ -83,7 +83,7 @@ func BenchmarkStructuredWithKey(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		M, Err = kafka_sarama.NewMessageFromConsumerMessage(structuredConsumerMessageWithKey)
 		Req, Err = nethttp.NewRequest("POST", "http://localhost", nil)
-		Err = http.WriteHttpRequest(context.TODO(), M, Req, binding.TransformerFactories{})
+		Err = http.WriteRequest(context.TODO(), M, Req, binding.TransformerFactories{})
 	}
 }
 
@@ -91,7 +91,7 @@ func BenchmarkStructuredWithoutKey(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		M, Err = kafka_sarama.NewMessageFromConsumerMessage(structuredConsumerMessageWithoutKey)
 		Req, Err = nethttp.NewRequest("POST", "http://localhost", nil)
-		Err = http.WriteHttpRequest(context.TODO(), M, Req, binding.TransformerFactories{})
+		Err = http.WriteRequest(context.TODO(), M, Req, binding.TransformerFactories{})
 	}
 }
 
@@ -99,7 +99,7 @@ func BenchmarkBinaryWithKey(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		M, Err = kafka_sarama.NewMessageFromConsumerMessage(binaryConsumerMessageWithKey)
 		Req, Err = nethttp.NewRequest("POST", "http://localhost", nil)
-		Err = http.WriteHttpRequest(context.TODO(), M, Req, binding.TransformerFactories{})
+		Err = http.WriteRequest(context.TODO(), M, Req, binding.TransformerFactories{})
 	}
 }
 
@@ -107,6 +107,6 @@ func BenchmarkBinaryWithoutKey(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		M, Err = kafka_sarama.NewMessageFromConsumerMessage(binaryConsumerMessageWithoutKey)
 		Req, Err = nethttp.NewRequest("POST", "http://localhost", nil)
-		Err = http.WriteHttpRequest(context.TODO(), M, Req, binding.TransformerFactories{})
+		Err = http.WriteRequest(context.TODO(), M, Req, binding.TransformerFactories{})
 	}
 }

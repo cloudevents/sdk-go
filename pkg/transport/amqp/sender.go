@@ -23,7 +23,7 @@ func (s *sender) Send(ctx context.Context, in binding.Message) error {
 	}
 
 	var amqpMessage amqp.Message
-	err = WriteAMQPMessage(ctx, in, &amqpMessage, s.transformers)
+	err = WriteMessage(ctx, in, &amqpMessage, s.transformers)
 	if err != nil {
 		return err
 	}

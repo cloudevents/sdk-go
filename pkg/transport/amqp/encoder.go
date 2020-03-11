@@ -15,7 +15,7 @@ import (
 
 // Fill the provided amqpMessage with the message m.
 // Using context you can tweak the encoding processing (more details on binding.Write documentation).
-func WriteAMQPMessage(ctx context.Context, m binding.Message, amqpMessage *amqp.Message, transformers binding.TransformerFactories) error {
+func WriteMessage(ctx context.Context, m binding.Message, amqpMessage *amqp.Message, transformers binding.TransformerFactories) error {
 	structuredWriter := (*amqpMessageWriter)(amqpMessage)
 	binaryWriter := (*amqpMessageWriter)(amqpMessage)
 

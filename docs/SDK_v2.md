@@ -20,6 +20,8 @@ the API into how we have seen v1 integrate into systems.
 - Extensions, an extension is anything that extends the base requirements from
   the CloudEvents spec. There are several
   [CloudEvents supported extensions](https://github.com/cloudevents/spec/tree/master/extensions).
+- Message Writer, the logic required to take in a Message and write out to a
+  given Protocol (request, message).
 
 ## Investment Level
 
@@ -28,8 +30,9 @@ support the following:
 
 - Resource Level, an Event can be used directly, and can be marshaled in and and
   out of JSON.
-- Bindings Level, a Protocol can be used directly, with facilities to aid in
-  converting an Event into a Message by using a Protocol Binding.
+- Protocol Level, a Protocol can be used directly, with facilities to aid in
+  converting an Event into a Message by using Message Readers and Writers for
+  that protocol.
 - Client Level, a Protocol can be selected and Events can be directly sent and
   received without requiring interactions with Message objects.
 
@@ -88,3 +91,32 @@ Event -> Message -> bits
 bits -> Message -> Event
 
 bit -> Message -> bits
+
+## Interfaces (Current pre-v2)
+
+```
+Client --> Transport (via TransportBinding) -> Protocol (implements Sender, Receiver)* -> Write<DataStructure>
+```
+
+`Write<DataStructure>` functions read a `binding.Message` and write what is
+found into the [3pl][3pl] data structure. For example, `nats.WriteMsg` writes
+the message into a `nats.Msg`, or `http.WriteRequest` writes message into a
+`http.Request`.
+
+Protocol is the thinnest wrapper for the [3pl][3pl] to implement Sender and
+Receiver.
+
+\*Protocol can optionally implement Requester and Responder(not yet defined,
+receiver with reply). Protocol does not want to manage the underlying resources
+that enable the external communication. For example: http.Protocol implements a
+ServeHTTP method which can be leveraged by another SDK component:
+http.Transport, or used directly in custom integrations where more control is
+required.
+
+Transport is legacy. It connects the Client to the Protocol and also manages a
+lot of the internal [3pl][3pl] setup. This is too much overhead for the SDK.
+
+Client gives a simple API for sending and receiving events as event.Event
+objects.
+
+[3pl]: 3pl: 3rd party lib (nats.io or net/http)
