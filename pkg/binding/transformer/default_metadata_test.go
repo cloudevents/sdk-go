@@ -44,7 +44,7 @@ func TestAddUUID(t *testing.T) {
 		},
 		{
 			Name:         "No change to id to Event message",
-			InputMessage: binding.EventMessage(test.CopyEventContext(eventWithId)),
+			InputEvent:   eventWithId,
 			WantEvent:    test.CopyEventContext(eventWithId),
 			Transformers: []binding.TransformerFactory{AddUUID},
 		},
@@ -56,7 +56,7 @@ func TestAddUUID(t *testing.T) {
 		},
 		{
 			Name:         "Add UUID to Event message",
-			InputMessage: binding.EventMessage(test.CopyEventContext(eventWithoutId)),
+			InputEvent:   eventWithoutId,
 			AssertFunc:   assertUUID,
 			Transformers: []binding.TransformerFactory{AddUUID},
 		},
@@ -91,7 +91,7 @@ func TestAddTimeNow(t *testing.T) {
 		},
 		{
 			Name:         "No change to time to Event message",
-			InputMessage: binding.EventMessage(test.CopyEventContext(eventWithTime)),
+			InputEvent:   eventWithTime,
 			WantEvent:    test.CopyEventContext(eventWithTime),
 			Transformers: []binding.TransformerFactory{AddTimeNow},
 		},
@@ -103,7 +103,7 @@ func TestAddTimeNow(t *testing.T) {
 		},
 		{
 			Name:         "Add time.Now() to Event message",
-			InputMessage: binding.EventMessage(test.CopyEventContext(eventWithoutTime)),
+			InputEvent:   eventWithoutTime,
 			AssertFunc:   assertTimeNow,
 			Transformers: []binding.TransformerFactory{AddTimeNow},
 		},

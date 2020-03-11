@@ -24,7 +24,7 @@ func TestWithFinish(t *testing.T) {
 	}
 
 	done := make(chan error, 1)
-	m := binding.WithFinish(binding.EventMessage(testEvent), func(err error) {
+	m := binding.WithFinish((*binding.EventMessage)(&testEvent), func(err error) {
 		done <- err
 	})
 	select {

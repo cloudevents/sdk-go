@@ -17,6 +17,7 @@ type copyMessageTestCase struct {
 	name     string
 	encoding binding.Encoding
 	message  binding.Message
+	event    event.Event
 	want     event.Event
 }
 
@@ -52,22 +53,31 @@ func TestCopyMessage(t *testing.T) {
 			{
 				name:     "From event with payload/" + NameOf(v),
 				encoding: binding.EncodingEvent,
-				message:  binding.EventMessage(v),
+				event:    v,
 				want:     v,
 			},
 			{
 				name:     "From event without payload/" + NameOf(v),
 				encoding: binding.EncodingEvent,
-				message:  binding.EventMessage(v),
+				event:    v,
 				want:     v,
 			},
 		}...)
 	}
 	for _, tt := range tests {
 		tt := tt // Don't use range variable in Run() scope
+
+		var inputMessage binding.Message
+		if tt.message != nil {
+			inputMessage = tt.message
+		} else {
+			e := CopyEventContext(tt.event)
+			inputMessage = binding.ToEventMessage(&e)
+		}
+
 		t.Run(fmt.Sprintf("CopyMessage: %s", tt.name), func(t *testing.T) {
 			finished := false
-			message := binding.WithFinish(tt.message, func(err error) {
+			message := binding.WithFinish(inputMessage, func(err error) {
 				finished = true
 			})
 			cpy, err := CopyMessage(context.Background(), message, nil)
@@ -84,7 +94,7 @@ func TestCopyMessage(t *testing.T) {
 		})
 		t.Run(fmt.Sprintf("BufferMessage: %s", tt.name), func(t *testing.T) {
 			finished := false
-			message := binding.WithFinish(tt.message, func(err error) {
+			message := binding.WithFinish(inputMessage, func(err error) {
 				finished = true
 			})
 			cpy, err := BufferMessage(context.Background(), message, nil)

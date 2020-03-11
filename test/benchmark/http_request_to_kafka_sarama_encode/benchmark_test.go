@@ -32,25 +32,25 @@ func init() {
 	eventWithKey.SetExtension("key", "aaa")
 
 	structuredHttpRequestWithoutKey, _ = nethttp.NewRequest("POST", "http://localhost", nil)
-	Err = http.WriteHttpRequest(context.TODO(), binding.EventMessage(eventWithoutKey), structuredHttpRequestWithoutKey, binding.TransformerFactories{})
+	Err = http.WriteHttpRequest(context.TODO(), (*binding.EventMessage)(&eventWithoutKey), structuredHttpRequestWithoutKey, binding.TransformerFactories{})
 	if Err != nil {
 		panic(Err)
 	}
 
 	structuredHttpRequestWithKey, _ = nethttp.NewRequest("POST", "http://localhost", nil)
-	Err = http.WriteHttpRequest(context.TODO(), binding.EventMessage(eventWithKey), structuredHttpRequestWithKey, binding.TransformerFactories{})
+	Err = http.WriteHttpRequest(context.TODO(), (*binding.EventMessage)(&eventWithKey), structuredHttpRequestWithKey, binding.TransformerFactories{})
 	if Err != nil {
 		panic(Err)
 	}
 
 	binaryHttpRequestWithoutKey, _ = nethttp.NewRequest("POST", "http://localhost", nil)
-	Err = http.WriteHttpRequest(context.TODO(), binding.EventMessage(eventWithoutKey), binaryHttpRequestWithoutKey, binding.TransformerFactories{})
+	Err = http.WriteHttpRequest(context.TODO(), (*binding.EventMessage)(&eventWithoutKey), binaryHttpRequestWithoutKey, binding.TransformerFactories{})
 	if Err != nil {
 		panic(Err)
 	}
 
 	binaryHttpRequestWithKey, _ = nethttp.NewRequest("POST", "http://localhost", nil)
-	Err = http.WriteHttpRequest(context.TODO(), binding.EventMessage(eventWithKey), binaryHttpRequestWithKey, binding.TransformerFactories{})
+	Err = http.WriteHttpRequest(context.TODO(), (*binding.EventMessage)(&eventWithKey), binaryHttpRequestWithKey, binding.TransformerFactories{})
 	if Err != nil {
 		panic(Err)
 	}
@@ -65,14 +65,14 @@ var Err error
 func BenchmarkBaselineStructured(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		Req, _ = nethttp.NewRequest("POST", "http://localhost", nil)
-		Err = http.WriteHttpRequest(context.TODO(), binding.EventMessage(eventWithKey), Req, binding.TransformerFactories{})
+		Err = http.WriteHttpRequest(context.TODO(), (*binding.EventMessage)(&eventWithKey), Req, binding.TransformerFactories{})
 	}
 }
 
 func BenchmarkStructured(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		tempReq, _ := nethttp.NewRequest("POST", "http://localhost", nil)
-		Err = http.WriteHttpRequest(context.TODO(), binding.EventMessage(eventWithKey), tempReq, binding.TransformerFactories{})
+		Err = http.WriteHttpRequest(context.TODO(), (*binding.EventMessage)(&eventWithKey), tempReq, binding.TransformerFactories{})
 
 		M = http.NewMessageFromHttpRequest(tempReq)
 		Req, Err = nethttp.NewRequest("POST", "http://localhost", nil)
@@ -84,14 +84,14 @@ func BenchmarkStructured(b *testing.B) {
 func BenchmarkBaselineStructuredSkipKey(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		Req, _ = nethttp.NewRequest("POST", "http://localhost", nil)
-		Err = http.WriteHttpRequest(context.TODO(), binding.EventMessage(eventWithoutKey), Req, binding.TransformerFactories{})
+		Err = http.WriteHttpRequest(context.TODO(), (*binding.EventMessage)(&eventWithoutKey), Req, binding.TransformerFactories{})
 	}
 }
 
 func BenchmarkStructuredSkipKey(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		tempReq, _ := nethttp.NewRequest("POST", "http://localhost", nil)
-		Err = http.WriteHttpRequest(context.TODO(), binding.EventMessage(eventWithoutKey), tempReq, binding.TransformerFactories{})
+		Err = http.WriteHttpRequest(context.TODO(), (*binding.EventMessage)(&eventWithoutKey), tempReq, binding.TransformerFactories{})
 
 		M = http.NewMessageFromHttpRequest(tempReq)
 		Req, Err = nethttp.NewRequest("POST", "http://localhost", nil)
@@ -103,14 +103,14 @@ func BenchmarkStructuredSkipKey(b *testing.B) {
 func BenchmarkBaselineBinary(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		Req, _ = nethttp.NewRequest("POST", "http://localhost", nil)
-		Err = http.WriteHttpRequest(context.TODO(), binding.EventMessage(eventWithKey), Req, binding.TransformerFactories{})
+		Err = http.WriteHttpRequest(context.TODO(), (*binding.EventMessage)(&eventWithKey), Req, binding.TransformerFactories{})
 	}
 }
 
 func BenchmarkBinary(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		tempReq, _ := nethttp.NewRequest("POST", "http://localhost", nil)
-		Err = http.WriteHttpRequest(context.TODO(), binding.EventMessage(eventWithKey), tempReq, binding.TransformerFactories{})
+		Err = http.WriteHttpRequest(context.TODO(), (*binding.EventMessage)(&eventWithKey), tempReq, binding.TransformerFactories{})
 
 		M = http.NewMessageFromHttpRequest(tempReq)
 		Req, Err = nethttp.NewRequest("POST", "http://localhost", nil)
@@ -122,14 +122,14 @@ func BenchmarkBinary(b *testing.B) {
 func BenchmarkBaselineBinarySkipKey(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		Req, _ = nethttp.NewRequest("POST", "http://localhost", nil)
-		Err = http.WriteHttpRequest(context.TODO(), binding.EventMessage(eventWithoutKey), Req, binding.TransformerFactories{})
+		Err = http.WriteHttpRequest(context.TODO(), (*binding.EventMessage)(&eventWithoutKey), Req, binding.TransformerFactories{})
 	}
 }
 
 func BenchmarkBinarySkipKey(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		tempReq, _ := nethttp.NewRequest("POST", "http://localhost", nil)
-		Err = http.WriteHttpRequest(context.TODO(), binding.EventMessage(eventWithoutKey), tempReq, binding.TransformerFactories{})
+		Err = http.WriteHttpRequest(context.TODO(), (*binding.EventMessage)(&eventWithoutKey), tempReq, binding.TransformerFactories{})
 
 		M = http.NewMessageFromHttpRequest(tempReq)
 		Req, Err = nethttp.NewRequest("POST", "http://localhost", nil)

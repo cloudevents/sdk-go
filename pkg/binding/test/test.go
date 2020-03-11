@@ -95,7 +95,7 @@ func ExToStr(t *testing.T, e event.Event) event.Event {
 
 // Must marshal the event.Event to JSON structured representation
 func MustJSON(e event.Event) []byte {
-	b, err := format.JSON.Marshal(e)
+	b, err := format.JSON.Marshal(&e)
 	if err != nil {
 		panic(err)
 	}

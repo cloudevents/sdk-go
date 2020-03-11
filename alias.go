@@ -44,7 +44,7 @@ type HTTPTransport = http.Protocol
 type HTTPEncoding = http.Encoding
 
 const (
-	// Encoding
+	// ReadEncoding
 
 	ApplicationXML                  = event.ApplicationXML
 	ApplicationJSON                 = event.ApplicationJSON

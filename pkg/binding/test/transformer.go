@@ -12,6 +12,7 @@ import (
 
 type TransformerTestArgs struct {
 	Name         string
+	InputEvent   event.Event
 	InputMessage binding.Message
 	WantEvent    event.Event
 	AssertFunc   func(t *testing.T, event event.Event)
@@ -23,10 +24,18 @@ func RunTransformerTests(t *testing.T, ctx context.Context, tests []TransformerT
 		tt := tt // Don't use range variable inside scope
 		t.Run(tt.Name, func(t *testing.T) {
 
+			var inputMessage binding.Message
+			if tt.InputMessage != nil {
+				inputMessage = tt.InputMessage
+			} else {
+				e := CopyEventContext(tt.InputEvent)
+				inputMessage = (*binding.EventMessage)(&e)
+			}
+
 			mockStructured := MockStructuredMessage{}
 			mockBinary := MockBinaryMessage{}
 
-			enc, err := binding.Write(ctx, tt.InputMessage, &mockStructured, &mockBinary, tt.Transformers)
+			enc, err := binding.Write(ctx, inputMessage, &mockStructured, &mockBinary, tt.Transformers)
 			require.NoError(t, err)
 
 			var e *event.Event

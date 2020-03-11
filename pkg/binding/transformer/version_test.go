@@ -48,7 +48,7 @@ func TestVersionTranscoder(t *testing.T) {
 		},
 		{
 			Name:         "V03 -> V1 with Event message",
-			InputMessage: binding.EventMessage(test.CopyEventContext(testEventV03)),
+			InputEvent:   testEventV03,
 			WantEvent:    test.CopyEventContext(testEventV1),
 			Transformers: binding.TransformerFactories{Version(spec.V1)},
 		},

@@ -32,7 +32,7 @@ func CopyMessage(ctx context.Context, m binding.Message, transformers binding.Tr
 		if err != nil {
 			return nil, err
 		}
-		return binding.EventMessage(*e), nil
+		return (*binding.EventMessage)(e), nil
 	}
 
 	sm := structBufferedMessage{}
@@ -48,6 +48,6 @@ func CopyMessage(ctx context.Context, m binding.Message, transformers binding.Tr
 		if err != nil {
 			return nil, err
 		}
-		return binding.EventMessage(*e), nil
+		return (*binding.EventMessage)(e), nil
 	}
 }
