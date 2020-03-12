@@ -160,7 +160,7 @@ type benchDelivery struct {
 	fn transport.DeliveryFunc
 }
 
-func (b *benchDelivery) Delivery(ctx context.Context, e event.Event) (*event.Event, event.Result) {
+func (b *benchDelivery) Delivery(ctx context.Context, e event.Event) (*event.Event, transport.Result) {
 	return b.fn(ctx, e)
 }
 

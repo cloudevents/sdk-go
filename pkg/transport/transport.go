@@ -28,7 +28,7 @@ type Transport interface {
 // Deprecated: use bindings.
 type Delivery interface {
 	// Deprecated: use bindings.
-	Delivery(context.Context, event.Event) (*event.Event, event.Result)
+	Delivery(context.Context, event.Event) (*event.Event, Result)
 }
 
 // DeliveryFunc wraps a function as a Receiver object.

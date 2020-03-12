@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/cloudevents/sdk-go/pkg/event"
+	"github.com/cloudevents/sdk-go/pkg/transport"
 
 	"github.com/google/go-cmp/cmp"
 )
@@ -19,7 +20,7 @@ func TestReceiverFnValidTypes(t *testing.T) {
 		"ctx+Event in, no out": func(context.Context, event.Event) {},
 
 		"no in, error out":       func() error { return nil },
-		"no in, Result out":      func() event.Result { return nil },
+		"no in, Result out":      func() transport.Result { return nil },
 		"no in, Event+error out": func() (*event.Event, error) { return nil, nil },
 
 		"ctx in, error out":       func(context.Context) error { return nil },
@@ -34,9 +35,9 @@ func TestReceiverFnValidTypes(t *testing.T) {
 		"Event in, Event+error out":     func(event.Event) (*event.Event, error) { return nil, nil },
 		"ctx+Event in, Event+error out": func(context.Context, event.Event) (*event.Event, error) { return nil, nil },
 
-		"ctx in, Event+Result out":       func(context.Context) (*event.Event, event.Result) { return nil, nil },
-		"Event in, Event+Result out":     func(event.Event) (*event.Event, event.Result) { return nil, nil },
-		"ctx+Event in, Event+Result out": func(context.Context, event.Event) (*event.Event, event.Result) { return nil, nil },
+		"ctx in, Event+Result out":       func(context.Context) (*event.Event, transport.Result) { return nil, nil },
+		"Event in, Event+Result out":     func(event.Event) (*event.Event, transport.Result) { return nil, nil },
+		"ctx+Event in, Event+Result out": func(context.Context, event.Event) (*event.Event, transport.Result) { return nil, nil },
 	} {
 		t.Run(name, func(t *testing.T) {
 			if _, err := receiver(fn); err != nil {
@@ -52,7 +53,7 @@ func TestReceiverFnInvalidTypes(t *testing.T) {
 		"wrong type out":           func() string { return "" },
 		"extra in":                 func(context.Context, event.Event, map[string]string) {},
 		"extra out":                func(context.Context) (error, int) { return nil, 0 },
-		"dup error out":            func(context.Context) (event.Result, error) { return nil, nil },
+		"dup error out":            func(context.Context) (transport.Result, error) { return nil, nil },
 		"context dup Event out":    func(context.Context) (*event.Event, *event.Event) { return nil, nil },
 		"context dup Event in":     func(context.Context, event.Event, event.Event) {},
 		"dup Event in":             func(event.Event, event.Event) {},
@@ -84,7 +85,7 @@ func TestReceiverFnInvoke_1(t *testing.T) {
 	}
 	wantResult := errors.New("UNIT TEST")
 
-	fn, err := receiver(func(ctx context.Context, event event.Event) (*event.Event, event.Result) {
+	fn, err := receiver(func(ctx context.Context, event event.Event) (*event.Event, transport.Result) {
 		if diff := cmp.Diff(wantCtx.Value(key), ctx.Value(key)); diff != "" {
 			t.Errorf("unexpected context (-want, +got) = %v", diff)
 		}
@@ -123,7 +124,7 @@ func TestReceiverFnInvoke_2(t *testing.T) {
 	}
 	wantResult := errors.New("UNIT TEST")
 
-	fn, err := receiver(func(event event.Event) (*event.Event, event.Result) {
+	fn, err := receiver(func(event event.Event) (*event.Event, transport.Result) {
 		if diff := cmp.Diff(wantEvent, event); diff != "" {
 			t.Errorf("unexpected event (-want, +got) = %v", diff)
 		}
@@ -186,7 +187,7 @@ func TestReceiverFnInvoke_4(t *testing.T) {
 	}
 	wantResult := errors.New("UNIT TEST")
 
-	fn, err := receiver(func() (*event.Event, event.Result) {
+	fn, err := receiver(func() (*event.Event, transport.Result) {
 		return wantResp, wantResult
 	})
 	if err != nil {
@@ -211,7 +212,7 @@ func TestReceiverFnInvoke_5(t *testing.T) {
 	var wantResp *event.Event
 	wantResult := errors.New("UNIT TEST")
 
-	fn, err := receiver(func() event.Result {
+	fn, err := receiver(func() transport.Result {
 		return wantResult
 	})
 	if err != nil {

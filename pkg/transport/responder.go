@@ -2,13 +2,13 @@ package transport
 
 import (
 	"context"
+
 	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/event"
 )
 
 // ResponseFn is the function callback provided from Responder.Respond to allow
 // for a receiver to "reply" to a message it receives.
-type ResponseFn func(ctx context.Context, m binding.Message, r event.Result) error
+type ResponseFn func(ctx context.Context, m binding.Message, r Result) error
 
 // Responder receives messages and is given a callback to respond.
 type Responder interface {

@@ -3,12 +3,12 @@ package http
 import (
 	"context"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/event"
-	"github.com/cloudevents/sdk-go/pkg/transport"
 	"io"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/cloudevents/sdk-go/pkg/transport"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	cecontext "github.com/cloudevents/sdk-go/pkg/context"
@@ -178,12 +178,12 @@ func (p *Protocol) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		return nil
 	}
 
-	var fn transport.ResponseFn = func(ctx context.Context, resp binding.Message, er event.Result) error {
+	var fn transport.ResponseFn = func(ctx context.Context, resp binding.Message, er transport.Result) error {
 		if resp != nil {
 			status := http.StatusOK
 			if er != nil {
 				var result *Result
-				if event.ResultAs(er, &result) {
+				if transport.ResultAs(er, &result) {
 					if result.Status > 100 && result.Status < 600 {
 						status = result.Status
 					}

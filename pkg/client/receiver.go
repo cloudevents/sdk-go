@@ -7,10 +7,11 @@ import (
 	"reflect"
 
 	"github.com/cloudevents/sdk-go/pkg/event"
+	"github.com/cloudevents/sdk-go/pkg/transport"
 )
 
 // Receive is the signature of a fn to be invoked for incoming cloudevents.
-type ReceiveFull func(context.Context, event.Event) event.Result
+type ReceiveFull func(context.Context, event.Event) transport.Result
 
 type receiverFn struct {
 	numIn   int
@@ -26,14 +27,14 @@ type receiverFn struct {
 
 const (
 	inParamUsage  = "expected a function taking either no parameters, one or more of (context.Context, event.Event) ordered"
-	outParamUsage = "expected a function returning one or mode of (*event.Event, event.Result) ordered"
+	outParamUsage = "expected a function returning one or mode of (*event.Event, transport.Result) ordered"
 )
 
 var (
 	contextType  = reflect.TypeOf((*context.Context)(nil)).Elem()
 	eventType    = reflect.TypeOf((*event.Event)(nil)).Elem()
 	eventPtrType = reflect.TypeOf((*event.Event)(nil)) // want the ptr type
-	resultType   = reflect.TypeOf((*event.Result)(nil)).Elem()
+	resultType   = reflect.TypeOf((*transport.Result)(nil)).Elem()
 )
 
 // receiver creates a receiverFn wrapper class that is used by the client to
@@ -42,15 +43,15 @@ var (
 // * func()
 // * func() error
 // * func(context.Context)
-// * func(context.Context) event.Result
+// * func(context.Context) transport.Result
 // * func(event.Event)
-// * func(event.Event) event.Result
+// * func(event.Event) transport.Result
 // * func(context.Context, event.Event)
-// * func(context.Context, event.Event) event.Result
+// * func(context.Context, event.Event) transport.Result
 // * func(event.Event) *event.Event
-// * func(event.Event) (*event.Event, event.Result)
+// * func(event.Event) (*event.Event, transport.Result)
 // * func(context.Context, event.Event, *event.Event
-// * func(context.Context, event.Event) (*event.Event, event.Result)
+// * func(context.Context, event.Event) (*event.Event, transport.Result)
 //
 func receiver(fn interface{}) (*receiverFn, error) {
 	fnType := reflect.TypeOf(fn)
@@ -71,7 +72,7 @@ func receiver(fn interface{}) (*receiverFn, error) {
 	return r, nil
 }
 
-func (r *receiverFn) invoke(ctx context.Context, e event.Event) (*event.Event, event.Result) {
+func (r *receiverFn) invoke(ctx context.Context, e event.Event) (*event.Event, transport.Result) {
 	args := make([]reflect.Value, 0, r.numIn)
 
 	if r.numIn > 0 {
@@ -83,7 +84,7 @@ func (r *receiverFn) invoke(ctx context.Context, e event.Event) (*event.Event, e
 		}
 	}
 	v := r.fnValue.Call(args)
-	var respOut event.Result
+	var respOut transport.Result
 	var eOut *event.Event
 	if r.numOut > 0 {
 		i := 0
@@ -94,7 +95,7 @@ func (r *receiverFn) invoke(ctx context.Context, e event.Event) (*event.Event, e
 			i++ // <-- note, need to inc i.
 		}
 		if r.hasResultOut {
-			if resp, ok := v[i].Interface().(event.Result); ok {
+			if resp, ok := v[i].Interface().(transport.Result); ok {
 				respOut = resp
 			}
 		}
@@ -141,14 +142,14 @@ func (r *receiverFn) validateInParamSignature(fnType reflect.Type) error {
 
 // Verifies that the outputs of a function have a valid signature
 // Valid output signatures to be [0, all] of
-// *event.Event, event.Result in this order
+// *event.Event, transport.Result in this order
 func (r *receiverFn) validateOutParamSignature(fnType reflect.Type) error {
 	r.hasEventOut = false
 	r.hasResultOut = false
 
 	switch fnType.NumOut() {
 	case 2:
-		// has to be (*event.Event, event.Result)
+		// has to be (*event.Event, transport.Result)
 		if !fnType.Out(1).ConvertibleTo(resultType) {
 			return fmt.Errorf("%s; cannot convert parameter 2 from %s to event.Response", outParamUsage, fnType.Out(1))
 		} else {
@@ -158,7 +159,7 @@ func (r *receiverFn) validateOutParamSignature(fnType reflect.Type) error {
 	case 1:
 		if !fnType.Out(0).ConvertibleTo(resultType) {
 			if !fnType.Out(0).ConvertibleTo(eventPtrType) {
-				return fmt.Errorf("%s; cannot convert parameter 1 from %s to *event.Event or event.Result", outParamUsage, fnType.Out(0))
+				return fmt.Errorf("%s; cannot convert parameter 1 from %s to *event.Event or transport.Result", outParamUsage, fnType.Out(0))
 			} else {
 				r.hasEventOut = true
 			}

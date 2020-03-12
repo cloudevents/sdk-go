@@ -30,15 +30,15 @@ type Client interface {
 	// * func()
 	// * func() error
 	// * func(context.Context)
-	// * func(context.Context) event.Result
+	// * func(context.Context) transport.Result
 	// * func(event.Event)
-	// * func(event.Event) event.Result
+	// * func(event.Event) transport.Result
 	// * func(context.Context, event.Event)
-	// * func(context.Context, event.Event) event.Result
+	// * func(context.Context, event.Event) transport.Result
 	// * func(event.Event) *event.Event
-	// * func(event.Event) (*event.Event, event.Result)
+	// * func(event.Event) (*event.Event, transport.Result)
 	// * func(context.Context, event.Event) *event.Event
-	// * func(context.Context, event.Event) (*event.Event, event.Result)
+	// * func(context.Context, event.Event) (*event.Event, transport.Result)
 	StartReceiver(ctx context.Context, fn interface{}) error
 }
 
@@ -191,7 +191,7 @@ func (c *ceClient) obsRequest(ctx context.Context, event event.Event) (*event.Ev
 }
 
 // Delivery is called from from the transport on event delivery.
-func (c *ceClient) Delivery(ctx context.Context, e event.Event) (*event.Event, event.Result) {
+func (c *ceClient) Delivery(ctx context.Context, e event.Event) (*event.Event, transport.Result) {
 	ctx, r := observability.NewReporter(ctx, reportReceive)
 
 	var span *trace.Span
@@ -217,7 +217,7 @@ func (c *ceClient) Delivery(ctx context.Context, e event.Event) (*event.Event, e
 	return resp, result
 }
 
-func (c *ceClient) obsDelivery(ctx context.Context, e event.Event) (*event.Event, event.Result) {
+func (c *ceClient) obsDelivery(ctx context.Context, e event.Event) (*event.Event, transport.Result) {
 	if c.fn != nil {
 		resp, err := c.fn.invoke(ctx, e)
 

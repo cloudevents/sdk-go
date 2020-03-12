@@ -3,12 +3,13 @@ package http
 import (
 	"errors"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/event"
+
+	"github.com/cloudevents/sdk-go/pkg/transport"
 )
 
 // NewResult returns a fully populated http Result that should be used as
-// a event.Result.
-func NewResult(status int, messageFmt string, args ...interface{}) event.Result {
+// a transport.Result.
+func NewResult(status int, messageFmt string, args ...interface{}) transport.Result {
 	return &Result{
 		Status: status,
 		Format: messageFmt,
