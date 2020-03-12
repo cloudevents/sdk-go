@@ -24,11 +24,11 @@ import (
 func TestMarshal(t *testing.T) {
 	now := types.Timestamp{Time: time.Now().UTC()}
 	sourceUrl, _ := url.Parse("http://example.com/source")
-	source := &types.URLRef{URL: *sourceUrl}
+	source := &types.URIRef{URL: *sourceUrl}
 	sourceV1 := &types.URIRef{URL: *sourceUrl}
 
 	schemaUrl, _ := url.Parse("http://example.com/schema")
-	schema := &types.URLRef{URL: *schemaUrl}
+	schema := &types.URIRef{URL: *schemaUrl}
 	schemaV1 := &types.URI{URL: *schemaUrl}
 
 	testCases := map[string]struct {
@@ -304,11 +304,11 @@ func TestMarshal(t *testing.T) {
 func TestUnmarshal(t *testing.T) {
 	now := types.Timestamp{Time: time.Now().UTC()}
 	sourceUrl, _ := url.Parse("http://example.com/source")
-	source := &types.URLRef{URL: *sourceUrl}
+	source := &types.URIRef{URL: *sourceUrl}
 	sourceV1 := &types.URIRef{URL: *sourceUrl}
 
 	schemaUrl, _ := url.Parse("http://example.com/schema")
-	schema := &types.URLRef{URL: *schemaUrl}
+	schema := &types.URIRef{URL: *schemaUrl}
 	schemaV1 := &types.URI{URL: *schemaUrl}
 
 	testCases := map[string]struct {

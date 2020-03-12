@@ -117,9 +117,6 @@ func Validate(v interface{}) (interface{}, error) {
 		return v, nil
 	case URI:
 		return v, nil
-	case URLRef:
-		// Convert old type to new one
-		return URIRef{v.URL}, nil
 	case time.Time:
 		return Timestamp{v}, nil
 	case *time.Time:
@@ -165,10 +162,6 @@ func Clone(v interface{}) interface{} {
 		return v
 	case *URI:
 		return &URI{v.URL}
-	case URLRef:
-		return URLRef{v.URL}
-	case *URLRef:
-		return &URLRef{v.URL}
 	case time.Time:
 		return Timestamp{v}
 	case *time.Time:

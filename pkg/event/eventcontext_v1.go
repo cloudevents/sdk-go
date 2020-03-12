@@ -132,13 +132,13 @@ func (ec EventContextV1) AsV03() *EventContextV03 {
 		Time:            ec.Time,
 		Type:            ec.Type,
 		DataContentType: ec.DataContentType,
-		Source:          types.URLRef{URL: ec.Source.URL},
+		Source:          types.URIRef{URL: ec.Source.URL},
 		Subject:         ec.Subject,
 		Extensions:      make(map[string]interface{}),
 	}
 
 	if ec.DataSchema != nil {
-		ret.SchemaURL = &types.URLRef{URL: ec.DataSchema.URL}
+		ret.SchemaURL = &types.URIRef{URL: ec.DataSchema.URL}
 	}
 
 	// TODO: DeprecatedDataContentEncoding needs to be moved to extensions.

@@ -16,12 +16,12 @@ func TestValidateV03(t *testing.T) {
 	now := types.Timestamp{Time: time.Now()}
 
 	sourceUrl, _ := url.Parse("http://example.com/source")
-	source := &types.URLRef{URL: *sourceUrl}
+	source := &types.URIRef{URL: *sourceUrl}
 
 	subject := "a subject"
 
 	schemaUrl, _ := url.Parse("http://example.com/schema")
-	schema := &types.URLRef{URL: *schemaUrl}
+	schema := &types.URIRef{URL: *schemaUrl}
 
 	extensions := make(map[string]interface{})
 	extensions["test"] = "extended"
@@ -101,7 +101,7 @@ func TestValidateV03(t *testing.T) {
 				SpecVersion: event.CloudEventsVersionV03,
 				ID:          "ABC-123",
 				Type:        "com.example.simple",
-				SchemaURL:   &types.URLRef{},
+				SchemaURL:   &types.URIRef{},
 				Source:      *source,
 			},
 			want: []string{"schemaurl:"},
@@ -151,7 +151,7 @@ func TestValidateV03(t *testing.T) {
 			ctx: event.EventContextV03{
 				SpecVersion:     "",
 				ID:              "",
-				SchemaURL:       &types.URLRef{},
+				SchemaURL:       &types.URIRef{},
 				DataContentType: strptr(""),
 				Extensions:      make(map[string]interface{}),
 			},

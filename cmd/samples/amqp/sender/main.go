@@ -96,7 +96,7 @@ func main() {
 			ID:              uuid.New().String(),
 			Type:            "com.cloudevents.sample.sent",
 			Time:            &types.Timestamp{Time: now},
-			Source:          types.URLRef{URL: d.Source},
+			Source:          types.URIRef{URL: d.Source},
 			DataContentType: &contentType,
 		}.AsV03()
 		if err := d.Send(ctx, seq); err != nil {

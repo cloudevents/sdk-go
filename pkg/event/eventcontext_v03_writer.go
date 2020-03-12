@@ -46,7 +46,7 @@ func (ec *EventContextV03) SetSource(u string) error {
 	if err != nil {
 		return err
 	}
-	ec.Source = types.URLRef{URL: *pu}
+	ec.Source = types.URIRef{URL: *pu}
 	return nil
 }
 
@@ -92,7 +92,7 @@ func (ec *EventContextV03) SetDataSchema(u string) error {
 	if err != nil {
 		return err
 	}
-	ec.SchemaURL = &types.URLRef{URL: *pu}
+	ec.SchemaURL = &types.URIRef{URL: *pu}
 	return nil
 }
 

@@ -114,7 +114,7 @@ func TestClientSend(t *testing.T) {
 			event: event.Event{
 				Context: event.EventContextV03{
 					Type:   "unit.test.client",
-					Source: *types.ParseURLRef("/unit/test/client"),
+					Source: *types.ParseURIRef("/unit/test/client"),
 					Time:   &types.Timestamp{Time: now},
 					ID:     "AABBCCDDEE",
 				}.AsV03(),
@@ -142,7 +142,7 @@ func TestClientSend(t *testing.T) {
 			event: event.Event{
 				Context: event.EventContextV03{
 					Type:   "unit.test.client",
-					Source: *types.ParseURLRef("/unit/test/client"),
+					Source: *types.ParseURIRef("/unit/test/client"),
 					Time:   &types.Timestamp{Time: now},
 					ID:     "AABBCCDDEE",
 				}.AsV03(),
@@ -347,7 +347,7 @@ func TestClientReceive(t *testing.T) {
 				Context: event.EventContextV03{
 					Type:            "unit.test.client",
 					DataContentType: event.StringOfApplicationJSON(),
-					Source:          *types.ParseURLRef("/unit/test/client"),
+					Source:          *types.ParseURIRef("/unit/test/client"),
 					Time:            &types.Timestamp{Time: now},
 					ID:              "AABBCCDDEE",
 				}.AsV03(),
@@ -371,7 +371,7 @@ func TestClientReceive(t *testing.T) {
 				Context: event.EventContextV03{
 					Type:            "unit.test.client",
 					DataContentType: event.StringOfApplicationJSON(),
-					Source:          *types.ParseURLRef("/unit/test/client"),
+					Source:          *types.ParseURIRef("/unit/test/client"),
 					Time:            &types.Timestamp{Time: now},
 					ID:              "AABBCCDDEE",
 				}.AsV03(),
@@ -502,7 +502,7 @@ func TestTracedClientReceive(t *testing.T) {
 				Context: event.EventContextV03{
 					Type:            "unit.test.client",
 					DataContentType: event.StringOfApplicationJSON(),
-					Source:          *types.ParseURLRef("/unit/test/client"),
+					Source:          *types.ParseURIRef("/unit/test/client"),
 					Time:            &types.Timestamp{Time: now},
 					ID:              "AABBCCDDEE",
 				}.AsV03(),

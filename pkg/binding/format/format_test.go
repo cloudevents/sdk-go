@@ -16,7 +16,7 @@ func TestJSON(t *testing.T) {
 		Context: event.EventContextV03{
 			Type:   "type",
 			ID:     "id",
-			Source: *types.ParseURLRef("source"),
+			Source: *types.ParseURIRef("source"),
 		}.AsV03(),
 	}
 	e.SetExtension("ex", "val")
@@ -45,7 +45,7 @@ func TestMarshalUnmarshal(t *testing.T) {
 		Context: event.EventContextV03{
 			Type:   "type",
 			ID:     "id",
-			Source: *types.ParseURLRef("source"),
+			Source: *types.ParseURIRef("source"),
 		}.AsV03(),
 	}
 	assert.NoError(e.SetData("foo"))

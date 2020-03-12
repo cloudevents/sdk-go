@@ -201,8 +201,6 @@ func TestURL(t *testing.T) {
 	x := valueTester{t, types.ToURL}
 	x.ok(testURL, types.URI{*testURL}, testURLstr)
 	x.ok(*testURL, types.URI{*testURL}, testURLstr)
-	x.okWithDifferentFromString(types.URLRef{URL: *testURL}, types.URIRef{*testURL}, testURLstr, types.URI{*testURL})
-	x.okWithDifferentFromString(&types.URLRef{URL: *testURL}, types.URIRef{*testURL}, testURLstr, types.URI{*testURL})
 	x.okWithDifferentFromString(types.URIRef{URL: *testURL}, types.URIRef{*testURL}, testURLstr, types.URI{*testURL})
 	x.okWithDifferentFromString(&types.URIRef{URL: *testURL}, types.URIRef{*testURL}, testURLstr, types.URI{*testURL})
 	x.ok(types.URI{URL: *testURL}, types.URI{*testURL}, testURLstr)

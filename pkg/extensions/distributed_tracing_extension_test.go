@@ -22,11 +22,11 @@ type Data struct {
 var now = types.Timestamp{Time: time.Now().UTC()}
 
 var sourceUrl, _ = url.Parse("http://example.com/source")
-var source = &types.URLRef{URL: *sourceUrl}
+var source = &types.URIRef{URL: *sourceUrl}
 var sourceUri = &types.URIRef{URL: *sourceUrl}
 
 var schemaUrl, _ = url.Parse("http://example.com/schema")
-var schema = &types.URLRef{URL: *schemaUrl}
+var schema = &types.URIRef{URL: *schemaUrl}
 var schemaUri = &types.URI{URL: *schemaUrl}
 
 type values struct {
