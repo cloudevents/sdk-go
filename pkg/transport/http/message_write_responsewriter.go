@@ -88,5 +88,5 @@ func (b *httpResponseWriterEncoder) SetExtension(name string, value interface{})
 	return nil
 }
 
-var _ binding.StructuredWriter = (*httpResponseWriter)(nil) // Test it conforms to the interface
-var _ binding.BinaryWriter = (*httpResponseWriter)(nil)     // Test it conforms to the interface
+var _ binding.StructuredWriter = (*httpResponseWriterEncoder)(nil) // Test it conforms to the interface
+var _ binding.BinaryWriter = (*httpResponseWriterEncoder)(nil)     // Test it conforms to the interface
