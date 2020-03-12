@@ -93,11 +93,7 @@ func versionFromRawMessage(raw map[string]json.RawMessage) string {
 
 // JsonEncode
 func JsonEncode(e Event) ([]byte, error) {
-	if len(e.DataBinary) > 0 {
-		return jsonEncode(e.Context, e.DataBinary, true)
-	} else {
-		return jsonEncode(e.Context, e.DataEncoded, false)
-	}
+	return jsonEncode(e.Context, e.DataEncoded, e.DataBinary)
 }
 
 // JsonEncodeLegacy
@@ -256,8 +252,10 @@ func (e *Event) JsonDecodeV1(body []byte, raw map[string]json.RawMessage) error 
 	}
 	if data != nil {
 		e.DataEncoded = data
+		e.DataBinary = false
 	} else if dataBase64 != nil {
-		e.DataBinary = dataBase64
+		e.DataEncoded = dataBase64
+		e.DataBinary = true
 	}
 
 	return nil

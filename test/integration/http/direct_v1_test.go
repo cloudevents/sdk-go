@@ -17,22 +17,24 @@ func TestSenderReceiver_binary_v1(t *testing.T) {
 			now: now,
 			event: &cloudevents.Event{
 				Context: cloudevents.EventContextV1{
-					ID:      "ABC-123",
-					Type:    "unit.test.client.sent",
-					Source:  *cloudevents.ParseURIRef("/unit/test/client"),
-					Subject: strptr("resource"),
+					ID:              "ABC-123",
+					Type:            "unit.test.client.sent",
+					Source:          *cloudevents.ParseURIRef("/unit/test/client"),
+					Subject:         strptr("resource"),
+					DataContentType: cloudevents.StringOfApplicationJSON(),
 				}.AsV1(),
-				Data: map[string]string{"hello": "unittest"},
+				DataEncoded: toBytes(map[string]interface{}{"hello": "unittest"}),
 			},
 			want: &cloudevents.Event{
 				Context: cloudevents.EventContextV1{
-					ID:      "ABC-123",
-					Type:    "unit.test.client.sent",
-					Time:    &cloudevents.Timestamp{Time: now},
-					Source:  *cloudevents.ParseURIRef("/unit/test/client"),
-					Subject: strptr("resource"),
+					ID:              "ABC-123",
+					Type:            "unit.test.client.sent",
+					Time:            &cloudevents.Timestamp{Time: now},
+					Source:          *cloudevents.ParseURIRef("/unit/test/client"),
+					Subject:         strptr("resource"),
+					DataContentType: cloudevents.StringOfApplicationJSON(),
 				}.AsV1(),
-				Data: toBytes(map[string]interface{}{"hello": "unittest"}),
+				DataEncoded: toBytes(map[string]interface{}{"hello": "unittest"}),
 			},
 			asSent: &TapValidation{
 				Method: "POST",
@@ -44,6 +46,7 @@ func TestSenderReceiver_binary_v1(t *testing.T) {
 					"ce-type":        {"unit.test.client.sent"},
 					"ce-source":      {"/unit/test/client"},
 					"ce-subject":     {"resource"},
+					"content-type":   {"application/json"},
 				},
 				Body:          `{"hello":"unittest"}`,
 				ContentLength: 20,
@@ -70,18 +73,19 @@ func TestSenderReceiver_structured_v1(t *testing.T) {
 				event.SetType("unit.test.client.sent")
 				event.SetSource("/unit/test/client")
 				event.SetSubject("resource")
-				_ = event.SetData(map[string]string{"hello": "unittest"})
+				_ = event.SetData(map[string]string{"hello": "unittest"}, cloudevents.ApplicationJSON)
 				return &event
 			}(),
 			want: &cloudevents.Event{
 				Context: cloudevents.EventContextV1{
-					ID:      "ABC-123",
-					Type:    "unit.test.client.sent",
-					Time:    &cloudevents.Timestamp{Time: now},
-					Source:  *cloudevents.ParseURIRef("/unit/test/client"),
-					Subject: strptr("resource"),
+					ID:              "ABC-123",
+					Type:            "unit.test.client.sent",
+					Time:            &cloudevents.Timestamp{Time: now},
+					Source:          *cloudevents.ParseURIRef("/unit/test/client"),
+					Subject:         strptr("resource"),
+					DataContentType: cloudevents.StringOfApplicationJSON(),
 				}.AsV1(),
-				Data: toBytes(map[string]interface{}{"hello": "unittest"}),
+				DataEncoded: toBytes(map[string]interface{}{"hello": "unittest"}),
 			},
 			asSent: &TapValidation{
 				Method: "POST",
@@ -116,18 +120,19 @@ func TestSenderReceiver_data_base64_v1(t *testing.T) {
 				event.SetType("unit.test.client.sent")
 				event.SetSource("/unit/test/client")
 				event.SetSubject("resource")
-				_ = event.SetData([]byte("hello: unittest"))
+				_ = event.SetData([]byte("hello: unittest"), cloudevents.TextPlain)
 				return &event
 			}(),
 			want: &cloudevents.Event{
 				Context: cloudevents.EventContextV1{
-					ID:      "ABC-123",
-					Type:    "unit.test.client.sent",
-					Time:    &cloudevents.Timestamp{Time: now},
-					Source:  *cloudevents.ParseURIRef("/unit/test/client"),
-					Subject: strptr("resource"),
+					ID:              "ABC-123",
+					Type:            "unit.test.client.sent",
+					Time:            &cloudevents.Timestamp{Time: now},
+					Source:          *cloudevents.ParseURIRef("/unit/test/client"),
+					Subject:         strptr("resource"),
+					DataContentType: cloudevents.StringOfTextPlain(),
 				}.AsV1(),
-				Data: []byte("hello: unittest"),
+				DataEncoded: []byte("hello: unittest"),
 			},
 			asSent: &TapValidation{
 				Method: "POST",

@@ -11,7 +11,7 @@ import (
 type Event struct {
 	Context     EventContext
 	DataEncoded []byte
-	DataBinary  []byte
+	DataBinary  bool
 	FieldErrors map[string]error
 }
 
@@ -101,28 +101,23 @@ func (e Event) String() string {
 
 	b.WriteString(e.Context.String())
 
-	var data []byte
-
 	if e.DataEncoded != nil {
-		b.WriteString("Data,\n  ")
-		data = e.DataEncoded
-	}
-	if e.DataBinary != nil {
-		b.WriteString("Data (binary),\n  ")
-		data = e.DataBinary
-	}
-	if data != nil {
+		if e.DataBinary {
+			b.WriteString("Data (binary),\n  ")
+		} else {
+			b.WriteString("Data,\n  ")
+		}
 		switch e.DataMediaType() {
 		case ApplicationJSON:
 			var prettyJSON bytes.Buffer
-			err := json.Indent(&prettyJSON, data, "  ", "  ")
+			err := json.Indent(&prettyJSON, e.DataEncoded, "  ", "  ")
 			if err != nil {
-				b.Write(data)
+				b.Write(e.DataEncoded)
 			} else {
 				b.Write(prettyJSON.Bytes())
 			}
 		default:
-			b.Write(data)
+			b.Write(e.DataEncoded)
 		}
 		b.WriteString("\n")
 	}
@@ -134,7 +129,7 @@ func (e Event) Clone() Event {
 	out := Event{}
 	out.Context = e.Context.Clone()
 	out.DataEncoded = cloneBytes(e.DataEncoded)
-	out.DataBinary = cloneBytes(e.DataBinary)
+	out.DataBinary = e.DataBinary
 	out.FieldErrors = e.cloneFieldErrors()
 	return out
 }

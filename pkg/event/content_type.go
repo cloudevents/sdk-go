@@ -21,6 +21,12 @@ func StringOfApplicationXML() *string {
 	return &a
 }
 
+// StringOfTextPlain returns a string pointer to "text/plain"
+func StringOfTextPlain() *string {
+	a := TextPlain
+	return &a
+}
+
 // StringOfApplicationCloudEventsJSON  returns a string pointer to
 // "application/cloudevents+json"
 func StringOfApplicationCloudEventsJSON() *string {

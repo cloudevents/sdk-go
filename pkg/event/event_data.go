@@ -22,15 +22,15 @@ func (e *Event) SetData(obj interface{}, contentType string) error {
 	// Version 1.0 and above.
 	switch obj := obj.(type) {
 	case []byte:
-		e.DataEncoded = nil
-		e.DataBinary = obj
+		e.DataEncoded = obj
+		e.DataBinary = true
 	default:
 		data, err := datacodec.Encode(context.Background(), e.DataMediaType(), obj)
 		if err != nil {
 			return err
 		}
 		e.DataEncoded = data
-		e.DataBinary = nil
+		e.DataBinary = false
 	}
 
 	return nil
@@ -46,14 +46,14 @@ func (e *Event) legacySetData(obj interface{}) error {
 		buf := make([]byte, base64.StdEncoding.EncodedLen(len(data)))
 		base64.StdEncoding.Encode(buf, data)
 		e.DataEncoded = buf
-		e.DataBinary = nil
+		e.DataBinary = false
 	} else {
 		data, err := datacodec.Encode(context.Background(), e.DataMediaType(), obj)
 		if err != nil {
 			return err
 		}
 		e.DataEncoded = data
-		e.DataBinary = nil
+		e.DataBinary = false
 	}
 	return nil
 }
@@ -63,12 +63,7 @@ const (
 )
 
 func (e Event) Data() []byte {
-	if len(e.DataEncoded) > 0 {
-		return e.DataEncoded
-	} else if len(e.DataBinary) > 0 {
-		return e.DataBinary
-	}
-	return nil
+	return e.DataEncoded
 }
 
 // DataAs attempts to populate the provided data object with the event payload.

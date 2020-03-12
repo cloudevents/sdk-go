@@ -19,8 +19,7 @@ func TestClientMiddleware_binary_v1(t *testing.T) {
 				e.SetType("unit.test.client.sent")
 				e.SetSource("/unit/test/client")
 				e.SetSubject("resource")
-				e.SetDataContentType(cloudevents.ApplicationJSON)
-				_ = e.SetData(map[string]string{"hello": "unittest"})
+				_ = e.SetData(map[string]string{"hello": "unittest"}, cloudevents.ApplicationJSON)
 				e.SetExtension("number", "4002909746823859279")
 				return &e
 			}(),
@@ -31,8 +30,7 @@ func TestClientMiddleware_binary_v1(t *testing.T) {
 				e.SetTime(now)
 				e.SetSource("/unit/test/client")
 				e.SetSubject("resource")
-				e.SetDataContentType(cloudevents.ApplicationJSON)
-				e.Data = map[string]string{"hello": "unittest"}
+				_ = e.SetData(map[string]string{"hello": "unittest"}, cloudevents.ApplicationJSON)
 				e.SetExtension("number", "4002909746823859279")
 				return &e
 			}(),

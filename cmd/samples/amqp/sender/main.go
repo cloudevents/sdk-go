@@ -3,13 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
-	cloudevents "github.com/cloudevents/sdk-go"
 	"log"
 	"net/url"
 	"os"
 	"strings"
 	"time"
 
+	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/client"
 	"github.com/cloudevents/sdk-go/pkg/event"
 	ceamqp "github.com/cloudevents/sdk-go/pkg/transport/amqp"

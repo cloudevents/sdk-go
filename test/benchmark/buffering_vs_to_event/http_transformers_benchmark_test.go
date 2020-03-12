@@ -36,7 +36,7 @@ func init() {
 	}
 
 	initialEventNoData := test.FullEvent()
-	initialEventNoData.Data = nil
+	initialEventNoData.DataEncoded = nil
 	initialEventNoData.SetDataContentType("")
 	initialEventNoData.SetExtension("key", "aaa")
 
