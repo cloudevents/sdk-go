@@ -59,9 +59,9 @@ func New(t transport.Transport, opts ...Option) (Client, error) {
 // Protocol client. The http transport has had WithBinaryEncoding http
 // transport option applied to it. The client will always send Binary
 // encoding but will inspect the outbound event context and match the version.
-// The WithTimeNow, WithUUIDs and WithDataContentType("application/json")
-// client options are also applied to the client, all outbound events will have
-// a time and id set if not already present.
+// The WithTimeNow, and WithUUIDs client options are also applied to the
+// client, all outbound events will have a time and id set if not already
+// present.
 func NewDefault() (Client, error) {
 	p, err := http.NewProtocol()
 	if err != nil {
@@ -71,7 +71,7 @@ func NewDefault() (Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	c, err := New(t, WithTimeNow(), WithUUIDs(), WithDataContentType(event.ApplicationJSON))
+	c, err := New(t, WithTimeNow(), WithUUIDs())
 	if err != nil {
 		return nil, err
 	}

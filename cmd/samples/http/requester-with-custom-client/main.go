@@ -107,16 +107,15 @@ func _main(args []string, env envConfig) int {
 			for i := 0; i < count; i++ {
 				event := cloudevents.Event{
 					Context: cloudevents.EventContextV03{
-						ID:              uuid.New().String(),
-						Type:            "com.cloudevents.sample.sent",
-						Source:          cloudevents.URIRef{URL: *source},
-						DataContentType: &dataContentType,
+						ID:     uuid.New().String(),
+						Type:   "com.cloudevents.sample.sent",
+						Source: cloudevents.URIRef{URL: *source},
 					}.AsV03(),
-					Data: &Example{
-						Sequence: i,
-						Message:  message,
-					},
 				}
+				_ = event.SetData(&Example{
+					Sequence: i,
+					Message:  message,
+				}, dataContentType)
 
 				if resp, err := c.Request(context.Background(), event); err != nil {
 					log.Printf("failed to send: %v", err)

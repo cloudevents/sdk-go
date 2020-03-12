@@ -66,10 +66,8 @@ func AssertEventContextEquals(t *testing.T, want event.EventContext, have event.
 // Assert two event.Event are equals
 func AssertEventEquals(t *testing.T, want event.Event, have event.Event) {
 	AssertEventContextEquals(t, want.Context, have.Context)
-	wantPayload, err := want.DataBytes()
-	assert.NoError(t, err)
-	havePayload, err := have.DataBytes()
-	assert.NoError(t, err)
+	wantPayload := want.Data()
+	havePayload := have.Data()
 	assert.Equal(t, wantPayload, havePayload)
 }
 

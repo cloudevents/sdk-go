@@ -111,18 +111,21 @@ func TestClientSend(t *testing.T) {
 	}{
 		"binary simple v0.3": {
 			c: simpleBinaryClient,
-			event: event.Event{
-				Context: event.EventContextV03{
-					Type:   "unit.test.client",
-					Source: *types.ParseURIRef("/unit/test/client"),
-					Time:   &types.Timestamp{Time: now},
-					ID:     "AABBCCDDEE",
-				}.AsV03(),
-				Data: &map[string]interface{}{
+			event: func() event.Event {
+				e := event.Event{
+					Context: event.EventContextV03{
+						Type:   "unit.test.client",
+						Source: *types.ParseURIRef("/unit/test/client"),
+						Time:   &types.Timestamp{Time: now},
+						ID:     "AABBCCDDEE",
+					}.AsV03(),
+				}
+				_ = e.SetData(&map[string]interface{}{
 					"sq":  42,
 					"msg": "hello",
-				},
-			},
+				}, event.ApplicationJSON)
+				return e
+			}(),
 			resp: &http.Response{
 				StatusCode: http.StatusAccepted,
 			},
@@ -133,24 +136,28 @@ func TestClientSend(t *testing.T) {
 					"ce-time":        {now.UTC().Format(time.RFC3339Nano)},
 					"ce-type":        {"unit.test.client"},
 					"ce-source":      {"/unit/test/client"},
+					"content-type":   {"application/json"},
 				},
-				Body: `{"msg":"hello","sq":42}`,
+				Body: []byte(`{"msg":"hello","sq":42}`),
 			},
 		},
 		"structured simple v0.3": {
 			c: simpleStructuredClient,
-			event: event.Event{
-				Context: event.EventContextV03{
-					Type:   "unit.test.client",
-					Source: *types.ParseURIRef("/unit/test/client"),
-					Time:   &types.Timestamp{Time: now},
-					ID:     "AABBCCDDEE",
-				}.AsV03(),
-				Data: &map[string]interface{}{
+			event: func() event.Event {
+				e := event.Event{
+					Context: event.EventContextV03{
+						Type:   "unit.test.client",
+						Source: *types.ParseURIRef("/unit/test/client"),
+						Time:   &types.Timestamp{Time: now},
+						ID:     "AABBCCDDEE",
+					}.AsV03(),
+				}
+				_ = e.SetData(&map[string]interface{}{
 					"sq":  42,
 					"msg": "hello",
-				},
-			},
+				}, event.ApplicationJSON)
+				return e
+			}(),
 			resp: &http.Response{
 				StatusCode: http.StatusAccepted,
 			},
@@ -158,8 +165,8 @@ func TestClientSend(t *testing.T) {
 				Headers: map[string][]string{
 					"content-type": {"application/cloudevents+json"},
 				},
-				Body: fmt.Sprintf(`{"data":{"msg":"hello","sq":42},"id":"AABBCCDDEE","source":"/unit/test/client","specversion":"0.3","time":%q,"type":"unit.test.client"}`,
-					now.UTC().Format(time.RFC3339Nano),
+				Body: []byte(fmt.Sprintf(`{"data":{"msg":"hello","sq":42},"datacontenttype":"application/json","id":"AABBCCDDEE","source":"/unit/test/client","specversion":"0.3","time":%q,"type":"unit.test.client"}`,
+					now.UTC().Format(time.RFC3339Nano)),
 				),
 			},
 		},
@@ -212,18 +219,21 @@ func TestTracingClientSend(t *testing.T) {
 	}{
 		"send unsampled": {
 			c: simpleTracingBinaryClient,
-			event: event.Event{
-				Context: event.EventContextV1{
-					Type:   "unit.test.client",
-					Source: *types.ParseURIRef("/unit/test/client"),
-					Time:   &types.Timestamp{Time: now},
-					ID:     "AABBCCDDEE",
-				}.AsV1(),
-				Data: &map[string]interface{}{
+			event: func() event.Event {
+				e := event.Event{
+					Context: event.EventContextV1{
+						Type:   "unit.test.client",
+						Source: *types.ParseURIRef("/unit/test/client"),
+						Time:   &types.Timestamp{Time: now},
+						ID:     "AABBCCDDEE",
+					}.AsV1(),
+				}
+				_ = e.SetData(&map[string]interface{}{
 					"sq":  42,
 					"msg": "hello",
-				},
-			},
+				}, event.ApplicationJSON)
+				return e
+			}(),
 			resp: &http.Response{
 				StatusCode: http.StatusAccepted,
 			},
@@ -231,18 +241,21 @@ func TestTracingClientSend(t *testing.T) {
 		},
 		"send sampled": {
 			c: simpleTracingBinaryClient,
-			event: event.Event{
-				Context: event.EventContextV1{
-					Type:   "unit.test.client",
-					Source: *types.ParseURIRef("/unit/test/client"),
-					Time:   &types.Timestamp{Time: now},
-					ID:     "AABBCCDDEE",
-				}.AsV1(),
-				Data: &map[string]interface{}{
+			event: func() event.Event {
+				e := event.Event{
+					Context: event.EventContextV1{
+						Type:   "unit.test.client",
+						Source: *types.ParseURIRef("/unit/test/client"),
+						Time:   &types.Timestamp{Time: now},
+						ID:     "AABBCCDDEE",
+					}.AsV1(),
+				}
+				_ = e.SetData(&map[string]interface{}{
 					"sq":  42,
 					"msg": "hello",
-				},
-			},
+				}, event.ApplicationJSON)
+				return e
+			}(),
 			resp: &http.Response{
 				StatusCode: http.StatusAccepted,
 			},
@@ -341,21 +354,23 @@ func TestClientReceive(t *testing.T) {
 					"ce-source":      {"/unit/test/client"},
 					"content-type":   {"application/json"},
 				},
-				Body: `{"msg":"hello","sq":"42"}`,
+				Body: []byte(`{"msg":"hello","sq":"42"}`),
 			},
-			want: event.Event{
-				Context: event.EventContextV03{
-					Type:            "unit.test.client",
-					DataContentType: event.StringOfApplicationJSON(),
-					Source:          *types.ParseURIRef("/unit/test/client"),
-					Time:            &types.Timestamp{Time: now},
-					ID:              "AABBCCDDEE",
-				}.AsV03(),
-				Data: &map[string]string{
+			want: func() event.Event {
+				e := event.Event{
+					Context: event.EventContextV03{
+						Type:   "unit.test.client",
+						Source: *types.ParseURIRef("/unit/test/client"),
+						Time:   &types.Timestamp{Time: now},
+						ID:     "AABBCCDDEE",
+					}.AsV03(),
+				}
+				_ = e.SetData(&map[string]string{
 					"sq":  "42",
 					"msg": "hello",
-				},
-			},
+				}, event.ApplicationJSON)
+				return e
+			}(),
 		},
 		"structured simple v0.3": {
 			optsFn: simpleStructuredOptions,
@@ -363,23 +378,25 @@ func TestClientReceive(t *testing.T) {
 				Headers: map[string][]string{
 					"content-type": {"application/cloudevents+json"},
 				},
-				Body: fmt.Sprintf(`{"data":{"msg":"hello","sq":"42"},"datacontenttype":"application/json","id":"AABBCCDDEE","source":"/unit/test/client","specversion":"0.3","time":%q,"type":"unit.test.client"}`,
+				Body: []byte(fmt.Sprintf(`{"data":{"msg":"hello","sq":"42"},"datacontenttype":"application/json","id":"AABBCCDDEE","source":"/unit/test/client","specversion":"0.3","time":%q,"type":"unit.test.client"}`,
 					now.UTC().Format(time.RFC3339Nano),
-				),
+				)),
 			},
-			want: event.Event{
-				Context: event.EventContextV03{
-					Type:            "unit.test.client",
-					DataContentType: event.StringOfApplicationJSON(),
-					Source:          *types.ParseURIRef("/unit/test/client"),
-					Time:            &types.Timestamp{Time: now},
-					ID:              "AABBCCDDEE",
-				}.AsV03(),
-				Data: &map[string]string{
+			want: func() event.Event {
+				e := event.Event{
+					Context: event.EventContextV03{
+						Type:   "unit.test.client",
+						Source: *types.ParseURIRef("/unit/test/client"),
+						Time:   &types.Timestamp{Time: now},
+						ID:     "AABBCCDDEE",
+					}.AsV03(),
+				}
+				_ = e.SetData(&map[string]string{
 					"sq":  "42",
 					"msg": "hello",
-				},
-			},
+				}, event.ApplicationJSON)
+				return e
+			}(),
 		},
 	}
 	for n, tc := range testCases {
@@ -440,7 +457,7 @@ func TestClientReceive(t *testing.T) {
 					Method:        "POST",
 					URL:           target,
 					Header:        tc.req.Headers,
-					Body:          ioutil.NopCloser(strings.NewReader(tc.req.Body)),
+					Body:          ioutil.NopCloser(bytes.NewReader(tc.req.Body)),
 					ContentLength: int64(len([]byte(tc.req.Body))),
 				}
 
@@ -464,13 +481,7 @@ func TestClientReceive(t *testing.T) {
 					t.Errorf("unexpected events.Context (-want, +got) = %v", diff)
 				}
 
-				data := &map[string]string{}
-				err = got.DataAs(data)
-				if err != nil {
-					t.Fatalf("returned unexpected error, got %s", err.Error())
-				}
-
-				if diff := cmp.Diff(tc.want.Data, data); diff != "" {
+				if diff := cmp.Diff(tc.want.Data(), got.Data()); diff != "" {
 					t.Errorf("unexpected events.Data (-want, +got) = %v", diff)
 				}
 
@@ -498,19 +509,21 @@ func TestTracedClientReceive(t *testing.T) {
 	}{
 		"simple binary v0.3": {
 			optsFn: simpleBinaryOptions,
-			event: event.Event{
-				Context: event.EventContextV03{
-					Type:            "unit.test.client",
-					DataContentType: event.StringOfApplicationJSON(),
-					Source:          *types.ParseURIRef("/unit/test/client"),
-					Time:            &types.Timestamp{Time: now},
-					ID:              "AABBCCDDEE",
-				}.AsV03(),
-				Data: &map[string]string{
+			event: func() event.Event {
+				e := event.Event{
+					Context: event.EventContextV03{
+						Type:   "unit.test.client",
+						Source: *types.ParseURIRef("/unit/test/client"),
+						Time:   &types.Timestamp{Time: now},
+						ID:     "AABBCCDDEE",
+					}.AsV03(),
+				}
+				_ = e.SetData(&map[string]string{
 					"sq":  "42",
 					"msg": "hello",
-				},
-			},
+				}, event.ApplicationJSON)
+				return e
+			}(),
 		},
 	}
 	for n, tc := range testCases {
@@ -572,7 +585,7 @@ func TestTracedClientReceive(t *testing.T) {
 type requestValidation struct {
 	Host    string
 	Headers http.Header
-	Body    string
+	Body    []byte
 }
 
 type fakeHandler struct {
@@ -592,7 +605,7 @@ func (f *fakeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	f.requests = append(f.requests, requestValidation{
 		Host:    r.Host,
 		Headers: r.Header,
-		Body:    string(body),
+		Body:    body,
 	})
 
 	// Write the response.

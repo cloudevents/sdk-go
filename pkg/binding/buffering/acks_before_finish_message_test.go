@@ -15,8 +15,7 @@ import (
 
 func TestWithAcksBeforeFinish(t *testing.T) {
 	var testEvent = event.Event{
-		Data:        []byte(`"data"`),
-		DataEncoded: true,
+		DataEncoded: []byte(`"data"`),
 		Context: event.EventContextV1{
 			DataContentType: event.StringOfApplicationJSON(),
 			Source:          types.URIRef{URL: url.URL{Path: "source"}},
@@ -48,8 +47,7 @@ func TestWithAcksBeforeFinish(t *testing.T) {
 
 func TestCopyAndWithAcksBeforeFinish(t *testing.T) {
 	var testEvent = event.Event{
-		Data:        []byte(`"data"`),
-		DataEncoded: true,
+		DataEncoded: []byte(`"data"`),
 		Context: event.EventContextV1{
 			DataContentType: event.StringOfApplicationJSON(),
 			Source:          types.URIRef{URL: url.URL{Path: "source"}},

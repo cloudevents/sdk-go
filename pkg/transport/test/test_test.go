@@ -17,7 +17,6 @@ func TestEvent(t *testing.T) {
 	e := FullEvent()
 	assert.Equal("1.0", e.SpecVersion())
 	assert.Equal("com.example.FullEvent", e.Type())
-	assert.Equal(true, e.DataEncoded)
 	var s string
 	err := e.DataAs(&s)
 	assert.NoError(err)
@@ -26,7 +25,7 @@ func TestEvent(t *testing.T) {
 	e = MinEvent()
 	assert.Equal("1.0", e.SpecVersion())
 	assert.Equal("com.example.MinEvent", e.Type())
-	assert.Nil(e.Data)
+	assert.Nil(e.Data())
 	assert.Empty(e.DataContentType())
 }
 

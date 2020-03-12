@@ -4,8 +4,6 @@ import (
 	"context"
 	"log"
 
-	"github.com/cloudevents/sdk-go/pkg/event"
-
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/transport/http"
 )
@@ -23,7 +21,7 @@ func main() {
 		log.Fatalf("failed to create transport, %v", err)
 	}
 
-	c, err := cloudevents.NewClient(t, cloudevents.WithTimeNow(), cloudevents.WithUUIDs(), cloudevents.WithDataContentType(event.ApplicationJSON))
+	c, err := cloudevents.NewClient(t, cloudevents.WithTimeNow(), cloudevents.WithUUIDs())
 	if err != nil {
 		log.Fatalf("failed to create client, %v", err)
 	}
@@ -35,7 +33,7 @@ func main() {
 		_ = e.SetData(map[string]interface{}{
 			"id":      i,
 			"message": "Hello, World!",
-		})
+		}, cloudevents.ApplicationJSON)
 
 		err := c.Send(ctx, e)
 		if err != nil {

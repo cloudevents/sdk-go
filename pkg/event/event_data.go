@@ -13,13 +13,13 @@ import (
 
 // SetData implements EventWriter.SetData
 func (e *Event) SetData(obj interface{}, contentType string) error {
+	e.SetDataContentType(contentType)
+
 	if e.SpecVersion() != CloudEventsVersionV1 {
 		return e.legacySetData(obj)
 	}
 
 	// Version 1.0 and above.
-	e.SetDataContentType(contentType)
-
 	switch obj := obj.(type) {
 	case []byte:
 		e.DataEncoded = nil

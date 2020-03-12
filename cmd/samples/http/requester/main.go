@@ -45,7 +45,7 @@ func _main(args []string, env envConfig) int {
 	}
 
 	seq := 0
-	for _, contentType := range []string{"application/json", "application/xml"} {
+	for _, contentType := range []string{"application/json", "application/xml", "text/plain"} {
 		for _, encoding := range []cloudevents.HTTPEncoding{cloudevents.HTTPBinaryEncoding, cloudevents.HTTPStructuredEncoding} {
 
 			p, err := cloudevents.NewHTTPProtocol(cloudevents.WithTarget(env.Target))
@@ -75,16 +75,15 @@ func _main(args []string, env envConfig) int {
 			for i := 0; i < count; i++ {
 				event := cloudevents.Event{
 					Context: cloudevents.EventContextV1{
-						ID:              uuid.New().String(),
-						Type:            "com.cloudevents.sample.sent",
-						Source:          cloudevents.URIRef{URL: *source},
-						DataContentType: &contentType,
+						ID:     uuid.New().String(),
+						Type:   "com.cloudevents.sample.sent",
+						Source: cloudevents.URIRef{URL: *source},
 					}.AsV1(),
-					Data: &Example{
-						Sequence: i,
-						Message:  message,
-					},
 				}
+				_ = event.SetData(&Example{
+					Sequence: i,
+					Message:  message,
+				}, contentType)
 
 				if resp, err := c.Request(context.Background(), event); err != nil {
 					log.Printf("failed to request: %v", err)

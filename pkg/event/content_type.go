@@ -1,6 +1,7 @@
 package event
 
 const (
+	TextPlain                       = "text/plain"
 	TextJSON                        = "text/json"
 	ApplicationJSON                 = "application/json"
 	ApplicationXML                  = "application/xml"

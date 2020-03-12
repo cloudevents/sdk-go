@@ -39,7 +39,7 @@ func main() {
 		event := cloudevents.NewEvent(version)
 		event.SetType("com.cloudevents.sample.sent")
 		event.SetSource("https://github.com/cloudevents/sdk-go/cmd/samples/sender")
-		event.Data = data
+		_ = event.SetData(data, cloudevents.ApplicationJSON)
 
 		if resp, err := c.Request(ctx, event); err != nil {
 			log.Printf("failed to send: %v", err)

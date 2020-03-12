@@ -67,11 +67,11 @@ type Example struct {
 func (d *Demo) Send() error {
 	e := cloudevents.Event{
 		Context: d.context(),
-		Data: &Example{
-			Sequence: seq,
-			Message:  d.Message,
-		},
 	}
+	_ = e.SetData(&Example{
+		Sequence: seq,
+		Message:  d.Message,
+	}, cloudevents.ApplicationJSON)
 	seq++
 	return d.Client.Send(context.Background(), e)
 }

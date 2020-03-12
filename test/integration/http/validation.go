@@ -40,7 +40,7 @@ func assertEventEqualityExact(t *testing.T, ctx string, expected, actual *cloude
 	if expected == nil || actual == nil {
 		return
 	}
-	if diff := cmp.Diff(expected.Data, actual.Data); diff != "" {
+	if diff := cmp.Diff(expected.Data(), actual.Data()); diff != "" {
 		t.Errorf("Unexpected data difference in %s (-want, +got): %v", ctx, diff)
 	}
 }
@@ -57,7 +57,7 @@ func assertEventEquality(t *testing.T, ctx string, expected, actual *cloudevents
 	if err != nil {
 		t.Error(err)
 	}
-	if diff := cmp.Diff(expected.Data, data); diff != "" {
+	if diff := cmp.Diff(expected.Data(), data); diff != "" {
 		t.Errorf("Unexpected data difference in %s (-want, +got): %v", ctx, diff)
 	}
 }

@@ -23,7 +23,7 @@ func runSender(w io.Writer) error {
 		e.SetType("example.com/event")
 		e.SetSource("example.com/source")
 		e.SetID(strconv.Itoa(i))
-		if err := e.SetData(fmt.Sprintf("hello %d", i)); err != nil {
+		if err := e.SetData(fmt.Sprintf("hello %d", i), event.TextJSON); err != nil {
 			return err
 		}
 		if err := c.Send(context.TODO(), e); err != nil {
