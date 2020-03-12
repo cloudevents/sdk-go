@@ -10,24 +10,24 @@ import (
 
 // Update cloudevents attribute (if present) using the provided function
 func UpdateAttribute(attributeKind spec.Kind, updater func(interface{}) (interface{}, error)) binding.TransformerFactory {
-	return updateAttributeTranscoderFactory{attributeKind: attributeKind, updater: updater}
+	return updateAttributeTransformerFactory{attributeKind: attributeKind, updater: updater}
 }
 
 // Update cloudevents extension (if present) using the provided function
 func UpdateExtension(name string, updater func(interface{}) (interface{}, error)) binding.TransformerFactory {
-	return updateExtensionTranscoderFactory{name: name, updater: updater}
+	return updateExtensionTransformerFactory{name: name, updater: updater}
 }
 
-type updateAttributeTranscoderFactory struct {
+type updateAttributeTransformerFactory struct {
 	attributeKind spec.Kind
 	updater       func(interface{}) (interface{}, error)
 }
 
-func (a updateAttributeTranscoderFactory) StructuredTransformer(binding.StructuredWriter) binding.StructuredWriter {
+func (a updateAttributeTransformerFactory) StructuredTransformer(binding.StructuredWriter) binding.StructuredWriter {
 	return nil
 }
 
-func (a updateAttributeTranscoderFactory) BinaryTransformer(encoder binding.BinaryWriter) binding.BinaryWriter {
+func (a updateAttributeTransformerFactory) BinaryTransformer(encoder binding.BinaryWriter) binding.BinaryWriter {
 	return &updateAttributeTransformer{
 		BinaryWriter:  encoder,
 		attributeKind: a.attributeKind,
@@ -35,7 +35,7 @@ func (a updateAttributeTranscoderFactory) BinaryTransformer(encoder binding.Bina
 	}
 }
 
-func (a updateAttributeTranscoderFactory) EventTransformer() binding.EventTransformer {
+func (a updateAttributeTransformerFactory) EventTransformer() binding.EventTransformer {
 	return func(event *event.Event) error {
 		v := spec.VS.Version(event.SpecVersion())
 		if v == nil {
@@ -56,16 +56,16 @@ func (a updateAttributeTranscoderFactory) EventTransformer() binding.EventTransf
 	}
 }
 
-type updateExtensionTranscoderFactory struct {
+type updateExtensionTransformerFactory struct {
 	name    string
 	updater func(interface{}) (interface{}, error)
 }
 
-func (a updateExtensionTranscoderFactory) StructuredTransformer(binding.StructuredWriter) binding.StructuredWriter {
+func (a updateExtensionTransformerFactory) StructuredTransformer(binding.StructuredWriter) binding.StructuredWriter {
 	return nil
 }
 
-func (a updateExtensionTranscoderFactory) BinaryTransformer(encoder binding.BinaryWriter) binding.BinaryWriter {
+func (a updateExtensionTransformerFactory) BinaryTransformer(encoder binding.BinaryWriter) binding.BinaryWriter {
 	return &updateExtensionTransformer{
 		BinaryWriter: encoder,
 		name:         a.name,
@@ -73,7 +73,7 @@ func (a updateExtensionTranscoderFactory) BinaryTransformer(encoder binding.Bina
 	}
 }
 
-func (a updateExtensionTranscoderFactory) EventTransformer() binding.EventTransformer {
+func (a updateExtensionTransformerFactory) EventTransformer() binding.EventTransformer {
 	return func(event *event.Event) error {
 		if val, ok := event.Extensions()[a.name]; ok {
 			newVal, err := a.updater(val)
