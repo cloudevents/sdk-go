@@ -8,22 +8,22 @@ import (
 
 // Converts the event context version to the specified one.
 func Version(version spec.Version) binding.TransformerFactory {
-	return versionTranscoderFactory{version: version}
+	return versionTransformerFactory{version: version}
 }
 
-type versionTranscoderFactory struct {
+type versionTransformerFactory struct {
 	version spec.Version
 }
 
-func (v versionTranscoderFactory) StructuredTransformer(binding.StructuredWriter) binding.StructuredWriter {
+func (v versionTransformerFactory) StructuredTransformer(binding.StructuredWriter) binding.StructuredWriter {
 	return nil // Not supported, must fallback to EventTransformer!
 }
 
-func (v versionTranscoderFactory) BinaryTransformer(encoder binding.BinaryWriter) binding.BinaryWriter {
+func (v versionTransformerFactory) BinaryTransformer(encoder binding.BinaryWriter) binding.BinaryWriter {
 	return binaryVersionTransformer{BinaryWriter: encoder, version: v.version}
 }
 
-func (v versionTranscoderFactory) EventTransformer() binding.EventTransformer {
+func (v versionTransformerFactory) EventTransformer() binding.EventTransformer {
 	return func(e *event.Event) error {
 		e.Context = v.version.Convert(e.Context)
 		return nil

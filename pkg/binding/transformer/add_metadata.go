@@ -10,25 +10,25 @@ import (
 
 // Add cloudevents attribute (if missing) during the encoding process
 func AddAttribute(attributeKind spec.Kind, value interface{}) binding.TransformerFactory {
-	return setAttributeTranscoderFactory{attributeKind: attributeKind, value: value}
+	return addAttributeTransformerFactory{attributeKind: attributeKind, value: value}
 }
 
 // Add cloudevents extension (if missing) during the encoding process
 func AddExtension(name string, value interface{}) binding.TransformerFactory {
-	return setExtensionTranscoderFactory{name: name, value: value}
+	return addExtensionTransformerFactory{name: name, value: value}
 }
 
-type setAttributeTranscoderFactory struct {
+type addAttributeTransformerFactory struct {
 	attributeKind spec.Kind
 	value         interface{}
 }
 
-func (a setAttributeTranscoderFactory) StructuredTransformer(binding.StructuredWriter) binding.StructuredWriter {
+func (a addAttributeTransformerFactory) StructuredTransformer(binding.StructuredWriter) binding.StructuredWriter {
 	return nil
 }
 
-func (a setAttributeTranscoderFactory) BinaryTransformer(encoder binding.BinaryWriter) binding.BinaryWriter {
-	return &setAttributeTransformer{
+func (a addAttributeTransformerFactory) BinaryTransformer(encoder binding.BinaryWriter) binding.BinaryWriter {
+	return &addAttributeTransformer{
 		BinaryWriter:  encoder,
 		attributeKind: a.attributeKind,
 		value:         a.value,
@@ -36,7 +36,7 @@ func (a setAttributeTranscoderFactory) BinaryTransformer(encoder binding.BinaryW
 	}
 }
 
-func (a setAttributeTranscoderFactory) EventTransformer() binding.EventTransformer {
+func (a addAttributeTransformerFactory) EventTransformer() binding.EventTransformer {
 	return func(event *event.Event) error {
 		v := spec.VS.Version(event.SpecVersion())
 		if v == nil {
@@ -49,17 +49,17 @@ func (a setAttributeTranscoderFactory) EventTransformer() binding.EventTransform
 	}
 }
 
-type setExtensionTranscoderFactory struct {
+type addExtensionTransformerFactory struct {
 	name  string
 	value interface{}
 }
 
-func (a setExtensionTranscoderFactory) StructuredTransformer(binding.StructuredWriter) binding.StructuredWriter {
+func (a addExtensionTransformerFactory) StructuredTransformer(binding.StructuredWriter) binding.StructuredWriter {
 	return nil
 }
 
-func (a setExtensionTranscoderFactory) BinaryTransformer(encoder binding.BinaryWriter) binding.BinaryWriter {
-	return &setExtensionTransformer{
+func (a addExtensionTransformerFactory) BinaryTransformer(encoder binding.BinaryWriter) binding.BinaryWriter {
+	return &addExtensionTransformer{
 		BinaryWriter: encoder,
 		name:         a.name,
 		value:        a.value,
@@ -67,7 +67,7 @@ func (a setExtensionTranscoderFactory) BinaryTransformer(encoder binding.BinaryW
 	}
 }
 
-func (a setExtensionTranscoderFactory) EventTransformer() binding.EventTransformer {
+func (a addExtensionTransformerFactory) EventTransformer() binding.EventTransformer {
 	return func(event *event.Event) error {
 		if _, ok := event.Extensions()[a.name]; !ok {
 			return event.Context.SetExtension(a.name, a.value)
@@ -76,7 +76,7 @@ func (a setExtensionTranscoderFactory) EventTransformer() binding.EventTransform
 	}
 }
 
-type setAttributeTransformer struct {
+type addAttributeTransformer struct {
 	binding.BinaryWriter
 	attributeKind spec.Kind
 	value         interface{}
@@ -84,7 +84,7 @@ type setAttributeTransformer struct {
 	found         bool
 }
 
-func (b *setAttributeTransformer) SetAttribute(attribute spec.Attribute, value interface{}) error {
+func (b *addAttributeTransformer) SetAttribute(attribute spec.Attribute, value interface{}) error {
 	if attribute.Kind() == b.attributeKind {
 		b.found = true
 	}
@@ -92,7 +92,7 @@ func (b *setAttributeTransformer) SetAttribute(attribute spec.Attribute, value i
 	return b.BinaryWriter.SetAttribute(attribute, value)
 }
 
-func (b *setAttributeTransformer) End() error {
+func (b *addAttributeTransformer) End() error {
 	if !b.found {
 		err := b.BinaryWriter.SetAttribute(b.version.AttributeFromKind(b.attributeKind), b.value)
 		if err != nil {
@@ -102,21 +102,21 @@ func (b *setAttributeTransformer) End() error {
 	return b.BinaryWriter.End()
 }
 
-type setExtensionTransformer struct {
+type addExtensionTransformer struct {
 	binding.BinaryWriter
 	name  string
 	value interface{}
 	found bool
 }
 
-func (b *setExtensionTransformer) SetExtension(name string, value interface{}) error {
+func (b *addExtensionTransformer) SetExtension(name string, value interface{}) error {
 	if name == b.name {
 		b.found = true
 	}
 	return b.BinaryWriter.SetExtension(name, value)
 }
 
-func (b *setExtensionTransformer) End() error {
+func (b *addExtensionTransformer) End() error {
 	if !b.found {
 		err := b.BinaryWriter.SetExtension(b.name, b.value)
 		if err != nil {

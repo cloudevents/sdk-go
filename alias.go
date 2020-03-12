@@ -31,7 +31,6 @@ type EventContextV03 = event.EventContextV03
 // Custom Types
 
 type Timestamp = types.Timestamp
-type URLRef = types.URLRef
 type URIRef = types.URIRef
 
 // HTTP Protocol
@@ -102,7 +101,6 @@ var (
 	// Custom Types
 
 	ParseTimestamp = types.ParseTimestamp
-	ParseURLRef    = types.ParseURLRef
 	ParseURIRef    = types.ParseURIRef
 	ParseURI       = types.ParseURI
 

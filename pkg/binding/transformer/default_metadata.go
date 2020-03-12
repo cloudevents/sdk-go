@@ -12,56 +12,39 @@ import (
 )
 
 var (
-	// Sets the cloudevents id attribute (if missing) to a UUID.New()
-	AddUUID binding.TransformerFactory = addUUID{}
-	// Sets the cloudevents time attribute (if missing) to time.Now()
+	// Sets the cloudevents id attribute to a UUID.New()
+	SetUUID binding.TransformerFactory = setUUID{}
+	// Add the cloudevents time attribute, if missing, to time.Now()
 	AddTimeNow binding.TransformerFactory = addTimeNow{}
 )
 
-type addUUID struct{}
+type setUUID struct{}
 
-func (a addUUID) StructuredTransformer(binding.StructuredWriter) binding.StructuredWriter {
+func (a setUUID) StructuredTransformer(binding.StructuredWriter) binding.StructuredWriter {
 	return nil
 }
 
-func (a addUUID) BinaryTransformer(encoder binding.BinaryWriter) binding.BinaryWriter {
-	return &addUUIDTransformer{
+func (a setUUID) BinaryTransformer(encoder binding.BinaryWriter) binding.BinaryWriter {
+	return &setUUIDTransformer{
 		BinaryWriter: encoder,
-		found:        false,
 	}
 }
 
-func (a addUUID) EventTransformer() binding.EventTransformer {
+func (a setUUID) EventTransformer() binding.EventTransformer {
 	return func(event *event.Event) error {
-		if event.Context.GetID() == "" {
-			return event.Context.SetID(uuid.New().String())
-		}
-		return nil
+		return event.Context.SetID(uuid.New().String())
 	}
 }
 
-type addUUIDTransformer struct {
+type setUUIDTransformer struct {
 	binding.BinaryWriter
-	version spec.Version
-	found   bool
 }
 
-func (b *addUUIDTransformer) SetAttribute(attribute spec.Attribute, value interface{}) error {
+func (b *setUUIDTransformer) SetAttribute(attribute spec.Attribute, value interface{}) error {
 	if attribute.Kind() == spec.ID {
-		b.found = true
+		return b.BinaryWriter.SetAttribute(attribute.Version().AttributeFromKind(spec.ID), uuid.New().String())
 	}
-	b.version = attribute.Version()
 	return b.BinaryWriter.SetAttribute(attribute, value)
-}
-
-func (b *addUUIDTransformer) End() error {
-	if !b.found {
-		err := b.BinaryWriter.SetAttribute(b.version.AttributeFromKind(spec.ID), uuid.New().String())
-		if err != nil {
-			return err
-		}
-	}
-	return b.BinaryWriter.End()
 }
 
 type addTimeNow struct{}

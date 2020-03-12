@@ -15,12 +15,7 @@ import (
 	. "github.com/cloudevents/sdk-go/pkg/binding/test"
 )
 
-func TestAddUUID(t *testing.T) {
-	eventWithoutId := test.MinEvent()
-	eventCtx := eventWithoutId.Context.AsV1()
-	eventCtx.ID = ""
-	eventWithoutId.Context = eventCtx
-
+func TestSetUUID(t *testing.T) {
 	eventWithId := test.MinEvent()
 
 	assertUUID := func(t *testing.T, ev event.Event) {
@@ -31,34 +26,22 @@ func TestAddUUID(t *testing.T) {
 
 	RunTransformerTests(t, context.Background(), []TransformerTestArgs{
 		{
-			Name:         "No change to id to Mock Structured message",
+			Name:         "Set UUID when id already exists to Mock Structured message",
 			InputMessage: test.MustCreateMockStructuredMessage(eventWithId.Clone()),
-			WantEvent:    eventWithId.Clone(),
-			Transformers: []binding.TransformerFactory{AddUUID},
+			AssertFunc:   assertUUID,
+			Transformers: []binding.TransformerFactory{SetUUID},
 		},
 		{
-			Name:         "No change to id to Mock Binary message",
+			Name:         "Set UUID when id already exists to Mock Binary message",
 			InputMessage: test.MustCreateMockBinaryMessage(eventWithId.Clone()),
-			WantEvent:    eventWithId.Clone(),
-			Transformers: []binding.TransformerFactory{AddUUID},
+			AssertFunc:   assertUUID,
+			Transformers: []binding.TransformerFactory{SetUUID},
 		},
 		{
-			Name:         "No change to id to Event message",
+			Name:         "Set UUID when id already exists to Event message",
 			InputEvent:   eventWithId,
-			WantEvent:    eventWithId,
-			Transformers: []binding.TransformerFactory{AddUUID},
-		},
-		{
-			Name:         "Add UUID to Mock Binary message",
-			InputMessage: test.MustCreateMockBinaryMessage(eventWithoutId.Clone()),
 			AssertFunc:   assertUUID,
-			Transformers: []binding.TransformerFactory{AddUUID},
-		},
-		{
-			Name:         "Add UUID to Event message",
-			InputEvent:   eventWithoutId,
-			AssertFunc:   assertUUID,
-			Transformers: []binding.TransformerFactory{AddUUID},
+			Transformers: []binding.TransformerFactory{SetUUID},
 		},
 	})
 }

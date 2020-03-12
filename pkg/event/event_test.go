@@ -487,7 +487,7 @@ func strptr(s string) *string {
 
 func MinEventContextV03() *event.EventContextV03 {
 	sourceUrl, _ := url.Parse("http://example.com/source")
-	source := &types.URLRef{URL: *sourceUrl}
+	source := &types.URIRef{URL: *sourceUrl}
 
 	return event.EventContextV03{
 		Type:   "com.example.simple",
@@ -509,10 +509,10 @@ func MinEventContextV1() *event.EventContextV1 {
 
 func FullEventContextV03(now types.Timestamp) *event.EventContextV03 {
 	sourceUrl, _ := url.Parse("http://example.com/source")
-	source := &types.URLRef{URL: *sourceUrl}
+	source := &types.URIRef{URL: *sourceUrl}
 
 	schemaUrl, _ := url.Parse("http://example.com/schema")
-	schema := &types.URLRef{URL: *schemaUrl}
+	schema := &types.URIRef{URL: *schemaUrl}
 
 	eventContextV03 := event.EventContextV03{
 		ID:                  "ABC-123",

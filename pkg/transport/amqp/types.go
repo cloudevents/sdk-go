@@ -12,8 +12,6 @@ func safeAMQPPropertiesUnwrap(val interface{}) (interface{}, error) {
 		v = t.String()
 	case types.URIRef: // Use string form of URLs.
 		v = t.String()
-	case types.URLRef: // Use string form of URLs.
-		v = t.String()
 	case types.Timestamp: // Use string form of URLs.
 		v = t.Time
 	case int32: // Use AMQP long for Integer as per CE spec.
