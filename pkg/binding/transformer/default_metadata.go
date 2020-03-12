@@ -27,7 +27,6 @@ func (a setUUID) StructuredTransformer(binding.StructuredWriter) binding.Structu
 func (a setUUID) BinaryTransformer(encoder binding.BinaryWriter) binding.BinaryWriter {
 	return &setUUIDTransformer{
 		BinaryWriter: encoder,
-		found:        false,
 	}
 }
 
@@ -39,7 +38,6 @@ func (a setUUID) EventTransformer() binding.EventTransformer {
 
 type setUUIDTransformer struct {
 	binding.BinaryWriter
-	found bool
 }
 
 func (b *setUUIDTransformer) SetAttribute(attribute spec.Attribute, value interface{}) error {
