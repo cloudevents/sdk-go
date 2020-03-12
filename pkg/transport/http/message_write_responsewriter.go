@@ -3,7 +3,6 @@ package http
 import (
 	"context"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 
@@ -19,7 +18,7 @@ func WriteResponseWriter(ctx context.Context, m binding.Message, status int, rw 
 	if status < 200 || status >= 600 {
 		status = http.StatusOK
 	}
-	writer := &httpResponseWriterEncoder{rw: rw, status: status}
+	writer := &httpResponseWriter{rw: rw, status: status}
 
 	_, err := binding.Write(
 		ctx,
@@ -31,39 +30,38 @@ func WriteResponseWriter(ctx context.Context, m binding.Message, status int, rw 
 	return err
 }
 
-type httpResponseWriterEncoder struct {
+type httpResponseWriter struct {
 	rw     http.ResponseWriter
 	status int
 }
 
-func (b *httpResponseWriterEncoder) SetStructuredEvent(ctx context.Context, format format.Format, event io.Reader) error {
+func (b *httpResponseWriter) SetStructuredEvent(ctx context.Context, format format.Format, event io.Reader) error {
 	b.rw.Header().Set(ContentType, format.MediaType())
 	return b.SetData(event)
 }
 
-func (b *httpResponseWriterEncoder) Start(ctx context.Context) error {
+func (b *httpResponseWriter) Start(ctx context.Context) error {
 	return nil
 }
 
-func (b *httpResponseWriterEncoder) End() error {
+func (b *httpResponseWriter) End() error {
 	return nil
 }
 
-func (b *httpResponseWriterEncoder) SetData(reader io.Reader) error {
+func (b *httpResponseWriter) SetData(reader io.Reader) error {
 	// Finalize the headers.
 	b.rw.WriteHeader(b.status)
 
 	// Write body.
-	body, err := ioutil.ReadAll(reader)
+	copied, err := io.Copy(b.rw, reader)
 	if err != nil {
 		return err
 	}
-	n, err := b.rw.Write(body)
-	b.rw.Header().Set(ContentLength, strconv.Itoa(n))
+	b.rw.Header().Set("Content-Length", strconv.FormatInt(copied, 10))
 	return nil
 }
 
-func (b *httpResponseWriterEncoder) SetAttribute(attribute spec.Attribute, value interface{}) error {
+func (b *httpResponseWriter) SetAttribute(attribute spec.Attribute, value interface{}) error {
 	// Http headers, everything is a string!
 	s, err := types.Format(value)
 	if err != nil {
@@ -78,7 +76,7 @@ func (b *httpResponseWriterEncoder) SetAttribute(attribute spec.Attribute, value
 	return nil
 }
 
-func (b *httpResponseWriterEncoder) SetExtension(name string, value interface{}) error {
+func (b *httpResponseWriter) SetExtension(name string, value interface{}) error {
 	// Http headers, everything is a string!
 	s, err := types.Format(value)
 	if err != nil {

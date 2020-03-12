@@ -1,11 +1,11 @@
 package http
 
 import (
+	"bytes"
 	"context"
-	"net/http"
+	"io/ioutil"
+	"net/http/httptest"
 	"testing"
-
-	test2 "github.com/cloudevents/sdk-go/pkg/binding/test"
 
 	"github.com/stretchr/testify/require"
 
@@ -14,7 +14,7 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/event"
 )
 
-func TestEncodeHttpResponse(t *testing.T) {
+func TestWriteHttpResponseWriter(t *testing.T) {
 	tests := []struct {
 		name             string
 		context          context.Context
@@ -47,24 +47,30 @@ func TestEncodeHttpResponse(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		test2.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
+		test.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
 			t.Run(tt.name, func(t *testing.T) {
-				res := &http.Response{
-					Header: make(http.Header),
-				}
+				res := httptest.NewRecorder()
 
-				eventIn = test2.ExToStr(t, eventIn)
+				eventIn = test.ExToStr(t, eventIn)
 				messageIn := tt.messageFactory(eventIn)
 
-				err := WriteResponse(tt.context, messageIn, res, nil)
+				shouldHaveContentLength := eventIn.Data != nil || messageIn.ReadEncoding() == binding.EncodingStructured
+
+				err := WriteResponseWriter(tt.context, messageIn, 200, res, nil)
 				require.NoError(t, err)
 
+				require.Equal(t, 200, res.Code)
+				if shouldHaveContentLength {
+					require.NotZero(t, res.Header().Get("content-length"))
+				}
+
 				//Little hack to go back to Message
-				messageOut := NewMessageFromHttpResponse(res)
+				messageOut := NewMessage(res.Header(), ioutil.NopCloser(bytes.NewReader(res.Body.Bytes())))
 				require.Equal(t, tt.expectedEncoding, messageOut.ReadEncoding())
 
 				eventOut, err := binding.ToEvent(context.TODO(), messageOut, nil)
-				test2.AssertEventEquals(t, eventIn, *eventOut)
+				require.NoError(t, err)
+				test.AssertEventEquals(t, eventIn, *eventOut)
 			})
 		})
 	}
