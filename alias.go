@@ -46,6 +46,7 @@ const (
 
 	ApplicationXML                  = event.ApplicationXML
 	ApplicationJSON                 = event.ApplicationJSON
+	TextPlain                       = event.TextPlain
 	ApplicationCloudEventsJSON      = event.ApplicationCloudEventsJSON
 	ApplicationCloudEventsBatchJSON = event.ApplicationCloudEventsBatchJSON
 	Base64                          = event.Base64
@@ -64,6 +65,7 @@ var (
 
 	StringOfApplicationJSON                 = event.StringOfApplicationJSON
 	StringOfApplicationXML                  = event.StringOfApplicationXML
+	StringOfTextPlain                       = event.StringOfTextPlain
 	StringOfApplicationCloudEventsJSON      = event.StringOfApplicationCloudEventsJSON
 	StringOfApplicationCloudEventsBatchJSON = event.StringOfApplicationCloudEventsBatchJSON
 	StringOfBase64                          = event.StringOfBase64
@@ -78,7 +80,6 @@ var (
 	WithEventDefaulter      = client.WithEventDefaulter
 	WithUUIDs               = client.WithUUIDs
 	WithTimeNow             = client.WithTimeNow
-	WithDataContentType     = client.WithDataContentType
 	WithoutTracePropagation = client.WithoutTracePropagation
 
 	// Event Creation

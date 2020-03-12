@@ -39,11 +39,7 @@ func MustCreateMockBinaryMessage(e event.Event) binding.Message {
 		m.Extensions[k] = v
 	}
 
-	var err error
-	m.Body, err = e.DataBytes()
-	if err != nil {
-		panic(err)
-	}
+	m.Body = e.Data()
 
 	return &m
 }

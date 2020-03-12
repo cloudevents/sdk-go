@@ -45,11 +45,11 @@ func gotEvent(ctx context.Context, event cloudevents.Event) (*cloudevents.Event,
 				Source: *cloudevents.ParseURIRef("/mod3"),
 				Type:   "samples.http.mod3",
 			}.AsV1(),
-			Data: Example{
-				Sequence: data.Sequence,
-				Message:  "mod 3!",
-			},
 		}
+		_ = r.SetData(cloudevents.ApplicationJSON, Example{
+			Sequence: data.Sequence,
+			Message:  "mod 3!",
+		})
 		return &r, nil
 	}
 

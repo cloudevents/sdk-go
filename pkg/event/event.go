@@ -9,10 +9,8 @@ import (
 
 // Event represents the canonical representation of a CloudEvent.
 type Event struct {
-	Context EventContext
-	// Data can be a string or a []byte
-	Data        interface{}
-	DataEncoded bool
+	Context     EventContext
+	DataEncoded []byte
 	DataBinary  bool
 	FieldErrors map[string]error
 }
@@ -103,55 +101,46 @@ func (e Event) String() string {
 
 	b.WriteString(e.Context.String())
 
-	if e.Data != nil {
-		b.WriteString("Data,\n  ")
-		if strings.HasPrefix(e.DataContentType(), ApplicationJSON) {
+	if e.DataEncoded != nil {
+		if e.DataBinary {
+			b.WriteString("Data (binary),\n  ")
+		} else {
+			b.WriteString("Data,\n  ")
+		}
+		switch e.DataMediaType() {
+		case ApplicationJSON:
 			var prettyJSON bytes.Buffer
-
-			data, ok := e.Data.([]byte)
-			if !ok {
-				var err error
-				data, err = json.Marshal(e.Data)
-				if err != nil {
-					data = []byte(err.Error())
-				}
-			}
-			err := json.Indent(&prettyJSON, data, "  ", "  ")
+			err := json.Indent(&prettyJSON, e.DataEncoded, "  ", "  ")
 			if err != nil {
-				b.Write(e.Data.([]byte))
+				b.Write(e.DataEncoded)
 			} else {
 				b.Write(prettyJSON.Bytes())
 			}
-		} else {
-			b.Write(e.Data.([]byte))
+		default:
+			b.Write(e.DataEncoded)
 		}
 		b.WriteString("\n")
 	}
+
 	return b.String()
 }
 
 func (e Event) Clone() Event {
-	new := Event{}
-	new.Context = e.Context.Clone()
-	new.DataBinary = e.DataBinary
-	new.DataEncoded = e.DataEncoded
-	new.Data = e.cloneData()
-	new.FieldErrors = e.cloneFieldErrors()
-	return new
+	out := Event{}
+	out.Context = e.Context.Clone()
+	out.DataEncoded = cloneBytes(e.DataEncoded)
+	out.DataBinary = e.DataBinary
+	out.FieldErrors = e.cloneFieldErrors()
+	return out
 }
 
-func (e Event) cloneData() interface{} {
-	if e.Data == nil {
+func cloneBytes(in []byte) []byte {
+	if in == nil {
 		return nil
-	} else if bytes, ok := e.Data.([]byte); ok {
-		new := make([]byte, len(bytes))
-		copy(new, bytes)
-		return new
-	} else if s, ok := e.Data.(string); ok {
-		return s // Strings are immutable!
-	} else {
-		panic("Invalid value in Event.Data field")
 	}
+	out := make([]byte, len(in))
+	copy(out, in)
+	return out
 }
 
 func (e Event) cloneFieldErrors() map[string]error {

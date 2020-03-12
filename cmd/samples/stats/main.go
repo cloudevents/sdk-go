@@ -14,6 +14,7 @@ import (
 	"go.opencensus.io/trace"
 	"go.opencensus.io/zpages"
 
+	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/client"
 	cecontext "github.com/cloudevents/sdk-go/pkg/context"
 	"github.com/cloudevents/sdk-go/pkg/event"
@@ -77,8 +78,8 @@ func mainSender() {
 					Type:   "com.cloudevents.sample.sent",
 					Source: *source,
 				}.AsV1(),
-				Data: data,
 			}
+			_ = e.SetData(cloudevents.ApplicationJSON, data)
 
 			if resp, err := c.Request(ctx, e); err != nil {
 				log.Printf("failed to send: %v", err)

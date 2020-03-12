@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/client"
 	"github.com/cloudevents/sdk-go/pkg/event"
 	ceamqp "github.com/cloudevents/sdk-go/pkg/transport/amqp"
@@ -58,11 +59,12 @@ type Example struct {
 func (d *Demo) Send(eventContext event.EventContext, i int) error {
 	e := event.Event{
 		Context: eventContext,
-		Data: &Example{
+	}
+	_ = e.SetData(cloudevents.ApplicationJSON,
+		&Example{
 			Sequence: i,
 			Message:  d.Message,
-		},
-	}
+		})
 	return d.Client.Send(context.Background(), e)
 }
 

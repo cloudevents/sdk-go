@@ -22,7 +22,7 @@ func TestClientLoopback_binary_v03tov03(t *testing.T) {
 					Subject:         strptr("resource"),
 					DataContentType: cloudevents.StringOfApplicationJSON(),
 				}.AsV03(),
-				Data: map[string]string{"hello": "unittest"},
+				DataEncoded: toBytes(map[string]interface{}{"hello": "unittest"}),
 			},
 			resp: &cloudevents.Event{
 				Context: cloudevents.EventContextV03{
@@ -31,7 +31,7 @@ func TestClientLoopback_binary_v03tov03(t *testing.T) {
 					Source:          *cloudevents.ParseURIRef("/unit/test/client"),
 					DataContentType: cloudevents.StringOfApplicationJSON(),
 				}.AsV03(),
-				Data: map[string]string{"unittest": "response"},
+				DataEncoded: toBytes(map[string]interface{}{"unittest": "response"}),
 			},
 			want: &cloudevents.Event{
 				Context: cloudevents.EventContextV03{
@@ -41,7 +41,7 @@ func TestClientLoopback_binary_v03tov03(t *testing.T) {
 					Source:          *cloudevents.ParseURIRef("/unit/test/client"),
 					DataContentType: cloudevents.StringOfApplicationJSON(),
 				}.AsV03(),
-				Data: map[string]string{"unittest": "response"},
+				DataEncoded: toBytes(map[string]interface{}{"unittest": "response"}),
 			},
 			asSent: &TapValidation{
 				Method: "POST",
@@ -98,7 +98,7 @@ func TestClientLoopback_binary_base64_v03tov03(t *testing.T) {
 					DataContentEncoding: cloudevents.StringOfBase64(),
 					DataContentType:     cloudevents.StringOfApplicationJSON(),
 				}.AsV03(),
-				Data: map[string]string{"hello": "unittest"},
+				DataEncoded: toBytes(map[string]interface{}{"hello": "unittest"}),
 			},
 			resp: &cloudevents.Event{
 				Context: cloudevents.EventContextV03{
@@ -108,7 +108,7 @@ func TestClientLoopback_binary_base64_v03tov03(t *testing.T) {
 					DataContentEncoding: cloudevents.StringOfBase64(),
 					DataContentType:     cloudevents.StringOfApplicationJSON(),
 				}.AsV03(),
-				Data: map[string]string{"unittest": "response"},
+				DataEncoded: toBytes(map[string]interface{}{"unittest": "response"}),
 			},
 			want: &cloudevents.Event{
 				Context: cloudevents.EventContextV03{
@@ -119,7 +119,7 @@ func TestClientLoopback_binary_base64_v03tov03(t *testing.T) {
 					DataContentType:     cloudevents.StringOfApplicationJSON(),
 					DataContentEncoding: cloudevents.StringOfBase64(),
 				}.AsV03(),
-				Data: map[string]string{"unittest": "response"},
+				DataEncoded: toBytes(map[string]interface{}{"unittest": "response"}),
 			},
 			asSent: &TapValidation{
 				Method: "POST",
@@ -176,7 +176,7 @@ func TestClientLoopback_structured_base64_v03tov03(t *testing.T) {
 					DataContentEncoding: cloudevents.StringOfBase64(),
 					DataContentType:     cloudevents.StringOfApplicationJSON(),
 				}.AsV03(),
-				Data: map[string]string{"hello": "unittest"},
+				DataEncoded: toBytes(map[string]interface{}{"hello": "unittest"}),
 			},
 			resp: &cloudevents.Event{
 				Context: cloudevents.EventContextV03{
@@ -186,7 +186,7 @@ func TestClientLoopback_structured_base64_v03tov03(t *testing.T) {
 					DataContentEncoding: cloudevents.StringOfBase64(),
 					DataContentType:     cloudevents.StringOfApplicationJSON(),
 				}.AsV03(),
-				Data: map[string]string{"unittest": "response"},
+				DataEncoded: toBytes(map[string]interface{}{"unittest": "response"}),
 			},
 			want: &cloudevents.Event{
 				Context: cloudevents.EventContextV03{
@@ -197,7 +197,7 @@ func TestClientLoopback_structured_base64_v03tov03(t *testing.T) {
 					DataContentType:     cloudevents.StringOfApplicationJSON(),
 					DataContentEncoding: cloudevents.StringOfBase64(),
 				}.AsV03(),
-				Data: map[string]string{"unittest": "response"},
+				DataEncoded: toBytes(map[string]interface{}{"unittest": "response"}),
 			},
 			asSent: &TapValidation{
 				Method: "POST",

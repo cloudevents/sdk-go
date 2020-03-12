@@ -24,13 +24,12 @@ var (
 func FullEvent() event.Event {
 	e := event.Event{
 		Context: event.EventContextV1{
-			Type:            "com.example.FullEvent",
-			Source:          Source,
-			ID:              "full-event",
-			Time:            &Timestamp,
-			DataSchema:      &Schema,
-			DataContentType: strptr("text/json"),
-			Subject:         strptr("topic"),
+			Type:       "com.example.FullEvent",
+			Source:     Source,
+			ID:         "full-event",
+			Time:       &Timestamp,
+			DataSchema: &Schema,
+			Subject:    strptr("topic"),
 		}.AsV1(),
 	}
 
@@ -41,7 +40,7 @@ func FullEvent() event.Event {
 	e.SetExtension("exurl", Source)
 	e.SetExtension("extime", Timestamp)
 
-	if err := e.SetData("hello"); err != nil {
+	if err := e.SetData("text/json", "hello"); err != nil {
 		panic(err)
 	}
 	return e

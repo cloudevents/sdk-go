@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	cloudevents "github.com/cloudevents/sdk-go"
 	"log"
 	"net/url"
 	"os"
@@ -53,13 +54,11 @@ type Example struct {
 }
 
 func (d *Demo) Send(eventContext event.EventContext, i int) error {
-	e := event.Event{
-		Context: eventContext,
-		Data: &Example{
-			Sequence: i,
-			Message:  d.Message,
-		},
-	}
+	e := event.Event{Context: eventContext}
+	_ = e.SetData(cloudevents.ApplicationJSON, &Example{
+		Sequence: i,
+		Message:  d.Message,
+	})
 	return d.Client.Send(context.Background(), e)
 }
 

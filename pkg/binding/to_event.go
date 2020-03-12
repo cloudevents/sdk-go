@@ -87,7 +87,7 @@ func (b *messageToEventBuilder) SetData(data io.Reader) error {
 		return err
 	}
 	if w != 0 {
-		return b.event.SetData(buf.Bytes())
+		b.event.DataEncoded = buf.Bytes()
 	}
 	return nil
 }

@@ -23,7 +23,7 @@ func TestClientLoopback_binary_v1tov03(t *testing.T) {
 					Subject:         strptr("resource"),
 					DataContentType: cloudevents.StringOfApplicationJSON(),
 				}.AsV1(),
-				Data: map[string]string{"hello": "unittest"},
+				DataEncoded: toBytes(map[string]interface{}{"hello": "unittest"}),
 			},
 			resp: &cloudevents.Event{
 				Context: cloudevents.EventContextV03{
@@ -32,7 +32,7 @@ func TestClientLoopback_binary_v1tov03(t *testing.T) {
 					Source:          *cloudevents.ParseURIRef("/unit/test/client"),
 					DataContentType: cloudevents.StringOfApplicationJSON(),
 				}.AsV03(),
-				Data: map[string]string{"unittest": "response"},
+				DataEncoded: toBytes(map[string]interface{}{"unittest": "response"}),
 			},
 			want: &cloudevents.Event{
 				Context: cloudevents.EventContextV03{
@@ -42,7 +42,7 @@ func TestClientLoopback_binary_v1tov03(t *testing.T) {
 					Source:          *cloudevents.ParseURIRef("/unit/test/client"),
 					DataContentType: cloudevents.StringOfApplicationJSON(),
 				}.AsV03(),
-				Data: map[string]string{"unittest": "response"},
+				DataEncoded: toBytes(map[string]interface{}{"unittest": "response"}),
 			},
 			asSent: &TapValidation{
 				Method: "POST",
@@ -96,7 +96,7 @@ func TestClientLoopback_binary_v1tov1(t *testing.T) {
 					Subject:         strptr("resource"),
 					DataContentType: cloudevents.StringOfApplicationJSON(),
 				}.AsV1(),
-				Data: map[string]string{"hello": "unittest"},
+				DataEncoded: toBytes(map[string]interface{}{"hello": "unittest"}),
 			},
 			resp: &cloudevents.Event{
 				Context: cloudevents.EventContextV1{
@@ -105,7 +105,7 @@ func TestClientLoopback_binary_v1tov1(t *testing.T) {
 					Source:          *cloudevents.ParseURIRef("/unit/test/client"),
 					DataContentType: cloudevents.StringOfApplicationJSON(),
 				}.AsV1(),
-				Data: map[string]string{"unittest": "response"},
+				DataEncoded: toBytes(map[string]interface{}{"unittest": "response"}),
 			},
 			want: &cloudevents.Event{
 				Context: cloudevents.EventContextV1{
@@ -115,7 +115,7 @@ func TestClientLoopback_binary_v1tov1(t *testing.T) {
 					Source:          *cloudevents.ParseURIRef("/unit/test/client"),
 					DataContentType: cloudevents.StringOfApplicationJSON(),
 				}.AsV1(),
-				Data: map[string]string{"unittest": "response"},
+				DataEncoded: toBytes(map[string]interface{}{"unittest": "response"}),
 			},
 			asSent: &TapValidation{
 				Method: "POST",
@@ -178,7 +178,7 @@ func TestClientLoopback_structured_base64_v03tov1(t *testing.T) {
 					DataContentEncoding: cloudevents.StringOfBase64(),
 					DataContentType:     cloudevents.StringOfApplicationJSON(),
 				}.AsV03(),
-				Data: map[string]string{"hello": "unittest"},
+				DataEncoded: toBytes(map[string]interface{}{"hello": "unittest"}),
 			},
 			resp: &cloudevents.Event{
 				Context: cloudevents.EventContextV1{
@@ -186,8 +186,8 @@ func TestClientLoopback_structured_base64_v03tov1(t *testing.T) {
 					Type:   "unit.test.client.response",
 					Source: *cloudevents.ParseURIRef("/unit/test/client"),
 				}.AsV1(),
-				Data:       bytes(map[string]string{"unittest": "response"}),
-				DataBinary: true,
+				DataEncoded: bytes(map[string]string{"unittest": "response"}),
+				DataBinary:  true,
 			},
 			want: &cloudevents.Event{
 				Context: cloudevents.EventContextV1{
@@ -196,7 +196,7 @@ func TestClientLoopback_structured_base64_v03tov1(t *testing.T) {
 					Time:   &cloudevents.Timestamp{Time: now},
 					Source: *cloudevents.ParseURIRef("/unit/test/client"),
 				}.AsV1(),
-				Data: map[string]string{"unittest": "response"},
+				DataEncoded: toBytes(map[string]interface{}{"unittest": "response"}),
 			},
 			asSent: &TapValidation{
 				Method: "POST",
@@ -232,14 +232,6 @@ func TestClientLoopback_structured_base64_v1tov1(t *testing.T) {
 
 	now := time.Now()
 
-	bytes := func(obj interface{}) []byte {
-		data, err := json.Marshal(obj)
-		if err != nil {
-			t.Error(err)
-		}
-		return data
-	}
-
 	testCases := TapTestCases{
 		"Loopback Base64 v1.0 -> v1.0": {
 			now: now,
@@ -249,8 +241,8 @@ func TestClientLoopback_structured_base64_v1tov1(t *testing.T) {
 					Type:   "unit.test.client.sent",
 					Source: *cloudevents.ParseURIRef("/unit/test/client"),
 				}.AsV1(),
-				Data:       bytes(map[string]string{"hello": "unittest"}),
-				DataBinary: true,
+				DataEncoded: toBytes(map[string]interface{}{"hello": "unittest"}),
+				DataBinary:  true,
 			},
 			resp: &cloudevents.Event{
 				Context: cloudevents.EventContextV1{
@@ -258,8 +250,8 @@ func TestClientLoopback_structured_base64_v1tov1(t *testing.T) {
 					Type:   "unit.test.client.response",
 					Source: *cloudevents.ParseURIRef("/unit/test/client"),
 				}.AsV1(),
-				Data:       bytes(map[string]string{"unittest": "response"}),
-				DataBinary: true,
+				DataEncoded: toBytes(map[string]interface{}{"hello": "unittest"}),
+				DataBinary:  true,
 			},
 			want: &cloudevents.Event{
 				Context: cloudevents.EventContextV1{
@@ -268,7 +260,7 @@ func TestClientLoopback_structured_base64_v1tov1(t *testing.T) {
 					Time:   &cloudevents.Timestamp{Time: now},
 					Source: *cloudevents.ParseURIRef("/unit/test/client"),
 				}.AsV1(),
-				Data: map[string]string{"unittest": "response"},
+				DataEncoded: toBytes(map[string]interface{}{"unittest": "response"}),
 			},
 			asSent: &TapValidation{
 				Method: "POST",

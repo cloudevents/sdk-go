@@ -93,23 +93,13 @@ func versionFromRawMessage(raw map[string]json.RawMessage) string {
 
 // JsonEncode
 func JsonEncode(e Event) ([]byte, error) {
-	data, err := e.DataBytes()
-	if err != nil {
-		return nil, err
-	}
-	return jsonEncode(e.Context, data, e.DataBinary)
+	return jsonEncode(e.Context, e.DataEncoded, e.DataBinary)
 }
 
 // JsonEncodeLegacy
 func JsonEncodeLegacy(e Event) ([]byte, error) {
-	var data []byte
 	isBase64 := e.Context.DeprecatedGetDataContentEncoding() == Base64
-	var err error
-	data, err = e.DataBytes()
-	if err != nil {
-		return nil, err
-	}
-	return jsonEncode(e.Context, data, isBase64)
+	return jsonEncode(e.Context, e.Data(), isBase64)
 }
 
 func jsonEncode(ctx EventContextReader, data []byte, isBase64 bool) ([]byte, error) {
@@ -181,9 +171,9 @@ func (e *Event) JsonDecodeV03(body []byte, raw map[string]json.RawMessage) error
 	delete(raw, "datacontenttype")
 	delete(raw, "datacontentencoding")
 
-	var data interface{}
+	var data []byte
 	if d, ok := raw["data"]; ok {
-		data = []byte(d)
+		data = d
 	}
 	delete(raw, "data")
 
@@ -203,8 +193,7 @@ func (e *Event) JsonDecodeV03(body []byte, raw map[string]json.RawMessage) error
 	}
 
 	e.Context = &ec
-	e.Data = data
-	e.DataEncoded = data != nil
+	e.DataEncoded = data
 
 	return nil
 }
@@ -226,9 +215,9 @@ func (e *Event) JsonDecodeV1(body []byte, raw map[string]json.RawMessage) error 
 	delete(raw, "dataschema")
 	delete(raw, "datacontenttype")
 
-	var data interface{}
+	var data []byte
 	if d, ok := raw["data"]; ok {
-		data = []byte(d)
+		data = d
 	}
 	delete(raw, "data")
 
@@ -262,11 +251,12 @@ func (e *Event) JsonDecodeV1(body []byte, raw map[string]json.RawMessage) error 
 		return errors.New("parsing error: JSON decoder found both 'data', and 'data_base64' in JSON payload")
 	}
 	if data != nil {
-		e.Data = data
+		e.DataEncoded = data
+		e.DataBinary = false
 	} else if dataBase64 != nil {
-		e.Data = dataBase64
+		e.DataEncoded = dataBase64
+		e.DataBinary = true
 	}
-	e.DataEncoded = data != nil
 
 	return nil
 }

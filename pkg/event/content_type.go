@@ -1,6 +1,7 @@
 package event
 
 const (
+	TextPlain                       = "text/plain"
 	TextJSON                        = "text/json"
 	ApplicationJSON                 = "application/json"
 	ApplicationXML                  = "application/xml"
@@ -17,6 +18,12 @@ func StringOfApplicationJSON() *string {
 // StringOfApplicationXML returns a string pointer to "application/xml"
 func StringOfApplicationXML() *string {
 	a := ApplicationXML
+	return &a
+}
+
+// StringOfTextPlain returns a string pointer to "text/plain"
+func StringOfTextPlain() *string {
+	a := TextPlain
 	return &a
 }
 

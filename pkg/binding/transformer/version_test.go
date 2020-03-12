@@ -17,10 +17,9 @@ import (
 func TestVersionTranscoder(t *testing.T) {
 	var testEventV03 = event.Event{
 		Context: event.EventContextV03{
-			Source:          types.URIRef{URL: url.URL{Path: "source"}},
-			DataContentType: event.StringOfApplicationJSON(),
-			ID:              "id",
-			Type:            "type",
+			Source: types.URIRef{URL: url.URL{Path: "source"}},
+			ID:     "id",
+			Type:   "type",
 		}.AsV03(),
 	}
 
@@ -28,9 +27,9 @@ func TestVersionTranscoder(t *testing.T) {
 	testEventV1.Context = testEventV03.Context.AsV1()
 
 	data := []byte("\"data\"")
-	err := testEventV03.SetData(data)
+	err := testEventV03.SetData(event.ApplicationJSON, data)
 	require.NoError(t, err)
-	err = testEventV1.SetData(data)
+	err = testEventV1.SetData(event.ApplicationJSON, data)
 	require.NoError(t, err)
 
 	test.RunTransformerTests(t, context.Background(), []test.TransformerTestArgs{
