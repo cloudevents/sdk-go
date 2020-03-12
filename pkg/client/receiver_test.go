@@ -6,28 +6,38 @@ import (
 	"testing"
 
 	"github.com/cloudevents/sdk-go/pkg/event"
+	"github.com/cloudevents/sdk-go/pkg/transport"
 
 	"github.com/google/go-cmp/cmp"
 )
 
 func TestReceiverFnValidTypes(t *testing.T) {
 	for name, fn := range map[string]interface{}{
-		"no in, no out":                           func() {},
-		"no in, error out":                        func() error { return nil },
-		"ctx in, no out":                          func(context.Context) {},
-		"ctx, Event in, no out":                   func(context.Context, event.Event) {},
-		"ctx, EventResponse in, no out":           func(context.Context, *event.EventResponse) {},
-		"ctx, Event, EventResponse in, no out":    func(context.Context, event.Event, *event.EventResponse) {},
-		"ctx in, error out":                       func(context.Context) error { return nil },
-		"ctx, Event in, error out":                func(context.Context, event.Event) error { return nil },
-		"ctx, EventResponse in, error out":        func(context.Context, *event.EventResponse) error { return nil },
-		"ctx, Event, EventResponse in, error out": func(context.Context, event.Event, *event.EventResponse) error { return nil },
-		"Event in, no out":                        func(event.Event) {},
-		"EventResponse in, no out":                func(*event.EventResponse) {},
-		"Event, EventResponse in, no out":         func(event.Event, *event.EventResponse) {},
-		"Event in, error out":                     func(event.Event) error { return nil },
-		"EventResponse in, error out":             func(*event.EventResponse) error { return nil },
-		"Event, EventResponse in, error out":      func(event.Event, *event.EventResponse) error { return nil },
+		"no in, no out": func() {},
+
+		"ctx in, no out":       func(context.Context) {},
+		"Event in, no out":     func(event.Event) {},
+		"ctx+Event in, no out": func(context.Context, event.Event) {},
+
+		"no in, error out":       func() error { return nil },
+		"no in, Result out":      func() transport.Result { return nil },
+		"no in, Event+error out": func() (*event.Event, error) { return nil, nil },
+
+		"ctx in, error out":       func(context.Context) error { return nil },
+		"Event in, error out":     func(event.Event) error { return nil },
+		"ctx+Event in, error out": func(context.Context, event.Event) error { return nil },
+
+		"ctx in, Event out":       func(context.Context) *event.Event { return nil },
+		"Event in, Event out":     func(event.Event) *event.Event { return nil },
+		"ctx+Event in, Event out": func(context.Context, event.Event) *event.Event { return nil },
+
+		"ctx in, Event+error out":       func(context.Context) (*event.Event, error) { return nil, nil },
+		"Event in, Event+error out":     func(event.Event) (*event.Event, error) { return nil, nil },
+		"ctx+Event in, Event+error out": func(context.Context, event.Event) (*event.Event, error) { return nil, nil },
+
+		"ctx in, Event+Result out":       func(context.Context) (*event.Event, transport.Result) { return nil, nil },
+		"Event in, Event+Result out":     func(event.Event) (*event.Event, transport.Result) { return nil, nil },
+		"ctx+Event in, Event+Result out": func(context.Context, event.Event) (*event.Event, transport.Result) { return nil, nil },
 	} {
 		t.Run(name, func(t *testing.T) {
 			if _, err := receiver(fn); err != nil {
@@ -39,22 +49,22 @@ func TestReceiverFnValidTypes(t *testing.T) {
 
 func TestReceiverFnInvalidTypes(t *testing.T) {
 	for name, fn := range map[string]interface{}{
-		"wrong type in":                func(string) {},
-		"wrong type out":               func() string { return "" },
-		"extra in":                     func(context.Context, event.Event, *event.EventResponse, map[string]string) {},
-		"extra out":                    func(context.Context, *event.EventResponse) (error, int) { return nil, 0 },
-		"context dup EventResponse in": func(context.Context, *event.EventResponse, *event.EventResponse) {},
-		"dup EventResponse in":         func(*event.EventResponse, *event.EventResponse) {},
-		"context dup Event in":         func(context.Context, event.Event, event.Event) {},
-		"dup Event in":                 func(event.Event, event.Event) {},
-		"wrong order, context3 in":     func(*event.EventResponse, *event.EventResponse, context.Context) {},
-		"wrong order, event in":        func(context.Context, *event.EventResponse, event.Event) {},
-		"wrong order, resp in":         func(*event.EventResponse, event.Event) {},
-		"wrong order, context2 in":     func(*event.EventResponse, context.Context) {},
-		"Event as ptr in":              func(*event.Event) {},
-		"EventResponse as non-ptr in":  func(event.EventResponse) {},
-		"extra Event in":               func(event.Event, *event.EventResponse, event.Event) {},
-		"not a function":               map[string]string(nil),
+		"wrong type in":            func(string) {},
+		"wrong type out":           func() string { return "" },
+		"extra in":                 func(context.Context, event.Event, map[string]string) {},
+		"extra out":                func(context.Context) (error, int) { return nil, 0 },
+		"dup error out":            func(context.Context) (transport.Result, error) { return nil, nil },
+		"context dup Event out":    func(context.Context) (*event.Event, *event.Event) { return nil, nil },
+		"context dup Event in":     func(context.Context, event.Event, event.Event) {},
+		"dup Event in":             func(event.Event, event.Event) {},
+		"wrong order, context3 in": func(*event.Event, event.Event, context.Context) {},
+		"wrong order, event in":    func(context.Context, *event.Event, event.Event) {},
+		"wrong order, resp in":     func(*event.Event, event.Event) {},
+		"wrong order, context2 in": func(*event.Event, context.Context) {},
+		"Event as ptr in":          func(*event.Event) {},
+		"Event as non-ptr out":     func() event.Event { return event.Event{} },
+		"extra Event in":           func(event.Event, event.Event) {},
+		"not a function":           map[string]string(nil),
 	} {
 		t.Run(name, func(t *testing.T) {
 			if _, err := receiver(fn); err == nil {
@@ -65,17 +75,17 @@ func TestReceiverFnInvalidTypes(t *testing.T) {
 }
 
 func TestReceiverFnInvoke_1(t *testing.T) {
-	wantErr := errors.New("UNIT TEST")
 	key := struct{}{}
 	wantCtx := context.WithValue(context.TODO(), key, "UNIT TEST")
 	wantEvent := event.Event{
-		Context: &event.EventContextV1{
-			ID: "UNIT TEST",
-		},
+		Context: &event.EventContextV1{ID: "UNIT TEST"},
 	}
-	wantResp := &event.EventResponse{Reason: "UNIT TEST"}
+	wantResp := &event.Event{
+		Context: &event.EventContextV1{ID: "UNIT TEST"},
+	}
+	wantResult := errors.New("UNIT TEST")
 
-	fn, err := receiver(func(ctx context.Context, event event.Event, resp *event.EventResponse) error {
+	fn, err := receiver(func(ctx context.Context, event event.Event) (*event.Event, transport.Result) {
 		if diff := cmp.Diff(wantCtx.Value(key), ctx.Value(key)); diff != "" {
 			t.Errorf("unexpected context (-want, +got) = %v", diff)
 		}
@@ -84,24 +94,24 @@ func TestReceiverFnInvoke_1(t *testing.T) {
 			t.Errorf("unexpected event (-want, +got) = %v", diff)
 		}
 
-		if diff := cmp.Diff(wantResp, resp); diff != "" {
-			t.Errorf("unexpected response (-want, +got) = %v", diff)
-		}
-		return wantErr
+		return wantResp, wantResult
 	})
 	if err != nil {
 		t.Errorf("unexpected error, wanted nil got = %v", err)
 	}
 
-	err = fn.invoke(wantCtx, wantEvent, wantResp)
+	resp, result := fn.invoke(wantCtx, wantEvent)
 
-	if diff := cmp.Diff(wantErr.Error(), err.Error()); diff != "" {
+	if diff := cmp.Diff(wantResp, resp); diff != "" {
+		t.Errorf("unexpected response (-want, +got) = %v", diff)
+	}
+
+	if diff := cmp.Diff(wantResult.Error(), result.Error()); diff != "" {
 		t.Errorf("unexpected error (-want, +got) = %v", diff)
 	}
 }
 
 func TestReceiverFnInvoke_2(t *testing.T) {
-	wantErr := errors.New("UNIT TEST")
 	key := struct{}{}
 	ctx := context.WithValue(context.TODO(), key, "UNIT TEST")
 	wantEvent := event.Event{
@@ -109,25 +119,28 @@ func TestReceiverFnInvoke_2(t *testing.T) {
 			ID: "UNIT TEST",
 		},
 	}
-	wantResp := &event.EventResponse{Reason: "UNIT TEST"}
+	wantResp := &event.Event{
+		Context: &event.EventContextV1{ID: "UNIT TEST"},
+	}
+	wantResult := errors.New("UNIT TEST")
 
-	fn, err := receiver(func(event event.Event, resp *event.EventResponse) error {
+	fn, err := receiver(func(event event.Event) (*event.Event, transport.Result) {
 		if diff := cmp.Diff(wantEvent, event); diff != "" {
 			t.Errorf("unexpected event (-want, +got) = %v", diff)
 		}
-
-		if diff := cmp.Diff(wantResp, resp); diff != "" {
-			t.Errorf("unexpected response (-want, +got) = %v", diff)
-		}
-		return wantErr
+		return wantResp, wantResult
 	})
 	if err != nil {
 		t.Errorf("unexpected error, wanted nil got = %v", err)
 	}
 
-	err = fn.invoke(ctx, wantEvent, wantResp)
+	resp, result := fn.invoke(ctx, wantEvent)
 
-	if diff := cmp.Diff(wantErr.Error(), err.Error()); diff != "" {
+	if diff := cmp.Diff(wantResp, resp); diff != "" {
+		t.Errorf("unexpected response (-want, +got) = %v", diff)
+	}
+
+	if diff := cmp.Diff(wantResult.Error(), result.Error()); diff != "" {
 		t.Errorf("unexpected error (-want, +got) = %v", diff)
 	}
 }
@@ -140,99 +153,79 @@ func TestReceiverFnInvoke_3(t *testing.T) {
 			ID: "UNIT TEST",
 		},
 	}
-	wantResp := &event.EventResponse{Reason: "UNIT TEST"}
+	wantResp := &event.Event{
+		Context: &event.EventContextV1{ID: "UNIT TEST"},
+	}
 
-	fn, err := receiver(func(event event.Event, resp *event.EventResponse) {
-		if diff := cmp.Diff(wantEvent, event); diff != "" {
+	fn, err := receiver(func(e event.Event) *event.Event {
+		if diff := cmp.Diff(wantEvent, e); diff != "" {
 			t.Errorf("unexpected event (-want, +got) = %v", diff)
 		}
 
-		if diff := cmp.Diff(wantResp, resp); diff != "" {
-			t.Errorf("unexpected response (-want, +got) = %v", diff)
-		}
+		return wantResp
 	})
 	if err != nil {
 		t.Errorf("unexpected error, wanted nil got = %v", err)
 	}
 
-	err = fn.invoke(ctx, wantEvent, wantResp)
+	resp, result := fn.invoke(ctx, wantEvent)
 
-	if err != nil {
-		t.Errorf("unexpected error, want nil got got = %v", err.Error())
+	if diff := cmp.Diff(wantResp, resp); diff != "" {
+		t.Errorf("unexpected response (-want, +got) = %v", diff)
+	}
+
+	if result != nil {
+		t.Errorf("unexpected error (-want, +got) = %v", result)
 	}
 }
 
 func TestReceiverFnInvoke_4(t *testing.T) {
-	wantErr := errors.New("UNIT TEST")
 	key := struct{}{}
 	ctx := context.WithValue(context.TODO(), key, "UNIT TEST")
-	e := event.Event{
-		Context: &event.EventContextV1{
-			ID: "UNIT TEST",
-		},
+	wantResp := &event.Event{
+		Context: &event.EventContextV1{ID: "UNIT TEST"},
 	}
-	wantResp := &event.EventResponse{Reason: "UNIT TEST"}
+	wantResult := errors.New("UNIT TEST")
 
-	fn, err := receiver(func(resp *event.EventResponse) error {
-		if diff := cmp.Diff(wantResp, resp); diff != "" {
-			t.Errorf("unexpected response (-want, +got) = %v", diff)
-		}
-		return wantErr
+	fn, err := receiver(func() (*event.Event, transport.Result) {
+		return wantResp, wantResult
 	})
 	if err != nil {
 		t.Errorf("unexpected error, wanted nil got = %v", err)
 	}
 
-	err = fn.invoke(ctx, e, wantResp)
+	resp, result := fn.invoke(ctx, event.Event{})
 
-	if diff := cmp.Diff(wantErr.Error(), err.Error()); diff != "" {
+	if diff := cmp.Diff(wantResp, resp); diff != "" {
+		t.Errorf("unexpected response (-want, +got) = %v", diff)
+	}
+
+	if diff := cmp.Diff(wantResult.Error(), result.Error()); diff != "" {
 		t.Errorf("unexpected error (-want, +got) = %v", diff)
 	}
 }
 
 func TestReceiverFnInvoke_5(t *testing.T) {
-	wantErr := errors.New("UNIT TEST")
 	key := struct{}{}
 	ctx := context.WithValue(context.TODO(), key, "UNIT TEST")
-	e := event.Event{
-		Context: &event.EventContextV1{
-			ID: "UNIT TEST",
-		},
-	}
-	resp := &event.EventResponse{Reason: "UNIT TEST"}
 
-	fn, err := receiver(func() error {
-		return wantErr
+	var wantResp *event.Event
+	wantResult := errors.New("UNIT TEST")
+
+	fn, err := receiver(func() transport.Result {
+		return wantResult
 	})
 	if err != nil {
 		t.Errorf("unexpected error, wanted nil got = %v", err)
 	}
 
-	err = fn.invoke(ctx, e, resp)
+	resp, result := fn.invoke(ctx, event.Event{})
 
-	if diff := cmp.Diff(wantErr.Error(), err.Error()); diff != "" {
+	if diff := cmp.Diff(wantResp, resp); diff != "" {
+		t.Errorf("unexpected response (-want, +got) = %v", diff)
+	}
+
+	if diff := cmp.Diff(wantResult.Error(), result.Error()); diff != "" {
 		t.Errorf("unexpected error (-want, +got) = %v", diff)
-	}
-}
-
-func TestReceiverFnInvoke_6(t *testing.T) {
-	key := struct{}{}
-	ctx := context.WithValue(context.TODO(), key, "UNIT TEST")
-	e := event.Event{
-		Context: &event.EventContextV1{
-			ID: "UNIT TEST",
-		},
-	}
-	resp := &event.EventResponse{Reason: "UNIT TEST"}
-
-	fn, err := receiver(func() {})
-	if err != nil {
-		t.Errorf("unexpected error, wanted nil got = %v", err)
-	}
-
-	err = fn.invoke(ctx, e, resp)
-
-	if err != nil {
-		t.Errorf("unexpected error, want nil got got = %v", err.Error())
 	}
 }

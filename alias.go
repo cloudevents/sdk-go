@@ -8,6 +8,7 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/context"
 	"github.com/cloudevents/sdk-go/pkg/event"
 	"github.com/cloudevents/sdk-go/pkg/observability"
+	"github.com/cloudevents/sdk-go/pkg/transport"
 	"github.com/cloudevents/sdk-go/pkg/transport/http"
 	"github.com/cloudevents/sdk-go/pkg/types"
 )
@@ -16,12 +17,10 @@ import (
 
 type ClientOption client.Option
 type Client = client.Client
-type ConvertFn = client.ConvertFn
 
 // Event
 
 type Event = event.Event
-type EventResponse = event.EventResponse
 
 // Context
 
@@ -85,7 +84,10 @@ var (
 
 	// Event Creation
 
-	NewEvent = event.New
+	NewEvent  = event.New
+	NewResult = transport.NewResult
+
+	NewHTTPResponse = http.NewResult
 
 	// Tracing
 
@@ -113,7 +115,7 @@ var (
 	// HTTP Protocol Options
 
 	WithTarget             = http.WithTarget
-	WitHHeader             = http.WithHeader
+	WithHeader             = http.WithHeader
 	WithShutdownTimeout    = http.WithShutdownTimeout
 	WithEncoding           = http.WithEncoding
 	WithStructuredEncoding = http.WithStructuredEncoding

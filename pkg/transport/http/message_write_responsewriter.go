@@ -15,15 +15,17 @@ import (
 
 // Write out to the the provided httpResponseWriter with the message m.
 // Using context you can tweak the encoding processing (more details on binding.Write documentation).
-func WriteResponseWriter(ctx context.Context, m binding.Message, rw http.ResponseWriter, transformers binding.TransformerFactories) error {
-	structuredWriter := &httpResponseWriterEncoder{rw: rw}
-	binaryWriter := &httpResponseWriterEncoder{rw: rw}
+func WriteResponseWriter(ctx context.Context, m binding.Message, status int, rw http.ResponseWriter, transformers binding.TransformerFactories) error {
+	if status < 200 || status >= 600 {
+		status = http.StatusOK
+	}
+	writer := &httpResponseWriterEncoder{rw: rw, status: status}
 
 	_, err := binding.Write(
 		ctx,
 		m,
-		structuredWriter,
-		binaryWriter,
+		writer,
+		writer,
 		transformers,
 	)
 	return err
@@ -48,6 +50,10 @@ func (b *httpResponseWriterEncoder) End() error {
 }
 
 func (b *httpResponseWriterEncoder) SetData(reader io.Reader) error {
+	// Finalize the headers.
+	b.rw.WriteHeader(b.status)
+
+	// Write body.
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
 		return err

@@ -82,8 +82,6 @@ func (e Event) Validate() error {
 		return err
 	}
 
-	// TODO: validate data.
-
 	return nil
 }
 

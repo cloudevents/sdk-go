@@ -19,6 +19,7 @@ import (
 
 	"github.com/cloudevents/sdk-go/pkg/client"
 	"github.com/cloudevents/sdk-go/pkg/event"
+	"github.com/cloudevents/sdk-go/pkg/transport"
 	cehttp "github.com/cloudevents/sdk-go/pkg/transport/http"
 	"github.com/cloudevents/sdk-go/pkg/types"
 )
@@ -404,7 +405,7 @@ func TestClientReceive(t *testing.T) {
 
 				ctx, cancel := context.WithCancel(context.TODO())
 				go func() {
-					err = c.StartReceiver(ctx, func(ctx context.Context, event event.Event, resp *event.EventResponse) error {
+					err = c.StartReceiver(ctx, func(ctx context.Context, event event.Event) error {
 						go func() {
 							events <- event
 						}()
@@ -533,11 +534,11 @@ func TestTracedClientReceive(t *testing.T) {
 
 			ctx, cancel := context.WithCancel(context.TODO())
 			go func() {
-				err = c.StartReceiver(ctx, func(ctx context.Context, event event.Event, resp *event.EventResponse) error {
+				err = c.StartReceiver(ctx, func(ctx context.Context, event event.Event) (*event.Event, transport.Result) {
 					go func() {
 						spanContexts <- trace.FromContext(ctx).SpanContext()
 					}()
-					return nil
+					return nil, nil
 				})
 				if err != nil {
 					t.Errorf("failed to start receiver %s", err.Error())

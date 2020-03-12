@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 
-	"github.com/cloudevents/sdk-go/pkg/transport/http"
+	"github.com/cloudevents/sdk-go/pkg/transport"
 
 	cloudevents "github.com/cloudevents/sdk-go"
+	"github.com/cloudevents/sdk-go/pkg/event"
 	"github.com/kelseyhightower/envconfig"
 )
 
@@ -31,7 +33,7 @@ func main() {
 		log.Fatalf("failed to create protocol: %s", err.Error())
 	}
 
-	t, err := http.New(p)
+	t, err := cloudevents.NewHTTPTransport(p)
 	if err != nil {
 		log.Fatalf("failed to create transport, %v", err)
 	}
@@ -39,6 +41,7 @@ func main() {
 	c, err := cloudevents.NewClient(t,
 		cloudevents.WithUUIDs(),
 		cloudevents.WithTimeNow(),
+		cloudevents.WithoutTracePropagation(),
 	)
 	if err != nil {
 		log.Fatalf("failed to create client: %s", err.Error())
@@ -50,9 +53,8 @@ func main() {
 	}
 }
 
-func gotEvent(ctx context.Context, event cloudevents.Event, resp *cloudevents.EventResponse) error {
+func gotEvent(ctx context.Context, event cloudevents.Event) (*event.Event, transport.Result) {
 	fmt.Printf("Got Event: %+v\n", event)
 
-	resp.RespondWith(200, &event)
-	return nil
+	return &event, cloudevents.NewHTTPResponse(http.StatusAccepted, "accept")
 }

@@ -28,13 +28,13 @@ type Transport interface {
 // Deprecated: use bindings.
 type Delivery interface {
 	// Deprecated: use bindings.
-	Delivery(context.Context, event.Event, *event.EventResponse) error
+	Delivery(context.Context, event.Event) (*event.Event, Result)
 }
 
 // DeliveryFunc wraps a function as a Receiver object.
-type DeliveryFunc func(ctx context.Context, e event.Event, er *event.EventResponse) error
+type DeliveryFunc func(ctx context.Context, e event.Event) (*event.Event, error)
 
 // Receive implements Receiver.Receive
-func (f DeliveryFunc) Receive(ctx context.Context, e event.Event, er *event.EventResponse) error {
-	return f(ctx, e, er)
+func (f DeliveryFunc) Receive(ctx context.Context, e event.Event) (*event.Event, error) {
+	return f(ctx, e)
 }

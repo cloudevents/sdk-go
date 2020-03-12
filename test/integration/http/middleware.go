@@ -60,8 +60,8 @@ func ClientMiddleware(t *testing.T, tc TapTest, opts ...interface{}) {
 	recvCtx, recvCancel := context.WithCancel(context.Background())
 
 	go func() {
-		if err := ce.StartReceiver(recvCtx, func(event cloudevents.Event, resp *cloudevents.EventResponse) {
-			resp.RespondWith(200, &event)
+		if err := ce.StartReceiver(recvCtx, func(event cloudevents.Event) *cloudevents.Event {
+			return &event
 		}); err != nil {
 			t.Log(err)
 		}

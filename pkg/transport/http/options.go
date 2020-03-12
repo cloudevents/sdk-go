@@ -56,7 +56,9 @@ func WithHeader(key, value string) ProtocolOption {
 		key = strings.TrimSpace(key)
 		if key != "" {
 			if p.RequestTemplate == nil {
-				p.RequestTemplate = &nethttp.Request{}
+				p.RequestTemplate = &nethttp.Request{
+					Method: nethttp.MethodPost,
+				}
 			}
 			if p.RequestTemplate.Header == nil {
 				p.RequestTemplate.Header = nethttp.Header{}
