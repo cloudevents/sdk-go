@@ -44,7 +44,7 @@ func (b *httpResponseWriter) Start(ctx context.Context) error {
 	return nil
 }
 
-func (b *httpResponseWriter) End() error {
+func (b *httpResponseWriter) End(ctx context.Context) error {
 	return nil
 }
 

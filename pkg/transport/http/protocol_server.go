@@ -183,9 +183,10 @@ func (t *Transport) GetPort() int {
 	return -1
 }
 
-func formatSpanName(r *http.Request) string {
-	return "cloudevents.http." + r.URL.Path
-}
+//
+//func formatSpanName(r *http.Request) string {
+//	return "cloudevents.http." + r.URL.Path
+//}
 
 func (t *Transport) setPort(port int) {
 	if t.Port == nil {
@@ -228,10 +229,11 @@ func (t *Transport) GetPath() string {
 	return "/" // default
 }
 
-// attachMiddleware attaches the HTTP middleware to the specified handler.
-func attachMiddleware(h http.Handler, middleware []Middleware) http.Handler {
-	for _, m := range middleware {
-		h = m(h)
-	}
-	return h
-}
+//
+//// attachMiddleware attaches the HTTP middleware to the specified handler.
+//func attachMiddleware(h http.Handler, middleware []Middleware) http.Handler {
+//	for _, m := range middleware {
+//		h = m(h)
+//	}
+//	return h
+//}

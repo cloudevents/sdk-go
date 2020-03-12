@@ -35,5 +35,5 @@ type BinaryWriter interface {
 
 	// End method is invoked only after the whole encoding process ends successfully.
 	// If it fails, it's never invoked. It can be used to finalize the message.
-	End() error
+	End(ctx context.Context) error
 }

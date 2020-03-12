@@ -2,7 +2,12 @@ package client
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"github.com/cloudevents/sdk-go/pkg/binding"
+	cecontext "github.com/cloudevents/sdk-go/pkg/context"
+	"go.uber.org/zap"
+	"io"
 	"sync"
 
 	"github.com/cloudevents/sdk-go/pkg/event"
@@ -44,14 +49,28 @@ type Client interface {
 
 // New produces a new client with the provided transport object and applied
 // client options.
-func New(t transport.Transport, opts ...Option) (Client, error) {
-	c := &ceClient{
-		transport: t,
+func New(protocol interface{}, engine transport.Engine, opts ...Option) (Client, error) {
+	c := &ceClient{}
+
+	if p, ok := protocol.(transport.Sender); ok {
+		c.sender = p
 	}
+	if p, ok := protocol.(transport.Requester); ok {
+		c.requester = p
+	}
+	if p, ok := protocol.(transport.Responder); ok {
+		c.responder = p
+	}
+	if p, ok := protocol.(transport.Receiver); ok {
+		c.receiver = p
+	}
+
+	// Optional
+	c.engine = engine
+
 	if err := c.applyOptions(opts...); err != nil {
 		return nil, err
 	}
-	t.SetDelivery(c)
 	return c, nil
 }
 
@@ -67,31 +86,48 @@ func NewDefault() (Client, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	t, err := http.New(p, http.WithEncoding(http.Binary))
 	if err != nil {
 		return nil, err
 	}
-	c, err := New(t, WithTimeNow(), WithUUIDs())
+
+	e, err := http.NewEngine()
 	if err != nil {
 		return nil, err
 	}
+
+	c, err := New(t, e, WithTimeNow(), WithUUIDs())
+	if err != nil {
+		return nil, err
+	}
+
 	return c, nil
 }
 
 type ceClient struct {
-	transport transport.Transport
-	fn        *receiverFn
+	sender    transport.Sender
+	requester transport.Requester
+	receiver  transport.Receiver
+	responder transport.Responder
+	engine    transport.Engine
+
+	outboundContextDecorators []func(context.Context) context.Context
+
+	fn *receiverFn
 
 	receiverMu        sync.Mutex
 	eventDefaulterFns []EventDefaulter
 
 	disableTracePropagation bool
+	// Deprecated: use the senders, etc
+	//transport transport.Transport
 }
 
 // Send transmits the provided event on a preconfigured Protocol. Send returns
 // an error if there was an an issue validating the outbound event or the
 // transport returns an error.
-func (c *ceClient) Send(ctx context.Context, event event.Event) error {
+func (c *ceClient) Send_old(ctx context.Context, event event.Event) error {
 	ctx, r := observability.NewReporter(ctx, reportSend)
 
 	ctx, span := trace.StartSpan(ctx, clientSpanName, trace.WithSpanKind(trace.SpanKindClient))
@@ -109,11 +145,33 @@ func (c *ceClient) Send(ctx context.Context, event event.Event) error {
 	return err
 }
 
+func (c *ceClient) Send(ctx context.Context, e event.Event) error {
+	if c.sender == nil {
+		return errors.New("sender not set")
+	}
+
+	for _, f := range c.outboundContextDecorators {
+		ctx = f(ctx)
+	}
+
+	if len(c.eventDefaulterFns) > 0 {
+		for _, fn := range c.eventDefaulterFns {
+			e = fn(ctx, e)
+		}
+	}
+
+	if err := e.Validate(); err != nil {
+		return err
+	}
+
+	return c.sender.Send(ctx, (*binding.EventMessage)(&e))
+}
+
 func (c *ceClient) obsSend(ctx context.Context, event event.Event) error {
 	// Confirm we have a transport set.
-	if c.transport == nil {
-		return fmt.Errorf("client not ready, transport not initialized")
-	}
+	//if c.transport == nil {
+	//	return fmt.Errorf("client not ready, transport not initialized")
+	//}
 	// Apply the defaulter chain to the incoming event.
 	if len(c.eventDefaulterFns) > 0 {
 		for _, fn := range c.eventDefaulterFns {
@@ -136,13 +194,14 @@ func (c *ceClient) obsSend(ctx context.Context, event event.Event) error {
 		return err
 	}
 	// Send the event over the transport.
-	return c.transport.Send(ctx, event)
+	//	return c.transport.Send(ctx, event)
+	return nil
 }
 
 // Request transmits the provided event on a preconfigured Protocol. Request
 // returns a response event if there is a response or an error if there was an
 // an issue validating the outbound event or the transport returns an error.
-func (c *ceClient) Request(ctx context.Context, event event.Event) (*event.Event, error) {
+func (c *ceClient) Request_old(ctx context.Context, event event.Event) (*event.Event, error) {
 	ctx, r := observability.NewReporter(ctx, reportSend)
 
 	ctx, span := trace.StartSpan(ctx, clientSpanName, trace.WithSpanKind(trace.SpanKindClient))
@@ -160,11 +219,47 @@ func (c *ceClient) Request(ctx context.Context, event event.Event) (*event.Event
 	return resp, err
 }
 
+func (c *ceClient) Request(ctx context.Context, e event.Event) (*event.Event, error) {
+	if c.requester == nil {
+		return nil, errors.New("requester not set")
+	}
+	for _, f := range c.outboundContextDecorators {
+		ctx = f(ctx)
+	}
+
+	if len(c.eventDefaulterFns) > 0 {
+		for _, fn := range c.eventDefaulterFns {
+			e = fn(ctx, e)
+		}
+	}
+
+	if err := e.Validate(); err != nil {
+		return nil, err
+	}
+
+	// If provided a requester, use it to do request/response.
+	var resp *event.Event
+	msg, err := c.requester.Request(ctx, (*binding.EventMessage)(&e))
+	defer func() {
+		if err := msg.Finish(err); err != nil {
+			cecontext.LoggerFrom(ctx).Warnw("failed calling message.Finish", zap.Error(err))
+		}
+	}()
+	if err == nil {
+		if rs, err := binding.ToEvent(ctx, msg, nil); err != nil {
+			cecontext.LoggerFrom(ctx).Warnw("failed calling ToEvent", zap.Error(err), zap.Any("resp", msg))
+		} else {
+			resp = rs
+		}
+	}
+	return resp, err
+}
+
 func (c *ceClient) obsRequest(ctx context.Context, event event.Event) (*event.Event, error) {
 	// Confirm we have a transport set.
-	if c.transport == nil {
-		return nil, fmt.Errorf("client not ready, transport not initialized")
-	}
+	//if c.transport == nil {
+	//	return nil, fmt.Errorf("client not ready, transport not initialized")
+	//}
 	// Apply the defaulter chain to the incoming event.
 	if len(c.eventDefaulterFns) > 0 {
 		for _, fn := range c.eventDefaulterFns {
@@ -187,7 +282,8 @@ func (c *ceClient) obsRequest(ctx context.Context, event event.Event) (*event.Ev
 		return nil, err
 	}
 	// Send the event over the transport.
-	return c.transport.Request(ctx, event)
+	//return c.transport.Request(ctx, event)
+	return nil, nil
 }
 
 // Delivery is called from from the transport on event delivery.
@@ -195,11 +291,11 @@ func (c *ceClient) Delivery(ctx context.Context, e event.Event) (*event.Event, t
 	ctx, r := observability.NewReporter(ctx, reportReceive)
 
 	var span *trace.Span
-	if !c.transport.HasTracePropagation() {
-		if ext, ok := extensions.GetDistributedTracingExtension(e); ok {
-			ctx, span = ext.StartChildSpan(ctx, clientSpanName, trace.WithSpanKind(trace.SpanKindServer))
-		}
-	}
+	//if !c.transport.HasTracePropagation() {
+	//	if ext, ok := extensions.GetDistributedTracingExtension(e); ok {
+	//		ctx, span = ext.StartChildSpan(ctx, clientSpanName, trace.WithSpanKind(trace.SpanKindServer))
+	//	}
+	//}
 	if span == nil {
 		ctx, span = trace.StartSpan(ctx, clientSpanName, trace.WithSpanKind(trace.SpanKindServer))
 	}
@@ -242,9 +338,9 @@ func (c *ceClient) StartReceiver(ctx context.Context, fn interface{}) error {
 	c.receiverMu.Lock()
 	defer c.receiverMu.Unlock()
 
-	if c.transport == nil {
-		return fmt.Errorf("client not ready, transport not initialized")
-	}
+	//if c.transport == nil {
+	//	return fmt.Errorf("client not ready, transport not initialized")
+	//}
 	if c.fn != nil {
 		return fmt.Errorf("client already has a receiver")
 	}
@@ -259,7 +355,7 @@ func (c *ceClient) StartReceiver(ctx context.Context, fn interface{}) error {
 		c.fn = nil
 	}()
 
-	return c.transport.StartReceiver(ctx)
+	return c.startReceiver(ctx)
 }
 
 func (c *ceClient) applyOptions(opts ...Option) error {
@@ -268,5 +364,55 @@ func (c *ceClient) applyOptions(opts ...Option) error {
 			return err
 		}
 	}
+	return nil
+}
+
+// Legacy Transport StartReceiver is really start Responder.
+func (c *ceClient) startReceiver(ctx context.Context) error {
+	var msg binding.Message
+	var err error
+	var respFn transport.ResponseFn
+	for {
+		if c.responder != nil {
+			msg, respFn, err = c.responder.Respond(ctx)
+		} else if c.receiver != nil {
+			msg, err = c.receiver.Receive(ctx)
+		} else {
+			return errors.New("responder and receiver not set")
+		}
+
+		if err == io.EOF { // Normal close
+			return nil
+		} else if err != nil {
+			return err
+		}
+		if err := c.handle(ctx, msg, respFn); err != nil {
+			return err
+		}
+	}
+}
+
+func (c *ceClient) handle(ctx context.Context, m binding.Message, respFn transport.ResponseFn) (err error) {
+	defer func() {
+		if err2 := m.Finish(err); err2 == nil {
+			err = err2
+		}
+	}()
+
+	e, err := binding.ToEvent(ctx, m, nil)
+	if err != nil {
+		return err
+	}
+
+	resp, result := c.Delivery(ctx, *e)
+	if respFn != nil {
+		var rm binding.Message
+		if resp != nil {
+			rm = (*binding.EventMessage)(resp)
+		}
+
+		return respFn(ctx, rm, result)
+	}
+
 	return nil
 }

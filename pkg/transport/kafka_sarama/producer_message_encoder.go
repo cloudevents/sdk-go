@@ -116,7 +116,7 @@ func (b *kafkaProducerMessageWriter) Start(ctx context.Context) error {
 	return nil
 }
 
-func (b *kafkaProducerMessageWriter) End() error {
+func (b *kafkaProducerMessageWriter) End(ctx context.Context) error {
 	return nil
 }
 

@@ -40,7 +40,7 @@ func (b *httpRequestWriter) Start(ctx context.Context) error {
 	return nil
 }
 
-func (b *httpRequestWriter) End() error {
+func (b *httpRequestWriter) End(ctx context.Context) error {
 	return nil
 }
 

@@ -1,6 +1,7 @@
 package transformer
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
@@ -92,14 +93,14 @@ func (b *addAttributeTransformer) SetAttribute(attribute spec.Attribute, value i
 	return b.BinaryWriter.SetAttribute(attribute, value)
 }
 
-func (b *addAttributeTransformer) End() error {
+func (b *addAttributeTransformer) End(ctx context.Context) error {
 	if !b.found {
 		err := b.BinaryWriter.SetAttribute(b.version.AttributeFromKind(b.attributeKind), b.value)
 		if err != nil {
 			return err
 		}
 	}
-	return b.BinaryWriter.End()
+	return b.BinaryWriter.End(ctx)
 }
 
 type addExtensionTransformer struct {
@@ -116,12 +117,12 @@ func (b *addExtensionTransformer) SetExtension(name string, value interface{}) e
 	return b.BinaryWriter.SetExtension(name, value)
 }
 
-func (b *addExtensionTransformer) End() error {
+func (b *addExtensionTransformer) End(ctx context.Context) error {
 	if !b.found {
 		err := b.BinaryWriter.SetExtension(b.name, b.value)
 		if err != nil {
 			return err
 		}
 	}
-	return b.BinaryWriter.End()
+	return b.BinaryWriter.End(ctx)
 }

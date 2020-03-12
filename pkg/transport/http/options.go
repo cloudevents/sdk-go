@@ -12,6 +12,9 @@ import (
 // ProtocolOption is the function signature required to be considered an http.ProtocolOption.
 type ProtocolOption func(*Protocol) error
 
+// EngineOption is the function signature required to be considered an http.EngineOption.
+type EngineOption func(*Engine) error
+
 // Option is the function signature required to be considered an http.Option.
 type Option func(*Transport) error
 

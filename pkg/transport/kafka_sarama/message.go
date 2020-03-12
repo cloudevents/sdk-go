@@ -151,7 +151,7 @@ func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) 
 		}
 	}
 
-	return encoder.End()
+	return encoder.End(ctx)
 }
 
 func (m *Message) Finish(error) error {

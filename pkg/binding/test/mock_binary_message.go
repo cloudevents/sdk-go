@@ -71,7 +71,7 @@ func (bm *MockBinaryMessage) ReadBinary(ctx context.Context, b binding.BinaryWri
 			return err
 		}
 	}
-	return b.End()
+	return b.End(ctx)
 }
 
 func (bm *MockBinaryMessage) ReadEncoding() binding.Encoding {
@@ -101,7 +101,7 @@ func (bm *MockBinaryMessage) SetData(data io.Reader) (err error) {
 	return err
 }
 
-func (bm *MockBinaryMessage) End() error {
+func (bm *MockBinaryMessage) End(ctx context.Context) error {
 	return nil
 }
 
