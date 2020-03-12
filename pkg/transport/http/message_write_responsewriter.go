@@ -2,7 +2,6 @@ package http
 
 import (
 	"context"
-	"github.com/cloudevents/sdk-go/pkg/event"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -16,17 +15,10 @@ import (
 
 // Write out to the the provided httpResponseWriter with the message m.
 // Using context you can tweak the encoding processing (more details on binding.Write documentation).
-func WriteResponseWriter(ctx context.Context, m binding.Message, er event.Result, rw http.ResponseWriter, transformers binding.TransformerFactories) error {
-	status := http.StatusOK
-	if er != nil {
-		var result *Result
-		if event.ResultAs(er, &result) {
-			if result.Status > 100 && result.Status < 600 {
-				status = result.Status
-			}
-		}
+func WriteResponseWriter(ctx context.Context, m binding.Message, status int, rw http.ResponseWriter, transformers binding.TransformerFactories) error {
+	if status < 200 || status >= 600 {
+		status = http.StatusOK
 	}
-
 	writer := &httpResponseWriterEncoder{rw: rw, status: status}
 
 	_, err := binding.Write(

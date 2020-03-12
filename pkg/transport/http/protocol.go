@@ -178,9 +178,19 @@ func (p *Protocol) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		return nil
 	}
 
-	var fn transport.ResponseFn = func(ctx context.Context, resp binding.Message, re event.Result) error {
+	var fn transport.ResponseFn = func(ctx context.Context, resp binding.Message, er event.Result) error {
 		if resp != nil {
-			err := WriteResponseWriter(ctx, resp, re, rw, p.transformers)
+			status := http.StatusOK
+			if er != nil {
+				var result *Result
+				if event.ResultAs(er, &result) {
+					if result.Status > 100 && result.Status < 600 {
+						status = result.Status
+					}
+				}
+			}
+
+			err := WriteResponseWriter(ctx, resp, status, rw, p.transformers)
 			return resp.Finish(err)
 		}
 
