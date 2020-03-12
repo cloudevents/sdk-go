@@ -17,7 +17,7 @@ import (
 func TestVersionTranscoder(t *testing.T) {
 	var testEventV03 = event.Event{
 		Context: event.EventContextV03{
-			Source:          types.URLRef{URL: url.URL{Path: "source"}},
+			Source:          types.URIRef{URL: url.URL{Path: "source"}},
 			DataContentType: event.StringOfApplicationJSON(),
 			ID:              "id",
 			Type:            "type",

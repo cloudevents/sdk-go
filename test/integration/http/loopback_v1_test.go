@@ -29,7 +29,7 @@ func TestClientLoopback_binary_v1tov03(t *testing.T) {
 				Context: cloudevents.EventContextV03{
 					ID:              "321-CBA",
 					Type:            "unit.test.client.response",
-					Source:          *cloudevents.ParseURLRef("/unit/test/client"),
+					Source:          *cloudevents.ParseURIRef("/unit/test/client"),
 					DataContentType: cloudevents.StringOfApplicationJSON(),
 				}.AsV03(),
 				Data: map[string]string{"unittest": "response"},
@@ -39,7 +39,7 @@ func TestClientLoopback_binary_v1tov03(t *testing.T) {
 					ID:              "321-CBA",
 					Type:            "unit.test.client.response",
 					Time:            &cloudevents.Timestamp{Time: now},
-					Source:          *cloudevents.ParseURLRef("/unit/test/client"),
+					Source:          *cloudevents.ParseURIRef("/unit/test/client"),
 					DataContentType: cloudevents.StringOfApplicationJSON(),
 				}.AsV03(),
 				Data: map[string]string{"unittest": "response"},
@@ -174,7 +174,7 @@ func TestClientLoopback_structured_base64_v03tov1(t *testing.T) {
 				Context: cloudevents.EventContextV03{
 					ID:                  "ABC-123",
 					Type:                "unit.test.client.sent",
-					Source:              *cloudevents.ParseURLRef("/unit/test/client"),
+					Source:              *cloudevents.ParseURIRef("/unit/test/client"),
 					DataContentEncoding: cloudevents.StringOfBase64(),
 					DataContentType:     cloudevents.StringOfApplicationJSON(),
 				}.AsV03(),

@@ -109,7 +109,7 @@ func _main(args []string, env envConfig) int {
 					Context: cloudevents.EventContextV03{
 						ID:              uuid.New().String(),
 						Type:            "com.cloudevents.sample.sent",
-						Source:          cloudevents.URLRef{URL: *source},
+						Source:          cloudevents.URIRef{URL: *source},
 						DataContentType: &dataContentType,
 					}.AsV03(),
 					Data: &Example{

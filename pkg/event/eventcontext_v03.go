@@ -22,7 +22,7 @@ type EventContextV03 struct {
 	// Type - The type of the occurrence which has happened.
 	Type string `json:"type"`
 	// Source - A URI describing the event producer.
-	Source types.URLRef `json:"source"`
+	Source types.URIRef `json:"source"`
 	// Subject - The subject of the event in the context of the event producer
 	// (identified by `source`).
 	Subject *string `json:"subject,omitempty"`
@@ -31,7 +31,7 @@ type EventContextV03 struct {
 	// Time - A Timestamp when the event happened.
 	Time *types.Timestamp `json:"time,omitempty"`
 	// DataSchema - A link to the schema that the `data` attribute adheres to.
-	SchemaURL *types.URLRef `json:"schemaurl,omitempty"`
+	SchemaURL *types.URIRef `json:"schemaurl,omitempty"`
 	// GetDataMediaType - A MIME (RFC2046) string describing the media type of `data`.
 	// TODO: Should an empty string assume `application/json`, `application/octet-stream`, or auto-detect the content?
 	DataContentType *string `json:"datacontenttype,omitempty"`
@@ -98,12 +98,12 @@ func (ec *EventContextV03) SetExtension(name string, value interface{}) error {
 // Clone implements EventContextConverter.Clone
 func (ec EventContextV03) Clone() EventContext {
 	ec03 := ec.AsV03()
-	ec03.Source = types.Clone(ec.Source).(types.URLRef)
+	ec03.Source = types.Clone(ec.Source).(types.URIRef)
 	if ec.Time != nil {
 		ec03.Time = types.Clone(ec.Time).(*types.Timestamp)
 	}
 	if ec.SchemaURL != nil {
-		ec03.SchemaURL = types.Clone(ec.SchemaURL).(*types.URLRef)
+		ec03.SchemaURL = types.Clone(ec.SchemaURL).(*types.URIRef)
 	}
 	ec03.Extensions = ec.cloneExtensions()
 	return ec03
