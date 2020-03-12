@@ -68,10 +68,10 @@ func (d *Demo) Send() error {
 	e := cloudevents.Event{
 		Context: d.context(),
 	}
-	_ = e.SetData(&Example{
+	_ = e.SetData(cloudevents.ApplicationJSON, &Example{
 		Sequence: seq,
 		Message:  d.Message,
-	}, cloudevents.ApplicationJSON)
+	})
 	seq++
 	return d.Client.Send(context.Background(), e)
 }

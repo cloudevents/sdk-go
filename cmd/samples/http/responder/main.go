@@ -46,10 +46,10 @@ func gotEvent(ctx context.Context, event cloudevents.Event) (*cloudevents.Event,
 				Type:   "samples.http.mod3",
 			}.AsV1(),
 		}
-		_ = r.SetData(Example{
+		_ = r.SetData(cloudevents.ApplicationJSON, Example{
 			Sequence: data.Sequence,
 			Message:  "mod 3!",
-		}, cloudevents.ApplicationJSON)
+		})
 		return &r, nil
 	}
 

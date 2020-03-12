@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/cloudevents/sdk-go/pkg/event"
-
 	"github.com/cloudevents/sdk-go/pkg/types"
 	"github.com/google/go-cmp/cmp"
 )
@@ -75,7 +74,7 @@ func TestEventSetData_Jsonv03(t *testing.T) {
 			e := tc.event(version)
 
 			if tc.set != nil {
-				if err := e.SetData(tc.set, "application/json"); err != nil {
+				if err := e.SetData(event.ApplicationJSON, tc.set); err != nil {
 					t.Errorf("unexpected error, %v", err)
 				}
 			}
@@ -136,7 +135,7 @@ func TestEventSetData_Jsonv1(t *testing.T) {
 			e := tc.event(version)
 
 			if tc.set != nil {
-				if err := e.SetData(tc.set, e.DataContentType()); err != nil {
+				if err := e.SetData(e.DataContentType(), tc.set); err != nil {
 					t.Errorf("unexpected error, %v", err)
 				}
 			}
@@ -204,7 +203,7 @@ func TestEventSetData_xml(t *testing.T) {
 				e := tc.event(version)
 
 				if tc.set != nil {
-					if err := e.SetData(tc.set, e.DataContentType()); err != nil {
+					if err := e.SetData(e.DataContentType(), tc.set); err != nil {
 						t.Errorf("unexpected error, %v", err)
 					}
 				}
@@ -247,7 +246,7 @@ func TestEventSetData_xml_base64(t *testing.T) {
 				e := tc.event(version)
 
 				if tc.set != nil {
-					if err := e.SetData(tc.set, e.DataContentType()); err != nil {
+					if err := e.SetData(e.DataContentType(), tc.set); err != nil {
 						t.Errorf("unexpected error, %v", err)
 					}
 				}

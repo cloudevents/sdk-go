@@ -20,7 +20,7 @@ func TestJSON(t *testing.T) {
 		}.AsV03(),
 	}
 	e.SetExtension("ex", "val")
-	assert.NoError(e.SetData("foo", event.ApplicationJSON))
+	assert.NoError(e.SetData(event.ApplicationJSON, "foo"))
 	b, err := format.JSON.Marshal(&e)
 	assert.NoError(err)
 	assert.Equal(`{"data":"foo","datacontenttype":"application/json","ex":"val","id":"id","source":"source","specversion":"0.3","type":"type"}`, string(b))
@@ -48,7 +48,7 @@ func TestMarshalUnmarshal(t *testing.T) {
 			Source: *types.ParseURIRef("source"),
 		}.AsV03(),
 	}
-	assert.NoError(e.SetData("foo", event.ApplicationJSON))
+	assert.NoError(e.SetData(event.ApplicationJSON, "foo"))
 	b, err := format.Marshal(format.JSON.MediaType(), &e)
 	assert.NoError(err)
 	assert.Equal(`{"data":"foo","datacontenttype":"application/json","id":"id","source":"source","specversion":"0.3","type":"type"}`, string(b))

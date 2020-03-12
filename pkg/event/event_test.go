@@ -560,7 +560,7 @@ func TestEvent_Clone(t *testing.T) {
 	original.FieldErrors = map[string]error{
 		"id": errors.New("an error"),
 	}
-	require.NoError(t, original.SetData("aaa", event.ApplicationJSON))
+	require.NoError(t, original.SetData(event.ApplicationJSON, "aaa"))
 
 	clone := original.Clone()
 
@@ -575,7 +575,7 @@ func TestEvent_Clone(t *testing.T) {
 	require.Equal(t, original.FieldErrors, clone.FieldErrors)
 	require.NotSame(t, original.FieldErrors, clone.FieldErrors)
 
-	require.NoError(t, clone.SetData("bbb", event.ApplicationJSON))
+	require.NoError(t, clone.SetData(event.ApplicationJSON, "bbb"))
 
 	require.Equal(t, []byte("\"aaa\""), original.Data())
 	require.Equal(t, []byte("\"bbb\""), clone.Data())

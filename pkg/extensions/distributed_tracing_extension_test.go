@@ -180,12 +180,12 @@ func testAddTracingAttributesFunc(t *testing.T, st extensions.DistributedTracing
 		ectx := ecv.context.(event.EventContextV1).AsV1()
 		st.AddTracingAttributes(ectx)
 		e = event.Event{Context: ectx}
-		e.SetData(&Data{Message: "Hello world"}, event.ApplicationJSON)
+		e.SetData(event.ApplicationJSON, &Data{Message: "Hello world"})
 	case "EventContextV03":
 		ectx := ecv.context.(event.EventContextV03).AsV03()
 		st.AddTracingAttributes(ectx)
 		e = event.Event{Context: ectx}
-		e.SetData(&Data{Message: "Hello world"}, event.ApplicationJSON)
+		e.SetData(event.ApplicationJSON, &Data{Message: "Hello world"})
 	}
 	got := e.Extensions()
 

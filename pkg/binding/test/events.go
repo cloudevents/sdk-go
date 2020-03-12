@@ -40,7 +40,7 @@ func FullEvent() event.Event {
 	e.SetExtension("exurl", Source)
 	e.SetExtension("extime", Timestamp)
 
-	if err := e.SetData("hello", "text/json"); err != nil {
+	if err := e.SetData("text/json", "hello"); err != nil {
 		panic(err)
 	}
 	return e

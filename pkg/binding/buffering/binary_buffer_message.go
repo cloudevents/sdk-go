@@ -61,7 +61,7 @@ func (m *binaryBufferedMessage) ReadBinary(ctx context.Context, b binding.Binary
 		}
 	}
 	if m.body != nil {
-		err = b.SetData(bytes.NewReader(m.body.Bytes())) // TODO: this is wrong for base64
+		err = b.SetData(bytes.NewReader(m.body.Bytes()))
 		if err != nil {
 			return
 		}

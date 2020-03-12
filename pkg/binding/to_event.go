@@ -87,7 +87,7 @@ func (b *messageToEventBuilder) SetData(data io.Reader) error {
 		return err
 	}
 	if w != 0 {
-		b.event.DataEncoded = buf.Bytes() // TODO: this might be wrong for base64.
+		b.event.DataEncoded = buf.Bytes()
 	}
 	return nil
 }

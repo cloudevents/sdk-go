@@ -27,9 +27,9 @@ func TestVersionTranscoder(t *testing.T) {
 	testEventV1.Context = testEventV03.Context.AsV1()
 
 	data := []byte("\"data\"")
-	err := testEventV03.SetData(data, event.ApplicationJSON)
+	err := testEventV03.SetData(event.ApplicationJSON, data)
 	require.NoError(t, err)
-	err = testEventV1.SetData(data, event.ApplicationJSON)
+	err = testEventV1.SetData(event.ApplicationJSON, data)
 	require.NoError(t, err)
 
 	test.RunTransformerTests(t, context.Background(), []test.TransformerTestArgs{

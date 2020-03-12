@@ -79,7 +79,7 @@ func mainSender() {
 					Source: *source,
 				}.AsV1(),
 			}
-			_ = e.SetData(data, cloudevents.ApplicationJSON)
+			_ = e.SetData(cloudevents.ApplicationJSON, data)
 
 			if resp, err := c.Request(ctx, e); err != nil {
 				log.Printf("failed to send: %v", err)

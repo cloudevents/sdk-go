@@ -26,7 +26,7 @@ func TestClientLoopback_setters_binary_json(t *testing.T) {
 				event.SetID("ABC-123")
 				event.SetType("unit.test.client.sent")
 				event.SetSource("/unit/test/client")
-				if err := event.SetData(map[string]string{"hello": "unittest"}, cloudevents.ApplicationJSON); err != nil {
+				if err := event.SetData(cloudevents.ApplicationJSON, map[string]string{"hello": "unittest"}); err != nil {
 					t.Fatal(err)
 				}
 				return &event
@@ -36,7 +36,7 @@ func TestClientLoopback_setters_binary_json(t *testing.T) {
 				event.SetID("321-CBA")
 				event.SetType("unit.test.client.response")
 				event.SetSource("/unit/test/client")
-				if err := event.SetData(map[string]string{"unittest": "response"}, cloudevents.ApplicationJSON); err != nil {
+				if err := event.SetData(cloudevents.ApplicationJSON, map[string]string{"unittest": "response"}); err != nil {
 					t.Fatal(err)
 				}
 				return &event
@@ -285,7 +285,7 @@ func TestClientLoopback_setters_structured_json(t *testing.T) {
 				event.SetType("unit.test.client.sent")
 				event.SetSource("/unit/test/client")
 				event.SetDataContentType(cloudevents.ApplicationJSON)
-				if err := event.SetData(map[string]string{"hello": "unittest"}, cloudevents.ApplicationJSON); err != nil {
+				if err := event.SetData(cloudevents.ApplicationJSON, map[string]string{"hello": "unittest"}); err != nil {
 					t.Fatal(err)
 				}
 				return &event
@@ -296,7 +296,7 @@ func TestClientLoopback_setters_structured_json(t *testing.T) {
 				event.SetType("unit.test.client.response")
 				event.SetSource("/unit/test/client")
 				event.SetDataContentType(cloudevents.ApplicationJSON)
-				if err := event.SetData(map[string]string{"unittest": "response"}, cloudevents.ApplicationJSON); err != nil {
+				if err := event.SetData(cloudevents.ApplicationJSON, map[string]string{"unittest": "response"}); err != nil {
 					t.Fatal(err)
 				}
 				return &event
@@ -404,7 +404,7 @@ func TestClientLoopback_setters_structured_json_base64(t *testing.T) {
 				event.SetType("unit.test.client.sent")
 				event.SetSource("/unit/test/client")
 				event.SetDataContentEncoding(cloudevents.Base64)
-				if err := event.SetData(map[string]string{"hello": "unittest"}, cloudevents.ApplicationJSON); err != nil {
+				if err := event.SetData(cloudevents.ApplicationJSON, map[string]string{"hello": "unittest"}); err != nil {
 					t.Fatal(err)
 				}
 				return &event
@@ -415,7 +415,7 @@ func TestClientLoopback_setters_structured_json_base64(t *testing.T) {
 				event.SetType("unit.test.client.response")
 				event.SetSource("/unit/test/client")
 				event.SetDataContentEncoding(cloudevents.Base64)
-				if err := event.SetData(map[string]string{"unittest": "response"}, cloudevents.ApplicationJSON); err != nil {
+				if err := event.SetData(cloudevents.ApplicationJSON, map[string]string{"unittest": "response"}); err != nil {
 					t.Fatal(err)
 				}
 				return &event

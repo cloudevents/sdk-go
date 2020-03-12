@@ -80,10 +80,10 @@ func _main(args []string, env envConfig) int {
 						Source: cloudevents.URIRef{URL: *source},
 					}.AsV1(),
 				}
-				_ = event.SetData(&Example{
+				_ = event.SetData(contentType, &Example{
 					Sequence: i,
 					Message:  message,
-				}, contentType)
+				})
 
 				if resp, err := c.Request(context.Background(), event); err != nil {
 					log.Printf("failed to request: %v", err)

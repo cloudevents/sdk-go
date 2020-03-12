@@ -73,7 +73,7 @@ func TestSenderReceiver_structured_v1(t *testing.T) {
 				event.SetType("unit.test.client.sent")
 				event.SetSource("/unit/test/client")
 				event.SetSubject("resource")
-				_ = event.SetData(map[string]string{"hello": "unittest"}, cloudevents.ApplicationJSON)
+				_ = event.SetData(cloudevents.ApplicationJSON, map[string]string{"hello": "unittest"})
 				return &event
 			}(),
 			want: &cloudevents.Event{
@@ -120,7 +120,7 @@ func TestSenderReceiver_data_base64_v1(t *testing.T) {
 				event.SetType("unit.test.client.sent")
 				event.SetSource("/unit/test/client")
 				event.SetSubject("resource")
-				_ = event.SetData([]byte("hello: unittest"), cloudevents.TextPlain)
+				_ = event.SetData(cloudevents.TextPlain, []byte("hello: unittest"))
 				return &event
 			}(),
 			want: &cloudevents.Event{

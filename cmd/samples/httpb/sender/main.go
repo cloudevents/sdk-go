@@ -30,10 +30,10 @@ func main() {
 		e := cloudevents.NewEvent()
 		e.SetType("com.cloudevents.sample.sent")
 		e.SetSource("https://github.com/cloudevents/sdk-go/cmd/samples/httpb/sender")
-		_ = e.SetData(map[string]interface{}{
+		_ = e.SetData(cloudevents.ApplicationJSON, map[string]interface{}{
 			"id":      i,
 			"message": "Hello, World!",
-		}, cloudevents.ApplicationJSON)
+		})
 
 		err := c.Send(ctx, e)
 		if err != nil {

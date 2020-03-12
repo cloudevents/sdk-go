@@ -12,7 +12,7 @@ import (
 // Data is special. Break it out into it's own file.
 
 // SetData implements EventWriter.SetData
-func (e *Event) SetData(obj interface{}, contentType string) error {
+func (e *Event) SetData(contentType string, obj interface{}) error {
 	e.SetDataContentType(contentType)
 
 	if e.SpecVersion() != CloudEventsVersionV1 {

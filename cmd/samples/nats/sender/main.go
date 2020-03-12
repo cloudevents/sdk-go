@@ -55,10 +55,10 @@ type Example struct {
 
 func (d *Demo) Send(eventContext event.EventContext, i int) error {
 	e := event.Event{Context: eventContext}
-	_ = e.SetData(&Example{
+	_ = e.SetData(cloudevents.ApplicationJSON, &Example{
 		Sequence: i,
 		Message:  d.Message,
-	}, cloudevents.ApplicationJSON)
+	})
 	return d.Client.Send(context.Background(), e)
 }
 

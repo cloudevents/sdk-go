@@ -52,10 +52,10 @@ func TestMarshal(t *testing.T) {
 						Time:      &now,
 					}.AsV03(),
 				}
-				_ = e.SetData(DataExample{
+				_ = e.SetData(event.ApplicationJSON, DataExample{
 					AnInt:   42,
 					AString: "testing",
-				}, event.ApplicationJSON)
+				})
 				return e
 			}(),
 			eventExtensions: map[string]interface{}{
@@ -132,7 +132,7 @@ func TestMarshal(t *testing.T) {
 						Time:      &now,
 					}.AsV03(),
 				}
-				_ = e.SetData("This is a string.", event.ApplicationJSON)
+				_ = e.SetData(event.ApplicationJSON, "This is a string.")
 				return e
 			}(),
 			eventExtensions: map[string]interface{}{
@@ -171,10 +171,10 @@ func TestMarshal(t *testing.T) {
 						Time:       &now,
 					}.AsV1(),
 				}
-				_ = e.SetData(DataExample{
+				_ = e.SetData(event.ApplicationJSON, DataExample{
 					AnInt:   42,
 					AString: "testing",
-				}, event.ApplicationJSON)
+				})
 				return e
 			}(),
 			eventExtensions: map[string]interface{}{
@@ -251,7 +251,7 @@ func TestMarshal(t *testing.T) {
 						Time:       &now,
 					}.AsV1(),
 				}
-				_ = e.SetData("This is a string.", event.ApplicationJSON)
+				_ = e.SetData(event.ApplicationJSON, "This is a string.")
 				return e
 			}(),
 			eventExtensions: map[string]interface{}{

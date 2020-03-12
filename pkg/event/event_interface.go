@@ -90,5 +90,5 @@ type EventWriter interface {
 	SetExtension(string, interface{})
 
 	// SetData encodes the given payload with the given content type.
-	SetData(interface{}, string) error
+	SetData(string, interface{}) error
 }

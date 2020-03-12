@@ -120,10 +120,10 @@ func TestClientSend(t *testing.T) {
 						ID:     "AABBCCDDEE",
 					}.AsV03(),
 				}
-				_ = e.SetData(&map[string]interface{}{
+				_ = e.SetData(event.ApplicationJSON, &map[string]interface{}{
 					"sq":  42,
 					"msg": "hello",
-				}, event.ApplicationJSON)
+				})
 				return e
 			}(),
 			resp: &http.Response{
@@ -152,10 +152,10 @@ func TestClientSend(t *testing.T) {
 						ID:     "AABBCCDDEE",
 					}.AsV03(),
 				}
-				_ = e.SetData(&map[string]interface{}{
+				_ = e.SetData(event.ApplicationJSON, &map[string]interface{}{
 					"sq":  42,
 					"msg": "hello",
-				}, event.ApplicationJSON)
+				})
 				return e
 			}(),
 			resp: &http.Response{
@@ -228,10 +228,10 @@ func TestTracingClientSend(t *testing.T) {
 						ID:     "AABBCCDDEE",
 					}.AsV1(),
 				}
-				_ = e.SetData(&map[string]interface{}{
+				_ = e.SetData(event.ApplicationJSON, &map[string]interface{}{
 					"sq":  42,
 					"msg": "hello",
-				}, event.ApplicationJSON)
+				})
 				return e
 			}(),
 			resp: &http.Response{
@@ -250,10 +250,10 @@ func TestTracingClientSend(t *testing.T) {
 						ID:     "AABBCCDDEE",
 					}.AsV1(),
 				}
-				_ = e.SetData(&map[string]interface{}{
+				_ = e.SetData(event.ApplicationJSON, &map[string]interface{}{
 					"sq":  42,
 					"msg": "hello",
-				}, event.ApplicationJSON)
+				})
 				return e
 			}(),
 			resp: &http.Response{
@@ -365,10 +365,10 @@ func TestClientReceive(t *testing.T) {
 						ID:     "AABBCCDDEE",
 					}.AsV03(),
 				}
-				_ = e.SetData(&map[string]string{
+				_ = e.SetData(event.ApplicationJSON, &map[string]string{
 					"sq":  "42",
 					"msg": "hello",
-				}, event.ApplicationJSON)
+				})
 				return e
 			}(),
 		},
@@ -391,10 +391,10 @@ func TestClientReceive(t *testing.T) {
 						ID:     "AABBCCDDEE",
 					}.AsV03(),
 				}
-				_ = e.SetData(&map[string]string{
+				_ = e.SetData(event.ApplicationJSON, &map[string]string{
 					"sq":  "42",
 					"msg": "hello",
-				}, event.ApplicationJSON)
+				})
 				return e
 			}(),
 		},
@@ -518,10 +518,10 @@ func TestTracedClientReceive(t *testing.T) {
 						ID:     "AABBCCDDEE",
 					}.AsV03(),
 				}
-				_ = e.SetData(&map[string]string{
+				_ = e.SetData(event.ApplicationJSON, &map[string]string{
 					"sq":  "42",
 					"msg": "hello",
-				}, event.ApplicationJSON)
+				})
 				return e
 			}(),
 		},
