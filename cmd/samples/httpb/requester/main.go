@@ -35,7 +35,7 @@ func main() {
 		_ = e.SetData(map[string]interface{}{
 			"id":      i,
 			"message": "Hello, World!",
-		})
+		}, cloudevents.ApplicationJSON)
 
 		resp, err := c.Request(ctx, e)
 		if err != nil {

@@ -180,14 +180,14 @@ func TestValidate(t *testing.T) {
 		},
 		"json valid, v0.3": {
 			event: event.Event{
-				Context: FullEventContextV03(now),
-				Data:    []byte(`{"a":"apple","b":"banana"}`),
+				Context:     FullEventContextV03(now),
+				DataEncoded: []byte(`{"a":"apple","b":"banana"}`),
 			},
 		},
 		"json valid, v1.0": {
 			event: event.Event{
-				Context: FullEventContextV1(now),
-				Data:    []byte(`{"a":"apple","b":"banana"}`),
+				Context:     FullEventContextV1(now),
+				DataEncoded: []byte(`{"a":"apple","b":"banana"}`),
 			},
 		},
 	}
@@ -280,8 +280,8 @@ Context Attributes,
 		},
 		"json simple, v0.3": {
 			event: event.Event{
-				Context: FullEventContextV03(now),
-				Data:    []byte(`{"a":"apple","b":"banana"}`),
+				Context:     FullEventContextV03(now),
+				DataEncoded: []byte(`{"a":"apple","b":"banana"}`),
 			},
 			want: fmt.Sprintf(`Validation: valid
 Context Attributes,
@@ -307,8 +307,8 @@ Data,
 		},
 		"json simple, v1.0": {
 			event: event.Event{
-				Context: FullEventContextV1(now),
-				Data:    []byte(`{"a":"apple","b":"banana"}`),
+				Context:     FullEventContextV1(now),
+				DataEncoded: []byte(`{"a":"apple","b":"banana"}`),
 			},
 			want: fmt.Sprintf(`Validation: valid
 Context Attributes,
@@ -560,14 +560,14 @@ func TestEvent_Clone(t *testing.T) {
 	original.FieldErrors = map[string]error{
 		"id": errors.New("an error"),
 	}
-	require.NoError(t, original.SetData("aaa"))
+	require.NoError(t, original.SetData("aaa", event.ApplicationJSON))
 
 	clone := original.Clone()
 
 	require.Equal(t, original.Context, clone.Context)
 	require.NotSame(t, original.Context, clone.Context)
-	require.Equal(t, original.Data, clone.Data)
-	require.NotSame(t, original.Data, clone.Data)
+	require.Equal(t, original.Data(), clone.Data())
+	require.NotSame(t, original.Data(), clone.Data())
 
 	require.Equal(t, original.DataEncoded, clone.DataEncoded)
 	require.Equal(t, original.DataBinary, clone.DataBinary)
@@ -575,8 +575,8 @@ func TestEvent_Clone(t *testing.T) {
 	require.Equal(t, original.FieldErrors, clone.FieldErrors)
 	require.NotSame(t, original.FieldErrors, clone.FieldErrors)
 
-	require.NoError(t, clone.SetData("bbb"))
+	require.NoError(t, clone.SetData("bbb", event.ApplicationJSON))
 
-	require.Equal(t, []byte("\"aaa\""), original.Data)
-	require.Equal(t, []byte("\"bbb\""), clone.Data)
+	require.Equal(t, []byte("\"aaa\""), original.Data())
+	require.Equal(t, []byte("\"bbb\""), clone.Data())
 }

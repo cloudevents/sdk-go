@@ -33,11 +33,26 @@ type EventReader interface {
 	// Extensions use the CloudEvents type system, details in package cloudevents/types.
 	Extensions() map[string]interface{}
 
-	// DEPRECATED: see event.Context.ExtensionAs
 	// ExtensionAs returns event.Context.ExtensionAs(name, obj).
+	//
+	// DEPRECATED: Access extensions directly via the e.Extensions() map.
+	// Use functions in the types package to convert extension values.
+	// For example replace this:
+	//
+	//     var i int
+	//     err := e.ExtensionAs("foo", &i)
+	//
+	// With this:
+	//
+	//     i, err := types.ToInteger(e.Extensions["foo"])
+	//
 	ExtensionAs(string, interface{}) error
 
 	// Data Attribute
+
+	// Data returns the raw data buffer, it might be encoded depending on data
+	// content type.
+	Data() []byte
 
 	// DataAs attempts to populate the provided data object with the event payload.
 	// data should be a pointer type.
@@ -74,6 +89,6 @@ type EventWriter interface {
 	// SetExtension performs event.Context.SetExtension.
 	SetExtension(string, interface{})
 
-	// SetData encodes the given payload with the current encoding settings.
-	SetData(interface{}) error
+	// SetData encodes the given payload with the given content type.
+	SetData(interface{}, string) error
 }

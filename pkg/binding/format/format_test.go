@@ -20,7 +20,7 @@ func TestJSON(t *testing.T) {
 		}.AsV03(),
 	}
 	e.SetExtension("ex", "val")
-	assert.NoError(e.SetData("foo"))
+	assert.NoError(e.SetData("foo", event.ApplicationJSON))
 	b, err := format.JSON.Marshal(&e)
 	assert.NoError(err)
 	assert.Equal(`{"data":"foo","ex":"val","id":"id","source":"source","specversion":"0.3","type":"type"}`, string(b))
@@ -48,7 +48,7 @@ func TestMarshalUnmarshal(t *testing.T) {
 			Source: *types.ParseURLRef("source"),
 		}.AsV03(),
 	}
-	assert.NoError(e.SetData("foo"))
+	assert.NoError(e.SetData("foo", event.ApplicationJSON))
 	b, err := format.Marshal(format.JSON.MediaType(), &e)
 	assert.NoError(err)
 	assert.Equal(`{"data":"foo","id":"id","source":"source","specversion":"0.3","type":"type"}`, string(b))
@@ -65,9 +65,12 @@ func TestMarshalUnmarshal(t *testing.T) {
 
 type dummyFormat struct{}
 
-func (dummyFormat) MediaType() string                        { return "dummy" }
-func (dummyFormat) Marshal(*event.Event) ([]byte, error)     { return []byte("dummy!"), nil }
-func (dummyFormat) Unmarshal(b []byte, e *event.Event) error { e.Data = "undummy!"; return nil }
+func (dummyFormat) MediaType() string                    { return "dummy" }
+func (dummyFormat) Marshal(*event.Event) ([]byte, error) { return []byte("dummy!"), nil }
+func (dummyFormat) Unmarshal(b []byte, e *event.Event) error {
+	e.DataEncoded = []byte("undummy!")
+	return nil
+}
 
 func TestAdd(t *testing.T) {
 	assert := assert.New(t)
@@ -80,5 +83,5 @@ func TestAdd(t *testing.T) {
 	assert.Equal("dummy!", string(b))
 	err = format.Unmarshal("dummy", b, &e)
 	assert.NoError(err)
-	assert.Equal("undummy!", e.Data)
+	assert.Equal([]byte("undummy!"), e.Data())
 }

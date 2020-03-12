@@ -23,7 +23,7 @@ func TestEventSetData_Jsonv03(t *testing.T) {
 			event: func(version string) event.Event {
 				return event.New(version)
 			},
-			want: nil,
+			want: []uint8(nil),
 		},
 		"defaults": {
 			event: func(version string) event.Event {
@@ -59,14 +59,13 @@ func TestEventSetData_Jsonv03(t *testing.T) {
 		"application/json+base64": {
 			event: func(version string) event.Event {
 				e := event.New(version)
-				e.SetDataContentType("application/json")
 				e.SetDataContentEncoding(event.Base64)
 				return e
 			},
 			set: map[string]interface{}{
 				"hello": "unittest",
 			},
-			want: `eyJoZWxsbyI6InVuaXR0ZXN0In0=`,
+			want: []byte(`eyJoZWxsbyI6InVuaXR0ZXN0In0=`),
 		},
 	}
 	for n, tc := range testCases {
@@ -76,11 +75,11 @@ func TestEventSetData_Jsonv03(t *testing.T) {
 			e := tc.event(version)
 
 			if tc.set != nil {
-				if err := e.SetData(tc.set); err != nil {
+				if err := e.SetData(tc.set, "application/json"); err != nil {
 					t.Errorf("unexpected error, %v", err)
 				}
 			}
-			got := e.Data
+			got := e.Data()
 
 			as, _ := types.Allocate(tc.set)
 
@@ -96,7 +95,7 @@ func TestEventSetData_Jsonv1(t *testing.T) {
 			event: func(version string) event.Event {
 				return event.New(version)
 			},
-			want: nil,
+			want: []uint8(nil),
 		},
 		"defaults": {
 			event: func(version string) event.Event {
@@ -137,11 +136,11 @@ func TestEventSetData_Jsonv1(t *testing.T) {
 			e := tc.event(version)
 
 			if tc.set != nil {
-				if err := e.SetData(tc.set); err != nil {
+				if err := e.SetData(tc.set, e.DataContentType()); err != nil {
 					t.Errorf("unexpected error, %v", err)
 				}
 			}
-			got := e.Data
+			got := e.Data()
 
 			as, _ := types.Allocate(tc.set)
 
@@ -169,7 +168,7 @@ func TestEventSetData_xml(t *testing.T) {
 				e.SetDataContentType("application/xml")
 				return e
 			},
-			want: nil,
+			want: []uint8(nil),
 		},
 		"text/xml": {
 			event: func(version string) event.Event {
@@ -205,11 +204,11 @@ func TestEventSetData_xml(t *testing.T) {
 				e := tc.event(version)
 
 				if tc.set != nil {
-					if err := e.SetData(tc.set); err != nil {
+					if err := e.SetData(tc.set, e.DataContentType()); err != nil {
 						t.Errorf("unexpected error, %v", err)
 					}
 				}
-				got := e.Data
+				got := e.Data()
 
 				as, _ := types.Allocate(tc.set)
 
@@ -238,7 +237,7 @@ func TestEventSetData_xml_base64(t *testing.T) {
 				AString: "true fact",
 				AnArray: versions,
 			},
-			want: `PFhtbEV4YW1wbGU+PGE+NDI8L2E+PGI+dHJ1ZSBmYWN0PC9iPjxjPjAuMzwvYz48L1htbEV4YW1wbGU+`,
+			want: []byte(`PFhtbEV4YW1wbGU+PGE+NDI8L2E+PGI+dHJ1ZSBmYWN0PC9iPjxjPjAuMzwvYz48L1htbEV4YW1wbGU+`),
 		},
 	}
 	for n, tc := range testCases {
@@ -248,11 +247,11 @@ func TestEventSetData_xml_base64(t *testing.T) {
 				e := tc.event(version)
 
 				if tc.set != nil {
-					if err := e.SetData(tc.set); err != nil {
+					if err := e.SetData(tc.set, e.DataContentType()); err != nil {
 						t.Errorf("unexpected error, %v", err)
 					}
 				}
-				got := e.Data
+				got := e.Data()
 
 				as, _ := types.Allocate(tc.set)
 

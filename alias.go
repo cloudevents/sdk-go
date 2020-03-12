@@ -79,7 +79,6 @@ var (
 	WithEventDefaulter      = client.WithEventDefaulter
 	WithUUIDs               = client.WithUUIDs
 	WithTimeNow             = client.WithTimeNow
-	WithDataContentType     = client.WithDataContentType
 	WithoutTracePropagation = client.WithoutTracePropagation
 
 	// Event Creation

@@ -42,20 +42,22 @@ func TestMarshal(t *testing.T) {
 			wantErr: strptr("json: error calling MarshalJSON for type event.Event: every event conforming to the CloudEvents specification MUST include a context"),
 		},
 		"struct data v0.3": {
-			event: event.Event{
-				Context: event.EventContextV03{
-					Type:            "com.example.test",
-					Source:          *source,
-					SchemaURL:       schema,
-					ID:              "ABC-123",
-					Time:            &now,
-					DataContentType: event.StringOfApplicationJSON(),
-				}.AsV03(),
-				Data: DataExample{
+			event: func() event.Event {
+				e := event.Event{
+					Context: event.EventContextV03{
+						Type:      "com.example.test",
+						Source:    *source,
+						SchemaURL: schema,
+						ID:        "ABC-123",
+						Time:      &now,
+					}.AsV03(),
+				}
+				_ = e.SetData(DataExample{
 					AnInt:   42,
 					AString: "testing",
-				},
-			},
+				}, event.ApplicationJSON)
+				return e
+			}(),
 			eventExtensions: map[string]interface{}{
 				"exbool":   true,
 				"exint":    int32(42),
@@ -120,17 +122,19 @@ func TestMarshal(t *testing.T) {
 			}),
 		},
 		"string data v0.3": {
-			event: event.Event{
-				Context: event.EventContextV03{
-					Type:            "com.example.test",
-					Source:          *source,
-					SchemaURL:       schema,
-					ID:              "ABC-123",
-					Time:            &now,
-					DataContentType: event.StringOfApplicationJSON(),
-				}.AsV03(),
-				Data: "This is a string.",
-			},
+			event: func() event.Event {
+				e := event.Event{
+					Context: event.EventContextV03{
+						Type:      "com.example.test",
+						Source:    *source,
+						SchemaURL: schema,
+						ID:        "ABC-123",
+						Time:      &now,
+					}.AsV03(),
+				}
+				_ = e.SetData("This is a string.", event.ApplicationJSON)
+				return e
+			}(),
 			eventExtensions: map[string]interface{}{
 				"exbool":   true,
 				"exint":    int32(42),
@@ -157,20 +161,22 @@ func TestMarshal(t *testing.T) {
 			}),
 		},
 		"struct data v1.0": {
-			event: event.Event{
-				Context: event.EventContextV1{
-					Type:            "com.example.test",
-					Source:          *sourceV1,
-					DataSchema:      schemaV1,
-					ID:              "ABC-123",
-					Time:            &now,
-					DataContentType: event.StringOfApplicationJSON(),
-				}.AsV1(),
-				Data: DataExample{
+			event: func() event.Event {
+				e := event.Event{
+					Context: event.EventContextV1{
+						Type:       "com.example.test",
+						Source:     *sourceV1,
+						DataSchema: schemaV1,
+						ID:         "ABC-123",
+						Time:       &now,
+					}.AsV1(),
+				}
+				_ = e.SetData(DataExample{
 					AnInt:   42,
 					AString: "testing",
-				},
-			},
+				}, event.ApplicationJSON)
+				return e
+			}(),
 			eventExtensions: map[string]interface{}{
 				"exbool":   true,
 				"exint":    int32(42),
@@ -235,17 +241,19 @@ func TestMarshal(t *testing.T) {
 			}),
 		},
 		"string data v1.0": {
-			event: event.Event{
-				Context: event.EventContextV1{
-					Type:            "com.example.test",
-					Source:          *sourceV1,
-					DataSchema:      schemaV1,
-					ID:              "ABC-123",
-					Time:            &now,
-					DataContentType: event.StringOfApplicationJSON(),
-				}.AsV1(),
-				Data: "This is a string.",
-			},
+			event: func() event.Event {
+				e := event.Event{
+					Context: event.EventContextV1{
+						Type:       "com.example.test",
+						Source:     *sourceV1,
+						DataSchema: schemaV1,
+						ID:         "ABC-123",
+						Time:       &now,
+					}.AsV1(),
+				}
+				_ = e.SetData("This is a string.", event.ApplicationJSON)
+				return e
+			}(),
 			eventExtensions: map[string]interface{}{
 				"exbool":   true,
 				"exint":    int32(42),
@@ -354,11 +362,10 @@ func TestUnmarshal(t *testing.T) {
 						"extime":   now.Format(time.RFC3339Nano),
 					},
 				}.AsV03(),
-				Data: toBytes(DataExample{
+				DataEncoded: toBytes(DataExample{
 					AnInt:   42,
 					AString: "testing",
 				}),
-				DataEncoded: true,
 			},
 		},
 		"string data v0.3": {
@@ -396,8 +403,7 @@ func TestUnmarshal(t *testing.T) {
 						"extime":   now.Format(time.RFC3339Nano),
 					},
 				}.AsV03(),
-				Data:        toBytes("This is a string."),
-				DataEncoded: true,
+				DataEncoded: toBytes("This is a string."),
 			},
 		},
 		"nil data v0.3": {
@@ -474,11 +480,10 @@ func TestUnmarshal(t *testing.T) {
 						"extime":   now.Format(time.RFC3339Nano),
 					},
 				}.AsV1(),
-				Data: toBytes(DataExample{
+				DataEncoded: toBytes(DataExample{
 					AnInt:   42,
 					AString: "testing",
 				}),
-				DataEncoded: true,
 			},
 		},
 		"string data v1.0": {
@@ -516,8 +521,7 @@ func TestUnmarshal(t *testing.T) {
 						"extime":   now.Format(time.RFC3339Nano),
 					},
 				}.AsV1(),
-				Data:        toBytes("This is a string."),
-				DataEncoded: true,
+				DataEncoded: toBytes("This is a string."),
 			},
 		},
 		"nil data v1.0": {
