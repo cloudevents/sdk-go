@@ -34,31 +34,31 @@ func TestAddUUID(t *testing.T) {
 			Name:         "No change to id to Mock Structured message",
 			InputMessage: test.MustCreateMockStructuredMessage(eventWithId.Clone()),
 			WantEvent:    eventWithId.Clone(),
-			Transformers: []binding.TransformerFactory{AddUUID},
+			Transformers: []binding.TransformerFactory{SetUUID},
 		},
 		{
 			Name:         "No change to id to Mock Binary message",
 			InputMessage: test.MustCreateMockBinaryMessage(eventWithId.Clone()),
 			WantEvent:    eventWithId.Clone(),
-			Transformers: []binding.TransformerFactory{AddUUID},
+			Transformers: []binding.TransformerFactory{SetUUID},
 		},
 		{
 			Name:         "No change to id to Event message",
 			InputEvent:   eventWithId,
 			WantEvent:    eventWithId,
-			Transformers: []binding.TransformerFactory{AddUUID},
+			Transformers: []binding.TransformerFactory{SetUUID},
 		},
 		{
 			Name:         "Add UUID to Mock Binary message",
 			InputMessage: test.MustCreateMockBinaryMessage(eventWithoutId.Clone()),
 			AssertFunc:   assertUUID,
-			Transformers: []binding.TransformerFactory{AddUUID},
+			Transformers: []binding.TransformerFactory{SetUUID},
 		},
 		{
 			Name:         "Add UUID to Event message",
 			InputEvent:   eventWithoutId,
 			AssertFunc:   assertUUID,
-			Transformers: []binding.TransformerFactory{AddUUID},
+			Transformers: []binding.TransformerFactory{SetUUID},
 		},
 	})
 }
