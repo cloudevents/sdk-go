@@ -41,46 +41,26 @@ type TapTest struct {
 
 type TapTestCases map[string]TapTest
 
-func ClientLoopback(t *testing.T, tc TapTest, opts ...interface{}) {
+func ClientLoopback(t *testing.T, tc TapTest, copts ...client.Option) {
 	tap := NewTap()
 	server := httptest.NewServer(tap)
 	defer server.Close()
 
-	topts := make([]cehttp.Option, 0)
-	popts := make([]cehttp.ProtocolOption, 0)
-	for _, v := range opts {
-		switch o := v.(type) {
-		case cehttp.Option:
-			topts = append(topts, o)
-		case cehttp.ProtocolOption:
-			popts = append(popts, o)
-		}
-	}
+	opts := make([]cehttp.Option, 0)
+	opts = append(opts, cloudevents.WithTarget(server.URL))
+	opts = append(opts, cloudevents.WithPort(0)) // random port
 
-	popts = append(popts, cloudevents.WithTarget(server.URL))
-
-	protocol, err := cloudevents.NewHTTPProtocol(popts...)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if len(topts) == 0 {
-		topts = append(topts, cloudevents.WithEncoding(cloudevents.HTTPBinaryEncoding))
-	}
-	topts = append(topts, cloudevents.WithPort(0)) // random port
-
-	transport, err := cloudevents.NewHTTPTransport(protocol, topts...)
+	protocol, err := cloudevents.NewHTTP(opts...)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	tap.handler = protocol
 
-	ce, err := cloudevents.NewClient(
-		transport,
-		cloudevents.WithEventDefaulter(AlwaysThen(tc.now)),
-		cloudevents.WithoutTracePropagation(),
-	)
+	copts = append(copts, cloudevents.WithEventDefaulter(AlwaysThen(tc.now)))
+	copts = append(copts, cloudevents.WithoutTracePropagation())
+
+	ce, err := cloudevents.NewClient(protocol, copts...)
 	if err != nil {
 		t.Fatal(err)
 	}

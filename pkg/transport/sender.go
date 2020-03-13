@@ -19,15 +19,6 @@ type Sender interface {
 	Send(ctx context.Context, m binding.Message) error
 }
 
-// Requester sends a message and receives a response
-//
-// Optional interface that may be implemented by protocols that support
-// request/response correlation.
-type Requester interface {
-	// Request sends m like Sender.Send() but also arranges to receive a response.
-	Request(ctx context.Context, m binding.Message) (binding.Message, error)
-}
-
 // SendCloser is a Sender that can be closed.
 type SendCloser interface {
 	Sender

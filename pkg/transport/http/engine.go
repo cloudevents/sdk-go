@@ -53,12 +53,6 @@ func (e *Protocol) StartInbound(ctx context.Context) error {
 		errChan <- e.server.Serve(e.listener)
 	}()
 
-	//go func() {
-	//	if err := e.BindingTransport.StartReceiver(ctx); err != nil {
-	//		errChan <- err
-	//	}
-	//}()
-
 	// wait for the server to return or ctx.Done().
 	select {
 	case <-ctx.Done():

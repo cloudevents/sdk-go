@@ -12,16 +12,12 @@ import (
 	"os"
 	"runtime"
 	"runtime/pprof"
-	"sync"
 	"testing"
 	"time"
-
-	"github.com/cloudevents/sdk-go/pkg/event"
 
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/buffering"
-	"github.com/cloudevents/sdk-go/pkg/transport"
 	http "github.com/cloudevents/sdk-go/pkg/transport/http"
 	"github.com/cloudevents/sdk-go/test/benchmark/e2e"
 )
@@ -67,7 +63,7 @@ func benchmarkBaseline(cases []e2e.BenchmarkCase, requestFactory func([]byte) *n
 	return results
 }
 
-func pipeLoopDirect(r *http.Protocol, sendCtx context.Context, endCtx context.Context, opts ...http.ProtocolOption) {
+func pipeLoopDirect(r *http.Protocol, sendCtx context.Context, endCtx context.Context, opts ...http.Option) {
 	s := MockedSender(opts...)
 	var err error
 	var m binding.Message
@@ -85,7 +81,7 @@ func pipeLoopDirect(r *http.Protocol, sendCtx context.Context, endCtx context.Co
 	}
 }
 
-func pipeLoopMulti(r *http.Protocol, sendCtx context.Context, endCtx context.Context, outputSenders int, opts ...http.ProtocolOption) {
+func pipeLoopMulti(r *http.Protocol, sendCtx context.Context, endCtx context.Context, outputSenders int, opts ...http.Option) {
 	s := MockedSender(opts...)
 	var err error
 	var m binding.Message
@@ -120,7 +116,7 @@ func benchmarkReceiverSender(cases []e2e.BenchmarkCase, requestFactory func([]by
 		fmt.Printf("%+v\n", c)
 
 		ctx, cancel := context.WithCancel(context.TODO())
-		receiver, err := http.NewProtocol()
+		receiver, err := http.New()
 		if err != nil {
 			panic(err)
 		}
@@ -156,28 +152,29 @@ func benchmarkReceiverSender(cases []e2e.BenchmarkCase, requestFactory func([]by
 	return results
 }
 
-type benchDelivery struct {
-	fn transport.DeliveryFunc
-}
+//
+//type benchDelivery struct {
+//	fn transport.DeliveryFunc
+//}
+//
+//func (b *benchDelivery) Delivery(ctx context.Context, e event.Event) (*event.Event, transport.Result) {
+//	return b.fn(ctx, e)
+//}
 
-func (b *benchDelivery) Delivery(ctx context.Context, e event.Event) (*event.Event, transport.Result) {
-	return b.fn(ctx, e)
-}
-
-func dispatchReceiver(clients []cloudevents.Client, outputSenders int) transport.Delivery {
-	return &benchDelivery{fn: func(ctx context.Context, e cloudevents.Event) (*cloudevents.Event, error) {
-		var wg sync.WaitGroup
-		for i := 0; i < outputSenders; i++ {
-			wg.Add(1)
-			go func(client cloudevents.Client) {
-				_ = client.Send(ctx, e)
-				wg.Done()
-			}(clients[i])
-		}
-		wg.Wait()
-		return nil, nil
-	}}
-}
+//func dispatchReceiver(clients []cloudevents.Client, outputSenders int) transport.Delivery {
+//	return &benchDelivery{fn: func(ctx context.Context, e cloudevents.Event) (*cloudevents.Event, error) {
+//		var wg sync.WaitGroup
+//		for i := 0; i < outputSenders; i++ {
+//			wg.Add(1)
+//			go func(client cloudevents.Client) {
+//				_ = client.Send(ctx, e)
+//				wg.Done()
+//			}(clients[i])
+//		}
+//		wg.Wait()
+//		return nil, nil
+//	}}
+//}
 
 func benchmarkClient(cases []e2e.BenchmarkCase, requestFactory func([]byte) *nethttp.Request) e2e.BenchmarkResults {
 	var results e2e.BenchmarkResults
@@ -186,14 +183,14 @@ func benchmarkClient(cases []e2e.BenchmarkCase, requestFactory func([]byte) *net
 	for _, c := range cases {
 		fmt.Printf("%+v\n", c)
 
-		_, mockedReceiverProtocol, mockedReceiverTransport := MockedClient()
+		//_, mockedReceiverProtocol, mockedReceiverTransport := MockedClient()
 
 		senderClients := make([]cloudevents.Client, c.OutputSenders)
 		for i := 0; i < c.OutputSenders; i++ {
-			senderClients[i], _, _ = MockedClient()
+			senderClients[i], _ = MockedClient()
 		}
 
-		mockedReceiverTransport.SetDelivery(dispatchReceiver(senderClients, c.OutputSenders))
+		//mockedReceiverTransport.SetDelivery(dispatchReceiver(senderClients, c.OutputSenders))
 
 		buffer := make([]byte, c.PayloadSize)
 		fillRandom(buffer, random)
@@ -203,8 +200,8 @@ func benchmarkClient(cases []e2e.BenchmarkCase, requestFactory func([]byte) *net
 			b.SetParallelism(c.Parallelism)
 			b.RunParallel(func(pb *testing.PB) {
 				for pb.Next() {
-					w := httptest.NewRecorder()
-					mockedReceiverProtocol.ServeHTTP(w, requestFactory(buffer))
+					//w := httptest.NewRecorder()
+					//mockedReceiverProtocol.ServeHTTP(w, requestFactory(buffer))
 				}
 			})
 		})

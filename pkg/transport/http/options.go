@@ -9,12 +9,12 @@ import (
 	"time"
 )
 
-// ProtocolOption is the function signature required to be considered an http.ProtocolOption.
-type ProtocolOption func(*Protocol) error
+// Option is the function signature required to be considered an http.Option.
+type Option func(*Protocol) error
 
 // WithTarget sets the outbound recipient of cloudevents when using an HTTP
 // request.
-func WithTarget(targetUrl string) ProtocolOption {
+func WithTarget(targetUrl string) Option {
 	return func(p *Protocol) error {
 		if p == nil {
 			return fmt.Errorf("http protocol option can not set nil protocol")
@@ -45,7 +45,7 @@ func WithTarget(targetUrl string) ProtocolOption {
 
 // WithHeader sets an additional default outbound header for all cloudevents
 // when using an HTTP request.
-func WithHeader(key, value string) ProtocolOption {
+func WithHeader(key, value string) Option {
 	return func(p *Protocol) error {
 		if p == nil {
 			return fmt.Errorf("http header option can not set nil transport")
@@ -68,7 +68,7 @@ func WithHeader(key, value string) ProtocolOption {
 }
 
 // WithShutdownTimeout sets the shutdown timeout when the http server is being shutdown.
-func WithShutdownTimeout(timeout time.Duration) ProtocolOption {
+func WithShutdownTimeout(timeout time.Duration) Option {
 	return func(t *Protocol) error {
 		if t == nil {
 			return fmt.Errorf("http shutdown timeout option can not set nil transport")
@@ -90,7 +90,7 @@ func checkListen(t *Protocol, prefix string) error {
 
 // WithPort sets the listening port for StartReceiver.
 // Only one of WithListener  or WithPort is allowed.
-func WithPort(port int) ProtocolOption {
+func WithPort(port int) Option {
 	return func(t *Protocol) error {
 		if t == nil {
 			return fmt.Errorf("http port option can not set nil transport")
@@ -108,7 +108,7 @@ func WithPort(port int) ProtocolOption {
 
 // WithListener sets the listener for StartReceiver.
 // Only one of WithListener or WithPort is allowed.
-func WithListener(l net.Listener) ProtocolOption {
+func WithListener(l net.Listener) Option {
 	return func(t *Protocol) error {
 		if t == nil {
 			return fmt.Errorf("http listener option can not set nil transport")
@@ -123,7 +123,7 @@ func WithListener(l net.Listener) ProtocolOption {
 }
 
 // WithPath sets the path to receive cloudevents on for HTTP transports.
-func WithPath(path string) ProtocolOption {
+func WithPath(path string) Option {
 	return func(t *Protocol) error {
 		if t == nil {
 			return fmt.Errorf("http path option can not set nil transport")
@@ -145,7 +145,7 @@ type Middleware func(next nethttp.Handler) nethttp.Handler
 // WithMiddleware adds an HTTP middleware to the transport. It may be specified multiple times.
 // Middleware is applied to everything before it. For example
 // `NewClient(WithMiddleware(foo), WithMiddleware(bar))` would result in `bar(foo(original))`.
-func WithMiddleware(middleware Middleware) ProtocolOption {
+func WithMiddleware(middleware Middleware) Option {
 	return func(t *Protocol) error {
 		if t == nil {
 			return fmt.Errorf("http middleware option can not set nil transport")
@@ -156,7 +156,7 @@ func WithMiddleware(middleware Middleware) ProtocolOption {
 }
 
 // WithHTTPTransport sets the HTTP client transport.
-func WithHTTPTransport(httpTransport nethttp.RoundTripper) ProtocolOption {
+func WithHTTPTransport(httpTransport nethttp.RoundTripper) Option {
 	return func(t *Protocol) error {
 		t.transport = httpTransport
 		return nil

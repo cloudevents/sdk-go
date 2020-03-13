@@ -10,19 +10,9 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/binding/transformer"
 	cecontext "github.com/cloudevents/sdk-go/pkg/context"
 	"github.com/cloudevents/sdk-go/pkg/transport"
-	"github.com/cloudevents/sdk-go/pkg/transport/bindings"
 )
 
-// Transport adheres to transport.Transport.
-var _ transport.Transport = (*Transport)(nil)
-
-const (
-	// TransportName is the name of this transport.
-	TransportName = "AMQP"
-)
-
-type Transport struct {
-	bindings.BindingTransport
+type Protocol struct {
 	connOpts         []amqp.ConnOption
 	sessionOpts      []amqp.SessionOption
 	senderLinkOpts   []amqp.LinkOption
@@ -34,16 +24,19 @@ type Transport struct {
 	// AMQP
 	Client  *amqp.Client
 	Session *amqp.Session
-	Sender  *amqp.Sender
 	Node    string
+
+	// Sender
+	Sender                  transport.Sender
+	SenderContextDecorators []func(context.Context) context.Context
 
 	// Receiver
 	Receiver transport.Receiver
 }
 
 // New creates a new amqp transport.
-func New(server, queue string, opts ...Option) (*Transport, error) {
-	t := &Transport{
+func New(server, queue string, opts ...Option) (*Protocol, error) {
+	t := &Protocol{
 		Node:             queue,
 		connOpts:         []amqp.ConnOption(nil),
 		sessionOpts:      []amqp.SessionOption(nil),
@@ -78,11 +71,11 @@ func New(server, queue string, opts ...Option) (*Transport, error) {
 		return nil, err
 	}
 	// TODO: in the future we might have more than one sender.
-	t.BindingTransport.Sender, t.BindingTransport.SenderContextDecorators = t.applyEncoding(sender)
+	t.Sender, t.SenderContextDecorators = t.applyEncoding(sender)
 	return t, nil
 }
 
-func (t *Transport) applyEncoding(amqpSender *amqp.Sender) (transport.Sender, []func(context.Context) context.Context) {
+func (t *Protocol) applyEncoding(amqpSender *amqp.Sender) (transport.Sender, []func(context.Context) context.Context) {
 	switch t.Encoding {
 	case BinaryV03:
 		return NewSender(
@@ -108,7 +101,7 @@ func (t *Transport) applyEncoding(amqpSender *amqp.Sender) (transport.Sender, []
 	return NewSender(amqpSender), []func(context.Context) context.Context{}
 }
 
-func (t *Transport) applyOptions(opts ...Option) error {
+func (t *Protocol) applyOptions(opts ...Option) error {
 	for _, fn := range opts {
 		if err := fn(t); err != nil {
 			return err
@@ -117,9 +110,9 @@ func (t *Transport) applyOptions(opts ...Option) error {
 	return nil
 }
 
-// StartReceiver implements Transport.StartReceiver
+// StartReceiver implements Protocol.StartReceiver
 // NOTE: This is a blocking call.
-func (t *Transport) StartReceiver(ctx context.Context) error {
+func (t *Protocol) StartInbound(ctx context.Context) error {
 	logger := cecontext.LoggerFrom(ctx)
 	logger.Info("StartReceiver on ", t.Node)
 
@@ -128,15 +121,23 @@ func (t *Transport) StartReceiver(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	t.BindingTransport.Receiver = NewReceiver(receiver)
-	return t.BindingTransport.StartReceiver(ctx)
+	t.Receiver = NewReceiver(receiver)
+	return nil
 }
 
-// HasTracePropagation implements Transport.HasTracePropagation
-func (t *Transport) HasTracePropagation() bool {
+// HasTracePropagation implements Protocol.HasTracePropagation
+func (t *Protocol) HasTracePropagation() bool {
 	return false
 }
 
-func (t *Transport) Close() error {
+func (t *Protocol) Close() error {
 	return t.Client.Close()
+}
+
+func (t *Protocol) Send(ctx context.Context, in binding.Message) error {
+	return t.Sender.Send(ctx, in)
+}
+
+func (t *Protocol) Receive(ctx context.Context) (binding.Message, error) {
+	return t.Receiver.Receive(ctx)
 }

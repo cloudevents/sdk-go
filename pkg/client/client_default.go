@@ -12,7 +12,7 @@ import (
 // client, all outbound events will have a time and id set if not already
 // present.
 func NewDefault() (Client, error) {
-	p, err := http.NewProtocol()
+	p, err := http.New()
 	if err != nil {
 		return nil, err
 	}

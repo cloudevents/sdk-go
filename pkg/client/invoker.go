@@ -15,8 +15,10 @@ type Invoker interface {
 
 var _ Invoker = (*receiveInvoker)(nil)
 
-func newReceiveInvoker(fn interface{}) (Invoker, error) {
-	r := &receiveInvoker{}
+func newReceiveInvoker(fn interface{}, fns ...EventDefaulter) (Invoker, error) {
+	r := &receiveInvoker{
+		eventDefaulterFns: fns,
+	}
 
 	if fn, err := receiver(fn); err != nil {
 		return nil, err

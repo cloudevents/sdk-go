@@ -35,8 +35,7 @@ type URIRef = types.URIRef
 
 // HTTP Protocol
 
-//type HTTPOption http.Option
-type HTTPProtocolOption http.ProtocolOption
+type HTTPOption http.Option
 
 type HTTPProtocol = http.Protocol
 type HTTPEncoding = http.Encoding
@@ -109,7 +108,7 @@ var (
 
 	// HTTP Protocol
 
-	NewHTTPProtocol = http.NewProtocol
+	NewHTTP = http.New
 
 	// HTTP Protocol Options
 
@@ -117,7 +116,7 @@ var (
 	WithHeader          = http.WithHeader
 	WithShutdownTimeout = http.WithShutdownTimeout
 	//WithEncoding           = http.WithEncoding
-	//WithStructuredEncoding = http.WithStructuredEncoding
+	//WithStructuredEncoding = http.WithStructuredEncoding // TODO: expose new way
 	WithPort          = http.WithPort
 	WithPath          = http.WithPath
 	WithMiddleware    = http.WithMiddleware

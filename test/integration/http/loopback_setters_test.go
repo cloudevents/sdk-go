@@ -2,6 +2,7 @@ package http
 
 import (
 	"fmt"
+	"github.com/cloudevents/sdk-go/pkg/client"
 	"testing"
 	"time"
 
@@ -377,7 +378,7 @@ func TestClientLoopback_setters_structured_json(t *testing.T) {
 				testcase.asSent.ContentLength = int64(len(testcase.asSent.Body))
 				testcase.asRecv.ContentLength = int64(len(testcase.asRecv.Body))
 
-				ClientLoopback(t, testcase, cloudevents.WithStructuredEncoding())
+				ClientLoopback(t, testcase, client.WithForceStructured())
 			})
 		}
 	}
@@ -471,7 +472,7 @@ func TestClientLoopback_setters_structured_json_base64(t *testing.T) {
 				testcase.asSent.ContentLength = int64(len(testcase.asSent.Body))
 				testcase.asRecv.ContentLength = int64(len(testcase.asRecv.Body))
 
-				ClientLoopback(t, testcase, cloudevents.WithStructuredEncoding())
+				ClientLoopback(t, testcase, client.WithForceStructured())
 			})
 		}
 	}

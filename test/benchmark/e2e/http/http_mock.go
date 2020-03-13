@@ -27,10 +27,10 @@ func NewTestClient(fn RoundTripFunc) *nethttp.Client {
 	}
 }
 
-func MockedSender(options ...http.ProtocolOption) bindings.Sender {
+func MockedSender(options ...http.Option) bindings.Sender {
 	u, _ := url.Parse("http://localhost")
 
-	p, err := http.NewProtocol(options...)
+	p, err := http.New(options...)
 	if err != nil {
 		panic(err)
 	}
@@ -44,7 +44,7 @@ func MockedSender(options ...http.ProtocolOption) bindings.Sender {
 	return p
 }
 
-func MockedClient() (cloudevents.Client, *cehttp.Protocol, *cehttp.Transport) {
+func MockedClient() (cloudevents.Client, *cehttp.Protocol) {
 	mockTransport := RoundTripFunc(func(req *nethttp.Request) *nethttp.Response {
 		return &nethttp.Response{
 			StatusCode: 202,
@@ -53,22 +53,17 @@ func MockedClient() (cloudevents.Client, *cehttp.Protocol, *cehttp.Transport) {
 		}
 	})
 
-	p, err := cehttp.NewProtocol(cehttp.WithTarget("http://localhost"))
+	p, err := cehttp.New(cehttp.WithTarget("http://localhost"), cehttp.WithHTTPTransport(mockTransport))
 	if err != nil {
 		panic(err)
 	}
 
-	t, err := cehttp.New(p, cehttp.WithHTTPTransport(mockTransport))
+	client, err := cloudevents.NewClient(p)
 	if err != nil {
 		panic(err)
 	}
 
-	client, err := cloudevents.NewClient(t)
-	if err != nil {
-		panic(err)
-	}
-
-	return client, p, t
+	return client, p
 }
 
 func MockedBinaryRequest(body []byte) *nethttp.Request {

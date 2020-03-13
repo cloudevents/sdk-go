@@ -45,20 +45,12 @@ func gotEvent(ctx context.Context, event cloudevents.Event) error {
 func _main(args []string, env envConfig) int {
 	ctx := context.Background()
 
-	p, err := cloudevents.NewHTTPProtocol()
+	p, err := cloudevents.NewHTTP(cloudevents.WithPort(env.Port), cloudevents.WithPath(env.Path))
 	if err != nil {
 		log.Fatalf("failed to create protocol: %s", err.Error())
 	}
 
-	t, err := cloudevents.NewHTTPTransport(p,
-		cloudevents.WithPort(env.Port),
-		cloudevents.WithPath(env.Path),
-	)
-	if err != nil {
-		log.Printf("failed to create transport, %v", err)
-		return 1
-	}
-	c, err := cloudevents.NewClient(t)
+	c, err := cloudevents.NewClient(p)
 	if err != nil {
 		log.Printf("failed to create client, %v", err)
 		return 1

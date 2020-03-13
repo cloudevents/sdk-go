@@ -52,7 +52,7 @@ type Protocol struct {
 	middleware        []Middleware
 }
 
-func NewProtocol(opts ...ProtocolOption) (*Protocol, error) {
+func New(opts ...Option) (*Protocol, error) {
 	p := &Protocol{
 		transformers: make(binding.TransformerFactories, 0),
 		incoming:     make(chan msgErr),
@@ -73,7 +73,7 @@ func NewProtocol(opts ...ProtocolOption) (*Protocol, error) {
 	return p, nil
 }
 
-func (p *Protocol) applyOptions(opts ...ProtocolOption) error {
+func (p *Protocol) applyOptions(opts ...Option) error {
 	for _, fn := range opts {
 		if err := fn(p); err != nil {
 			return err

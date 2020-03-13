@@ -10,7 +10,7 @@ import (
 
 func main() {
 	ctx := context.Background()
-	p, err := cloudevents.NewHTTPProtocol()
+	p, err := cloudevents.NewHTTP()
 	if err != nil {
 		log.Fatalf("failed to create protocol: %s", err.Error())
 	}
