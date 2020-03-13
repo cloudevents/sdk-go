@@ -38,7 +38,7 @@ type URIRef = types.URIRef
 //type HTTPOption http.Option
 type HTTPProtocolOption http.ProtocolOption
 
-type HTTPTransport = http.Protocol
+type HTTPProtocol = http.Protocol
 type HTTPEncoding = http.Encoding
 
 const (

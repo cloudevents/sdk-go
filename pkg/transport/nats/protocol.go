@@ -3,8 +3,6 @@ package nats
 import (
 	"context"
 	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/transport"
-	"github.com/cloudevents/sdk-go/pkg/transport/bindings"
 	"time"
 
 	"github.com/nats-io/nats.go"
@@ -13,8 +11,6 @@ import (
 // Protocol is a reference implementation for using the CloudEvents binding
 // integration. Protocol acts as both a NATS client and a NATS handler.
 type Protocol struct {
-	bindings.BindingTransport
-
 	Conn         *nats.Conn
 	ConnOptions  []nats.Option
 	NatsURL      string
@@ -43,16 +39,7 @@ func New(natsURL, subject string, opts ...Option) (*Protocol, error) {
 		return nil, err
 	}
 
-	t.Sender = t
-	t.Receiver = t
-
 	return t, nil
-}
-
-// Transport returns a CloudEvents transport.Transport.
-// Deprecated: This is for legacy transition until client uses Sender/Receiver directly.
-func (p *Protocol) Transport() transport.Transport {
-	return &p.BindingTransport
 }
 
 func (t *Protocol) connect() error {
