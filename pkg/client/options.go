@@ -40,7 +40,7 @@ func WithTimeNow() Option {
 // the distributed tracing extension.
 func WithoutTracePropagation() Option {
 	return func(c *ceClient) error {
-		c.disableTracePropagation = true
+		//c.disableTracePropagation = true
 		return nil
 	}
 }

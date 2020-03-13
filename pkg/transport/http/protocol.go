@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
+	"sync"
 	"time"
 
 	"github.com/cloudevents/sdk-go/pkg/transport"
@@ -26,6 +28,28 @@ type Protocol struct {
 	transformers    binding.TransformerFactories
 	Client          *http.Client
 	incoming        chan msgErr
+
+	// To support engine:
+
+	// ShutdownTimeout defines the timeout given to the http.Server when calling Shutdown.
+	// If nil, DefaultShutdownTimeout is used.
+	ShutdownTimeout *time.Duration
+
+	// Port is the port to bind the receiver to. Defaults to 8080.
+	Port *int
+	// Path is the path to bind the receiver to. Defaults to "/".
+	Path string
+
+	// Receive Mutex
+	reMu sync.Mutex
+	// Handler is the handler the http Server will use. Use this to reuse the
+	// http server. If nil, the Protocol will create a one.
+	Handler           *http.ServeMux
+	listener          net.Listener
+	transport         http.RoundTripper // TODO: use this.
+	server            *http.Server
+	handlerRegistered bool
+	middleware        []Middleware
 }
 
 func NewProtocol(opts ...ProtocolOption) (*Protocol, error) {
@@ -39,6 +63,11 @@ func NewProtocol(opts ...ProtocolOption) (*Protocol, error) {
 
 	if p.Client == nil {
 		p.Client = http.DefaultClient
+	}
+
+	if p.ShutdownTimeout == nil {
+		timeout := DefaultShutdownTimeout
+		p.ShutdownTimeout = &timeout
 	}
 
 	return p, nil

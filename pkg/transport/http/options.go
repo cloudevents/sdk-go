@@ -12,12 +12,6 @@ import (
 // ProtocolOption is the function signature required to be considered an http.ProtocolOption.
 type ProtocolOption func(*Protocol) error
 
-// EngineOption is the function signature required to be considered an http.EngineOption.
-type EngineOption func(*Engine) error
-
-// Option is the function signature required to be considered an http.Option.
-type Option func(*Transport) error
-
 // WithTarget sets the outbound recipient of cloudevents when using an HTTP
 // request.
 func WithTarget(targetUrl string) ProtocolOption {
@@ -74,8 +68,8 @@ func WithHeader(key, value string) ProtocolOption {
 }
 
 // WithShutdownTimeout sets the shutdown timeout when the http server is being shutdown.
-func WithShutdownTimeout(timeout time.Duration) Option {
-	return func(t *Transport) error {
+func WithShutdownTimeout(timeout time.Duration) ProtocolOption {
+	return func(t *Protocol) error {
 		if t == nil {
 			return fmt.Errorf("http shutdown timeout option can not set nil transport")
 		}
@@ -84,46 +78,7 @@ func WithShutdownTimeout(timeout time.Duration) Option {
 	}
 }
 
-// WithEncoding sets the encoding for clients with HTTP transports.
-func WithEncoding(encoding Encoding) Option {
-	return func(t *Transport) error {
-		if t == nil {
-			return fmt.Errorf("http encoding option can not set nil transport")
-		}
-		t.Encoding = encoding
-		return nil
-	}
-}
-
-// WithBinaryEncoding sets the encoding selection strategy for
-// default encoding selections based on Event, the encoded event will be the
-// given version in Binary form.
-func WithBinaryEncoding() Option {
-	return func(t *Transport) error {
-		if t == nil {
-			return fmt.Errorf("http binary encoding option can not set nil transport")
-		}
-
-		t.Encoding = Binary
-		return nil
-	}
-}
-
-// WithStructuredEncoding sets the encoding selection strategy for
-// default encoding selections based on Event, the encoded event will be the
-// given version in Structured form.
-func WithStructuredEncoding() Option {
-	return func(t *Transport) error {
-		if t == nil {
-			return fmt.Errorf("http structured encoding option can not set nil transport")
-		}
-
-		t.Encoding = Structured
-		return nil
-	}
-}
-
-func checkListen(t *Transport, prefix string) error {
+func checkListen(t *Protocol, prefix string) error {
 	switch {
 	case t.Port != nil:
 		return fmt.Errorf("%v port already set", prefix)
@@ -135,8 +90,8 @@ func checkListen(t *Transport, prefix string) error {
 
 // WithPort sets the listening port for StartReceiver.
 // Only one of WithListener  or WithPort is allowed.
-func WithPort(port int) Option {
-	return func(t *Transport) error {
+func WithPort(port int) ProtocolOption {
+	return func(t *Protocol) error {
 		if t == nil {
 			return fmt.Errorf("http port option can not set nil transport")
 		}
@@ -153,8 +108,8 @@ func WithPort(port int) Option {
 
 // WithListener sets the listener for StartReceiver.
 // Only one of WithListener or WithPort is allowed.
-func WithListener(l net.Listener) Option {
-	return func(t *Transport) error {
+func WithListener(l net.Listener) ProtocolOption {
+	return func(t *Protocol) error {
 		if t == nil {
 			return fmt.Errorf("http listener option can not set nil transport")
 		}
@@ -168,8 +123,8 @@ func WithListener(l net.Listener) Option {
 }
 
 // WithPath sets the path to receive cloudevents on for HTTP transports.
-func WithPath(path string) Option {
-	return func(t *Transport) error {
+func WithPath(path string) ProtocolOption {
+	return func(t *Protocol) error {
 		if t == nil {
 			return fmt.Errorf("http path option can not set nil transport")
 		}
@@ -190,8 +145,8 @@ type Middleware func(next nethttp.Handler) nethttp.Handler
 // WithMiddleware adds an HTTP middleware to the transport. It may be specified multiple times.
 // Middleware is applied to everything before it. For example
 // `NewClient(WithMiddleware(foo), WithMiddleware(bar))` would result in `bar(foo(original))`.
-func WithMiddleware(middleware Middleware) Option {
-	return func(t *Transport) error {
+func WithMiddleware(middleware Middleware) ProtocolOption {
+	return func(t *Protocol) error {
 		if t == nil {
 			return fmt.Errorf("http middleware option can not set nil transport")
 		}
@@ -201,8 +156,8 @@ func WithMiddleware(middleware Middleware) Option {
 }
 
 // WithHTTPTransport sets the HTTP client transport.
-func WithHTTPTransport(httpTransport nethttp.RoundTripper) Option {
-	return func(t *Transport) error {
+func WithHTTPTransport(httpTransport nethttp.RoundTripper) ProtocolOption {
+	return func(t *Protocol) error {
 		t.transport = httpTransport
 		return nil
 	}

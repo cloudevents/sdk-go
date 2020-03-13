@@ -5,7 +5,6 @@ import (
 	"log"
 
 	cloudevents "github.com/cloudevents/sdk-go"
-	"github.com/cloudevents/sdk-go/pkg/transport/http"
 )
 
 func main() {
@@ -16,12 +15,7 @@ func main() {
 		log.Fatalf("failed to create protocol: %s", err.Error())
 	}
 
-	e, err := http.NewEngine()
-	if err != nil {
-		log.Fatalf("failed to create engine, %v", err)
-	}
-
-	c, err := cloudevents.NewClient(p, e, cloudevents.WithTimeNow(), cloudevents.WithUUIDs())
+	c, err := cloudevents.NewClient(p, cloudevents.WithTimeNow(), cloudevents.WithUUIDs())
 	if err != nil {
 		log.Fatalf("failed to create client, %v", err)
 	}

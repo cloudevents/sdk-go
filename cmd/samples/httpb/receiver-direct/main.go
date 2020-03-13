@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 
 	cloudevents "github.com/cloudevents/sdk-go"
 )
@@ -15,13 +16,15 @@ func main() {
 		log.Fatalf("failed to create protocol: %s", err.Error())
 	}
 
-	c, err := cloudevents.NewClient(p)
+	h, err := cloudevents.NewHTTPReceiveHandler(ctx, p, receive)
 	if err != nil {
-		log.Fatalf("failed to create client, %v", err)
+		log.Fatalf("failed to create handler: %s", err.Error())
 	}
 
 	log.Printf("will listen on :8080\n")
-	log.Fatalf("failed to start receiver: %s", c.StartReceiver(ctx, receive))
+	if err := http.ListenAndServe(":8080", h); err != nil {
+		log.Fatalf("unable to start http server, %s", err)
+	}
 }
 
 func receive(ctx context.Context, event cloudevents.Event) {

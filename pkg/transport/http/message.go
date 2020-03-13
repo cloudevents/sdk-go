@@ -119,5 +119,7 @@ func (m *Message) Finish(err error) error {
 	if m.OnFinish != nil {
 		return m.OnFinish(err)
 	}
+	// TODO: if in binary mode, there could be nothing in this request or
+	// response. Meaning Message is not nil but never going to be a valid event.
 	return nil
 }

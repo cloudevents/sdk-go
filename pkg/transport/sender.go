@@ -24,8 +24,6 @@ type Sender interface {
 // Optional interface that may be implemented by protocols that support
 // request/response correlation.
 type Requester interface {
-	Sender
-
 	// Request sends m like Sender.Send() but also arranges to receive a response.
 	Request(ctx context.Context, m binding.Message) (binding.Message, error)
 }
