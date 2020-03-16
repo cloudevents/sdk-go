@@ -80,7 +80,7 @@ func testSenderReceiver(t testing.TB, options ...kafka_sarama.SenderOptionFunc) 
 
 	topicName := "test-ce-client-" + uuid.New().String()
 	r := kafka_sarama.NewConsumerFromClient(client, TEST_GROUP_ID, topicName)
-	s, err := kafka_sarama.NewSender(client, topicName, options...)
+	s, err := kafka_sarama.NewSenderFromClient(client, topicName, options...)
 	require.NoError(t, err)
 
 	go func() {
