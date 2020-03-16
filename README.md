@@ -45,20 +45,16 @@ be renamed to protocol):
 
 ## Working with CloudEvents
 
-Package [binding](./pkg/binding) provides primitives to bind an
-[event](./pkg/event) onto a [protocol](./pkg/transport) following the
-CloudEvents specification: https://github.com/cloudevents/spec.
-
-The SDK is written in such a way too allow as much control to the integrator as
-needed.
+_Note:_ Supported
+[CloudEvents specification](https://github.com/cloudevents/spec): [0.3, 1.0].
 
 Import this repo to get the `cloudevents` package:
 
 ```go
-import "github.com/cloudevents/sdk-go"
+import cloudevents "github.com/cloudevents/sdk-go"
 ```
 
-If all that is required is to convert a CloudEvent into JSON, use `event.Event`:
+To marshal a CloudEvent into JSON, use `event.Event` directly:
 
 ```go
 event :=  cloudevents.NewEvent()
@@ -69,20 +65,18 @@ event.SetData(cloudevents.ApplicationJSON, map[string]string{"hello": "world"})
 bytes, err := json.Marshal(event)
 ```
 
-The SDK can help bind this to a specific protocol, in this case HTTP Request:
+To unmarshal JSON back into a a CloudEvent:
 
 ```go
-msg := cloudevents.ToMessage(&event)
+event :=  cloudevents.NewEvent()
 
-req, _ = nethttp.NewRequest("POST", "http://localhost", nil)
-err = http.WriteRequest(context.TODO(), msg, req, nil)
-// ...check error.
-
-// Then use req:
-resp, err := http.DefaultClient.Do(req)
+err := json.Marshal(bytes, &event)
 ```
 
-The SDK can let you stay at the `Event` level if you want to use the `Client`.
+The aim of CloudEvents Specification is to define how to "bind" an event to a
+particular protocol and back. This SDK wraps the protocol binding
+implementations in a client to expose a simple `event.Event` based API.
+
 An example of sending a cloudevents.Event via HTTP:
 
 ```go
@@ -129,6 +123,26 @@ func main() {
 
 Checkout the sample [sender](./cmd/samples/http/sender) and
 [receiver](./cmd/samples/http/receiver) applications for working demo.
+
+The client will convert between the protocol specific message and event. It can
+be more performant to not parse an event all the way to the `event.Event`. For
+this the package [binding](./pkg/binding) provides primitives convert
+`event.Event` to `binding.Message`, and then bind an them onto a
+[protocol](./pkg/protocol) implementation.
+
+For example, to convert an `event.Event` to a `binding.Message` and then create
+an `http.Request`:
+
+```go
+msg := cloudevents.ToMessage(&event)
+
+req, _ = nethttp.NewRequest("POST", "http://localhost", nil)
+err = http.WriteRequest(context.TODO(), msg, req, nil)
+// ...check error.
+
+// Then use req:
+resp, err := http.DefaultClient.Do(req)
+```
 
 ## Community
 

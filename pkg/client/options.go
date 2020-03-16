@@ -6,29 +6,35 @@ import (
 )
 
 // Option is the function signature required to be considered an client.Option.
-type Option func(*ceClient) error
+type Option func(interface{}) error
 
 // WithEventDefaulter adds an event defaulter to the end of the defaulter chain.
 func WithEventDefaulter(fn EventDefaulter) Option {
-	return func(c *ceClient) error {
-		if fn == nil {
-			return fmt.Errorf("client option was given an nil event defaulter")
+	return func(i interface{}) error {
+		if c, ok := i.(*ceClient); ok {
+			if fn == nil {
+				return fmt.Errorf("client option was given an nil event defaulter")
+			}
+			c.eventDefaulterFns = append(c.eventDefaulterFns, fn)
 		}
-		c.eventDefaulterFns = append(c.eventDefaulterFns, fn)
 		return nil
 	}
 }
 
 func WithForceBinary() Option {
-	return func(c *ceClient) error {
-		c.outboundContextDecorators = append(c.outboundContextDecorators, binding.WithForceBinary)
+	return func(i interface{}) error {
+		if c, ok := i.(*ceClient); ok {
+			c.outboundContextDecorators = append(c.outboundContextDecorators, binding.WithForceBinary)
+		}
 		return nil
 	}
 }
 
 func WithForceStructured() Option {
-	return func(c *ceClient) error {
-		c.outboundContextDecorators = append(c.outboundContextDecorators, binding.WithForceStructured)
+	return func(i interface{}) error {
+		if c, ok := i.(*ceClient); ok {
+			c.outboundContextDecorators = append(c.outboundContextDecorators, binding.WithForceStructured)
+		}
 		return nil
 	}
 }
@@ -36,8 +42,10 @@ func WithForceStructured() Option {
 // WithUUIDs adds DefaultIDToUUIDIfNotSet event defaulter to the end of the
 // defaulter chain.
 func WithUUIDs() Option {
-	return func(c *ceClient) error {
-		c.eventDefaulterFns = append(c.eventDefaulterFns, DefaultIDToUUIDIfNotSet)
+	return func(i interface{}) error {
+		if c, ok := i.(*ceClient); ok {
+			c.eventDefaulterFns = append(c.eventDefaulterFns, DefaultIDToUUIDIfNotSet)
+		}
 		return nil
 	}
 }
@@ -45,17 +53,21 @@ func WithUUIDs() Option {
 // WithTimeNow adds DefaultTimeToNowIfNotSet event defaulter to the end of the
 // defaulter chain.
 func WithTimeNow() Option {
-	return func(c *ceClient) error {
-		c.eventDefaulterFns = append(c.eventDefaulterFns, DefaultTimeToNowIfNotSet)
+	return func(i interface{}) error {
+		if c, ok := i.(*ceClient); ok {
+			c.eventDefaulterFns = append(c.eventDefaulterFns, DefaultTimeToNowIfNotSet)
+		}
 		return nil
 	}
 }
 
-// WithoutTracePropagation disables automatic trace propagation via
-// the distributed tracing extension.
-func WithoutTracePropagation() Option {
-	return func(c *ceClient) error {
-		//c.disableTracePropagation = true
+// WithTracePropagation enables trace propagation via the distributed tracing
+// extension.
+func WithTracePropagation() Option {
+	return func(i interface{}) error {
+		if c, ok := i.(*obsClient); ok {
+			c.addTracing = true
+		}
 		return nil
 	}
 }

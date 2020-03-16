@@ -43,7 +43,7 @@ func simpleBinaryClient(target string) client.Client {
 		return nil
 	}
 
-	c, err := client.New(p, client.WithoutTracePropagation(), client.WithForceBinary())
+	c, err := client.New(p, client.WithForceBinary())
 	if err != nil {
 		return nil
 	}
@@ -57,7 +57,7 @@ func simpleTracingBinaryClient(target string) client.Client {
 		return nil
 	}
 
-	c, err := client.New(p)
+	c, err := client.NewObserved(p, client.WithTracePropagation())
 	if err != nil {
 		return nil
 	}
@@ -71,7 +71,7 @@ func simpleStructuredClient(target string) client.Client {
 		return nil
 	}
 
-	c, err := client.New(p, client.WithoutTracePropagation(), client.WithForceStructured())
+	c, err := client.New(p, client.WithForceStructured())
 	if err != nil {
 		return nil
 	}
@@ -187,8 +187,6 @@ func TestClientSend(t *testing.T) {
 }
 
 func TestTracingClientSend(t *testing.T) {
-	t.Skip("skipping tracing tests for now, need to rework this for sdk v2")
-
 	now := time.Now()
 
 	testCases := map[string]struct {
@@ -475,8 +473,6 @@ func TestClientReceive(t *testing.T) {
 }
 
 func TestTracedClientReceive(t *testing.T) {
-	t.Skip("TODO: need to re-add tracedClient features into httpb")
-
 	now := time.Now()
 
 	testCases := map[string]struct {
@@ -518,9 +514,11 @@ func TestTracedClientReceive(t *testing.T) {
 
 			ctx, cancel := context.WithCancel(context.TODO())
 			go func() {
-				err = c.StartReceiver(ctx, func(ctx context.Context, event event.Event) (*event.Event, transport.Result) {
+				err = c.StartReceiver(ctx, func(ctx context.Context, e event.Event) (*event.Event, transport.Result) {
 					go func() {
-						spanContexts <- trace.FromContext(ctx).SpanContext()
+						_, span := client.TraceSpan(ctx, e)
+						defer span.End()
+						spanContexts <- span.SpanContext()
 					}()
 					return nil, nil
 				})
@@ -531,10 +529,10 @@ func TestTracedClientReceive(t *testing.T) {
 			time.Sleep(5 * time.Millisecond) // let the server start
 
 			target := fmt.Sprintf("http://localhost:%d", p.GetPort())
-			client := simpleBinaryClient(target)
+			sender := simpleTracingBinaryClient(target)
 
 			ctx, span := trace.StartSpan(context.TODO(), "test-span")
-			err = client.Send(ctx, tc.event)
+			err = sender.Send(ctx, tc.event)
 			span.End()
 
 			if err != nil {

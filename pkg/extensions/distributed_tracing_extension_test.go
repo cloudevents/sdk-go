@@ -177,16 +177,13 @@ func testAddTracingAttributesFunc(t *testing.T, st extensions.DistributedTracing
 	var e event.Event
 	switch ces {
 	case "EventContextV1":
-		ectx := ecv.context.(event.EventContextV1).AsV1()
-		st.AddTracingAttributes(ectx)
-		e = event.Event{Context: ectx}
+		e = event.Event{Context: ecv.context.(event.EventContextV1).AsV1()}
 		e.SetData(event.ApplicationJSON, &Data{Message: "Hello world"})
 	case "EventContextV03":
-		ectx := ecv.context.(event.EventContextV03).AsV03()
-		st.AddTracingAttributes(ectx)
-		e = event.Event{Context: ectx}
+		e = event.Event{Context: ecv.context.(event.EventContextV03).AsV03()}
 		e.SetData(event.ApplicationJSON, &Data{Message: "Hello world"})
 	}
+	st.AddTracingAttributes(&e)
 	got := e.Extensions()
 
 	if diff := cmp.Diff(ecv.want, got); diff != "" {
