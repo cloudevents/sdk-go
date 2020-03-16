@@ -4,60 +4,26 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 
 	cloudevents "github.com/cloudevents/sdk-go"
-	"github.com/kelseyhightower/envconfig"
 )
 
-type envConfig struct {
-	// Port on which to listen for cloudevents
-	Port int    `envconfig:"RCV_PORT" default:"8080"`
-	Path string `envconfig:"RCV_PATH" default:"/"`
-}
-
 func main() {
-	var env envConfig
-	if err := envconfig.Process("", &env); err != nil {
-		log.Printf("[ERROR] Failed to process env var: %s", err)
-		os.Exit(1)
-	}
-	os.Exit(_main(os.Args[1:], env))
-}
-
-type Example struct {
-	Sequence int    `json:"id"`
-	Message  string `json:"message"`
-}
-
-func gotEvent(ctx context.Context, event cloudevents.Event) error {
-	fmt.Printf("Got Event Context: %+v\n", event.Context)
-	data := &Example{}
-	if err := event.DataAs(data); err != nil {
-		fmt.Printf("Got Data Error: %s\n", err.Error())
-	}
-	fmt.Printf("Got Data: %+v\n", data)
-
-	fmt.Printf("----------------------------\n")
-	return nil
-}
-
-func _main(args []string, env envConfig) int {
 	ctx := context.Background()
-
-	p, err := cloudevents.NewHTTP(cloudevents.WithPort(env.Port), cloudevents.WithPath(env.Path))
+	p, err := cloudevents.NewHTTP()
 	if err != nil {
 		log.Fatalf("failed to create protocol: %s", err.Error())
 	}
 
 	c, err := cloudevents.NewClient(p)
 	if err != nil {
-		log.Printf("failed to create client, %v", err)
-		return 1
+		log.Fatalf("failed to create client, %v", err)
 	}
 
-	log.Printf("will listen on :%d%s\n", env.Port, env.Path)
-	log.Fatalf("failed to start receiver: %s", c.StartReceiver(ctx, gotEvent))
+	log.Printf("will listen on :8080\n")
+	log.Fatalf("failed to start receiver: %s", c.StartReceiver(ctx, receive))
+}
 
-	return 0
+func receive(ctx context.Context, event cloudevents.Event) {
+	fmt.Printf("%s", event)
 }
