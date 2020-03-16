@@ -18,7 +18,7 @@ import (
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/buffering"
-	http "github.com/cloudevents/sdk-go/pkg/transport/http"
+	http "github.com/cloudevents/sdk-go/pkg/protocol/http"
 	"github.com/cloudevents/sdk-go/test/benchmark/e2e"
 )
 

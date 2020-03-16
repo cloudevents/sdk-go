@@ -7,12 +7,12 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/cloudevents/sdk-go/pkg/transport"
+	"github.com/cloudevents/sdk-go/pkg/protocol"
 	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/plugin/ochttp/propagation/tracecontext"
 )
 
-var _ transport.Opener = (*Protocol)(nil)
+var _ protocol.Opener = (*Protocol)(nil)
 
 func (e *Protocol) OpenInbound(ctx context.Context) error {
 	e.reMu.Lock()

@@ -10,7 +10,7 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/test"
 	"github.com/cloudevents/sdk-go/pkg/event"
-	"github.com/cloudevents/sdk-go/pkg/transport/kafka_sarama"
+	"github.com/cloudevents/sdk-go/pkg/protocol/kafka_sarama"
 )
 
 // Avoid DCE

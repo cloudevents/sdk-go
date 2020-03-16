@@ -8,7 +8,7 @@ import (
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	. "github.com/cloudevents/sdk-go/pkg/binding/test"
-	. "github.com/cloudevents/sdk-go/pkg/transport/test"
+	. "github.com/cloudevents/sdk-go/pkg/protocol/test"
 )
 
 func TestEvent(t *testing.T) {

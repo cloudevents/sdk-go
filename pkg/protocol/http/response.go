@@ -4,12 +4,12 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/cloudevents/sdk-go/pkg/transport"
+	"github.com/cloudevents/sdk-go/pkg/protocol"
 )
 
 // NewResult returns a fully populated http Result that should be used as
 // a transport.Result.
-func NewResult(status int, messageFmt string, args ...interface{}) transport.Result {
+func NewResult(status int, messageFmt string, args ...interface{}) protocol.Result {
 	return &Result{
 		Status: status,
 		Format: messageFmt,

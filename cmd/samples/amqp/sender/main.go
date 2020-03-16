@@ -12,7 +12,7 @@ import (
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/client"
 	"github.com/cloudevents/sdk-go/pkg/event"
-	ceamqp "github.com/cloudevents/sdk-go/pkg/transport/amqp"
+	ceamqp "github.com/cloudevents/sdk-go/pkg/protocol/amqp"
 	"github.com/cloudevents/sdk-go/pkg/types"
 	"github.com/google/uuid"
 	"pack.ag/amqp"
@@ -72,7 +72,7 @@ func main() {
 	host, node, opts := sampleConfig()
 	t, err := ceamqp.New(host, node, opts...)
 	if err != nil {
-		log.Fatalf("Failed to create amqp transport: %v", err)
+		log.Fatalf("Failed to create amqp protocol: %v", err)
 	}
 	c, err := client.New(t)
 	if err != nil {

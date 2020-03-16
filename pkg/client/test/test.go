@@ -5,19 +5,20 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/cloudevents/sdk-go/pkg/protocol"
+
 	"github.com/stretchr/testify/require"
 
 	"github.com/cloudevents/sdk-go/pkg/client"
 	"github.com/cloudevents/sdk-go/pkg/event"
-	"github.com/cloudevents/sdk-go/pkg/transport"
 )
 
 // SendReceive does client.Send(in), then it receives the message using client.StartReceiver() and executes outAssert
 // Halt test on error.
 func SendReceive(t *testing.T, protocolFactory func() interface{}, in event.Event, outAssert func(e event.Event), opts ...client.Option) {
 	t.Helper()
-	protocol := protocolFactory()
-	c, err := client.New(protocol, opts...)
+	pf := protocolFactory()
+	c, err := client.New(pf, opts...)
 	require.NoError(t, err)
 	wg := sync.WaitGroup{}
 	wg.Add(2)
@@ -50,7 +51,7 @@ func SendReceive(t *testing.T, protocolFactory func() interface{}, in event.Even
 
 	wg.Wait()
 
-	if closer, ok := protocol.(transport.Closer); ok {
+	if closer, ok := pf.(protocol.Closer); ok {
 		require.NoError(t, closer.Close(context.TODO()))
 	}
 }

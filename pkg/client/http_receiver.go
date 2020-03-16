@@ -2,8 +2,9 @@ package client
 
 import (
 	"context"
-	thttp "github.com/cloudevents/sdk-go/pkg/transport/http"
 	"net/http"
+
+	thttp "github.com/cloudevents/sdk-go/pkg/protocol/http"
 )
 
 func NewHTTPReceiveHandler(ctx context.Context, p *thttp.Protocol, fn interface{}) (*EventReceiver, error) {

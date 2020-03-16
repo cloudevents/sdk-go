@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/cloudevents/sdk-go/pkg/transport"
+	"github.com/cloudevents/sdk-go/pkg/protocol"
 
 	cloudevents "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/event"
@@ -47,7 +47,7 @@ func main() {
 	}
 }
 
-func gotEvent(ctx context.Context, event cloudevents.Event) (*event.Event, transport.Result) {
+func gotEvent(ctx context.Context, event cloudevents.Event) (*event.Event, protocol.Result) {
 	fmt.Printf("Got Event: %+v\n", event)
 
 	return &event, cloudevents.NewHTTPResponse(http.StatusAccepted, "accept")

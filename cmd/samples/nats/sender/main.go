@@ -9,7 +9,7 @@ import (
 
 	"github.com/cloudevents/sdk-go/pkg/client"
 	"github.com/cloudevents/sdk-go/pkg/event"
-	cloudeventsnats "github.com/cloudevents/sdk-go/pkg/transport/nats"
+	cloudeventsnats "github.com/cloudevents/sdk-go/pkg/protocol/nats"
 	"github.com/google/uuid"
 	"github.com/kelseyhightower/envconfig"
 )
@@ -41,7 +41,7 @@ func main() {
 	for _, contentType := range []string{"application/json", "application/xml"} {
 		p, err := cloudeventsnats.New(env.NATSServer, env.Subject)
 		if err != nil {
-			log.Printf("failed to create nats transport, %s", err.Error())
+			log.Printf("failed to create nats protocol, %s", err.Error())
 			os.Exit(1)
 		}
 		c, err := client.New(p)
