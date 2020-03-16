@@ -8,7 +8,7 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/binding"
 )
 
-// Sender implements binding.Sender that sends messages to a specific topic using sarama.SyncProducer
+// Sender implements binding.Sender that sends messages to a specific receiverTopic using sarama.SyncProducer
 type Sender struct {
 	topic        string
 	syncProducer sarama.SyncProducer
@@ -16,8 +16,18 @@ type Sender struct {
 	transformers binding.TransformerFactories
 }
 
-// Returns a binding.Sender that sends messages to a specific topic using sarama.SyncProducer
-func NewSender(client sarama.Client, topic string, options ...SenderOptionFunc) (*Sender, error) {
+// Returns a binding.Sender that sends messages to a specific receiverTopic using sarama.SyncProducer
+func NewSender(brokers []string, saramaConfig *sarama.Config, topic string, options ...SenderOptionFunc) (*Sender, error) {
+	client, err := sarama.NewClient(brokers, saramaConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewSenderFromClient(client, topic, options...)
+}
+
+// Returns a binding.Sender that sends messages to a specific receiverTopic using sarama.SyncProducer
+func NewSenderFromClient(client sarama.Client, topic string, options ...SenderOptionFunc) (*Sender, error) {
 	producer, err := sarama.NewSyncProducerFromClient(client)
 	if err != nil {
 		return nil, err

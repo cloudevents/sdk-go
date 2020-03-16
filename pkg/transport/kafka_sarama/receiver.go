@@ -3,10 +3,12 @@ package kafka_sarama
 import (
 	"context"
 	"io"
+	"sync"
 
 	"github.com/Shopify/sarama"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
+	"github.com/cloudevents/sdk-go/pkg/transport"
 )
 
 type msgErr struct {
@@ -17,22 +19,16 @@ type msgErr struct {
 // Receiver which implements sarama.ConsumerGroupHandler
 // After the first invocation of Receiver.Receive(), the sarama.ConsumerGroup is created and started.
 type Receiver struct {
+	once     sync.Once
 	incoming chan msgErr
-
-	client              sarama.Client
-	topic               string
-	groupId             string
-	saramaConsumerGroup sarama.ConsumerGroup
 }
 
 // NewReceiver creates a Receiver which implements sarama.ConsumerGroupHandler
+// The sarama.ConsumerGroup must be started invoking. If you need a Receiver which also manage the ConsumerGroup, use NewConsumer
 // After the first invocation of Receiver.Receive(), the sarama.ConsumerGroup is created and started.
-func NewReceiver(client sarama.Client, groupId string, topic string) *Receiver {
+func NewReceiver() *Receiver {
 	return &Receiver{
 		incoming: make(chan msgErr),
-		client:   client,
-		groupId:  groupId,
-		topic:    topic,
 	}
 }
 
@@ -41,6 +37,9 @@ func (r *Receiver) Setup(sess sarama.ConsumerGroupSession) error {
 }
 
 func (r *Receiver) Cleanup(sarama.ConsumerGroupSession) error {
+	r.once.Do(func() {
+		close(r.incoming)
+	})
 	return nil
 }
 
@@ -56,21 +55,6 @@ func (r *Receiver) ConsumeClaim(session sarama.ConsumerGroupSession, claim saram
 }
 
 func (r *Receiver) Receive(ctx context.Context) (binding.Message, error) {
-	// Consumer Group not started!
-	if r.saramaConsumerGroup == nil {
-		cg, err := sarama.NewConsumerGroupFromClient(r.groupId, r.client)
-		if err != nil {
-			return nil, err
-		}
-		r.saramaConsumerGroup = cg
-
-		go func() {
-			if err := cg.Consume(ctx, []string{r.topic}, r); err != nil {
-				r.incoming <- msgErr{err: err}
-			}
-		}()
-	}
-
 	msgErr, ok := <-r.incoming
 	if !ok {
 		return nil, io.EOF
@@ -78,9 +62,68 @@ func (r *Receiver) Receive(ctx context.Context) (binding.Message, error) {
 	return msgErr.msg, msgErr.err
 }
 
-func (r *Receiver) Close(ctx context.Context) error {
-	if r.saramaConsumerGroup != nil {
-		return r.saramaConsumerGroup.Close()
+var _ transport.Receiver = (*Receiver)(nil)
+
+type Consumer struct {
+	Receiver
+
+	client              sarama.Client
+	topic               string
+	groupId             string
+	saramaConsumerGroup sarama.ConsumerGroup
+}
+
+func NewConsumer(brokers []string, saramaConfig *sarama.Config, groupId string, topic string) (*Consumer, error) {
+	client, err := sarama.NewClient(brokers, saramaConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewConsumerFromClient(client, groupId, topic), nil
+}
+
+func NewConsumerFromClient(client sarama.Client, groupId string, topic string) *Consumer {
+	return &Consumer{
+		Receiver: Receiver{
+			incoming: make(chan msgErr),
+		},
+		client:  client,
+		topic:   topic,
+		groupId: groupId,
+	}
+}
+
+func (c *Consumer) OpenInbound(ctx context.Context) (err error) {
+	cg, err := sarama.NewConsumerGroupFromClient(c.groupId, c.client)
+	if err != nil {
+		return
+	}
+	c.saramaConsumerGroup = cg
+
+	errCh := make(chan error)
+
+	go func(errs chan error) {
+		errs <- cg.Consume(context.Background(), []string{c.topic}, c)
+	}(errCh)
+
+	for {
+		select {
+		case <-ctx.Done():
+			err = c.Close(context.TODO())
+			return
+		case err = <-errCh:
+			return
+		}
+	}
+}
+
+func (c *Consumer) Close(ctx context.Context) error {
+	if c.saramaConsumerGroup != nil {
+		if err := c.saramaConsumerGroup.Close(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
+
+var _ transport.Opener = (*Consumer)(nil)

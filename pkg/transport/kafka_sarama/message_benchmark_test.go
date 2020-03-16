@@ -37,7 +37,7 @@ var (
 			"ce_specversion":     "1.0",
 			"ce_dataschema":      test.Schema.String(),
 			"ce_datacontenttype": "text/json",
-			"ce_subject":         "topic",
+			"ce_subject":         "receiverTopic",
 			"ce_exta":            "someext",
 		}),
 	}
