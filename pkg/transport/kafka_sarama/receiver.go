@@ -24,9 +24,9 @@ type Receiver struct {
 }
 
 // NewReceiver creates a Receiver which implements sarama.ConsumerGroupHandler
-// The sarama.ConsumerGroup must be started invoking
+// The sarama.ConsumerGroup must be started invoking. If you need a Receiver which also manage the ConsumerGroup, use NewConsumer
 // After the first invocation of Receiver.Receive(), the sarama.ConsumerGroup is created and started.
-func NewReceiver(client sarama.Client, groupId string, topic string) *Receiver {
+func NewReceiver() *Receiver {
 	return &Receiver{
 		incoming: make(chan msgErr),
 	}
@@ -73,7 +73,16 @@ type Consumer struct {
 	saramaConsumerGroup sarama.ConsumerGroup
 }
 
-func NewConsumer(client sarama.Client, groupId string, topic string) *Consumer {
+func NewConsumer(brokers []string, saramaConfig *sarama.Config, groupId string, topic string) (*Consumer, error) {
+	client, err := sarama.NewClient(brokers, saramaConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewConsumerFromClient(client, groupId, topic), nil
+}
+
+func NewConsumerFromClient(client sarama.Client, groupId string, topic string) *Consumer {
 	return &Consumer{
 		Receiver: Receiver{
 			incoming: make(chan msgErr),

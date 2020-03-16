@@ -59,7 +59,7 @@ func testSenderReceiver(t testing.TB) *kafka_sarama.Protocol {
 	options := []kafka_sarama.ProtocolOptionFunc{
 		kafka_sarama.WithReceiverGroupId(TEST_GROUP_ID),
 	}
-	p, err := kafka_sarama.NewFromClient(client, topicName, topicName, options...)
+	p, err := kafka_sarama.NewProtocolFromClient(client, topicName, topicName, options...)
 	require.NoError(t, err)
 
 	return p

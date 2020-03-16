@@ -37,17 +37,18 @@ type Protocol struct {
 	receiverGroupId string
 }
 
-func New(brokers []string, saramaConfig *sarama.Config, sendToTopic string, receiveFromTopic string, opts ...ProtocolOptionFunc) (*Protocol, error) {
+// NewProtocol creates a new kafka transport.
+func NewProtocol(brokers []string, saramaConfig *sarama.Config, sendToTopic string, receiveFromTopic string, opts ...ProtocolOptionFunc) (*Protocol, error) {
 	client, err := sarama.NewClient(brokers, saramaConfig)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewFromClient(client, sendToTopic, receiveFromTopic, opts...)
+	return NewProtocolFromClient(client, sendToTopic, receiveFromTopic, opts...)
 }
 
-// New creates a new kafka transport.
-func NewFromClient(client sarama.Client, sendToTopic string, receiveFromTopic string, opts ...ProtocolOptionFunc) (*Protocol, error) {
+// NewProtocolFromClient creates a new kafka transport starting from a sarama.Client
+func NewProtocolFromClient(client sarama.Client, sendToTopic string, receiveFromTopic string, opts ...ProtocolOptionFunc) (*Protocol, error) {
 	p := &Protocol{
 		Client:                  client,
 		SenderContextDecorators: make([]func(context.Context) context.Context, 0),
@@ -64,7 +65,7 @@ func NewFromClient(client sarama.Client, sendToTopic string, receiveFromTopic st
 	if p.senderTopic == "" {
 		return nil, errors.New("you didn't specify the topic to send to")
 	}
-	p.Sender, err = NewSender(p.Client, p.senderTopic)
+	p.Sender, err = NewSenderFromClient(p.Client, p.senderTopic)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +73,7 @@ func NewFromClient(client sarama.Client, sendToTopic string, receiveFromTopic st
 	if p.receiverTopic == "" {
 		return nil, errors.New("you didn't specify the topic to receive from")
 	}
-	p.Consumer = NewConsumer(p.Client, p.receiverGroupId, p.receiverTopic)
+	p.Consumer = NewConsumerFromClient(p.Client, p.receiverGroupId, p.receiverTopic)
 
 	return p, nil
 }
