@@ -16,54 +16,31 @@ import (
 var ProducerMessage *sarama.ProducerMessage
 
 var (
-	ctxSkipKey                  context.Context
-	ctx                         context.Context
-	eventWithoutKey             event.Event
-	eventWithKey                event.Event
-	structuredMessageWithoutKey binding.Message
-	structuredMessageWithKey    binding.Message
-	binaryMessageWithoutKey     binding.Message
-	binaryMessageWithKey        binding.Message
+	ctx               context.Context
+	initialEvent      event.Event
+	structuredMessage binding.Message
+	binaryMessage     binding.Message
 )
 
 func init() {
-	ctxSkipKey = kafka_sarama.WithSkipKeyExtension(context.TODO())
 	ctx = context.TODO()
 
-	eventWithoutKey = test.FullEvent()
-	eventWithKey = test.FullEvent()
-	eventWithKey.SetExtension("key", "aaaaaa")
+	initialEvent = test.FullEvent()
 
-	structuredMessageWithoutKey = test.MustCreateMockStructuredMessage(eventWithoutKey)
-	structuredMessageWithKey = test.MustCreateMockStructuredMessage(eventWithKey)
-	binaryMessageWithoutKey = test.MustCreateMockBinaryMessage(eventWithoutKey)
-	binaryMessageWithKey = test.MustCreateMockBinaryMessage(eventWithKey)
-}
-
-func BenchmarkEncodeStructuredMessageSkipKey(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		ProducerMessage = &sarama.ProducerMessage{}
-		Err = kafka_sarama.WriteProducerMessage(ctxSkipKey, structuredMessageWithoutKey, ProducerMessage, nil)
-	}
+	structuredMessage = test.MustCreateMockStructuredMessage(initialEvent)
+	binaryMessage = test.MustCreateMockBinaryMessage(initialEvent)
 }
 
 func BenchmarkEncodeStructuredMessage(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		ProducerMessage = &sarama.ProducerMessage{}
-		Err = kafka_sarama.WriteProducerMessage(ctx, structuredMessageWithKey, ProducerMessage, nil)
-	}
-}
-
-func BenchmarkEncodeBinaryMessageSkipKey(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		ProducerMessage = &sarama.ProducerMessage{}
-		Err = kafka_sarama.WriteProducerMessage(ctxSkipKey, binaryMessageWithoutKey, ProducerMessage, nil)
+		Err = kafka_sarama.WriteProducerMessage(ctx, structuredMessage, ProducerMessage, nil)
 	}
 }
 
 func BenchmarkEncodeBinaryMessage(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		ProducerMessage = &sarama.ProducerMessage{}
-		Err = kafka_sarama.WriteProducerMessage(ctx, binaryMessageWithKey, ProducerMessage, nil)
+		Err = kafka_sarama.WriteProducerMessage(ctx, binaryMessage, ProducerMessage, nil)
 	}
 }

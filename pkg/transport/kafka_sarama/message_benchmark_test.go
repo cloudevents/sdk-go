@@ -19,43 +19,20 @@ var Event *event.Event
 var Err error
 
 var (
-	e                                   = test.FullEvent()
-	structuredConsumerMessageWithoutKey = &sarama.ConsumerMessage{
-		Value: test.MustJSON(e),
+	benchEvent                = test.FullEvent()
+	structuredConsumerMessage = &sarama.ConsumerMessage{
+		Value: test.MustJSON(benchEvent),
 		Headers: []*sarama.RecordHeader{{
 			Key:   []byte("content-type"),
 			Value: []byte(cloudevents.ApplicationCloudEventsJSON),
 		}},
 	}
-	structuredConsumerMessageWithKey = &sarama.ConsumerMessage{
-		Key:   []byte("aaa"),
-		Value: test.MustJSON(e),
-		Headers: []*sarama.RecordHeader{{
-			Key:   []byte("content-type"),
-			Value: []byte(cloudevents.ApplicationCloudEventsJSON),
-		}},
-	}
-	binaryConsumerMessageWithoutKey = &sarama.ConsumerMessage{
+	binaryConsumerMessage = &sarama.ConsumerMessage{
 		Value: []byte("hello world!"),
 		Headers: mustToSaramaConsumerHeaders(map[string]string{
-			"ce_type":            e.Type(),
-			"ce_source":          e.Source(),
-			"ce_id":              e.ID(),
-			"ce_time":            test.Timestamp.String(),
-			"ce_specversion":     "1.0",
-			"ce_dataschema":      test.Schema.String(),
-			"ce_datacontenttype": "text/json",
-			"ce_subject":         "topic",
-			"ce_exta":            "someext",
-		}),
-	}
-	binaryConsumerMessageWithKey = &sarama.ConsumerMessage{
-		Key:   []byte("akey"),
-		Value: []byte("hello world!"),
-		Headers: mustToSaramaConsumerHeaders(map[string]string{
-			"ce_type":            e.Type(),
-			"ce_source":          e.Source(),
-			"ce_id":              e.ID(),
+			"ce_type":            benchEvent.Type(),
+			"ce_source":          benchEvent.Source(),
+			"ce_id":              benchEvent.ID(),
 			"ce_time":            test.Timestamp.String(),
 			"ce_specversion":     "1.0",
 			"ce_dataschema":      test.Schema.String(),
@@ -66,54 +43,28 @@ var (
 	}
 )
 
-func BenchmarkNewStructuredMessageWithoutKey(b *testing.B) {
+func BenchmarkNewStructuredMessage(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		M, Err = kafka_sarama.NewMessageFromConsumerMessage(structuredConsumerMessageWithoutKey)
+		M = kafka_sarama.NewMessageFromConsumerMessage(structuredConsumerMessage)
 	}
 }
 
-func BenchmarkNewStructuredMessageWithKey(b *testing.B) {
+func BenchmarkNewBinaryMessage(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		M, Err = kafka_sarama.NewMessageFromConsumerMessage(structuredConsumerMessageWithKey)
+		M = kafka_sarama.NewMessageFromConsumerMessage(binaryConsumerMessage)
 	}
 }
 
-func BenchmarkNewBinaryMessageWithoutKey(b *testing.B) {
+func BenchmarkNewStructuredMessageToEvent(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		M, Err = kafka_sarama.NewMessageFromConsumerMessage(binaryConsumerMessageWithoutKey)
-	}
-}
-
-func BenchmarkNewBinaryMessageWithKey(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		M, Err = kafka_sarama.NewMessageFromConsumerMessage(binaryConsumerMessageWithKey)
-	}
-}
-
-func BenchmarkNewStructuredMessageWithoutKeyToEvent(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		M, Err = kafka_sarama.NewMessageFromConsumerMessage(structuredConsumerMessageWithoutKey)
+		M = kafka_sarama.NewMessageFromConsumerMessage(structuredConsumerMessage)
 		Event, Err = binding.ToEvent(context.TODO(), M, nil)
 	}
 }
 
-func BenchmarkNewStructuredMessageWithKeyToEvent(b *testing.B) {
+func BenchmarkNewBinaryMessageToEvent(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		M, Err = kafka_sarama.NewMessageFromConsumerMessage(structuredConsumerMessageWithKey)
-		Event, Err = binding.ToEvent(context.TODO(), M, nil)
-	}
-}
-
-func BenchmarkNewBinaryMessageWithoutKeyToEvent(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		M, Err = kafka_sarama.NewMessageFromConsumerMessage(binaryConsumerMessageWithoutKey)
-		Event, Err = binding.ToEvent(context.TODO(), M, nil)
-	}
-}
-
-func BenchmarkNewBinaryMessageWithKeyToEvent(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		M, Err = kafka_sarama.NewMessageFromConsumerMessage(binaryConsumerMessageWithKey)
+		M = kafka_sarama.NewMessageFromConsumerMessage(binaryConsumerMessage)
 		Event, Err = binding.ToEvent(context.TODO(), M, nil)
 	}
 }
