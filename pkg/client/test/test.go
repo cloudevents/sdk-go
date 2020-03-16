@@ -9,12 +9,14 @@ import (
 
 	"github.com/cloudevents/sdk-go/pkg/client"
 	"github.com/cloudevents/sdk-go/pkg/event"
+	"github.com/cloudevents/sdk-go/pkg/transport"
 )
 
 // SendReceive does client.Send(in), then it receives the message using client.StartReceiver() and executes outAssert
 // Halt test on error.
-func SendReceive(t *testing.T, protocol interface{}, in event.Event, outAssert func(e event.Event), opts ...client.Option) {
+func SendReceive(t *testing.T, protocolFactory func() interface{}, in event.Event, outAssert func(e event.Event), opts ...client.Option) {
 	t.Helper()
+	protocol := protocolFactory()
 	c, err := client.New(protocol, opts...)
 	require.NoError(t, err)
 	wg := sync.WaitGroup{}
@@ -23,11 +25,11 @@ func SendReceive(t *testing.T, protocol interface{}, in event.Event, outAssert f
 	go func() {
 		ctx, cancel := context.WithCancel(context.TODO())
 		ch := make(chan event.Event)
-		defer func() {
+		defer func(channel chan event.Event) {
 			cancel()
-			close(ch)
+			close(channel)
 			wg.Done()
-		}()
+		}(ch)
 		go func(channel chan event.Event) {
 			err := c.StartReceiver(ctx, func(e event.Event) {
 				channel <- e
@@ -47,4 +49,8 @@ func SendReceive(t *testing.T, protocol interface{}, in event.Event, outAssert f
 	}()
 
 	wg.Wait()
+
+	if closer, ok := protocol.(transport.Closer); ok {
+		require.NoError(t, closer.Close(context.TODO()))
+	}
 }

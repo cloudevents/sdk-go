@@ -20,10 +20,11 @@ const (
 )
 
 func TestSendEvent(t *testing.T) {
-	p := testSenderReceiver(t)
 	bindingtest.EachEvent(t, bindingtest.Events(), func(t *testing.T, eventIn event.Event) {
 		eventIn = bindingtest.ExToStr(t, eventIn)
-		clienttest.SendReceive(t, p, eventIn, func(e event.Event) {
+		clienttest.SendReceive(t, func() interface{} {
+			return testSenderReceiver(t)
+		}, eventIn, func(e event.Event) {
 			bindingtest.AssertEventEquals(t, eventIn, bindingtest.ExToStr(t, e))
 		})
 	})

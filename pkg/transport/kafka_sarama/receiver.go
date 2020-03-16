@@ -37,6 +37,9 @@ func (r *Receiver) Setup(sess sarama.ConsumerGroupSession) error {
 }
 
 func (r *Receiver) Cleanup(sarama.ConsumerGroupSession) error {
+	r.once.Do(func() {
+		close(r.incoming)
+	})
 	return nil
 }
 
@@ -48,9 +51,6 @@ func (r *Receiver) ConsumeClaim(session sarama.ConsumerGroupSession, claim saram
 			msg: binding.WithFinish(m, func(err error) { session.MarkMessage(message, "") }),
 		}
 	}
-	r.once.Do(func() {
-		close(r.incoming)
-	})
 	return nil
 }
 
@@ -62,15 +62,7 @@ func (r *Receiver) Receive(ctx context.Context) (binding.Message, error) {
 	return msgErr.msg, msgErr.err
 }
 
-func (r *Receiver) Close(ctx context.Context) error {
-	r.once.Do(func() {
-		close(r.incoming)
-	})
-	return nil
-}
-
 var _ transport.Receiver = (*Receiver)(nil)
-var _ transport.Closer = (*Receiver)(nil)
 
 type Consumer struct {
 	Receiver
@@ -121,9 +113,6 @@ func (c *Consumer) Close(ctx context.Context) error {
 		if err := c.saramaConsumerGroup.Close(); err != nil {
 			return err
 		}
-	}
-	if err := c.Receiver.Close(ctx); err != nil {
-		return err
 	}
 	return nil
 }
