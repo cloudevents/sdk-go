@@ -17,43 +17,20 @@ import (
 )
 
 var (
-	e                                   = test.FullEvent()
-	structuredConsumerMessageWithoutKey = &sarama.ConsumerMessage{
-		Value: test2.MustJSON(e),
+	event                     = test.FullEvent()
+	structuredConsumerMessage = &sarama.ConsumerMessage{
+		Value: test2.MustJSON(event),
 		Headers: []*sarama.RecordHeader{{
 			Key:   []byte("Content-Type"),
 			Value: []byte(cloudevents.ApplicationCloudEventsJSON),
 		}},
 	}
-	structuredConsumerMessageWithKey = &sarama.ConsumerMessage{
-		Key:   []byte("aaa"),
-		Value: test2.MustJSON(e),
-		Headers: []*sarama.RecordHeader{{
-			Key:   []byte("Content-Type"),
-			Value: []byte(cloudevents.ApplicationCloudEventsJSON),
-		}},
-	}
-	binaryConsumerMessageWithoutKey = &sarama.ConsumerMessage{
+	binaryConsumerMessage = &sarama.ConsumerMessage{
 		Value: []byte("hello world!"),
 		Headers: mustToSaramaConsumerHeaders(map[string]string{
-			"ce_type":            e.Type(),
-			"ce_source":          e.Source(),
-			"ce_id":              e.ID(),
-			"ce_time":            test.Timestamp.String(),
-			"ce_specversion":     "1.0",
-			"ce_dataschema":      test.Schema.String(),
-			"ce_datacontenttype": "text/json",
-			"ce_subject":         "topic",
-			"ce_exta":            "someext",
-		}),
-	}
-	binaryConsumerMessageWithKey = &sarama.ConsumerMessage{
-		Key:   []byte("akey"),
-		Value: []byte("hello world!"),
-		Headers: mustToSaramaConsumerHeaders(map[string]string{
-			"ce_type":            e.Type(),
-			"ce_source":          e.Source(),
-			"ce_id":              e.ID(),
+			"ce_type":            event.Type(),
+			"ce_source":          event.Source(),
+			"ce_id":              event.ID(),
 			"ce_time":            test.Timestamp.String(),
 			"ce_specversion":     "1.0",
 			"ce_dataschema":      test.Schema.String(),
@@ -79,33 +56,17 @@ var M binding.Message
 var Req *nethttp.Request
 var Err error
 
-func BenchmarkStructuredWithKey(b *testing.B) {
+func BenchmarkStructured(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		M, Err = kafka_sarama.NewMessageFromConsumerMessage(structuredConsumerMessageWithKey)
+		M = kafka_sarama.NewMessageFromConsumerMessage(structuredConsumerMessage)
 		Req, Err = nethttp.NewRequest("POST", "http://localhost", nil)
 		Err = http.WriteRequest(context.TODO(), M, Req, binding.TransformerFactories{})
 	}
 }
 
-func BenchmarkStructuredWithoutKey(b *testing.B) {
+func BenchmarkBinary(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		M, Err = kafka_sarama.NewMessageFromConsumerMessage(structuredConsumerMessageWithoutKey)
-		Req, Err = nethttp.NewRequest("POST", "http://localhost", nil)
-		Err = http.WriteRequest(context.TODO(), M, Req, binding.TransformerFactories{})
-	}
-}
-
-func BenchmarkBinaryWithKey(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		M, Err = kafka_sarama.NewMessageFromConsumerMessage(binaryConsumerMessageWithKey)
-		Req, Err = nethttp.NewRequest("POST", "http://localhost", nil)
-		Err = http.WriteRequest(context.TODO(), M, Req, binding.TransformerFactories{})
-	}
-}
-
-func BenchmarkBinaryWithoutKey(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		M, Err = kafka_sarama.NewMessageFromConsumerMessage(binaryConsumerMessageWithoutKey)
+		M = kafka_sarama.NewMessageFromConsumerMessage(binaryConsumerMessage)
 		Req, Err = nethttp.NewRequest("POST", "http://localhost", nil)
 		Err = http.WriteRequest(context.TODO(), M, Req, binding.TransformerFactories{})
 	}

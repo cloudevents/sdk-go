@@ -46,16 +46,11 @@ func (r *Receiver) Cleanup(sarama.ConsumerGroupSession) error {
 
 func (r *Receiver) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	for message := range claim.Messages() {
-		m, err := NewMessageFromConsumerMessage(message)
+		m := NewMessageFromConsumerMessage(message)
 
-		if err != nil {
-			r.incoming <- msgErr{err: err}
-		} else {
-			r.incoming <- msgErr{
-				msg: binding.WithFinish(m, func(err error) { session.MarkMessage(message, "") }),
-			}
+		r.incoming <- msgErr{
+			msg: binding.WithFinish(m, func(err error) { session.MarkMessage(message, "") }),
 		}
-
 	}
 	return nil
 }

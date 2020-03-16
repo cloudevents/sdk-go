@@ -5,9 +5,6 @@ import (
 	"context"
 	"strings"
 
-	"github.com/pkg/errors"
-
-	ce "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/binding/format"
 	"github.com/cloudevents/sdk-go/pkg/binding/spec"
@@ -38,7 +35,7 @@ var _ binding.Message = (*Message)(nil)
 // Returns a binding.Message that holds the provided ConsumerMessage.
 // The returned binding.Message *can* be read several times safely
 // This function *doesn't* guarantee that the returned binding.Message is always a kafka_sarama.Message instance
-func NewMessageFromConsumerMessage(cm *sarama.ConsumerMessage) (binding.Message, error) {
+func NewMessageFromConsumerMessage(cm *sarama.ConsumerMessage) *Message {
 	var contentType string
 	headers := make(map[string][]byte, len(cm.Headers))
 	for _, r := range cm.Headers {
@@ -54,27 +51,14 @@ func NewMessageFromConsumerMessage(cm *sarama.ConsumerMessage) (binding.Message,
 // Returns a binding.Message that holds the provided kafka message components.
 // The returned binding.Message *can* be read several times safely
 // This function *doesn't* guarantee that the returned binding.Message is always a kafka_sarama.Message instance
-func NewMessage(key []byte, value []byte, contentType string, headers map[string][]byte) (binding.Message, error) {
+func NewMessage(key []byte, value []byte, contentType string, headers map[string][]byte) *Message {
 	if ft := format.Lookup(contentType); ft != nil {
-		// If the message is structured and has a key,
-		// then it's cheaper to go through event message
-		// because we need to add the key as extension
-		if key != nil {
-			event := ce.Event{}
-			err := ft.Unmarshal(value, &event)
-			if err != nil {
-				return nil, errors.Wrap(err, "Error while trying to convert the kafka message to event")
-			}
-			event.SetExtension("key", string(key))
-			return (*binding.EventMessage)(&event), nil
-		} else {
-			return &Message{
-				Key:         key,
-				Value:       value,
-				ContentType: contentType,
-				Headers:     headers,
-				format:      ft,
-			}, nil
+		return &Message{
+			Key:         key,
+			Value:       value,
+			ContentType: contentType,
+			Headers:     headers,
+			format:      ft,
 		}
 	} else if v := specs.Version(string(headers[specs.PrefixedSpecVersionName()])); v != nil {
 		return &Message{
@@ -83,7 +67,7 @@ func NewMessage(key []byte, value []byte, contentType string, headers map[string
 			ContentType: contentType,
 			Headers:     headers,
 			version:     v,
-		}, nil
+		}
 	}
 
 	return &Message{
@@ -91,7 +75,7 @@ func NewMessage(key []byte, value []byte, contentType string, headers map[string
 		Value:       value,
 		ContentType: contentType,
 		Headers:     headers,
-	}, nil
+	}
 }
 
 func (m *Message) ReadEncoding() binding.Encoding {
