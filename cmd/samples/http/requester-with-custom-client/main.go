@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"net/url"
 	"os"
 	"time"
@@ -73,26 +74,16 @@ func _main(args []string, env envConfig) int {
 
 	seq := 0
 	for _, dataContentType := range []string{"application/json", "application/xml"} {
-		for _, encoding := range []cloudevents.HTTPEncoding{cloudevents.HTTPBinaryEncoding, cloudevents.HTTPStructuredEncoding} {
+		for _, encoding := range []cloudevents.Encoding{cloudevents.EncodingBinary, cloudevents.EncodingStructured} {
 
-			p, err := cloudevents.NewHTTP(cloudevents.WithTarget(env.Target))
+			ctx := context.Background()
+
+			p, err := cloudevents.NewHTTP(cloudevents.WithTarget(env.Target),
+				cloudevents.WithHTTPTransport(&http.Transport{TLSClientConfig: tlsConfig}))
 			if err != nil {
 				log.Printf("failed to create protocol, %v", err)
 				return 1
 			}
-
-			// TODO: redo this demo
-			//t, err := cloudevents.NewHTTPTransport(
-			//	p,
-			//	cloudevents.WithEncoding(encoding),
-			//	// Use custom transport
-			//	cloudevents.WithHTTPTransport(&http.Transport{TLSClientConfig: tlsConfig}),
-			//)
-			//
-			//if err != nil {
-			//	log.Printf("failed to create transport, %v", err)
-			//	return 1
-			//}
 
 			c, err := cloudevents.NewClient(p,
 				cloudevents.WithTimeNow(),
@@ -117,7 +108,14 @@ func _main(args []string, env envConfig) int {
 					Message:  message,
 				})
 
-				if resp, err := c.Request(context.Background(), event); err != nil {
+				switch encoding {
+				case cloudevents.EncodingBinary:
+					ctx = cloudevents.WithEncodingBinary(ctx)
+				case cloudevents.EncodingStructured:
+					ctx = cloudevents.WithEncodingStructured(ctx)
+				}
+				
+				if resp, err := c.Request(ctx, event); err != nil {
 					log.Printf("failed to send: %v", err)
 				} else if resp != nil {
 					fmt.Printf("Response:\n%s\n", resp)
