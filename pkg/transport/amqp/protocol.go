@@ -6,8 +6,6 @@ import (
 	"pack.ag/amqp"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/binding/spec"
-	"github.com/cloudevents/sdk-go/pkg/binding/transformer"
 	cecontext "github.com/cloudevents/sdk-go/pkg/context"
 	"github.com/cloudevents/sdk-go/pkg/transport"
 )
@@ -17,9 +15,6 @@ type Protocol struct {
 	sessionOpts      []amqp.SessionOption
 	senderLinkOpts   []amqp.LinkOption
 	receiverLinkOpts []amqp.LinkOption
-
-	// Encoding
-	Encoding Encoding
 
 	// AMQP
 	Client  *amqp.Client
@@ -71,34 +66,9 @@ func New(server, queue string, opts ...Option) (*Protocol, error) {
 		return nil, err
 	}
 	// TODO: in the future we might have more than one sender.
-	t.Sender, t.SenderContextDecorators = t.applyEncoding(sender)
+	t.Sender = NewSender(sender)
+	t.SenderContextDecorators = []func(context.Context) context.Context{}
 	return t, nil
-}
-
-func (t *Protocol) applyEncoding(amqpSender *amqp.Sender) (transport.Sender, []func(context.Context) context.Context) {
-	switch t.Encoding {
-	case BinaryV03:
-		return NewSender(
-			amqpSender,
-			WithTransformer(transformer.Version(spec.V03)),
-		), []func(context.Context) context.Context{binding.WithForceBinary}
-	case BinaryV1:
-		return NewSender(
-			amqpSender,
-			WithTransformer(transformer.Version(spec.V1)),
-		), []func(context.Context) context.Context{binding.WithForceBinary}
-	case StructuredV03:
-		return NewSender(
-			amqpSender,
-			WithTransformer(transformer.Version(spec.V03)),
-		), []func(context.Context) context.Context{binding.WithForceStructured}
-	case StructuredV1:
-		return NewSender(
-			amqpSender,
-			WithTransformer(transformer.Version(spec.V1)),
-		), []func(context.Context) context.Context{binding.WithForceStructured}
-	}
-	return NewSender(amqpSender), []func(context.Context) context.Context{}
 }
 
 func (t *Protocol) applyOptions(opts ...Option) error {
