@@ -96,6 +96,10 @@ var (
 
 	NewHTTPResponse = http.NewResult
 
+	// Message Creation
+
+	ToMessage = binding.ToMessage
+
 	// Tracing
 
 	EnableTracing = observability.EnableTracing

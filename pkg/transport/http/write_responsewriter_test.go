@@ -36,13 +36,13 @@ func TestWriteHttpResponseWriter(t *testing.T) {
 		{
 			name:             "Event to Structured",
 			context:          binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingStructured),
-			messageFactory:   func(e event.Event) binding.Message { return binding.ToEventMessage(&e) },
+			messageFactory:   func(e event.Event) binding.Message { return binding.ToMessage(&e) },
 			expectedEncoding: binding.EncodingStructured,
 		},
 		{
 			name:             "Event to Binary",
 			context:          binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingBinary),
-			messageFactory:   func(e event.Event) binding.Message { return binding.ToEventMessage(&e) },
+			messageFactory:   func(e event.Event) binding.Message { return binding.ToMessage(&e) },
 			expectedEncoding: binding.EncodingBinary,
 		},
 	}
