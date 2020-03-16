@@ -3,6 +3,7 @@ package kafka_sarama
 import (
 	"context"
 	"io"
+	"sync"
 
 	"github.com/Shopify/sarama"
 
@@ -18,6 +19,7 @@ type msgErr struct {
 // Receiver which implements sarama.ConsumerGroupHandler
 // After the first invocation of Receiver.Receive(), the sarama.ConsumerGroup is created and started.
 type Receiver struct {
+	once     sync.Once
 	incoming chan msgErr
 }
 
@@ -46,6 +48,9 @@ func (r *Receiver) ConsumeClaim(session sarama.ConsumerGroupSession, claim saram
 			msg: binding.WithFinish(m, func(err error) { session.MarkMessage(message, "") }),
 		}
 	}
+	r.once.Do(func() {
+		close(r.incoming)
+	})
 	return nil
 }
 
@@ -58,7 +63,9 @@ func (r *Receiver) Receive(ctx context.Context) (binding.Message, error) {
 }
 
 func (r *Receiver) Close(ctx context.Context) error {
-	close(r.incoming)
+	r.once.Do(func() {
+		close(r.incoming)
+	})
 	return nil
 }
 
@@ -85,22 +92,38 @@ func NewConsumer(client sarama.Client, groupId string, topic string) *Consumer {
 	}
 }
 
-func (c *Consumer) OpenInbound(ctx context.Context) error {
+func (c *Consumer) OpenInbound(ctx context.Context) (err error) {
 	cg, err := sarama.NewConsumerGroupFromClient(c.groupId, c.client)
 	if err != nil {
-		return err
+		return
 	}
 	c.saramaConsumerGroup = cg
 
-	if err := cg.Consume(ctx, []string{c.topic}, c); err != nil {
-		return err
+	errCh := make(chan error)
+
+	go func(errs chan error) {
+		errs <- cg.Consume(context.Background(), []string{c.topic}, c)
+	}(errCh)
+
+	for {
+		select {
+		case <-ctx.Done():
+			err = c.Close(context.TODO())
+			return
+		case err = <-errCh:
+			return
+		}
 	}
-	return nil
 }
 
-func (r *Consumer) Close(ctx context.Context) error {
-	if r.saramaConsumerGroup != nil {
-		return r.saramaConsumerGroup.Close()
+func (c *Consumer) Close(ctx context.Context) error {
+	if c.saramaConsumerGroup != nil {
+		if err := c.saramaConsumerGroup.Close(); err != nil {
+			return err
+		}
+	}
+	if err := c.Receiver.Close(ctx); err != nil {
+		return err
 	}
 	return nil
 }
