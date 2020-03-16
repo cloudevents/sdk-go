@@ -72,7 +72,7 @@ func TestCopyMessage(t *testing.T) {
 			inputMessage = tt.message
 		} else {
 			e := tt.event.Clone()
-			inputMessage = binding.ToEventMessage(&e)
+			inputMessage = binding.ToMessage(&e)
 		}
 
 		t.Run(fmt.Sprintf("CopyMessage: %s", tt.name), func(t *testing.T) {

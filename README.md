@@ -10,130 +10,138 @@
 
 This SDK is still considered work in progress.
 
-**With v1.1.0:**
+**For v1 of the SDK, see** [CloudEvents Go SDK v1](./README_v1.md).
 
-[Master](https://github.com/cloudevents/sdk-go/tree/master) will now be the base
-of the effort for v2.0.0 of this SDK and will contain breaking changes or
-missing libraries.
+**v2.0.0-preview2:**
 
-Future work on v1.X.Y releases will branch off of
-[release-1.y.z](https://github.com/cloudevents/sdk-go/tree/release-1.y.z). To
-add a bugfix to a v1.X.Y release, please make a PR to that branch and we can do
-releases as needed on the v1 SDK. No date for EOL on v1 support yet, that will
-be determined by the progress on v2.
+In _preview2_ we are focusing on the new Client interface:
 
-The CloudEvents golang team is working hard to bring you v2.0.0 of the SDK.
+```go
+type Client interface {
+	Send(ctx context.Context, event event.Event) error
+	Request(ctx context.Context, event event.Event) (*event.Event, error)
+	StartReceiver(ctx context.Context, fn interface{}) error
+}
+```
 
-**With v1.0.0:**
+Where a full `fn` looks like
+`func(context.Context, event.Event) (*event.Event, transport.Result)`
 
-The API that exists under [`pkg/cloudevents`](./pkg/cloudevents) will follow
-semver rules. This applies to the root [`./alias.go`](./alias.go) file as well.
+For protocols that do not support responses, `StartReceiver` will throw an error
+when attempting to set a receiver fn with that capability.
 
-Even though `pkg/cloudevents` is v1.0.0, there could still be minor bugs and
-performance issues. We will continue to track and fix these issues as they come
-up. Please file a pull request or issue if you experience problems.
+For protocols that do not support responses from send (Requester interface),
+`Client.Request` will throw an error.
 
-The API that exists under [`pkg/bindings`](./pkg/bindings) is a new API that
-will become SDK v2.x, and will replace `pkg/cloudevents`. This area is still
-under heavy development and will not be following the same semver rules as
-`pkg/cloudevents`. If a release is required to ship changes to `pkg/bindings`, a
-bug fix release will be issued (x.y.z+1).
+**v2.0.0-preview1:**
 
-We will target ~2 months of development to release v2 of this SDK with an end
-date of March 27, 2020. You can read more about the plan for SDK v2 in the
-[SDK v2 planning doc](./docs/SDK_v2.md).
+In _preview1_ we are focusing on the new interfaces found in pkg/transport (will
+be renamed to protocol):
 
-This SDK current supports the following versions of CloudEvents:
-
-- v1.0
-- v0.3
-- v0.2
-- v0.1
+- Sender, Send an event.
+- Requester, Send an event and expect a response.
+- Receiver, Receive an event.
+- Responder, Receive an event and respond.
 
 ## Working with CloudEvents
 
-Package [cloudevents](./pkg/cloudevents) provides primitives to work with
-CloudEvents specification: https://github.com/cloudevents/spec.
+_Note:_ Supported
+[CloudEvents specification](https://github.com/cloudevents/spec): [0.3, 1.0].
 
 Import this repo to get the `cloudevents` package:
 
 ```go
-import "github.com/cloudevents/sdk-go"
+import cloudevents "github.com/cloudevents/sdk-go"
 ```
 
-Receiving a cloudevents.Event via the HTTP Transport:
+To marshal a CloudEvent into JSON, use `event.Event` directly:
 
 ```go
-func Receive(event cloudevents.Event) {
-	// do something with event.Context and event.Data (via event.DataAs(foo)
-}
+event := cloudevents.NewEvent()
+event.SetSource("example/uri")
+event.SetType("example.type")
+event.SetData(cloudevents.ApplicationJSON, map[string]string{"hello": "world"})
 
+bytes, err := json.Marshal(event)
+```
+
+To unmarshal JSON back into a CloudEvent:
+
+```go
+event :=  cloudevents.NewEvent()
+
+err := json.Marshal(bytes, &event)
+```
+
+The aim of CloudEvents Specification is to define how to "bind" an event to a
+particular protocol and back. This SDK wraps the protocol binding
+implementations in a client to expose a simple `event.Event` based API.
+
+An example of sending a cloudevents.Event via HTTP:
+
+```go
 func main() {
+	// The default client is HTTP.
 	c, err := cloudevents.NewDefaultClient()
 	if err != nil {
 		log.Fatalf("failed to create client, %v", err)
 	}
-	log.Fatal(c.StartReceiver(context.Background(), Receive));
+
+	// Create an Event.
+	event :=  cloudevents.NewEvent()
+	event.SetSource("example/uri")
+	event.SetType("example.type")
+	event.SetData(cloudevents.ApplicationJSON, map[string]string{"hello": "world"})
+
+	// Set a target.
+	ctx := cloudevents.ContextWithTarget(context.Background(), "http://localhost:8080/")
+
+	// Send that Event.
+	if err := c.Send(ctx, event); err != nil {
+		log.Fatalf("failed to send, %v", err)}
+	}
 }
 ```
 
-Creating a minimal CloudEvent in version 1.0:
+An example of receiving a cloudevents.Event via HTTP:
 
 ```go
-event := cloudevents.NewEvent()
-event.SetID("ABC-123")
-event.SetType("com.cloudevents.readme.sent")
-event.SetSource("http://localhost:8080/")
-event.SetData(data)
-```
-
-Sending a cloudevents.Event via the HTTP Transport with Binary v1.0 encoding:
-
-```go
-t, err := cloudevents.NewHTTPTransport(
-	cloudevents.WithTarget("http://localhost:8080/"),
-	cloudevents.WithEncoding(cloudevents.HTTPBinaryV1),
-)
-if err != nil {
-	panic("failed to create transport, " + err.Error())
+func receive(event cloudevents.Event) {
+	// do something with event.
+    fmt.Printf("%s", event)
 }
 
-c, err := cloudevents.NewClient(t)
-if err != nil {
-	panic("unable to create cloudevent client: " + err.Error())
+func main() {
+	// The default client is HTTP.
+	c, err := cloudevents.NewDefaultClient()
+	if err != nil {
+		log.Fatalf("failed to create client, %v", err)
+	}
+	log.Fatal(c.StartReceiver(context.Background(), receive));
 }
-if err := c.Send(ctx, event); err != nil {
-	panic("failed to send cloudevent: " + err.Error())
-}
-```
-
-Or, the transport can be set to produce CloudEvents using the selected encoding
-but not change the provided event version, here the client is set to output
-structured encoding:
-
-```go
-t, err := cloudevents.NewHTTPTransport(
-	cloudevents.WithTarget("http://localhost:8080/"),
-	cloudevents.WithStructuredEncoding(),
-)
-```
-
-If you are using advanced transport features or have implemented your own
-transport integration, provide it to a client so your integration does not
-change:
-
-```go
-t, err := cloudevents.NewHTTPTransport(
-	cloudevents.WithPort(8181),
-	cloudevents.WithPath("/events/")
-)
-// or a custom transport: t := &custom.MyTransport{Cool:opts}
-
-c, err := cloudevents.NewClient(t, opts...)
 ```
 
 Checkout the sample [sender](./cmd/samples/http/sender) and
 [receiver](./cmd/samples/http/receiver) applications for working demo.
+
+It can be more performant to not parse an event all the way to the
+`event.Event`. For this the package [binding](./pkg/binding) provides primitives
+convert `event.Event` to `binding.Message`, and then bind an them onto a
+[protocol](./pkg/protocol) implementation.
+
+For example, to convert an `event.Event` to a `binding.Message` and then create
+an `http.Request`:
+
+```go
+msg := cloudevents.ToMessage(&event)
+
+req, _ = nethttp.NewRequest("POST", "http://localhost", nil)
+err = http.WriteRequest(context.TODO(), msg, req, nil)
+// ...check error.
+
+// Then use req:
+resp, err := http.DefaultClient.Do(req)
+```
 
 ## Community
 

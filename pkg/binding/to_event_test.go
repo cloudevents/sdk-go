@@ -63,7 +63,7 @@ func TestToEvent(t *testing.T) {
 				inputMessage = tt.message
 			} else {
 				e := tt.event.Clone()
-				inputMessage = binding.ToEventMessage(&e)
+				inputMessage = binding.ToMessage(&e)
 			}
 			got, err := binding.ToEvent(context.Background(), inputMessage, nil)
 			require.NoError(t, err)

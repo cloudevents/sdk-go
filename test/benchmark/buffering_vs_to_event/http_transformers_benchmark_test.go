@@ -30,7 +30,7 @@ func init() {
 	initialEvent.SetExtension("key", "aaa")
 
 	binaryHttpRequest, _ = nethttp.NewRequest("POST", "http://localhost", nil)
-	Err = http.WriteRequest(context.TODO(), binding.ToEventMessage(&initialEvent), binaryHttpRequest, nil)
+	Err = http.WriteRequest(context.TODO(), binding.ToMessage(&initialEvent), binaryHttpRequest, nil)
 	if Err != nil {
 		panic(Err)
 	}
@@ -41,7 +41,7 @@ func init() {
 	initialEventNoData.SetExtension("key", "aaa")
 
 	binaryHttpRequestNoData, _ = nethttp.NewRequest("POST", "http://localhost", nil)
-	Err = http.WriteRequest(context.TODO(), binding.ToEventMessage(&initialEventNoData), binaryHttpRequestNoData, nil)
+	Err = http.WriteRequest(context.TODO(), binding.ToMessage(&initialEventNoData), binaryHttpRequestNoData, nil)
 	if Err != nil {
 		panic(Err)
 	}
@@ -80,7 +80,7 @@ func BenchmarkHttpWithToEvent(b *testing.B) {
 		if Err != nil {
 			panic(Err)
 		}
-		Err = http.WriteRequest(ctx, binding.ToEventMessage(E), Req, nil)
+		Err = http.WriteRequest(ctx, binding.ToMessage(E), Req, nil)
 	}
 }
 
@@ -96,7 +96,7 @@ func BenchmarkNoDataHttpWithToEvent(b *testing.B) {
 		if Err != nil {
 			panic(Err)
 		}
-		Err = http.WriteRequest(ctx, binding.ToEventMessage(E), Req, nil)
+		Err = http.WriteRequest(ctx, binding.ToMessage(E), Req, nil)
 	}
 }
 
