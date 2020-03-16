@@ -77,9 +77,13 @@ func testSenderReceiver(t testing.TB, options ...kafka_sarama.SenderOptionFunc) 
 	client := testClient(t)
 
 	topicName := "test-ce-client-" + uuid.New().String()
-	r := kafka_sarama.NewReceiver(client, TEST_GROUP_ID, topicName)
+	r := kafka_sarama.NewConsumer(client, TEST_GROUP_ID, topicName)
 	s, err := kafka_sarama.NewSender(client, topicName, options...)
 	require.NoError(t, err)
+
+	go func() {
+		require.NoError(t, r.OpenInbound(context.TODO()))
+	}()
 
 	return func() {
 		err = r.Close(context.TODO())
