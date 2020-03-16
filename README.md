@@ -57,7 +57,7 @@ import cloudevents "github.com/cloudevents/sdk-go"
 To marshal a CloudEvent into JSON, use `event.Event` directly:
 
 ```go
-event :=  cloudevents.NewEvent()
+event := cloudevents.NewEvent()
 event.SetSource("example/uri")
 event.SetType("example.type")
 event.SetData(cloudevents.ApplicationJSON, map[string]string{"hello": "world"})
@@ -65,7 +65,7 @@ event.SetData(cloudevents.ApplicationJSON, map[string]string{"hello": "world"})
 bytes, err := json.Marshal(event)
 ```
 
-To unmarshal JSON back into a a CloudEvent:
+To unmarshal JSON back into a CloudEvent:
 
 ```go
 event :=  cloudevents.NewEvent()
@@ -124,10 +124,9 @@ func main() {
 Checkout the sample [sender](./cmd/samples/http/sender) and
 [receiver](./cmd/samples/http/receiver) applications for working demo.
 
-The client will convert between the protocol specific message and event. It can
-be more performant to not parse an event all the way to the `event.Event`. For
-this the package [binding](./pkg/binding) provides primitives convert
-`event.Event` to `binding.Message`, and then bind an them onto a
+It can be more performant to not parse an event all the way to the
+`event.Event`. For this the package [binding](./pkg/binding) provides primitives
+convert `event.Event` to `binding.Message`, and then bind an them onto a
 [protocol](./pkg/protocol) implementation.
 
 For example, to convert an `event.Event` to a `binding.Message` and then create
