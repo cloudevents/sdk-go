@@ -8,7 +8,7 @@ import (
 	"github.com/Shopify/sarama"
 
 	cloudevents "github.com/cloudevents/sdk-go"
-	"github.com/cloudevents/sdk-go/pkg/transport/kafka_sarama"
+	"github.com/cloudevents/sdk-go/pkg/protocol/kafka_sarama"
 )
 
 func main() {

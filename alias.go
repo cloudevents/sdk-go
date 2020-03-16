@@ -9,8 +9,8 @@ import (
 	"github.com/cloudevents/sdk-go/pkg/context"
 	"github.com/cloudevents/sdk-go/pkg/event"
 	"github.com/cloudevents/sdk-go/pkg/observability"
-	"github.com/cloudevents/sdk-go/pkg/transport"
-	"github.com/cloudevents/sdk-go/pkg/transport/http"
+	"github.com/cloudevents/sdk-go/pkg/protocol"
+	"github.com/cloudevents/sdk-go/pkg/protocol/http"
 	"github.com/cloudevents/sdk-go/pkg/types"
 )
 
@@ -93,7 +93,7 @@ var (
 	// Event Creation
 
 	NewEvent  = event.New
-	NewResult = transport.NewResult
+	NewResult = protocol.NewResult
 
 	NewHTTPResponse = http.NewResult
 

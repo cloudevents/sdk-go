@@ -2,8 +2,9 @@ package nats
 
 import (
 	"context"
-	"github.com/cloudevents/sdk-go/pkg/binding"
 	"time"
+
+	"github.com/cloudevents/sdk-go/pkg/binding"
 
 	"github.com/nats-io/nats.go"
 )

@@ -9,7 +9,7 @@ import (
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	cecontext "github.com/cloudevents/sdk-go/pkg/context"
-	"github.com/cloudevents/sdk-go/pkg/transport"
+	"github.com/cloudevents/sdk-go/pkg/protocol"
 )
 
 const (
@@ -121,6 +121,6 @@ func (p *Protocol) Close(ctx context.Context) error {
 }
 
 // Kafka protocol implements Sender, Receiver
-var _ transport.Sender = (*Protocol)(nil)
-var _ transport.Receiver = (*Protocol)(nil)
-var _ transport.Closer = (*Protocol)(nil)
+var _ protocol.Sender = (*Protocol)(nil)
+var _ protocol.Receiver = (*Protocol)(nil)
+var _ protocol.Closer = (*Protocol)(nil)

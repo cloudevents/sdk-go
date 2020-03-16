@@ -8,7 +8,7 @@ import (
 	"github.com/Shopify/sarama"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/transport"
+	"github.com/cloudevents/sdk-go/pkg/protocol"
 )
 
 type msgErr struct {
@@ -62,7 +62,7 @@ func (r *Receiver) Receive(ctx context.Context) (binding.Message, error) {
 	return msgErr.msg, msgErr.err
 }
 
-var _ transport.Receiver = (*Receiver)(nil)
+var _ protocol.Receiver = (*Receiver)(nil)
 
 type Consumer struct {
 	Receiver
@@ -126,4 +126,4 @@ func (c *Consumer) Close(ctx context.Context) error {
 	return nil
 }
 
-var _ transport.Opener = (*Consumer)(nil)
+var _ protocol.Opener = (*Consumer)(nil)

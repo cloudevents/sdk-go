@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cloudevents/sdk-go/pkg/transport"
+	"github.com/cloudevents/sdk-go/pkg/protocol"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	cecontext "github.com/cloudevents/sdk-go/pkg/context"
@@ -178,7 +178,7 @@ func (p *Protocol) Receive(ctx context.Context) (binding.Message, error) {
 // for the response callback to invoked before continuing.
 // Returns non-nil error if the incoming HTTP request fails to parse as a CloudEvent
 // Returns io.EOF if the receiver is closed.
-func (p *Protocol) Respond(ctx context.Context) (binding.Message, transport.ResponseFn, error) {
+func (p *Protocol) Respond(ctx context.Context) (binding.Message, protocol.ResponseFn, error) {
 	in, ok := <-p.incoming
 	if !ok {
 		return nil, nil, io.EOF
@@ -188,7 +188,7 @@ func (p *Protocol) Respond(ctx context.Context) (binding.Message, transport.Resp
 
 type msgErr struct {
 	msg    *Message
-	respFn transport.ResponseFn
+	respFn protocol.ResponseFn
 	err    error
 }
 
@@ -207,12 +207,12 @@ func (p *Protocol) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		return nil
 	}
 
-	var fn transport.ResponseFn = func(ctx context.Context, resp binding.Message, er transport.Result) error {
+	var fn protocol.ResponseFn = func(ctx context.Context, resp binding.Message, er protocol.Result) error {
 		if resp != nil {
 			status := http.StatusOK
 			if er != nil {
 				var result *Result
-				if transport.ResultAs(er, &result) {
+				if protocol.ResultAs(er, &result) {
 					if result.Status > 100 && result.Status < 600 {
 						status = result.Status
 					}

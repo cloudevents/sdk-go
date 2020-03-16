@@ -11,9 +11,9 @@ import (
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/event"
-	bindings "github.com/cloudevents/sdk-go/pkg/transport"
-	http "github.com/cloudevents/sdk-go/pkg/transport/http"
-	test "github.com/cloudevents/sdk-go/pkg/transport/test"
+	bindings "github.com/cloudevents/sdk-go/pkg/protocol"
+	http "github.com/cloudevents/sdk-go/pkg/protocol/http"
+	test "github.com/cloudevents/sdk-go/pkg/protocol/test"
 
 	. "github.com/cloudevents/sdk-go/pkg/binding/test"
 )

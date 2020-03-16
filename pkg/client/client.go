@@ -4,14 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/binding"
-	cecontext "github.com/cloudevents/sdk-go/pkg/context"
-	"go.uber.org/zap"
 	"io"
 	"sync"
 
+	"go.uber.org/zap"
+
+	"github.com/cloudevents/sdk-go/pkg/binding"
+	cecontext "github.com/cloudevents/sdk-go/pkg/context"
 	"github.com/cloudevents/sdk-go/pkg/event"
-	"github.com/cloudevents/sdk-go/pkg/transport"
+	"github.com/cloudevents/sdk-go/pkg/protocol"
 )
 
 // Client interface defines the runtime contract the CloudEvents client supports.
@@ -24,43 +25,43 @@ type Client interface {
 	Request(ctx context.Context, event event.Event) (*event.Event, error)
 
 	// StartReceiver will register the provided function for callback on receipt
-	// of a cloudevent. It will also start the underlying transport as it has
+	// of a cloudevent. It will also start the underlying protocol as it has
 	// been configured.
 	// This call is blocking.
 	// Valid fn signatures are:
 	// * func()
 	// * func() error
 	// * func(context.Context)
-	// * func(context.Context) transport.Result
+	// * func(context.Context) protocol.Result
 	// * func(event.Event)
-	// * func(event.Event) transport.Result
+	// * func(event.Event) protocol.Result
 	// * func(context.Context, event.Event)
-	// * func(context.Context, event.Event) transport.Result
+	// * func(context.Context, event.Event) protocol.Result
 	// * func(event.Event) *event.Event
-	// * func(event.Event) (*event.Event, transport.Result)
+	// * func(event.Event) (*event.Event, protocol.Result)
 	// * func(context.Context, event.Event) *event.Event
-	// * func(context.Context, event.Event) (*event.Event, transport.Result)
+	// * func(context.Context, event.Event) (*event.Event, protocol.Result)
 	StartReceiver(ctx context.Context, fn interface{}) error
 }
 
 // New produces a new client with the provided transport object and applied
 // client options.
-func New(protocol interface{}, opts ...Option) (Client, error) {
+func New(obj interface{}, opts ...Option) (Client, error) {
 	c := &ceClient{}
 
-	if p, ok := protocol.(transport.Sender); ok {
+	if p, ok := obj.(protocol.Sender); ok {
 		c.sender = p
 	}
-	if p, ok := protocol.(transport.Requester); ok {
+	if p, ok := obj.(protocol.Requester); ok {
 		c.requester = p
 	}
-	if p, ok := protocol.(transport.Responder); ok {
+	if p, ok := obj.(protocol.Responder); ok {
 		c.responder = p
 	}
-	if p, ok := protocol.(transport.Receiver); ok {
+	if p, ok := obj.(protocol.Receiver); ok {
 		c.receiver = p
 	}
-	if p, ok := protocol.(transport.Opener); ok {
+	if p, ok := obj.(protocol.Opener); ok {
 		c.opener = p
 	}
 
@@ -71,12 +72,12 @@ func New(protocol interface{}, opts ...Option) (Client, error) {
 }
 
 type ceClient struct {
-	sender    transport.Sender
-	requester transport.Requester
-	receiver  transport.Receiver
-	responder transport.Responder
+	sender    protocol.Sender
+	requester protocol.Requester
+	receiver  protocol.Receiver
+	responder protocol.Responder
 	// Optional.
-	opener transport.Opener
+	opener protocol.Opener
 
 	outboundContextDecorators []func(context.Context) context.Context
 	invoker                   Invoker
@@ -167,10 +168,10 @@ func (c *ceClient) StartReceiver(ctx context.Context, fn interface{}) error {
 		return err
 	}
 	if invoker.IsReceiver() && c.receiver == nil {
-		return fmt.Errorf("mismatched receiver callback without transport.Receiver supported by protocol")
+		return fmt.Errorf("mismatched receiver callback without protocol.Receiver supported by protocol")
 	}
 	if invoker.IsResponder() && c.responder == nil {
-		return fmt.Errorf("mismatched receiver callback without transport.Responder supported by protocol")
+		return fmt.Errorf("mismatched receiver callback without protocol.Responder supported by protocol")
 	}
 	c.invoker = invoker
 
@@ -189,7 +190,7 @@ func (c *ceClient) StartReceiver(ctx context.Context, fn interface{}) error {
 	}
 
 	var msg binding.Message
-	var respFn transport.ResponseFn
+	var respFn protocol.ResponseFn
 	// Start Polling.
 	for {
 		if c.responder != nil {

@@ -3,12 +3,13 @@ package client
 import (
 	"context"
 	"fmt"
+
 	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/transport"
+	"github.com/cloudevents/sdk-go/pkg/protocol"
 )
 
 type Invoker interface {
-	Invoke(context.Context, binding.Message, transport.ResponseFn) error
+	Invoke(context.Context, binding.Message, protocol.ResponseFn) error
 	IsReceiver() bool
 	IsResponder() bool
 }
@@ -34,7 +35,7 @@ type receiveInvoker struct {
 	eventDefaulterFns []EventDefaulter
 }
 
-func (r *receiveInvoker) Invoke(ctx context.Context, m binding.Message, respFn transport.ResponseFn) (err error) {
+func (r *receiveInvoker) Invoke(ctx context.Context, m binding.Message, respFn protocol.ResponseFn) (err error) {
 	defer func() {
 		if err2 := m.Finish(err); err2 == nil {
 			err = err2

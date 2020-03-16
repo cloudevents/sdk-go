@@ -19,8 +19,8 @@ import (
 
 	"github.com/cloudevents/sdk-go/pkg/client"
 	"github.com/cloudevents/sdk-go/pkg/event"
-	"github.com/cloudevents/sdk-go/pkg/transport"
-	cehttp "github.com/cloudevents/sdk-go/pkg/transport/http"
+	"github.com/cloudevents/sdk-go/pkg/protocol"
+	cehttp "github.com/cloudevents/sdk-go/pkg/protocol/http"
 	"github.com/cloudevents/sdk-go/pkg/types"
 )
 
@@ -514,7 +514,7 @@ func TestTracedClientReceive(t *testing.T) {
 
 			ctx, cancel := context.WithCancel(context.TODO())
 			go func() {
-				err = c.StartReceiver(ctx, func(ctx context.Context, e event.Event) (*event.Event, transport.Result) {
+				err = c.StartReceiver(ctx, func(ctx context.Context, e event.Event) (*event.Event, protocol.Result) {
 					go func() {
 						_, span := client.TraceSpan(ctx, e)
 						defer span.End()
