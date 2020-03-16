@@ -73,7 +73,7 @@ func Write(
 	message MessageReader,
 	structuredWriter StructuredWriter,
 	binaryWriter BinaryWriter,
-	transformers TransformerFactories,
+	transformers ...TransformerFactory,
 ) (Encoding, error) {
 	enc := message.ReadEncoding()
 	var err error
