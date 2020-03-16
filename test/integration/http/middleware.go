@@ -2,14 +2,15 @@ package http
 
 import (
 	"context"
-	"github.com/cloudevents/sdk-go/pkg/client"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/cloudevents/sdk-go/pkg/client"
 
 	"github.com/google/uuid"
 
 	cloudevents "github.com/cloudevents/sdk-go"
-	cehttp "github.com/cloudevents/sdk-go/pkg/transport/http"
+	cehttp "github.com/cloudevents/sdk-go/pkg/protocol/http"
 )
 
 func ClientMiddleware(t *testing.T, tc TapTest, copts ...client.Option) {

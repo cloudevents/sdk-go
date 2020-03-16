@@ -7,7 +7,7 @@ import (
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
 	cecontext "github.com/cloudevents/sdk-go/pkg/context"
-	"github.com/cloudevents/sdk-go/pkg/transport"
+	"github.com/cloudevents/sdk-go/pkg/protocol"
 )
 
 type Protocol struct {
@@ -22,11 +22,11 @@ type Protocol struct {
 	Node    string
 
 	// Sender
-	Sender                  transport.Sender
+	Sender                  protocol.Sender
 	SenderContextDecorators []func(context.Context) context.Context
 
 	// Receiver
-	Receiver transport.Receiver
+	Receiver protocol.Receiver
 }
 
 // New creates a new amqp transport.

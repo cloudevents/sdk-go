@@ -9,12 +9,12 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cloudevents/sdk-go/pkg/binding"
-	bindings "github.com/cloudevents/sdk-go/pkg/transport"
+	"github.com/cloudevents/sdk-go/pkg/protocol"
 )
 
 // SendReceive does s.Send(in), then it receives the message in r.Receive() and executes outAssert
 // Halt test on error.
-func SendReceive(t *testing.T, ctx context.Context, in binding.Message, s bindings.Sender, r bindings.Receiver, outAssert func(binding.Message)) {
+func SendReceive(t *testing.T, ctx context.Context, in binding.Message, s protocol.Sender, r protocol.Receiver, outAssert func(binding.Message)) {
 	t.Helper()
 	wg := sync.WaitGroup{}
 	wg.Add(2)
