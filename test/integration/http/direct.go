@@ -46,7 +46,6 @@ func ClientDirect(t *testing.T, tc DirectTapTest, copts ...client.Option) {
 	tap.handler = protocol
 
 	copts = append(copts, cloudevents.WithEventDefaulter(AlwaysThen(tc.now)))
-	copts = append(copts, cloudevents.WithoutTracePropagation())
 
 	ce, err := cloudevents.NewClient(protocol, copts...)
 	if err != nil {

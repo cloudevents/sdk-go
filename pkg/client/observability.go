@@ -1,7 +1,9 @@
 package client
 
 import (
+	"context"
 	"github.com/cloudevents/sdk-go/pkg/event"
+	"github.com/cloudevents/sdk-go/pkg/extensions"
 	"github.com/cloudevents/sdk-go/pkg/observability"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
@@ -31,8 +33,6 @@ type observed int32
 var _ observability.Observable = observed(0)
 
 const (
-	clientSpanName = "cloudevents.client"
-
 	specversionAttr     = "cloudevents.specversion"
 	typeAttr            = "cloudevents.type"
 	sourceAttr          = "cloudevents.source"
@@ -63,17 +63,32 @@ func (o observed) LatencyMs() *stats.Float64Measure {
 	return LatencyMs
 }
 
-func eventTraceAttributes(e event.EventContextReader) []trace.Attribute {
+func EventTraceAttributes(e event.EventReader) []trace.Attribute {
 	as := []trace.Attribute{
-		trace.StringAttribute(specversionAttr, e.GetSpecVersion()),
-		trace.StringAttribute(typeAttr, e.GetType()),
-		trace.StringAttribute(sourceAttr, e.GetSource()),
+		trace.StringAttribute(specversionAttr, e.SpecVersion()),
+		trace.StringAttribute(typeAttr, e.Type()),
+		trace.StringAttribute(sourceAttr, e.Source()),
 	}
-	if sub := e.GetSubject(); sub != "" {
+	if sub := e.Subject(); sub != "" {
 		as = append(as, trace.StringAttribute(subjectAttr, sub))
 	}
-	if dct := e.GetDataContentType(); dct != "" {
+	if dct := e.DataContentType(); dct != "" {
 		as = append(as, trace.StringAttribute(datacontenttypeAttr, dct))
 	}
 	return as
+}
+
+// TraceSpan returns context and trace.Span based on event. Caller must call span.End()
+func TraceSpan(ctx context.Context, e event.Event) (context.Context, *trace.Span) {
+	var span *trace.Span
+	if ext, ok := extensions.GetDistributedTracingExtension(e); ok {
+		ctx, span = ext.StartChildSpan(ctx, observability.ClientSpanName, trace.WithSpanKind(trace.SpanKindServer))
+	}
+	if span == nil {
+		ctx, span = trace.StartSpan(ctx, observability.ClientSpanName, trace.WithSpanKind(trace.SpanKindServer))
+	}
+	if span.IsRecordingEvents() {
+		span.AddAttributes(EventTraceAttributes(&e)...)
+	}
+	return ctx, span
 }

@@ -19,11 +19,6 @@ const (
 	TraceStateExtension  = "tracestate"
 )
 
-// EventTracer interface allows setting extension for cloudevents context.
-type EventTracer interface {
-	SetExtension(k string, v interface{}) error
-}
-
 // DistributedTracingExtension represents the extension for cloudevents context
 type DistributedTracingExtension struct {
 	TraceParent string `json:"traceparent"`
@@ -31,7 +26,7 @@ type DistributedTracingExtension struct {
 }
 
 // AddTracingAttributes adds the tracing attributes traceparent and tracestate to the cloudevents context
-func (d DistributedTracingExtension) AddTracingAttributes(ec EventTracer) error {
+func (d DistributedTracingExtension) AddTracingAttributes(e event.EventWriter) {
 	if d.TraceParent != "" {
 		value := reflect.ValueOf(d)
 		typeOf := value.Type()
@@ -42,12 +37,9 @@ func (d DistributedTracingExtension) AddTracingAttributes(ec EventTracer) error 
 			if k == TraceStateExtension && v == "" {
 				continue
 			}
-			if err := ec.SetExtension(k, v); err != nil {
-				return err
-			}
+			e.SetExtension(k, v)
 		}
 	}
-	return nil
 }
 
 func GetDistributedTracingExtension(event event.Event) (DistributedTracingExtension, bool) {
