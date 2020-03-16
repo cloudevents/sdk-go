@@ -46,23 +46,15 @@ func _main(args []string, env envConfig) int {
 
 	seq := 0
 	for _, contentType := range []string{"application/json", "application/xml", "text/plain"} {
-		for _, encoding := range []cloudevents.HTTPEncoding{cloudevents.HTTPBinaryEncoding, cloudevents.HTTPStructuredEncoding} {
+		for _, encoding := range []cloudevents.HTTPEncoding{cloudevents.HTTPBinaryEncoding, cloudevents.HTTPStructuredEncoding} { // TODO: force this again or remove
 
-			p, err := cloudevents.NewHTTPProtocol(cloudevents.WithTarget(env.Target))
+			p, err := cloudevents.NewHTTP(cloudevents.WithTarget(env.Target))
 			if err != nil {
 				log.Printf("failed to create protocol, %v", err)
 				return 1
 			}
 
-			t, err := cloudevents.NewHTTPTransport(p,
-				cloudevents.WithEncoding(encoding),
-			)
-			if err != nil {
-				log.Printf("failed to create transport, %v", err)
-				return 1
-			}
-
-			c, err := cloudevents.NewClient(t,
+			c, err := cloudevents.NewClient(p,
 				cloudevents.WithTimeNow(),
 			)
 			if err != nil {

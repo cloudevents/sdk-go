@@ -41,7 +41,7 @@ func (b *natsMessageWriter) Start(ctx context.Context) error {
 	return nil
 }
 
-func (b *natsMessageWriter) End() error {
+func (b *natsMessageWriter) End(ctx context.Context) error {
 	return nil
 }
 

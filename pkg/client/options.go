@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"github.com/cloudevents/sdk-go/pkg/binding"
 )
 
 // Option is the function signature required to be considered an client.Option.
@@ -14,6 +15,20 @@ func WithEventDefaulter(fn EventDefaulter) Option {
 			return fmt.Errorf("client option was given an nil event defaulter")
 		}
 		c.eventDefaulterFns = append(c.eventDefaulterFns, fn)
+		return nil
+	}
+}
+
+func WithForceBinary() Option {
+	return func(c *ceClient) error {
+		c.outboundContextDecorators = append(c.outboundContextDecorators, binding.WithForceBinary)
+		return nil
+	}
+}
+
+func WithForceStructured() Option {
+	return func(c *ceClient) error {
+		c.outboundContextDecorators = append(c.outboundContextDecorators, binding.WithForceStructured)
 		return nil
 	}
 }
@@ -40,7 +55,7 @@ func WithTimeNow() Option {
 // the distributed tracing extension.
 func WithoutTracePropagation() Option {
 	return func(c *ceClient) error {
-		c.disableTracePropagation = true
+		//c.disableTracePropagation = true
 		return nil
 	}
 }

@@ -28,17 +28,12 @@ func main() {
 	}
 	ctx := context.Background()
 
-	p, err := cloudevents.NewHTTPProtocol()
+	p, err := cloudevents.NewHTTP()
 	if err != nil {
 		log.Fatalf("failed to create protocol: %s", err.Error())
 	}
 
-	t, err := cloudevents.NewHTTPTransport(p)
-	if err != nil {
-		log.Fatalf("failed to create transport, %v", err)
-	}
-
-	c, err := cloudevents.NewClient(t,
+	c, err := cloudevents.NewClient(p,
 		cloudevents.WithUUIDs(),
 		cloudevents.WithTimeNow(),
 		cloudevents.WithoutTracePropagation(),
@@ -47,7 +42,7 @@ func main() {
 		log.Fatalf("failed to create client: %s", err.Error())
 	}
 
-	log.Printf("listening on :%d%s\n", t.GetPort(), t.GetPath())
+	log.Printf("listening on :%d%s\n", p.GetPort(), p.GetPath())
 	if err := c.StartReceiver(ctx, gotEvent); err != nil {
 		log.Fatalf("failed to start receiver: %s", err.Error())
 	}

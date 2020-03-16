@@ -2,6 +2,7 @@ package http
 
 import (
 	"fmt"
+	"github.com/cloudevents/sdk-go/pkg/client"
 	"testing"
 	"time"
 
@@ -223,7 +224,7 @@ func TestClientLoopback_structured_base64_v03tov03(t *testing.T) {
 			tc.asSent.ContentLength = int64(len(tc.asSent.Body))
 			tc.asRecv.ContentLength = int64(len(tc.asRecv.Body))
 
-			ClientLoopback(t, tc, cloudevents.WithStructuredEncoding())
+			ClientLoopback(t, tc, client.WithForceStructured())
 		})
 	}
 }

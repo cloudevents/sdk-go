@@ -41,7 +41,7 @@ const (
 
 	reportSend observed = iota
 	reportRequest
-	reportReceive
+	reportStartReceiver
 )
 
 // MethodName implements Observable.MethodName
@@ -51,8 +51,8 @@ func (o observed) MethodName() string {
 		return "send"
 	case reportRequest:
 		return "request"
-	case reportReceive:
-		return "receive"
+	case reportStartReceiver:
+		return "start_receiver"
 	default:
 		return "unknown"
 	}

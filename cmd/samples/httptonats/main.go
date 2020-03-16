@@ -64,11 +64,11 @@ func (r *Receiver) Receive(event event.Event) error {
 func _main(args []string, env envConfig) int {
 	ctx := context.Background()
 
-	nt, err := cloudeventsnats.New(env.NATSServer, env.Subject)
+	np, err := cloudeventsnats.New(env.NATSServer, env.Subject)
 	if err != nil {
 		log.Fatalf("failed to create nats transport, %s", err.Error())
 	}
-	nc, err := client.New(nt.Transport())
+	nc, err := client.New(np)
 	if err != nil {
 		log.Printf("failed to create client, %v", err)
 		return 1
@@ -76,19 +76,12 @@ func _main(args []string, env envConfig) int {
 
 	r := &Receiver{Client: nc}
 
-	p, err := cloudeventshttp.NewProtocol()
+	p, err := cloudeventshttp.New(cloudeventshttp.WithPort(env.Port))
 	if err != nil {
 		log.Fatalf("failed to create protocol: %s", err.Error())
 	}
 
-	t, err := cloudeventshttp.New(p,
-		cloudeventshttp.WithPort(env.Port),
-	)
-	if err != nil {
-		log.Printf("failed to create transport, %v", err)
-		return 1
-	}
-	c, err := client.New(t)
+	c, err := client.New(p)
 	if err != nil {
 		log.Printf("failed to create client, %v", err)
 		return 1

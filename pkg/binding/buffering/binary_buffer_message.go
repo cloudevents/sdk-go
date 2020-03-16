@@ -27,7 +27,7 @@ func (m *binaryBufferedMessage) Start(ctx context.Context) error {
 	return nil
 }
 
-func (m *binaryBufferedMessage) End() error {
+func (m *binaryBufferedMessage) End(ctx context.Context) error {
 	return nil
 }
 
@@ -66,7 +66,7 @@ func (m *binaryBufferedMessage) ReadBinary(ctx context.Context, b binding.Binary
 			return
 		}
 	}
-	return b.End()
+	return b.End(ctx)
 }
 
 func (b *binaryBufferedMessage) Finish(error) error {

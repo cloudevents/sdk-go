@@ -28,11 +28,11 @@ func main() {
 	}
 	ctx := context.Background()
 
-	t, err := cloudeventsnats.New(env.NATSServer, env.Subject)
+	p, err := cloudeventsnats.New(env.NATSServer, env.Subject)
 	if err != nil {
 		log.Fatalf("failed to create nats transport, %s", err.Error())
 	}
-	c, err := client.New(t.Transport())
+	c, err := client.New(p)
 	if err != nil {
 		log.Fatalf("failed to create client, %s", err.Error())
 	}

@@ -2,6 +2,7 @@ package http
 
 import (
 	"fmt"
+	"github.com/cloudevents/sdk-go/pkg/client"
 	"testing"
 	"time"
 
@@ -101,7 +102,7 @@ func TestSenderReceiver_structured_v1(t *testing.T) {
 
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
-			ClientDirect(t, tc, cloudevents.WithStructuredEncoding())
+			ClientDirect(t, tc, client.WithForceStructured())
 		})
 	}
 }
@@ -148,7 +149,7 @@ func TestSenderReceiver_data_base64_v1(t *testing.T) {
 
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
-			ClientDirect(t, tc, cloudevents.WithStructuredEncoding())
+			ClientDirect(t, tc, client.WithForceStructured())
 		})
 	}
 }

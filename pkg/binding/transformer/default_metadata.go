@@ -1,6 +1,7 @@
 package transformer
 
 import (
+	"context"
 	"time"
 
 	"github.com/google/uuid"
@@ -83,12 +84,12 @@ func (b *addTimeNowTransformer) SetAttribute(attribute spec.Attribute, value int
 	return b.BinaryWriter.SetAttribute(attribute, value)
 }
 
-func (b *addTimeNowTransformer) End() error {
+func (b *addTimeNowTransformer) End(ctx context.Context) error {
 	if !b.found {
 		err := b.BinaryWriter.SetAttribute(b.version.AttributeFromKind(spec.Time), types.Timestamp{Time: time.Now()})
 		if err != nil {
 			return err
 		}
 	}
-	return b.BinaryWriter.End()
+	return b.BinaryWriter.End(ctx)
 }

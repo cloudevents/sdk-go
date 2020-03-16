@@ -76,7 +76,7 @@ func (b *messageToEventBuilder) Start(ctx context.Context) error {
 	return nil
 }
 
-func (b *messageToEventBuilder) End() error {
+func (b *messageToEventBuilder) End(ctx context.Context) error {
 	return nil
 }
 

@@ -47,7 +47,7 @@ func (b *amqpMessageWriter) Start(ctx context.Context) error {
 	return nil
 }
 
-func (b *amqpMessageWriter) End() error {
+func (b *amqpMessageWriter) End(ctx context.Context) error {
 	return nil
 }
 

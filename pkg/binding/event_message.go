@@ -55,7 +55,7 @@ func (m *EventMessage) ReadBinary(ctx context.Context, b BinaryWriter) (err erro
 			return err
 		}
 	}
-	return b.End()
+	return b.End(ctx)
 }
 
 func eventContextToBinaryWriter(c event.EventContext, b BinaryWriter) (err error) {

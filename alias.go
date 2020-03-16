@@ -36,9 +36,8 @@ type URIRef = types.URIRef
 // HTTP Protocol
 
 type HTTPOption http.Option
-type HTTPProtocolOption http.ProtocolOption
 
-type HTTPTransport = http.Protocol
+type HTTPProtocol = http.Protocol
 type HTTPEncoding = http.Encoding
 
 const (
@@ -72,8 +71,9 @@ var (
 
 	// Client Creation
 
-	NewClient        = client.New
-	NewDefaultClient = client.NewDefault
+	NewClient             = client.New
+	NewDefaultClient      = client.NewDefault
+	NewHTTPReceiveHandler = client.NewHTTPReceiveHandler
 
 	// Client Options
 
@@ -108,19 +108,18 @@ var (
 
 	// HTTP Protocol
 
-	NewHTTPTransport = http.New
-	NewHTTPProtocol  = http.NewProtocol
+	NewHTTP = http.New
 
 	// HTTP Protocol Options
 
-	WithTarget             = http.WithTarget
-	WithHeader             = http.WithHeader
-	WithShutdownTimeout    = http.WithShutdownTimeout
-	WithEncoding           = http.WithEncoding
-	WithStructuredEncoding = http.WithStructuredEncoding
-	WithPort               = http.WithPort
-	WithPath               = http.WithPath
-	WithMiddleware         = http.WithMiddleware
-	WithListener           = http.WithListener
-	WithHTTPTransport      = http.WithHTTPTransport
+	WithTarget          = http.WithTarget
+	WithHeader          = http.WithHeader
+	WithShutdownTimeout = http.WithShutdownTimeout
+	//WithEncoding           = http.WithEncoding
+	//WithStructuredEncoding = http.WithStructuredEncoding // TODO: expose new way
+	WithPort          = http.WithPort
+	WithPath          = http.WithPath
+	WithMiddleware    = http.WithMiddleware
+	WithListener      = http.WithListener
+	WithHTTPTransport = http.WithHTTPTransport
 )

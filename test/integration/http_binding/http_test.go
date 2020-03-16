@@ -88,8 +88,8 @@ func TestSendEventReceiveBinary(t *testing.T) {
 	})
 }
 
-func testSenderReceiver(t testing.TB, options ...http.ProtocolOption) (func(), bindings.Sender, bindings.Receiver) {
-	p, err := http.NewProtocol(options...)
+func testSenderReceiver(t testing.TB, options ...http.Option) (func(), bindings.Sender, bindings.Receiver) {
+	p, err := http.New(options...)
 	require.NoError(t, err)
 	srv := httptest.NewServer(p)
 	u, err := url.Parse(srv.URL)

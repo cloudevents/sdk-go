@@ -5,23 +5,17 @@ import (
 	"log"
 
 	cloudevents "github.com/cloudevents/sdk-go"
-	"github.com/cloudevents/sdk-go/pkg/transport/http"
 )
 
 func main() {
 	ctx := cloudevents.ContextWithTarget(context.Background(), "http://localhost:8080/")
 
-	p, err := cloudevents.NewHTTPProtocol()
+	p, err := cloudevents.NewHTTP()
 	if err != nil {
 		log.Fatalf("failed to create protocol: %s", err.Error())
 	}
 
-	t, err := http.New(p)
-	if err != nil {
-		log.Fatalf("failed to create transport, %v", err)
-	}
-
-	c, err := cloudevents.NewClient(t, cloudevents.WithTimeNow(), cloudevents.WithUUIDs())
+	c, err := cloudevents.NewClient(p, cloudevents.WithTimeNow(), cloudevents.WithUUIDs())
 	if err != nil {
 		log.Fatalf("failed to create client, %v", err)
 	}

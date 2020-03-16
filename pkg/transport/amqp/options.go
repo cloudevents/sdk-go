@@ -3,11 +3,11 @@ package amqp
 import "pack.ag/amqp"
 
 // Option is the function signature required to be considered an amqp.Option.
-type Option func(*Transport) error
+type Option func(*Protocol) error
 
 // WithEncoding sets the encoding for amqp transport.
 func WithEncoding(encoding Encoding) Option {
-	return func(t *Transport) error {
+	return func(t *Protocol) error {
 		t.Encoding = encoding
 		return nil
 	}
@@ -15,7 +15,7 @@ func WithEncoding(encoding Encoding) Option {
 
 // WithConnOpt sets a connection option for amqp
 func WithConnOpt(opt amqp.ConnOption) Option {
-	return func(t *Transport) error {
+	return func(t *Protocol) error {
 		t.connOpts = append(t.connOpts, opt)
 		return nil
 	}
@@ -28,7 +28,7 @@ func WithConnSASLPlain(username, password string) Option {
 
 // WithSessionOpt sets a session option for amqp
 func WithSessionOpt(opt amqp.SessionOption) Option {
-	return func(t *Transport) error {
+	return func(t *Protocol) error {
 		t.sessionOpts = append(t.sessionOpts, opt)
 		return nil
 	}
@@ -36,7 +36,7 @@ func WithSessionOpt(opt amqp.SessionOption) Option {
 
 // WithSenderLinkOption sets a link option for amqp
 func WithSenderLinkOption(opt amqp.LinkOption) Option {
-	return func(t *Transport) error {
+	return func(t *Protocol) error {
 		t.senderLinkOpts = append(t.senderLinkOpts, opt)
 		return nil
 	}
@@ -44,7 +44,7 @@ func WithSenderLinkOption(opt amqp.LinkOption) Option {
 
 // WithReceiverLinkOption sets a link option for amqp
 func WithReceiverLinkOption(opt amqp.LinkOption) Option {
-	return func(t *Transport) error {
+	return func(t *Protocol) error {
 		t.receiverLinkOpts = append(t.receiverLinkOpts, opt)
 		return nil
 	}
