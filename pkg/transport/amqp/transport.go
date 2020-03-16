@@ -112,7 +112,7 @@ func (t *Protocol) applyOptions(opts ...Option) error {
 
 // StartReceiver implements Protocol.StartReceiver
 // NOTE: This is a blocking call.
-func (t *Protocol) StartInbound(ctx context.Context) error {
+func (t *Protocol) OpenInbound(ctx context.Context) error {
 	logger := cecontext.LoggerFrom(ctx)
 	logger.Info("StartReceiver on ", t.Node)
 

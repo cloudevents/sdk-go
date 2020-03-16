@@ -12,9 +12,9 @@ import (
 	"go.opencensus.io/plugin/ochttp/propagation/tracecontext"
 )
 
-var _ transport.Engine = (*Protocol)(nil)
+var _ transport.Opener = (*Protocol)(nil)
 
-func (e *Protocol) StartInbound(ctx context.Context) error {
+func (e *Protocol) OpenInbound(ctx context.Context) error {
 	e.reMu.Lock()
 	defer e.reMu.Unlock()
 
