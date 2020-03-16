@@ -1,17 +1,12 @@
 package amqp
 
-import "pack.ag/amqp"
+import (
+	"github.com/cloudevents/sdk-go/pkg/binding"
+	"pack.ag/amqp"
+)
 
 // Option is the function signature required to be considered an amqp.Option.
 type Option func(*Protocol) error
-
-// WithEncoding sets the encoding for amqp transport.
-func WithEncoding(encoding Encoding) Option {
-	return func(t *Protocol) error {
-		t.Encoding = encoding
-		return nil
-	}
-}
 
 // WithConnOpt sets a connection option for amqp
 func WithConnOpt(opt amqp.ConnOption) Option {
@@ -47,5 +42,15 @@ func WithReceiverLinkOption(opt amqp.LinkOption) Option {
 	return func(t *Protocol) error {
 		t.receiverLinkOpts = append(t.receiverLinkOpts, opt)
 		return nil
+	}
+}
+
+// amqp.Sender options
+type SenderOptionFunc func(sender *sender)
+
+// Add a transformer, which Sender uses while encoding a binding.Message to an amqp.Message
+func WithTransformer(transformer binding.TransformerFactory) SenderOptionFunc {
+	return func(sender *sender) {
+		sender.transformers = append(sender.transformers, transformer)
 	}
 }
