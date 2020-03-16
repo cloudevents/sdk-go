@@ -4,6 +4,7 @@ package cloudevents
 // the number of imports for simple HTTP clients.
 
 import (
+	"github.com/cloudevents/sdk-go/pkg/binding"
 	"github.com/cloudevents/sdk-go/pkg/client"
 	"github.com/cloudevents/sdk-go/pkg/context"
 	"github.com/cloudevents/sdk-go/pkg/event"
@@ -38,7 +39,10 @@ type URIRef = types.URIRef
 type HTTPOption http.Option
 
 type HTTPProtocol = http.Protocol
-type HTTPEncoding = http.Encoding
+
+// Encoding
+
+type Encoding = binding.Encoding
 
 const (
 	// ReadEncoding
@@ -55,11 +59,14 @@ const (
 	VersionV1  = event.CloudEventsVersionV1
 	VersionV03 = event.CloudEventsVersionV03
 
-	HTTPBinaryEncoding     = http.Binary
-	HTTPStructuredEncoding = http.Structured
+	// Encoding
+
+	EncodingBinary     = binding.EncodingBinary
+	EncodingStructured = binding.EncodingStructured
 )
 
 var (
+
 	// ContentType Helpers
 
 	StringOfApplicationJSON                 = event.StringOfApplicationJSON
@@ -95,10 +102,10 @@ var (
 
 	// Context
 
-	ContextWithTarget   = context.WithTarget
-	TargetFromContext   = context.TargetFrom
-	ContextWithEncoding = context.WithEncoding
-	EncodingFromContext = context.EncodingFrom
+	ContextWithTarget      = context.WithTarget
+	TargetFromContext      = context.TargetFrom
+	WithEncodingBinary     = binding.WithForceBinary
+	WithEncodingStructured = binding.WithForceStructured
 
 	// Custom Types
 

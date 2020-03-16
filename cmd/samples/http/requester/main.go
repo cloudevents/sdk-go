@@ -46,7 +46,7 @@ func _main(args []string, env envConfig) int {
 
 	seq := 0
 	for _, contentType := range []string{"application/json", "application/xml", "text/plain"} {
-		for _, encoding := range []cloudevents.HTTPEncoding{cloudevents.HTTPBinaryEncoding, cloudevents.HTTPStructuredEncoding} { // TODO: force this again or remove
+		for _, encoding := range []cloudevents.Encoding{cloudevents.EncodingBinary, cloudevents.EncodingStructured} {
 
 			p, err := cloudevents.NewHTTP(cloudevents.WithTarget(env.Target))
 			if err != nil {
@@ -77,7 +77,16 @@ func _main(args []string, env envConfig) int {
 					Message:  message,
 				})
 
-				if resp, err := c.Request(context.Background(), event); err != nil {
+				ctx := context.Background()
+
+				switch encoding {
+				case cloudevents.EncodingBinary:
+					ctx = cloudevents.WithEncodingBinary(ctx)
+				case cloudevents.EncodingStructured:
+					ctx = cloudevents.WithEncodingStructured(ctx)
+				}
+
+				if resp, err := c.Request(ctx, event); err != nil {
 					log.Printf("failed to request: %v", err)
 				} else if resp != nil {
 					fmt.Printf("Response:\n%s\n", resp)
