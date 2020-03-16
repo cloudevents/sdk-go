@@ -114,7 +114,7 @@ func _main(args []string, env envConfig) int {
 				case cloudevents.EncodingStructured:
 					ctx = cloudevents.WithEncodingStructured(ctx)
 				}
-				
+
 				if resp, err := c.Request(ctx, event); err != nil {
 					log.Printf("failed to send: %v", err)
 				} else if resp != nil {
