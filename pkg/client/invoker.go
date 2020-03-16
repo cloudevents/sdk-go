@@ -31,7 +31,7 @@ func newReceiveInvoker(fn interface{}, fns ...EventDefaulter) (Invoker, error) {
 
 type receiveInvoker struct {
 	fn                *receiverFn
-	eventDefaulterFns []EventDefaulter // TODO: set these.
+	eventDefaulterFns []EventDefaulter
 }
 
 func (r *receiveInvoker) Invoke(ctx context.Context, m binding.Message, respFn transport.ResponseFn) (err error) {

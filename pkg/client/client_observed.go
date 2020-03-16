@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"github.com/cloudevents/sdk-go/pkg/event"
+	"github.com/cloudevents/sdk-go/pkg/extensions"
 	"github.com/cloudevents/sdk-go/pkg/observability"
 	"go.opencensus.io/trace"
 )
@@ -15,34 +16,43 @@ func NewObserved(protocol interface{}, opts ...Option) (Client, error) {
 		return nil, err
 	}
 
-	return &obsClient{client: client}, nil
+	c := &obsClient{client: client}
+
+	if err := c.applyOptions(opts...); err != nil {
+		return nil, err
+	}
+	return c, nil
 }
 
 type obsClient struct {
 	client Client
 
-	disableTracePropagation bool // TODO?
+	addTracing bool
 }
 
-//
-//func (c *ceClient) applyOptions(opts ...Option) error {
-//	for _, fn := range opts {
-//		if err := fn(c); err != nil {
-//			return err
-//		}
-//	}
-//	return nil
-//}
+func (c *obsClient) applyOptions(opts ...Option) error {
+	for _, fn := range opts {
+		if err := fn(c); err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
 // Send transmits the provided event on a preconfigured Protocol. Send returns
 // an error if there was an an issue validating the outbound event or the
 // transport returns an error.
 func (c *obsClient) Send(ctx context.Context, e event.Event) error {
 	ctx, r := observability.NewReporter(ctx, reportSend)
-	ctx, span := trace.StartSpan(ctx, clientSpanName, trace.WithSpanKind(trace.SpanKindClient))
+	ctx, span := trace.StartSpan(ctx, observability.ClientSpanName, trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 	if span.IsRecordingEvents() {
-		span.AddAttributes(eventTraceAttributes(e.Context)...)
+		span.AddAttributes(EventTraceAttributes(&e)...)
+	}
+
+	if c.addTracing {
+		e.Context = e.Context.Clone()
+		extensions.FromSpanContext(span.SpanContext()).AddTracingAttributes(&e)
 	}
 
 	err := c.client.Send(ctx, e)
@@ -57,10 +67,10 @@ func (c *obsClient) Send(ctx context.Context, e event.Event) error {
 
 func (c *obsClient) Request(ctx context.Context, e event.Event) (*event.Event, error) {
 	ctx, r := observability.NewReporter(ctx, reportRequest)
-	ctx, span := trace.StartSpan(ctx, clientSpanName, trace.WithSpanKind(trace.SpanKindClient))
+	ctx, span := trace.StartSpan(ctx, observability.ClientSpanName, trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 	if span.IsRecordingEvents() {
-		span.AddAttributes(eventTraceAttributes(e.Context)...)
+		span.AddAttributes(EventTraceAttributes(&e)...)
 	}
 
 	resp, err := c.client.Request(ctx, e)

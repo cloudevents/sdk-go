@@ -36,7 +36,6 @@ func main() {
 	c, err := cloudevents.NewClient(p,
 		cloudevents.WithUUIDs(),
 		cloudevents.WithTimeNow(),
-		cloudevents.WithoutTracePropagation(),
 	)
 	if err != nil {
 		log.Fatalf("failed to create client: %s", err.Error())

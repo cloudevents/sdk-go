@@ -12,6 +12,9 @@ var (
 )
 
 const (
+	// ClientSpanName is the key used to start spans from the client.
+	ClientSpanName = "cloudevents.client"
+
 	// ResultError is a shared result tag value for error.
 	ResultError = "error"
 	// ResultOK is a shared result tag value for success.

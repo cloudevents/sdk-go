@@ -79,15 +79,16 @@ var (
 	// Client Creation
 
 	NewClient             = client.New
+	NewClientObserved     = client.NewObserved
 	NewDefaultClient      = client.NewDefault
 	NewHTTPReceiveHandler = client.NewHTTPReceiveHandler
 
 	// Client Options
 
-	WithEventDefaulter      = client.WithEventDefaulter
-	WithUUIDs               = client.WithUUIDs
-	WithTimeNow             = client.WithTimeNow
-	WithoutTracePropagation = client.WithoutTracePropagation
+	WithEventDefaulter   = client.WithEventDefaulter
+	WithUUIDs            = client.WithUUIDs
+	WithTimeNow          = client.WithTimeNow
+	WithTracePropagation = client.WithTracePropagation()
 
 	// Event Creation
 
