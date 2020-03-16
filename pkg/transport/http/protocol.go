@@ -29,7 +29,7 @@ type Protocol struct {
 	Client          *http.Client
 	incoming        chan msgErr
 
-	// To support engine:
+	// To support Opener:
 
 	// ShutdownTimeout defines the timeout given to the http.Server when calling Shutdown.
 	// If nil, DefaultShutdownTimeout is used.

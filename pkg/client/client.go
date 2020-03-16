@@ -60,8 +60,8 @@ func New(protocol interface{}, opts ...Option) (Client, error) {
 	if p, ok := protocol.(transport.Receiver); ok {
 		c.receiver = p
 	}
-	if p, ok := protocol.(transport.Engine); ok {
-		c.engine = p
+	if p, ok := protocol.(transport.Opener); ok {
+		c.opener = p
 	}
 
 	if err := c.applyOptions(opts...); err != nil {
@@ -76,7 +76,7 @@ type ceClient struct {
 	receiver  transport.Receiver
 	responder transport.Responder
 	// Optional.
-	engine transport.Engine
+	opener transport.Opener
 
 	outboundContextDecorators []func(context.Context) context.Context
 	invoker                   Invoker
@@ -178,11 +178,11 @@ func (c *ceClient) StartReceiver(ctx context.Context, fn interface{}) error {
 		c.invoker = nil
 	}()
 
-	// Start the engine, if set.
-	if c.engine != nil {
+	// Start the opener, if set.
+	if c.opener != nil {
 		go func() {
 			// TODO: handle error correctly here.
-			if err := c.engine.StartInbound(ctx); err != nil {
+			if err := c.opener.OpenInbound(ctx); err != nil {
 				panic(err)
 			}
 		}()
