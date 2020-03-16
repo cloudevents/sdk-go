@@ -1,5 +1,8 @@
 # Go SDK for [CloudEvents](https://github.com/cloudevents/spec)
 
+The Golong SDK v1 can be found on the `release-1.x.y` branch, or one of the
+releases for v0, or v1 published releases.
+
 **With v1.1.0:**
 
 [Master](https://github.com/cloudevents/sdk-go/tree/master) will now be the base
@@ -16,22 +19,26 @@ The CloudEvents golang team is working hard to bring you v2.0.0 of the SDK.
 
 **With v1.0.0:**
 
-The API that exists under [`pkg/cloudevents`](./pkg/cloudevents) will follow
-semver rules. This applies to the root [`./alias.go`](./alias.go) file as well.
+The API that exists under
+[`pkg/cloudevents`](https://github.com/cloudevents/sdk-go/tree/release-1.y.z/pkg/cloudevents)
+will follow semver rules. This applies to the root
+[`./alias.go`](https://github.com/cloudevents/sdk-go/tree/release-1.y.z/alias.go)
+file as well.
 
 Even though `pkg/cloudevents` is v1.0.0, there could still be minor bugs and
 performance issues. We will continue to track and fix these issues as they come
 up. Please file a pull request or issue if you experience problems.
 
-The API that exists under [`pkg/bindings`](./pkg/bindings) is a new API that
-will become SDK v2.x, and will replace `pkg/cloudevents`. This area is still
-under heavy development and will not be following the same semver rules as
-`pkg/cloudevents`. If a release is required to ship changes to `pkg/bindings`, a
-bug fix release will be issued (x.y.z+1).
+The API that exists under
+[`pkg/bindings`](https://github.com/cloudevents/sdk-go/tree/release-1.y.z/pkg/bindings)
+is a new API that will become SDK v2.x, and will replace `pkg/cloudevents`. This
+area is still under heavy development and will not be following the same semver
+rules as `pkg/cloudevents`. If a release is required to ship changes to
+`pkg/bindings`, a bug fix release will be issued (x.y.z+1).
 
 We will target ~2 months of development to release v2 of this SDK with an end
 date of March 27, 2020. You can read more about the plan for SDK v2 in the
-[SDK v2 planning doc](./docs/SDK_v2.md).
+[SDK v2 planning doc](https://github.com/cloudevents/sdk-go/tree/release-1.y.z/docs/SDK_v2.md).
 
 This SDK current supports the following versions of CloudEvents:
 
@@ -42,8 +49,10 @@ This SDK current supports the following versions of CloudEvents:
 
 ## Working with CloudEvents
 
-Package [cloudevents](./pkg/cloudevents) provides primitives to work with
-CloudEvents specification: https://github.com/cloudevents/spec.
+Package
+[cloudevents](https://github.com/cloudevents/sdk-go/tree/release-1.y.z/pkg/cloudevents)
+provides primitives to work with CloudEvents specification:
+https://github.com/cloudevents/spec.
 
 Import this repo to get the `cloudevents` package:
 
@@ -122,18 +131,8 @@ t, err := cloudevents.NewHTTPTransport(
 c, err := cloudevents.NewClient(t, opts...)
 ```
 
-Checkout the sample [sender](./cmd/samples/http/sender) and
-[receiver](./cmd/samples/http/receiver) applications for working demo.
-
-## Community
-
-- There are bi-weekly calls immediately following the
-  [Serverless/CloudEvents call](https://github.com/cloudevents/spec#meeting-time)
-  at 9am PT (US Pacific). Which means they will typically start at 10am PT, but
-  if the other call ends early then the SDK call will start early as well. See
-  the
-  [CloudEvents meeting minutes](https://docs.google.com/document/d/1OVF68rpuPK5shIHILK9JOqlZBbfe91RNzQ7u_P7YCDE/edit#)
-  to determine which week will have the call.
-- Slack: #cloudeventssdk channel under
-  [CNCF's Slack workspace](https://slack.cncf.io/).
-- Contact for additional information: Scott Nichols (`@Scott Nichols` on slack).
+Checkout the sample
+[sender](https://github.com/cloudevents/sdk-go/tree/release-1.y.z/cmd/samples/http/sender)
+and
+[receiver](https://github.com/cloudevents/sdk-go/tree/release-1.y.z/cmd/samples/http/receiver)
+applications for working demo.
