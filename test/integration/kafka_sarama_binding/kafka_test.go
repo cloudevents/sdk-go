@@ -23,23 +23,7 @@ const (
 	TEST_GROUP_ID = "test_group_id"
 )
 
-func TestSendStructuredMessageToStructuredWithKey(t *testing.T) {
-	close, s, r := testSenderReceiver(t)
-	defer close()
-	EachEvent(t, Events(), func(t *testing.T, eventIn event.Event) {
-		eventIn = ExToStr(t, eventIn)
-		require.NoError(t, eventIn.Context.SetExtension("key", "aaa"))
-
-		in := MustCreateMockStructuredMessage(eventIn)
-		test.SendReceive(t, binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingStructured), in, s, r, func(out binding.Message) {
-			eventOut := MustToEvent(t, context.Background(), out)
-			assert.Equal(t, binding.EncodingEvent, out.ReadEncoding())
-			AssertEventEquals(t, eventIn, ExToStr(t, eventOut))
-		})
-	})
-}
-
-func TestSendStructuredMessageToStructuredWithoutKey(t *testing.T) {
+func TestSendStructuredMessageToStructured(t *testing.T) {
 	close, s, r := testSenderReceiver(t)
 	defer close()
 	EachEvent(t, Events(), func(t *testing.T, eventIn event.Event) {
@@ -54,23 +38,7 @@ func TestSendStructuredMessageToStructuredWithoutKey(t *testing.T) {
 	})
 }
 
-func TestSendBinaryMessageToBinaryWithKey(t *testing.T) {
-	close, s, r := testSenderReceiver(t)
-	defer close()
-	EachEvent(t, Events(), func(t *testing.T, eventIn event.Event) {
-		eventIn = ExToStr(t, eventIn)
-		require.NoError(t, eventIn.Context.SetExtension("key", "aaa"))
-
-		in := MustCreateMockBinaryMessage(eventIn)
-		test.SendReceive(t, binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingBinary), in, s, r, func(out binding.Message) {
-			eventOut := MustToEvent(t, context.Background(), out)
-			assert.Equal(t, binding.EncodingBinary, out.ReadEncoding())
-			AssertEventEquals(t, eventIn, ExToStr(t, eventOut))
-		})
-	})
-}
-
-func TestSendBinaryMessageToBinaryWithoutKey(t *testing.T) {
+func TestSendBinaryMessageToBinary(t *testing.T) {
 	close, s, r := testSenderReceiver(t)
 	defer close()
 	EachEvent(t, Events(), func(t *testing.T, eventIn event.Event) {
