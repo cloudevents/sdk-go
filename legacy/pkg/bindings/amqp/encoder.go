@@ -15,7 +15,7 @@ import (
 
 // Fill the provided amqpMessage with the message m.
 // Using context you can tweak the encoding processing (more details on binding.Translate documentation).
-func EncodeAMQPMessage(ctx context.Context, m binding.Message, amqpMessage *amqp.Message, transformerFactories binding.TransformerFactories) error {
+func EncodeAMQPMessage(ctx context.Context, m binding.Message, amqpMessage *amqp.Message, transformerFactories ...binding.TransformerFactory) error {
 	structuredEncoder := (*amqpMessageEncoder)(amqpMessage)
 	binaryEncoder := (*amqpMessageEncoder)(amqpMessage)
 
