@@ -19,14 +19,18 @@ var ErrCannotConvertToEvent = errors.New("cannot convert message to event")
 // This function returns the Event generated from the Message and the original encoding of the message or
 // an error that points the conversion error.
 // transformers can be nil and this function guarantees that they are invoked only once during the encoding process.
-func ToEvent(ctx context.Context, message MessageReader, transformers TransformerFactories) (*event.Event, error) {
+func ToEvent(ctx context.Context, message MessageReader, transformers ...TransformerFactory) (*event.Event, error) {
 	messageEncoding := message.ReadEncoding()
 	if messageEncoding == EncodingEvent {
 		for m := message; m != nil; {
 			if em, ok := m.(*EventMessage); ok {
 				e := (*event.Event)(em)
-				if err := transformers.EventTransformer()(e); err != nil {
-					return nil, err
+				if transformers != nil {
+					var tf TransformerFactories
+					tf = transformers
+					if err := tf.EventTransformer()(e); err != nil {
+						return nil, err
+					}
 				}
 				return e, nil
 			}
@@ -50,8 +54,12 @@ func ToEvent(ctx context.Context, message MessageReader, transformers Transforme
 	); err != nil {
 		return nil, err
 	}
-	if err := transformers.EventTransformer()(&e); err != nil {
-		return nil, err
+	if transformers != nil {
+		var tf TransformerFactories
+		tf = transformers
+		if err := tf.EventTransformer()(&e); err != nil {
+			return nil, err
+		}
 	}
 	return &e, nil
 }

@@ -81,7 +81,7 @@ func TestEncodeKafkaProducerMessage(t *testing.T) {
 				messageOut := NewMessage(key, value, string(headers[contentTypeHeader]), headers)
 				require.Equal(t, tt.expectedEncoding, messageOut.ReadEncoding())
 
-				eventOut, err := binding.ToEvent(context.TODO(), messageOut, nil)
+				eventOut, err := binding.ToEvent(context.TODO(), messageOut)
 				require.NoError(t, err)
 				test.AssertEventEquals(t, eventIn, *eventOut)
 			})

@@ -73,7 +73,7 @@ func Write(
 	message MessageReader,
 	structuredWriter StructuredWriter,
 	binaryWriter BinaryWriter,
-	transformers TransformerFactories,
+	transformers ...TransformerFactory,
 ) (Encoding, error) {
 	enc := message.ReadEncoding()
 	var err error
@@ -87,7 +87,7 @@ func Write(
 	}
 
 	var e *event.Event
-	e, err = ToEvent(ctx, message, transformers)
+	e, err = ToEvent(ctx, message, transformers...)
 	if err != nil {
 		return enc, err
 	}

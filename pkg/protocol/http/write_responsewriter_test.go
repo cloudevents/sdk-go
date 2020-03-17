@@ -68,7 +68,7 @@ func TestWriteHttpResponseWriter(t *testing.T) {
 				messageOut := NewMessage(res.Header(), ioutil.NopCloser(bytes.NewReader(res.Body.Bytes())))
 				require.Equal(t, tt.expectedEncoding, messageOut.ReadEncoding())
 
-				eventOut, err := binding.ToEvent(context.TODO(), messageOut, nil)
+				eventOut, err := binding.ToEvent(context.TODO(), messageOut)
 				require.NoError(t, err)
 				test.AssertEventEquals(t, eventIn, *eventOut)
 			})

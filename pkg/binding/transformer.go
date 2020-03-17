@@ -28,13 +28,14 @@ func (t TransformerFactories) StructuredTransformer(encoder StructuredWriter) St
 		return nil
 	}
 	res := encoder
-	if t != nil {
-		for _, b := range t {
-			if new := b.StructuredTransformer(res); new != nil {
-				res = new
-			} else {
-				return nil // Structured not supported!
-			}
+	for _, b := range t {
+		if b == nil {
+			continue
+		}
+		if r := b.StructuredTransformer(res); r != nil {
+			res = r
+		} else {
+			return nil // Structured not supported!
 		}
 	}
 	return res
@@ -45,13 +46,15 @@ func (t TransformerFactories) BinaryTransformer(encoder BinaryWriter) BinaryWrit
 		return nil
 	}
 	res := encoder
-	if t != nil {
-		for i, _ := range t {
-			if new := t[len(t)-i-1].BinaryTransformer(res); new != nil {
-				res = new
-			} else {
-				return nil // Binary not supported!
-			}
+	for i := range t {
+		b := t[len(t)-i-1]
+		if b == nil {
+			continue
+		}
+		if r := b.BinaryTransformer(res); r != nil {
+			res = r
+		} else {
+			return nil // Binary not supported!
 		}
 	}
 	return res
@@ -59,15 +62,15 @@ func (t TransformerFactories) BinaryTransformer(encoder BinaryWriter) BinaryWrit
 
 func (t TransformerFactories) EventTransformer() EventTransformer {
 	return func(e *event.Event) error {
-		if t != nil {
-			for _, factory := range t {
-				f := factory.EventTransformer()
-
-				if f != nil {
-					err := f(e)
-					if err != nil {
-						return err
-					}
+		for _, b := range t {
+			if b == nil {
+				continue
+			}
+			f := b.EventTransformer()
+			if f != nil {
+				err := f(e)
+				if err != nil {
+					return err
 				}
 			}
 		}

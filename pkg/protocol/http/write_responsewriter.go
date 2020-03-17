@@ -14,7 +14,7 @@ import (
 
 // Write out to the the provided httpResponseWriter with the message m.
 // Using context you can tweak the encoding processing (more details on binding.Write documentation).
-func WriteResponseWriter(ctx context.Context, m binding.Message, status int, rw http.ResponseWriter, transformers binding.TransformerFactories) error {
+func WriteResponseWriter(ctx context.Context, m binding.Message, status int, rw http.ResponseWriter, transformers ...binding.TransformerFactory) error {
 	if status < 200 || status >= 600 {
 		status = http.StatusOK
 	}
@@ -25,7 +25,7 @@ func WriteResponseWriter(ctx context.Context, m binding.Message, status int, rw 
 		m,
 		writer,
 		writer,
-		transformers,
+		transformers...,
 	)
 	return err
 }

@@ -84,7 +84,7 @@ func TestCopyMessage(t *testing.T) {
 			require.NoError(t, err)
 			// The copy can be read any number of times
 			for i := 0; i < 3; i++ {
-				got, err := binding.ToEvent(context.Background(), cpy, nil)
+				got, err := binding.ToEvent(context.Background(), cpy)
 				assert.NoError(t, err)
 				require.Equal(t, tt.encoding, cpy.ReadEncoding())
 				AssertEventEquals(t, ExToStr(t, tt.want), ExToStr(t, *got))
@@ -101,7 +101,7 @@ func TestCopyMessage(t *testing.T) {
 			require.NoError(t, err)
 			// The copy can be read any number of times
 			for i := 0; i < 3; i++ {
-				got, err := binding.ToEvent(context.Background(), cpy, nil)
+				got, err := binding.ToEvent(context.Background(), cpy)
 				assert.NoError(t, err)
 				require.Equal(t, tt.encoding, cpy.ReadEncoding())
 				AssertEventEquals(t, ExToStr(t, tt.want), ExToStr(t, *got))

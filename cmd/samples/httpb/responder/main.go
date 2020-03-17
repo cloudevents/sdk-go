@@ -50,5 +50,5 @@ func main() {
 func gotEvent(ctx context.Context, event cloudevents.Event) (*event.Event, protocol.Result) {
 	fmt.Printf("Got Event: %+v\n", event)
 
-	return &event, cloudevents.NewHTTPResponse(http.StatusAccepted, "accept")
+	return &event, cloudevents.NewHTTPResult(http.StatusAccepted, "accept")
 }

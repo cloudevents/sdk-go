@@ -44,6 +44,10 @@ type HTTPProtocol = http.Protocol
 
 type Encoding = binding.Encoding
 
+// Message
+
+type Message = binding.Message
+
 const (
 	// ReadEncoding
 
@@ -95,11 +99,15 @@ var (
 	NewEvent  = event.New
 	NewResult = protocol.NewResult
 
-	NewHTTPResponse = http.NewResult
+	NewHTTPResult = http.NewResult
 
 	// Message Creation
 
 	ToMessage = binding.ToMessage
+
+	// HTTP Messages
+
+	WriteHTTPRequest = http.WriteRequest
 
 	// Tracing
 

@@ -102,7 +102,7 @@ func MustJSON(e event.Event) []byte {
 
 // Must convert the Message to event.Event
 func MustToEvent(t *testing.T, ctx context.Context, m binding.Message) event.Event {
-	e, err := binding.ToEvent(ctx, m, nil)
+	e, err := binding.ToEvent(ctx, m)
 	require.NoError(t, err)
 	return *e
 }

@@ -144,7 +144,7 @@ func (c *ceClient) Request(ctx context.Context, e event.Event) (*event.Event, er
 	}()
 	if err == nil {
 		fmt.Printf("%#v", msg)
-		if rs, err := binding.ToEvent(ctx, msg, nil); err != nil {
+		if rs, err := binding.ToEvent(ctx, msg); err != nil {
 			cecontext.LoggerFrom(ctx).Infow("failed calling ToEvent", zap.Error(err), zap.Any("resp", msg))
 		} else {
 			resp = rs
