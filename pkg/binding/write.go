@@ -87,7 +87,7 @@ func Write(
 	}
 
 	var e *event.Event
-	e, err = ToEvent(ctx, message, transformers)
+	e, err = ToEvent(ctx, message, transformers...)
 	if err != nil {
 		return enc, err
 	}

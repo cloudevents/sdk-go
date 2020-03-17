@@ -42,7 +42,7 @@ func (r *receiveInvoker) Invoke(ctx context.Context, m binding.Message, respFn p
 		}
 	}()
 
-	e, err := binding.ToEvent(ctx, m, nil)
+	e, err := binding.ToEvent(ctx, m)
 	if err != nil {
 		return err
 	}

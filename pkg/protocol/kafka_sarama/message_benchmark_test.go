@@ -58,14 +58,14 @@ func BenchmarkNewBinaryMessage(b *testing.B) {
 func BenchmarkNewStructuredMessageToEvent(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		M = kafka_sarama.NewMessageFromConsumerMessage(structuredConsumerMessage)
-		Event, Err = binding.ToEvent(context.TODO(), M, nil)
+		Event, Err = binding.ToEvent(context.TODO(), M)
 	}
 }
 
 func BenchmarkNewBinaryMessageToEvent(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		M = kafka_sarama.NewMessageFromConsumerMessage(binaryConsumerMessage)
-		Event, Err = binding.ToEvent(context.TODO(), M, nil)
+		Event, Err = binding.ToEvent(context.TODO(), M)
 	}
 }
 
