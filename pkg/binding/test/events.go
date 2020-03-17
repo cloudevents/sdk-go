@@ -7,9 +7,9 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/cloudevents/sdk-go/pkg/binding/spec"
-	"github.com/cloudevents/sdk-go/pkg/event"
-	"github.com/cloudevents/sdk-go/pkg/types"
+	"github.com/cloudevents/sdk-go/v2/pkg/binding/spec"
+	"github.com/cloudevents/sdk-go/v2/pkg/event"
+	"github.com/cloudevents/sdk-go/v2/pkg/types"
 )
 
 func strptr(s string) *string { return &s }

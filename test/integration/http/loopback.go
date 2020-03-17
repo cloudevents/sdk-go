@@ -9,9 +9,9 @@ import (
 
 	"github.com/google/uuid"
 
-	cloudevents "github.com/cloudevents/sdk-go"
-	"github.com/cloudevents/sdk-go/pkg/client"
-	cehttp "github.com/cloudevents/sdk-go/pkg/protocol/http"
+	cloudevents "github.com/cloudevents/sdk-go/v2"
+	"github.com/cloudevents/sdk-go/v2/pkg/client"
+	cehttp "github.com/cloudevents/sdk-go/v2/pkg/protocol/http"
 )
 
 // Loopback Test:

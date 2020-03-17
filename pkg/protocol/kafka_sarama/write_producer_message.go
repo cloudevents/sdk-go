@@ -7,10 +7,10 @@ import (
 
 	"github.com/Shopify/sarama"
 
-	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/binding/format"
-	"github.com/cloudevents/sdk-go/pkg/binding/spec"
-	"github.com/cloudevents/sdk-go/pkg/types"
+	"github.com/cloudevents/sdk-go/v2/pkg/binding"
+	"github.com/cloudevents/sdk-go/v2/pkg/binding/format"
+	"github.com/cloudevents/sdk-go/v2/pkg/binding/spec"
+	"github.com/cloudevents/sdk-go/v2/pkg/types"
 )
 
 // Fill the provided producerMessage with the message m.

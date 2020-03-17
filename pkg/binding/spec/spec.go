@@ -3,8 +3,8 @@ package spec
 import (
 	"strings"
 
-	"github.com/cloudevents/sdk-go/pkg/event"
-	"github.com/cloudevents/sdk-go/pkg/types"
+	"github.com/cloudevents/sdk-go/v2/pkg/event"
+	"github.com/cloudevents/sdk-go/v2/pkg/types"
 )
 
 // Version provides meta-data for a single spec-version.

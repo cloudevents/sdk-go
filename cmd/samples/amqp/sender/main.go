@@ -9,11 +9,11 @@ import (
 	"strings"
 	"time"
 
-	cloudevents "github.com/cloudevents/sdk-go"
-	"github.com/cloudevents/sdk-go/pkg/client"
-	"github.com/cloudevents/sdk-go/pkg/event"
-	ceamqp "github.com/cloudevents/sdk-go/pkg/protocol/amqp"
-	"github.com/cloudevents/sdk-go/pkg/types"
+	cloudevents "github.com/cloudevents/sdk-go/v2"
+	"github.com/cloudevents/sdk-go/v2/pkg/client"
+	"github.com/cloudevents/sdk-go/v2/pkg/event"
+	ceamqp "github.com/cloudevents/sdk-go/v2/pkg/protocol/amqp"
+	"github.com/cloudevents/sdk-go/v2/pkg/types"
 	"github.com/google/uuid"
 	"pack.ag/amqp"
 )
@@ -80,7 +80,7 @@ func main() {
 	}
 
 	// Attributes for events
-	source, _ := url.Parse("https://github.com/cloudevents/sdk-go/cmd/samples/sender")
+	source, _ := url.Parse("https://github.com/cloudevents/sdk-go/v2/cmd/samples/sender")
 	contentType := "application/json"
 
 	// Value for event data

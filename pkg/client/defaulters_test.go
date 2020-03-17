@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cloudevents/sdk-go/pkg/event"
+	"github.com/cloudevents/sdk-go/v2/pkg/event"
 )
 
 var versions = []string{"0.3", "1.0"}

@@ -1,7 +1,7 @@
 package binding
 
 import (
-	"github.com/cloudevents/sdk-go/pkg/event"
+	"github.com/cloudevents/sdk-go/v2/pkg/event"
 )
 
 // Implements a transformation process while transferring the event from the Message implementation

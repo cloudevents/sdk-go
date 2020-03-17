@@ -6,9 +6,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/cloudevents/sdk-go/pkg/binding"
-	. "github.com/cloudevents/sdk-go/pkg/binding/test"
-	. "github.com/cloudevents/sdk-go/pkg/protocol/test"
+	"github.com/cloudevents/sdk-go/v2/pkg/binding"
+	. "github.com/cloudevents/sdk-go/v2/pkg/binding/test"
+	. "github.com/cloudevents/sdk-go/v2/pkg/protocol/test"
 )
 
 func TestEvent(t *testing.T) {

@@ -5,7 +5,7 @@ import (
 
 	"github.com/Shopify/sarama"
 
-	"github.com/cloudevents/sdk-go/pkg/binding"
+	"github.com/cloudevents/sdk-go/v2/pkg/binding"
 )
 
 // Sender implements binding.Sender that sends messages to a specific receiverTopic using sarama.SyncProducer

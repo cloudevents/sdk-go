@@ -2,7 +2,7 @@ package client
 
 import (
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/binding"
+	"github.com/cloudevents/sdk-go/v2/pkg/binding"
 )
 
 // Option is the function signature required to be considered an client.Option.

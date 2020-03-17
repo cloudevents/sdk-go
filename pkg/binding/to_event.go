@@ -6,10 +6,10 @@ import (
 	"errors"
 	"io"
 
-	"github.com/cloudevents/sdk-go/pkg/binding/format"
-	"github.com/cloudevents/sdk-go/pkg/binding/spec"
-	"github.com/cloudevents/sdk-go/pkg/event"
-	"github.com/cloudevents/sdk-go/pkg/types"
+	"github.com/cloudevents/sdk-go/v2/pkg/binding/format"
+	"github.com/cloudevents/sdk-go/v2/pkg/binding/spec"
+	"github.com/cloudevents/sdk-go/v2/pkg/event"
+	"github.com/cloudevents/sdk-go/v2/pkg/types"
 )
 
 // Generic error when a conversion of a Message to an Event fails

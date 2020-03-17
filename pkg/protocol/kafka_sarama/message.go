@@ -5,9 +5,9 @@ import (
 	"context"
 	"strings"
 
-	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/binding/format"
-	"github.com/cloudevents/sdk-go/pkg/binding/spec"
+	"github.com/cloudevents/sdk-go/v2/pkg/binding"
+	"github.com/cloudevents/sdk-go/v2/pkg/binding/format"
+	"github.com/cloudevents/sdk-go/v2/pkg/binding/spec"
 
 	"github.com/Shopify/sarama"
 )

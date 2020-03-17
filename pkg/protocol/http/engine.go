@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/cloudevents/sdk-go/pkg/protocol"
+	"github.com/cloudevents/sdk-go/v2/pkg/protocol"
 	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/plugin/ochttp/propagation/tracecontext"
 )

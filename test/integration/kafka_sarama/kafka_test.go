@@ -9,10 +9,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 
-	bindingtest "github.com/cloudevents/sdk-go/pkg/binding/test"
-	clienttest "github.com/cloudevents/sdk-go/pkg/client/test"
-	"github.com/cloudevents/sdk-go/pkg/event"
-	"github.com/cloudevents/sdk-go/pkg/protocol/kafka_sarama"
+	bindingtest "github.com/cloudevents/sdk-go/v2/pkg/binding/test"
+	clienttest "github.com/cloudevents/sdk-go/v2/pkg/client/test"
+	"github.com/cloudevents/sdk-go/v2/pkg/event"
+	"github.com/cloudevents/sdk-go/v2/pkg/protocol/kafka_sarama"
 )
 
 const (

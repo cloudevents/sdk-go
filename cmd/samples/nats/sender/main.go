@@ -7,9 +7,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/cloudevents/sdk-go/pkg/client"
-	"github.com/cloudevents/sdk-go/pkg/event"
-	cloudeventsnats "github.com/cloudevents/sdk-go/pkg/protocol/nats"
+	"github.com/cloudevents/sdk-go/v2/pkg/client"
+	"github.com/cloudevents/sdk-go/v2/pkg/event"
+	cloudeventsnats "github.com/cloudevents/sdk-go/v2/pkg/protocol/nats"
 	"github.com/google/uuid"
 	"github.com/kelseyhightower/envconfig"
 )
@@ -57,7 +57,7 @@ func main() {
 
 			e.SetType("com.cloudevents.sample.sent")
 			e.SetTime(now)
-			e.SetSource("https://github.com/cloudevents/sdk-go/cmd/samples/sender")
+			e.SetSource("https://github.com/cloudevents/sdk-go/v2/cmd/samples/sender")
 			_ = e.SetData(contentType, &Example{
 				Sequence: i,
 				Message:  fmt.Sprintf("Hello, %s!", contentType),

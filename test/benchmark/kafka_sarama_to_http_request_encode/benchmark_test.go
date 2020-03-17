@@ -5,15 +5,15 @@ import (
 	nethttp "net/http"
 	"testing"
 
-	test2 "github.com/cloudevents/sdk-go/pkg/binding/test"
+	test2 "github.com/cloudevents/sdk-go/v2/pkg/binding/test"
 
 	"github.com/Shopify/sarama"
 
-	cloudevents "github.com/cloudevents/sdk-go"
-	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/binding/test"
-	"github.com/cloudevents/sdk-go/pkg/protocol/http"
-	"github.com/cloudevents/sdk-go/pkg/protocol/kafka_sarama"
+	cloudevents "github.com/cloudevents/sdk-go/v2"
+	"github.com/cloudevents/sdk-go/v2/pkg/binding"
+	"github.com/cloudevents/sdk-go/v2/pkg/binding/test"
+	"github.com/cloudevents/sdk-go/v2/pkg/protocol/http"
+	"github.com/cloudevents/sdk-go/v2/pkg/protocol/kafka_sarama"
 )
 
 var (

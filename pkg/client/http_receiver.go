@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	thttp "github.com/cloudevents/sdk-go/pkg/protocol/http"
+	thttp "github.com/cloudevents/sdk-go/v2/pkg/protocol/http"
 )
 
 func NewHTTPReceiveHandler(ctx context.Context, p *thttp.Protocol, fn interface{}) (*EventReceiver, error) {

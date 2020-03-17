@@ -8,11 +8,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cloudevents/sdk-go/pkg/binding/spec"
-	"github.com/cloudevents/sdk-go/pkg/binding/test"
-	"github.com/cloudevents/sdk-go/pkg/types"
+	"github.com/cloudevents/sdk-go/v2/pkg/binding/spec"
+	"github.com/cloudevents/sdk-go/v2/pkg/binding/test"
+	"github.com/cloudevents/sdk-go/v2/pkg/types"
 
-	. "github.com/cloudevents/sdk-go/pkg/binding/test"
+	. "github.com/cloudevents/sdk-go/v2/pkg/binding/test"
 )
 
 func TestSetAttribute(t *testing.T) {

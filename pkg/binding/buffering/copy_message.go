@@ -3,7 +3,7 @@ package buffering
 import (
 	"context"
 
-	"github.com/cloudevents/sdk-go/pkg/binding"
+	"github.com/cloudevents/sdk-go/v2/pkg/binding"
 )
 
 // BufferMessage works the same as CopyMessage and it also bounds the original Message

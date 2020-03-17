@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	event "github.com/cloudevents/sdk-go/pkg/event"
+	event "github.com/cloudevents/sdk-go/v2/pkg/event"
 
 	"github.com/google/go-cmp/cmp"
 )

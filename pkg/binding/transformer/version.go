@@ -1,9 +1,9 @@
 package transformer
 
 import (
-	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/binding/spec"
-	"github.com/cloudevents/sdk-go/pkg/event"
+	"github.com/cloudevents/sdk-go/v2/pkg/binding"
+	"github.com/cloudevents/sdk-go/v2/pkg/binding/spec"
+	"github.com/cloudevents/sdk-go/v2/pkg/event"
 )
 
 // Converts the event context version to the specified one.

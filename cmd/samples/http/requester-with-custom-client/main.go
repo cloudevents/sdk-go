@@ -12,7 +12,7 @@ import (
 	"os"
 	"time"
 
-	cloudevents "github.com/cloudevents/sdk-go"
+	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/google/uuid"
 	"github.com/kelseyhightower/envconfig"
 )
@@ -46,7 +46,7 @@ type Example struct {
 }
 
 func _main(args []string, env envConfig) int {
-	source, err := url.Parse("https://github.com/cloudevents/sdk-go/cmd/samples/sender")
+	source, err := url.Parse("https://github.com/cloudevents/sdk-go/v2/cmd/samples/sender")
 	if err != nil {
 		log.Printf("failed to parse source url, %v", err)
 		return 1

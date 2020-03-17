@@ -4,7 +4,7 @@ import (
 	"context"
 	"io"
 
-	"github.com/cloudevents/sdk-go/pkg/binding/spec"
+	"github.com/cloudevents/sdk-go/v2/pkg/binding/spec"
 )
 
 // BinaryWriter is used to visit a binary Message and generate a new representation.

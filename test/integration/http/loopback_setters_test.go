@@ -2,11 +2,11 @@ package http
 
 import (
 	"fmt"
-	"github.com/cloudevents/sdk-go/pkg/client"
+	"github.com/cloudevents/sdk-go/v2/pkg/client"
 	"testing"
 	"time"
 
-	cloudevents "github.com/cloudevents/sdk-go"
+	cloudevents "github.com/cloudevents/sdk-go/v2"
 )
 
 func TestClientLoopback_setters_binary_json(t *testing.T) {

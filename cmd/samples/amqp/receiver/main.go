@@ -8,9 +8,9 @@ import (
 	"os"
 	"strings"
 
-	ce "github.com/cloudevents/sdk-go"
-	"github.com/cloudevents/sdk-go/pkg/client"
-	ceamqp "github.com/cloudevents/sdk-go/pkg/protocol/amqp"
+	ce "github.com/cloudevents/sdk-go/v2"
+	"github.com/cloudevents/sdk-go/v2/pkg/client"
+	ceamqp "github.com/cloudevents/sdk-go/v2/pkg/protocol/amqp"
 	amqp "pack.ag/amqp"
 )
 

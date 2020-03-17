@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"context"
 
-	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/binding/format"
+	"github.com/cloudevents/sdk-go/v2/pkg/binding"
+	"github.com/cloudevents/sdk-go/v2/pkg/binding/format"
 	"github.com/nats-io/nats.go"
 )
 

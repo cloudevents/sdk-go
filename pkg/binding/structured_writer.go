@@ -4,7 +4,7 @@ import (
 	"context"
 	"io"
 
-	"github.com/cloudevents/sdk-go/pkg/binding/format"
+	"github.com/cloudevents/sdk-go/v2/pkg/binding/format"
 )
 
 // StructuredWriter is used to visit a structured Message and generate a new representation.

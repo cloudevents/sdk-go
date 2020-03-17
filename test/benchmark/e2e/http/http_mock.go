@@ -8,11 +8,11 @@ import (
 	"net/http/httptest"
 	"net/url"
 
-	bindings "github.com/cloudevents/sdk-go/pkg/protocol"
-	http "github.com/cloudevents/sdk-go/pkg/protocol/http"
+	bindings "github.com/cloudevents/sdk-go/v2/pkg/protocol"
+	http "github.com/cloudevents/sdk-go/v2/pkg/protocol/http"
 
-	cloudevents "github.com/cloudevents/sdk-go"
-	cehttp "github.com/cloudevents/sdk-go/pkg/protocol/http"
+	cloudevents "github.com/cloudevents/sdk-go/v2"
+	cehttp "github.com/cloudevents/sdk-go/v2/pkg/protocol/http"
 )
 
 type RoundTripFunc func(req *nethttp.Request) *nethttp.Response

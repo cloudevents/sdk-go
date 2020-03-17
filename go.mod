@@ -1,4 +1,4 @@
-module github.com/cloudevents/sdk-go
+module github.com/cloudevents/sdk-go/v2
 
 require (
 	contrib.go.opencensus.io/exporter/prometheus v0.1.0

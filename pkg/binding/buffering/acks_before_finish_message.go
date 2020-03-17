@@ -3,7 +3,7 @@ package buffering
 import (
 	"sync/atomic"
 
-	"github.com/cloudevents/sdk-go/pkg/binding"
+	"github.com/cloudevents/sdk-go/v2/pkg/binding"
 )
 
 type acksMessage struct {

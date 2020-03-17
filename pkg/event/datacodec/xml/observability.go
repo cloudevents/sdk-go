@@ -1,7 +1,7 @@
 package xml
 
 import (
-	"github.com/cloudevents/sdk-go/pkg/observability"
+	"github.com/cloudevents/sdk-go/v2/pkg/observability"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 )

@@ -5,9 +5,9 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/cloudevents/sdk-go/pkg/event"
+	"github.com/cloudevents/sdk-go/v2/pkg/event"
 
-	"github.com/cloudevents/sdk-go/pkg/types"
+	"github.com/cloudevents/sdk-go/v2/pkg/types"
 	"github.com/lightstep/tracecontext.go/traceparent"
 	"github.com/lightstep/tracecontext.go/tracestate"
 	"go.opencensus.io/trace"

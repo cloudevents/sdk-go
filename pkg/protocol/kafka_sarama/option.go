@@ -3,7 +3,7 @@ package kafka_sarama
 import (
 	"context"
 
-	"github.com/cloudevents/sdk-go/pkg/binding"
+	"github.com/cloudevents/sdk-go/v2/pkg/binding"
 )
 
 // kafka_sarama.Sender options

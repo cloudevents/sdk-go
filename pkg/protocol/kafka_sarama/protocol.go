@@ -7,9 +7,9 @@ import (
 
 	"github.com/Shopify/sarama"
 
-	"github.com/cloudevents/sdk-go/pkg/binding"
-	cecontext "github.com/cloudevents/sdk-go/pkg/context"
-	"github.com/cloudevents/sdk-go/pkg/protocol"
+	"github.com/cloudevents/sdk-go/v2/pkg/binding"
+	cecontext "github.com/cloudevents/sdk-go/v2/pkg/context"
+	"github.com/cloudevents/sdk-go/v2/pkg/protocol"
 )
 
 const (

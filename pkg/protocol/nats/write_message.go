@@ -7,8 +7,8 @@ import (
 
 	"github.com/nats-io/nats.go"
 
-	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/binding/format"
+	"github.com/cloudevents/sdk-go/v2/pkg/binding"
+	"github.com/cloudevents/sdk-go/v2/pkg/binding/format"
 )
 
 // Fill the provided natsMessage with the bindings.Message m.

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	cloudevents "github.com/cloudevents/sdk-go"
+	cloudevents "github.com/cloudevents/sdk-go/v2"
 )
 
 func main() {
