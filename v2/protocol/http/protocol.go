@@ -116,6 +116,7 @@ func (p *Protocol) Request(ctx context.Context, m binding.Message) (binding.Mess
 func (p *Protocol) makeRequest(ctx context.Context) *http.Request {
 	// TODO: support custom headers from context?
 	req := &http.Request{
+		Method: http.MethodPost,
 		Header: make(http.Header),
 		// TODO: HeaderFrom(ctx),
 	}
