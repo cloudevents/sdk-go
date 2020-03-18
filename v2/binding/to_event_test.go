@@ -18,7 +18,7 @@ type toEventTestCase struct {
 	want    event.Event
 }
 
-func TestToEvent(t *testing.T) {
+func TestToEvent_success(t *testing.T) {
 	tests := []toEventTestCase{}
 
 	for _, v := range test.Events() {
@@ -67,7 +67,33 @@ func TestToEvent(t *testing.T) {
 			}
 			got, err := binding.ToEvent(context.Background(), inputMessage)
 			require.NoError(t, err)
+			require.NotNil(t, got)
 			test.AssertEventEquals(t, test.ExToStr(t, tt.want), test.ExToStr(t, *got))
 		})
 	}
+}
+
+func TestToEvent_success_wrapped_event_message(t *testing.T) {
+	inputEvent := test.FullEvent()
+
+	cloned := inputEvent.Clone()
+	inputMessage := binding.WithFinish(binding.ToMessage(&cloned), func(err error) {})
+
+	got, err := binding.ToEvent(context.Background(), inputMessage)
+	require.NoError(t, err)
+	require.NotNil(t, got)
+	test.AssertEventEquals(t, *got, inputEvent)
+
+}
+
+func TestToEvent_unknown(t *testing.T) {
+	got, err := binding.ToEvent(context.Background(), test.UnknownMessage)
+	require.Nil(t, got)
+	require.Equal(t, binding.ErrUnknownEncoding, err)
+}
+
+func TestToEvent_wrapped_unknown(t *testing.T) {
+	got, err := binding.ToEvent(context.Background(), binding.WithFinish(test.UnknownMessage, func(err error) {}))
+	require.Nil(t, got)
+	require.Equal(t, binding.ErrUnknownEncoding, err)
 }

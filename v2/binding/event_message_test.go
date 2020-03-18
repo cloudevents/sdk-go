@@ -42,3 +42,33 @@ func TestStructuredModeCustomFormat(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, &format, enc.Format)
 }
+
+func TestEventMessage_ReadStructured(t *testing.T) {
+	test.EachEvent(t, test.Events(), func(t *testing.T, inputEvent event.Event) {
+		eventMessage := binding.ToMessage(&inputEvent)
+		outMessage := test.MockStructuredMessage{}
+
+		require.NoError(t, eventMessage.ReadStructured(context.TODO(), &outMessage))
+
+		outputEvent, err := binding.ToEvent(context.TODO(), &outMessage)
+		require.NoError(t, err)
+		require.NotNil(t, outputEvent)
+
+		test.AssertEventEquals(t, test.ExToStr(t, inputEvent), test.ExToStr(t, *outputEvent))
+	})
+}
+
+func TestEventMessage_ReadBinary(t *testing.T) {
+	test.EachEvent(t, test.Events(), func(t *testing.T, inputEvent event.Event) {
+		eventMessage := binding.ToMessage(&inputEvent)
+		outMessage := test.MockBinaryMessage{}
+
+		require.NoError(t, eventMessage.ReadBinary(context.TODO(), &outMessage))
+
+		outputEvent, err := binding.ToEvent(context.TODO(), &outMessage)
+		require.NoError(t, err)
+		require.NotNil(t, outputEvent)
+
+		test.AssertEventEquals(t, inputEvent, *outputEvent)
+	})
+}
