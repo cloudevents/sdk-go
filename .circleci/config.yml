@@ -35,16 +35,16 @@ jobs:
 
       - restore_cache:
           keys:
-            - gomod-cache-{{ checksum "go.sum" }}
+            - gomod-cache-{{ checksum "v2/go.sum" }}
       - run:
           name: "Check modules via go tidy"
-          command: go mod tidy && git diff --exit-code go.{mod,sum}
+          command: pushd v2; go mod tidy && git diff --exit-code go.{mod,sum}; popd
       - run:
           name: "Enforce Go Formatted Code"
-          command: "! GO111MODULE=off go fmt ./... 2>&1 | read" # Avoid any dependency resolution
+          command: "! GO111MODULE=off go fmt ./v2/... 2>&1 | read" # Avoid any dependency resolution
       - run:
           name: "Run go vet"
-          command: go vet ./...
+          command: pushd v2; go vet ./...; popd
       - run:
           name: Run unit tests
           command: |
@@ -55,7 +55,7 @@ jobs:
             TEST_AMQP_URL=amqp://localhost/test ./hack/integration-test.sh | tee ${TEST_RESULTS}/go-integration-test.out
 
       - save_cache:
-          key: gomod-cache-{{ checksum "go.sum" }}
+          key: gomod-cache-{{ checksum "v2/go.sum" }}
           paths:
             - "/go/pkg/mod"
 
