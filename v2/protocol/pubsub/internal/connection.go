@@ -204,7 +204,7 @@ func (c *Connection) Receive(ctx context.Context, fn func(context.Context, *pubs
 	}
 	// Ok, ready to start pulling.
 	return sub.Receive(ctx, func(ctx context.Context, m *pubsub.Message) {
-		ctx = pscontext.WithTransportContext(ctx, pscontext.NewTransportContext(c.ProjectID, c.TopicID, c.SubscriptionID, "pull", m))
+		ctx = pscontext.WithProtocolContext(ctx, pscontext.NewProtocolContext(c.ProjectID, c.TopicID, c.SubscriptionID, "pull", m))
 		fn(ctx, m)
 	})
 }

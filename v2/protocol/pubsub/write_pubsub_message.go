@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 
+	"cloud.google.com/go/pubsub"
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/binding/format"
 	"github.com/cloudevents/sdk-go/v2/binding/spec"
@@ -13,7 +14,7 @@ import (
 
 // Fill the provided pubsubMessage with the message m.
 // Using context you can tweak the encoding processing (more details on binding.Write documentation).
-func WritePubSubMessage(ctx context.Context, m binding.Message, pubsubMessage *PubSubMessage, transformers ...binding.TransformerFactory) error {
+func WritePubSubMessage(ctx context.Context, m binding.Message, pubsubMessage *pubsub.Message, transformers ...binding.TransformerFactory) error {
 	structuredWriter := (*pubsubMessagePublisher)(pubsubMessage)
 	binaryWriter := (*pubsubMessagePublisher)(pubsubMessage)
 
@@ -27,7 +28,7 @@ func WritePubSubMessage(ctx context.Context, m binding.Message, pubsubMessage *P
 	return err
 }
 
-type pubsubMessagePublisher PubSubMessage
+type pubsubMessagePublisher pubsub.Message
 
 func (b *pubsubMessagePublisher) SetStructuredEvent(ctx context.Context, f format.Format, event io.Reader) error {
 	val, err := ioutil.ReadAll(event)
@@ -63,9 +64,9 @@ func (b *pubsubMessagePublisher) SetAttribute(attribute spec.Attribute, value in
 	}
 
 	if attribute.Kind() == spec.DataContentType {
-		b.attributes[contentType] = s
+		b.Attributes[contentType] = s
 	} else {
-		b.attributes[prefix+attribute.Name()] = s
+		b.Attributes[prefix+attribute.Name()] = s
 	}
 	return nil
 }
@@ -76,7 +77,7 @@ func (b *pubsubMessagePublisher) SetExtension(name string, value interface{}) er
 	if err != nil {
 		return err
 	}
-	b.attributes[prefix+name] = s
+	b.Attributes[prefix+name] = s
 	return nil
 }
 

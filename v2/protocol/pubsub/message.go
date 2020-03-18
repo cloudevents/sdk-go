@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"strings"
 
+	"cloud.google.com/go/pubsub"
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/binding/format"
 	"github.com/cloudevents/sdk-go/v2/binding/spec"
@@ -18,19 +19,10 @@ const (
 
 var specs = spec.WithPrefix(prefix)
 
-type PubSubMessage struct {
-	// Data is the actual data in the message.
-	Data []byte
-
-	// Attributes represents the key-value pairs the current message
-	// is labelled with.
-	attributes map[string]string
-}
-
 // Message represents a Pub/Sub message.
 // This message *can* be read several times safely
 type Message struct {
-	Msg PubSubMessage
+	Msg pubsub.Message
 
 	format   format.Format
 	version  spec.Version
@@ -71,7 +63,7 @@ func NewMessage(data []byte, attributes map[string]string) *Message {
 		version = specs.Version(ver)
 	}
 	return &Message{
-		Msg:      PubSubMessage{Data: data, attributes: attributes},
+		Msg:      pubsub.Message{Data: data, Attributes: attributes},
 		encoding: encoding,
 		format:   f,
 		version:  version,
@@ -102,7 +94,7 @@ func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) 
 		return err
 	}
 
-	for k, v := range m.Msg.attributes {
+	for k, v := range m.Msg.Attributes {
 		if strings.HasPrefix(k, prefix) {
 			attr := m.version.Attribute(k)
 			if attr != nil {

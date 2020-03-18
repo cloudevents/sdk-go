@@ -1,6 +1,7 @@
 module github.com/cloudevents/sdk-go/v2
 
 require (
+	cloud.google.com/go v0.40.0
 	contrib.go.opencensus.io/exporter/prometheus v0.1.0
 	github.com/Shopify/sarama v1.19.0
 	github.com/cloudevents/sdk-go v1.1.2

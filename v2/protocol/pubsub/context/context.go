@@ -8,8 +8,8 @@ import (
 	"cloud.google.com/go/pubsub"
 )
 
-// TransportContext allows a Receiver to understand the context of a request.
-type TransportContext struct {
+// ProtocolContext allows a Receiver to understand the context of a request.
+type ProtocolContext struct {
 	ID           string
 	PublishTime  time.Time
 	Project      string
@@ -18,11 +18,11 @@ type TransportContext struct {
 	Method       string // push or pull
 }
 
-// NewTransportContext creates a new TransportContext from a pubsub.Message.
-func NewTransportContext(project, topic, subscription, method string, msg *pubsub.Message) TransportContext {
-	var tx *TransportContext
+// NewProtocolContext creates a new ProtocolContext from a pubsub.Message.
+func NewProtocolContext(project, topic, subscription, method string, msg *pubsub.Message) ProtocolContext {
+	var tx *ProtocolContext
 	if msg != nil {
-		tx = &TransportContext{
+		tx = &ProtocolContext{
 			ID:           msg.ID,
 			PublishTime:  msg.PublishTime,
 			Project:      project,
@@ -31,13 +31,13 @@ func NewTransportContext(project, topic, subscription, method string, msg *pubsu
 			Method:       method,
 		}
 	} else {
-		tx = &TransportContext{}
+		tx = &ProtocolContext{}
 	}
 	return *tx
 }
 
 // String generates a pretty-printed version of the resource as a string.
-func (tx TransportContext) String() string {
+func (tx ProtocolContext) String() string {
 	b := strings.Builder{}
 
 	b.WriteString("Transport Context,\n")
@@ -68,27 +68,27 @@ func (tx TransportContext) String() string {
 	return b.String()
 }
 
-// Opaque key type used to store TransportContext
-type transportContextKeyType struct{}
+// Opaque key type used to store ProtocolContext
+type protocolContextKeyType struct{}
 
-var transportContextKey = transportContextKeyType{}
+var protocolContextKey = protocolContextKeyType{}
 
-// WithTransportContext return a context with the given TransportContext into the provided context object.
-func WithTransportContext(ctx context.Context, tcxt TransportContext) context.Context {
-	return context.WithValue(ctx, transportContextKey, tcxt)
+// WithProtocolContext return a context with the given ProtocolContext into the provided context object.
+func WithProtocolContext(ctx context.Context, tcxt ProtocolContext) context.Context {
+	return context.WithValue(ctx, protocolContextKey, tcxt)
 }
 
-// TransportContextFrom pulls a TransportContext out of a context. Always
+// ProtocolContextFrom pulls a ProtocolContext out of a context. Always
 // returns a non-nil object.
-func TransportContextFrom(ctx context.Context) TransportContext {
-	tctx := ctx.Value(transportContextKey)
+func ProtocolContextFrom(ctx context.Context) ProtocolContext {
+	tctx := ctx.Value(protocolContextKey)
 	if tctx != nil {
-		if tx, ok := tctx.(TransportContext); ok {
+		if tx, ok := tctx.(ProtocolContext); ok {
 			return tx
 		}
-		if tx, ok := tctx.(*TransportContext); ok {
+		if tx, ok := tctx.(*ProtocolContext); ok {
 			return *tx
 		}
 	}
-	return TransportContext{}
+	return ProtocolContext{}
 }
