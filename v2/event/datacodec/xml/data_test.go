@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/xml"
 	"fmt"
-	"strings"
 	"testing"
 	"time"
 
@@ -45,7 +44,7 @@ func TestCodecDecode(t *testing.T) {
 		"empty": {},
 		"not bytes": {
 			in:      &BadDataExample{},
-			wantErr: "[xml] failed to marshal in",
+			wantErr: "[xml] failed to marshal in: unit test",
 		},
 		"structured type encoding, escaped": {
 			in:   []byte(`"<Example><Sequence>7</Sequence><Message>Hello, Structured Encoding v0.2!</Message></Example>"`),
@@ -53,7 +52,7 @@ func TestCodecDecode(t *testing.T) {
 		},
 		"structured type encoding, escaped error": {
 			in:      []byte(`"<Example><Sequence>7</Sequence></Message>Hello, Structured Encoding v0.2!</Message></Example>"`),
-			wantErr: "[xml] found bytes, but failed to unmarshal",
+			wantErr: "[xml] found bytes, but failed to unmarshal: non-pointer passed to Unmarshal <Example><Sequence>7</Sequence></Message>Hello, Structured Encoding v0.2!</Message></Example>",
 		},
 		"structured type encoding, base64": {
 			in:   []byte(`"PEV4YW1wbGU+PFNlcXVlbmNlPjc8L1NlcXVlbmNlPjxNZXNzYWdlPkhlbGxvLCBTdHJ1Y3R1cmVkIEVuY29kaW5nIHYwLjIhPC9NZXNzYWdlPjwvRXhhbXBsZT4="`),
@@ -61,11 +60,11 @@ func TestCodecDecode(t *testing.T) {
 		},
 		"structured type encoding, bad quote base64": {
 			in:      []byte(`"PEV4YW1wbGU+PFNlcXVlbmNlPjc8L1NlcXVlbmNlPjxNZXNzYWdlPkhlbGxvLCBTdHJ1Y3R1cmVkIEVuY29kaW5nIHYwLjIhPC9NZXNzYWdlPjwvRXhhbXBsZT4=`),
-			wantErr: "[xml] failed to unquote quoted data",
+			wantErr: "[xml] failed to unquote quoted data: invalid syntax",
 		},
 		"structured type encoding, bad base64": {
 			in:      []byte(`"?EV4YW1wbGU+PFNlcXVlbmNlPjc8L1NlcXVlbmNlPjxNZXNzYWdlPkhlbGxvLCBTdHJ1Y3R1cmVkIEVuY29kaW5nIHYwLjIhPC9NZXNzYWdlPjwvRXhhbXBsZT4="`),
-			wantErr: "[xml] failed to decode base64 encoded string",
+			wantErr: "[xml] failed to decode base64 encoded string: illegal base64 data at input byte 0",
 		},
 		"complex filled": {
 			in: func() []byte {
@@ -101,21 +100,76 @@ func TestCodecDecode(t *testing.T) {
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
-
 			got, _ := types.Allocate(tc.want)
+			gotObs, _ := types.Allocate(tc.want)
 
 			err := cex.Decode(context.TODO(), tc.in, got)
+			errObs := cex.DecodeObserved(context.TODO(), tc.in, gotObs)
 
-			if tc.wantErr != "" {
-				if err != nil {
-					gotErr := err.Error()
-					if !strings.Contains(gotErr, tc.wantErr) {
-						t.Errorf("unexpected error, expected to contain %q, got: %q", tc.wantErr, gotErr)
-					}
-				} else {
-					t.Errorf("expected error to contain %q, got: nil", tc.wantErr)
+			if diff := cmpErrors(tc.wantErr, errObs); diff != "" {
+				t.Errorf("obs unexpected error (-want, +got) = %v", diff)
+			}
+
+			if diff := cmpErrors(tc.wantErr, err); diff != "" {
+				t.Errorf("unexpected error (-want, +got) = %v", diff)
+			}
+
+			if diff := cmp.Diff(gotObs, got); diff != "" {
+				t.Errorf("obs unexpected obj diff between observed and direct (-want, +got) = %v", diff)
+			}
+
+			if tc.wantErr == "" && tc.want != nil {
+				if diff := cmp.Diff(tc.want, got); diff != "" {
+					t.Errorf("unexpected data (-want, +got) = %v", diff)
 				}
-				return
+			}
+		})
+	}
+}
+
+func TestCodecEncode(t *testing.T) {
+	testCases := map[string]struct {
+		in      interface{}
+		want    interface{}
+		wantErr string
+	}{
+		"empty": {},
+		"not bytes": {
+			in:      &BadDataExample{},
+			wantErr: "unit test",
+		},
+		"bytes": {
+			in:   []byte(`"<pre>Value</pre>"`),
+			want: []byte(`"<pre>Value</pre>"`),
+		},
+		"structured type encoding, escaped": {
+			in:   &Example{Sequence: 7, Message: "Hello, Structured Encoding v0.2!"},
+			want: []byte(`<Example><Sequence>7</Sequence><Message>Hello, Structured Encoding v0.2!</Message></Example>`),
+		},
+		"complex filled": {
+			in: &DataExample{
+				AnInt:   42,
+				AString: "Hello, World!",
+				AnArray: []string{"Anne", "Bob", "Chad"},
+			},
+			want: []byte("<DataExample><a>42</a><b>Hello, World!</b><c>Anne</c><c>Bob</c><c>Chad</c></DataExample>"),
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+			got, err := cex.Encode(context.TODO(), tc.in)
+
+			gotObs, errObs := cex.EncodeObserved(context.TODO(), tc.in)
+
+			if diff := cmpErrors(tc.wantErr, errObs); diff != "" {
+				t.Errorf("obs unexpected error (-want, +got) = %v", diff)
+			}
+			if diff := cmp.Diff(gotObs, got); diff != "" {
+				t.Errorf("obs unexpected obj diff between observed and direct (-want, +got) = %v", diff)
+			}
+
+			if diff := cmpErrors(tc.wantErr, err); diff != "" {
+				t.Errorf("unexpected error (-want, +got) = %v", diff)
 			}
 
 			if tc.want != nil {
@@ -125,4 +179,15 @@ func TestCodecDecode(t *testing.T) {
 			}
 		})
 	}
+}
+
+func cmpErrors(want string, err error) string {
+	if want != "" || err != nil {
+		var gotErr string
+		if err != nil {
+			gotErr = err.Error()
+		}
+		return cmp.Diff(want, gotErr)
+	}
+	return ""
 }

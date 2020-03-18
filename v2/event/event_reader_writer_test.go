@@ -105,6 +105,18 @@ func TestEventRW_Type(t *testing.T) {
 
 func TestEventRW_ID(t *testing.T) {
 	testCases := map[string]ReadWriteTest{
+		"v03 blank": {
+			event:   event.New("0.3"),
+			set:     "",
+			want:    "",
+			wantErr: "id is required to be a non-empty string",
+		},
+		"v1 blank": {
+			event:   event.New("1.0"),
+			set:     "",
+			want:    "",
+			wantErr: "id is required to be a non-empty string",
+		},
 		"v03": {
 			event: event.New("0.3"),
 			set:   "id.0.3",
