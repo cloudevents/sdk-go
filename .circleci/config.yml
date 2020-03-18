@@ -9,6 +9,7 @@ jobs:
       - image: lensesio/fast-data-dev
         environment:
           - ADV_HOST=localhost
+      - image: nats-streaming:0.17.0
       - image: scholzj/qpid-dispatch
         environment:
           QDROUTERD_CONFIG_OPTIONS: |
