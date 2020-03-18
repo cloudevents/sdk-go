@@ -69,7 +69,7 @@ func (t valueTester) convert(v interface{}) (interface{}, error) {
 	return result[0].Interface(), err
 }
 
-// Verify round trip: convertible -> wrapped -> string -> wrapped
+// Verify round trip: convertible -> wrapped -> string -> wrapped -> clone
 func (t *valueTester) ok(in, want interface{}, wantStr string) {
 	t.Helper()
 	got, err := types.Validate(in)
@@ -85,6 +85,9 @@ func (t *valueTester) ok(in, want interface{}, wantStr string) {
 	x2, err := types.Validate(x)
 	assert.NoError(t, err)
 	assert.Equal(t, want, x2)
+
+	cloned := types.Clone(want)
+	assert.Equal(t, want, cloned)
 }
 
 // Verify round trip with exception: convertible -> wrapped -> string -> different wrapped
@@ -170,6 +173,7 @@ func TestInteger(t *testing.T) {
 	// Float32 doesn't keep all the bits of an int32 so we need to exaggerate fof range error.
 	x.err(float64(2*math.MinInt32), "cannot convert -4.294967296e+09 to int32: out of range")
 	x.err(float64(-2*math.MaxInt32), "cannot convert -4.294967294e+09 to int32: out of range")
+	x.err("12147483647", "cannot convert \"12147483647\" to int32: out of range")
 
 	x.err("X", "strconv.ParseFloat: parsing \"X\": invalid syntax")
 	x.err(true, "cannot convert true to int32")
@@ -182,6 +186,8 @@ func TestString(t *testing.T) {
 	s := new(string)
 	*s = "foo" // non-nil pointers allowed
 	x.ok(s, "foo", "foo")
+
+	x.err(map[string]string{"totes": "error"}, "invalid CloudEvents value: map[string]string{\"totes\":\"error\"}")
 }
 
 func TestBinary(t *testing.T) {
@@ -201,10 +207,13 @@ func TestURL(t *testing.T) {
 	x := valueTester{t, types.ToURL}
 	x.ok(testURL, types.URI{*testURL}, testURLstr)
 	x.ok(*testURL, types.URI{*testURL}, testURLstr)
-	x.okWithDifferentFromString(types.URIRef{URL: *testURL}, types.URIRef{*testURL}, testURLstr, types.URI{*testURL})
-	x.okWithDifferentFromString(&types.URIRef{URL: *testURL}, types.URIRef{*testURL}, testURLstr, types.URI{*testURL})
-	x.ok(types.URI{URL: *testURL}, types.URI{*testURL}, testURLstr)
-	x.ok(&types.URI{URL: *testURL}, types.URI{*testURL}, testURLstr)
+	x.okWithDifferentFromString(types.URIRef{URL: *testURL}, types.URIRef{URL: *testURL}, testURLstr, types.URI{*testURL})
+	x.okWithDifferentFromString(&types.URIRef{URL: *testURL}, types.URIRef{URL: *testURL}, testURLstr, types.URI{*testURL})
+	x.ok(types.URI{URL: *testURL}, types.URI{URL: *testURL}, testURLstr)
+	x.ok(&types.URI{URL: *testURL}, types.URI{URL: *testURL}, testURLstr)
+	// TODO: these tests do not work with valueTester because it calls validate internally.
+	//x.ok(types.URIRef{URL: *testURL}, types.URIRef{URL: *testURL}, testURLstr)
+	//x.ok(&types.URIRef{URL: *testURL}, types.URIRef{URL: *testURL}, testURLstr)
 
 	x.str("http://hello/world", &url.URL{Scheme: "http", Host: "hello", Path: "/world"})
 	x.str("/world", &url.URL{Path: "/world"})
@@ -213,15 +222,16 @@ func TestURL(t *testing.T) {
 	x.err("%bad %url", "parse %bad %url: invalid URL escape \"%ur\"")
 	x.err(nil, "invalid CloudEvents value: <nil>")
 	x.err((*url.URL)(nil), "invalid CloudEvents value: (*url.URL)(nil)")
-	x.err((*types.URIRef)(nil), "invalid CloudEvents value: (*types.URIRef)(nil)")
+	x.err((*types.URI)(nil), "cannot convert <nil> to *url.URL")
+	x.err((*types.URIRef)(nil), "cannot convert <nil> to *url.URL")
 }
 
 func TestTime(t *testing.T) {
 	x := valueTester{t, types.ToTime}
-	x.ok(someTime, types.Timestamp{someTime}, timeStr)
-	x.ok(&someTime, types.Timestamp{someTime}, timeStr)
-	x.ok(types.Timestamp{someTime}, types.Timestamp{someTime}, timeStr)
-	x.ok(&types.Timestamp{someTime}, types.Timestamp{someTime}, timeStr)
+	x.ok(someTime, types.Timestamp{Time: someTime}, timeStr)
+	x.ok(&someTime, types.Timestamp{Time: someTime}, timeStr)
+	x.ok(types.Timestamp{someTime}, types.Timestamp{Time: someTime}, timeStr)
+	x.ok(&types.Timestamp{someTime}, types.Timestamp{Time: someTime}, timeStr)
 
 	x.str(timeStr, someTime)
 
@@ -240,6 +250,12 @@ func TestIncompatible(t *testing.T) {
 	x.err(map[string]interface{}{}, "invalid CloudEvents value: map[string]interface {}{}")
 	x.err(struct{ i int }{i: 9}, "invalid CloudEvents value: struct { i int }{i:9}")
 	x.err((*int32)(nil), "invalid CloudEvents value: (*int32)(nil)")
+}
+
+func TestFormat(t *testing.T) {
+	got, err := types.Format(nil)
+	require.Equal(t, "", got)
+	assert.EqualError(t, err, "invalid CloudEvents value: <nil>")
 }
 
 func TestCloneTimestamp(t *testing.T) {
