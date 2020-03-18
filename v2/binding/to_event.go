@@ -22,15 +22,14 @@ var ErrCannotConvertToEvent = errors.New("cannot convert message to event")
 func ToEvent(ctx context.Context, message MessageReader, transformers ...TransformerFactory) (*event.Event, error) {
 	messageEncoding := message.ReadEncoding()
 	if messageEncoding == EncodingEvent {
-		for m := message; m != nil; {
+		m := message
+		for m != nil {
 			if em, ok := m.(*EventMessage); ok {
 				e := (*event.Event)(em)
-				if transformers != nil {
-					var tf TransformerFactories
-					tf = transformers
-					if err := tf.EventTransformer()(e); err != nil {
-						return nil, err
-					}
+				var tf TransformerFactories
+				tf = transformers
+				if err := tf.EventTransformer()(e); err != nil {
+					return nil, err
 				}
 				return e, nil
 			}
@@ -54,12 +53,10 @@ func ToEvent(ctx context.Context, message MessageReader, transformers ...Transfo
 	); err != nil {
 		return nil, err
 	}
-	if transformers != nil {
-		var tf TransformerFactories
-		tf = transformers
-		if err := tf.EventTransformer()(&e); err != nil {
-			return nil, err
-		}
+	var tf TransformerFactories
+	tf = transformers
+	if err := tf.EventTransformer()(&e); err != nil {
+		return nil, err
 	}
 	return &e, nil
 }
