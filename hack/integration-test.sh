@@ -8,10 +8,13 @@ set -o pipefail
 pushd ./v2
 
 # Run integration tests not in parallel
-touch ./coverage.tmp
-echo 'mode: atomic' > ./coverage.txt
+# Prepare coverage file only if not exists
+if [ ! -f /tmp/foo.txt ]; then
+  touch ./coverage.tmp
+  echo 'mode: atomic' > ./coverage.txt
+fi
 COVERPKG=$(go list ./... | grep -v /vendor | tr "\n" ",")
-for gomodule in $(go list ./test/.... | grep -v /cmd | grep -v /vendor)
+for gomodule in $(go list ./test/... | grep -v /cmd | grep -v /vendor)
 do
   go test -v -parallel 1 -timeout 60s -covermode=atomic -coverprofile=coverage.tmp -coverpkg "$COVERPKG" "$gomodule" 2>&1 | sed 's/ of statements in.*//; /warning: no packages being tested depend on matches for pattern /d'
   tail -n +2 coverage.tmp >> ./coverage.txt
