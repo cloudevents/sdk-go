@@ -32,7 +32,7 @@ func BenchmarkToEventAndUpdateExtensions(b *testing.B) {
 	initialEvent.SetExtension("aaa", "bbb")
 	for i := 0; i < b.N; i++ {
 		M = test.MustCreateMockBinaryMessage(initialEvent)
-		E, _ = binding.ToEvent(ctx, M, nil)
+		E, _ = binding.ToEvent(ctx, M)
 		if v, ok := E.Extensions()["aaa"]; ok {
 			vStr, err := types.Format(v)
 			if err != nil {

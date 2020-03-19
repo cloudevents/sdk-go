@@ -49,7 +49,6 @@ func ToEvent(ctx context.Context, message MessageReader, transformers ...Transfo
 		message,
 		encoder,
 		encoder,
-		[]TransformerFactory{},
 	); err != nil {
 		return nil, err
 	}

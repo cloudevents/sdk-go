@@ -19,58 +19,40 @@ type toEventTestCase struct {
 }
 
 func TestToEvent_success(t *testing.T) {
-	tests := []toEventTestCase{}
-
-	for _, v := range test.Events() {
-		tests = append(tests, []toEventTestCase{
+	test.EachEvent(t, test.Events(), func(t *testing.T, v event.Event) {
+		testCases := []toEventTestCase{
 			{
-				name:    "From mock structured with payload/" + test.NameOf(v),
+				name:    "From mock structured/" + test.NameOf(v),
 				message: test.MustCreateMockStructuredMessage(v),
 				want:    v,
 			},
 			{
-				name:    "From mock structured without payload/" + test.NameOf(v),
-				message: test.MustCreateMockStructuredMessage(v),
-				want:    v,
-			},
-			{
-				name:    "From mock binary with payload/" + test.NameOf(v),
+				name:    "From mock binary/" + test.NameOf(v),
 				message: test.MustCreateMockBinaryMessage(v),
 				want:    v,
 			},
 			{
-				name:    "From mock binary without payload/" + test.NameOf(v),
-				message: test.MustCreateMockBinaryMessage(v),
-				want:    v,
-			},
-			{
-				name:  "From event with payload/" + test.NameOf(v),
+				name:  "From event/" + test.NameOf(v),
 				event: v,
 				want:  v,
 			},
-			{
-				name:  "From event without payload/" + test.NameOf(v),
-				event: v,
-				want:  v,
-			},
-		}...)
-	}
-	for _, tt := range tests {
-		tt := tt // Don't use range variable in Run() scope
-		t.Run(tt.name, func(t *testing.T) {
-			var inputMessage binding.Message
-			if tt.message != nil {
-				inputMessage = tt.message
-			} else {
-				e := tt.event.Clone()
-				inputMessage = binding.ToMessage(&e)
-			}
-			got, err := binding.ToEvent(context.Background(), inputMessage)
-			require.NoError(t, err)
-			require.NotNil(t, got)
-			test.AssertEventEquals(t, test.ExToStr(t, tt.want), test.ExToStr(t, *got))
-		})
-	}
+		}
+		for _, tt := range testCases {
+			tt := tt // Don't use range variable in Run() scope
+			t.Run(tt.name, func(t *testing.T) {
+				var inputMessage binding.Message
+				if tt.message != nil {
+					inputMessage = tt.message
+				} else {
+					e := tt.event.Clone()
+					inputMessage = binding.ToMessage(&e)
+				}
+				got, err := binding.ToEvent(context.Background(), inputMessage)
+				require.NoError(t, err)
+				test.AssertEventEquals(t, test.ExToStr(t, tt.want), test.ExToStr(t, *got))
+			})
+		}
+	})
 }
 
 func TestToEvent_success_wrapped_event_message(t *testing.T) {
@@ -96,4 +78,74 @@ func TestToEvent_wrapped_unknown(t *testing.T) {
 	got, err := binding.ToEvent(context.Background(), binding.WithFinish(test.UnknownMessage, func(err error) {}))
 	require.Nil(t, got)
 	require.Equal(t, binding.ErrUnknownEncoding, err)
+}
+
+func TestToEvent_transformers_applied_once(t *testing.T) {
+	test.EachEvent(t, test.Events(), func(t *testing.T, v event.Event) {
+		testCases := []toEventTestCase{
+			{
+				name:    "From mock structured/" + test.NameOf(v),
+				message: test.MustCreateMockStructuredMessage(v),
+				want:    v,
+			},
+			{
+				name:    "From mock binary/" + test.NameOf(v),
+				message: test.MustCreateMockBinaryMessage(v),
+				want:    v,
+			},
+			{
+				name:  "From event/" + test.NameOf(v),
+				event: v,
+				want:  v,
+			},
+		}
+
+		for _, tt := range testCases {
+			t.Run("With structured Transformer "+tt.name, func(t *testing.T) {
+				testToEventWithTransformer(t, tt, test.NewMockTransformerFactory(false, false))
+			})
+			t.Run("With binary Transformer "+tt.name, func(t *testing.T) {
+				testToEventWithTransformer(t, tt, test.NewMockTransformerFactory(true, false))
+			})
+			t.Run("With event Transformer "+tt.name, func(t *testing.T) {
+				testToEventWithTransformer(t, tt, test.NewMockTransformerFactory(true, true))
+			})
+			t.Run("With mixed Transformers "+tt.name, func(t *testing.T) {
+				var inputMessage binding.Message
+				if tt.message != nil {
+					inputMessage = tt.message
+				} else {
+					e := tt.event.Clone()
+					inputMessage = binding.ToMessage(&e)
+				}
+
+				transformerBinary := test.NewMockTransformerFactory(true, false)
+				transformerEvent := test.NewMockTransformerFactory(true, true)
+
+				got, err := binding.ToEvent(context.Background(), inputMessage, transformerBinary, transformerEvent)
+				require.NoError(t, err)
+				test.AssertEventEquals(t, test.ExToStr(t, tt.want), test.ExToStr(t, *got))
+
+				test.AssertTransformerInvokedOneTime(t, transformerBinary)
+				require.Equal(t, 1, transformerBinary.InvokedEventTransformer)
+				test.AssertTransformerInvokedOneTime(t, transformerEvent)
+			})
+		}
+	})
+}
+
+func testToEventWithTransformer(t *testing.T, tt toEventTestCase, transformer *test.MockTransformerFactory) {
+	var inputMessage binding.Message
+	if tt.message != nil {
+		inputMessage = tt.message
+	} else {
+		e := tt.event.Clone()
+		inputMessage = binding.ToMessage(&e)
+	}
+
+	got, err := binding.ToEvent(context.Background(), inputMessage, transformer)
+	require.NoError(t, err)
+	test.AssertEventEquals(t, test.ExToStr(t, tt.want), test.ExToStr(t, *got))
+
+	test.AssertTransformerInvokedOneTime(t, transformer)
 }
