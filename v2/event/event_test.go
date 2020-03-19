@@ -296,7 +296,6 @@ Context Attributes,
   datacontentencoding: base64
 Extensions,
   anothertest: 1
-  eventtypeversion: v1alpha1
   test: extended
 Data,
   {
@@ -323,7 +322,6 @@ Context Attributes,
 Extensions,
   anothertest: 1
   datacontentencoding: base64
-  eventtypeversion: v1alpha1
   test: extended
 Data,
   {
@@ -526,7 +524,6 @@ func FullEventContextV03(now types.Timestamp) *event.EventContextV03 {
 	}
 	_ = eventContextV03.SetExtension("test", "extended")
 	_ = eventContextV03.SetExtension("anothertest", int32(1))
-	_ = eventContextV03.SetExtension(event.EventTypeVersionKey, "v1alpha1")
 	return eventContextV03.AsV03()
 }
 
@@ -548,7 +545,6 @@ func FullEventContextV1(now types.Timestamp) *event.EventContextV1 {
 	}
 	_ = eventContextV1.SetExtension("test", "extended")
 	_ = eventContextV1.SetExtension("anothertest", 1)
-	_ = eventContextV1.SetExtension(event.EventTypeVersionKey, "v1alpha1")
 	_ = eventContextV1.SetExtension(event.DataContentEncodingKey, event.Base64)
 	return eventContextV1.AsV1()
 }

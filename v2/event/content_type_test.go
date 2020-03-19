@@ -26,6 +26,15 @@ func TestStringOfApplicationXML(t *testing.T) {
 	}
 }
 
+func TestStringOfTextPlain(t *testing.T) {
+	want := strptr("text/plain")
+	got := event.StringOfTextPlain()
+
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("unexpected string (-want, +got) = %v", diff)
+	}
+}
+
 func TestStringOfApplicationCloudEventsJSON(t *testing.T) {
 	want := strptr("application/cloudevents+json")
 	got := event.StringOfApplicationCloudEventsJSON()

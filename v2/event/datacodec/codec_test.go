@@ -88,8 +88,16 @@ func TestCodecDecode(t *testing.T) {
 			}
 
 			got, _ := types.Allocate(tc.want)
-
 			err := datacodec.Decode(context.TODO(), tc.contentType, tc.in, got)
+
+			gotObs, _ := types.Allocate(tc.want)
+			errObs := datacodec.DecodeObserved(context.TODO(), tc.contentType, tc.in, gotObs)
+
+			if err != nil && errObs != nil {
+				if diff := cmp.Diff(err.Error(), errObs.Error()); diff != "" {
+					t.Errorf("unexpected error (-want, +got) = %v", diff)
+				}
+			}
 
 			if tc.wantErr != "" || err != nil {
 				if diff := cmp.Diff(tc.wantErr, err.Error()); diff != "" {
@@ -99,6 +107,9 @@ func TestCodecDecode(t *testing.T) {
 			}
 
 			if tc.want != nil {
+				if diff := cmp.Diff(got, gotObs); diff != "" {
+					t.Errorf("obs unexpected data (-want, +got) = %v", diff)
+				}
 				if diff := cmp.Diff(tc.want, got); diff != "" {
 					t.Errorf("unexpected data (-want, +got) = %v", diff)
 				}
@@ -180,6 +191,13 @@ func TestCodecEncode(t *testing.T) {
 			}
 
 			got, err := datacodec.Encode(context.TODO(), tc.contentType, tc.in)
+			gotObs, errObs := datacodec.EncodeObserved(context.TODO(), tc.contentType, tc.in)
+
+			if err != nil && errObs != nil {
+				if diff := cmp.Diff(err.Error(), errObs.Error()); diff != "" {
+					t.Errorf("unexpected error (-want, +got) = %v", diff)
+				}
+			}
 
 			if tc.wantErr != "" || err != nil {
 				if diff := cmp.Diff(tc.wantErr, err.Error()); diff != "" {
@@ -189,12 +207,19 @@ func TestCodecEncode(t *testing.T) {
 			}
 
 			if tc.want != nil {
+				if diff := cmp.Diff(got, gotObs); diff != "" {
+					t.Errorf("obs unexpected data (-want, +got) = %v", diff)
+				}
 				if diff := cmp.Diff(tc.want, got); diff != "" {
 					t.Errorf("unexpected data (-want, +got) = %v", diff)
 				}
 			}
 		})
 	}
+}
+
+func TestSetObservedCodecs(t *testing.T) {
+	datacodec.SetObservedCodecs()
 }
 
 //
