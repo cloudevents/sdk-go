@@ -1,7 +1,6 @@
 package binding_test
 
 import (
-	"context"
 	"net/url"
 	"testing"
 
@@ -31,7 +30,6 @@ func TestWithFinish(t *testing.T) {
 		assert.Fail(t, "done early")
 	default:
 	}
-	ch := make(chan binding.Message, 1)
-	assert.NoError(t, binding.ChanSender(ch).Send(context.Background(), m))
+	assert.NoError(t, m.Finish(nil))
 	assert.NoError(t, <-done)
 }

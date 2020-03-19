@@ -6,7 +6,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/event"
@@ -34,15 +34,14 @@ func TestWithAcksBeforeFinish(t *testing.T) {
 	for i := 0; i < 1000; i++ {
 		wg.Add(1)
 		go func(m binding.Message) {
-			ch := make(chan binding.Message, 1)
-			assert.NoError(t, binding.ChanSender(ch).Send(context.Background(), m))
-			<-ch
+			require.False(t, finishCalled)
+			require.NoError(t, messageToTest.Finish(nil))
 			wg.Done()
 		}(messageToTest)
 	}
 
 	wg.Wait()
-	assert.True(t, finishCalled)
+	require.True(t, finishCalled)
 }
 
 func TestCopyAndWithAcksBeforeFinish(t *testing.T) {
@@ -61,7 +60,7 @@ func TestCopyAndWithAcksBeforeFinish(t *testing.T) {
 	})
 
 	copiedMessage, err := BufferMessage(context.Background(), finishMessage)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	wg := sync.WaitGroup{}
 
@@ -69,13 +68,12 @@ func TestCopyAndWithAcksBeforeFinish(t *testing.T) {
 	for i := 0; i < 1000; i++ {
 		wg.Add(1)
 		go func(m binding.Message) {
-			ch := make(chan binding.Message, 1)
-			assert.NoError(t, binding.ChanSender(ch).Send(context.Background(), m))
-			<-ch
+			require.False(t, finishCalled)
+			require.NoError(t, messageToTest.Finish(nil))
 			wg.Done()
 		}(messageToTest)
 	}
 
 	wg.Wait()
-	assert.True(t, finishCalled)
+	require.True(t, finishCalled)
 }
