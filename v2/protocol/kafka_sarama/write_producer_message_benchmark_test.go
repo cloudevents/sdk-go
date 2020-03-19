@@ -34,13 +34,13 @@ func init() {
 func BenchmarkEncodeStructuredMessage(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		ProducerMessage = &sarama.ProducerMessage{}
-		Err = kafka_sarama.WriteProducerMessage(ctx, structuredMessage, ProducerMessage, nil)
+		Err = kafka_sarama.WriteProducerMessage(ctx, structuredMessage, ProducerMessage)
 	}
 }
 
 func BenchmarkEncodeBinaryMessage(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		ProducerMessage = &sarama.ProducerMessage{}
-		Err = kafka_sarama.WriteProducerMessage(ctx, binaryMessage, ProducerMessage, nil)
+		Err = kafka_sarama.WriteProducerMessage(ctx, binaryMessage, ProducerMessage)
 	}
 }
