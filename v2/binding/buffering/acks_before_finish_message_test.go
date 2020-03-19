@@ -60,7 +60,7 @@ func TestCopyAndWithAcksBeforeFinish(t *testing.T) {
 		finishCalled = true
 	})
 
-	copiedMessage, err := BufferMessage(context.Background(), finishMessage, nil)
+	copiedMessage, err := BufferMessage(context.Background(), finishMessage)
 	assert.NoError(t, err)
 
 	wg := sync.WaitGroup{}

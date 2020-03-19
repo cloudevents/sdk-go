@@ -59,7 +59,7 @@ func TestCopyMessage_success(t *testing.T) {
 				message := binding.WithFinish(inputMessage, func(err error) {
 					finished = true
 				})
-				cpy, err := CopyMessage(context.Background(), message, nil)
+				cpy, err := CopyMessage(context.Background(), message)
 				require.NoError(t, err)
 				// The copy can be read any number of times
 				for i := 0; i < 3; i++ {
@@ -76,7 +76,7 @@ func TestCopyMessage_success(t *testing.T) {
 				message := binding.WithFinish(inputMessage, func(err error) {
 					finished = true
 				})
-				cpy, err := BufferMessage(context.Background(), message, nil)
+				cpy, err := BufferMessage(context.Background(), message)
 				require.NoError(t, err)
 				// The copy can be read any number of times
 				for i := 0; i < 3; i++ {
@@ -93,7 +93,7 @@ func TestCopyMessage_success(t *testing.T) {
 }
 
 func TestCopyMessage_unknown(t *testing.T) {
-	cpy, err := BufferMessage(context.Background(), UnknownMessage, nil)
+	cpy, err := BufferMessage(context.Background(), UnknownMessage)
 	require.Nil(t, cpy)
 	require.Equal(t, binding.ErrUnknownEncoding, err)
 }
@@ -139,7 +139,7 @@ func TestCopyMessage_transformers_applied_once(t *testing.T) {
 				transformerBinary := NewMockTransformerFactory(true, false)
 				transformerEvent := NewMockTransformerFactory(true, true)
 
-				cpy, err := CopyMessage(context.Background(), inputMessage, binding.TransformerFactories{transformerBinary, transformerEvent})
+				cpy, err := CopyMessage(context.Background(), inputMessage, transformerBinary, transformerEvent)
 				require.NoError(t, err)
 				require.NotNil(t, cpy)
 				got, err := binding.ToEvent(context.Background(), cpy)
@@ -163,7 +163,7 @@ func testCopyMessageWithTransformer(t *testing.T, tt copyMessageTestCase, transf
 		inputMessage = binding.ToMessage(&e)
 	}
 
-	cpy, err := CopyMessage(context.Background(), inputMessage, binding.TransformerFactories{transformer})
+	cpy, err := CopyMessage(context.Background(), inputMessage, transformer)
 	require.NoError(t, err)
 	require.NotNil(t, cpy)
 	got, err := binding.ToEvent(context.Background(), cpy)
