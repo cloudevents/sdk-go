@@ -97,11 +97,6 @@ func (p *Protocol) OpenInbound(ctx context.Context) error {
 	return p.Consumer.OpenInbound(ctx)
 }
 
-// HasTracePropagation implements Protocol.HasTracePropagation
-func (p *Protocol) HasTracePropagation() bool {
-	return false
-}
-
 func (p *Protocol) Send(ctx context.Context, in binding.Message) error {
 	for _, f := range p.SenderContextDecorators {
 		ctx = f(ctx)

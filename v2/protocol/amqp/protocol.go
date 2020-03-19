@@ -95,11 +95,6 @@ func (t *Protocol) OpenInbound(ctx context.Context) error {
 	return nil
 }
 
-// HasTracePropagation implements Protocol.HasTracePropagation
-func (t *Protocol) HasTracePropagation() bool {
-	return false
-}
-
 func (t *Protocol) Close() error {
 	return t.Client.Close()
 }
