@@ -15,7 +15,7 @@ import (
 
 // Fill the provided producerMessage with the message m.
 // Using context you can tweak the encoding processing (more details on binding.Write documentation).
-func WriteProducerMessage(ctx context.Context, m binding.Message, producerMessage *sarama.ProducerMessage, transformerFactories ...binding.TransformerFactory) error {
+func WriteProducerMessage(ctx context.Context, m binding.Message, producerMessage *sarama.ProducerMessage, transformers ...binding.TransformerFactory) error {
 	enc := (*kafkaProducerMessageWriter)(producerMessage)
 
 	_, err := binding.Write(
@@ -23,7 +23,7 @@ func WriteProducerMessage(ctx context.Context, m binding.Message, producerMessag
 		m,
 		enc,
 		enc,
-		transformerFactories...,
+		transformers...,
 	)
 	return err
 }
