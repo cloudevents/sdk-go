@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
+	"github.com/cloudevents/sdk-go/v2/protocol"
 )
 
 // ChanSender implements Sender by sending Messages on a channel.
@@ -34,3 +35,5 @@ func (s ChanSender) Close(ctx context.Context) (err error) {
 	close(s)
 	return nil
 }
+
+var _ protocol.Sender = (ChanSender)(nil)
