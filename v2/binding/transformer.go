@@ -29,9 +29,6 @@ func (t TransformerFactories) StructuredTransformer(writer StructuredWriter) Str
 	}
 	res := writer
 	for _, b := range t {
-		if b == nil {
-			continue
-		}
 		if r := b.StructuredTransformer(res); r != nil {
 			res = r
 		} else {
@@ -48,9 +45,6 @@ func (t TransformerFactories) BinaryTransformer(writer BinaryWriter) BinaryWrite
 	res := writer
 	for i := range t {
 		b := t[len(t)-i-1]
-		if b == nil {
-			continue
-		}
 		if r := b.BinaryTransformer(res); r != nil {
 			res = r
 		} else {
@@ -63,9 +57,6 @@ func (t TransformerFactories) BinaryTransformer(writer BinaryWriter) BinaryWrite
 func (t TransformerFactories) EventTransformer() EventTransformer {
 	return func(e *event.Event) error {
 		for _, b := range t {
-			if b == nil {
-				continue
-			}
 			f := b.EventTransformer()
 			if f != nil {
 				err := f(e)
