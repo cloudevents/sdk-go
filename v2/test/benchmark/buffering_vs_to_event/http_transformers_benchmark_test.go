@@ -30,7 +30,7 @@ func init() {
 	initialEvent.SetExtension("key", "aaa")
 
 	binaryHttpRequest, _ = nethttp.NewRequest("POST", "http://localhost", nil)
-	Err = http.WriteRequest(context.TODO(), binding.ToMessage(&initialEvent), binaryHttpRequest, nil)
+	Err = http.WriteRequest(context.TODO(), binding.ToMessage(&initialEvent), binaryHttpRequest)
 	if Err != nil {
 		panic(Err)
 	}
@@ -41,7 +41,7 @@ func init() {
 	initialEventNoData.SetExtension("key", "aaa")
 
 	binaryHttpRequestNoData, _ = nethttp.NewRequest("POST", "http://localhost", nil)
-	Err = http.WriteRequest(context.TODO(), binding.ToMessage(&initialEventNoData), binaryHttpRequestNoData, nil)
+	Err = http.WriteRequest(context.TODO(), binding.ToMessage(&initialEventNoData), binaryHttpRequestNoData)
 	if Err != nil {
 		panic(Err)
 	}
@@ -71,7 +71,7 @@ var Req *nethttp.Request
 func BenchmarkHttpWithToEvent(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		M = http.NewMessageFromHttpRequest(binaryHttpRequest)
-		E, Err = binding.ToEvent(ctx, M, nil)
+		E, Err = binding.ToEvent(ctx, M)
 		if Err != nil {
 			panic(Err)
 		}
@@ -80,14 +80,14 @@ func BenchmarkHttpWithToEvent(b *testing.B) {
 		if Err != nil {
 			panic(Err)
 		}
-		Err = http.WriteRequest(ctx, binding.ToMessage(E), Req, nil)
+		Err = http.WriteRequest(ctx, binding.ToMessage(E), Req)
 	}
 }
 
 func BenchmarkNoDataHttpWithToEvent(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		M = http.NewMessageFromHttpRequest(binaryHttpRequestNoData)
-		E, Err = binding.ToEvent(ctx, M, nil)
+		E, Err = binding.ToEvent(ctx, M)
 		if Err != nil {
 			panic(Err)
 		}
@@ -96,7 +96,7 @@ func BenchmarkNoDataHttpWithToEvent(b *testing.B) {
 		if Err != nil {
 			panic(Err)
 		}
-		Err = http.WriteRequest(ctx, binding.ToMessage(E), Req, nil)
+		Err = http.WriteRequest(ctx, binding.ToMessage(E), Req)
 	}
 }
 
@@ -111,7 +111,7 @@ func BenchmarkHttpWithBuffering(b *testing.B) {
 		if Err != nil {
 			panic(Err)
 		}
-		Err = http.WriteRequest(ctx, M, Req, nil)
+		Err = http.WriteRequest(ctx, M, Req)
 	}
 }
 
@@ -137,7 +137,7 @@ func BenchmarkNoDataHttpWithBuffering(b *testing.B) {
 		if Err != nil {
 			panic(Err)
 		}
-		Err = http.WriteRequest(ctx, M, Req, nil)
+		Err = http.WriteRequest(ctx, M, Req)
 	}
 }
 

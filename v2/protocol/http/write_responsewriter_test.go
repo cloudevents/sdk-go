@@ -56,7 +56,7 @@ func TestWriteHttpResponseWriter(t *testing.T) {
 
 				shouldHaveContentLength := eventIn.Data() != nil || messageIn.ReadEncoding() == binding.EncodingStructured
 
-				err := WriteResponseWriter(tt.context, messageIn, 200, res, nil)
+				err := WriteResponseWriter(tt.context, messageIn, 200, res)
 				require.NoError(t, err)
 
 				require.Equal(t, 200, res.Code)
