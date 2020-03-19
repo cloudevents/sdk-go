@@ -14,11 +14,11 @@ import (
 
 // Connection acts as either a pubsub topic or a pubsub subscription .
 type Connection struct {
-	// AllowCreateTopic controls if the transport can create a topic if it does
+	// AllowCreateTopic controls if the protocol can create a topic if it does
 	// not exist.
 	AllowCreateTopic bool
 
-	// AllowCreateSubscription controls if the transport can create a
+	// AllowCreateSubscription controls if the protocol can create a
 	// subscription if it does not exist.
 	AllowCreateSubscription bool
 
@@ -76,7 +76,7 @@ func (c *Connection) getOrCreateTopic(ctx context.Context) (*pubsub.Topic, error
 		// If the topic does not exist, create a new topic with the given name.
 		if !ok {
 			if !c.AllowCreateTopic {
-				err = fmt.Errorf("transport not allowed to create topic %q", c.TopicID)
+				err = fmt.Errorf("protocol not allowed to create topic %q", c.TopicID)
 				return
 			}
 			topic, err = c.Client.CreateTopic(ctx, c.TopicID)
@@ -97,7 +97,7 @@ func (c *Connection) getOrCreateTopic(ctx context.Context) (*pubsub.Topic, error
 // DeleteTopic
 func (c *Connection) DeleteTopic(ctx context.Context) error {
 	if !c.topicWasCreated {
-		return errors.New("topic was not created by pubsub transport")
+		return errors.New("topic was not created by pubsub protocol")
 	}
 	if err := c.topic.Delete(ctx); err != nil {
 		return err
@@ -121,7 +121,7 @@ func (c *Connection) getOrCreateSubscription(ctx context.Context) (*pubsub.Subsc
 		// If subscription doesn't exist, create it.
 		if !ok {
 			if !c.AllowCreateSubscription {
-				err = fmt.Errorf("transport not allowed to create subscription %q", c.SubscriptionID)
+				err = fmt.Errorf("protocol not allowed to create subscription %q", c.SubscriptionID)
 				return
 			}
 
@@ -164,7 +164,7 @@ func (c *Connection) getOrCreateSubscription(ctx context.Context) (*pubsub.Subsc
 		c.sub = sub
 	})
 	if c.sub == nil {
-		return nil, fmt.Errorf("unable to create sunscription %q, %v", c.SubscriptionID, err)
+		return nil, fmt.Errorf("unable to create subscription %q, %v", c.SubscriptionID, err)
 	}
 	return c.sub, err
 }
@@ -172,7 +172,7 @@ func (c *Connection) getOrCreateSubscription(ctx context.Context) (*pubsub.Subsc
 // DeleteSubscription
 func (c *Connection) DeleteSubscription(ctx context.Context) error {
 	if !c.subWasCreated {
-		return errors.New("subscription was not created by pubsub transport")
+		return errors.New("subscription was not created by pubsub protocol")
 	}
 	if err := c.sub.Delete(ctx); err != nil {
 		return err
