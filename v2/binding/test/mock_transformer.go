@@ -73,22 +73,18 @@ func (m *MockTransformerFactory) Start(ctx context.Context) error {
 }
 
 func (m *MockTransformerFactory) SetAttribute(attribute spec.Attribute, value interface{}) error {
-	m.InvokedBinaryTransformer++
 	return m.BinaryDelegate.SetAttribute(attribute, value)
 }
 
 func (m *MockTransformerFactory) SetExtension(name string, value interface{}) error {
-	m.InvokedBinaryTransformer++
 	return m.BinaryDelegate.SetExtension(name, value)
 }
 
 func (m *MockTransformerFactory) SetData(data io.Reader) error {
-	m.InvokedBinaryTransformer++
 	return m.BinaryDelegate.SetData(data)
 }
 
 func (m *MockTransformerFactory) End(ctx context.Context) error {
-	m.InvokedBinaryTransformer++
 	return m.BinaryDelegate.End(ctx)
 }
 

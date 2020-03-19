@@ -36,23 +36,23 @@ func TestToEvent_success(t *testing.T) {
 				event: v,
 				want:  v,
 			},
-		}...)
-	}
-	for _, tt := range tests {
-		tt := tt // Don't use range variable in Run() scope
-		t.Run(tt.name, func(t *testing.T) {
-			var inputMessage binding.Message
-			if tt.message != nil {
-				inputMessage = tt.message
-			} else {
-				e := tt.event.Clone()
-				inputMessage = binding.ToMessage(&e)
-			}
-			got, err := binding.ToEvent(context.Background(), inputMessage)
-			require.NoError(t, err)
-			test.AssertEventEquals(t, test.ExToStr(t, tt.want), test.ExToStr(t, *got))
-		})
-	}
+		}
+		for _, tt := range testCases {
+			tt := tt // Don't use range variable in Run() scope
+			t.Run(tt.name, func(t *testing.T) {
+				var inputMessage binding.Message
+				if tt.message != nil {
+					inputMessage = tt.message
+				} else {
+					e := tt.event.Clone()
+					inputMessage = binding.ToMessage(&e)
+				}
+				got, err := binding.ToEvent(context.Background(), inputMessage)
+				require.NoError(t, err)
+				test.AssertEventEquals(t, test.ExToStr(t, tt.want), test.ExToStr(t, *got))
+			})
+		}
+	})
 }
 
 func TestToEvent_success_wrapped_event_message(t *testing.T) {
@@ -80,7 +80,7 @@ func TestToEvent_wrapped_unknown(t *testing.T) {
 	require.Equal(t, binding.ErrUnknownEncoding, err)
 }
 
-func TestToEvent_transformers_applied_one_time(t *testing.T) {
+func TestToEvent_transformers_applied_once(t *testing.T) {
 	test.EachEvent(t, test.Events(), func(t *testing.T, v event.Event) {
 		testCases := []toEventTestCase{
 			{
