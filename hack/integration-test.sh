@@ -9,7 +9,7 @@ pushd ./v2
 
 # Run integration tests not in parallel
 # Prepare coverage file only if not exists
-if [ ! -f /tmp/foo.txt ]; then
+if [ ! -f ./coverage.txt ]; then
   touch ./coverage.tmp
   echo 'mode: atomic' > ./coverage.txt
 fi
