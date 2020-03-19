@@ -1,19 +1,18 @@
-package http
+package amqp
 
 import (
-	"bytes"
 	"context"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"pack.ag/amqp"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/binding/test"
 	"github.com/cloudevents/sdk-go/v2/event"
 )
 
-func TestNewMessage(t *testing.T) {
+func TestNewMessage_success(t *testing.T) {
 	tests := []struct {
 		name     string
 		encoding binding.Encoding
@@ -30,6 +29,7 @@ func TestNewMessage(t *testing.T) {
 	for _, tt := range tests {
 		test.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
 			t.Run(tt.name, func(t *testing.T) {
+				eventIn = eventIn.Clone()
 
 				ctx := context.TODO()
 				if tt.encoding == binding.EncodingStructured {
@@ -38,20 +38,19 @@ func TestNewMessage(t *testing.T) {
 					ctx = binding.WithForceBinary(ctx)
 				}
 
-				req := httptest.NewRequest("POST", "http://localhost", nil)
-				require.NoError(t, WriteRequest(ctx, (*binding.EventMessage)(&eventIn), req, binding.TransformerFactories{}))
+				message := amqp.Message{}
+				require.NoError(t, WriteMessage(ctx, binding.ToMessage(&eventIn), &message))
 
-				got := NewMessageFromHttpRequest(req)
+				got := NewMessage(&message)
 				require.Equal(t, tt.encoding, got.ReadEncoding())
 			})
 		})
 	}
 }
 
-func TestNewMessageUnknown(t *testing.T) {
-	req := httptest.NewRequest("POST", "http://localhost", bytes.NewReader([]byte("{}")))
-	req.Header.Add("content-type", "application/json")
+func TestNewMessage_message_unknown(t *testing.T) {
+	message := amqp.NewMessage([]byte("hello-world"))
 
-	got := NewMessageFromHttpRequest(req)
+	got := NewMessage(message)
 	require.Equal(t, binding.EncodingUnknown, got.ReadEncoding())
 }

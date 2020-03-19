@@ -23,7 +23,7 @@ func TestSendEvent(t *testing.T) {
 	bindingtest.EachEvent(t, bindingtest.Events(), func(t *testing.T, eventIn event.Event) {
 		eventIn = bindingtest.ExToStr(t, eventIn)
 		clienttest.SendReceive(t, func() interface{} {
-			return testSenderReceiver(t)
+			return protocolFactory(t)
 		}, eventIn, func(e event.Event) {
 			bindingtest.AssertEventEquals(t, eventIn, bindingtest.ExToStr(t, e))
 		})
@@ -52,7 +52,7 @@ func testClient(t testing.TB) sarama.Client {
 	return client
 }
 
-func testSenderReceiver(t testing.TB) *kafka_sarama.Protocol {
+func protocolFactory(t testing.TB) *kafka_sarama.Protocol {
 	client := testClient(t)
 
 	topicName := "test-ce-client-" + uuid.New().String()
