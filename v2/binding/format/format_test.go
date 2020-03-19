@@ -3,7 +3,7 @@ package format_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/cloudevents/sdk-go/v2/binding/format"
 	"github.com/cloudevents/sdk-go/v2/event"
@@ -11,7 +11,7 @@ import (
 )
 
 func TestJSON(t *testing.T) {
-	assert := assert.New(t)
+	require := require.New(t)
 	e := event.Event{
 		Context: event.EventContextV03{
 			Type:   "type",
@@ -20,27 +20,27 @@ func TestJSON(t *testing.T) {
 		}.AsV03(),
 	}
 	e.SetExtension("ex", "val")
-	assert.NoError(e.SetData(event.ApplicationJSON, "foo"))
+	require.NoError(e.SetData(event.ApplicationJSON, "foo"))
 	b, err := format.JSON.Marshal(&e)
-	assert.NoError(err)
-	assert.Equal(`{"data":"foo","datacontenttype":"application/json","ex":"val","id":"id","source":"source","specversion":"0.3","type":"type"}`, string(b))
+	require.NoError(err)
+	require.Equal(`{"data":"foo","datacontenttype":"application/json","ex":"val","id":"id","source":"source","specversion":"0.3","type":"type"}`, string(b))
 
 	var e2 event.Event
-	assert.NoError(format.JSON.Unmarshal(b, &e2))
-	assert.Equal(e, e2)
+	require.NoError(format.JSON.Unmarshal(b, &e2))
+	require.Equal(e, e2)
 }
 
 func TestLookup(t *testing.T) {
-	assert := assert.New(t)
-	assert.Nil(format.Lookup("nosuch"))
+	require := require.New(t)
+	require.Nil(format.Lookup("nosuch"))
 
 	f := format.Lookup(event.ApplicationCloudEventsJSON)
-	assert.Equal(f.MediaType(), event.ApplicationCloudEventsJSON)
-	assert.Equal(format.JSON, f)
+	require.Equal(f.MediaType(), event.ApplicationCloudEventsJSON)
+	require.Equal(format.JSON, f)
 }
 
 func TestMarshalUnmarshal(t *testing.T) {
-	assert := assert.New(t)
+	require := require.New(t)
 	e := event.Event{
 		Context: event.EventContextV03{
 			Type:   "type",
@@ -48,19 +48,19 @@ func TestMarshalUnmarshal(t *testing.T) {
 			Source: *types.ParseURIRef("source"),
 		}.AsV03(),
 	}
-	assert.NoError(e.SetData(event.ApplicationJSON, "foo"))
+	require.NoError(e.SetData(event.ApplicationJSON, "foo"))
 	b, err := format.Marshal(format.JSON.MediaType(), &e)
-	assert.NoError(err)
-	assert.Equal(`{"data":"foo","datacontenttype":"application/json","id":"id","source":"source","specversion":"0.3","type":"type"}`, string(b))
+	require.NoError(err)
+	require.Equal(`{"data":"foo","datacontenttype":"application/json","id":"id","source":"source","specversion":"0.3","type":"type"}`, string(b))
 
 	var e2 event.Event
-	assert.NoError(format.Unmarshal(format.JSON.MediaType(), b, &e2))
-	assert.Equal(e, e2)
+	require.NoError(format.Unmarshal(format.JSON.MediaType(), b, &e2))
+	require.Equal(e, e2)
 
 	_, err = format.Marshal("nosuchformat", &e)
-	assert.EqualError(err, "unknown event format media-type \"nosuchformat\"")
+	require.EqualError(err, "unknown event format media-type \"nosuchformat\"")
 	err = format.Unmarshal("nosuchformat", nil, &e)
-	assert.EqualError(err, "unknown event format media-type \"nosuchformat\"")
+	require.EqualError(err, "unknown event format media-type \"nosuchformat\"")
 }
 
 type dummyFormat struct{}
@@ -73,15 +73,15 @@ func (dummyFormat) Unmarshal(b []byte, e *event.Event) error {
 }
 
 func TestAdd(t *testing.T) {
-	assert := assert.New(t)
+	require := require.New(t)
 	format.Add(dummyFormat{})
-	assert.Equal(dummyFormat{}, format.Lookup("dummy"))
+	require.Equal(dummyFormat{}, format.Lookup("dummy"))
 
 	e := event.Event{}
 	b, err := format.Marshal("dummy", &e)
-	assert.NoError(err)
-	assert.Equal("dummy!", string(b))
+	require.NoError(err)
+	require.Equal("dummy!", string(b))
 	err = format.Unmarshal("dummy", b, &e)
-	assert.NoError(err)
-	assert.Equal([]byte("undummy!"), e.Data())
+	require.NoError(err)
+	require.Equal([]byte("undummy!"), e.Data())
 }
