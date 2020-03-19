@@ -87,7 +87,7 @@ func NewMockRequesterClient(t *testing.T, chanSize int, replierFn func(inMessage
 }
 
 // MockReceiverClient returns a client that can Receive events, without replying.
-// All sent messages are delivered to the returned channel.
+// The returned channel is the channel for sending messages to the client
 func NewMockReceiverClient(t *testing.T, chanSize int, opts ...client.Option) (client.Client, chan<- event.Event) {
 	require.NotZero(t, chanSize)
 
@@ -118,8 +118,9 @@ type ClientMockResponse struct {
 	Result protocol.Result
 }
 
-// MockReceiverClient returns a client that can Receive events, without replying.
-// All sent messages are delivered to the returned channel.
+// MockReceiverClient returns a client that can Receive events and reply.
+// The first returned channel is the channel for sending messages to the client, while the second one
+// contains the eventual responses.
 func NewMockResponderClient(t *testing.T, chanSize int, opts ...client.Option) (client.Client, chan<- event.Event, <-chan ClientMockResponse) {
 	require.NotZero(t, chanSize)
 
