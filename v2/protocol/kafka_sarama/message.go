@@ -22,7 +22,7 @@ var specs = spec.WithPrefix(prefix)
 // Message holds a Kafka Message.
 // This message *can* be read several times safely
 type Message struct {
-	Key, Value  []byte
+	Value       []byte
 	Headers     map[string][]byte
 	ContentType string
 	format      format.Format
@@ -45,16 +45,15 @@ func NewMessageFromConsumerMessage(cm *sarama.ConsumerMessage) *Message {
 		}
 		headers[k] = r.Value
 	}
-	return NewMessage(cm.Key, cm.Value, contentType, headers)
+	return NewMessage(cm.Value, contentType, headers)
 }
 
 // Returns a binding.Message that holds the provided kafka message components.
 // The returned binding.Message *can* be read several times safely
 // This function *doesn't* guarantee that the returned binding.Message is always a kafka_sarama.Message instance
-func NewMessage(key []byte, value []byte, contentType string, headers map[string][]byte) *Message {
+func NewMessage(value []byte, contentType string, headers map[string][]byte) *Message {
 	if ft := format.Lookup(contentType); ft != nil {
 		return &Message{
-			Key:         key,
 			Value:       value,
 			ContentType: contentType,
 			Headers:     headers,
@@ -62,7 +61,6 @@ func NewMessage(key []byte, value []byte, contentType string, headers map[string
 		}
 	} else if v := specs.Version(string(headers[specs.PrefixedSpecVersionName()])); v != nil {
 		return &Message{
-			Key:         key,
 			Value:       value,
 			ContentType: contentType,
 			Headers:     headers,
@@ -71,7 +69,6 @@ func NewMessage(key []byte, value []byte, contentType string, headers map[string
 	}
 
 	return &Message{
-		Key:         key,
 		Value:       value,
 		ContentType: contentType,
 		Headers:     headers,
@@ -116,13 +113,6 @@ func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) 
 		} else if k == contentTypeHeader {
 			err = encoder.SetAttribute(m.version.AttributeFromKind(spec.DataContentType), string(v))
 		}
-		if err != nil {
-			return err
-		}
-	}
-
-	if m.Key != nil {
-		err = encoder.SetExtension("key", string(m.Key))
 		if err != nil {
 			return err
 		}
