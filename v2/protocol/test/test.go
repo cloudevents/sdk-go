@@ -30,8 +30,14 @@ func SendReceive(t *testing.T, ctx context.Context, in binding.Message, s protoc
 
 	go func() {
 		defer wg.Done()
+		finished := false
+		in = binding.WithFinish(in, func(err error) {
+			require.NoError(t, err)
+			finished = true
+		})
 		err := s.Send(ctx, in)
 		require.NoError(t, err)
+		require.True(t, finished)
 	}()
 
 	wg.Wait()

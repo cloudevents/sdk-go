@@ -28,7 +28,8 @@ func (s *sender) Send(ctx context.Context, in binding.Message) error {
 		return err
 	}
 
-	return s.amqp.Send(ctx, &amqpMessage)
+	err = s.amqp.Send(ctx, &amqpMessage)
+	return err
 }
 
 func (s *sender) Close(ctx context.Context) error { return s.amqp.Close(ctx) }

@@ -45,13 +45,16 @@ func NewSenderFromClient(client sarama.Client, topic string, options ...SenderOp
 }
 
 func (s *Sender) Send(ctx context.Context, m binding.Message) error {
+	var err error
+	defer m.Finish(err)
+
 	kafkaMessage := sarama.ProducerMessage{Topic: s.topic}
 
-	if err := WriteProducerMessage(ctx, m, &kafkaMessage, s.transformers); err != nil {
+	if err = WriteProducerMessage(ctx, m, &kafkaMessage, s.transformers); err != nil {
 		return err
 	}
 
-	_, _, err := s.syncProducer.SendMessage(&kafkaMessage)
+	_, _, err = s.syncProducer.SendMessage(&kafkaMessage)
 	return err
 }
 
