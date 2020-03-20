@@ -3,10 +3,8 @@ package pubsub
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"strings"
 
-	"cloud.google.com/go/pubsub"
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/binding/format"
 	"github.com/cloudevents/sdk-go/v2/binding/spec"
@@ -22,17 +20,20 @@ var specs = spec.WithPrefix(prefix)
 // Message represents a Pub/Sub message.
 // This message *can* be read several times safely
 type Message struct {
-	Msg pubsub.Message
+	// Data is the actual data in the message.
+	Data []byte
 
-	format   format.Format
-	version  spec.Version
-	encoding binding.Encoding
+	// Attributes represents the key-value pairs the current message
+	// is labelled with.
+	Attributes map[string]string
+
+	format  format.Format
+	version spec.Version
 }
 
 // NewMessage returns a binding.Message with data and attributes.
 // This message *can* be read several times safely
 func NewMessage(data []byte, attributes map[string]string) *Message {
-	encoding := binding.EncodingBinary
 	var f format.Format = nil
 	var version spec.Version = nil
 	if attributes != nil {
@@ -40,33 +41,18 @@ func NewMessage(data []byte, attributes map[string]string) *Message {
 		// set format.
 		if s := attributes[contentType]; format.IsFormat(s) {
 			f = format.Lookup(s)
-			encoding = binding.EncodingStructured
 		}
 		// Binary v0.3:
-		if s := attributes[prefix+"specversion"]; s != "" {
+		if s := attributes[specs.PrefixedSpecVersionName()]; s != "" {
 			version = specs.Version(s)
 		}
 	}
 
-	// Check as Structured encoding.
-	raw := make(map[string]json.RawMessage)
-	if err := json.Unmarshal(data, &raw); err != nil {
-		version = specs.Version("")
-	}
-
-	// Structured v0.3
-	if v, ok := raw["specversion"]; ok {
-		var ver string
-		if err := json.Unmarshal(v, &ver); err != nil {
-			version = specs.Version("")
-		}
-		version = specs.Version(ver)
-	}
 	return &Message{
-		Msg:      pubsub.Message{Data: data, Attributes: attributes},
-		encoding: encoding,
-		format:   f,
-		version:  version,
+		Data:       data,
+		Attributes: attributes,
+		format:     f,
+		version:    version,
 	}
 }
 
@@ -74,18 +60,24 @@ func NewMessage(data []byte, attributes map[string]string) *Message {
 var _ binding.Message = (*Message)(nil)
 
 func (m *Message) ReadEncoding() binding.Encoding {
-	return m.encoding
+	if m.version != nil {
+		return binding.EncodingBinary
+	}
+	if m.format != nil {
+		return binding.EncodingStructured
+	}
+	return binding.EncodingUnknown
 }
 
 func (m *Message) ReadStructured(ctx context.Context, encoder binding.StructuredWriter) error {
-	if m.encoding == binding.EncodingBinary {
+	if m.version != nil {
 		return binding.ErrNotStructured
 	}
-	return encoder.SetStructuredEvent(ctx, m.format, bytes.NewReader(m.Msg.Data))
+	return encoder.SetStructuredEvent(ctx, m.format, bytes.NewReader(m.Data))
 }
 
 func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) error {
-	if m.encoding == binding.EncodingStructured {
+	if m.format != nil {
 		return binding.ErrNotBinary
 	}
 
@@ -94,7 +86,7 @@ func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) 
 		return err
 	}
 
-	for k, v := range m.Msg.Attributes {
+	for k, v := range m.Attributes {
 		if strings.HasPrefix(k, prefix) {
 			attr := m.version.Attribute(k)
 			if attr != nil {
@@ -110,7 +102,7 @@ func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) 
 		}
 	}
 
-	err = encoder.SetData(bytes.NewReader(m.Msg.Data))
+	err = encoder.SetData(bytes.NewReader(m.Data))
 	if err != nil {
 		return err
 	}

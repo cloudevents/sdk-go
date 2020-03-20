@@ -1,9 +1,9 @@
 package pubsub
 
 import (
+	"bytes"
 	"context"
 	"io"
-	"io/ioutil"
 
 	"cloud.google.com/go/pubsub"
 	"github.com/cloudevents/sdk-go/v2/binding"
@@ -31,11 +31,12 @@ func WritePubSubMessage(ctx context.Context, m binding.Message, pubsubMessage *p
 type pubsubMessagePublisher pubsub.Message
 
 func (b *pubsubMessagePublisher) SetStructuredEvent(ctx context.Context, f format.Format, event io.Reader) error {
-	val, err := ioutil.ReadAll(event)
+	var buf bytes.Buffer
+	_, err := io.Copy(&buf, event)
 	if err != nil {
 		return err
 	}
-	b.Data = val
+	b.Data = buf.Bytes()
 	return nil
 }
 
@@ -49,11 +50,12 @@ func (b *pubsubMessagePublisher) End(ctx context.Context) error {
 }
 
 func (b *pubsubMessagePublisher) SetData(reader io.Reader) error {
-	val, err := ioutil.ReadAll(reader)
+	var buf bytes.Buffer
+	_, err := io.Copy(&buf, reader)
 	if err != nil {
 		return err
 	}
-	b.Data = val
+	b.Data = buf.Bytes()
 	return nil
 }
 

@@ -95,6 +95,9 @@ func (t *Protocol) applyOptions(opts ...Option) error {
 
 // Send implements Sender.Send
 func (t *Protocol) Send(ctx context.Context, in binding.Message) error {
+	var err error
+	defer func() { _ = in.Finish(err) }()
+
 	topic := cecontext.TopicFrom(ctx)
 	if topic == "" {
 		topic = t.topicID
