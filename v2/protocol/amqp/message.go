@@ -3,7 +3,6 @@ package amqp
 import (
 	"bytes"
 	"context"
-	"errors"
 	"reflect"
 	"strings"
 
@@ -64,9 +63,6 @@ func (m *Message) ReadStructured(ctx context.Context, encoder binding.Structured
 }
 
 func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) error {
-	if len(m.AMQP.ApplicationProperties) == 0 {
-		return errors.New("AMQP CloudEvents message has no application properties")
-	}
 	version := getSpecVersion(m.AMQP)
 	if version == nil {
 		return binding.ErrNotBinary

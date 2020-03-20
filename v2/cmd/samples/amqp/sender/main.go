@@ -70,7 +70,7 @@ func (d *Demo) Send(eventContext event.EventContext, i int) error {
 
 func main() {
 	host, node, opts := sampleConfig()
-	t, err := ceamqp.New(host, node, opts...)
+	t, err := ceamqp.NewProtocol(host, node, []amqp.ConnOption{}, []amqp.SessionOption{}, opts...)
 	if err != nil {
 		log.Fatalf("Failed to create amqp protocol: %v", err)
 	}

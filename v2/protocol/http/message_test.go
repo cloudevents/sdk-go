@@ -56,8 +56,8 @@ func TestNewMessageFromHttpRequestUnknown(t *testing.T) {
 		req.Header.Add("content-type", "application/json")
 
 		got := NewMessageFromHttpRequest(req)
-		require.Equal(t, binding.EncodingUnknown, got.ReadEncoding())
 
+		require.Equal(t, binding.EncodingUnknown, got.ReadEncoding())
 		require.NoError(t, got.Finish(nil))
 	})
 }

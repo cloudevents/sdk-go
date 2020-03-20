@@ -66,19 +66,13 @@ func TestEncodeKafkaProducerMessage(t *testing.T) {
 					headers[strings.ToLower(string(h.Key))] = h.Value
 				}
 
-				var key []byte
-				if kafkaMessage.Key != nil {
-					key, err = kafkaMessage.Key.Encode()
-					require.NoError(t, err)
-				}
-
 				var value []byte
 				if kafkaMessage.Value != nil {
 					value, err = kafkaMessage.Value.Encode()
 					require.NoError(t, err)
 				}
 
-				messageOut := NewMessage(key, value, string(headers[contentTypeHeader]), headers)
+				messageOut := NewMessage(value, string(headers[contentTypeHeader]), headers)
 				require.Equal(t, tt.expectedEncoding, messageOut.ReadEncoding())
 
 				eventOut, err := binding.ToEvent(context.TODO(), messageOut)

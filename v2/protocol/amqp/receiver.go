@@ -2,6 +2,7 @@ package amqp
 
 import (
 	"context"
+	"io"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/protocol"
@@ -14,6 +15,9 @@ type receiver struct{ amqp *amqp.Receiver }
 func (r *receiver) Receive(ctx context.Context) (binding.Message, error) {
 	m, err := r.amqp.Receive(ctx)
 	if err != nil {
+		if err == ctx.Err() {
+			return nil, io.EOF
+		}
 		return nil, err
 	}
 
