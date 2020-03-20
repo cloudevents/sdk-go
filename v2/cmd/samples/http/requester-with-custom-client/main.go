@@ -79,7 +79,7 @@ func _main(args []string, env envConfig) int {
 			ctx := context.Background()
 
 			p, err := cloudevents.NewHTTP(cloudevents.WithTarget(env.Target),
-				cloudevents.WithHTTPTransport(&http.Transport{TLSClientConfig: tlsConfig}))
+				cloudevents.WithRoundTripper(&http.Transport{TLSClientConfig: tlsConfig}))
 			if err != nil {
 				log.Printf("failed to create protocol, %v", err)
 				return 1

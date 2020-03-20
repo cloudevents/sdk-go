@@ -53,7 +53,7 @@ func MockedClient() (cloudevents.Client, *cehttp.Protocol) {
 		}
 	})
 
-	p, err := cehttp.New(cehttp.WithTarget("http://localhost"), cehttp.WithHTTPTransport(mockTransport))
+	p, err := cehttp.New(cehttp.WithTarget("http://localhost"), cehttp.WithRoundTripper(mockTransport))
 	if err != nil {
 		panic(err)
 	}

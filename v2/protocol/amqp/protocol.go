@@ -88,11 +88,6 @@ func (t *Protocol) applyOptions(opts ...Option) error {
 	return nil
 }
 
-// HasTracePropagation implements Protocol.HasTracePropagation
-func (t *Protocol) HasTracePropagation() bool {
-	return false
-}
-
 func (t *Protocol) Close(ctx context.Context) error {
 	if t.Sender != nil {
 		if err := t.Sender.Close(ctx); err != nil {
