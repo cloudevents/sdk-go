@@ -32,15 +32,13 @@ func TestValidateV03(t *testing.T) {
 	}{
 		"min valid": {
 			ctx: event.EventContextV03{
-				SpecVersion: event.CloudEventsVersionV03,
-				ID:          "ABC-123",
-				Type:        "com.example.simple",
-				Source:      *source,
+				ID:     "ABC-123",
+				Type:   "com.example.simple",
+				Source: *source,
 			},
 		},
 		"full valid": {
 			ctx: event.EventContextV03{
-				SpecVersion:         event.CloudEventsVersionV03,
 				ID:                  "ABC-123",
 				Time:                &now,
 				Type:                "com.example.simple",
@@ -54,61 +52,46 @@ func TestValidateV03(t *testing.T) {
 		},
 		"no Type": {
 			ctx: event.EventContextV03{
-				SpecVersion: event.CloudEventsVersionV03,
-				ID:          "ABC-123",
-				Source:      *source,
+				ID:     "ABC-123",
+				Source: *source,
 			},
 			want: []string{"type:"},
 		},
-		"non-empty SpecVersion": {
-			ctx: event.EventContextV03{
-				SpecVersion: "",
-				ID:          "ABC-123",
-				Type:        "com.example.simple",
-				Source:      *source,
-			},
-			want: []string{"specversion:"},
-		},
 		"missing source": {
 			ctx: event.EventContextV03{
-				SpecVersion: event.CloudEventsVersionV03,
-				ID:          "ABC-123",
-				Type:        "com.example.simple",
+				ID:   "ABC-123",
+				Type: "com.example.simple",
 			},
 			want: []string{"source:"},
 		},
 		"non-empty subject": {
 			ctx: event.EventContextV03{
-				SpecVersion: event.CloudEventsVersionV03,
-				ID:          "",
-				Type:        "com.example.simple",
-				Source:      *source,
-				Subject:     strptr("  "),
+				ID:      "",
+				Type:    "com.example.simple",
+				Source:  *source,
+				Subject: strptr("  "),
 			},
 			want: []string{"subject:"},
 		},
 		"non-empty ID": {
 			ctx: event.EventContextV03{
-				SpecVersion: event.CloudEventsVersionV03,
-				ID:          "",
-				Type:        "com.example.simple",
-				Source:      *source,
+				ID:     "",
+				Type:   "com.example.simple",
+				Source: *source,
 			},
 			want: []string{"id:"},
 		},
 		"empty schemaURL": {
 			ctx: event.EventContextV03{
-				SpecVersion: event.CloudEventsVersionV03,
-				ID:          "ABC-123",
-				Type:        "com.example.simple",
-				SchemaURL:   &types.URIRef{},
-				Source:      *source,
+				ID:        "ABC-123",
+				Type:      "com.example.simple",
+				SchemaURL: &types.URIRef{},
+				Source:    *source,
 			},
 			want: []string{"schemaurl:"},
 		},
 		"non-empty contentType": {
 			ctx: event.EventContextV03{
-				SpecVersion:     event.CloudEventsVersionV03,
 				ID:              "ABC-123",
 				Type:            "com.example.simple",
 				Source:          *source,
@@ -118,7 +101,6 @@ func TestValidateV03(t *testing.T) {
 		},
 		"non-empty dataContentEncoding": {
 			ctx: event.EventContextV03{
-				SpecVersion:         event.CloudEventsVersionV03,
 				ID:                  "ABC-123",
 				Type:                "com.example.simple",
 				Source:              *source,
@@ -128,7 +110,6 @@ func TestValidateV03(t *testing.T) {
 		},
 		"invalid dataContentEncoding": {
 			ctx: event.EventContextV03{
-				SpecVersion:         event.CloudEventsVersionV03,
 				ID:                  "ABC-123",
 				Type:                "com.example.simple",
 				Source:              *source,
@@ -136,20 +117,8 @@ func TestValidateV03(t *testing.T) {
 			},
 			want: []string{"datacontentencoding:"},
 		},
-
-		//"empty extensions": {
-		//	ctx: ce.EventContextV03{
-		//		SpecVersion: ce.CloudEventsVersionV03,
-		//		ID:            "ABC-123",
-		//		Type:          "com.example.simple",
-		//		Source:             *source,
-		//		Extensions:         make(map[string]interface{}),
-		//	},
-		//	want: []string{"extensions:"},
-		//},
 		"all errors": {
 			ctx: event.EventContextV03{
-				SpecVersion:     "",
 				ID:              "",
 				SchemaURL:       &types.URIRef{},
 				DataContentType: strptr(""),
@@ -158,7 +127,6 @@ func TestValidateV03(t *testing.T) {
 			want: []string{
 				"type:",
 				"id:",
-				"specversion:",
 				"source:",
 				"contenttype:",
 			},
