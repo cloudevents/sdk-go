@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
+	"github.com/cloudevents/sdk-go/v2/binding/buffering"
 	"github.com/cloudevents/sdk-go/v2/binding/test"
 	"github.com/cloudevents/sdk-go/v2/event"
 )
@@ -31,6 +32,54 @@ func TestWriteHttpResponseWriter(t *testing.T) {
 			name:             "Binary to Binary",
 			context:          context.TODO(),
 			messageFactory:   test.MustCreateMockBinaryMessage,
+			expectedEncoding: binding.EncodingBinary,
+		},
+		{
+			name:    "Structured to buffered to Structured",
+			context: context.TODO(),
+			messageFactory: func(e event.Event) binding.Message {
+				m := test.MustCreateMockStructuredMessage(e)
+
+				buffered, err := buffering.BufferMessage(context.TODO(), m)
+				require.NoError(t, err)
+
+				return buffered
+			},
+			expectedEncoding: binding.EncodingStructured,
+		},
+		{
+			name:    "Binary to buffered to Binary",
+			context: context.TODO(),
+			messageFactory: func(e event.Event) binding.Message {
+				m := test.MustCreateMockBinaryMessage(e)
+
+				buffered, err := buffering.BufferMessage(context.TODO(), m)
+				require.NoError(t, err)
+
+				return buffered
+			},
+			expectedEncoding: binding.EncodingBinary,
+		},
+		{
+			name:    "Direct structured HttpRequest to Structured",
+			context: context.TODO(),
+			messageFactory: func(e event.Event) binding.Message {
+				req := httptest.NewRequest("POST", "http://localhost", nil)
+				require.NoError(t, WriteRequest(binding.WithForceStructured(context.TODO()), binding.ToMessage(&e), req))
+
+				return NewMessageFromHttpRequest(req)
+			},
+			expectedEncoding: binding.EncodingStructured,
+		},
+		{
+			name:    "Binary to buffered to Binary",
+			context: context.TODO(),
+			messageFactory: func(e event.Event) binding.Message {
+				req := httptest.NewRequest("POST", "http://localhost", nil)
+				require.NoError(t, WriteRequest(binding.WithForceBinary(context.TODO()), binding.ToMessage(&e), req))
+
+				return NewMessageFromHttpRequest(req)
+			},
 			expectedEncoding: binding.EncodingBinary,
 		},
 		{

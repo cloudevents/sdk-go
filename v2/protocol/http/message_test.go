@@ -39,7 +39,7 @@ func TestNewMessageFromHttpRequest(t *testing.T) {
 				}
 
 				req := httptest.NewRequest("POST", "http://localhost", nil)
-				require.NoError(t, WriteRequest(ctx, (*binding.EventMessage)(&eventIn), req, binding.TransformerFactories{}))
+				require.NoError(t, WriteRequest(ctx, (*binding.EventMessage)(&eventIn), req))
 
 				got := NewMessageFromHttpRequest(req)
 				require.Equal(t, tt.encoding, got.ReadEncoding())
