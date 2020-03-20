@@ -19,7 +19,8 @@ func (s *sender) Send(ctx context.Context, in binding.Message) error {
 	var err error
 	defer func() { _ = in.Finish(err) }()
 	if m, ok := in.(*Message); ok { // Already an AMQP message.
-		return s.amqp.Send(ctx, m.AMQP)
+		err = s.amqp.Send(ctx, m.AMQP)
+		return err
 	}
 
 	var amqpMessage amqp.Message
