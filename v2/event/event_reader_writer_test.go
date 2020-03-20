@@ -18,55 +18,6 @@ type ReadWriteTest struct {
 	wantErr   string
 }
 
-func TestEventRW_SpecVersion(t *testing.T) {
-	testCases := map[string]ReadWriteTest{
-		"empty v03": {
-			event:   event.New(),
-			want:    "1.0",
-			set:     "0.3",
-			wantErr: "invalid version",
-		},
-		"empty v1": {
-			event: event.New(),
-			set:   "1.0",
-			want:  "1.0",
-		},
-		"v03": {
-			event: event.New("0.3"),
-			set:   "0.3",
-			want:  "0.3",
-		},
-		"v1": {
-			event: event.New("1.0"),
-			set:   "1.0",
-			want:  "1.0",
-		},
-		"invalid v03": {
-			event:   event.New("0.3"),
-			want:    "0.3",
-			set:     "1.3",
-			wantErr: "invalid version",
-		},
-		"invalid v1": {
-			event:   event.New("1.0"),
-			want:    "1.0",
-			set:     "1.3",
-			wantErr: "invalid version",
-		},
-	}
-	for n, tc := range testCases {
-		t.Run(n, func(t *testing.T) {
-			var got interface{}
-
-			tc.event.SetSpecVersion(tc.set)
-			got = tc.event.SpecVersion()
-
-			err := tc.event.Validate()
-			validateReaderWriter(t, tc, got, err)
-		})
-	}
-}
-
 func TestEventRW_Type(t *testing.T) {
 	testCases := map[string]ReadWriteTest{
 		"v03": {

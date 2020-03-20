@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"io"
 
 	"github.com/cloudevents/sdk-go/v2/binding/format"
@@ -108,6 +109,8 @@ func (b *messageToEventBuilder) SetAttribute(attribute spec.Attribute, value int
 			b.event.Context = b.event.Context.AsV03()
 		case event.CloudEventsVersionV1:
 			b.event.Context = b.event.Context.AsV1()
+		default:
+			return fmt.Errorf("unrecognized event version %s", str)
 		}
 		return nil
 	}

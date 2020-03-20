@@ -227,11 +227,10 @@ func TestString(t *testing.T) {
 			want: `Validation: invalid
 Validation Error: 
 type: MUST be a non-empty string
-specversion: MUST be a non-empty string
 source: REQUIRED
 id: MUST be a non-empty string
 Context Attributes,
-  specversion: 
+  specversion: 0.3
   type: 
   source: 
   id: 
@@ -245,10 +244,9 @@ Context Attributes,
 Validation Error: 
 id: MUST be a non-empty string
 source: REQUIRED
-specversion: MUST be a non-empty string
 type: MUST be a non-empty string
 Context Attributes,
-  specversion: 
+  specversion: 1.0
   type: 
   source: 
   id: 

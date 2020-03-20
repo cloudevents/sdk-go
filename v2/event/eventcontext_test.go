@@ -20,14 +20,6 @@ func TestContextAsV03(t *testing.T) {
 		event event.Event
 		want  *event.EventContextV03
 	}{
-		"empty, no conversion": {
-			event: event.Event{
-				Context: &event.EventContextV03{},
-			},
-			want: &event.EventContextV03{
-				SpecVersion: "0.3",
-			},
-		},
 		"min v03, no conversion": {
 			event: event.Event{
 				Context: MinEventContextV03(),
@@ -72,14 +64,6 @@ func TestContextAsV1(t *testing.T) {
 		event event.Event
 		want  *event.EventContextV1
 	}{
-		"empty, no conversion": {
-			event: event.Event{
-				Context: &event.EventContextV1{},
-			},
-			want: &event.EventContextV1{
-				SpecVersion: "1.0",
-			},
-		},
 		"min v03 -> v1": {
 			event: event.Event{
 				Context: MinEventContextV03(),

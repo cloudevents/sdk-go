@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
+	"github.com/cloudevents/sdk-go/v2/binding/spec"
 	"github.com/cloudevents/sdk-go/v2/binding/test"
 	"github.com/cloudevents/sdk-go/v2/event"
 )
@@ -53,6 +54,18 @@ func TestToEvent_success(t *testing.T) {
 			})
 		}
 	})
+}
+
+func TestToEvent_bad_spec_version_binary(t *testing.T) {
+	inputEvent := test.FullEvent()
+
+	inputMessage := test.MustCreateMockBinaryMessage(inputEvent)
+	// Injecting bad spec version
+	inputMessage.(*test.MockBinaryMessage).Metadata[spec.VS.Version(inputEvent.SpecVersion()).AttributeFromKind(spec.SpecVersion)] = "0.1.1"
+
+	got, err := binding.ToEvent(context.Background(), inputMessage)
+	require.Nil(t, got)
+	require.EqualError(t, err, "unrecognized event version 0.1.1")
 }
 
 func TestToEvent_success_wrapped_event_message(t *testing.T) {
