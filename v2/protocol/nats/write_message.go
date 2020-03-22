@@ -2,46 +2,35 @@ package nats
 
 import (
 	"context"
-	"io"
-	"io/ioutil"
-
-	"github.com/nats-io/nats.go"
-
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/binding/format"
+	"io"
 )
 
-// Fill the provided natsMessage with the bindings.Message m.
+// Fill the provided writer with the bindings.Message m.
 // Using context you can tweak the encoding processing (more details on binding.Write documentation).
-func WriteMsg(ctx context.Context, m binding.Message, natsMessage *nats.Msg, transformers ...binding.TransformerFactory) error {
-	structuredWriter := (*natsMessageWriter)(natsMessage)
+func WriteMsg(ctx context.Context, m binding.Message, writer io.ReaderFrom, transformers binding.TransformerFactories) error {
+	structuredWriter := &natsMessageWriter{writer}
 
 	_, err := binding.Write(
 		ctx,
 		m,
 		structuredWriter,
 		nil,
-		transformers...,
+		transformers,
 	)
 	return err
 }
 
-type natsMessageWriter nats.Msg
+type natsMessageWriter struct {
+	io.ReaderFrom
+}
 
-func (b *natsMessageWriter) SetStructuredEvent(ctx context.Context, f format.Format, event io.Reader) error {
-	val, err := ioutil.ReadAll(event)
-	if err != nil {
+func (w *natsMessageWriter) SetStructuredEvent(_ context.Context, _ format.Format, event io.Reader) error {
+	if _, err := w.ReadFrom(event); err != nil {
 		return err
 	}
-	b.Data = val
-	return nil
-}
 
-func (b *natsMessageWriter) Start(ctx context.Context) error {
-	return nil
-}
-
-func (b *natsMessageWriter) End(ctx context.Context) error {
 	return nil
 }
 
