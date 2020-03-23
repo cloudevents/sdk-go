@@ -9,8 +9,6 @@ import (
 	"github.com/nats-io/nats.go"
 )
 
-const prefix = "cloudEvents:" // Name prefix for AMQP properties that hold CE attributes.
-
 // Message implements binding.Message by wrapping an *nats.Msg.
 // This message *can* be read several times safely
 type Message struct {

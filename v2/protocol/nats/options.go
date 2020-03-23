@@ -1,29 +1,55 @@
 package nats
 
 import (
+	"errors"
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/nats-io/nats.go"
 )
 
-// Option is the function signature required to be considered an nats.Option.
-type Option func(*Protocol) error
+var ErrInvalidQueueName = errors.New("invalid queue name for QueueSubscriber")
 
-// WithConnOptions supplies NATS connection options that will be used when setting
-// up the internal NATS connection
-func WithConnOptions(opts ...nats.Option) Option {
-	return func(t *Protocol) error {
-		for _, o := range opts {
-			t.ConnOptions = append(t.ConnOptions, o)
-		}
+// NatsOptions is a helper function to group a variadic stan.ProtocolOption into
+// []stan.Option that can be used by either Sender, Consumer or Protocol
+func NatsOptions(opts ...nats.Option) []nats.Option {
+	return opts
+}
 
+// ProtocolOption is the function signature required to be considered an nats.ProtocolOption.
+type ProtocolOption func(*Protocol) error
+
+func WithConsumerOptions(opts ...ConsumerOption) ProtocolOption {
+	return func(p *Protocol) error {
+		p.consumerOptions = opts
 		return nil
 	}
 }
 
-// Add a transformer, which Protocol uses while encoding a binding.Message to an nats.Message
-func WithTransformer(transformer binding.TransformerFactory) Option {
+func WithSenderOptions(opts ...SenderOption) ProtocolOption {
 	return func(p *Protocol) error {
-		p.Transformers = append(p.Transformers, transformer)
+		p.senderOptions = opts
+		return nil
+	}
+}
+
+type SenderOption func(*Sender) error
+
+// Add a transformer, which Sender uses while encoding a binding.Message to an nats.Message
+func WithTransformer(transformer binding.TransformerFactory) SenderOption {
+	return func(s *Sender) error {
+		s.Transformers = append(s.Transformers, transformer)
+		return nil
+	}
+}
+
+type ConsumerOption func(*Consumer) error
+
+// WithQueueSubscriber configures the Consumer to join a queue group when subscribing
+func WithQueueSubscriber(queue string) ConsumerOption {
+	return func(c *Consumer) error {
+		if queue == "" {
+			return ErrInvalidQueueName
+		}
+		c.Subscriber = &QueueSubscriber{Queue: queue}
 		return nil
 	}
 }

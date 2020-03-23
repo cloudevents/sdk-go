@@ -39,7 +39,7 @@ func main() {
 	}
 
 	for _, contentType := range []string{"application/json", "application/xml"} {
-		p, err := cloudeventsnats.New(env.NATSServer, env.Subject)
+		p, err := cloudeventsnats.NewSender(env.NATSServer, env.Subject, cloudeventsnats.NatsOptions())
 		if err != nil {
 			log.Printf("failed to create nats protocol, %s", err.Error())
 			os.Exit(1)
