@@ -6,6 +6,7 @@ import (
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/nats-io/stan.go"
 	"io"
+	"sync"
 )
 
 type msgErr struct {
@@ -80,6 +81,8 @@ type Consumer struct {
 
 	subscriptionOptions []stan.SubscriptionOption
 	sub                 stan.Subscription
+	subCloser           chan struct{}             // subCloser is closed when OpenInbound needs to stop
+	subMutex            sync.Mutex                // access to sub should be locked around this mutex
 	connOwned           bool                      // whether this consumer is responsible for closing the connection
 	appliedSubOpts      *stan.SubscriptionOptions // only used locally, stored to avoid recomputing
 }
@@ -130,17 +133,46 @@ func NewConsumerFromConn(conn stan.Conn, subject string, opts ...ConsumerOption)
 // OpenInbound implements Opener.OpenInbound.
 func (c *Consumer) OpenInbound(ctx context.Context) error {
 	var err error
+	// we lock access to the sub during startup
+	c.subMutex.Lock()
 	if c.sub != nil && c.sub.IsValid() {
+		defer c.subMutex.Unlock()
 		// TODO: is this what we want?
 		return ErrSubscriptionAlreadyOpen
 	}
 
 	c.sub, err = c.Subscriber.Subscribe(c.Conn, c.Subject, c.Receiver.MsgHandler, c.subscriptionOptions...)
+	c.subCloser = make(chan struct{})
 	if err != nil {
+		defer c.subMutex.Unlock()
 		c.sub = nil
 		return err
 	}
-	<-ctx.Done()
+	c.subMutex.Unlock()
+
+	// wait until ctx or c.subCloser is closed
+	select {
+	case <-ctx.Done():
+	case <-c.subCloser:
+	}
+
+	// tidy up the subscription
+	c.subMutex.Lock()
+	defer func() {
+		c.subCloser = nil
+		c.sub = nil
+		c.subMutex.Unlock()
+	}()
+
+	if c.UnsubscribeOnClose {
+		if err := c.sub.Unsubscribe(); err != nil {
+			return err
+		}
+	} else {
+		if err := c.sub.Close(); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
@@ -149,23 +181,13 @@ func (c *Consumer) OpenInbound(ctx context.Context) error {
 // This method only closes the connection if the Consumer opened it. Subscriptions are closed/unsubscribed dependent
 // on the UnsubscribeOnClose field.
 func (c *Consumer) Close(_ context.Context) error {
-	if c.sub == nil || !c.sub.IsValid() {
-		return nil
-	}
+	c.subMutex.Lock()
+	defer c.subMutex.Unlock()
 
-	if c.UnsubscribeOnClose {
-		if err := c.sub.Unsubscribe(); err != nil {
-			return err
-		}
-	} else {
-		// c.Conn.Close() would implicitly close any underlying subscriptions but this results in over-complicated
-		// logic, it's easier to just explicitly close like so
-		if err := c.sub.Close(); err != nil {
-			return err
-		}
+	// if there's an active subscription, trigger it to close
+	if c.subCloser != nil {
+		close(c.subCloser)
 	}
-
-	c.sub = nil
 
 	if c.connOwned {
 		return c.Conn.Close()
