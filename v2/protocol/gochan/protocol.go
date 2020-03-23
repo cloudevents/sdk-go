@@ -13,13 +13,13 @@ const (
 // Protocol is a reference implementation for using the CloudEvents binding
 // integration.
 type Protocol struct {
-	sender       protocol.Sender
-	receiver     protocol.Receiver
-	transformers binding.TransformerFactories
+	sender   protocol.Sender
+	receiver protocol.Receiver
 }
 
 func New() *Protocol {
 	ch := make(chan binding.Message, defaultChanDepth)
+
 	return &Protocol{
 		sender:   ChanSender(ch),
 		receiver: ChanReceiver(ch),

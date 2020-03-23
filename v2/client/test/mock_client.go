@@ -10,7 +10,7 @@ import (
 	"github.com/cloudevents/sdk-go/v2/client"
 	"github.com/cloudevents/sdk-go/v2/event"
 	"github.com/cloudevents/sdk-go/v2/protocol"
-	protocoltest "github.com/cloudevents/sdk-go/v2/protocol/test"
+	"github.com/cloudevents/sdk-go/v2/protocol/gochan"
 )
 
 // MockSenderClient returns a client that can Send() event.
@@ -36,7 +36,7 @@ func NewMockSenderClient(t *testing.T, chanSize int, opts ...client.Option) (cli
 		}
 	}(messageCh, eventCh)
 
-	c, err := client.New(protocoltest.ChanSender(messageCh), opts...)
+	c, err := client.New(gochan.ChanSender(messageCh), opts...)
 	require.NoError(t, err)
 
 	return c, eventCh
@@ -61,7 +61,7 @@ func NewMockRequesterClient(t *testing.T, chanSize int, replierFn func(inMessage
 		return nil, err
 	}
 
-	chanRequester := protocoltest.ChanRequester{
+	chanRequester := gochan.ChanRequester{
 		Ch:    messageCh,
 		Reply: replier,
 	}
@@ -107,7 +107,7 @@ func NewMockReceiverClient(t *testing.T, chanSize int, opts ...client.Option) (c
 		}
 	}(messageCh, eventCh)
 
-	c, err := client.New(protocoltest.ChanReceiver(messageCh), opts...)
+	c, err := client.New(gochan.ChanReceiver(messageCh), opts...)
 	require.NoError(t, err)
 
 	return c, eventCh
@@ -128,7 +128,7 @@ func NewMockResponderClient(t *testing.T, chanSize int, opts ...client.Option) (
 	inMessageCh := make(chan binding.Message)
 
 	outEventCh := make(chan ClientMockResponse, chanSize)
-	outMessageCh := make(chan protocoltest.ChanResponderResponse)
+	outMessageCh := make(chan gochan.ChanResponderResponse)
 
 	// Input piping
 	go func(messageCh chan<- binding.Message, eventCh <-chan event.Event) {
@@ -144,7 +144,7 @@ func NewMockResponderClient(t *testing.T, chanSize int, opts ...client.Option) (
 	}(inMessageCh, inEventCh)
 
 	// Output piping
-	go func(messageCh <-chan protocoltest.ChanResponderResponse, eventCh chan<- ClientMockResponse) {
+	go func(messageCh <-chan gochan.ChanResponderResponse, eventCh chan<- ClientMockResponse) {
 		for {
 			select {
 			case m, ok := <-messageCh:
@@ -164,7 +164,7 @@ func NewMockResponderClient(t *testing.T, chanSize int, opts ...client.Option) (
 		}
 	}(outMessageCh, outEventCh)
 
-	c, err := client.New(&protocoltest.ChanResponder{In: inMessageCh, Out: outMessageCh}, opts...)
+	c, err := client.New(&gochan.ChanResponder{In: inMessageCh, Out: outMessageCh}, opts...)
 	require.NoError(t, err)
 
 	return c, inEventCh, outEventCh

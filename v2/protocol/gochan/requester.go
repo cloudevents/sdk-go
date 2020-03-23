@@ -1,8 +1,9 @@
-package test
+package gochan
 
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/protocol"
@@ -14,6 +15,12 @@ type ChanRequester struct {
 }
 
 func (s *ChanRequester) Send(ctx context.Context, m binding.Message) (err error) {
+	if ctx == nil {
+		return fmt.Errorf("nil Context")
+	} else if m == nil {
+		return fmt.Errorf("nil Message")
+	}
+
 	defer func() {
 		err2 := m.Finish(err)
 		if err == nil {
@@ -53,4 +60,4 @@ func (s *ChanRequester) Close(ctx context.Context) (err error) {
 	return nil
 }
 
-var _ protocol.Requester = (*ChanRequester)(nil)
+var _ protocol.RequesterCloser = (*ChanRequester)(nil)

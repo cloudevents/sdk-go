@@ -3,12 +3,13 @@ package gochan
 import (
 	"context"
 	"fmt"
+	"github.com/cloudevents/sdk-go/v2/protocol"
 	"io"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
 )
 
-// ChanReceiver implements Receiver by receiving from a channel.
+// ChanReceiver implements Receiver by receiving Messages from a channel.
 type ChanReceiver <-chan binding.Message
 
 func (r ChanReceiver) Receive(ctx context.Context) (binding.Message, error) {
@@ -26,3 +27,5 @@ func (r ChanReceiver) Receive(ctx context.Context) (binding.Message, error) {
 		return m, nil
 	}
 }
+
+var _ protocol.Receiver = (*ChanReceiver)(nil)

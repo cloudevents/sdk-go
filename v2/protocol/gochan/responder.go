@@ -1,7 +1,8 @@
-package test
+package gochan
 
 import (
 	"context"
+	"fmt"
 	"io"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
@@ -20,6 +21,10 @@ type ChanResponder struct {
 }
 
 func (r *ChanResponder) Respond(ctx context.Context) (binding.Message, protocol.ResponseFn, error) {
+	if ctx == nil {
+		return nil, nil, fmt.Errorf("nil Context")
+	}
+
 	select {
 	case <-ctx.Done():
 		return nil, nil, ctx.Err()
@@ -36,19 +41,5 @@ func (r *ChanResponder) Respond(ctx context.Context) (binding.Message, protocol.
 		}, nil
 	}
 }
-
-func (r *ChanResponder) Receive(ctx context.Context) (binding.Message, error) {
-	select {
-	case <-ctx.Done():
-		return nil, ctx.Err()
-	case m, ok := <-r.In:
-		if !ok {
-			return nil, io.EOF
-		}
-		return m, nil
-	}
-}
-
-func (r *ChanResponder) Close(ctx context.Context) error { return nil }
 
 var _ protocol.Responder = (*ChanResponder)(nil)

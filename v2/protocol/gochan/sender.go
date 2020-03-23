@@ -6,9 +6,10 @@ import (
 	"fmt"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
+	"github.com/cloudevents/sdk-go/v2/protocol"
 )
 
-// ChanSender implements Sender by sending on a channel.
+// ChanSender implements Sender by sending Messages on a channel.
 type ChanSender chan<- binding.Message
 
 func (s ChanSender) Send(ctx context.Context, m binding.Message) (err error) {
@@ -35,9 +36,11 @@ func (s ChanSender) Send(ctx context.Context, m binding.Message) (err error) {
 func (s ChanSender) Close(ctx context.Context) (err error) {
 	defer func() {
 		if recover() != nil {
-			err = errors.New("send on closed channel")
+			err = errors.New("trying to close a closed ChanSender")
 		}
 	}()
 	close(s)
 	return nil
 }
+
+var _ protocol.SendCloser = (ChanSender)(nil)
