@@ -2,6 +2,7 @@ package gochan
 
 import (
 	"context"
+	"fmt"
 	"io"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
@@ -11,6 +12,10 @@ import (
 type ChanReceiver <-chan binding.Message
 
 func (r ChanReceiver) Receive(ctx context.Context) (binding.Message, error) {
+	if ctx == nil {
+		return nil, fmt.Errorf("nil Context")
+	}
+
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
@@ -20,8 +25,4 @@ func (r ChanReceiver) Receive(ctx context.Context) (binding.Message, error) {
 		}
 		return m, nil
 	}
-}
-
-func (r ChanReceiver) Close(ctx context.Context) error {
-	return nil
 }
