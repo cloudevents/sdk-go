@@ -10,26 +10,26 @@ const (
 	defaultChanDepth = 20
 )
 
-// Protocol is a reference implementation for using the CloudEvents binding
+// SendReceiver is a reference implementation for using the CloudEvents binding
 // integration.
-type Protocol struct {
+type SendReceiver struct {
 	sender   protocol.Sender
 	receiver protocol.Receiver
 }
 
-func New() *Protocol {
+func New() *SendReceiver {
 	ch := make(chan binding.Message, defaultChanDepth)
 
-	return &Protocol{
-		sender:   ChanSender(ch),
-		receiver: ChanReceiver(ch),
+	return &SendReceiver{
+		sender:   Sender(ch),
+		receiver: Receiver(ch),
 	}
 }
 
-func (s *Protocol) Send(ctx context.Context, in binding.Message) (err error) {
+func (s *SendReceiver) Send(ctx context.Context, in binding.Message) (err error) {
 	return s.sender.Send(ctx, in)
 }
 
-func (r *Protocol) Receive(ctx context.Context) (binding.Message, error) {
+func (r *SendReceiver) Receive(ctx context.Context) (binding.Message, error) {
 	return r.receiver.Receive(ctx)
 }

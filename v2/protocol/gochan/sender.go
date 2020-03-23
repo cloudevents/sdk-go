@@ -9,10 +9,10 @@ import (
 	"github.com/cloudevents/sdk-go/v2/protocol"
 )
 
-// ChanSender implements Sender by sending Messages on a channel.
-type ChanSender chan<- binding.Message
+// Sender implements Sender by sending Messages on a channel.
+type Sender chan<- binding.Message
 
-func (s ChanSender) Send(ctx context.Context, m binding.Message) (err error) {
+func (s Sender) Send(ctx context.Context, m binding.Message) (err error) {
 	if ctx == nil {
 		return fmt.Errorf("nil Context")
 	} else if m == nil {
@@ -33,14 +33,14 @@ func (s ChanSender) Send(ctx context.Context, m binding.Message) (err error) {
 	}
 }
 
-func (s ChanSender) Close(ctx context.Context) (err error) {
+func (s Sender) Close(ctx context.Context) (err error) {
 	defer func() {
 		if recover() != nil {
-			err = errors.New("trying to close a closed ChanSender")
+			err = errors.New("trying to close a closed Sender")
 		}
 	}()
 	close(s)
 	return nil
 }
 
-var _ protocol.SendCloser = (ChanSender)(nil)
+var _ protocol.SendCloser = (Sender)(nil)

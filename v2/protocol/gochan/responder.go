@@ -14,13 +14,13 @@ type ChanResponderResponse struct {
 	Result  protocol.Result
 }
 
-// ChanResponder implements Responder by receiving Messages from a channel and outputting the result in an output channel.
-type ChanResponder struct {
+// Responder implements Responder by receiving Messages from a channel and outputting the result in an output channel.
+type Responder struct {
 	In  <-chan binding.Message
 	Out chan<- ChanResponderResponse
 }
 
-func (r *ChanResponder) Respond(ctx context.Context) (binding.Message, protocol.ResponseFn, error) {
+func (r *Responder) Respond(ctx context.Context) (binding.Message, protocol.ResponseFn, error) {
 	if ctx == nil {
 		return nil, nil, fmt.Errorf("nil Context")
 	}
@@ -42,4 +42,4 @@ func (r *ChanResponder) Respond(ctx context.Context) (binding.Message, protocol.
 	}
 }
 
-var _ protocol.Responder = (*ChanResponder)(nil)
+var _ protocol.Responder = (*Responder)(nil)

@@ -15,8 +15,8 @@ func TestNew(t *testing.T) {
 	assert.NotNil(t, got)
 }
 
-func protocols(t *testing.T) []*Protocol {
-	return []*Protocol{New()}
+func protocols(t *testing.T) []*SendReceiver {
+	return []*SendReceiver{New()}
 }
 
 func TestSend(t *testing.T) {
@@ -118,7 +118,7 @@ func TestSendReceive(t *testing.T) {
 	}
 }
 
-func ReceiveTest(t *testing.T, p *Protocol, ctx context.Context, want binding.Message, wantErr string) {
+func ReceiveTest(t *testing.T, p *SendReceiver, ctx context.Context, want binding.Message, wantErr string) {
 	if ctx != nil {
 		var done context.CancelFunc
 		ctx, done = context.WithTimeout(ctx, time.Millisecond*10)

@@ -9,10 +9,10 @@ import (
 	"github.com/cloudevents/sdk-go/v2/binding"
 )
 
-// ChanReceiver implements Receiver by receiving Messages from a channel.
-type ChanReceiver <-chan binding.Message
+// Receiver implements Receiver by receiving Messages from a channel.
+type Receiver <-chan binding.Message
 
-func (r ChanReceiver) Receive(ctx context.Context) (binding.Message, error) {
+func (r Receiver) Receive(ctx context.Context) (binding.Message, error) {
 	if ctx == nil {
 		return nil, fmt.Errorf("nil Context")
 	}
@@ -28,4 +28,4 @@ func (r ChanReceiver) Receive(ctx context.Context) (binding.Message, error) {
 	}
 }
 
-var _ protocol.Receiver = (*ChanReceiver)(nil)
+var _ protocol.Receiver = (*Receiver)(nil)

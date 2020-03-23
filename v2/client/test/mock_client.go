@@ -36,7 +36,7 @@ func NewMockSenderClient(t *testing.T, chanSize int, opts ...client.Option) (cli
 		}
 	}(messageCh, eventCh)
 
-	c, err := client.New(gochan.ChanSender(messageCh), opts...)
+	c, err := client.New(gochan.Sender(messageCh), opts...)
 	require.NoError(t, err)
 
 	return c, eventCh
@@ -61,7 +61,7 @@ func NewMockRequesterClient(t *testing.T, chanSize int, replierFn func(inMessage
 		return nil, err
 	}
 
-	chanRequester := gochan.ChanRequester{
+	chanRequester := gochan.Requester{
 		Ch:    messageCh,
 		Reply: replier,
 	}
@@ -107,7 +107,7 @@ func NewMockReceiverClient(t *testing.T, chanSize int, opts ...client.Option) (c
 		}
 	}(messageCh, eventCh)
 
-	c, err := client.New(gochan.ChanReceiver(messageCh), opts...)
+	c, err := client.New(gochan.Receiver(messageCh), opts...)
 	require.NoError(t, err)
 
 	return c, eventCh
@@ -164,7 +164,7 @@ func NewMockResponderClient(t *testing.T, chanSize int, opts ...client.Option) (
 		}
 	}(outMessageCh, outEventCh)
 
-	c, err := client.New(&gochan.ChanResponder{In: inMessageCh, Out: outMessageCh}, opts...)
+	c, err := client.New(&gochan.Responder{In: inMessageCh, Out: outMessageCh}, opts...)
 	require.NoError(t, err)
 
 	return c, inEventCh, outEventCh
