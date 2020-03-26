@@ -206,11 +206,11 @@ func decodeSID(s string) (sid [8]byte, err error) {
 func TestConvertSpanContext(t *testing.T) {
 	tid, err := decodeTID("4bf92f3577b34da6a3ce929d0e0e4736")
 	if err != nil {
-		t.Fatalf("failed to decode traceID: %w", err)
+		t.Fatalf("failed to decode traceID: %v", err)
 	}
 	sid, err := decodeSID("00f067aa0ba902b7")
 	if err != nil {
-		t.Fatalf("failed to decode spanID: %w", err)
+		t.Fatalf("failed to decode spanID: %v", err)
 	}
 	ts, err := tracestate.New(nil,
 		tracestate.Entry{
@@ -218,12 +218,12 @@ func TestConvertSpanContext(t *testing.T) {
 			Value: "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
 		},
 		tracestate.Entry{
-			Key:   "congo",
+			Key:   "tenant@congo",
 			Value: "lZWRzIHRoNhcm5hbCBwbGVhc3VyZS4",
 		},
 	)
 	if err != nil {
-		t.Fatalf("failed to make tracestate: %w", err)
+		t.Fatalf("failed to make tracestate: %v", err)
 	}
 	tests := []struct {
 		name string
@@ -239,7 +239,7 @@ func TestConvertSpanContext(t *testing.T) {
 		},
 		ext: extensions.DistributedTracingExtension{
 			TraceParent: "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
-			TraceState:  "rojo=00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01,congo=lZWRzIHRoNhcm5hbCBwbGVhc3VyZS4",
+			TraceState:  "rojo=00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01,tenant@congo=lZWRzIHRoNhcm5hbCBwbGVhc3VyZS4",
 		},
 	}, {
 		name: "without tracestate",
@@ -264,6 +264,7 @@ func TestConvertSpanContext(t *testing.T) {
 	}}
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run("FromSpanContext: "+tt.name, func(t *testing.T) {
 			t.Parallel()
 			got := extensions.FromSpanContext(tt.sc)
@@ -277,7 +278,15 @@ func TestConvertSpanContext(t *testing.T) {
 			if err != nil {
 				t.Error(err)
 			}
-			if diff := cmp.Diff(tt.sc, got); diff != "" {
+			if diff := cmp.Diff(
+				tt.sc, got,
+				cmp.Transformer(
+					"entries",
+					func(ts tracestate.Tracestate) []tracestate.Entry {
+						return ts.Entries()
+					},
+				),
+			); diff != "" {
 				t.Errorf("\nunexpected (-want, +got) = %v", diff)
 			}
 		})
