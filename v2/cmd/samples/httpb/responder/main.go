@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 
@@ -50,5 +51,12 @@ func main() {
 func gotEvent(ctx context.Context, event cloudevents.Event) (*event.Event, protocol.Result) {
 	fmt.Printf("Got Event: %+v\n", event)
 
-	return &event, cloudevents.NewHTTPResult(http.StatusAccepted, "accept")
+	// 50% chance of ACK
+	if rand.Int()%2 == 0 {
+		fmt.Printf(" ACK\n")
+		return &event, cloudevents.NewHTTPResult(http.StatusAccepted, "accept")
+	}
+
+	fmt.Printf("NACK\n")
+	return nil, cloudevents.NewHTTPResult(http.StatusBadRequest, "rejected")
 }

@@ -61,7 +61,8 @@ func NewMessageFromHttpResponse(resp *nethttp.Response) *Message {
 	if resp == nil {
 		return nil
 	}
-	return NewMessage(resp.Header, resp.Body)
+	msg := NewMessage(resp.Header, resp.Body)
+	return msg
 }
 
 func (m *Message) ReadEncoding() binding.Encoding {

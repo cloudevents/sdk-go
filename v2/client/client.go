@@ -18,11 +18,11 @@ import (
 // Client interface defines the runtime contract the CloudEvents client supports.
 type Client interface {
 	// Send will transmit the given event over the client's configured transport.
-	Send(ctx context.Context, event event.Event) error
+	Send(ctx context.Context, event event.Event) protocol.Result
 
 	// Request will transmit the given event over the client's configured
 	// transport and return any response event.
-	Request(ctx context.Context, event event.Event) (*event.Event, error)
+	Request(ctx context.Context, event event.Event) (*event.Event, protocol.Result)
 
 	// StartReceiver will register the provided function for callback on receipt
 	// of a cloudevent. It will also start the underlying protocol as it has
@@ -94,7 +94,7 @@ func (c *ceClient) applyOptions(opts ...Option) error {
 	return nil
 }
 
-func (c *ceClient) Send(ctx context.Context, e event.Event) error {
+func (c *ceClient) Send(ctx context.Context, e event.Event) protocol.Result {
 	if c.sender == nil {
 		return errors.New("sender not set")
 	}
@@ -116,7 +116,7 @@ func (c *ceClient) Send(ctx context.Context, e event.Event) error {
 	return c.sender.Send(ctx, (*binding.EventMessage)(&e))
 }
 
-func (c *ceClient) Request(ctx context.Context, e event.Event) (*event.Event, error) {
+func (c *ceClient) Request(ctx context.Context, e event.Event) (*event.Event, protocol.Result) {
 	if c.requester == nil {
 		return nil, errors.New("requester not set")
 	}
@@ -138,18 +138,25 @@ func (c *ceClient) Request(ctx context.Context, e event.Event) (*event.Event, er
 	var resp *event.Event
 	msg, err := c.requester.Request(ctx, (*binding.EventMessage)(&e))
 	defer func() {
+		if msg == nil {
+			return
+		}
 		if err := msg.Finish(err); err != nil {
 			cecontext.LoggerFrom(ctx).Warnw("failed calling message.Finish", zap.Error(err))
 		}
 	}()
-	if err == nil {
-		fmt.Printf("%#v", msg)
-		if rs, err := binding.ToEvent(ctx, msg); err != nil {
-			cecontext.LoggerFrom(ctx).Infow("failed calling ToEvent", zap.Error(err), zap.Any("resp", msg))
-		} else {
-			resp = rs
-		}
+
+	if msg != nil {
+		fmt.Println("message was not nil")
 	}
+	//fmt.Printf("%#v", msg)
+	// try to turn msg into an event, it might not work and that is ok.
+	if rs, err := binding.ToEvent(ctx, msg); err != nil {
+		cecontext.LoggerFrom(ctx).Debugw("failed calling ToEvent", zap.Error(err), zap.Any("resp", msg))
+	} else {
+		resp = rs
+	}
+
 	return resp, err
 }
 
@@ -198,14 +205,15 @@ func (c *ceClient) StartReceiver(ctx context.Context, fn interface{}) error {
 		} else if c.receiver != nil {
 			msg, err = c.receiver.Receive(ctx)
 		} else {
-			return errors.New("responder and receiver not set")
+			return errors.New("responder nor receiver set")
 		}
 
 		if err == io.EOF { // Normal close
 			return nil
-		} else if err != nil {
-			return err
 		}
+		//else if err != nil {
+		//	return err
+		//}
 		if err := c.invoker.Invoke(ctx, msg, respFn); err != nil {
 			return err
 		}

@@ -48,7 +48,7 @@ func TestNewWrappedErrors_Is(t *testing.T) {
 func TestNewOtherStatus_Is(t *testing.T) {
 	err := NewResult(403, "this is an example error, %s", "yep")
 	if protocol.ResultIs(err, NewResult(200, "OK")) {
-		t.Error("Did not expect event to be Status=200")
+		t.Error("Did not expect event to be StatusCode=200")
 	}
 }
 
@@ -60,8 +60,8 @@ func TestNew_As(t *testing.T) {
 		t.Errorf("Expected error to be a Result, is not")
 	}
 
-	if event.Status != 404 {
-		t.Errorf("Mismatched Status")
+	if event.StatusCode != 404 {
+		t.Errorf("Mismatched StatusCode")
 	}
 }
 
