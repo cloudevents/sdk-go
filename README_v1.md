@@ -124,7 +124,7 @@ change:
 ```go
 t, err := cloudevents.NewHTTPTransport(
 	cloudevents.WithPort(8181),
-	cloudevents.WithPath("/events/")
+	cloudevents.WithPath("/events/"),
 )
 // or a custom transport: t := &custom.MyTransport{Cool:opts}
 

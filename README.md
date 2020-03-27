@@ -12,36 +12,31 @@ This SDK is still considered work in progress.
 
 **For v1 of the SDK, see** [CloudEvents Go SDK v1](./README_v1.md).
 
-**v2.0.0-preview2:**
+**v2.0.0-preview8:**
 
-In _preview2_ we are focusing on the new Client interface:
+In _preview8_ we are focusing on the new Client interface:
 
 ```go
 type Client interface {
-	Send(ctx context.Context, event event.Event) error
-	Request(ctx context.Context, event event.Event) (*event.Event, error)
+	Send(ctx context.Context, event event.Event) protcol.Result
+	Request(ctx context.Context, event event.Event) (*event.Event, protcol.Result)
 	StartReceiver(ctx context.Context, fn interface{}) error
 }
 ```
 
-Where a full `fn` looks like
-`func(context.Context, event.Event) (*event.Event, transport.Result)`
+`Send` and `Request` will return the result of the outbound event. This at minimum means the result is testable
+for being an _ACK_ or _NACK_ via:
 
-For protocols that do not support responses, `StartReceiver` will throw an error
-when attempting to set a receiver fn with that capability.
+```go
+if cloudevents.IsACK(result) { 
+	// handle result as an accepted event.
+} else if cloudevents.IsNACK(result) {
+	// handle result as a rejected event.
+} else {
+	// handle result as an error.
+} 
+```
 
-For protocols that do not support responses from send (Requester interface),
-`Client.Request` will throw an error.
-
-**v2.0.0-preview1:**
-
-In _preview1_ we are focusing on the new interfaces found in pkg/transport (will
-be renamed to protocol):
-
-- Sender, Send an event.
-- Requester, Send an event and expect a response.
-- Receiver, Receive an event.
-- Responder, Receive an event and respond.
 
 ## Working with CloudEvents
 
@@ -51,7 +46,7 @@ _Note:_ Supported
 Import this repo to get the `cloudevents` package:
 
 ```go
-import cloudevents "github.com/cloudevents/sdk-go"
+import cloudevents "github.com/cloudevents/sdk-go/v2"
 ```
 
 To marshal a CloudEvent into JSON, use `event.Event` directly:
@@ -97,7 +92,7 @@ func main() {
 	ctx := cloudevents.ContextWithTarget(context.Background(), "http://localhost:8080/")
 
 	// Send that Event.
-	if err := c.Send(ctx, event); err != nil {
+	if result := c.Send(ctx, event); !cloudevents.IsACK(result) {
 		log.Fatalf("failed to send, %v", err)}
 	}
 }
