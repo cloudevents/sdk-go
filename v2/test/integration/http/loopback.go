@@ -31,12 +31,14 @@ func AlwaysThen(then time.Time) client.EventDefaulter {
 }
 
 type TapTest struct {
-	now    time.Time
-	event  *cloudevents.Event
-	resp   *cloudevents.Event
-	want   *cloudevents.Event
-	asSent *TapValidation
-	asRecv *TapValidation
+	now        time.Time
+	event      *cloudevents.Event
+	resp       *cloudevents.Event
+	result     cloudevents.Result
+	want       *cloudevents.Event
+	wantResult cloudevents.Result
+	asSent     *TapValidation
+	asRecv     *TapValidation
 }
 
 type TapTestCases map[string]TapTest
@@ -68,17 +70,23 @@ func ClientLoopback(t *testing.T, tc TapTest, copts ...client.Option) {
 	recvCtx, recvCancel := context.WithCancel(context.Background())
 
 	go func() {
-		if err := ce.StartReceiver(recvCtx, func() *cloudevents.Event {
-			return tc.resp
+		if err := ce.StartReceiver(recvCtx, func() (*cloudevents.Event, cloudevents.Result) {
+			return tc.resp, tc.result
 		}); err != nil {
 			t.Log(err)
 		}
 	}()
 
 	tc.event.SetExtension(unitTestIDKey, testID)
-	got, err := ce.Request(context.Background(), *tc.event)
-	if err != nil {
-		t.Fatal(err)
+	got, result := ce.Request(context.Background(), *tc.event)
+	if result != nil {
+		if tc.wantResult == nil {
+			if !cloudevents.IsACK(result) {
+				t.Errorf("expected ACK, got %s", result)
+			}
+		} else if !cloudevents.ResultIs(result, tc.wantResult) {
+			t.Fatalf("expected %s, got %s", tc.wantResult, result)
+		}
 	}
 
 	recvCancel()

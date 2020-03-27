@@ -119,8 +119,6 @@ func (p *Protocol) Request(ctx context.Context, m binding.Message) (binding.Mess
 		return nil, protocol.NewReceipt(false, "%w", err)
 	}
 
-	fmt.Printf("\nDEBUG: --> http.Request status code = %d\n\n", resp.StatusCode)
-
 	var result protocol.Result
 	if resp.StatusCode/100 == 2 {
 		result = protocol.ResultACK

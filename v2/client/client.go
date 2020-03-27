@@ -146,10 +146,6 @@ func (c *ceClient) Request(ctx context.Context, e event.Event) (*event.Event, pr
 		}
 	}()
 
-	if msg != nil {
-		fmt.Println("message was not nil")
-	}
-	//fmt.Printf("%#v", msg)
 	// try to turn msg into an event, it might not work and that is ok.
 	if rs, err := binding.ToEvent(ctx, msg); err != nil {
 		cecontext.LoggerFrom(ctx).Debugw("failed calling ToEvent", zap.Error(err), zap.Any("resp", msg))

@@ -22,7 +22,9 @@ func SendReceive(t *testing.T, ctx context.Context, in binding.Message, s protoc
 	go func() {
 		defer wg.Done()
 		out, recvErr := r.Receive(ctx)
-		require.NoError(t, recvErr)
+		if !protocol.IsACK(recvErr) {
+			require.NoError(t, recvErr)
+		}
 		outAssert(out)
 		finishErr := out.Finish(nil)
 		require.NoError(t, finishErr)

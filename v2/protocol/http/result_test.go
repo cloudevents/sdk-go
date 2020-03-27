@@ -77,7 +77,7 @@ func TestNil_As(t *testing.T) {
 func TestNew_Error(t *testing.T) {
 	err := NewResult(500, "this is an example error, %s", "yep")
 
-	const want = "this is an example error, yep"
+	const want = "500: this is an example error, yep"
 	got := err.Error()
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("Unexpected diff (-want, +got) = %v", diff)
