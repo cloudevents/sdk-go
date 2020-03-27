@@ -207,9 +207,7 @@ func (c *ceClient) StartReceiver(ctx context.Context, fn interface{}) error {
 		if err == io.EOF { // Normal close
 			return nil
 		}
-		//else if err != nil {
-		//	return err
-		//}
+
 		if err := c.invoker.Invoke(ctx, msg, respFn); err != nil {
 			return err
 		}
