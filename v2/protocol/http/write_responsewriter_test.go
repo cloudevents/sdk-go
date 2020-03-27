@@ -1,9 +1,7 @@
 package http
 
 import (
-	"bytes"
 	"context"
-	"io/ioutil"
 	"net/http/httptest"
 	"testing"
 
@@ -12,27 +10,31 @@ import (
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/binding/buffering"
 	"github.com/cloudevents/sdk-go/v2/binding/test"
+	"github.com/cloudevents/sdk-go/v2/binding/transformer"
 	"github.com/cloudevents/sdk-go/v2/event"
 )
 
 func TestWriteHttpResponseWriter(t *testing.T) {
 	tests := []struct {
-		name             string
-		context          context.Context
-		messageFactory   func(e event.Event) binding.Message
-		expectedEncoding binding.Encoding
+		name                string
+		context             context.Context
+		messageFactory      func(e event.Event) binding.Message
+		expectedEncoding    binding.Encoding
+		expectContentLength bool
 	}{
 		{
-			name:             "Structured to Structured",
-			context:          context.TODO(),
-			messageFactory:   test.MustCreateMockStructuredMessage,
-			expectedEncoding: binding.EncodingStructured,
+			name:                "Structured to Structured",
+			context:             context.TODO(),
+			messageFactory:      test.MustCreateMockStructuredMessage,
+			expectedEncoding:    binding.EncodingStructured,
+			expectContentLength: true,
 		},
 		{
-			name:             "Binary to Binary",
-			context:          context.TODO(),
-			messageFactory:   test.MustCreateMockBinaryMessage,
-			expectedEncoding: binding.EncodingBinary,
+			name:                "Binary to Binary",
+			context:             context.TODO(),
+			messageFactory:      test.MustCreateMockBinaryMessage,
+			expectedEncoding:    binding.EncodingBinary,
+			expectContentLength: true,
 		},
 		{
 			name:    "Structured to buffered to Structured",
@@ -45,7 +47,8 @@ func TestWriteHttpResponseWriter(t *testing.T) {
 
 				return buffered
 			},
-			expectedEncoding: binding.EncodingStructured,
+			expectedEncoding:    binding.EncodingStructured,
+			expectContentLength: true,
 		},
 		{
 			name:    "Binary to buffered to Binary",
@@ -58,7 +61,8 @@ func TestWriteHttpResponseWriter(t *testing.T) {
 
 				return buffered
 			},
-			expectedEncoding: binding.EncodingBinary,
+			expectedEncoding:    binding.EncodingBinary,
+			expectContentLength: true,
 		},
 		{
 			name:    "Direct structured HttpRequest to Structured",
@@ -69,10 +73,11 @@ func TestWriteHttpResponseWriter(t *testing.T) {
 
 				return NewMessageFromHttpRequest(req)
 			},
-			expectedEncoding: binding.EncodingStructured,
+			expectedEncoding:    binding.EncodingStructured,
+			expectContentLength: false,
 		},
 		{
-			name:    "Binary to buffered to Binary",
+			name:    "Binary to binary HttpRequest to Binary",
 			context: context.TODO(),
 			messageFactory: func(e event.Event) binding.Message {
 				req := httptest.NewRequest("POST", "http://localhost", nil)
@@ -80,19 +85,22 @@ func TestWriteHttpResponseWriter(t *testing.T) {
 
 				return NewMessageFromHttpRequest(req)
 			},
-			expectedEncoding: binding.EncodingBinary,
+			expectedEncoding:    binding.EncodingBinary,
+			expectContentLength: false,
 		},
 		{
-			name:             "Event to Structured",
-			context:          binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingStructured),
-			messageFactory:   func(e event.Event) binding.Message { return binding.ToMessage(&e) },
-			expectedEncoding: binding.EncodingStructured,
+			name:                "Event to Structured",
+			context:             binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingStructured),
+			messageFactory:      func(e event.Event) binding.Message { return binding.ToMessage(&e) },
+			expectedEncoding:    binding.EncodingStructured,
+			expectContentLength: true,
 		},
 		{
-			name:             "Event to Binary",
-			context:          binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingBinary),
-			messageFactory:   func(e event.Event) binding.Message { return binding.ToMessage(&e) },
-			expectedEncoding: binding.EncodingBinary,
+			name:                "Event to Binary",
+			context:             binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingBinary),
+			messageFactory:      func(e event.Event) binding.Message { return binding.ToMessage(&e) },
+			expectedEncoding:    binding.EncodingBinary,
+			expectContentLength: true,
 		},
 	}
 	for _, tt := range tests {
@@ -103,18 +111,20 @@ func TestWriteHttpResponseWriter(t *testing.T) {
 				eventIn = test.ExToStr(t, eventIn)
 				messageIn := tt.messageFactory(eventIn)
 
-				shouldHaveContentLength := eventIn.Data() != nil || messageIn.ReadEncoding() == binding.EncodingStructured
+				shouldHaveContentLength := tt.expectContentLength && (eventIn.Data() != nil || messageIn.ReadEncoding() == binding.EncodingStructured)
 
-				err := WriteResponseWriter(tt.context, messageIn, 200, res)
+				err := WriteResponseWriter(tt.context, messageIn, 202, res)
 				require.NoError(t, err)
 
-				require.Equal(t, 200, res.Code)
+				response := res.Result()
+
+				require.Equal(t, 202, response.StatusCode)
 				if shouldHaveContentLength {
-					require.NotZero(t, res.Header().Get("content-length"))
+					require.NotZero(t, response.Header.Get("content-length"))
 				}
 
 				//Little hack to go back to Message
-				messageOut := NewMessage(res.Header(), ioutil.NopCloser(bytes.NewReader(res.Body.Bytes())))
+				messageOut := NewMessageFromHttpResponse(response)
 				require.Equal(t, tt.expectedEncoding, messageOut.ReadEncoding())
 
 				eventOut, err := binding.ToEvent(context.TODO(), messageOut)
@@ -123,4 +133,30 @@ func TestWriteHttpResponseWriter(t *testing.T) {
 			})
 		})
 	}
+}
+
+func TestWriteHttpResponseWriter_using_transformers_with_end(t *testing.T) {
+	eventIn := test.ExToStr(t, test.FullEvent())
+	initialReq := httptest.NewRequest("POST", "http://localhost", nil)
+	require.NoError(t, WriteRequest(binding.WithForceBinary(context.TODO()), binding.ToMessage(&eventIn), initialReq))
+
+	messageIn := NewMessageFromHttpRequest(initialReq)
+
+	res := httptest.NewRecorder()
+
+	err := WriteResponseWriter(context.TODO(), messageIn, 202, res, transformer.AddExtension("blablabla", "blablabla"))
+	require.NoError(t, err)
+
+	response := res.Result()
+
+	require.Equal(t, 202, response.StatusCode)
+
+	//Little hack to go back to Message
+	messageOut := NewMessageFromHttpResponse(response)
+	require.Equal(t, binding.EncodingBinary, messageOut.ReadEncoding())
+
+	eventIn.SetExtension("blablabla", "blablabla")
+	eventOut, err := binding.ToEvent(context.TODO(), messageOut)
+	require.NoError(t, err)
+	test.AssertEventEquals(t, eventIn, *eventOut)
 }
