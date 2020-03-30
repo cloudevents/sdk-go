@@ -137,18 +137,25 @@ func (c *ceClient) Request(ctx context.Context, e event.Event) (*event.Event, pr
 	// If provided a requester, use it to do request/response.
 	var resp *event.Event
 	msg, err := c.requester.Request(ctx, (*binding.EventMessage)(&e))
-	defer func() {
-		if msg == nil {
-			return
-		}
-		if err := msg.Finish(err); err != nil {
-			cecontext.LoggerFrom(ctx).Warnw("failed calling message.Finish", zap.Error(err))
-		}
-	}()
+	if msg != nil {
+		defer func() {
+			if err := msg.Finish(err); err != nil {
+				cecontext.LoggerFrom(ctx).Warnw("failed calling message.Finish", zap.Error(err))
+			}
+		}()
+	}
 
 	// try to turn msg into an event, it might not work and that is ok.
-	if rs, err := binding.ToEvent(ctx, msg); err != nil {
-		cecontext.LoggerFrom(ctx).Debugw("failed calling ToEvent", zap.Error(err), zap.Any("resp", msg))
+	if rs, rserr := binding.ToEvent(ctx, msg); rserr != nil {
+		cecontext.LoggerFrom(ctx).Debugw("response: failed calling ToEvent", zap.Error(rserr), zap.Any("resp", msg))
+		if err != nil {
+			err = fmt.Errorf("%w; failed to convert response into event: %s", err, rserr)
+		} else {
+			// If the protocol returns no error, it is an ACK on the request, but we had
+			// issues turning the response into an event, so make an ACK Result and pass
+			// down the ToEvent error as well.
+			err = fmt.Errorf("%w; failed to convert response into event: %s", protocol.ResultACK, rserr)
+		}
 	} else {
 		resp = rs
 	}

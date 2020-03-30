@@ -32,7 +32,7 @@ if cloudevents.IsACK(result) {
 	// handle result as an accepted event.
 } else if cloudevents.IsNACK(result) {
 	// handle result as a rejected event.
-} else {
+} else if result != nil {
 	// handle result as an error.
 } 
 ```

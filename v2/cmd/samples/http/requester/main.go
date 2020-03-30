@@ -62,7 +62,11 @@ func _main(args []string, env envConfig) int {
 				return 1
 			}
 
-			message := fmt.Sprintf("Hello, %d!", encoding)
+			enc := "binary"
+			if encoding == cloudevents.EncodingStructured {
+				enc = "structured"
+			}
+			message := fmt.Sprintf("Hello %s, %s!", contentType, enc)
 
 			for i := 0; i < count; i++ {
 				event := cloudevents.Event{
