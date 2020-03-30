@@ -241,7 +241,7 @@ func (ec EventContextV03) Validate() error {
 		} else {
 			_, _, err := mime.ParseMediaType(dataContentType)
 			if err != nil {
-				errors = append(errors, fmt.Sprintf("datacontenttype: failed to parse media type, %s", err.Error()))
+				errors = append(errors, fmt.Sprintf("datacontenttype: failed to parse RFC 2046 media type, %s", err.Error()))
 			}
 		}
 	}
