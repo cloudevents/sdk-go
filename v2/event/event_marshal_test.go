@@ -675,7 +675,7 @@ func TestUnmarshal(t *testing.T) {
 		"xml data v1.0": {
 			body: mustJsonMarshal(t, map[string]interface{}{
 				"specversion":     "1.0",
-				"datacontenttype": "application/json",
+				"datacontenttype": event.ApplicationXML,
 				"data":            string(mustEncodeWithDataCodec(t, event.ApplicationXML, XMLDataExample{AnInt: 5, AString: "aaa"})),
 				"id":              "ABC-123",
 				"time":            now.Format(time.RFC3339Nano),
@@ -683,26 +683,18 @@ func TestUnmarshal(t *testing.T) {
 				"dataschema":      "http://example.com/schema",
 				"source":          "http://example.com/source",
 			}),
-			want: func() *event.Event {
-				ev := &event.Event{
-					Context: event.EventContextV1{
-						Type:            "com.example.test",
-						Source:          *sourceV1,
-						DataSchema:      schemaV1,
-						ID:              "ABC-123",
-						Time:            &now,
-						DataContentType: event.StringOfApplicationJSON(),
-					}.AsV1(),
-					DataBase64: false,
-				}
-
-				// We need this stuff hack because json module enforces escaping the angular brackets
-				// and doesn't give any way to disable this setting
-				b := mustEncodeWithDataCodec(t, event.ApplicationXML, &XMLDataExample{AnInt: 5, AString: "aaa"})
-				ev.DataEncoded = mustJsonMarshal(t, string(b))
-
-				return ev
-			}(),
+			want: &event.Event{
+				Context: event.EventContextV1{
+					Type:            "com.example.test",
+					Source:          *sourceV1,
+					DataSchema:      schemaV1,
+					ID:              "ABC-123",
+					Time:            &now,
+					DataContentType: event.StringOfApplicationXML(),
+				}.AsV1(),
+				DataBase64:  false,
+				DataEncoded: mustEncodeWithDataCodec(t, event.ApplicationXML, &XMLDataExample{AnInt: 5, AString: "aaa"}),
+			},
 		},
 		"nil data v1.0": {
 			body: mustJsonMarshal(t, map[string]interface{}{

@@ -178,6 +178,18 @@ func (e *Event) JsonDecodeV03(body []byte, raw map[string]json.RawMessage) error
 			e.DataBase64 = true
 			e.DataEncoded = tmp
 		} else {
+			if ec.DataContentType != nil {
+				ct := *ec.DataContentType
+				if ct != ApplicationJSON && ct != TextJSON {
+					var dataStr string
+					err := json.Unmarshal(d, dataStr)
+					if err != nil {
+						return err
+					}
+
+					data = []byte(dataStr)
+				}
+			}
 			e.DataEncoded = data
 			e.DataBase64 = false
 		}
@@ -224,6 +236,18 @@ func (e *Event) JsonDecodeV1(body []byte, raw map[string]json.RawMessage) error 
 	var data []byte
 	if d, ok := raw["data"]; ok {
 		data = d
+		if ec.DataContentType != nil {
+			ct := *ec.DataContentType
+			if ct != ApplicationJSON && ct != TextJSON {
+				var dataStr string
+				err := json.Unmarshal(d, &dataStr)
+				if err != nil {
+					return err
+				}
+
+				data = []byte(dataStr)
+			}
+		}
 	}
 	delete(raw, "data")
 
