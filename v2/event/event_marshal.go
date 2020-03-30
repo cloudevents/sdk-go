@@ -182,7 +182,7 @@ func (e *Event) JsonDecodeV03(body []byte, raw map[string]json.RawMessage) error
 				ct := *ec.DataContentType
 				if ct != ApplicationJSON && ct != TextJSON {
 					var dataStr string
-					err := json.Unmarshal(d, dataStr)
+					err := json.Unmarshal(d, &dataStr)
 					if err != nil {
 						return err
 					}
