@@ -2,15 +2,15 @@ package event_test
 
 import (
 	"context"
-	"encoding/base64"
 	"strings"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/require"
 
 	"github.com/cloudevents/sdk-go/v2/event"
 	"github.com/cloudevents/sdk-go/v2/event/datacodec"
 	"github.com/cloudevents/sdk-go/v2/types"
-	"github.com/google/go-cmp/cmp"
-	"github.com/stretchr/testify/require"
 )
 
 type DataTest struct {
@@ -161,7 +161,7 @@ func TestEventSetData_binary_v1(t *testing.T) {
 
 	require.NoError(t, e.SetData(event.ApplicationJSON, encodedPayload))
 
-	require.True(t, e.DataBinary)
+	require.True(t, e.DataBase64)
 	require.Equal(t, encodedPayload, e.Data())
 
 	actual := map[string]interface{}{}
@@ -307,10 +307,4 @@ func mustEncodeWithDataCodec(t *testing.T, ct string, in interface{}) []byte {
 	data, err := datacodec.Encode(context.TODO(), ct, in)
 	require.NoError(t, err)
 	return data
-}
-
-func encodeBase64(in []byte) []byte {
-	data := make([]byte, base64.StdEncoding.EncodedLen(len(in)))
-	base64.StdEncoding.Encode(data, in)
-	return in
 }

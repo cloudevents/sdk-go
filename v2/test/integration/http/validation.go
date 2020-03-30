@@ -34,7 +34,7 @@ func toBytes(body map[string]interface{}) []byte {
 }
 
 func assertEventEqualityExact(t *testing.T, ctx string, expected, actual *cloudevents.Event) {
-	if diff := cmp.Diff(expected, actual, cmpopts.IgnoreFields(cloudevents.Event{}, "DataEncoded", "DataBinary")); diff != "" {
+	if diff := cmp.Diff(expected, actual, cmpopts.IgnoreFields(cloudevents.Event{}, "DataEncoded", "DataBase64")); diff != "" {
 		t.Errorf("Unexpected difference in %s (-want, +got): %v", ctx, diff)
 	}
 	if expected == nil || actual == nil {
@@ -46,7 +46,7 @@ func assertEventEqualityExact(t *testing.T, ctx string, expected, actual *cloude
 }
 
 func assertEventEquality(t *testing.T, ctx string, expected, actual *cloudevents.Event) {
-	if diff := cmp.Diff(expected, actual, cmpopts.IgnoreFields(cloudevents.Event{}, "DataEncoded", "DataBinary")); diff != "" {
+	if diff := cmp.Diff(expected, actual, cmpopts.IgnoreFields(cloudevents.Event{}, "DataEncoded", "DataBase64")); diff != "" {
 		t.Errorf("Unexpected difference in %s (-want, +got): %v", ctx, diff)
 	}
 	if expected == nil || actual == nil {

@@ -645,7 +645,7 @@ func TestUnmarshal(t *testing.T) {
 					DataContentType: event.StringOfApplicationJSON(),
 				}.AsV1(),
 				DataEncoded: mustJsonMarshal(t, map[string]interface{}{"hello": "world"}),
-				DataBinary:  true,
+				DataBase64:  true,
 			},
 		},
 		"base64 xml encoded data v1.0": {
@@ -669,7 +669,7 @@ func TestUnmarshal(t *testing.T) {
 					DataContentType: event.StringOfApplicationJSON(),
 				}.AsV1(),
 				DataEncoded: mustEncodeWithDataCodec(t, event.ApplicationXML, &XMLDataExample{AnInt: 10}),
-				DataBinary:  true,
+				DataBase64:  true,
 			},
 		},
 		"xml data v1.0": {
@@ -693,7 +693,7 @@ func TestUnmarshal(t *testing.T) {
 						Time:            &now,
 						DataContentType: event.StringOfApplicationJSON(),
 					}.AsV1(),
-					DataBinary: false,
+					DataBase64: false,
 				}
 
 				// We need this stuff hack because json module enforces escaping the angular brackets

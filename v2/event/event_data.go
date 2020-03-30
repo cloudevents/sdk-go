@@ -24,14 +24,14 @@ func (e *Event) SetData(contentType string, obj interface{}) error {
 	switch obj := obj.(type) {
 	case []byte:
 		e.DataEncoded = obj
-		e.DataBinary = true
+		e.DataBase64 = true
 	default:
 		data, err := datacodec.Encode(context.Background(), e.DataMediaType(), obj)
 		if err != nil {
 			return err
 		}
 		e.DataEncoded = data
-		e.DataBinary = false
+		e.DataBase64 = false
 	}
 
 	return nil
@@ -47,14 +47,14 @@ func (e *Event) legacySetData(obj interface{}) error {
 		buf := make([]byte, base64.StdEncoding.EncodedLen(len(data)))
 		base64.StdEncoding.Encode(buf, data)
 		e.DataEncoded = buf
-		e.DataBinary = false
+		e.DataBase64 = false
 	} else {
 		data, err := datacodec.Encode(context.Background(), e.DataMediaType(), obj)
 		if err != nil {
 			return err
 		}
 		e.DataEncoded = data
-		e.DataBinary = false
+		e.DataBase64 = false
 	}
 	return nil
 }
