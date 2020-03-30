@@ -267,5 +267,3 @@ func TestURIRefString(t *testing.T) {
 		})
 	}
 }
-
-// TODO: Test xml:  MarshalXML(e *xml.Encoder, start xml.StartElement) error {

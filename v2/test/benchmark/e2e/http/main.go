@@ -241,7 +241,7 @@ func main() {
 		1,
 		*maxParallelism,
 		1,
-		*maxOutputSenders, //TODO to be increased when receiver-sender will support multi senders
+		*maxOutputSenders,
 	)
 
 	var results e2e.BenchmarkResults

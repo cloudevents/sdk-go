@@ -211,9 +211,6 @@ func TestURL(t *testing.T) {
 	x.okWithDifferentFromString(&types.URIRef{URL: *testURL}, types.URIRef{URL: *testURL}, testURLstr, types.URI{*testURL})
 	x.ok(types.URI{URL: *testURL}, types.URI{URL: *testURL}, testURLstr)
 	x.ok(&types.URI{URL: *testURL}, types.URI{URL: *testURL}, testURLstr)
-	// TODO: these tests do not work with valueTester because it calls validate internally.
-	//x.ok(types.URIRef{URL: *testURL}, types.URIRef{URL: *testURL}, testURLstr)
-	//x.ok(&types.URIRef{URL: *testURL}, types.URIRef{URL: *testURL}, testURLstr)
 
 	x.str("http://hello/world", &url.URL{Scheme: "http", Host: "hello", Path: "/world"})
 	x.str("/world", &url.URL{Path: "/world"})

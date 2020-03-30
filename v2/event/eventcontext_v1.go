@@ -137,7 +137,6 @@ func (ec EventContextV1) AsV03() *EventContextV03 {
 		ret.SchemaURL = &types.URIRef{URL: ec.DataSchema.URL}
 	}
 
-	// TODO: DeprecatedDataContentEncoding needs to be moved to extensions.
 	if ec.Extensions != nil {
 		for k, v := range ec.Extensions {
 			k = strings.ToLower(k)

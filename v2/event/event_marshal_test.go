@@ -279,6 +279,31 @@ func TestMarshal(t *testing.T) {
 				"source":          "http://example.com/source",
 			}),
 		},
+		"number data v1.0": {
+			event: func() event.Event {
+				e := event.Event{
+					Context: event.EventContextV1{
+						Type:       "com.example.test",
+						Source:     *sourceV1,
+						DataSchema: schemaV1,
+						ID:         "ABC-123",
+						Time:       &now,
+					}.AsV1(),
+				}
+				_ = e.SetData(event.ApplicationJSON, 101)
+				return e
+			}(),
+			want: toBytes(map[string]interface{}{
+				"specversion":     "1.0",
+				"datacontenttype": "application/json",
+				"data":            101,
+				"id":              "ABC-123",
+				"time":            now.Format(time.RFC3339Nano),
+				"type":            "com.example.test",
+				"dataschema":      "http://example.com/schema",
+				"source":          "http://example.com/source",
+			}),
+		},
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
