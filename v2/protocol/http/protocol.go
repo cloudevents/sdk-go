@@ -46,7 +46,7 @@ type Protocol struct {
 	// http server. If nil, the Protocol will create a one.
 	Handler           *http.ServeMux
 	listener          net.Listener
-	roundTripper      http.RoundTripper // TODO: use this.
+	roundTripper      http.RoundTripper
 	server            *http.Server
 	handlerRegistered bool
 	middleware        []Middleware
@@ -63,6 +63,10 @@ func New(opts ...Option) (*Protocol, error) {
 
 	if p.Client == nil {
 		p.Client = http.DefaultClient
+	}
+
+	if p.roundTripper != nil {
+		p.Client.Transport = p.roundTripper
 	}
 
 	if p.ShutdownTimeout == nil {

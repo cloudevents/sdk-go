@@ -131,7 +131,6 @@ func NewConsumerFromConn(conn stan.Conn, subject string, opts ...ConsumerOption)
 func (c *Consumer) OpenInbound(ctx context.Context) error {
 	var err error
 	if c.sub != nil && c.sub.IsValid() {
-		// TODO: is this what we want?
 		return ErrSubscriptionAlreadyOpen
 	}
 

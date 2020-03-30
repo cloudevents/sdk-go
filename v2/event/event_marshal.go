@@ -122,7 +122,6 @@ func jsonEncode(ctx EventContextReader, data []byte, isBase64 bool) ([]byte, err
 			return nil, err
 		}
 		isJson := mediaType == "" || mediaType == ApplicationJSON || mediaType == TextJSON
-		// TODO(#60): we do not support json values at the moment, only objects and lists.
 		if isJson && !isBase64 {
 			b["data"] = data
 		} else {
@@ -160,7 +159,6 @@ func (e *Event) JsonDecodeV03(body []byte, raw map[string]json.RawMessage) error
 		return err
 	}
 
-	// TODO: could use reflection to get these.
 	delete(raw, "specversion")
 	delete(raw, "type")
 	delete(raw, "source")
