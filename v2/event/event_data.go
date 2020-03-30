@@ -9,9 +9,10 @@ import (
 	"github.com/cloudevents/sdk-go/v2/event/datacodec"
 )
 
-// Data is special. Break it out into it's own file.
-
-// SetData implements EventWriter.SetData
+// SetData encodes the given payload with the given content type.
+// If the provided payload is a byte array, when marshalled to json it will be encoded as base64.
+// If the provided payload is different from byte array, datacodec.Encode is invoked to attempt a
+// marshalling to byte array.
 func (e *Event) SetData(contentType string, obj interface{}) error {
 	e.SetDataContentType(contentType)
 

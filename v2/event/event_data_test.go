@@ -1,12 +1,16 @@
 package event_test
 
 import (
+	"context"
+	"encoding/base64"
 	"strings"
 	"testing"
 
 	"github.com/cloudevents/sdk-go/v2/event"
+	"github.com/cloudevents/sdk-go/v2/event/datacodec"
 	"github.com/cloudevents/sdk-go/v2/types"
 	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/require"
 )
 
 type DataTest struct {
@@ -149,6 +153,23 @@ func TestEventSetData_Jsonv1(t *testing.T) {
 	}
 }
 
+func TestEventSetData_binary_v1(t *testing.T) {
+	e := event.New(event.CloudEventsVersionV1)
+
+	decodedPayload := map[string]interface{}{"hello": "world"}
+	encodedPayload := mustEncodeWithDataCodec(t, event.ApplicationJSON, decodedPayload)
+
+	require.NoError(t, e.SetData(event.ApplicationJSON, encodedPayload))
+
+	require.True(t, e.DataBinary)
+	require.Equal(t, encodedPayload, e.Data())
+
+	actual := map[string]interface{}{}
+	require.NoError(t, e.DataAs(&actual))
+
+	require.Equal(t, decodedPayload, actual)
+}
+
 type XmlExample struct {
 	AnInt   int      `xml:"a,omitempty"`
 	AString string   `xml:"b,omitempty"`
@@ -280,4 +301,16 @@ func validateData(t *testing.T, tc DataTest, got, as interface{}, err error) {
 	if diff := cmp.Diff(tc.set, as); diff != "" {
 		t.Errorf("unexpected as (-want, +got) = %v", diff)
 	}
+}
+
+func mustEncodeWithDataCodec(t *testing.T, ct string, in interface{}) []byte {
+	data, err := datacodec.Encode(context.TODO(), ct, in)
+	require.NoError(t, err)
+	return data
+}
+
+func encodeBase64(in []byte) []byte {
+	data := make([]byte, base64.StdEncoding.EncodedLen(len(in)))
+	base64.StdEncoding.Encode(data, in)
+	return in
 }
