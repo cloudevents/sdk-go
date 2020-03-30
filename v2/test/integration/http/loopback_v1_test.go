@@ -188,7 +188,7 @@ func TestClientLoopback_structured_base64_v03tov1(t *testing.T) {
 					Source: *cloudevents.ParseURIRef("/unit/test/client"),
 				}.AsV1(),
 				DataEncoded: bytes(map[string]string{"unittest": "response"}),
-				DataBinary:  true,
+				DataBase64:  true,
 			},
 			want: &cloudevents.Event{
 				Context: cloudevents.EventContextV1{
@@ -243,7 +243,7 @@ func TestClientLoopback_structured_base64_v1tov1(t *testing.T) {
 					Source: *cloudevents.ParseURIRef("/unit/test/client"),
 				}.AsV1(),
 				DataEncoded: toBytes(map[string]interface{}{"hello": "unittest"}),
-				DataBinary:  true,
+				DataBase64:  true,
 			},
 			resp: &cloudevents.Event{
 				Context: cloudevents.EventContextV1{
@@ -252,7 +252,7 @@ func TestClientLoopback_structured_base64_v1tov1(t *testing.T) {
 					Source: *cloudevents.ParseURIRef("/unit/test/client"),
 				}.AsV1(),
 				DataEncoded: toBytes(map[string]interface{}{"hello": "unittest"}),
-				DataBinary:  true,
+				DataBase64:  true,
 			},
 			want: &cloudevents.Event{
 				Context: cloudevents.EventContextV1{

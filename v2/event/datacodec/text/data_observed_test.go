@@ -27,7 +27,7 @@ func TestEncodeObserved(t *testing.T) {
 func TestDecodeObserved(t *testing.T) {
 	assert := assert.New(t)
 	var s string
-	assert.NoError(text.DecodeObserved(ctx, "hello", &s))
+	assert.NoError(text.DecodeObserved(ctx, []byte("hello"), &s))
 	assert.Equal("hello", s)
 	assert.NoError(text.DecodeObserved(ctx, []byte("bye"), &s))
 	assert.Equal("bye", s)
@@ -36,8 +36,4 @@ func TestDecodeObserved(t *testing.T) {
 	s = "xxx"
 	assert.NoError(text.DecodeObserved(ctx, nil, &s))
 	assert.Equal("", s)
-
-	assert.EqualError(text.DecodeObserved(ctx, 123, &s), "text.Decode in: want []byte or string, got int")
-	assert.EqualError(text.DecodeObserved(ctx, "", nil), "text.Decode out: want *string, got <nil>")
-	assert.EqualError(text.DecodeObserved(ctx, "", 1), "text.Decode out: want *string, got int")
 }

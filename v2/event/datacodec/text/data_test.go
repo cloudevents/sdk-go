@@ -30,8 +30,6 @@ func TestEncode(t *testing.T) {
 func TestDecode(t *testing.T) {
 	assert := assert.New(t)
 	var s string
-	assert.NoError(text.Decode(ctx, "hello", &s))
-	assert.Equal("hello", s)
 	assert.NoError(text.Decode(ctx, []byte("bye"), &s))
 	assert.Equal("bye", s)
 	assert.NoError(text.Decode(ctx, []byte{}, &s))
@@ -39,8 +37,4 @@ func TestDecode(t *testing.T) {
 	s = "xxx"
 	assert.NoError(text.Decode(ctx, nil, &s))
 	assert.Equal("", s)
-
-	assert.EqualError(text.Decode(ctx, 123, &s), "text.Decode in: want []byte or string, got int")
-	assert.EqualError(text.Decode(ctx, "", nil), "text.Decode out: want *string, got <nil>")
-	assert.EqualError(text.Decode(ctx, "", 1), "text.Decode out: want *string, got int")
 }

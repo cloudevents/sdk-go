@@ -22,7 +22,7 @@ func TestCodecDecode(t *testing.T) {
 	testCases := map[string]struct {
 		contentType string
 		decoder     datacodec.Decoder
-		in          interface{}
+		in          []byte
 		want        interface{}
 		wantErr     string
 	}{
@@ -34,7 +34,7 @@ func TestCodecDecode(t *testing.T) {
 
 		"text/plain": {
 			contentType: "text/plain",
-			in:          "hello😀",
+			in:          []byte("hello😀"),
 			want:        strptr("hello😀"), // Test  unicode outiside UTF-8
 		},
 		"application/json": {
@@ -54,15 +54,13 @@ func TestCodecDecode(t *testing.T) {
 		"custom content type": {
 			contentType: "unit/testing",
 			in:          []byte("Hello, Testing"),
-			decoder: func(ctx context.Context, in, out interface{}) error {
-				if b, ok := in.([]byte); ok {
-					if s, k := out.(*map[string]string); k {
-						if (*s) == nil {
-							(*s) = make(map[string]string)
-						}
-						(*s)["upper"] = strings.ToUpper(string(b))
-						(*s)["lower"] = strings.ToLower(string(b))
+			decoder: func(ctx context.Context, in []byte, out interface{}) error {
+				if s, k := out.(*map[string]string); k {
+					if (*s) == nil {
+						(*s) = make(map[string]string)
 					}
+					(*s)["upper"] = strings.ToUpper(string(in))
+					(*s)["lower"] = strings.ToLower(string(in))
 				}
 				return nil
 			},
@@ -74,7 +72,7 @@ func TestCodecDecode(t *testing.T) {
 		"custom content type error": {
 			contentType: "unit/testing",
 			in:          []byte("Hello, Testing"),
-			decoder: func(ctx context.Context, in, out interface{}) error {
+			decoder: func(ctx context.Context, in []byte, out interface{}) error {
 				return fmt.Errorf("expecting unit test error")
 			},
 			wantErr: "expecting unit test error",
@@ -221,44 +219,3 @@ func TestCodecEncode(t *testing.T) {
 func TestSetObservedCodecs(t *testing.T) {
 	datacodec.SetObservedCodecs()
 }
-
-//
-//func TestCodecRoundTrip(t *testing.T) {
-//	testCases := map[string]struct {
-//		contentType string
-//		decoder     datacodec.Decoder
-//		encoder     datacodec.Encoder
-//		in          interface{}
-//		want        interface{}
-//		wantErr     string
-//	}{
-//		"empty": {},
-//	}
-//	for n, tc := range testCases {
-//		t.Run(n, func(t *testing.T) {
-//
-//			if tc.decoder != nil {
-//				datacodec.AddDecoder(tc.contentType, tc.decoder)
-//			}
-//
-//
-//			// TODO
-//			got, _ := types.Allocate(tc.want)
-//
-//			err := datacodec.Decode(tc.contentType, tc.in, got)
-//
-//			if tc.wantErr != "" || err != nil {
-//				if diff := cmp.Diff(tc.wantErr, err.Error()); diff != "" {
-//					t.Errorf("unexpected error (-want, +got) = %v", diff)
-//				}
-//				return
-//			}
-//
-//			if tc.want != nil {
-//				if diff := cmp.Diff(tc.want, got); diff != "" {
-//					t.Errorf("unexpected data (-want, +got) = %v", diff)
-//				}
-//			}
-//		})
-//	}
-//}

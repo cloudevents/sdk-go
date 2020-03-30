@@ -1,11 +1,13 @@
 package event_test
 
 import (
+	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/cloudevents/sdk-go/v2/event"
 
@@ -14,12 +16,10 @@ import (
 	"github.com/cloudevents/sdk-go/v2/types"
 )
 
-//type DataExample struct {
-//	AnInt   int        `json:"a,omitempty"`
-//	AString string     `json:"b,omitempty"`
-//	AnArray []string   `json:"c,omitempty"`
-//	ATime   *time.Time `json:"e,omitempty"`
-//}
+type XMLDataExample struct {
+	AnInt   int    `xml:"a,omitempty"`
+	AString string `xml:"b,omitempty"`
+}
 
 func TestMarshal(t *testing.T) {
 	now := types.Timestamp{Time: time.Now().UTC()}
@@ -66,7 +66,7 @@ func TestMarshal(t *testing.T) {
 				"exurl":    source,
 				"extime":   &now,
 			},
-			want: toBytes(map[string]interface{}{
+			want: mustJsonMarshal(t, map[string]interface{}{
 				"specversion":     "0.3",
 				"datacontenttype": "application/json",
 				"data": map[string]interface{}{
@@ -105,7 +105,7 @@ func TestMarshal(t *testing.T) {
 				"exurl":    source,
 				"extime":   &now,
 			},
-			want: toBytes(map[string]interface{}{
+			want: mustJsonMarshal(t, map[string]interface{}{
 				"specversion":     "0.3",
 				"datacontenttype": "application/json",
 				"id":              "ABC-123",
@@ -143,7 +143,7 @@ func TestMarshal(t *testing.T) {
 				"exurl":    source,
 				"extime":   &now,
 			},
-			want: toBytes(map[string]interface{}{
+			want: mustJsonMarshal(t, map[string]interface{}{
 				"specversion":     "0.3",
 				"datacontenttype": "application/json",
 				"data":            "This is a string.",
@@ -185,7 +185,7 @@ func TestMarshal(t *testing.T) {
 				"exurl":    sourceV1,
 				"extime":   &now,
 			},
-			want: toBytes(map[string]interface{}{
+			want: mustJsonMarshal(t, map[string]interface{}{
 				"specversion":     "1.0",
 				"datacontenttype": "application/json",
 				"data": map[string]interface{}{
@@ -224,7 +224,7 @@ func TestMarshal(t *testing.T) {
 				"exurl":    sourceV1,
 				"extime":   &now,
 			},
-			want: toBytes(map[string]interface{}{
+			want: mustJsonMarshal(t, map[string]interface{}{
 				"specversion":     "1.0",
 				"datacontenttype": "application/json",
 				"id":              "ABC-123",
@@ -262,7 +262,7 @@ func TestMarshal(t *testing.T) {
 				"exurl":    sourceV1,
 				"extime":   &now,
 			},
-			want: toBytes(map[string]interface{}{
+			want: mustJsonMarshal(t, map[string]interface{}{
 				"specversion":     "1.0",
 				"datacontenttype": "application/json",
 				"data":            "This is a string.",
@@ -275,6 +275,81 @@ func TestMarshal(t *testing.T) {
 				"exbinary":        "AAECAw==",
 				"exurl":           "http://example.com/source",
 				"extime":          now.Format(time.RFC3339Nano),
+				"dataschema":      "http://example.com/schema",
+				"source":          "http://example.com/source",
+			}),
+		},
+		"base64 json encoded data v1.0": {
+			event: func() event.Event {
+				e := event.Event{
+					Context: event.EventContextV1{
+						Type:       "com.example.test",
+						Source:     *sourceV1,
+						DataSchema: schemaV1,
+						ID:         "ABC-123",
+						Time:       &now,
+					}.AsV1(),
+				}
+				_ = e.SetData(event.ApplicationJSON, []byte(`{"hello": "world"}`))
+				return e
+			}(),
+			want: mustJsonMarshal(t, map[string]interface{}{
+				"specversion":     "1.0",
+				"datacontenttype": "application/json",
+				"data_base64":     []byte(`{"hello": "world"}`),
+				"id":              "ABC-123",
+				"time":            now.Format(time.RFC3339Nano),
+				"type":            "com.example.test",
+				"dataschema":      "http://example.com/schema",
+				"source":          "http://example.com/source",
+			}),
+		},
+		"base64 xml encoded data v1.0": {
+			event: func() event.Event {
+				e := event.Event{
+					Context: event.EventContextV1{
+						Type:       "com.example.test",
+						Source:     *sourceV1,
+						DataSchema: schemaV1,
+						ID:         "ABC-123",
+						Time:       &now,
+					}.AsV1(),
+				}
+				_ = e.SetData(event.ApplicationXML, mustEncodeWithDataCodec(t, event.ApplicationXML, XMLDataExample{AnInt: 5, AString: "aaa"}))
+				return e
+			}(),
+			want: mustJsonMarshal(t, map[string]interface{}{
+				"specversion":     "1.0",
+				"datacontenttype": event.ApplicationXML,
+				"data_base64":     mustEncodeWithDataCodec(t, event.ApplicationXML, XMLDataExample{AnInt: 5, AString: "aaa"}),
+				"id":              "ABC-123",
+				"time":            now.Format(time.RFC3339Nano),
+				"type":            "com.example.test",
+				"dataschema":      "http://example.com/schema",
+				"source":          "http://example.com/source",
+			}),
+		},
+		"xml data v1.0": {
+			event: func() event.Event {
+				e := event.Event{
+					Context: event.EventContextV1{
+						Type:       "com.example.test",
+						Source:     *sourceV1,
+						DataSchema: schemaV1,
+						ID:         "ABC-123",
+						Time:       &now,
+					}.AsV1(),
+				}
+				_ = e.SetData(event.ApplicationXML, XMLDataExample{AnInt: 5, AString: "aaa"})
+				return e
+			}(),
+			want: mustJsonMarshal(t, map[string]interface{}{
+				"specversion":     "1.0",
+				"datacontenttype": event.ApplicationXML,
+				"data":            string(mustEncodeWithDataCodec(t, event.ApplicationXML, XMLDataExample{AnInt: 5, AString: "aaa"})),
+				"id":              "ABC-123",
+				"time":            now.Format(time.RFC3339Nano),
+				"type":            "com.example.test",
 				"dataschema":      "http://example.com/schema",
 				"source":          "http://example.com/source",
 			}),
@@ -293,7 +368,7 @@ func TestMarshal(t *testing.T) {
 				_ = e.SetData(event.ApplicationJSON, 101)
 				return e
 			}(),
-			want: toBytes(map[string]interface{}{
+			want: mustJsonMarshal(t, map[string]interface{}{
 				"specversion":     "1.0",
 				"datacontenttype": "application/json",
 				"data":            101,
@@ -350,7 +425,7 @@ func TestUnmarshal(t *testing.T) {
 		wantErr error
 	}{
 		"struct data v0.3": {
-			body: toBytes(map[string]interface{}{
+			body: mustJsonMarshal(t, map[string]interface{}{
 				"specversion":     "0.3",
 				"datacontenttype": "application/json",
 				"data": map[string]interface{}{
@@ -387,14 +462,14 @@ func TestUnmarshal(t *testing.T) {
 						"extime":   now.Format(time.RFC3339Nano),
 					},
 				}.AsV03(),
-				DataEncoded: toBytes(DataExample{
+				DataEncoded: mustJsonMarshal(t, DataExample{
 					AnInt:   42,
 					AString: "testing",
 				}),
 			},
 		},
 		"string data v0.3": {
-			body: toBytes(map[string]interface{}{
+			body: mustJsonMarshal(t, map[string]interface{}{
 				"specversion":     "0.3",
 				"datacontenttype": "application/json",
 				"data":            "This is a string.",
@@ -428,11 +503,11 @@ func TestUnmarshal(t *testing.T) {
 						"extime":   now.Format(time.RFC3339Nano),
 					},
 				}.AsV03(),
-				DataEncoded: toBytes("This is a string."),
+				DataEncoded: mustJsonMarshal(t, "This is a string."),
 			},
 		},
 		"nil data v0.3": {
-			body: toBytes(map[string]interface{}{
+			body: mustJsonMarshal(t, map[string]interface{}{
 				"specversion":     "0.3",
 				"datacontenttype": "application/json",
 				"id":              "ABC-123",
@@ -468,7 +543,7 @@ func TestUnmarshal(t *testing.T) {
 			},
 		},
 		"struct data v1.0": {
-			body: toBytes(map[string]interface{}{
+			body: mustJsonMarshal(t, map[string]interface{}{
 				"specversion":     "1.0",
 				"datacontenttype": "application/json",
 				"data": map[string]interface{}{
@@ -505,14 +580,14 @@ func TestUnmarshal(t *testing.T) {
 						"extime":   now.Format(time.RFC3339Nano),
 					},
 				}.AsV1(),
-				DataEncoded: toBytes(DataExample{
+				DataEncoded: mustJsonMarshal(t, DataExample{
 					AnInt:   42,
 					AString: "testing",
 				}),
 			},
 		},
 		"string data v1.0": {
-			body: toBytes(map[string]interface{}{
+			body: mustJsonMarshal(t, map[string]interface{}{
 				"specversion":     "1.0",
 				"datacontenttype": "application/json",
 				"data":            "This is a string.",
@@ -546,11 +621,83 @@ func TestUnmarshal(t *testing.T) {
 						"extime":   now.Format(time.RFC3339Nano),
 					},
 				}.AsV1(),
-				DataEncoded: toBytes("This is a string."),
+				DataEncoded: mustJsonMarshal(t, "This is a string."),
+			},
+		},
+		"base64 json encoded data v1.0": {
+			body: mustJsonMarshal(t, map[string]interface{}{
+				"specversion":     "1.0",
+				"datacontenttype": "application/json",
+				"data_base64":     base64.StdEncoding.EncodeToString([]byte(`{"hello":"world"}`)),
+				"id":              "ABC-123",
+				"time":            now.Format(time.RFC3339Nano),
+				"type":            "com.example.test",
+				"dataschema":      "http://example.com/schema",
+				"source":          "http://example.com/source",
+			}),
+			want: &event.Event{
+				Context: event.EventContextV1{
+					Type:            "com.example.test",
+					Source:          *sourceV1,
+					DataSchema:      schemaV1,
+					ID:              "ABC-123",
+					Time:            &now,
+					DataContentType: event.StringOfApplicationJSON(),
+				}.AsV1(),
+				DataEncoded: mustJsonMarshal(t, map[string]interface{}{"hello": "world"}),
+				DataBase64:  true,
+			},
+		},
+		"base64 xml encoded data v1.0": {
+			body: mustJsonMarshal(t, map[string]interface{}{
+				"specversion":     "1.0",
+				"datacontenttype": "application/json",
+				"data_base64":     base64.StdEncoding.EncodeToString(mustEncodeWithDataCodec(t, event.ApplicationXML, &XMLDataExample{AnInt: 10})),
+				"id":              "ABC-123",
+				"time":            now.Format(time.RFC3339Nano),
+				"type":            "com.example.test",
+				"dataschema":      "http://example.com/schema",
+				"source":          "http://example.com/source",
+			}),
+			want: &event.Event{
+				Context: event.EventContextV1{
+					Type:            "com.example.test",
+					Source:          *sourceV1,
+					DataSchema:      schemaV1,
+					ID:              "ABC-123",
+					Time:            &now,
+					DataContentType: event.StringOfApplicationJSON(),
+				}.AsV1(),
+				DataEncoded: mustEncodeWithDataCodec(t, event.ApplicationXML, &XMLDataExample{AnInt: 10}),
+				DataBase64:  true,
+			},
+		},
+		"xml data v1.0": {
+			body: mustJsonMarshal(t, map[string]interface{}{
+				"specversion":     "1.0",
+				"datacontenttype": event.ApplicationXML,
+				"data":            string(mustEncodeWithDataCodec(t, event.ApplicationXML, XMLDataExample{AnInt: 5, AString: "aaa"})),
+				"id":              "ABC-123",
+				"time":            now.Format(time.RFC3339Nano),
+				"type":            "com.example.test",
+				"dataschema":      "http://example.com/schema",
+				"source":          "http://example.com/source",
+			}),
+			want: &event.Event{
+				Context: event.EventContextV1{
+					Type:            "com.example.test",
+					Source:          *sourceV1,
+					DataSchema:      schemaV1,
+					ID:              "ABC-123",
+					Time:            &now,
+					DataContentType: event.StringOfApplicationXML(),
+				}.AsV1(),
+				DataBase64:  false,
+				DataEncoded: mustEncodeWithDataCodec(t, event.ApplicationXML, &XMLDataExample{AnInt: 5, AString: "aaa"}),
 			},
 		},
 		"nil data v1.0": {
-			body: toBytes(map[string]interface{}{
+			body: mustJsonMarshal(t, map[string]interface{}{
 				"specversion":     "1.0",
 				"datacontenttype": "application/json",
 				"id":              "ABC-123",
@@ -606,10 +753,8 @@ func TestUnmarshal(t *testing.T) {
 	}
 }
 
-func toBytes(body interface{}) []byte {
+func mustJsonMarshal(t *testing.T, body interface{}) []byte {
 	b, err := json.Marshal(body)
-	if err != nil {
-		return []byte(fmt.Sprintf(`{"error":%q}`, err.Error()))
-	}
+	require.NoError(t, err)
 	return b
 }

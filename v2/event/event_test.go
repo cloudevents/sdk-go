@@ -564,7 +564,7 @@ func TestEvent_Clone(t *testing.T) {
 	require.NotSame(t, original.Data(), clone.Data())
 
 	require.Equal(t, original.DataEncoded, clone.DataEncoded)
-	require.Equal(t, original.DataBinary, clone.DataBinary)
+	require.Equal(t, original.DataBase64, clone.DataBase64)
 
 	require.Equal(t, original.FieldErrors, clone.FieldErrors)
 	require.NotSame(t, original.FieldErrors, clone.FieldErrors)
