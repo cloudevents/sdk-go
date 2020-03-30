@@ -86,7 +86,7 @@ func TestClientSend(t *testing.T) {
 		event   event.Event
 		resp    *http.Response
 		want    *requestValidation
-		wantErr string
+		wantRes string
 	}{
 		"binary simple v0.3": {
 			c: simpleBinaryClient,
@@ -162,20 +162,20 @@ func TestClientSend(t *testing.T) {
 
 			c := tc.c(server.URL)
 
-			err := c.Send(context.TODO(), tc.event)
-			if tc.wantErr != "" {
-				if err == nil {
+			result := c.Send(context.TODO(), tc.event)
+			if tc.wantRes != "" {
+				if result == nil {
 					t.Fatalf("failed to return expected error, got nil")
 				}
-				want := tc.wantErr
-				got := err.Error()
+				want := tc.wantRes
+				got := result.Error()
 				if !strings.Contains(got, want) {
-					t.Fatalf("failed to return expected error, got %q, want %q", err, want)
+					t.Fatalf("failed to return expected error, got %q, want %q", result, want)
 				}
 				return
 			} else {
-				if err != nil {
-					t.Fatalf("failed to send event: %s", err)
+				if !protocol.IsACK(result) {
+					t.Fatalf("expected ACK, got: %s", result)
 				}
 			}
 
@@ -263,11 +263,11 @@ func TestTracingClientSend(t *testing.T) {
 			ctx, span := trace.StartSpan(context.TODO(), "test-span", trace.WithSampler(sampler))
 			sc := span.SpanContext()
 
-			err := c.Send(ctx, tc.event)
+			result := c.Send(ctx, tc.event)
 			span.End()
 
-			if err != nil {
-				t.Fatalf("failed to send event: %s", err)
+			if !protocol.IsACK(result) {
+				t.Fatalf("failed to send event: %s", result)
 			}
 
 			rv := handler.popRequest(t)
@@ -276,6 +276,7 @@ func TestTracingClientSend(t *testing.T) {
 			if tp := rv.Headers.Get(tc.tpHeader); tp == "" {
 				t.Fatal("missing traceparent header")
 			} else {
+				var err error
 				got, err = traceparent.ParseString(tp)
 				if err != nil {
 					t.Fatalf("invalid traceparent: %s", err)
@@ -532,11 +533,11 @@ func TestTracedClientReceive(t *testing.T) {
 			sender := simpleTracingBinaryClient(target)
 
 			ctx, span := trace.StartSpan(context.TODO(), "test-span")
-			err = sender.Send(ctx, tc.event)
+			result := sender.Send(ctx, tc.event)
 			span.End()
 
-			if err != nil {
-				t.Fatalf("failed to send event %s", err)
+			if !protocol.IsACK(result) {
+				t.Fatalf("failed to send event: %s", result)
 			}
 
 			got := <-spanContexts

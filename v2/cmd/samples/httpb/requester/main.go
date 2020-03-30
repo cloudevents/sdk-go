@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/cloudevents/sdk-go/v2/protocol"
 	"log"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
@@ -29,14 +30,17 @@ func main() {
 			"message": "Hello, World!",
 		})
 
-		resp, err := c.Request(ctx, e)
-		if err != nil {
-			log.Printf("failed to send: %v", err)
+		resp, result := c.Request(ctx, e)
+		if resp != nil {
+			//log.Printf("response: %s", resp)
+		}
+
+		if protocol.IsACK(result) {
+			log.Printf("%d: ACK'ed  👍", i)
+		} else if protocol.IsNACK(result) {
+			log.Printf("%d: NACK'ed 😭 %s", i, result)
 		} else {
-			log.Printf("sent: %d", i)
-			if resp != nil {
-				log.Printf("response: %s", resp)
-			}
+			log.Printf("%d: Error %s", i, result)
 		}
 	}
 }

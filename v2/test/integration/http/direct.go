@@ -22,10 +22,11 @@ import (
 // Client is a set to binary or
 
 type DirectTapTest struct {
-	now    time.Time
-	event  *cloudevents.Event
-	want   *cloudevents.Event
-	asSent *TapValidation
+	now        time.Time
+	event      *cloudevents.Event
+	want       *cloudevents.Event
+	wantResult cloudevents.Result
+	asSent     *TapValidation
 }
 
 type DirectTapTestCases map[string]DirectTapTest
@@ -70,9 +71,15 @@ func ClientDirect(t *testing.T, tc DirectTapTest, copts ...client.Option) {
 		}
 	}()
 
-	err = ce.Send(context.Background(), *tc.event)
-	if err != nil {
-		t.Fatal(err)
+	result := ce.Send(context.Background(), *tc.event)
+	if result != nil {
+		if tc.wantResult == nil {
+			if !cloudevents.IsACK(result) {
+				t.Errorf("expected ACK, got %s", result)
+			}
+		} else if !cloudevents.ResultIs(result, tc.wantResult) {
+			t.Fatalf("expected %s, got %s", tc.wantResult, result)
+		}
 	}
 
 	// Wait until the receiver is done.

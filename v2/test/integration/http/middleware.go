@@ -49,9 +49,15 @@ func ClientMiddleware(t *testing.T, tc TapTest, copts ...client.Option) {
 		}
 	}()
 
-	got, err := ce.Request(context.Background(), *tc.event)
-	if err != nil {
-		t.Fatal(err)
+	got, result := ce.Request(context.Background(), *tc.event)
+	if result != nil {
+		if tc.wantResult == nil {
+			if !cloudevents.IsACK(result) {
+				t.Errorf("expected ACK, got %s", result)
+			}
+		} else if !cloudevents.ResultIs(result, tc.wantResult) {
+			t.Fatalf("expected %s, got %s", tc.wantResult, result)
+		}
 	}
 
 	recvCancel()

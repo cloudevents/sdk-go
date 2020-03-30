@@ -5,6 +5,7 @@ import (
 	"context"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -21,8 +22,10 @@ func SendReceive(t *testing.T, ctx context.Context, in binding.Message, s protoc
 
 	go func() {
 		defer wg.Done()
-		out, recvErr := r.Receive(ctx)
-		require.NoError(t, recvErr)
+		out, result := r.Receive(ctx)
+		if !protocol.IsACK(result) {
+			require.NoError(t, result)
+		}
 		outAssert(out)
 		finishErr := out.Finish(nil)
 		require.NoError(t, finishErr)
@@ -35,8 +38,11 @@ func SendReceive(t *testing.T, ctx context.Context, in binding.Message, s protoc
 			require.NoError(t, err)
 			finished = true
 		})
-		err := s.Send(ctx, in)
-		require.NoError(t, err)
+		result := s.Send(ctx, in)
+		if !protocol.IsACK(result) {
+			require.NoError(t, result)
+		}
+		time.Sleep(5 * time.Millisecond) // let the receiver receive.
 		require.True(t, finished)
 	}()
 
