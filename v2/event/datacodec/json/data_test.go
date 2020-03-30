@@ -30,33 +30,33 @@ func TestCodecDecode(t *testing.T) {
 	now := time.Now()
 
 	testCases := map[string]struct {
-		in      interface{}
+		in      []byte
 		want    interface{}
 		wantErr string
 	}{
 		"empty": {},
 		"out nil": {
-			in:      "not nil",
+			in:      []byte{},
 			wantErr: "out is nil",
 		},
-		"not a []byte": {
-			in: "something that is not a map",
+		"wrong unmarshalling receiver": {
+			in: []byte("\"something that is not a map\""),
 			want: &map[string]string{
 				"an": "error",
 			},
 			wantErr: `[json] found bytes ""something that is not a map"", but failed to unmarshal: json: cannot unmarshal string into Go value of type map[string]string`,
 		},
-		"BadMarshal": {
-			in:      BadMarshal{},
-			want:    &BadMarshal{},
-			wantErr: "[json] failed to marshal in: json: error calling MarshalJSON for type json_test.BadMarshal: BadMashal Error",
+		"wrong string": {
+			in:      []byte("a non json string"),
+			want:    "a non json string",
+			wantErr: `[json] found bytes "a non json string", but failed to unmarshal: invalid character 'a' looking for beginning of value`,
 		},
 		"Bad Quotes": {
-			in: []byte{'\\', '"'},
+			in: []byte("\""),
 			want: &map[string]string{
 				"an": "error",
 			},
-			wantErr: "[json] failed to unquote in: invalid syntax",
+			wantErr: `[json] found bytes """, but failed to unmarshal: unexpected end of JSON input`,
 		},
 		"simple": {
 			in: []byte(`{"a":"apple","b":"banana"}`),
@@ -71,13 +71,6 @@ func TestCodecDecode(t *testing.T) {
 		},
 		"simple array": {
 			in: []byte(`["apple","banana"]`),
-			want: &[]string{
-				"apple",
-				"banana",
-			},
-		},
-		"simple quoted array": {
-			in: []byte(`"[\"apple\",\"banana\"]"`),
 			want: &[]string{
 				"apple",
 				"banana",
@@ -111,14 +104,6 @@ func TestCodecDecode(t *testing.T) {
 				AString: "Hello, World!",
 				ATime:   &now,
 				AnArray: []string{"Anne", "Bob", "Chad"},
-			},
-		},
-		"object in": {
-			in: &DataExample{
-				AnInt: 42,
-			},
-			want: &DataExample{
-				AnInt: 42,
 			},
 		},
 	}

@@ -37,34 +37,18 @@ func TestCodecDecode(t *testing.T) {
 	now := time.Now()
 
 	testCases := map[string]struct {
-		in      interface{}
+		in      []byte
 		want    interface{}
 		wantErr string
 	}{
 		"empty": {},
-		"not bytes": {
-			in:      &BadDataExample{},
-			wantErr: "[xml] failed to marshal in: unit test",
-		},
-		"structured type encoding, escaped": {
-			in:   []byte(`"<Example><Sequence>7</Sequence><Message>Hello, Structured Encoding v0.2!</Message></Example>"`),
+		"structured type encoding": {
+			in:   []byte(`<Example><Sequence>7</Sequence><Message>Hello, Structured Encoding v0.2!</Message></Example>`),
 			want: &Example{Sequence: 7, Message: "Hello, Structured Encoding v0.2!"},
 		},
 		"structured type encoding, escaped error": {
 			in:      []byte(`"<Example><Sequence>7</Sequence></Message>Hello, Structured Encoding v0.2!</Message></Example>"`),
-			wantErr: "[xml] found bytes, but failed to unmarshal: non-pointer passed to Unmarshal <Example><Sequence>7</Sequence></Message>Hello, Structured Encoding v0.2!</Message></Example>",
-		},
-		"structured type encoding, base64": {
-			in:   []byte(`"PEV4YW1wbGU+PFNlcXVlbmNlPjc8L1NlcXVlbmNlPjxNZXNzYWdlPkhlbGxvLCBTdHJ1Y3R1cmVkIEVuY29kaW5nIHYwLjIhPC9NZXNzYWdlPjwvRXhhbXBsZT4="`),
-			want: &Example{Sequence: 7, Message: "Hello, Structured Encoding v0.2!"},
-		},
-		"structured type encoding, bad quote base64": {
-			in:      []byte(`"PEV4YW1wbGU+PFNlcXVlbmNlPjc8L1NlcXVlbmNlPjxNZXNzYWdlPkhlbGxvLCBTdHJ1Y3R1cmVkIEVuY29kaW5nIHYwLjIhPC9NZXNzYWdlPjwvRXhhbXBsZT4=`),
-			wantErr: "[xml] failed to unquote quoted data: invalid syntax",
-		},
-		"structured type encoding, bad base64": {
-			in:      []byte(`"?EV4YW1wbGU+PFNlcXVlbmNlPjc8L1NlcXVlbmNlPjxNZXNzYWdlPkhlbGxvLCBTdHJ1Y3R1cmVkIEVuY29kaW5nIHYwLjIhPC9NZXNzYWdlPjwvRXhhbXBsZT4="`),
-			wantErr: "[xml] failed to decode base64 encoded string: illegal base64 data at input byte 0",
+			wantErr: `[xml] found bytes, but failed to unmarshal: non-pointer passed to Unmarshal "<Example><Sequence>7</Sequence></Message>Hello, Structured Encoding v0.2!</Message></Example>"`,
 		},
 		"complex filled": {
 			in: func() []byte {
@@ -87,14 +71,6 @@ func TestCodecDecode(t *testing.T) {
 				AString: "Hello, World!",
 				ATime:   &now,
 				AnArray: []string{"Anne", "Bob", "Chad"},
-			},
-		},
-		"object in": {
-			in: &DataExample{
-				AnInt: 42,
-			},
-			want: &DataExample{
-				AnInt: 42,
 			},
 		},
 	}
