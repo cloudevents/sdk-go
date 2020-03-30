@@ -2,11 +2,9 @@ package event
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 
 	errors2 "github.com/pkg/errors"
@@ -99,10 +97,10 @@ func JsonEncode(e Event) ([]byte, error) {
 // JsonEncodeLegacy
 func JsonEncodeLegacy(e Event) ([]byte, error) {
 	isBase64 := e.Context.DeprecatedGetDataContentEncoding() == Base64
-	return jsonEncode(e.Context, e.Data(), isBase64)
+	return jsonEncode(e.Context, e.DataEncoded, isBase64)
 }
 
-func jsonEncode(ctx EventContextReader, data []byte, isBase64 bool) ([]byte, error) {
+func jsonEncode(ctx EventContextReader, data []byte, shouldEncodeToBase64 bool) ([]byte, error) {
 	var b map[string]json.RawMessage
 	var err error
 
@@ -112,34 +110,32 @@ func jsonEncode(ctx EventContextReader, data []byte, isBase64 bool) ([]byte, err
 	}
 
 	if data != nil {
-		// data is passed in as an encoded []byte. That slice might be any
-		// number of things but for json encoding of the envelope all we care
-		// is if the payload is either a string or a json object. If it is a
-		// json object, it can be inserted into the body without modification.
-		// Otherwise we need to quote it if not already quoted.
+		// data here is a serialized version of whatever payload.
+		// If we need to write the payload as base64, shouldEncodeToBase64 is true.
 		mediaType, err := ctx.GetDataMediaType()
 		if err != nil {
 			return nil, err
 		}
 		isJson := mediaType == "" || mediaType == ApplicationJSON || mediaType == TextJSON
-		if isJson && !isBase64 {
+		// If isJson and no encoding to base64, we don't need to perform additional steps
+		if isJson && !shouldEncodeToBase64 {
 			b["data"] = data
 		} else {
-			var dataKey string
-			if ctx.GetSpecVersion() == CloudEventsVersionV1 {
+			var dataKey = "data"
+			if ctx.GetSpecVersion() == CloudEventsVersionV1 && shouldEncodeToBase64 {
 				dataKey = "data_base64"
-				buf := make([]byte, base64.StdEncoding.EncodedLen(len(data)))
-				base64.StdEncoding.Encode(buf, data)
-				data = buf
-			} else {
-				dataKey = "data"
 			}
-			if data[0] != byte('"') {
-				b[dataKey] = []byte(strconv.QuoteToASCII(string(data)))
+			var dataPointer []byte
+			if shouldEncodeToBase64 {
+				dataPointer, err = json.Marshal(data)
 			} else {
-				// already quoted
-				b[dataKey] = data
+				dataPointer, err = json.Marshal(string(data))
 			}
+			if err != nil {
+				return nil, err
+			}
+
+			b[dataKey] = dataPointer
 		}
 	}
 
@@ -172,6 +168,19 @@ func (e *Event) JsonDecodeV03(body []byte, raw map[string]json.RawMessage) error
 	var data []byte
 	if d, ok := raw["data"]; ok {
 		data = d
+
+		// Decode the Base64 if we have a base64 payload
+		if ec.DeprecatedGetDataContentEncoding() == Base64 {
+			var tmp []byte
+			if err := json.Unmarshal(d, &tmp); err != nil {
+				return err
+			}
+			e.DataBinary = true
+			e.DataEncoded = tmp
+		} else {
+			e.DataEncoded = data
+			e.DataBinary = false
+		}
 	}
 	delete(raw, "data")
 
@@ -191,7 +200,6 @@ func (e *Event) JsonDecodeV03(body []byte, raw map[string]json.RawMessage) error
 	}
 
 	e.Context = &ec
-	e.DataEncoded = data
 
 	return nil
 }
@@ -226,8 +234,20 @@ func (e *Event) JsonDecodeV1(body []byte, raw map[string]json.RawMessage) error 
 			return err
 		}
 		dataBase64 = tmp
+
 	}
 	delete(raw, "data_base64")
+
+	if data != nil && dataBase64 != nil {
+		return errors.New("parsing error: JSON decoder found both 'data', and 'data_base64' in JSON payload")
+	}
+	if data != nil {
+		e.DataEncoded = data
+		e.DataBinary = false
+	} else if dataBase64 != nil {
+		e.DataEncoded = dataBase64
+		e.DataBinary = true
+	}
 
 	if len(raw) > 0 {
 		extensions := make(map[string]interface{}, len(raw))
@@ -245,16 +265,6 @@ func (e *Event) JsonDecodeV1(body []byte, raw map[string]json.RawMessage) error 
 	}
 
 	e.Context = &ec
-	if data != nil && dataBase64 != nil {
-		return errors.New("parsing error: JSON decoder found both 'data', and 'data_base64' in JSON payload")
-	}
-	if data != nil {
-		e.DataEncoded = data
-		e.DataBinary = false
-	} else if dataBase64 != nil {
-		e.DataEncoded = dataBase64
-		e.DataBinary = true
-	}
 
 	return nil
 }

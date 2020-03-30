@@ -11,7 +11,7 @@ import (
 type Event struct {
 	Context     EventContext
 	DataEncoded []byte
-	DataBinary  bool
+	DataBinary  bool //TODO rename
 	FieldErrors map[string]error
 }
 
