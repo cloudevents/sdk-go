@@ -167,9 +167,7 @@ func (t *Protocol) Receive(ctx context.Context) (binding.Message, error) {
 		return nil, io.EOF
 	}
 
-	msg := NewMessage(m.Data, m.Attributes)
-	m.Ack()
-	// TODO: when to do m.Nack()?
+	msg := NewMessage(&m)
 	return msg, nil
 }
 
