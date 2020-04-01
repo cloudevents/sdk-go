@@ -1,3 +1,4 @@
+// Package test provides Client test helpers.
 package test
 
 import (
