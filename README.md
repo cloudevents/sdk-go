@@ -116,13 +116,13 @@ func main() {
 }
 ```
 
-Checkout the sample [sender](./cmd/samples/http/sender) and
-[receiver](./cmd/samples/http/receiver) applications for working demo.
+Checkout the sample [sender](./v2/cmd/samples/http/sender) and
+[receiver](./v2/cmd/samples/http/receiver) applications for working demo.
 
 It can be more performant to not parse an event all the way to the
-`event.Event`. For this the package [binding](./pkg/binding) provides primitives
+`event.Event`. For this the package [binding](./v2/binding) provides primitives
 convert `event.Event` to `binding.Message`, and then bind an them onto a
-[protocol](./pkg/protocol) implementation.
+[protocol](./v2/protocol) implementation.
 
 For example, to convert an `event.Event` to a `binding.Message` and then create
 an `http.Request`:
