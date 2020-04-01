@@ -5,8 +5,6 @@ import (
 	nethttp "net/http"
 	"testing"
 
-	test2 "github.com/cloudevents/sdk-go/v2/binding/test"
-
 	"github.com/Shopify/sarama"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
@@ -19,7 +17,7 @@ import (
 var (
 	event                     = test.FullEvent()
 	structuredConsumerMessage = &sarama.ConsumerMessage{
-		Value: test2.MustJSON(event),
+		Value: test.MustJSON(event),
 		Headers: []*sarama.RecordHeader{{
 			Key:   []byte("Content-Type"),
 			Value: []byte(cloudevents.ApplicationCloudEventsJSON),

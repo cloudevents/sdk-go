@@ -10,8 +10,6 @@ import (
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/binding/spec"
 	"github.com/cloudevents/sdk-go/v2/binding/test"
-
-	. "github.com/cloudevents/sdk-go/v2/binding/test"
 )
 
 func TestDeleteAttribute(t *testing.T) {
@@ -25,7 +23,7 @@ func TestDeleteAttribute(t *testing.T) {
 	noSubjectEvent := withSubjectEvent.Clone()
 	require.NoError(t, noSubjectEvent.Context.SetSubject(""))
 
-	RunTransformerTests(t, context.Background(), []TransformerTestArgs{
+	test.RunTransformerTests(t, context.Background(), []test.TransformerTestArgs{
 		{
 			Name:         "Remove subject from Mock Structured message",
 			InputMessage: test.MustCreateMockStructuredMessage(withSubjectEvent.Clone()),
@@ -92,7 +90,7 @@ func TestDeleteExtension(t *testing.T) {
 	expectedEventWithExtension := e.Clone()
 	require.NoError(t, expectedEventWithExtension.Context.SetExtension(extName, extValue))
 
-	RunTransformerTests(t, context.Background(), []TransformerTestArgs{
+	test.RunTransformerTests(t, context.Background(), []test.TransformerTestArgs{
 		{
 			Name:         "No change to Mock Structured message",
 			InputMessage: test.MustCreateMockStructuredMessage(expectedEventWithExtension.Clone()),

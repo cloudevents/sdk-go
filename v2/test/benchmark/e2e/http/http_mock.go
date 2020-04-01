@@ -8,11 +8,9 @@ import (
 	"net/http/httptest"
 	"net/url"
 
-	bindings "github.com/cloudevents/sdk-go/v2/protocol"
-	http "github.com/cloudevents/sdk-go/v2/protocol/http"
-
 	cloudevents "github.com/cloudevents/sdk-go/v2"
-	cehttp "github.com/cloudevents/sdk-go/v2/protocol/http"
+	bindings "github.com/cloudevents/sdk-go/v2/protocol"
+	"github.com/cloudevents/sdk-go/v2/protocol/http"
 )
 
 type RoundTripFunc func(req *nethttp.Request) *nethttp.Response
@@ -44,7 +42,7 @@ func MockedSender(options ...http.Option) bindings.Sender {
 	return p
 }
 
-func MockedClient() (cloudevents.Client, *cehttp.Protocol) {
+func MockedClient() (cloudevents.Client, *http.Protocol) {
 	mockTransport := RoundTripFunc(func(req *nethttp.Request) *nethttp.Response {
 		return &nethttp.Response{
 			StatusCode: 202,
@@ -53,7 +51,7 @@ func MockedClient() (cloudevents.Client, *cehttp.Protocol) {
 		}
 	})
 
-	p, err := cehttp.New(cehttp.WithTarget("http://localhost"), cehttp.WithRoundTripper(mockTransport))
+	p, err := http.New(http.WithTarget("http://localhost"), http.WithRoundTripper(mockTransport))
 	if err != nil {
 		panic(err)
 	}

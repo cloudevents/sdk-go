@@ -11,8 +11,6 @@ import (
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/binding/test"
 	"github.com/cloudevents/sdk-go/v2/event"
-
-	. "github.com/cloudevents/sdk-go/v2/binding/test"
 )
 
 func TestSetUUID(t *testing.T) {
@@ -24,7 +22,7 @@ func TestSetUUID(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	RunTransformerTests(t, context.Background(), []TransformerTestArgs{
+	test.RunTransformerTests(t, context.Background(), []test.TransformerTestArgs{
 		{
 			Name:         "Set UUID when id already exists to Mock Structured message",
 			InputMessage: test.MustCreateMockStructuredMessage(eventWithId.Clone()),
@@ -59,7 +57,7 @@ func TestAddTimeNow(t *testing.T) {
 		require.False(t, ev.Context.GetTime().IsZero())
 	}
 
-	RunTransformerTests(t, context.Background(), []TransformerTestArgs{
+	test.RunTransformerTests(t, context.Background(), []test.TransformerTestArgs{
 		{
 			Name:         "No change to time to Mock Structured message",
 			InputMessage: test.MustCreateMockStructuredMessage(eventWithTime.Clone()),
