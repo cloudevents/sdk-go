@@ -1,3 +1,4 @@
+// Package v2 reexports a subset of the SDK v2 API.
 package v2
 
 // Package cloudevents alias' common functions and types to improve discoverability and reduce

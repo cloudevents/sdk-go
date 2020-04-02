@@ -51,6 +51,10 @@ jobs:
       - run:
           name: "Run go vet"
           command: pushd v2; go vet ./...; popd
+      - run: go get honnef.co/go/tools/cmd/staticcheck
+      - run:
+          name: "Run staticcheck"
+          command: pushd v2; staticcheck --checks=ST1000 ./...; popd
       - run:
           name: Run unit tests
           command: |

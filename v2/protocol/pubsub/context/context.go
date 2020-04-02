@@ -1,3 +1,4 @@
+// Package context provides the pubsub ProtocolContext.
 package context
 
 import (

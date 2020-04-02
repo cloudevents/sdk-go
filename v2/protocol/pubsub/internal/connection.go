@@ -1,3 +1,4 @@
+// Package internal provides the internal pubsub Connection type.
 package internal
 
 import (
