@@ -5,7 +5,7 @@ import (
 	"github.com/cloudevents/sdk-go/v2/binding/spec"
 )
 
-// Sets a cloudevents attribute (if missing) to defaultValue or update it with updater function
+// SetAttribute sets a cloudevents attribute (if missing) to defaultValue or updates it with updater function
 func SetAttribute(attribute spec.Kind, defaultValue interface{}, updater func(interface{}) (interface{}, error)) []binding.TransformerFactory {
 	return []binding.TransformerFactory{
 		UpdateAttribute(attribute, updater),
@@ -13,7 +13,7 @@ func SetAttribute(attribute spec.Kind, defaultValue interface{}, updater func(in
 	}
 }
 
-// Sets a cloudevents extension (if missing) to defaultValue or update it with updater function
+// SetExtension sets a cloudevents extension (if missing) to defaultValue or updates it with updater function
 func SetExtension(name string, defaultValue interface{}, updater func(interface{}) (interface{}, error)) []binding.TransformerFactory {
 	return []binding.TransformerFactory{
 		UpdateExtension(name, updater),

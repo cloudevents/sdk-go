@@ -28,7 +28,7 @@ type Message struct {
 	encoding binding.Encoding
 }
 
-// Wrap an *amqp.Message in a binding.Message.
+// NewMessage wrap an *amqp.Message in a binding.Message.
 // The returned message *can* be read several times safely
 func NewMessage(message *amqp.Message) *Message {
 	if message.Properties != nil && format.IsFormat(message.Properties.ContentType) {

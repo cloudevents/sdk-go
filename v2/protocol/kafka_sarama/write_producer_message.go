@@ -13,7 +13,7 @@ import (
 	"github.com/cloudevents/sdk-go/v2/types"
 )
 
-// Fill the provided producerMessage with the message m.
+// WriteProducerMessage fills the provided producerMessage with the message m.
 // Using context you can tweak the encoding processing (more details on binding.Write documentation).
 func WriteProducerMessage(ctx context.Context, m binding.Message, producerMessage *sarama.ProducerMessage, transformers ...binding.TransformerFactory) error {
 	enc := (*kafkaProducerMessageWriter)(producerMessage)

@@ -16,7 +16,7 @@ import (
 // Generic error when a conversion of a Message to an Event fails
 var ErrCannotConvertToEvent = errors.New("cannot convert message to event")
 
-// Translates a Message with a valid Structured or Binary representation to an Event.
+// ToEvent translates a Message with a valid Structured or Binary representation to an Event.
 // This function returns the Event generated from the Message and the original encoding of the message or
 // an error that points the conversion error.
 // transformers can be nil and this function guarantees that they are invoked only once during the encoding process.

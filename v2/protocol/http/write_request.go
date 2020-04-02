@@ -14,7 +14,7 @@ import (
 	"github.com/cloudevents/sdk-go/v2/types"
 )
 
-// Fill the provided httpRequest with the message m.
+// WriteRequest fills the provided httpRequest with the message m.
 // Using context you can tweak the encoding processing (more details on binding.Write documentation).
 func WriteRequest(ctx context.Context, m binding.Message, httpRequest *http.Request, transformers ...binding.TransformerFactory) error {
 	structuredWriter := (*httpRequestWriter)(httpRequest)

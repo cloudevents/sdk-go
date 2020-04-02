@@ -95,7 +95,7 @@ func (c *Connection) getOrCreateTopic(ctx context.Context) (*pubsub.Topic, error
 	return c.topic, err
 }
 
-// DeleteTopic
+// DeleteTopic deletes the connection's topic
 func (c *Connection) DeleteTopic(ctx context.Context) error {
 	if !c.topicWasCreated {
 		return errors.New("topic was not created by pubsub protocol")
@@ -170,7 +170,7 @@ func (c *Connection) getOrCreateSubscription(ctx context.Context) (*pubsub.Subsc
 	return c.sub, err
 }
 
-// DeleteSubscription
+// DeleteSubscription delete's the connection's subscription
 func (c *Connection) DeleteSubscription(ctx context.Context) error {
 	if !c.subWasCreated {
 		return errors.New("subscription was not created by pubsub protocol")
@@ -184,7 +184,7 @@ func (c *Connection) DeleteSubscription(ctx context.Context) error {
 	return nil
 }
 
-// Publish
+// Publish publishes a message to the connection's topic
 func (c *Connection) Publish(ctx context.Context, msg *pubsub.Message) (*binding.Message, error) {
 	topic, err := c.getOrCreateTopic(ctx)
 	if err != nil {
@@ -196,7 +196,7 @@ func (c *Connection) Publish(ctx context.Context, msg *pubsub.Message) (*binding
 	return nil, err
 }
 
-// Start
+// Receive begins pulling messages.
 // NOTE: This is a blocking call.
 func (c *Connection) Receive(ctx context.Context, fn func(context.Context, *pubsub.Message)) error {
 	sub, err := c.getOrCreateSubscription(ctx)

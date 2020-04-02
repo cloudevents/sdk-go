@@ -47,7 +47,7 @@ func New(version ...string) Event {
 	return *e
 }
 
-// DEPRECATED: Access extensions directly via the e.Extensions() map.
+// ExtensionAs is deprecated: access extensions directly via the e.Extensions() map.
 // Use functions in the types package to convert extension values.
 // For example replace this:
 //

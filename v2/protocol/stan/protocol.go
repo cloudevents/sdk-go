@@ -24,7 +24,7 @@ type Protocol struct {
 	connOwned bool // whether this protocol created the stan connection
 }
 
-// New creates a new STAN protocol including managing the lifecycle of the connection
+// NewProtocol creates a new STAN protocol including managing the lifecycle of the connection
 func NewProtocol(clusterID, clientID, sendSubject, receiveSubject string, stanOpts []stan.Option, opts ...ProtocolOption) (*Protocol, error) {
 	conn, err := stan.Connect(clusterID, clientID, stanOpts...)
 	if err != nil {

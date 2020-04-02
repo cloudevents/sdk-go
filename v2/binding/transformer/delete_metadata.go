@@ -8,12 +8,12 @@ import (
 	"github.com/cloudevents/sdk-go/v2/event"
 )
 
-// Delete cloudevents attribute during the encoding process
+// DeleteAttribute deletes a cloudevents attribute during the encoding process
 func DeleteAttribute(attributeKind spec.Kind) binding.TransformerFactory {
 	return deleteAttributeTransformerFactory{attributeKind: attributeKind}
 }
 
-// Delete cloudevents extension during the encoding process
+// DeleteExtension deletes a cloudevents extension during the encoding process
 func DeleteExtension(name string) binding.TransformerFactory {
 	return deleteExtensionTransformerFactory{name: name}
 }

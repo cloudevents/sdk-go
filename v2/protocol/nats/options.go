@@ -33,7 +33,7 @@ func WithSenderOptions(opts ...SenderOption) ProtocolOption {
 
 type SenderOption func(*Sender) error
 
-// Add a transformer, which Sender uses while encoding a binding.Message to an nats.Message
+// WithTransformer adds a transformer, which Sender uses while encoding a binding.Message to an nats.Message
 func WithTransformer(transformer binding.TransformerFactory) SenderOption {
 	return func(s *Sender) error {
 		s.Transformers = append(s.Transformers, transformer)

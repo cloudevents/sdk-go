@@ -12,7 +12,7 @@ import (
 	"github.com/cloudevents/sdk-go/v2/types"
 )
 
-// Fill the provided pubsubMessage with the message m.
+// WritePubSubMessage fills the provided pubsubMessage with the message m.
 // Using context you can tweak the encoding processing (more details on binding.Write documentation).
 func WritePubSubMessage(ctx context.Context, m binding.Message, pubsubMessage *pubsub.Message, transformers ...binding.TransformerFactory) error {
 	structuredWriter := (*pubsubMessagePublisher)(pubsubMessage)

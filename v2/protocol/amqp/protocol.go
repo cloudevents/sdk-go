@@ -28,7 +28,7 @@ type Protocol struct {
 	Receiver *receiver
 }
 
-// NewProtocol creates a new amqp transport.
+// NewProtocolFromClient creates a new amqp transport.
 func NewProtocolFromClient(client *amqp.Client, session *amqp.Session, queue string, opts ...Option) (*Protocol, error) {
 	t := &Protocol{
 		Node:             queue,

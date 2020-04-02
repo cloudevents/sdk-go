@@ -9,12 +9,12 @@ import (
 	"github.com/cloudevents/sdk-go/v2/event"
 )
 
-// Add cloudevents attribute (if missing) during the encoding process
+// AddAttribute adds a cloudevents attribute (if missing) during the encoding process
 func AddAttribute(attributeKind spec.Kind, value interface{}) binding.TransformerFactory {
 	return addAttributeTransformerFactory{attributeKind: attributeKind, value: value}
 }
 
-// Add cloudevents extension (if missing) during the encoding process
+// AddExtension adds a cloudevents extension (if missing) during the encoding process
 func AddExtension(name string, value interface{}) binding.TransformerFactory {
 	return addExtensionTransformerFactory{name: name, value: value}
 }

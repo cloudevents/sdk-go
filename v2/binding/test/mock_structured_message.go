@@ -18,7 +18,7 @@ type MockStructuredMessage struct {
 	Bytes  []byte
 }
 
-// Create a new MockStructuredMessage starting from an event.Event. Panics in case of error
+// MustCreateMockStructuredMessage creates a new MockStructuredMessage starting from an event.Event. Panics in case of error.
 func MustCreateMockStructuredMessage(e event.Event) binding.Message {
 	return &MockStructuredMessage{
 		Bytes:  MustJSON(e),

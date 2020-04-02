@@ -12,7 +12,7 @@ import (
 	"github.com/cloudevents/sdk-go/v2/protocol"
 )
 
-// Simple send/receive benchmark.
+// BenchmarkSendReceive implements a simple send/receive benchmark.
 // Requires a sender and receiver that are connected to each other.
 func BenchmarkSendReceive(b *testing.B, s protocol.Sender, r protocol.Receiver) {
 	e := FullEvent()

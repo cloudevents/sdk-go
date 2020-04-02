@@ -85,7 +85,7 @@ func (p *Protocol) applyOptions(opts ...ProtocolOptionFunc) error {
 	return nil
 }
 
-// StartReceiver implements Protocol.StartReceiver
+// OpenInbound implements Opener.OpenInbound
 // NOTE: This is a blocking call.
 func (p *Protocol) OpenInbound(ctx context.Context) error {
 	p.consumerMux.Lock()

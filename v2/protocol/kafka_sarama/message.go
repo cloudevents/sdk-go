@@ -32,7 +32,7 @@ type Message struct {
 // Check if http.Message implements binding.Message
 var _ binding.Message = (*Message)(nil)
 
-// Returns a binding.Message that holds the provided ConsumerMessage.
+// NewMessageFromConsumerMessage returns a binding.Message that holds the provided ConsumerMessage.
 // The returned binding.Message *can* be read several times safely
 // This function *doesn't* guarantee that the returned binding.Message is always a kafka_sarama.Message instance
 func NewMessageFromConsumerMessage(cm *sarama.ConsumerMessage) *Message {
@@ -48,7 +48,7 @@ func NewMessageFromConsumerMessage(cm *sarama.ConsumerMessage) *Message {
 	return NewMessage(cm.Value, contentType, headers)
 }
 
-// Returns a binding.Message that holds the provided kafka message components.
+// NewMessage returns a binding.Message that holds the provided kafka message components.
 // The returned binding.Message *can* be read several times safely
 // This function *doesn't* guarantee that the returned binding.Message is always a kafka_sarama.Message instance
 func NewMessage(value []byte, contentType string, headers map[string][]byte) *Message {

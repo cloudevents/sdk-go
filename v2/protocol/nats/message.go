@@ -16,7 +16,7 @@ type Message struct {
 	encoding binding.Encoding
 }
 
-// Wrap an *nats.Msg in a binding.Message.
+// NewMessage wraps an *nats.Msg in a binding.Message.
 // The returned message *can* be read several times safely
 func NewMessage(msg *nats.Msg) *Message {
 	return &Message{Msg: msg, encoding: binding.EncodingStructured}

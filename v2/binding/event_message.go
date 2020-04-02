@@ -84,7 +84,7 @@ func (*EventMessage) Finish(error) error { return nil }
 
 var _ Message = (*EventMessage)(nil) // Test it conforms to the interface
 
-// Configure which format to use when marshalling the event to structured mode
+// UseFormatForEvent configures which format to use when marshalling the event to structured mode
 func UseFormatForEvent(ctx context.Context, f format.Format) context.Context {
 	return context.WithValue(ctx, FORMAT_EVENT_STRUCTURED, f)
 }
