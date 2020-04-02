@@ -26,10 +26,10 @@ func New() *SendReceiver {
 	}
 }
 
-func (s *SendReceiver) Send(ctx context.Context, in binding.Message) (err error) {
-	return s.sender.Send(ctx, in)
+func (sr *SendReceiver) Send(ctx context.Context, in binding.Message) (err error) {
+	return sr.sender.Send(ctx, in)
 }
 
-func (r *SendReceiver) Receive(ctx context.Context) (binding.Message, error) {
-	return r.receiver.Receive(ctx)
+func (sr *SendReceiver) Receive(ctx context.Context) (binding.Message, error) {
+	return sr.receiver.Receive(ctx)
 }

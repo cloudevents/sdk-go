@@ -61,15 +61,15 @@ func (m *binaryBufferedMessage) ReadBinary(ctx context.Context, b binding.Binary
 	return b.End(ctx)
 }
 
-func (b *binaryBufferedMessage) Finish(error) error {
-	if b.body != nil {
-		binaryMessagePool.Put(b.body)
+func (m *binaryBufferedMessage) Finish(error) error {
+	if m.body != nil {
+		binaryMessagePool.Put(m.body)
 	}
 	return nil
 }
 
 // Binary Encoder
-func (b *binaryBufferedMessage) SetData(data io.Reader) error {
+func (m *binaryBufferedMessage) SetData(data io.Reader) error {
 	buf := binaryMessagePool.Get()
 	w, err := io.Copy(buf, data)
 	if err != nil {
@@ -79,18 +79,18 @@ func (b *binaryBufferedMessage) SetData(data io.Reader) error {
 		binaryMessagePool.Put(buf)
 		return nil
 	}
-	b.body = buf
+	m.body = buf
 	return nil
 }
 
-func (b *binaryBufferedMessage) SetAttribute(attribute spec.Attribute, value interface{}) error {
+func (m *binaryBufferedMessage) SetAttribute(attribute spec.Attribute, value interface{}) error {
 	// If spec version we need to change to right context struct
-	b.metadata[attribute] = value
+	m.metadata[attribute] = value
 	return nil
 }
 
-func (b *binaryBufferedMessage) SetExtension(name string, value interface{}) error {
-	b.extensions[name] = value
+func (m *binaryBufferedMessage) SetExtension(name string, value interface{}) error {
+	m.extensions[name] = value
 	return nil
 }
 
