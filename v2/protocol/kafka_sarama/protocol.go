@@ -25,8 +25,9 @@ type Protocol struct {
 
 	// Sender options
 	SenderContextDecorators []func(context.Context) context.Context
-	senderTransformers      binding.TransformerFactories
-	senderTopic             string
+	//lint:ignore U1000 TODO: https://github.com/cloudevents/sdk-go/issues/434
+	senderTransformers binding.TransformerFactories
+	senderTopic        string
 
 	// Consumer
 	Consumer    *Consumer
@@ -85,7 +86,7 @@ func (p *Protocol) applyOptions(opts ...ProtocolOptionFunc) error {
 	return nil
 }
 
-// StartReceiver implements Protocol.StartReceiver
+// OpenInbound implements Opener.OpenInbound
 // NOTE: This is a blocking call.
 func (p *Protocol) OpenInbound(ctx context.Context) error {
 	p.consumerMux.Lock()

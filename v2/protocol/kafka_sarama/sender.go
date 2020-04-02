@@ -16,7 +16,7 @@ type Sender struct {
 	transformers binding.TransformerFactories
 }
 
-// Returns a binding.Sender that sends messages to a specific receiverTopic using sarama.SyncProducer
+// NewSender returns a binding.Sender that sends messages to a specific receiverTopic using sarama.SyncProducer
 func NewSender(brokers []string, saramaConfig *sarama.Config, topic string, options ...SenderOptionFunc) (*Sender, error) {
 	client, err := sarama.NewClient(brokers, saramaConfig)
 	if err != nil {
@@ -26,7 +26,7 @@ func NewSender(brokers []string, saramaConfig *sarama.Config, topic string, opti
 	return NewSenderFromClient(client, topic, options...)
 }
 
-// Returns a binding.Sender that sends messages to a specific receiverTopic using sarama.SyncProducer
+// NewSenderFromClient returns a binding.Sender that sends messages to a specific receiverTopic using sarama.SyncProducer
 func NewSenderFromClient(client sarama.Client, topic string, options ...SenderOptionFunc) (*Sender, error) {
 	producer, err := sarama.NewSyncProducerFromClient(client)
 	if err != nil {

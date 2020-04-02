@@ -80,7 +80,7 @@ func WithUnsubscribeOnClose() ConsumerOption {
 
 type SenderOption func(*Sender) error
 
-// Add a transformer, which Protocol uses while encoding a binding.Message to an stan.Message
+// WithTransformer adds a transformer, which Protocol uses while encoding a binding.Message to an stan.Message
 func WithTransformer(transformer binding.TransformerFactory) SenderOption {
 	return func(p *Sender) error {
 		p.Transformers = append(p.Transformers, transformer)

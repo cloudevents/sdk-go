@@ -8,12 +8,12 @@ import (
 	"github.com/cloudevents/sdk-go/v2/event"
 )
 
-// Update cloudevents attribute (if present) using the provided function
+// UpdateAttribute updates a cloudevents attribute (if present) using the provided function
 func UpdateAttribute(attributeKind spec.Kind, updater func(interface{}) (interface{}, error)) binding.TransformerFactory {
 	return updateAttributeTransformerFactory{attributeKind: attributeKind, updater: updater}
 }
 
-// Update cloudevents extension (if present) using the provided function
+// UpdateExtension updates cloudevents extension (if present) using the provided function
 func UpdateExtension(name string, updater func(interface{}) (interface{}, error)) binding.TransformerFactory {
 	return updateExtensionTransformerFactory{name: name, updater: updater}
 }

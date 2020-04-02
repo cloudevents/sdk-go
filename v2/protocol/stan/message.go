@@ -16,7 +16,7 @@ type Message struct {
 	manualAcks bool
 }
 
-// Wrap an *nats.Msg in a binding.Message.
+// NewMessage wraps a *nats.Msg in a binding.Message.
 // The returned message *can* be read several times safely
 func NewMessage(msg *stan.Msg, opts ...MessageOption) (*Message, error) {
 	m := &Message{Msg: msg}

@@ -13,7 +13,7 @@ import (
 	"github.com/cloudevents/sdk-go/v2/types"
 )
 
-// Fill the provided amqpMessage with the message m.
+// WriteMessage fills the provided amqpMessage with the message m.
 // Using context you can tweak the encoding processing (more details on binding.Write documentation).
 func WriteMessage(ctx context.Context, m binding.Message, amqpMessage *amqp.Message, transformers ...binding.TransformerFactory) error {
 	structuredWriter := (*amqpMessageWriter)(amqpMessage)

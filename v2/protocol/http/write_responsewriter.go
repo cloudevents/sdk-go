@@ -14,7 +14,7 @@ import (
 	"github.com/cloudevents/sdk-go/v2/types"
 )
 
-// Write out to the the provided httpResponseWriter with the message m.
+// WriteResponseWriter writes out to the the provided httpResponseWriter with the message m.
 // Using context you can tweak the encoding processing (more details on binding.Write documentation).
 func WriteResponseWriter(ctx context.Context, m binding.Message, status int, rw http.ResponseWriter, transformers ...binding.TransformerFactory) error {
 	if status < 200 || status >= 600 {

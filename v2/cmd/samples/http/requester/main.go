@@ -31,7 +31,7 @@ func main() {
 	os.Exit(_main(os.Args[1:], env))
 }
 
-// Basic data struct.
+// Example is a basic data struct.
 type Example struct {
 	Sequence int    `json:"id"`
 	Message  string `json:"message"`

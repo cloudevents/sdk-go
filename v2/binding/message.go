@@ -2,6 +2,7 @@ package binding
 
 import "context"
 
+// MessageReader defines the read-related portion of the Message interface.
 // The ReadStructured and ReadBinary methods allows to perform an optimized encoding of a Message to a specific data structure.
 // A Sender should try each method of interest and fall back to binding.ToEvent() if none are supported.
 // An out of the box algorithm is provided for writing a message: binding.Write().
@@ -90,7 +91,7 @@ type ExactlyOnceMessage interface {
 	Received(settle func(error))
 }
 
-// Message Wrapper interface is used to walk through a decorated Message and unwrap it.
+// MessageWrapper interface is used to walk through a decorated Message and unwrap it.
 type MessageWrapper interface {
 	Message
 

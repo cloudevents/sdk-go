@@ -6,13 +6,15 @@ import (
 	"github.com/cloudevents/sdk-go/v2/event"
 )
 
+type eventEncodingKey int
+
 const (
-	SKIP_DIRECT_STRUCTURED_ENCODING = "SKIP_DIRECT_STRUCTURED_ENCODING"
-	SKIP_DIRECT_BINARY_ENCODING     = "SKIP_DIRECT_BINARY_ENCODING"
-	PREFERRED_EVENT_ENCODING        = "PREFERRED_EVENT_ENCODING"
+	skipDirectStructuredEncoding eventEncodingKey = iota
+	skipDirectBinaryEncoding
+	preferredEventEncoding
 )
 
-// Invokes the encoders. structuredWriter and binaryWriter could be nil if the protocol doesn't support it.
+// DirectWrite invokes the encoders. structuredWriter and binaryWriter could be nil if the protocol doesn't support it.
 // transformers can be nil and this function guarantees that they are invoked only once during the encoding process.
 //
 // Returns:
@@ -28,7 +30,7 @@ func DirectWrite(
 	binaryWriter BinaryWriter,
 	transformers ...TransformerFactory,
 ) (Encoding, error) {
-	if structuredWriter != nil && !GetOrDefaultFromCtx(ctx, SKIP_DIRECT_STRUCTURED_ENCODING, false).(bool) {
+	if structuredWriter != nil && !GetOrDefaultFromCtx(ctx, skipDirectStructuredEncoding, false).(bool) {
 		// Wrap the transformers in the structured builder
 		structuredWriter = TransformerFactories(transformers).StructuredTransformer(structuredWriter)
 
@@ -43,7 +45,7 @@ func DirectWrite(
 		}
 	}
 
-	if binaryWriter != nil && !GetOrDefaultFromCtx(ctx, SKIP_DIRECT_BINARY_ENCODING, false).(bool) {
+	if binaryWriter != nil && !GetOrDefaultFromCtx(ctx, skipDirectBinaryEncoding, false).(bool) {
 		binaryWriter = TransformerFactories(transformers).BinaryTransformer(binaryWriter)
 		if binaryWriter != nil {
 			if err := message.ReadBinary(ctx, binaryWriter); err == nil {
@@ -57,7 +59,7 @@ func DirectWrite(
 	return EncodingUnknown, ErrUnknownEncoding
 }
 
-// This is the full algorithm to encode a Message using transformers:
+// Write executes the full algorithm to encode a Message using transformers:
 // 1. It first tries direct encoding using DirectWrite
 // 2. If no direct encoding is possible, it uses ToEvent to generate an Event representation
 // 3. From the Event, the message is encoded back to the provided structured or binary encoders
@@ -94,7 +96,7 @@ func Write(
 
 	message = (*EventMessage)(e)
 
-	if GetOrDefaultFromCtx(ctx, PREFERRED_EVENT_ENCODING, EncodingBinary).(Encoding) == EncodingStructured {
+	if GetOrDefaultFromCtx(ctx, preferredEventEncoding, EncodingBinary).(Encoding) == EncodingStructured {
 		if structuredWriter != nil {
 			return EncodingStructured, message.ReadStructured(ctx, structuredWriter)
 		}
@@ -113,33 +115,33 @@ func Write(
 	return EncodingUnknown, ErrUnknownEncoding
 }
 
-// Skip direct structured to structured encoding during the encoding process
+// WithSkipDirectStructuredEncoding skips direct structured to structured encoding during the encoding process
 func WithSkipDirectStructuredEncoding(ctx context.Context, skip bool) context.Context {
-	return context.WithValue(ctx, SKIP_DIRECT_STRUCTURED_ENCODING, skip)
+	return context.WithValue(ctx, skipDirectStructuredEncoding, skip)
 }
 
-// Skip direct binary to binary encoding during the encoding process
+// WithSkipDirectBinaryEncoding skips direct binary to binary encoding during the encoding process
 func WithSkipDirectBinaryEncoding(ctx context.Context, skip bool) context.Context {
-	return context.WithValue(ctx, SKIP_DIRECT_BINARY_ENCODING, skip)
+	return context.WithValue(ctx, skipDirectBinaryEncoding, skip)
 }
 
-// Define the preferred encoding from event to message during the encoding process
+// WithPreferredEventEncoding defines the preferred encoding from event to message during the encoding process
 func WithPreferredEventEncoding(ctx context.Context, enc Encoding) context.Context {
-	return context.WithValue(ctx, PREFERRED_EVENT_ENCODING, enc)
+	return context.WithValue(ctx, preferredEventEncoding, enc)
 }
 
-// Force structured encoding during the encoding process
+// WithForceStructured forces structured encoding during the encoding process
 func WithForceStructured(ctx context.Context) context.Context {
-	return context.WithValue(context.WithValue(ctx, PREFERRED_EVENT_ENCODING, EncodingStructured), SKIP_DIRECT_BINARY_ENCODING, true)
+	return context.WithValue(context.WithValue(ctx, preferredEventEncoding, EncodingStructured), skipDirectBinaryEncoding, true)
 }
 
-// Force binary encoding during the encoding process
+// WithForceBinary forces binary encoding during the encoding process
 func WithForceBinary(ctx context.Context) context.Context {
-	return context.WithValue(context.WithValue(ctx, PREFERRED_EVENT_ENCODING, EncodingBinary), SKIP_DIRECT_STRUCTURED_ENCODING, true)
+	return context.WithValue(context.WithValue(ctx, preferredEventEncoding, EncodingBinary), skipDirectStructuredEncoding, true)
 }
 
-// Get a configuration value from the provided context
-func GetOrDefaultFromCtx(ctx context.Context, key string, def interface{}) interface{} {
+// GetOrDefaultFromCtx gets a configuration value from the provided context
+func GetOrDefaultFromCtx(ctx context.Context, key interface{}, def interface{}) interface{} {
 	if val := ctx.Value(key); val != nil {
 		return val
 	} else {

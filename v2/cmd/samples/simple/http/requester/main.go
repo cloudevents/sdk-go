@@ -8,7 +8,7 @@ import (
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 )
 
-// Basic data struct.
+// Example is a basic data struct.
 type Example struct {
 	Sequence int    `json:"id"`
 	Message  string `json:"message"`

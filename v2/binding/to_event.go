@@ -13,10 +13,10 @@ import (
 	"github.com/cloudevents/sdk-go/v2/types"
 )
 
-// Generic error when a conversion of a Message to an Event fails
+// ErrCannotConvertToEvent is a generic error when a conversion of a Message to an Event fails
 var ErrCannotConvertToEvent = errors.New("cannot convert message to event")
 
-// Translates a Message with a valid Structured or Binary representation to an Event.
+// ToEvent translates a Message with a valid Structured or Binary representation to an Event.
 // This function returns the Event generated from the Message and the original encoding of the message or
 // an error that points the conversion error.
 // transformers can be nil and this function guarantees that they are invoked only once during the encoding process.
@@ -31,8 +31,7 @@ func ToEvent(ctx context.Context, message MessageReader, transformers ...Transfo
 		for m != nil {
 			if em, ok := m.(*EventMessage); ok {
 				e := (*event.Event)(em)
-				var tf TransformerFactories
-				tf = transformers
+				var tf TransformerFactories = transformers
 				if err := tf.EventTransformer()(e); err != nil {
 					return nil, err
 				}
@@ -57,8 +56,7 @@ func ToEvent(ctx context.Context, message MessageReader, transformers ...Transfo
 	); err != nil {
 		return nil, err
 	}
-	var tf TransformerFactories
-	tf = transformers
+	var tf TransformerFactories = transformers
 	if err := tf.EventTransformer()(&e); err != nil {
 		return nil, err
 	}

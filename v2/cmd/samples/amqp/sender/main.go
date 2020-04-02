@@ -41,7 +41,7 @@ func sampleConfig() (server, node string, opts []ceamqp.Option) {
 	return env, strings.TrimPrefix(u.Path, "/"), opts
 }
 
-// Simple holder for the sending sample.
+// Demo is a simple holder for the sending sample.
 type Demo struct {
 	Message string
 	Source  url.URL
@@ -50,7 +50,7 @@ type Demo struct {
 	Client client.Client
 }
 
-// Basic data struct.
+// Example is a basic data struct.
 type Example struct {
 	Sequence int    `json:"id"`
 	Message  string `json:"message"`

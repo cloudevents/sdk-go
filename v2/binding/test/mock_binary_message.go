@@ -19,7 +19,7 @@ type MockBinaryMessage struct {
 	Body       []byte
 }
 
-// Create a new MockBinaryMessage starting from an event.Event. Panics in case of error
+// MustCreateMockBinaryMessage creates a new MockBinaryMessage starting from an event.Event. Panics in case of error
 func MustCreateMockBinaryMessage(e event.Event) binding.Message {
 	version := spec.VS.Version(e.SpecVersion())
 

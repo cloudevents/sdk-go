@@ -26,7 +26,7 @@ func (r *receiver) Receive(ctx context.Context) (binding.Message, error) {
 
 func (r *receiver) Close(ctx context.Context) error { return r.amqp.Close(ctx) }
 
-// Create a new Receiver which wraps an amqp.Receiver in a binding.Receiver
+// NewReceiver create a new Receiver which wraps an amqp.Receiver in a binding.Receiver
 func NewReceiver(amqp *amqp.Receiver) protocol.Receiver {
 	return &receiver{amqp: amqp}
 }

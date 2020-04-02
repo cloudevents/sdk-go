@@ -7,7 +7,7 @@ import (
 	"io"
 )
 
-// Fill the provided writer with the bindings.Message m.
+// WriteMsg fills the provided writer with the bindings.Message m.
 // Using context you can tweak the encoding processing (more details on binding.Write documentation).
 func WriteMsg(ctx context.Context, m binding.Message, writer io.ReaderFrom, transformers binding.TransformerFactories) error {
 	structuredWriter := &natsMessageWriter{writer}

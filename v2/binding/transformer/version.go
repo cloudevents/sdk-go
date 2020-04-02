@@ -6,7 +6,7 @@ import (
 	"github.com/cloudevents/sdk-go/v2/event"
 )
 
-// Converts the event context version to the specified one.
+// Version converts the event context version to the specified one.
 func Version(version spec.Version) binding.TransformerFactory {
 	return versionTransformerFactory{version: version}
 }
