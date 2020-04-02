@@ -252,28 +252,20 @@ func main() {
 	switch *bench {
 	case "baseline-structured":
 		results = benchmarkBaseline(benchmarkCases, MockedStructuredRequest)
-		break
 	case "baseline-binary":
 		results = benchmarkBaseline(benchmarkCases, MockedBinaryRequest)
-		break
 	case "binding-structured-to-structured":
 		results = benchmarkReceiverSender(benchmarkCases, MockedStructuredRequest, binding.WithForceStructured)
-		break
 	case "binding-structured-to-binary":
 		results = benchmarkReceiverSender(benchmarkCases, MockedStructuredRequest, binding.WithForceBinary)
-		break
 	case "binding-binary-to-structured":
 		results = benchmarkReceiverSender(benchmarkCases, MockedBinaryRequest, binding.WithForceStructured)
-		break
 	case "binding-binary-to-binary":
 		results = benchmarkReceiverSender(benchmarkCases, MockedBinaryRequest, binding.WithForceBinary)
-		break
 	case "client-binary":
 		results = benchmarkClient(benchmarkCases, MockedBinaryRequest)
-		break
 	case "client-structured":
 		results = benchmarkClient(benchmarkCases, MockedStructuredRequest)
-		break
 	default:
 		panic("Wrong bench flag")
 	}

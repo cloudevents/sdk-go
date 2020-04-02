@@ -28,7 +28,6 @@ func (e *Event) SetSpecVersion(v string) {
 		return
 	}
 	e.fieldOK("specversion")
-	return
 }
 
 // SetType implements EventWriter.SetType
