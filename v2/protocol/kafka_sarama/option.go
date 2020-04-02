@@ -6,7 +6,7 @@ import (
 	"github.com/cloudevents/sdk-go/v2/binding"
 )
 
-// kafka_sarama.Sender options
+// SenderOptionFunc is the type of kafka_sarama.Sender options
 type SenderOptionFunc func(sender *Sender)
 
 // WithTransformer adds a transformer, which Sender uses while encoding a binding.Message to a sarama.ProducerMessage
@@ -16,7 +16,7 @@ func WithTransformer(transformer binding.TransformerFactory) SenderOptionFunc {
 	}
 }
 
-// kafka_sarama.Protocol options
+// ProtocolOptionFunc is the type of kafka_sarama.Protocol options
 type ProtocolOptionFunc func(protocol *Protocol)
 
 func WithReceiverGroupId(groupId string) ProtocolOptionFunc {

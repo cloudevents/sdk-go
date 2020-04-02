@@ -28,7 +28,7 @@ type envConfig struct {
 	TopicIDs string `envconfig:"PUBSUB_TOPICS" default:"demo_cloudevents" required:"true"`
 }
 
-// Basic data struct.
+// Example is a basic data struct.
 type Example struct {
 	Sequence int    `json:"id"`
 	Message  string `json:"message"`

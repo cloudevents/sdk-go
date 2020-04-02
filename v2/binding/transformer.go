@@ -4,8 +4,9 @@ import (
 	"github.com/cloudevents/sdk-go/v2/event"
 )
 
-// Implements a transformation process while transferring the event from the Message implementation
-// to the provided encoder
+// TransformerFactory is an interface that implements a transformation
+// process while transferring the event from the Message
+// implementation to the provided encoder
 //
 // A transformer could optionally not provide an implementation for binary and/or structured encodings,
 // returning nil to the respective factory method.
@@ -20,7 +21,7 @@ type TransformerFactory interface {
 	EventTransformer() EventTransformer
 }
 
-// Utility type alias to manage multiple TransformerFactory
+// TransformerFactories is a utility type alias to manage multiple TransformerFactory
 type TransformerFactories []TransformerFactory
 
 func (t TransformerFactories) StructuredTransformer(writer StructuredWriter) StructuredWriter {
