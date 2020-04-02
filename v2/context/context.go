@@ -3,6 +3,8 @@ package context
 import (
 	"context"
 	"net/url"
+
+	"github.com/cloudevents/sdk-go/v2/types"
 )
 
 // Opaque key type used to store target
@@ -49,4 +51,25 @@ func TopicFrom(ctx context.Context) string {
 		}
 	}
 	return ""
+}
+
+// Opaque key type used to store backoff parameters
+type retryKeyType struct{}
+
+var retryKey = retryKeyType{}
+
+// WithRetry returns back a new context with the retry backoff parameters.
+func WithRetry(ctx context.Context, backoff types.Backoff) context.Context {
+	return context.WithValue(ctx, retryKey, backoff)
+}
+
+// RetryFrom looks in the given context and returns the backoff parameters if found, otherwise nil
+func RetryFrom(ctx context.Context) *types.Backoff {
+	c := ctx.Value(retryKey)
+	if c != nil {
+		if s, ok := c.(types.Backoff); ok {
+			return &s
+		}
+	}
+	return nil
 }

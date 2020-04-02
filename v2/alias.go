@@ -113,10 +113,13 @@ var (
 
 	// Event Creation
 
-	NewEvent  = event.New
-	NewResult = protocol.NewResult
+	NewEvent = event.New
 
+	// Results
+
+	NewResult     = protocol.NewResult
 	NewHTTPResult = http.NewResult
+	NewHTTPRetriesResult = http.NewRetriesResult
 
 	// Message Creation
 
@@ -134,6 +137,7 @@ var (
 
 	ContextWithTarget      = context.WithTarget
 	TargetFromContext      = context.TargetFrom
+	ContextWithRetry       = context.WithRetry
 	WithEncodingBinary     = binding.WithForceBinary
 	WithEncodingStructured = binding.WithForceStructured
 

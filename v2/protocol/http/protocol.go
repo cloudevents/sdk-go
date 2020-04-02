@@ -10,6 +10,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cloudevents/sdk-go/v2/types"
+
 	"github.com/cloudevents/sdk-go/v2/protocol"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
@@ -118,6 +120,16 @@ func (p *Protocol) Request(ctx context.Context, m binding.Message) (binding.Mess
 	if err = WriteRequest(ctx, m, req, p.transformers); err != nil {
 		return nil, err
 	}
+
+	do := p.doOnce
+	if backoff := cecontext.RetryFrom(ctx); backoff != nil {
+		do = p.doWithRetry(backoff)
+	}
+
+	return do(req)
+}
+
+func (p *Protocol) doOnce(req *http.Request) (binding.Message, error) {
 	resp, err := p.Client.Do(req)
 	if err != nil {
 		return nil, protocol.NewReceipt(false, "%w", err)
@@ -131,6 +143,64 @@ func (p *Protocol) Request(ctx context.Context, m binding.Message) (binding.Mess
 	}
 
 	return NewMessage(resp.Header, resp.Body), NewResult(resp.StatusCode, "%w", result)
+}
+
+func (p *Protocol) doWithRetry(backoff *types.Backoff) func(*http.Request) (binding.Message, error) {
+	return func(req *http.Request) (binding.Message, error) {
+		retries := 0
+		var results []protocol.Result
+		for {
+			resp, err := p.Client.Do(req)
+
+			// Fast track common case.
+			if err == nil && resp.StatusCode/100 == 2 {
+				result := NewResult(resp.StatusCode, "%w", protocol.ResultACK)
+
+				if retries != 0 {
+					result = NewRetriesResult(result, retries, results)
+				}
+				return NewMessage(resp.Header, resp.Body), result
+			}
+
+			// Slow case.
+			retry := retries < backoff.Retry
+
+			var result protocol.Result
+			if err != nil {
+				result = protocol.NewReceipt(false, "%w", err)
+				if retry && !err.(*url.Error).Timeout() {
+					// Do not retry if the error is not a timeout
+					retry = false
+				}
+			} else {
+				// No error, status code is not 2xx
+				result = NewResult(resp.StatusCode, "%w", protocol.ResultNACK)
+
+				// Potentially retry when:
+				// - 413 Payload Too Large with Retry-After (NOT SUPPORTED)
+				// - 425 Too Early
+				// - 429 Too Many Requests
+				// - 503 Service Unavailable (with or without Retry-After) (IGNORE Retry-After)
+				// - 504 Gateway Timeout
+
+				sc := resp.StatusCode
+				if retry && sc != 425 && sc != 429 && sc != 503 && sc != 504 {
+					// Permanent error
+					retry = false
+				}
+			}
+
+			if !retry {
+				return NewMessage(resp.Header, resp.Body), NewRetriesResult(result, retries, results)
+			}
+
+			results = append(results, result)
+			retries++
+
+			// Linear backoff.
+			time.Sleep(backoff.Delay)
+		}
+	}
 }
 
 func (p *Protocol) makeRequest(ctx context.Context) *http.Request {
