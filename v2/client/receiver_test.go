@@ -52,7 +52,7 @@ func TestReceiverFnInvalidTypes(t *testing.T) {
 		"wrong type in":            func(string) {},
 		"wrong type out":           func() string { return "" },
 		"extra in":                 func(context.Context, event.Event, map[string]string) {},
-		"extra out":                func(context.Context) (error, int) { return nil, 0 },
+		"extra out":                func(context.Context) (int, error) { return 0, nil },
 		"dup error out":            func(context.Context) (protocol.Result, error) { return nil, nil },
 		"context dup Event out":    func(context.Context) (*event.Event, *event.Event) { return nil, nil },
 		"context dup Event in":     func(context.Context, event.Event, event.Event) {},
