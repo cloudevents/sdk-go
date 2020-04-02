@@ -70,6 +70,7 @@ func _main(args []string, env envConfig) int {
 		InsecureSkipVerify: true,
 	}
 
+	//lint:ignore SA1019 TODO: remove use of deprecated method.
 	tlsConfig.BuildNameToCertificate()
 
 	seq := 0
