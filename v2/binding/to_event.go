@@ -13,7 +13,7 @@ import (
 	"github.com/cloudevents/sdk-go/v2/types"
 )
 
-// Generic error when a conversion of a Message to an Event fails
+// ErrCannotConvertToEvent is a generic error when a conversion of a Message to an Event fails
 var ErrCannotConvertToEvent = errors.New("cannot convert message to event")
 
 // ToEvent translates a Message with a valid Structured or Binary representation to an Event.

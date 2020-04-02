@@ -8,7 +8,7 @@ import (
 // Result leverages go's 1.13 error wrapping.
 type Result error
 
-// Is reports whether any error in err's chain matches target.
+// ResultIs reports whether any error in err's chain matches target.
 //
 // The chain consists of err itself followed by the sequence of errors obtained by
 // repeatedly calling Unwrap.
@@ -18,7 +18,7 @@ type Result error
 // (text from errors/wrap.go)
 var ResultIs = errors.Is
 
-// As finds the first error in err's chain that matches target, and if so, sets
+// ResultAs finds the first error in err's chain that matches target, and if so, sets
 // target to that error value and returns true.
 //
 // The chain consists of err itself followed by the sequence of errors obtained by

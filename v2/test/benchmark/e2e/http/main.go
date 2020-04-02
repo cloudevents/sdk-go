@@ -31,6 +31,7 @@ func fillRandom(buf []byte, r *rand.Rand) {
 }
 
 // Avoid DCE
+
 var W *httptest.ResponseRecorder
 var R *nethttp.Request
 
