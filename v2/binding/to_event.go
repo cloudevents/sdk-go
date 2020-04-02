@@ -31,8 +31,7 @@ func ToEvent(ctx context.Context, message MessageReader, transformers ...Transfo
 		for m != nil {
 			if em, ok := m.(*EventMessage); ok {
 				e := (*event.Event)(em)
-				var tf TransformerFactories
-				tf = transformers
+				var tf TransformerFactories = transformers
 				if err := tf.EventTransformer()(e); err != nil {
 					return nil, err
 				}
@@ -57,8 +56,7 @@ func ToEvent(ctx context.Context, message MessageReader, transformers ...Transfo
 	); err != nil {
 		return nil, err
 	}
-	var tf TransformerFactories
-	tf = transformers
+	var tf TransformerFactories = transformers
 	if err := tf.EventTransformer()(&e); err != nil {
 		return nil, err
 	}
