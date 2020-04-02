@@ -24,7 +24,7 @@ const (
 
 func (e *Event) fieldError(field string, err error) {
 	if e.FieldErrors == nil {
-		e.FieldErrors = make(map[string]error, 0)
+		e.FieldErrors = make(map[string]error)
 	}
 	e.FieldErrors[field] = err
 }

@@ -75,11 +75,11 @@ func New(ctx context.Context, opts ...Option) (*Protocol, error) {
 	}
 
 	if t.connectionsBySubscription == nil {
-		t.connectionsBySubscription = make(map[string]*internal.Connection, 0)
+		t.connectionsBySubscription = make(map[string]*internal.Connection)
 	}
 
 	if t.connectionsByTopic == nil {
-		t.connectionsByTopic = make(map[string]*internal.Connection, 0)
+		t.connectionsByTopic = make(map[string]*internal.Connection)
 	}
 	return t, nil
 }
