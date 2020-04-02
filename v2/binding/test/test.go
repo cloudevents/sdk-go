@@ -78,9 +78,9 @@ func ExToStr(t *testing.T, e event.Event) event.Event {
 		var vParsed interface{}
 		var err error
 
-		switch v.(type) {
+		switch v := v.(type) {
 		case json.RawMessage:
-			err = json.Unmarshal(v.(json.RawMessage), &vParsed)
+			err = json.Unmarshal(v, &vParsed)
 			require.NoError(t, err)
 		default:
 			vParsed, err = types.Format(v)
