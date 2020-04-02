@@ -217,8 +217,8 @@ func TestServeHTTP_Receive(t *testing.T) {
 	for n, tc := range testCases {
 		for _, p := range protocols(t) {
 			t.Run(n, func(t *testing.T) {
-				go ReceiveTest(t, p, context.Background(), tc.want, tc.wantErr)
-				p.ServeHTTP(tc.rw, tc.req)
+				go p.ServeHTTP(tc.rw, tc.req)
+				ReceiveTest(t, p, context.Background(), tc.want, tc.wantErr)
 			})
 		}
 	}

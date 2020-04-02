@@ -101,18 +101,22 @@ func TestSendReceive(t *testing.T) {
 	for n, tc := range testCases {
 		for _, p := range protocols(t) {
 			t.Run(n, func(t *testing.T) {
+				sendErrCh := make(chan error)
 				go func() {
-					wantErr := tc.sendErr
-					err := p.Send(context.Background(), tc.want)
-					if wantErr != "" {
-						if err == nil || err.Error() != wantErr {
-							t.Fatalf("Expected error '%s'. Actual '%v'", wantErr, err)
-						}
-					} else if err != nil {
-						t.Fatalf("Unexpected error: %v", err)
-					}
+					sendErrCh <- p.Send(context.Background(), tc.want)
 				}()
+
 				ReceiveTest(t, p, context.Background(), tc.want, tc.receiveErr)
+
+				err := <-sendErrCh
+				wantErr := tc.sendErr
+				if wantErr != "" {
+					if err == nil || err.Error() != wantErr {
+						t.Fatalf("Expected error '%s'. Actual '%v'", wantErr, err)
+					}
+				} else if err != nil {
+					t.Fatalf("Unexpected error: %v", err)
+				}
 			})
 		}
 	}
