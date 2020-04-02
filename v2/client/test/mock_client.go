@@ -23,16 +23,10 @@ func NewMockSenderClient(t *testing.T, chanSize int, opts ...client.Option) (cli
 
 	// Output piping
 	go func(messageCh <-chan binding.Message, eventCh chan<- event.Event) {
-		for {
-			select {
-			case m, ok := <-messageCh:
-				if !ok {
-					return
-				}
-				e, err := binding.ToEvent(context.TODO(), m)
-				require.NoError(t, err)
-				eventCh <- *e
-			}
+		for m := range messageCh {
+			e, err := binding.ToEvent(context.TODO(), m)
+			require.NoError(t, err)
+			eventCh <- *e
 		}
 	}(messageCh, eventCh)
 
@@ -67,16 +61,10 @@ func NewMockRequesterClient(t *testing.T, chanSize int, replierFn func(inMessage
 	}
 	// Output piping
 	go func(messageCh <-chan binding.Message, eventCh chan<- event.Event) {
-		for {
-			select {
-			case m, ok := <-messageCh:
-				if !ok {
-					return
-				}
-				e, err := binding.ToEvent(context.TODO(), m)
-				require.NoError(t, err)
-				eventCh <- *e
-			}
+		for m := range messageCh {
+			e, err := binding.ToEvent(context.TODO(), m)
+			require.NoError(t, err)
+			eventCh <- *e
 		}
 	}(messageCh, eventCh)
 
@@ -96,14 +84,8 @@ func NewMockReceiverClient(t *testing.T, chanSize int, opts ...client.Option) (c
 
 	// Input piping
 	go func(messageCh chan<- binding.Message, eventCh <-chan event.Event) {
-		for {
-			select {
-			case e, ok := <-eventCh:
-				if !ok {
-					return
-				}
-				messageCh <- binding.ToMessage(&e)
-			}
+		for e := range eventCh {
+			messageCh <- binding.ToMessage(&e)
 		}
 	}(messageCh, eventCh)
 
@@ -132,35 +114,23 @@ func NewMockResponderClient(t *testing.T, chanSize int, opts ...client.Option) (
 
 	// Input piping
 	go func(messageCh chan<- binding.Message, eventCh <-chan event.Event) {
-		for {
-			select {
-			case e, ok := <-eventCh:
-				if !ok {
-					return
-				}
-				messageCh <- binding.ToMessage(&e)
-			}
+		for e := range eventCh {
+			messageCh <- binding.ToMessage(&e)
 		}
 	}(inMessageCh, inEventCh)
 
 	// Output piping
 	go func(messageCh <-chan gochan.ChanResponderResponse, eventCh chan<- ClientMockResponse) {
-		for {
-			select {
-			case m, ok := <-messageCh:
-				if !ok {
-					return
+		for m := range messageCh {
+			if m.Message != nil {
+				e, err := binding.ToEvent(context.TODO(), m.Message)
+				require.NoError(t, err)
+				eventCh <- ClientMockResponse{
+					Event:  *e,
+					Result: m.Result,
 				}
-				if m.Message != nil {
-					e, err := binding.ToEvent(context.TODO(), m.Message)
-					require.NoError(t, err)
-					eventCh <- ClientMockResponse{
-						Event:  *e,
-						Result: m.Result,
-					}
-				}
-				eventCh <- ClientMockResponse{Result: m.Result}
 			}
+			eventCh <- ClientMockResponse{Result: m.Result}
 		}
 	}(outMessageCh, outEventCh)
 
