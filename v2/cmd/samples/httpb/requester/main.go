@@ -30,10 +30,7 @@ func main() {
 			"message": "Hello, World!",
 		})
 
-		resp, result := c.Request(ctx, e)
-		if resp != nil {
-			//log.Printf("response: %s", resp)
-		}
+		_, result := c.Request(ctx, e)
 
 		if protocol.IsACK(result) {
 			log.Printf("%d: ACK'ed  👍", i)
