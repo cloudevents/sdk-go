@@ -79,10 +79,7 @@ var _ error = (*Receipt)(nil)
 // Is returns if the target error is a Result type checking target.
 func (e *Receipt) Is(target error) bool {
 	if o, ok := target.(*Receipt); ok {
-		if e.ACK == o.ACK {
-			return true
-		}
-		return false
+		return e.ACK == o.ACK
 	}
 	// Allow for wrapped errors.
 	err := fmt.Errorf(e.Format, e.Args...)
