@@ -25,8 +25,9 @@ type Protocol struct {
 
 	// Sender options
 	SenderContextDecorators []func(context.Context) context.Context
-	senderTransformers      binding.TransformerFactories
-	senderTopic             string
+	//lint:ignore U1000 TODO: https://github.com/cloudevents/sdk-go/issues/434
+	senderTransformers binding.TransformerFactories
+	senderTopic        string
 
 	// Consumer
 	Consumer    *Consumer

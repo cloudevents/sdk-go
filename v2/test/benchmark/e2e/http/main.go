@@ -30,9 +30,12 @@ func fillRandom(buf []byte, r *rand.Rand) {
 	}
 }
 
-// Avoid DCE
+//lint:ignore U1000 Avoid DCE
 
 var W *httptest.ResponseRecorder
+
+//lint:ignore U1000 Avoid DCE
+
 var R *nethttp.Request
 
 func benchmarkBaseline(cases []e2e.BenchmarkCase, requestFactory func([]byte) *nethttp.Request) e2e.BenchmarkResults {

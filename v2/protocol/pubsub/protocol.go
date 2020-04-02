@@ -41,9 +41,8 @@ type Protocol struct {
 	// subscription if it does not exist.
 	AllowCreateSubscription bool
 
-	projectID      string
-	topicID        string
-	subscriptionID string
+	projectID string
+	topicID   string
 
 	gccMux sync.Mutex
 
