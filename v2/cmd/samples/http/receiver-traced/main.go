@@ -26,7 +26,7 @@ func main() {
 }
 
 func receive(ctx context.Context, e cloudevents.Event) {
-	ctx, span := client.TraceSpan(ctx, e)
+	_, span := client.TraceSpan(ctx, e)
 	defer span.End()
 
 	fmt.Printf("%s", e)
