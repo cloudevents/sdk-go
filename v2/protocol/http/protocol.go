@@ -11,10 +11,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cloudevents/sdk-go/v2/protocol"
-
 	"github.com/cloudevents/sdk-go/v2/binding"
 	cecontext "github.com/cloudevents/sdk-go/v2/context"
+	"github.com/cloudevents/sdk-go/v2/protocol"
 )
 
 const (
@@ -167,8 +166,8 @@ func (p *Protocol) doWithLinearRetry(ctx context.Context, delay time.Duration, t
 				if retry {
 					var err *url.Error
 					if errors.As(result, &err) { // should always be true
-						// Do not retry if the error is not a timeout
-						retry = !err.Timeout()
+						// Only retry when the error is a timeout
+						retry = err.Timeout()
 					}
 				}
 			} else {

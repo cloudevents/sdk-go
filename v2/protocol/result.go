@@ -91,3 +91,9 @@ func (e *Receipt) Is(target error) bool {
 func (e *Receipt) Error() string {
 	return fmt.Sprintf(e.Format, e.Args...)
 }
+
+// Unwrap returns the wrapped error if exist or nil
+func (e *Receipt) Unwrap() error {
+	err := fmt.Errorf(e.Format, e.Args...)
+	return errors.Unwrap(err)
+}
