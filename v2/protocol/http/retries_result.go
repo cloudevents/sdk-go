@@ -2,17 +2,19 @@ package http
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/cloudevents/sdk-go/v2/protocol"
 )
 
 // NewRetriesResult returns a http RetriesResult that should be used as
 // a transport.Result without retries
-func NewRetriesResult(result protocol.Result, retries int, results []protocol.Result) protocol.Result {
+func NewRetriesResult(result protocol.Result, retries int, retriesDuration time.Duration, results []protocol.Result) protocol.Result {
 	return &RetriesResult{
-		Result:  result,
-		Retries: retries,
-		Results: results,
+		Result:          result,
+		Retries:         retries,
+		RetriesDuration: retriesDuration,
+		Results:         results,
 	}
 }
 
@@ -24,7 +26,10 @@ type RetriesResult struct {
 	// Retries is the number of times the request was tried
 	Retries int
 
-	//
+	// RetriesDuration records the time spent retrying. Exclude the successful request (if any)
+	RetriesDuration time.Duration
+
+	// Results of all failed requests. Exclude last result.
 	Results []protocol.Result
 }
 

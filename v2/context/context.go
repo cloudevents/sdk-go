@@ -3,6 +3,7 @@ package context
 import (
 	"context"
 	"net/url"
+	"time"
 
 	"github.com/cloudevents/sdk-go/v2/types"
 )
@@ -53,23 +54,28 @@ func TopicFrom(ctx context.Context) string {
 	return ""
 }
 
-// Opaque key type used to store backoff parameters
-type retryKeyType struct{}
+// Opaque key type used to store linear backoff parameters
+type linearBackoffKeyType struct{}
 
-var retryKey = retryKeyType{}
+var linearBackoffKey = linearBackoffKeyType{}
 
-// WithRetry returns back a new context with the retry backoff parameters.
-func WithRetry(ctx context.Context, backoff types.Backoff) context.Context {
-	return context.WithValue(ctx, retryKey, backoff)
+// WithLinearBackoff returns back a new context with the linear backoff parameters.
+// MaxTries is the maximum number for retries and delay is the time interval between retries
+func WithLinearBackoff(ctx context.Context, delay time.Duration, maxTries int) context.Context {
+	return context.WithValue(ctx, linearBackoffKey, types.Backoff{
+		Strategy: types.BackoffStrategyLinear,
+		Period:   delay,
+		MaxTries: maxTries,
+	})
 }
 
-// RetryFrom looks in the given context and returns the backoff parameters if found, otherwise nil
-func RetryFrom(ctx context.Context) *types.Backoff {
-	c := ctx.Value(retryKey)
+// RetryFrom looks in the given context and returns the linear backoff parameters if found, otherwise 0,0
+func LinearBackoffFrom(ctx context.Context) (time.Duration, int) {
+	c := ctx.Value(linearBackoffKey)
 	if c != nil {
 		if s, ok := c.(types.Backoff); ok {
-			return &s
+			return s.Period, s.MaxTries
 		}
 	}
-	return nil
+	return time.Duration(0), 0
 }

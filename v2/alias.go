@@ -117,8 +117,8 @@ var (
 
 	// Results
 
-	NewResult     = protocol.NewResult
-	NewHTTPResult = http.NewResult
+	NewResult            = protocol.NewResult
+	NewHTTPResult        = http.NewResult
 	NewHTTPRetriesResult = http.NewRetriesResult
 
 	// Message Creation
@@ -135,11 +135,11 @@ var (
 
 	// Context
 
-	ContextWithTarget      = context.WithTarget
-	TargetFromContext      = context.TargetFrom
-	ContextWithRetry       = context.WithRetry
-	WithEncodingBinary     = binding.WithForceBinary
-	WithEncodingStructured = binding.WithForceStructured
+	ContextWithTarget        = context.WithTarget
+	TargetFromContext        = context.TargetFrom
+	ContextWithLinearBackoff = context.WithLinearBackoff
+	WithEncodingBinary       = binding.WithForceBinary
+	WithEncodingStructured   = binding.WithForceStructured
 
 	// Custom Types
 
