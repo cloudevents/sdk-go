@@ -2,15 +2,17 @@ package http
 
 import (
 	"context"
+	"net/http"
+	"testing"
+	"time"
+
 	"github.com/cloudevents/sdk-go/v2/binding"
+	cecontext "github.com/cloudevents/sdk-go/v2/context"
+	"github.com/cloudevents/sdk-go/v2/event"
 	"github.com/cloudevents/sdk-go/v2/protocol"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/stretchr/testify/require"
-
-	"net/http"
-	"testing"
-	"time"
 )
 
 func TestNew(t *testing.T) {
@@ -247,4 +249,66 @@ func ReceiveTest(t *testing.T, p *Protocol, ctx context.Context, want binding.Me
 	} else {
 		require.IsType(t, want, got)
 	}
+}
+
+func TestRequestWithRetries(t *testing.T) {
+	dummyEvent := event.New()
+	dummyMsg := binding.ToMessage(&dummyEvent)
+	ctx := cecontext.WithTarget(context.Background(), "http://test")
+	testCases := map[string]struct {
+		// roundTripperTest
+		statusCodes []int
+
+		// Linear Backoff
+		delay   time.Duration
+		retries int
+
+		// Wants
+		wantResult       protocol.Result
+		wantRequestCount int
+	}{
+		"425, 200, 3 retries": {
+			statusCodes: []int{425, 200},
+			delay:       time.Nanosecond,
+			retries:     3,
+			wantResult: &RetriesResult{
+				Result:          NewResult(200, "%w", protocol.ResultACK),
+				Retries:         1,
+				RetriesDuration: time.Nanosecond,
+				Results:         []protocol.Result{NewResult(425, "%w", protocol.ResultNACK)},
+			},
+			wantRequestCount: 2,
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+			roundTripper := roundTripperTest{statusCodes: tc.statusCodes}
+
+			p, err := New(WithRoundTripper(&roundTripper))
+			if err != nil {
+				t.Fail()
+			}
+			ctxWithRetries := cecontext.WithLinearBackoff(ctx, tc.delay, tc.retries)
+			_, got := p.Request(ctxWithRetries, dummyMsg)
+
+			if roundTripper.requestCount != tc.wantRequestCount {
+				t.Errorf("expected %d requests, got %d", tc.wantRequestCount, roundTripper.requestCount)
+			}
+
+			if diff := cmp.Diff(tc.wantResult, got); diff != "" {
+				t.Errorf("unexpected diff (-want, +got) = %v", diff)
+			}
+		})
+	}
+}
+
+type roundTripperTest struct {
+	statusCodes  []int
+	requestCount int
+}
+
+func (r *roundTripperTest) RoundTrip(*http.Request) (*http.Response, error) {
+	code := r.statusCodes[r.requestCount]
+	r.requestCount++
+	return &http.Response{StatusCode: code}, nil
 }
