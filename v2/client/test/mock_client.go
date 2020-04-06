@@ -125,6 +125,7 @@ func NewMockResponderClient(t *testing.T, chanSize int, opts ...client.Option) (
 			if m.Message != nil {
 				e, err := binding.ToEvent(context.TODO(), m.Message)
 				require.NoError(t, err)
+				require.NoError(t, m.Message.Finish(nil))
 				eventCh <- ClientMockResponse{
 					Event:  *e,
 					Result: m.Result,

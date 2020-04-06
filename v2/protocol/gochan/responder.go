@@ -15,6 +15,7 @@ type ChanResponderResponse struct {
 }
 
 // Responder implements Responder by receiving Messages from a channel and outputting the result in an output channel.
+// All message received in the `Out` channel must be finished
 type Responder struct {
 	In  <-chan binding.Message
 	Out chan<- ChanResponderResponse
