@@ -4,8 +4,6 @@ import (
 	"context"
 	"net/url"
 	"time"
-
-	"github.com/cloudevents/sdk-go/v2/types"
 )
 
 // Opaque key type used to store target
@@ -62,8 +60,8 @@ var linearBackoffKey = linearBackoffKeyType{}
 // WithLinearBackoff returns back a new context with the linear backoff parameters.
 // MaxTries is the maximum number for retries and delay is the time interval between retries
 func WithLinearBackoff(ctx context.Context, delay time.Duration, maxTries int) context.Context {
-	return context.WithValue(ctx, linearBackoffKey, types.Backoff{
-		Strategy: types.BackoffStrategyLinear,
+	return context.WithValue(ctx, linearBackoffKey, Backoff{
+		Strategy: BackoffStrategyLinear,
 		Period:   delay,
 		MaxTries: maxTries,
 	})
@@ -73,7 +71,7 @@ func WithLinearBackoff(ctx context.Context, delay time.Duration, maxTries int) c
 func LinearBackoffFrom(ctx context.Context) (time.Duration, int) {
 	c := ctx.Value(linearBackoffKey)
 	if c != nil {
-		if s, ok := c.(types.Backoff); ok {
+		if s, ok := c.(Backoff); ok {
 			return s.Period, s.MaxTries
 		}
 	}
