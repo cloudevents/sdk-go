@@ -57,14 +57,39 @@ type retriesKeyType struct{}
 
 var retriesKey = retriesKeyType{}
 
-// WithRetriesLinearBackoff returns back a new context with retries parameters using linear backoff strategy.
+// WithRetriesConstantBackoff returns back a new context with retries parameters using constant backoff strategy.
 // MaxTries is the maximum number for retries and delay is the time interval between retries
+func WithRetriesConstantBackoff(ctx context.Context, delay time.Duration, maxTries int) context.Context {
+	return WithRetryParams(ctx, &RetryParams{
+		Strategy: BackoffStrategyConstant,
+		Period:   delay,
+		MaxTries: maxTries,
+	})
+}
+
+// WithRetriesLinearBackoff returns back a new context with retries parameters using linear backoff strategy.
+// MaxTries is the maximum number for retries and delay*tries is the time interval between retries
 func WithRetriesLinearBackoff(ctx context.Context, delay time.Duration, maxTries int) context.Context {
-	return context.WithValue(ctx, retriesKey, &RetryParams{
+	return WithRetryParams(ctx, &RetryParams{
 		Strategy: BackoffStrategyLinear,
 		Period:   delay,
 		MaxTries: maxTries,
 	})
+}
+
+// WithRetriesExponentialBackoff returns back a new context with retries parameters using exponential backoff strategy.
+// MaxTries is the maximum number for retries and period is the amount of time to wait, used as `period * 2^retries`.
+func WithRetriesExponentialBackoff(ctx context.Context, period time.Duration, maxTries int) context.Context {
+	return WithRetryParams(ctx, &RetryParams{
+		Strategy: BackoffStrategyExponential,
+		Period:   period,
+		MaxTries: maxTries,
+	})
+}
+
+// WithRetryParams returns back a new context with retries parameters.
+func WithRetryParams(ctx context.Context, rp *RetryParams) context.Context {
+	return context.WithValue(ctx, retriesKey, rp)
 }
 
 // RetriesFrom looks in the given context and returns the retries parameters if found.
