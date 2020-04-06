@@ -25,9 +25,8 @@ type Protocol struct {
 
 	// Sender options
 	SenderContextDecorators []func(context.Context) context.Context
-	//lint:ignore U1000 TODO: https://github.com/cloudevents/sdk-go/issues/434
-	senderTransformers binding.TransformerFactories
-	senderTopic        string
+	senderTransformers      binding.TransformerFactories
+	senderTopic             string
 
 	// Consumer
 	Consumer    *Consumer
@@ -70,6 +69,7 @@ func NewProtocolFromClient(client sarama.Client, sendToTopic string, receiveFrom
 	if err != nil {
 		return nil, err
 	}
+	p.Sender.transformers = p.senderTransformers
 
 	if p.receiverTopic == "" {
 		return nil, errors.New("you didn't specify the topic to receive from")
