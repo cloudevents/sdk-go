@@ -3,7 +3,6 @@ package http
 import (
 	"fmt"
 	"net"
-	"net/http"
 	nethttp "net/http"
 	"net/url"
 	"strings"
@@ -176,7 +175,7 @@ func WithMiddleware(middleware Middleware) Option {
 }
 
 // WithRoundTripper sets the HTTP RoundTripper.
-func WithRoundTripper(roundTripper http.RoundTripper) Option {
+func WithRoundTripper(roundTripper nethttp.RoundTripper) Option {
 	return func(t *Protocol) error {
 		if t == nil {
 			return fmt.Errorf("http round tripper option can not set nil protocol")
@@ -187,7 +186,7 @@ func WithRoundTripper(roundTripper http.RoundTripper) Option {
 }
 
 // WithClient sets the protocol client
-func WithClient(client http.Client) Option {
+func WithClient(client nethttp.Client) Option {
 	return func(p *Protocol) error {
 		if p == nil {
 			return fmt.Errorf("client option can not set nil protocol")

@@ -18,7 +18,7 @@ func NewRetriesResult(result protocol.Result, retries int, retriesDuration time.
 	}
 }
 
-// Result wraps the fields required to make adjustments for http Responses.
+// RetriesResult wraps the fields required to make adjustments for http Responses.
 type RetriesResult struct {
 	// The last result
 	protocol.Result
