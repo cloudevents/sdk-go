@@ -6,6 +6,8 @@ import (
 	"github.com/cloudevents/sdk-go/v2/protocol"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/stretchr/testify/require"
+
 	"net/http"
 	"testing"
 	"time"
@@ -207,7 +209,7 @@ func TestServeHTTP_Receive(t *testing.T) {
 		rw  http.ResponseWriter
 		req *http.Request
 		// Receive
-		want    *Message
+		want    binding.Message
 		wantErr string
 	}{
 		"nil": {
@@ -240,7 +242,9 @@ func ReceiveTest(t *testing.T, p *Protocol, ctx context.Context, want binding.Me
 		t.Fatalf("Unexpected error: %v", err)
 	}
 
-	if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("unexpected diff (-want, +got) = %v", diff)
+	if want == nil {
+		require.Nil(t, want)
+	} else {
+		require.IsType(t, want, got)
 	}
 }

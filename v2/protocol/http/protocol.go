@@ -191,11 +191,15 @@ func (p *Protocol) Receive(ctx context.Context) (binding.Message, error) {
 
 	msg, fn, err := p.Respond(ctx)
 	// No-op the response when finish is invoked.
-	return binding.WithFinish(msg, func(err error) {
-		if fn != nil {
-			_ = fn(ctx, nil, nil)
-		}
-	}), err
+	if msg != nil {
+		return binding.WithFinish(msg, func(err error) {
+			if fn != nil {
+				_ = fn(ctx, nil, nil)
+			}
+		}), err
+	} else {
+		return nil, err
+	}
 }
 
 // Respond receives the next incoming HTTP request as a CloudEvent and waits
