@@ -29,17 +29,17 @@ func ToEvent(ctx context.Context, message MessageReader, transformers ...Transfo
 	if messageEncoding == EncodingEvent {
 		m := message
 		for m != nil {
-			if em, ok := m.(*EventMessage); ok {
-				e := (*event.Event)(em)
+			switch mt := m.(type) {
+			case *EventMessage:
+				e := (*event.Event)(mt)
 				var tf TransformerFactories = transformers
 				if err := tf.EventTransformer()(e); err != nil {
 					return nil, err
 				}
 				return e, nil
-			}
-			if mw, ok := m.(MessageWrapper); ok {
-				m = mw.GetWrappedMessage()
-			} else {
+			case MessageWrapper:
+				m = mt.GetWrappedMessage()
+			default:
 				break
 			}
 		}
