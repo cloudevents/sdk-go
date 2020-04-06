@@ -52,28 +52,29 @@ func TopicFrom(ctx context.Context) string {
 	return ""
 }
 
-// Opaque key type used to store linear backoff parameters
-type linearBackoffKeyType struct{}
+// Opaque key type used to store retry parameters
+type retriesKeyType struct{}
 
-var linearBackoffKey = linearBackoffKeyType{}
+var retriesKey = retriesKeyType{}
 
-// WithLinearBackoff returns back a new context with the linear backoff parameters.
+// WithRetriesLinearBackoff returns back a new context with retries parameters using linear backoff strategy.
 // MaxTries is the maximum number for retries and delay is the time interval between retries
-func WithLinearBackoff(ctx context.Context, delay time.Duration, maxTries int) context.Context {
-	return context.WithValue(ctx, linearBackoffKey, Backoff{
+func WithRetriesLinearBackoff(ctx context.Context, delay time.Duration, maxTries int) context.Context {
+	return context.WithValue(ctx, retriesKey, &RetryParams{
 		Strategy: BackoffStrategyLinear,
 		Period:   delay,
 		MaxTries: maxTries,
 	})
 }
 
-// RetryFrom looks in the given context and returns the linear backoff parameters if found, otherwise 0,0
-func LinearBackoffFrom(ctx context.Context) (time.Duration, int) {
-	c := ctx.Value(linearBackoffKey)
+// RetriesFrom looks in the given context and returns the retries parameters if found.
+// Otherwise returns the default retries configuration (ie. no retries).
+func RetriesFrom(ctx context.Context) *RetryParams {
+	c := ctx.Value(retriesKey)
 	if c != nil {
-		if s, ok := c.(Backoff); ok {
-			return s.Period, s.MaxTries
+		if s, ok := c.(*RetryParams); ok {
+			return s
 		}
 	}
-	return time.Duration(0), 0
+	return &DefaultRetryParams
 }

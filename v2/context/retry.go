@@ -5,13 +5,18 @@ import "time"
 type BackoffStrategy string
 
 const (
-	BackoffStrategyLinear      = "linear"
-	BackoffStrategyExponential = "exponential"
+	BackoffStrategyNone   = "none"
+	BackoffStrategyLinear = "linear"
+
+	// TODO
+	// BackoffStrategyExponential = "exponential"
 )
 
-// Backoff holds parameters applied to retries
-type Backoff struct {
-	// Backoff strategy
+var DefaultRetryParams = RetryParams{Strategy: BackoffStrategyNone}
+
+// RetryParams holds parameters applied to retries
+type RetryParams struct {
+	// Strategy is the backoff strategy to applies between retries
 	Strategy BackoffStrategy
 
 	// MaxTries is the maximum number of times to retry request before giving up

@@ -119,12 +119,7 @@ func (p *Protocol) Request(ctx context.Context, m binding.Message) (binding.Mess
 		return nil, err
 	}
 
-	do := p.doOnce
-	if delay, tries := cecontext.LinearBackoffFrom(ctx); tries > 0 {
-		do = p.doWithLinearRetry(ctx, delay, tries)
-	}
-
-	return do(req)
+	return p.doWithRetry(ctx, cecontext.RetriesFrom(ctx))(req)
 }
 
 func (p *Protocol) doOnce(req *http.Request) (binding.Message, error) {
@@ -143,7 +138,7 @@ func (p *Protocol) doOnce(req *http.Request) (binding.Message, error) {
 	return NewMessage(resp.Header, resp.Body), NewResult(resp.StatusCode, "%w", result)
 }
 
-func (p *Protocol) doWithLinearRetry(ctx context.Context, delay time.Duration, tries int) func(*http.Request) (binding.Message, error) {
+func (p *Protocol) doWithRetry(ctx context.Context, retriesParams *cecontext.RetryParams) func(*http.Request) (binding.Message, error) {
 	return func(req *http.Request) (binding.Message, error) {
 		retries := 0
 		retriesDuration := time.Duration(0)
@@ -159,44 +154,47 @@ func (p *Protocol) doWithLinearRetry(ctx context.Context, delay time.Duration, t
 				return msg, result
 			}
 
-			// Slow case.
-			retry := retries < tries
+			// Slow case: determine whether or not to retry
+			retry := retries < retriesParams.MaxTries
 
-			if msg == nil {
-				if retry {
+			if retry {
+				if msg == nil {
 					var err *url.Error
 					if errors.As(result, &err) { // should always be true
 						// Only retry when the error is a timeout
 						retry = err.Timeout()
 					}
-				}
-			} else {
-				// Got a msg but status code is not 2xx
+				} else {
+					// Got a msg but status code is not 2xx
 
-				// Potentially retry when:
-				// - 413 Payload Too Large with Retry-After (NOT SUPPORTED)
-				// - 425 Too Early
-				// - 429 Too Many Requests
-				// - 503 Service Unavailable (with or without Retry-After) (IGNORE Retry-After)
-				// - 504 Gateway Timeout
+					// Potentially retry when:
+					// - 413 Payload Too Large with Retry-After (NOT SUPPORTED)
+					// - 425 Too Early
+					// - 429 Too Many Requests
+					// - 503 Service Unavailable (with or without Retry-After) (IGNORE Retry-After)
+					// - 504 Gateway Timeout
 
-				sc := result.(*Result).StatusCode
-				if retry && sc != 425 && sc != 429 && sc != 503 && sc != 504 {
-					// Permanent error
-					retry = false
+					sc := result.(*Result).StatusCode
+					if sc != 425 && sc != 429 && sc != 503 && sc != 504 {
+						// Permanent error
+						retry = false
+					}
 				}
 			}
 
 			if !retry {
 				// return the last http response (or nil if none).
-				return msg, NewRetriesResult(result, retries, retriesDuration, results)
+				if retries != 0 {
+					return msg, NewRetriesResult(result, retries, retriesDuration, results)
+				}
+				return msg, result
 			}
 
 			results = append(results, result)
 			retries++
-			retriesDuration += delay
+			retriesDuration += retriesParams.Period
 
-			ticker := time.NewTicker(delay)
+			ticker := time.NewTicker(retriesParams.Period)
 			select {
 			case <-ctx.Done():
 				ticker.Stop()

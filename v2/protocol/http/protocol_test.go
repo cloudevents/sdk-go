@@ -352,7 +352,7 @@ func TestRequestWithRetries(t *testing.T) {
 			if err != nil {
 				t.Fail()
 			}
-			ctxWithRetries := cecontext.WithLinearBackoff(ctx, tc.delay, tc.retries)
+			ctxWithRetries := cecontext.WithRetriesLinearBackoff(ctx, tc.delay, tc.retries)
 			_, got := p.Request(ctxWithRetries, dummyMsg)
 
 			if roundTripper.requestCount != tc.wantRequestCount {

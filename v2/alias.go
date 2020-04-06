@@ -135,11 +135,11 @@ var (
 
 	// Context
 
-	ContextWithTarget        = context.WithTarget
-	TargetFromContext        = context.TargetFrom
-	ContextWithLinearBackoff = context.WithLinearBackoff
-	WithEncodingBinary       = binding.WithForceBinary
-	WithEncodingStructured   = binding.WithForceStructured
+	ContextWithTarget               = context.WithTarget
+	TargetFromContext               = context.TargetFrom
+	ContextWithRetriesLinearBackoff = context.WithRetriesLinearBackoff
+	WithEncodingBinary              = binding.WithForceBinary
+	WithEncodingStructured          = binding.WithForceStructured
 
 	// Custom Types
 
