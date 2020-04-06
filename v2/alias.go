@@ -113,10 +113,13 @@ var (
 
 	// Event Creation
 
-	NewEvent  = event.New
-	NewResult = protocol.NewResult
+	NewEvent = event.New
 
-	NewHTTPResult = http.NewResult
+	// Results
+
+	NewResult            = protocol.NewResult
+	NewHTTPResult        = http.NewResult
+	NewHTTPRetriesResult = http.NewRetriesResult
 
 	// Message Creation
 
@@ -132,10 +135,11 @@ var (
 
 	// Context
 
-	ContextWithTarget      = context.WithTarget
-	TargetFromContext      = context.TargetFrom
-	WithEncodingBinary     = binding.WithForceBinary
-	WithEncodingStructured = binding.WithForceStructured
+	ContextWithTarget               = context.WithTarget
+	TargetFromContext               = context.TargetFrom
+	ContextWithRetriesLinearBackoff = context.WithRetriesLinearBackoff
+	WithEncodingBinary              = binding.WithForceBinary
+	WithEncodingStructured          = binding.WithForceStructured
 
 	// Custom Types
 

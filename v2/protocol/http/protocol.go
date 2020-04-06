@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -10,10 +11,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cloudevents/sdk-go/v2/protocol"
-
 	"github.com/cloudevents/sdk-go/v2/binding"
 	cecontext "github.com/cloudevents/sdk-go/v2/context"
+	"github.com/cloudevents/sdk-go/v2/protocol"
 )
 
 const (
@@ -118,6 +118,11 @@ func (p *Protocol) Request(ctx context.Context, m binding.Message) (binding.Mess
 	if err = WriteRequest(ctx, m, req, p.transformers); err != nil {
 		return nil, err
 	}
+
+	return p.doWithRetry(ctx, cecontext.RetriesFrom(ctx))(req)
+}
+
+func (p *Protocol) doOnce(req *http.Request) (binding.Message, error) {
 	resp, err := p.Client.Do(req)
 	if err != nil {
 		return nil, protocol.NewReceipt(false, "%w", err)
@@ -131,6 +136,74 @@ func (p *Protocol) Request(ctx context.Context, m binding.Message) (binding.Mess
 	}
 
 	return NewMessage(resp.Header, resp.Body), NewResult(resp.StatusCode, "%w", result)
+}
+
+func (p *Protocol) doWithRetry(ctx context.Context, retriesParams *cecontext.RetryParams) func(*http.Request) (binding.Message, error) {
+	return func(req *http.Request) (binding.Message, error) {
+		retries := 0
+		retriesDuration := time.Duration(0)
+		var results []protocol.Result
+		for {
+			msg, result := p.doOnce(req)
+
+			// Fast track common case.
+			if msg != nil && result.(*Result).StatusCode/100 == 2 {
+				if retries != 0 {
+					result = NewRetriesResult(result, retries, retriesDuration, results)
+				}
+				return msg, result
+			}
+
+			// Slow case: determine whether or not to retry
+			retry := retries < retriesParams.MaxTries
+
+			if retry {
+				if msg == nil {
+					var err *url.Error
+					if errors.As(result, &err) { // should always be true
+						// Only retry when the error is a timeout
+						retry = err.Timeout()
+					}
+				} else {
+					// Got a msg but status code is not 2xx
+
+					// Potentially retry when:
+					// - 413 Payload Too Large with Retry-After (NOT SUPPORTED)
+					// - 425 Too Early
+					// - 429 Too Many Requests
+					// - 503 Service Unavailable (with or without Retry-After) (IGNORE Retry-After)
+					// - 504 Gateway Timeout
+
+					sc := result.(*Result).StatusCode
+					if sc != 425 && sc != 429 && sc != 503 && sc != 504 {
+						// Permanent error
+						retry = false
+					}
+				}
+			}
+
+			if !retry {
+				// return the last http response (or nil if none).
+				if retries != 0 {
+					return msg, NewRetriesResult(result, retries, retriesDuration, results)
+				}
+				return msg, result
+			}
+
+			results = append(results, result)
+			retries++
+			retriesDuration += retriesParams.Period
+
+			ticker := time.NewTicker(retriesParams.Period)
+			select {
+			case <-ctx.Done():
+				ticker.Stop()
+				return nil, protocol.NewReceipt(false, "request has been cancelled")
+			case <-ticker.C:
+				ticker.Stop()
+			}
+		}
+	}
 }
 
 func (p *Protocol) makeRequest(ctx context.Context) *http.Request {

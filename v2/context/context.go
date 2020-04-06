@@ -3,6 +3,7 @@ package context
 import (
 	"context"
 	"net/url"
+	"time"
 )
 
 // Opaque key type used to store target
@@ -49,4 +50,31 @@ func TopicFrom(ctx context.Context) string {
 		}
 	}
 	return ""
+}
+
+// Opaque key type used to store retry parameters
+type retriesKeyType struct{}
+
+var retriesKey = retriesKeyType{}
+
+// WithRetriesLinearBackoff returns back a new context with retries parameters using linear backoff strategy.
+// MaxTries is the maximum number for retries and delay is the time interval between retries
+func WithRetriesLinearBackoff(ctx context.Context, delay time.Duration, maxTries int) context.Context {
+	return context.WithValue(ctx, retriesKey, &RetryParams{
+		Strategy: BackoffStrategyLinear,
+		Period:   delay,
+		MaxTries: maxTries,
+	})
+}
+
+// RetriesFrom looks in the given context and returns the retries parameters if found.
+// Otherwise returns the default retries configuration (ie. no retries).
+func RetriesFrom(ctx context.Context) *RetryParams {
+	c := ctx.Value(retriesKey)
+	if c != nil {
+		if s, ok := c.(*RetryParams); ok {
+			return s
+		}
+	}
+	return &DefaultRetryParams
 }
