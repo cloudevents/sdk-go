@@ -36,7 +36,11 @@ func TestRetryParams_Backoff(t *testing.T) {
 		},
 		"const timeout": {
 			ctx: func() context.Context {
-				ctx, _ := context.WithTimeout(context.Background(), 10*time.Millisecond)
+				ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
+				go func() {
+					time.Sleep(10 * time.Millisecond)
+					cancel()
+				}()
 				return ctx
 			}(),
 			rp:      &RetryParams{Strategy: BackoffStrategyConstant, MaxTries: 10, Period: 1 * time.Second},
