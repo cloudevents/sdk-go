@@ -13,7 +13,7 @@ func NewRetriesResult(result protocol.Result, retries int, startTime time.Time, 
 	rr := &RetriesResult{
 		Result:   result,
 		Retries:  retries,
-		Duration: time.Now().Sub(startTime),
+		Duration: time.Since(startTime),
 	}
 	if len(attempts) > 0 {
 		rr.Attempts = attempts
