@@ -36,7 +36,7 @@ func newMatchExactVersionVersion(
 	return v
 }
 
-// WithPrefix returns a set of versions with prefix added to all attribute names.
+// WithPrefixMatchExact returns a set of versions with prefix added to all attribute names.
 func WithPrefixMatchExact(attributeNameMatchMapper func(string) string, prefix string) *Versions {
 	attr := func(name string, kind Kind) *attribute {
 		return &attribute{accessor: acc[kind], name: name}
