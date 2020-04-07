@@ -5,6 +5,7 @@ import (
 	"io"
 	nethttp "net/http"
 	"strings"
+	"unicode"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/binding/format"
@@ -99,7 +100,12 @@ func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) 
 			if attr != nil {
 				err = encoder.SetAttribute(attr, v[0])
 			} else {
-				err = encoder.SetExtension(strings.ToLower(strings.TrimPrefix(k, prefix)), v[0])
+				// Trim Prefix + To lower
+				var b strings.Builder
+				b.Grow(len(k) - len(prefix))
+				b.WriteRune(unicode.ToLower(rune(k[len(prefix)])))
+				b.WriteString(k[len(prefix)+1:])
+				err = encoder.SetExtension(b.String(), v[0])
 			}
 		} else if k == ContentType {
 			err = encoder.SetAttribute(m.version.AttributeFromKind(spec.DataContentType), v[0])
