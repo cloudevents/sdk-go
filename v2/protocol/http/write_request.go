@@ -109,11 +109,8 @@ func (b *httpRequestWriter) SetAttribute(attribute spec.Attribute, value interfa
 		return err
 	}
 
-	if attribute.Kind() == spec.DataContentType {
-		b.Header.Add(ContentType, s)
-	} else {
-		b.Header.Add(prefix+attribute.Name(), s)
-	}
+	mapping := attributeHeadersMapping[attribute.Name()]
+	b.Header[mapping] = append(b.Header[mapping], s)
 	return nil
 }
 

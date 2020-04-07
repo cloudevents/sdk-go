@@ -55,11 +55,8 @@ func (b *httpResponseWriter) SetAttribute(attribute spec.Attribute, value interf
 		return err
 	}
 
-	if attribute.Kind() == spec.DataContentType {
-		b.rw.Header().Add(ContentType, s)
-	} else {
-		b.rw.Header().Add(prefix+attribute.Name(), s)
-	}
+	mapping := attributeHeadersMapping[attribute.Name()]
+	b.rw.Header()[mapping] = append(b.rw.Header()[mapping], s)
 	return nil
 }
 
