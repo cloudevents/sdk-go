@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	nethttp "net/http"
+	"net/textproto"
 	"strings"
 	"unicode"
 
@@ -14,7 +15,16 @@ import (
 
 const prefix = "Ce-"
 
-var specs = spec.WithPrefix(prefix)
+var specs = spec.WithPrefixMatchExact(
+	func(s string) string {
+		if s == "datacontenttype" {
+			return "Content-Type"
+		} else {
+			return textproto.CanonicalMIMEHeaderKey("Ce-" + s)
+		}
+	},
+	"Ce-",
+)
 
 const ContentType = "Content-Type"
 const ContentLength = "Content-Length"
@@ -95,20 +105,16 @@ func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) 
 	}
 
 	for k, v := range m.Header {
-		if strings.HasPrefix(k, prefix) {
-			attr := m.version.Attribute(k)
-			if attr != nil {
-				err = encoder.SetAttribute(attr, v[0])
-			} else {
-				// Trim Prefix + To lower
-				var b strings.Builder
-				b.Grow(len(k) - len(prefix))
-				b.WriteRune(unicode.ToLower(rune(k[len(prefix)])))
-				b.WriteString(k[len(prefix)+1:])
-				err = encoder.SetExtension(b.String(), v[0])
-			}
-		} else if k == ContentType {
-			err = encoder.SetAttribute(m.version.AttributeFromKind(spec.DataContentType), v[0])
+		attr := m.version.Attribute(k)
+		if attr != nil {
+			err = encoder.SetAttribute(attr, v[0])
+		} else if strings.HasPrefix(k, prefix) {
+			// Trim Prefix + To lower
+			var b strings.Builder
+			b.Grow(len(k) - len(prefix))
+			b.WriteRune(unicode.ToLower(rune(k[len(prefix)])))
+			b.WriteString(k[len(prefix)+1:])
+			err = encoder.SetExtension(b.String(), v[0])
 		}
 		if err != nil {
 			return err
