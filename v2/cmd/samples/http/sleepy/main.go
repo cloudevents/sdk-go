@@ -43,19 +43,19 @@ func gotEvent(event cloudevents.Event) error {
 }
 
 func _main(args []string, env envConfig) int {
-	p, err := cloudevents.NewHTTP(cloudevents.WithPort(env.Port), cloudevents.WithPath(env.Path))
-	if err != nil {
-		log.Fatalf("failed to create protocol: %s", err.Error())
-	}
-	c, err := cloudevents.NewClient(p)
-	if err != nil {
-		log.Printf("failed to create client, %v", err)
-		return 1
-	}
-
-	log.Printf("listening on :%d%s\n", env.Port, env.Path)
-
 	for {
+		p, err := cloudevents.NewHTTP(cloudevents.WithPort(env.Port), cloudevents.WithPath(env.Path))
+		if err != nil {
+			log.Fatalf("failed to create protocol: %s", err.Error())
+		}
+		c, err := cloudevents.NewClient(p)
+		if err != nil {
+			log.Printf("failed to create client, %v", err)
+			return 1
+		}
+
+		log.Printf("listening on :%d%s\n", env.Port, env.Path)
+
 		ctx, cancel := context.WithCancel(context.TODO())
 
 		go func() {

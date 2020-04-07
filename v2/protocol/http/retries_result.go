@@ -9,13 +9,16 @@ import (
 
 // NewRetriesResult returns a http RetriesResult that should be used as
 // a transport.Result without retries
-func NewRetriesResult(result protocol.Result, retries int, retriesDuration time.Duration, results []protocol.Result) protocol.Result {
-	return &RetriesResult{
-		Result:          result,
-		Retries:         retries,
-		RetriesDuration: retriesDuration,
-		Results:         results,
+func NewRetriesResult(result protocol.Result, retries int, startTime time.Time, attempts []protocol.Result) protocol.Result {
+	rr := &RetriesResult{
+		Result:   result,
+		Retries:  retries,
+		Duration: time.Since(startTime),
 	}
+	if len(attempts) > 0 {
+		rr.Attempts = attempts
+	}
+	return rr
 }
 
 // RetriesResult wraps the fields required to make adjustments for http Responses.
@@ -26,11 +29,11 @@ type RetriesResult struct {
 	// Retries is the number of times the request was tried
 	Retries int
 
-	// RetriesDuration records the time spent retrying. Exclude the successful request (if any)
-	RetriesDuration time.Duration
+	// Duration records the time spent retrying. Exclude the successful request (if any)
+	Duration time.Duration
 
-	// Results of all failed requests. Exclude last result.
-	Results []protocol.Result
+	// Attempts of all failed requests. Exclude last result.
+	Attempts []protocol.Result
 }
 
 // make sure RetriesResult implements error.
