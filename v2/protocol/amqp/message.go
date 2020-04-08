@@ -24,23 +24,26 @@ var (
 // Message implements binding.Message by wrapping an *amqp.Message.
 // This message *can* be read several times safely
 type Message struct {
-	AMQP     *amqp.Message
-	encoding binding.Encoding
+	AMQP *amqp.Message
+
+	version spec.Version
+	format  format.Format
 }
 
 // NewMessage wrap an *amqp.Message in a binding.Message.
 // The returned message *can* be read several times safely
 func NewMessage(message *amqp.Message) *Message {
 	if message.Properties != nil && format.IsFormat(message.Properties.ContentType) {
-		return &Message{AMQP: message, encoding: binding.EncodingStructured}
+		return &Message{AMQP: message, format: format.Lookup(message.Properties.ContentType)}
 	} else if sv := getSpecVersion(message); sv != nil {
-		return &Message{AMQP: message, encoding: binding.EncodingBinary}
+		return &Message{AMQP: message, version: sv}
 	} else {
-		return &Message{AMQP: message, encoding: binding.EncodingUnknown}
+		return &Message{AMQP: message}
 	}
 }
 
 var _ binding.Message = (*Message)(nil)
+var _ binding.MessageMetadataReader = (*Message)(nil)
 
 func getSpecVersion(message *amqp.Message) spec.Version {
 	if sv, ok := message.ApplicationProperties[specs.PrefixedSpecVersionName()]; ok {
@@ -52,29 +55,30 @@ func getSpecVersion(message *amqp.Message) spec.Version {
 }
 
 func (m *Message) ReadEncoding() binding.Encoding {
-	return m.encoding
+	if m.version != nil {
+		return binding.EncodingBinary
+	}
+	if m.format != nil {
+		return binding.EncodingStructured
+	}
+	return binding.EncodingUnknown
 }
 
 func (m *Message) ReadStructured(ctx context.Context, encoder binding.StructuredWriter) error {
-	if m.AMQP.Properties != nil && format.IsFormat(m.AMQP.Properties.ContentType) {
-		return encoder.SetStructuredEvent(ctx, format.Lookup(m.AMQP.Properties.ContentType), bytes.NewReader(m.AMQP.GetData()))
+	if m.format != nil {
+		return encoder.SetStructuredEvent(ctx, m.format, bytes.NewReader(m.AMQP.GetData()))
 	}
 	return binding.ErrNotStructured
 }
 
 func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) error {
-	version := getSpecVersion(m.AMQP)
-	if version == nil {
+	if m.version == nil {
 		return binding.ErrNotBinary
 	}
-
-	err := encoder.Start(ctx)
-	if err != nil {
-		return err
-	}
+	var err error
 
 	if m.AMQP.Properties != nil && m.AMQP.Properties.ContentType != "" {
-		err = encoder.SetAttribute(version.AttributeFromKind(spec.DataContentType), m.AMQP.Properties.ContentType)
+		err = encoder.SetAttribute(m.version.AttributeFromKind(spec.DataContentType), m.AMQP.Properties.ContentType)
 		if err != nil {
 			return err
 		}
@@ -82,7 +86,7 @@ func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) 
 
 	for k, v := range m.AMQP.ApplicationProperties {
 		if strings.HasPrefix(k, prefix) {
-			attr := version.Attribute(k)
+			attr := m.version.Attribute(k)
 			if attr != nil {
 				err = encoder.SetAttribute(attr, v)
 			} else {
@@ -101,7 +105,19 @@ func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) 
 			return err
 		}
 	}
-	return encoder.End(ctx)
+	return nil
+}
+
+func (m *Message) GetAttribute(k spec.Kind) (spec.Attribute, interface{}) {
+	attr := m.version.AttributeFromKind(k)
+	if attr != nil {
+		return attr, m.AMQP.ApplicationProperties[attr.PrefixedName()]
+	}
+	return nil, nil
+}
+
+func (m *Message) GetExtension(name string) interface{} {
+	return m.AMQP.ApplicationProperties[prefix+name]
 }
 
 func (m *Message) Finish(err error) error {
