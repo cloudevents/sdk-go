@@ -101,11 +101,19 @@ func (bm *MockBinaryMessage) Start(ctx context.Context) error {
 }
 
 func (bm *MockBinaryMessage) SetAttribute(attribute spec.Attribute, value interface{}) error {
+	if value == nil {
+		delete(bm.Metadata, attribute)
+		return nil
+	}
 	bm.Metadata[attribute] = value
 	return nil
 }
 
 func (bm *MockBinaryMessage) SetExtension(name string, value interface{}) error {
+	if value == nil {
+		delete(bm.Extensions, name)
+		return nil
+	}
 	bm.Extensions[name] = value
 	return nil
 }

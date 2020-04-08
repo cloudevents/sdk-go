@@ -70,7 +70,10 @@ func (m *EventMessage) GetAttribute(k spec.Kind) (spec.Attribute, interface{}) {
 }
 
 func (m *EventMessage) GetExtension(name string) interface{} {
-	ext, _ := m.Context.GetExtension(name)
+	ext, err := m.Context.GetExtension(name)
+	if err != nil {
+		return nil
+	}
 	return ext
 }
 

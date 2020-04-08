@@ -45,17 +45,20 @@ type MessageMetadataReader interface {
 }
 
 //TODO comment
+//TODO value can be nil
 type MessageMetadataWriter interface {
 	// Set a standard attribute.
 	//
 	// The value can either be the correct golang type for the attribute, or a canonical
 	// string encoding. See package types to perform the needed conversions
+	//TODO value can be nil
 	SetAttribute(attribute spec.Attribute, value interface{}) error
 
 	// Set an extension attribute.
 	//
 	// The value can either be the correct golang type for the attribute, or a canonical
 	// string encoding. See package types to perform the needed conversions
+	//TODO value can be nil
 	SetExtension(name string, value interface{}) error
 }
 

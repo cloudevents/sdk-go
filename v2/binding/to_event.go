@@ -91,6 +91,10 @@ func (b *messageToEventBuilder) SetData(data io.Reader) error {
 }
 
 func (b *messageToEventBuilder) SetAttribute(attribute spec.Attribute, value interface{}) error {
+	if value == nil {
+		_ = attribute.Delete(b.Context)
+		return nil
+	}
 	// If spec version we need to change to right context struct
 	if attribute.Kind() == spec.SpecVersion {
 		str, err := types.ToString(value)
@@ -111,6 +115,9 @@ func (b *messageToEventBuilder) SetAttribute(attribute spec.Attribute, value int
 }
 
 func (b *messageToEventBuilder) SetExtension(name string, value interface{}) error {
+	if value == nil {
+		return b.Context.SetExtension(name, nil)
+	}
 	value, err := types.Validate(value)
 	if err != nil {
 		return err
