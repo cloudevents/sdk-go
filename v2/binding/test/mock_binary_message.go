@@ -55,10 +55,7 @@ func (bm *MockBinaryMessage) ReadStructured(context.Context, binding.StructuredW
 }
 
 func (bm *MockBinaryMessage) ReadBinary(ctx context.Context, b binding.BinaryWriter) error {
-	err := b.Start(ctx)
-	if err != nil {
-		return err
-	}
+	var err error
 	for k, v := range bm.Metadata {
 		err = b.SetAttribute(k, v)
 		if err != nil {
@@ -77,7 +74,7 @@ func (bm *MockBinaryMessage) ReadBinary(ctx context.Context, b binding.BinaryWri
 			return err
 		}
 	}
-	return b.End(ctx)
+	return nil
 }
 
 func (bm *MockBinaryMessage) GetAttribute(k spec.Kind) (spec.Attribute, interface{}) {

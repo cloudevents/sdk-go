@@ -37,10 +37,6 @@ func (m *binaryBufferedMessage) ReadStructured(context.Context, binding.Structur
 }
 
 func (m *binaryBufferedMessage) ReadBinary(ctx context.Context, b binding.BinaryWriter) (err error) {
-	err = b.Start(ctx)
-	if err != nil {
-		return
-	}
 	for k, v := range m.metadata {
 		err = b.SetAttribute(k, v)
 		if err != nil {
@@ -59,7 +55,7 @@ func (m *binaryBufferedMessage) ReadBinary(ctx context.Context, b binding.Binary
 			return
 		}
 	}
-	return b.End(ctx)
+	return nil
 }
 
 func (m *binaryBufferedMessage) Finish(error) error {

@@ -41,10 +41,6 @@ func (m *EventMessage) ReadStructured(ctx context.Context, builder StructuredWri
 }
 
 func (m *EventMessage) ReadBinary(ctx context.Context, b BinaryWriter) (err error) {
-	err = b.Start(ctx)
-	if err != nil {
-		return err
-	}
 	err = eventContextToBinaryWriter(m.Context, b)
 	if err != nil {
 		return err
@@ -57,7 +53,7 @@ func (m *EventMessage) ReadBinary(ctx context.Context, b BinaryWriter) (err erro
 			return err
 		}
 	}
-	return b.End(ctx)
+	return nil
 }
 
 func (m *EventMessage) GetAttribute(k spec.Kind) (spec.Attribute, interface{}) {
