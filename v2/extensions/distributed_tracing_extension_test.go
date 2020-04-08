@@ -1,11 +1,16 @@
 package extensions_test
 
 import (
+	"context"
 	"encoding/hex"
 	"net/url"
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
+	"github.com/cloudevents/sdk-go/v2/binding"
+	"github.com/cloudevents/sdk-go/v2/binding/test"
 	"github.com/cloudevents/sdk-go/v2/event"
 
 	"github.com/cloudevents/sdk-go/v2/extensions"
@@ -291,4 +296,102 @@ func TestConvertSpanContext(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestDistributedTracingExtension_ReadTransformer_empty(t *testing.T) {
+	e := test.MinEvent()
+	e.Context = e.Context.AsV1()
+
+	tests := []test.TransformerTestArgs{
+		{
+			Name:         "Read from Mock Structured message",
+			InputMessage: test.MustCreateMockStructuredMessage(e),
+			WantEvent:    e,
+		},
+		{
+			Name:         "Read from Mock Binary message",
+			InputMessage: test.MustCreateMockBinaryMessage(e),
+			WantEvent:    e,
+		},
+		{
+			Name:       "Read from Event message",
+			InputEvent: e,
+			WantEvent:  e,
+		},
+	}
+	for _, tt := range tests {
+		ext := extensions.DistributedTracingExtension{}
+		tt.Transformers = binding.Transformers{ext.ReadTransformer()}
+		test.RunTransformerTests(t, context.TODO(), []test.TransformerTestArgs{tt})
+		require.Zero(t, ext.TraceState)
+		require.Zero(t, ext.TraceParent)
+	}
+}
+
+func TestDistributedTracingExtension_ReadTransformer(t *testing.T) {
+	e := test.MinEvent()
+	e.Context = e.Context.AsV1()
+	wantExt := extensions.DistributedTracingExtension{
+		TraceParent: "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
+		TraceState:  "rojo=00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01,congo=lZWRzIHRoNhcm5hbCBwbGVhc3VyZS4=",
+	}
+	wantExt.AddTracingAttributes(&e)
+
+	tests := []test.TransformerTestArgs{
+		{
+			Name:         "Read from Mock Structured message",
+			InputMessage: test.MustCreateMockStructuredMessage(e),
+			WantEvent:    e,
+		},
+		{
+			Name:         "Read from Mock Binary message",
+			InputMessage: test.MustCreateMockBinaryMessage(e),
+			WantEvent:    e,
+		},
+		{
+			Name:       "Read from Event message",
+			InputEvent: e,
+			WantEvent:  e,
+		},
+	}
+	for _, tt := range tests {
+		haveExt := extensions.DistributedTracingExtension{}
+		tt.Transformers = binding.Transformers{haveExt.ReadTransformer()}
+		test.RunTransformerTests(t, context.TODO(), []test.TransformerTestArgs{tt})
+		require.Equal(t, wantExt.TraceParent, haveExt.TraceParent)
+		require.Equal(t, wantExt.TraceState, haveExt.TraceState)
+	}
+}
+
+func TestDistributedTracingExtension_WriteTransformer(t *testing.T) {
+	e := test.MinEvent()
+	e.Context = e.Context.AsV1()
+
+	ext := extensions.DistributedTracingExtension{
+		TraceParent: "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
+		TraceState:  "rojo=00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01,congo=lZWRzIHRoNhcm5hbCBwbGVhc3VyZS4=",
+	}
+	want := e.Clone()
+	ext.AddTracingAttributes(&want)
+
+	test.RunTransformerTests(t, context.TODO(), []test.TransformerTestArgs{
+		{
+			Name:         "Write to Mock Structured message",
+			InputMessage: test.MustCreateMockStructuredMessage(e),
+			WantEvent:    want,
+			Transformers: binding.Transformers{ext.WriteTransformer()},
+		},
+		{
+			Name:         "Write to Mock Binary message",
+			InputMessage: test.MustCreateMockBinaryMessage(e),
+			WantEvent:    want,
+			Transformers: binding.Transformers{ext.WriteTransformer()},
+		},
+		{
+			Name:         "Write to Event message",
+			InputEvent:   e,
+			WantEvent:    want,
+			Transformers: binding.Transformers{ext.WriteTransformer()},
+		},
+	})
 }
