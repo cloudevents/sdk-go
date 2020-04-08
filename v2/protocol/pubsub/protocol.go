@@ -105,7 +105,7 @@ func (t *Protocol) Send(ctx context.Context, in binding.Message) error {
 	conn := t.getOrCreateConnection(ctx, topic, "")
 
 	msg := &pubsub.Message{}
-	if err := WritePubSubMessage(ctx, in, msg, t.transformers); err != nil {
+	if err := WritePubSubMessage(ctx, in, msg, t.transformers...); err != nil {
 		return err
 	}
 

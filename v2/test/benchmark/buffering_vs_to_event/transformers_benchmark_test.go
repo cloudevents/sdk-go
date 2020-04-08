@@ -9,7 +9,6 @@ import (
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/binding/buffering"
 	"github.com/cloudevents/sdk-go/v2/binding/test"
-	"github.com/cloudevents/sdk-go/v2/binding/transformer"
 	"github.com/cloudevents/sdk-go/v2/event"
 	"github.com/cloudevents/sdk-go/v2/types"
 )
@@ -59,26 +58,6 @@ func BenchmarkBufferingAndUpdateExtensions(b *testing.B) {
 	initialEvent := test.FullEvent()
 	ctx := context.TODO()
 	initialEvent.SetExtension("aaa", "bbb")
-
-	transformers := binding.TransformerFactories{}
-	transformers = append(transformers,
-		transformer.SetExtension("aaa", "AAAA", func(i2 interface{}) (interface{}, error) {
-			vStr, err := types.Format(i2)
-			if err != nil {
-				return nil, err
-			}
-			return strings.ToUpper(vStr), nil
-		})...,
-	)
-	transformers = append(transformers,
-		transformer.SetExtension("aTime", time.Now(), func(i2 interface{}) (interface{}, error) {
-			vTime, err := types.ToTime(i2)
-			if err != nil {
-				return nil, err
-			}
-			return vTime.Add(3 * time.Hour), nil
-		})...,
-	)
 
 	for i := 0; i < b.N; i++ {
 		M = test.MustCreateMockBinaryMessage(initialEvent)

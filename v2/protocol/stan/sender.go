@@ -65,7 +65,7 @@ func (s *Sender) Send(ctx context.Context, in binding.Message) (err error) {
 	}()
 
 	writer := new(bytes.Buffer)
-	if err = WriteMsg(ctx, in, writer, s.Transformers); err != nil {
+	if err = WriteMsg(ctx, in, writer, s.Transformers...); err != nil {
 		return err
 	}
 	return s.Conn.Publish(s.Subject, writer.Bytes())

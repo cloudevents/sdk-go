@@ -114,7 +114,7 @@ func (p *Protocol) Request(ctx context.Context, m binding.Message) (binding.Mess
 		return nil, fmt.Errorf("not initialized: %#v", p)
 	}
 
-	if err = WriteRequest(ctx, m, req, p.transformers); err != nil {
+	if err = WriteRequest(ctx, m, req, p.transformers...); err != nil {
 		return nil, err
 	}
 

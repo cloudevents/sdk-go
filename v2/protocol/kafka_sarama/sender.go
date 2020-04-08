@@ -50,7 +50,7 @@ func (s *Sender) Send(ctx context.Context, m binding.Message) error {
 
 	kafkaMessage := sarama.ProducerMessage{Topic: s.topic}
 
-	if err = WriteProducerMessage(ctx, m, &kafkaMessage, s.transformers); err != nil {
+	if err = WriteProducerMessage(ctx, m, &kafkaMessage, s.transformers...); err != nil {
 		return err
 	}
 
