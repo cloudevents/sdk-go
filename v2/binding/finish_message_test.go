@@ -5,8 +5,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
+	"github.com/cloudevents/sdk-go/v2/binding/spec"
+	"github.com/cloudevents/sdk-go/v2/binding/test"
 	"github.com/cloudevents/sdk-go/v2/event"
 	"github.com/cloudevents/sdk-go/v2/types"
 )
@@ -32,4 +35,13 @@ func TestWithFinish(t *testing.T) {
 	}
 	assert.NoError(t, m.Finish(nil))
 	assert.NoError(t, <-done)
+}
+
+func TestMessageMetadataHandler(t *testing.T) {
+	var testEvent = test.FullEvent()
+	finishMessage := binding.WithFinish((*binding.EventMessage)(&testEvent), func(err error) {})
+
+	_, ty := finishMessage.(binding.MessageMetadataReader).GetAttribute(spec.Type)
+	require.Equal(t, testEvent.Type(), ty)
+	require.Equal(t, testEvent.Extensions()["exstring"], finishMessage.(binding.MessageMetadataReader).GetExtension("exstring"))
 }
