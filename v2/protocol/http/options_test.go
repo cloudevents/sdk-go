@@ -60,6 +60,7 @@ func TestWithTarget(t *testing.T) {
 			},
 			target: "%",
 			wantErr: "http target option failed to parse target url: " + func() string {
+				//lint:ignore SA1007
 				_, err := url.Parse("%")
 				return err.Error()
 			}(),

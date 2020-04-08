@@ -216,6 +216,7 @@ func TestURL(t *testing.T) {
 	x.str("/world", &url.URL{Path: "/world"})
 	x.str("world", &url.URL{Path: "world"})
 
+	//lint:ignore SA1007
 	_, err := url.Parse("%bad %url")
 	x.err("%bad %url", err.Error())
 	x.err(nil, "invalid CloudEvents value: <nil>")
