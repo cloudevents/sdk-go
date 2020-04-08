@@ -9,6 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
+	"github.com/cloudevents/sdk-go/v2/binding/spec"
+	"github.com/cloudevents/sdk-go/v2/binding/test"
 	"github.com/cloudevents/sdk-go/v2/event"
 	"github.com/cloudevents/sdk-go/v2/types"
 )
@@ -76,4 +78,13 @@ func TestCopyAndWithAcksBeforeFinish(t *testing.T) {
 
 	wg.Wait()
 	require.True(t, finishCalled)
+}
+
+func TestMessageMetadataHandler(t *testing.T) {
+	var testEvent = test.FullEvent()
+	finishMessage := WithAcksBeforeFinish((*binding.EventMessage)(&testEvent), 3)
+
+	_, ty := finishMessage.(binding.MessageMetadataReader).GetAttribute(spec.Type)
+	require.Equal(t, testEvent.Type(), ty)
+	require.Equal(t, testEvent.Extensions()["exstring"], finishMessage.(binding.MessageMetadataReader).GetExtension("exstring"))
 }
