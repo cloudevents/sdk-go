@@ -26,7 +26,7 @@ type subscriptionWithTopic struct {
 
 // Protocol acts as both a pubsub topic and a pubsub subscription .
 type Protocol struct {
-	transformers binding.TransformerFactories
+	transformers binding.Transformers
 
 	// PubSub
 

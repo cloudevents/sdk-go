@@ -14,7 +14,7 @@ import (
 
 // WritePubSubMessage fills the provided pubsubMessage with the message m.
 // Using context you can tweak the encoding processing (more details on binding.Write documentation).
-func WritePubSubMessage(ctx context.Context, m binding.Message, pubsubMessage *pubsub.Message, transformers ...binding.TransformerFactory) error {
+func WritePubSubMessage(ctx context.Context, m binding.Message, pubsubMessage *pubsub.Message, transformers ...binding.Transformer) error {
 	structuredWriter := (*pubsubMessagePublisher)(pubsubMessage)
 	binaryWriter := (*pubsubMessagePublisher)(pubsubMessage)
 
@@ -60,21 +60,37 @@ func (b *pubsubMessagePublisher) SetData(reader io.Reader) error {
 }
 
 func (b *pubsubMessagePublisher) SetAttribute(attribute spec.Attribute, value interface{}) error {
-	// Everything is a string here
-	s, err := types.Format(value)
-	if err != nil {
-		return err
-	}
-
 	if attribute.Kind() == spec.DataContentType {
+		if value == nil {
+			delete(b.Attributes, contentType)
+		}
+
+		// Everything is a string here
+		s, err := types.Format(value)
+		if err != nil {
+			return err
+		}
 		b.Attributes[contentType] = s
 	} else {
+		if value == nil {
+			delete(b.Attributes, prefix+attribute.Name())
+		}
+
+		// Everything is a string here
+		s, err := types.Format(value)
+		if err != nil {
+			return err
+		}
 		b.Attributes[prefix+attribute.Name()] = s
 	}
 	return nil
 }
 
 func (b *pubsubMessagePublisher) SetExtension(name string, value interface{}) error {
+	if value == nil {
+		delete(b.Attributes, prefix+name)
+	}
+
 	// Store extensions as string attrs as well
 	s, err := types.Format(value)
 	if err != nil {

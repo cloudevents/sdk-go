@@ -52,6 +52,7 @@ func NewMessage(pm *pubsub.Message) *Message {
 
 // Check if pubsub.Message implements binding.Message
 var _ binding.Message = (*Message)(nil)
+var _ binding.MessageMetadataReader = (*Message)(nil)
 
 func (m *Message) ReadEncoding() binding.Encoding {
 	if m.version != nil {
@@ -70,14 +71,9 @@ func (m *Message) ReadStructured(ctx context.Context, encoder binding.Structured
 	return encoder.SetStructuredEvent(ctx, m.format, bytes.NewReader(m.internal.Data))
 }
 
-func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) error {
+func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) (err error) {
 	if m.format != nil {
 		return binding.ErrNotBinary
-	}
-
-	err := encoder.Start(ctx)
-	if err != nil {
-		return err
 	}
 
 	for k, v := range m.internal.Attributes {
@@ -96,12 +92,23 @@ func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) 
 		}
 	}
 
-	err = encoder.SetData(bytes.NewReader(m.internal.Data))
-	if err != nil {
-		return err
+	if m.internal.Data != nil {
+		return encoder.SetData(bytes.NewReader(m.internal.Data))
 	}
 
-	return encoder.End(ctx)
+	return
+}
+
+func (m *Message) GetAttribute(k spec.Kind) (spec.Attribute, interface{}) {
+	attr := m.version.AttributeFromKind(k)
+	if attr != nil {
+		return attr, m.internal.Attributes[prefix+attr.Name()]
+	}
+	return nil, nil
+}
+
+func (m *Message) GetExtension(name string) interface{} {
+	return m.internal.Attributes[prefix+name]
 }
 
 // Finish marks the message to be forgotten.
