@@ -216,7 +216,8 @@ func TestURL(t *testing.T) {
 	x.str("/world", &url.URL{Path: "/world"})
 	x.str("world", &url.URL{Path: "world"})
 
-	x.err("%bad %url", "parse %bad %url: invalid URL escape \"%ur\"")
+	_, err := url.Parse("%bad %url")
+	x.err("%bad %url", err.Error())
 	x.err(nil, "invalid CloudEvents value: <nil>")
 	x.err((*url.URL)(nil), "invalid CloudEvents value: (*url.URL)(nil)")
 	x.err((*types.URI)(nil), "cannot convert <nil> to *url.URL")
