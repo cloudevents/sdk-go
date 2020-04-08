@@ -7,7 +7,12 @@ import (
 )
 
 // MessageReader defines the read-related portion of the Message interface.
+//
 // The ReadStructured and ReadBinary methods allows to perform an optimized encoding of a Message to a specific data structure.
+//
+// If MessageReader.ReadEncoding() can be equal to EncodingBinary, then the implementation of MessageReader
+// MUST also implement MessageMetadataReader.
+//
 // A Sender should try each method of interest and fall back to binding.ToEvent() if none are supported.
 // An out of the box algorithm is provided for writing a message: binding.Write().
 type MessageReader interface {
@@ -28,38 +33,30 @@ type MessageReader interface {
 	// ReadBinary transfers a binary-mode event to an BinaryWriter.
 	// It must return ErrNotBinary if message is not in binary mode.
 	//
+	// The implementation of ReadBinary must not control the lifecycle with BinaryWriter.Start() and BinaryWriter.End(),
+	// because the caller must control the lifecycle.
+	//
 	// Returns a different err if something wrong happened while trying to read the binary event
 	// In this case, the caller must Finish the message with appropriate error
 	//
 	// This allows Senders to avoid re-encoding messages that are
 	// already in suitable binary form.
-	// TODO explain lifecycle of binary writer
 	ReadBinary(context.Context, BinaryWriter) error
 }
 
-//TODO comment
-// This is a MUST for all binary messages
+// MessageMetadataReader defines how to read metadata from a binary/event message
+//
+// If a message implementing MessageReader is encoded as binary (MessageReader.ReadEncoding() == EncodingBinary)
+// or it's an EventMessage, then it's safe to assume that it also implements this interface
 type MessageMetadataReader interface {
-	GetAttribute(spec.Kind) (spec.Attribute, interface{})
-	GetExtension(string) interface{}
-}
-
-//TODO comment
-//TODO value can be nil
-type MessageMetadataWriter interface {
-	// Set a standard attribute.
+	// GetAttribute returns:
 	//
-	// The value can either be the correct golang type for the attribute, or a canonical
-	// string encoding. See package types to perform the needed conversions
-	//TODO value can be nil
-	SetAttribute(attribute spec.Attribute, value interface{}) error
-
-	// Set an extension attribute.
-	//
-	// The value can either be the correct golang type for the attribute, or a canonical
-	// string encoding. See package types to perform the needed conversions
-	//TODO value can be nil
-	SetExtension(name string, value interface{}) error
+	// * attribute, value: if the message contains an attribute of that attribute kind
+	// * attribute, nil: if the message spec version supports the attribute kind, but doesn't have any value
+	// * nil, nil: if the message spec version doesn't support the attribute kind
+	GetAttribute(attributeKind spec.Kind) (spec.Attribute, interface{})
+	// GetExtension returns the value of that extension, if any.
+	GetExtension(name string) interface{}
 }
 
 // Message is the interface to a binding-specific message containing an event.

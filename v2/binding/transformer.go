@@ -1,6 +1,6 @@
 package binding
 
-// TransformerFactory is an interface that implements a transformation
+// Transformer is an interface that implements a transformation
 // process while transferring the event from the Message
 // implementation to the provided encoder
 //
@@ -12,7 +12,7 @@ type Transformer interface {
 	Transform(MessageMetadataReader, MessageMetadataWriter) error
 }
 
-// TODO doc
+// TransformerFunc is a type alias to implement a Transformer through a function pointer
 type TransformerFunc func(MessageMetadataReader, MessageMetadataWriter) error
 
 func (t TransformerFunc) Transform(r MessageMetadataReader, w MessageMetadataWriter) error {
@@ -21,7 +21,7 @@ func (t TransformerFunc) Transform(r MessageMetadataReader, w MessageMetadataWri
 
 var _ Transformer = (TransformerFunc)(nil)
 
-// TODO doc
+// Transformers is a utility alias to run several Transformer
 type Transformers []Transformer
 
 func (t Transformers) Transform(r MessageMetadataReader, w MessageMetadataWriter) error {
