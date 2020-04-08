@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
+	"github.com/cloudevents/sdk-go/v2/binding/spec"
 	"github.com/cloudevents/sdk-go/v2/binding/test"
 	"github.com/cloudevents/sdk-go/v2/event"
 )
@@ -108,6 +109,17 @@ func TestNewMessageFromHttpRequestNoBody(t *testing.T) {
 
 		require.NoError(t, got.Finish(nil))
 	})
+}
+
+func TestMessageMetadataReader(t *testing.T) {
+	eventIn := test.FullEvent()
+	req := httptest.NewRequest("POST", "http://localhost", nil)
+	require.NoError(t, WriteRequest(binding.WithForceBinary(context.TODO()), (*binding.EventMessage)(&eventIn), req))
+
+	got := binding.MessageMetadataReader(NewMessageFromHttpRequest(req))
+	require.Equal(t, eventIn.Extensions()["exstring"], got.GetExtension("exstring"))
+	_, id := got.GetAttribute(spec.ID)
+	require.Equal(t, eventIn.ID(), id)
 }
 
 func TestNewMessageFromHttpResponse(t *testing.T) {
