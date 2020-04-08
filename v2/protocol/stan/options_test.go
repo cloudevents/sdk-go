@@ -115,7 +115,7 @@ func TestWithSubscriptionOptions(t *testing.T) {
 func TestWithTransformer(t *testing.T) {
 	baseSender := Sender{}
 	type args struct {
-		transformer binding.TransformerFactory
+		transformer binding.Transformer
 	}
 	type wants struct {
 		err    error
@@ -129,13 +129,13 @@ func TestWithTransformer(t *testing.T) {
 		{
 			name: "nested transformer factories",
 			args: args{
-				transformer: binding.TransformerFactories{transformer.SetUUID, transformer.AddTimeNow},
+				transformer: binding.Transformers{transformer.SetUUID, transformer.AddTimeNow},
 			},
 			wants: wants{
 				err: nil,
 				sender: Sender{
-					Transformers: binding.TransformerFactories{
-						binding.TransformerFactories{transformer.SetUUID, transformer.AddTimeNow},
+					Transformers: binding.Transformers{
+						binding.Transformers{transformer.SetUUID, transformer.AddTimeNow},
 					},
 				},
 			},
@@ -148,7 +148,7 @@ func TestWithTransformer(t *testing.T) {
 			wants: wants{
 				err: nil,
 				sender: Sender{
-					Transformers: binding.TransformerFactories{transformer.SetUUID},
+					Transformers: binding.Transformers{transformer.SetUUID},
 				},
 			},
 		},
@@ -160,7 +160,7 @@ func TestWithTransformer(t *testing.T) {
 			wants: wants{
 				err: nil,
 				sender: Sender{
-					Transformers: binding.TransformerFactories{nil},
+					Transformers: binding.Transformers{nil},
 				},
 			},
 		},
