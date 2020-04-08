@@ -31,6 +31,7 @@ type Message struct {
 
 // Check if http.Message implements binding.Message
 var _ binding.Message = (*Message)(nil)
+var _ binding.MessageMetadataReader = (*Message)(nil)
 
 // NewMessageFromConsumerMessage returns a binding.Message that holds the provided ConsumerMessage.
 // The returned binding.Message *can* be read several times safely
@@ -92,14 +93,9 @@ func (m *Message) ReadStructured(ctx context.Context, encoder binding.Structured
 	return binding.ErrNotStructured
 }
 
-func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) error {
+func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) (err error) {
 	if m.version == nil {
 		return binding.ErrNotBinary
-	}
-
-	err := encoder.Start(ctx)
-	if err != nil {
-		return err
 	}
 
 	for k, v := range m.Headers {
@@ -114,18 +110,27 @@ func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) 
 			err = encoder.SetAttribute(m.version.AttributeFromKind(spec.DataContentType), string(v))
 		}
 		if err != nil {
-			return err
+			return
 		}
 	}
 
 	if m.Value != nil {
 		err = encoder.SetData(bytes.NewReader(m.Value))
-		if err != nil {
-			return err
-		}
 	}
 
-	return encoder.End(ctx)
+	return
+}
+
+func (m *Message) GetAttribute(k spec.Kind) (spec.Attribute, interface{}) {
+	attr := m.version.AttributeFromKind(k)
+	if attr != nil {
+		return attr, string(m.Headers[attr.PrefixedName()])
+	}
+	return nil, nil
+}
+
+func (m *Message) GetExtension(name string) interface{} {
+	return string(m.Headers[prefix+name])
 }
 
 func (m *Message) Finish(error) error {

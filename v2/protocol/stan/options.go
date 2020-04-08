@@ -2,8 +2,10 @@ package stan
 
 import (
 	"errors"
-	"github.com/cloudevents/sdk-go/v2/binding"
+
 	"github.com/nats-io/stan.go"
+
+	"github.com/cloudevents/sdk-go/v2/binding"
 )
 
 var ErrInvalidQueueName = errors.New("invalid queue name for QueueSubscriber")
@@ -25,6 +27,14 @@ func WithConsumerOptions(opts ...ConsumerOption) ProtocolOption {
 func WithSenderOptions(opts ...SenderOption) ProtocolOption {
 	return func(p *Protocol) error {
 		p.senderOptions = opts
+		return nil
+	}
+}
+
+// WithTransformer adds a transformer, which Sender uses while encoding a binding.Message to an stan.Message
+func WithTransformer(transformer binding.Transformer) SenderOption {
+	return func(s *Sender) error {
+		s.Transformers = append(s.Transformers, transformer)
 		return nil
 	}
 }
@@ -79,11 +89,3 @@ func WithUnsubscribeOnClose() ConsumerOption {
 }
 
 type SenderOption func(*Sender) error
-
-// WithTransformer adds a transformer, which Protocol uses while encoding a binding.Message to an stan.Message
-func WithTransformer(transformer binding.TransformerFactory) SenderOption {
-	return func(p *Sender) error {
-		p.Transformers = append(p.Transformers, transformer)
-		return nil
-	}
-}

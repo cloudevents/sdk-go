@@ -11,7 +11,7 @@ import (
 type Sender struct {
 	Conn         *nats.Conn
 	Subject      string
-	Transformers binding.TransformerFactories
+	Transformers binding.Transformers
 
 	connOwned bool
 }
@@ -40,7 +40,7 @@ func NewSenderFromConn(conn *nats.Conn, subject string, opts ...SenderOption) (*
 	s := &Sender{
 		Conn:         conn,
 		Subject:      subject,
-		Transformers: make(binding.TransformerFactories, 0),
+		Transformers: make(binding.Transformers, 0),
 	}
 
 	err := s.applyOptions(opts...)

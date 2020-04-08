@@ -114,16 +114,7 @@ func TestToEvent_transformers_applied_once(t *testing.T) {
 		}
 
 		for _, tt := range testCases {
-			t.Run("With structured Transformer "+tt.name, func(t *testing.T) {
-				testToEventWithTransformer(t, tt, test.NewMockTransformerFactory(false, false))
-			})
-			t.Run("With binary Transformer "+tt.name, func(t *testing.T) {
-				testToEventWithTransformer(t, tt, test.NewMockTransformerFactory(true, false))
-			})
-			t.Run("With event Transformer "+tt.name, func(t *testing.T) {
-				testToEventWithTransformer(t, tt, test.NewMockTransformerFactory(true, true))
-			})
-			t.Run("With mixed Transformers "+tt.name, func(t *testing.T) {
+			t.Run("With one Transformer "+tt.name, func(t *testing.T) {
 				var inputMessage binding.Message
 				if tt.message != nil {
 					inputMessage = tt.message
@@ -132,33 +123,33 @@ func TestToEvent_transformers_applied_once(t *testing.T) {
 					inputMessage = binding.ToMessage(&e)
 				}
 
-				transformerBinary := test.NewMockTransformerFactory(true, false)
-				transformerEvent := test.NewMockTransformerFactory(true, true)
+				transformer := test.MockTransformer{}
 
-				got, err := binding.ToEvent(context.Background(), inputMessage, transformerBinary, transformerEvent)
+				got, err := binding.ToEvent(context.Background(), inputMessage, &transformer)
 				require.NoError(t, err)
 				test.AssertEventEquals(t, test.ExToStr(t, tt.want), test.ExToStr(t, *got))
 
-				test.AssertTransformerInvokedOneTime(t, transformerBinary)
-				require.Equal(t, 1, transformerBinary.InvokedEventTransformer)
-				test.AssertTransformerInvokedOneTime(t, transformerEvent)
+				test.AssertTransformerInvokedOneTime(t, &transformer)
+			})
+			t.Run("With two Transformers "+tt.name, func(t *testing.T) {
+				var inputMessage binding.Message
+				if tt.message != nil {
+					inputMessage = tt.message
+				} else {
+					e := tt.event.Clone()
+					inputMessage = binding.ToMessage(&e)
+				}
+
+				transformer1 := test.MockTransformer{}
+				transformer2 := test.MockTransformer{}
+
+				got, err := binding.ToEvent(context.Background(), inputMessage, &transformer1, &transformer2)
+				require.NoError(t, err)
+				test.AssertEventEquals(t, test.ExToStr(t, tt.want), test.ExToStr(t, *got))
+
+				test.AssertTransformerInvokedOneTime(t, &transformer1)
+				test.AssertTransformerInvokedOneTime(t, &transformer2)
 			})
 		}
 	})
-}
-
-func testToEventWithTransformer(t *testing.T, tt toEventTestCase, transformer *test.MockTransformerFactory) {
-	var inputMessage binding.Message
-	if tt.message != nil {
-		inputMessage = tt.message
-	} else {
-		e := tt.event.Clone()
-		inputMessage = binding.ToMessage(&e)
-	}
-
-	got, err := binding.ToEvent(context.Background(), inputMessage, transformer)
-	require.NoError(t, err)
-	test.AssertEventEquals(t, test.ExToStr(t, tt.want), test.ExToStr(t, *got))
-
-	test.AssertTransformerInvokedOneTime(t, transformer)
 }

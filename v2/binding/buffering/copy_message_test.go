@@ -118,16 +118,7 @@ func TestCopyMessage_transformers_applied_once(t *testing.T) {
 			},
 		}
 		for _, tt := range tests {
-			t.Run(tt.name+" with structured Transformer", func(t *testing.T) {
-				testCopyMessageWithTransformer(t, tt, NewMockTransformerFactory(false, false))
-			})
-			t.Run(tt.name+" with binary Transformer", func(t *testing.T) {
-				testCopyMessageWithTransformer(t, tt, NewMockTransformerFactory(true, false))
-			})
-			t.Run(tt.name+" with event Transformer", func(t *testing.T) {
-				testCopyMessageWithTransformer(t, tt, NewMockTransformerFactory(true, true))
-			})
-			t.Run(tt.name+" with mixed Transformers", func(t *testing.T) {
+			t.Run(tt.name+" with 1 Transformer", func(t *testing.T) {
 				var inputMessage binding.Message
 				if tt.message != nil {
 					inputMessage = tt.message
@@ -136,39 +127,39 @@ func TestCopyMessage_transformers_applied_once(t *testing.T) {
 					inputMessage = binding.ToMessage(&e)
 				}
 
-				transformerBinary := NewMockTransformerFactory(true, false)
-				transformerEvent := NewMockTransformerFactory(true, true)
+				transformer := MockTransformer{}
 
-				cpy, err := CopyMessage(context.Background(), inputMessage, transformerBinary, transformerEvent)
+				cpy, err := CopyMessage(context.Background(), inputMessage, &transformer)
 				require.NoError(t, err)
 				require.NotNil(t, cpy)
 				got, err := binding.ToEvent(context.Background(), cpy)
 				assert.NoError(t, err)
 				AssertEventEquals(t, ExToStr(t, tt.want), ExToStr(t, *got))
 
-				AssertTransformerInvokedOneTime(t, transformerBinary)
-				require.Equal(t, 1, transformerBinary.InvokedEventTransformer)
-				AssertTransformerInvokedOneTime(t, transformerEvent)
+				AssertTransformerInvokedOneTime(t, &transformer)
+			})
+			t.Run(tt.name+" with 2 Transformers", func(t *testing.T) {
+				var inputMessage binding.Message
+				if tt.message != nil {
+					inputMessage = tt.message
+				} else {
+					e := tt.event.Clone()
+					inputMessage = binding.ToMessage(&e)
+				}
+
+				transformer1 := MockTransformer{}
+				transformer2 := MockTransformer{}
+
+				cpy, err := CopyMessage(context.Background(), inputMessage, &transformer1, &transformer2)
+				require.NoError(t, err)
+				require.NotNil(t, cpy)
+				got, err := binding.ToEvent(context.Background(), cpy)
+				assert.NoError(t, err)
+				AssertEventEquals(t, ExToStr(t, tt.want), ExToStr(t, *got))
+
+				AssertTransformerInvokedOneTime(t, &transformer1)
+				AssertTransformerInvokedOneTime(t, &transformer2)
 			})
 		}
 	})
-}
-
-func testCopyMessageWithTransformer(t *testing.T, tt copyMessageTestCase, transformer *MockTransformerFactory) {
-	var inputMessage binding.Message
-	if tt.message != nil {
-		inputMessage = tt.message
-	} else {
-		e := tt.event.Clone()
-		inputMessage = binding.ToMessage(&e)
-	}
-
-	cpy, err := CopyMessage(context.Background(), inputMessage, transformer)
-	require.NoError(t, err)
-	require.NotNil(t, cpy)
-	got, err := binding.ToEvent(context.Background(), cpy)
-	assert.NoError(t, err)
-	AssertEventEquals(t, ExToStr(t, tt.want), ExToStr(t, *got))
-
-	AssertTransformerInvokedOneTime(t, transformer)
 }

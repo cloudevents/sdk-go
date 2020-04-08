@@ -14,7 +14,7 @@ func BenchmarkBufferMessageFromStructured(b *testing.B) {
 	input := test.MustCreateMockStructuredMessage(e)
 	ctx := context.Background()
 	for i := 0; i < b.N; i++ {
-		outputMessage, _ := BufferMessage(ctx, input, nil)
+		outputMessage, _ := BufferMessage(ctx, input)
 		err = outputMessage.Finish(nil)
 	}
 }
@@ -24,7 +24,7 @@ func BenchmarkBufferMessageFromBinary(b *testing.B) {
 	input := test.MustCreateMockBinaryMessage(e)
 	ctx := context.Background()
 	for i := 0; i < b.N; i++ {
-		outputMessage, _ := BufferMessage(ctx, input, nil)
+		outputMessage, _ := BufferMessage(ctx, input)
 		err = outputMessage.Finish(nil)
 	}
 }

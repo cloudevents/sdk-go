@@ -160,3 +160,23 @@ func TestWriteHttpResponseWriter_using_transformers_with_end(t *testing.T) {
 	require.NoError(t, err)
 	test.AssertEventEquals(t, eventIn, *eventOut)
 }
+
+func TestWriteHttpResponseWriter_using_transformers_fails(t *testing.T) {
+	eventIn := test.ExToStr(t, test.FullEvent())
+	messageIn := test.MustCreateMockBinaryMessage(eventIn)
+	messageIn.(*test.MockBinaryMessage).Extensions["badext"] = struct {
+		val string
+	}{
+		val: "aaa",
+	}
+
+	res := httptest.NewRecorder()
+
+	err := WriteResponseWriter(context.TODO(), messageIn, 202, res)
+	require.Error(t, err)
+	res.WriteHeader(500)
+
+	response := res.Result()
+
+	require.Equal(t, 500, response.StatusCode)
+}

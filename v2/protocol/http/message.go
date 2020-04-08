@@ -43,6 +43,7 @@ type Message struct {
 
 // Check if http.Message implements binding.Message
 var _ binding.Message = (*Message)(nil)
+var _ binding.MessageMetadataReader = (*Message)(nil)
 
 // NewMessage returns a binding.Message with header and data.
 // The returned binding.Message *cannot* be read several times. In order to read it more times, buffer it using binding/buffering methods
@@ -94,14 +95,9 @@ func (m *Message) ReadStructured(ctx context.Context, encoder binding.Structured
 	}
 }
 
-func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) error {
+func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) (err error) {
 	if m.version == nil {
 		return binding.ErrNotBinary
-	}
-
-	err := encoder.Start(ctx)
-	if err != nil {
-		return err
 	}
 
 	for k, v := range m.Header {
@@ -128,7 +124,19 @@ func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) 
 		}
 	}
 
-	return encoder.End(ctx)
+	return
+}
+
+func (m *Message) GetAttribute(k spec.Kind) (spec.Attribute, interface{}) {
+	attr := m.version.AttributeFromKind(k)
+	if attr != nil {
+		return attr, m.Header[attributeHeadersMapping[attr.Name()]]
+	}
+	return nil, nil
+}
+
+func (m *Message) GetExtension(name string) interface{} {
+	return m.Header[extNameToHeaderName(name)]
 }
 
 func (m *Message) Finish(err error) error {

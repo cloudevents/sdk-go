@@ -20,7 +20,7 @@ var (
 	binaryHttpRequest       *nethttp.Request
 	binaryHttpRequestNoData *nethttp.Request
 
-	transformers binding.TransformerFactories
+	transformers binding.Transformers
 
 	ctx = context.TODO()
 )
@@ -46,23 +46,29 @@ func init() {
 		panic(Err)
 	}
 
-	transformers = append(binding.TransformerFactories{},
-		transformer.SetExtension("aaa", "AAAA", func(i2 interface{}) (interface{}, error) {
+	transformers = append(binding.Transformers{},
+		transformer.SetExtension("aaa", func(i2 interface{}) (interface{}, error) {
+			if types.IsZero(i2) {
+				return "AAAA", nil
+			}
 			vStr, err := types.Format(i2)
 			if err != nil {
 				return nil, err
 			}
 			return strings.ToUpper(vStr), nil
-		})...,
+		}),
 	)
 	transformers = append(transformers,
-		transformer.SetExtension("aTime", time.Now(), func(i2 interface{}) (interface{}, error) {
+		transformer.SetExtension("aTime", func(i2 interface{}) (interface{}, error) {
+			if types.IsZero(i2) {
+				return time.Now(), nil
+			}
 			vTime, err := types.ToTime(i2)
 			if err != nil {
 				return nil, err
 			}
 			return vTime.Add(3 * time.Hour), nil
-		})...,
+		}),
 	)
 }
 

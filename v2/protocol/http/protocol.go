@@ -24,7 +24,7 @@ const (
 type Protocol struct {
 	Target          *url.URL
 	RequestTemplate *http.Request
-	transformers    binding.TransformerFactories
+	transformers    binding.Transformers
 	Client          *http.Client
 	incoming        chan msgErr
 
@@ -53,7 +53,7 @@ type Protocol struct {
 
 func New(opts ...Option) (*Protocol, error) {
 	p := &Protocol{
-		transformers: make(binding.TransformerFactories, 0),
+		transformers: make(binding.Transformers, 0),
 		incoming:     make(chan msgErr),
 	}
 	if err := p.applyOptions(opts...); err != nil {
@@ -114,7 +114,7 @@ func (p *Protocol) Request(ctx context.Context, m binding.Message) (binding.Mess
 		return nil, fmt.Errorf("not initialized: %#v", p)
 	}
 
-	if err = WriteRequest(ctx, m, req, p.transformers); err != nil {
+	if err = WriteRequest(ctx, m, req, p.transformers...); err != nil {
 		return nil, err
 	}
 

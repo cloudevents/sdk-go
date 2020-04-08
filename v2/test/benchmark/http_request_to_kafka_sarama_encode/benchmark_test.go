@@ -26,13 +26,13 @@ func init() {
 	event = test.FullEvent()
 
 	structuredHttpRequest, _ = nethttp.NewRequest("POST", "http://localhost", nil)
-	Err = http.WriteRequest(context.TODO(), (*binding.EventMessage)(&event), structuredHttpRequest, binding.TransformerFactories{})
+	Err = http.WriteRequest(context.TODO(), (*binding.EventMessage)(&event), structuredHttpRequest)
 	if Err != nil {
 		panic(Err)
 	}
 
 	binaryHttpRequest, _ = nethttp.NewRequest("POST", "http://localhost", nil)
-	Err = http.WriteRequest(context.TODO(), (*binding.EventMessage)(&event), binaryHttpRequest, binding.TransformerFactories{})
+	Err = http.WriteRequest(context.TODO(), (*binding.EventMessage)(&event), binaryHttpRequest)
 	if Err != nil {
 		panic(Err)
 	}
@@ -46,37 +46,37 @@ var Err error
 func BenchmarkBaselineStructured(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		Req, _ = nethttp.NewRequest("POST", "http://localhost", nil)
-		Err = http.WriteRequest(context.TODO(), (*binding.EventMessage)(&event), Req, binding.TransformerFactories{})
+		Err = http.WriteRequest(context.TODO(), (*binding.EventMessage)(&event), Req)
 	}
 }
 
 func BenchmarkStructured(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		tempReq, _ := nethttp.NewRequest("POST", "http://localhost", nil)
-		Err = http.WriteRequest(context.TODO(), (*binding.EventMessage)(&event), tempReq, binding.TransformerFactories{})
+		Err = http.WriteRequest(context.TODO(), (*binding.EventMessage)(&event), tempReq)
 
 		M = http.NewMessageFromHttpRequest(tempReq)
 		Req, Err = nethttp.NewRequest("POST", "http://localhost", nil)
 		producerMessage := &sarama.ProducerMessage{}
-		Err = kafka_sarama.WriteProducerMessage(ctx, M, producerMessage, binding.TransformerFactories{})
+		Err = kafka_sarama.WriteProducerMessage(ctx, M, producerMessage)
 	}
 }
 
 func BenchmarkBaselineBinary(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		Req, _ = nethttp.NewRequest("POST", "http://localhost", nil)
-		Err = http.WriteRequest(context.TODO(), (*binding.EventMessage)(&event), Req, binding.TransformerFactories{})
+		Err = http.WriteRequest(context.TODO(), (*binding.EventMessage)(&event), Req)
 	}
 }
 
 func BenchmarkBinary(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		tempReq, _ := nethttp.NewRequest("POST", "http://localhost", nil)
-		Err = http.WriteRequest(context.TODO(), (*binding.EventMessage)(&event), tempReq, binding.TransformerFactories{})
+		Err = http.WriteRequest(context.TODO(), (*binding.EventMessage)(&event), tempReq)
 
 		M = http.NewMessageFromHttpRequest(tempReq)
 		Req, Err = nethttp.NewRequest("POST", "http://localhost", nil)
 		producerMessage := &sarama.ProducerMessage{}
-		Err = kafka_sarama.WriteProducerMessage(ctx, M, producerMessage, binding.TransformerFactories{})
+		Err = kafka_sarama.WriteProducerMessage(ctx, M, producerMessage)
 	}
 }

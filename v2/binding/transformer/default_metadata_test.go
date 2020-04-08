@@ -27,19 +27,19 @@ func TestSetUUID(t *testing.T) {
 			Name:         "Set UUID when id already exists to Mock Structured message",
 			InputMessage: test.MustCreateMockStructuredMessage(eventWithId.Clone()),
 			AssertFunc:   assertUUID,
-			Transformers: []binding.TransformerFactory{SetUUID},
+			Transformers: binding.Transformers{SetUUID},
 		},
 		{
 			Name:         "Set UUID when id already exists to Mock Binary message",
 			InputMessage: test.MustCreateMockBinaryMessage(eventWithId.Clone()),
 			AssertFunc:   assertUUID,
-			Transformers: []binding.TransformerFactory{SetUUID},
+			Transformers: binding.Transformers{SetUUID},
 		},
 		{
 			Name:         "Set UUID when id already exists to Event message",
 			InputEvent:   eventWithId,
 			AssertFunc:   assertUUID,
-			Transformers: []binding.TransformerFactory{SetUUID},
+			Transformers: binding.Transformers{SetUUID},
 		},
 	})
 }
@@ -62,31 +62,31 @@ func TestAddTimeNow(t *testing.T) {
 			Name:         "No change to time to Mock Structured message",
 			InputMessage: test.MustCreateMockStructuredMessage(eventWithTime.Clone()),
 			WantEvent:    eventWithTime.Clone(),
-			Transformers: []binding.TransformerFactory{AddTimeNow},
+			Transformers: binding.Transformers{AddTimeNow},
 		},
 		{
 			Name:         "No change to time to Mock Binary message",
 			InputMessage: test.MustCreateMockBinaryMessage(eventWithTime.Clone()),
 			WantEvent:    eventWithTime.Clone(),
-			Transformers: []binding.TransformerFactory{AddTimeNow},
+			Transformers: binding.Transformers{AddTimeNow},
 		},
 		{
 			Name:         "No change to time to Event message",
 			InputEvent:   eventWithTime,
 			WantEvent:    eventWithTime,
-			Transformers: []binding.TransformerFactory{AddTimeNow},
+			Transformers: binding.Transformers{AddTimeNow},
 		},
 		{
 			Name:         "Add time.Now() to Mock Binary message",
 			InputMessage: test.MustCreateMockBinaryMessage(eventWithoutTime.Clone()),
 			AssertFunc:   assertTimeNow,
-			Transformers: []binding.TransformerFactory{AddTimeNow},
+			Transformers: binding.Transformers{AddTimeNow},
 		},
 		{
 			Name:         "Add time.Now() to Event message",
 			InputEvent:   eventWithoutTime,
 			AssertFunc:   assertTimeNow,
-			Transformers: []binding.TransformerFactory{AddTimeNow},
+			Transformers: binding.Transformers{AddTimeNow},
 		},
 	})
 }

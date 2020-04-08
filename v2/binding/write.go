@@ -16,6 +16,7 @@ const (
 
 // DirectWrite invokes the encoders. structuredWriter and binaryWriter could be nil if the protocol doesn't support it.
 // transformers can be nil and this function guarantees that they are invoked only once during the encoding process.
+// This function MUST be invoked only if message.ReadEncoding() == EncodingBinary or message.ReadEncoding() == EncodingStructured
 //
 // Returns:
 // * EncodingStructured, nil if message is correctly encoded in structured encoding
@@ -28,32 +29,18 @@ func DirectWrite(
 	message MessageReader,
 	structuredWriter StructuredWriter,
 	binaryWriter BinaryWriter,
-	transformers ...TransformerFactory,
+	transformers ...Transformer,
 ) (Encoding, error) {
-	if structuredWriter != nil && !GetOrDefaultFromCtx(ctx, skipDirectStructuredEncoding, false).(bool) {
-		// Wrap the transformers in the structured builder
-		structuredWriter = TransformerFactories(transformers).StructuredTransformer(structuredWriter)
-
-		// StructuredTransformer could return nil if one of transcoders doesn't support
-		// direct structured transcoding
-		if structuredWriter != nil {
-			if err := message.ReadStructured(ctx, structuredWriter); err == nil {
-				return EncodingStructured, nil
-			} else if err != ErrNotStructured {
-				return EncodingStructured, err
-			}
+	if structuredWriter != nil && len(transformers) == 0 && !GetOrDefaultFromCtx(ctx, skipDirectStructuredEncoding, false).(bool) {
+		if err := message.ReadStructured(ctx, structuredWriter); err == nil {
+			return EncodingStructured, nil
+		} else if err != ErrNotStructured {
+			return EncodingStructured, err
 		}
 	}
 
-	if binaryWriter != nil && !GetOrDefaultFromCtx(ctx, skipDirectBinaryEncoding, false).(bool) {
-		binaryWriter = TransformerFactories(transformers).BinaryTransformer(binaryWriter)
-		if binaryWriter != nil {
-			if err := message.ReadBinary(ctx, binaryWriter); err == nil {
-				return EncodingBinary, nil
-			} else if err != ErrNotBinary {
-				return EncodingBinary, err
-			}
-		}
+	if binaryWriter != nil && !GetOrDefaultFromCtx(ctx, skipDirectBinaryEncoding, false).(bool) && message.ReadEncoding() == EncodingBinary {
+		return EncodingBinary, writeBinaryWithTransformer(ctx, message, binaryWriter, transformers)
 	}
 
 	return EncodingUnknown, ErrUnknownEncoding
@@ -75,7 +62,7 @@ func Write(
 	message MessageReader,
 	structuredWriter StructuredWriter,
 	binaryWriter BinaryWriter,
-	transformers ...TransformerFactory,
+	transformers ...Transformer,
 ) (Encoding, error) {
 	enc := message.ReadEncoding()
 	var err error
@@ -101,11 +88,11 @@ func Write(
 			return EncodingStructured, message.ReadStructured(ctx, structuredWriter)
 		}
 		if binaryWriter != nil {
-			return EncodingBinary, message.ReadBinary(ctx, binaryWriter)
+			return EncodingBinary, writeBinary(ctx, message, binaryWriter)
 		}
 	} else {
 		if binaryWriter != nil {
-			return EncodingBinary, message.ReadBinary(ctx, binaryWriter)
+			return EncodingBinary, writeBinary(ctx, message, binaryWriter)
 		}
 		if structuredWriter != nil {
 			return EncodingStructured, message.ReadStructured(ctx, structuredWriter)
@@ -147,4 +134,41 @@ func GetOrDefaultFromCtx(ctx context.Context, key interface{}, def interface{}) 
 	} else {
 		return def
 	}
+}
+
+func writeBinaryWithTransformer(
+	ctx context.Context,
+	message MessageReader,
+	binaryWriter BinaryWriter,
+	transformers Transformers,
+) error {
+	err := binaryWriter.Start(ctx)
+	if err != nil {
+		return err
+	}
+	err = message.ReadBinary(ctx, binaryWriter)
+	if err != nil {
+		return err
+	}
+	err = transformers.Transform(message.(MessageMetadataReader), binaryWriter)
+	if err != nil {
+		return err
+	}
+	return binaryWriter.End(ctx)
+}
+
+func writeBinary(
+	ctx context.Context,
+	message MessageReader,
+	binaryWriter BinaryWriter,
+) error {
+	err := binaryWriter.Start(ctx)
+	if err != nil {
+		return err
+	}
+	err = message.ReadBinary(ctx, binaryWriter)
+	if err != nil {
+		return err
+	}
+	return binaryWriter.End(ctx)
 }

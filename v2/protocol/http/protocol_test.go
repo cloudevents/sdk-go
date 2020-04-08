@@ -24,7 +24,7 @@ func TestNew(t *testing.T) {
 	}{
 		"no options": {
 			want: &Protocol{
-				transformers:    binding.TransformerFactories{},
+				transformers:    binding.Transformers{},
 				Client:          http.DefaultClient,
 				ShutdownTimeout: &dst,
 			},

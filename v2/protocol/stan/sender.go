@@ -11,7 +11,7 @@ import (
 type Sender struct {
 	Conn         stan.Conn
 	Subject      string
-	Transformers binding.TransformerFactories
+	Transformers binding.Transformers
 
 	connOwned bool
 }
@@ -42,7 +42,7 @@ func NewSenderFromConn(conn stan.Conn, subject string, opts ...SenderOption) (*S
 	s := &Sender{
 		Conn:         conn,
 		Subject:      subject,
-		Transformers: make(binding.TransformerFactories, 0),
+		Transformers: make(binding.Transformers, 0),
 	}
 
 	err := s.applyOptions(opts...)
@@ -65,7 +65,7 @@ func (s *Sender) Send(ctx context.Context, in binding.Message) (err error) {
 	}()
 
 	writer := new(bytes.Buffer)
-	if err = WriteMsg(ctx, in, writer, s.Transformers); err != nil {
+	if err = WriteMsg(ctx, in, writer, s.Transformers...); err != nil {
 		return err
 	}
 	return s.Conn.Publish(s.Subject, writer.Bytes())

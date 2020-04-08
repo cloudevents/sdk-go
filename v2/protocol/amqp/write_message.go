@@ -15,7 +15,7 @@ import (
 
 // WriteMessage fills the provided amqpMessage with the message m.
 // Using context you can tweak the encoding processing (more details on binding.Write documentation).
-func WriteMessage(ctx context.Context, m binding.Message, amqpMessage *amqp.Message, transformers ...binding.TransformerFactory) error {
+func WriteMessage(ctx context.Context, m binding.Message, amqpMessage *amqp.Message, transformers ...binding.Transformer) error {
 	structuredWriter := (*amqpMessageWriter)(amqpMessage)
 	binaryWriter := (*amqpMessageWriter)(amqpMessage)
 
@@ -62,12 +62,20 @@ func (b *amqpMessageWriter) SetData(reader io.Reader) error {
 
 func (b *amqpMessageWriter) SetAttribute(attribute spec.Attribute, value interface{}) error {
 	if attribute.Kind() == spec.DataContentType {
+		if value == nil {
+			b.Properties.ContentType = ""
+			return nil
+		}
 		s, err := types.Format(value)
 		if err != nil {
 			return err
 		}
 		b.Properties.ContentType = s
 	} else {
+		if value == nil {
+			delete(b.ApplicationProperties, prefix+attribute.Name())
+			return nil
+		}
 		v, err := safeAMQPPropertiesUnwrap(value)
 		if err != nil {
 			return err

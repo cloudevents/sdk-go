@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/binding/spec"
 	"github.com/cloudevents/sdk-go/v2/binding/test"
 	"github.com/cloudevents/sdk-go/v2/types"
@@ -27,8 +28,10 @@ func TestSetAttribute(t *testing.T) {
 	eventWithUpdatedValue := e.Clone()
 	eventWithUpdatedValue.SetTime(attributeUpdatedValue.Time)
 
-	transformers := SetAttribute(attributeKind, attributeInitialValue.Time, func(i2 interface{}) (i interface{}, err error) {
-		require.NotNil(t, i2)
+	transformers := SetAttribute(attributeKind, func(i2 interface{}) (i interface{}, err error) {
+		if types.IsZero(i2) {
+			return attributeInitialValue.Time, nil
+		}
 		t, err := types.ToTime(i2)
 		if err != nil {
 			return nil, err
@@ -42,37 +45,37 @@ func TestSetAttribute(t *testing.T) {
 			Name:         "Add time to Mock Structured message",
 			InputMessage: test.MustCreateMockStructuredMessage(e),
 			WantEvent:    eventWithInitialValue,
-			Transformers: transformers,
+			Transformers: binding.Transformers{transformers},
 		},
 		{
 			Name:         "Add time to Mock Binary message",
 			InputMessage: test.MustCreateMockBinaryMessage(e),
 			WantEvent:    eventWithInitialValue,
-			Transformers: transformers,
+			Transformers: binding.Transformers{transformers},
 		},
 		{
 			Name:         "Add time to Event message",
 			InputEvent:   e,
 			WantEvent:    eventWithInitialValue,
-			Transformers: transformers,
+			Transformers: binding.Transformers{transformers},
 		},
 		{
 			Name:         "Update time in Mock Structured message",
 			InputMessage: test.MustCreateMockStructuredMessage(eventWithInitialValue),
 			WantEvent:    eventWithUpdatedValue,
-			Transformers: transformers,
+			Transformers: binding.Transformers{transformers},
 		},
 		{
 			Name:         "Update time in Mock Binary message",
 			InputMessage: test.MustCreateMockBinaryMessage(eventWithInitialValue),
 			WantEvent:    eventWithUpdatedValue,
-			Transformers: transformers,
+			Transformers: binding.Transformers{transformers},
 		},
 		{
 			Name:         "Update time in Event message",
 			InputEvent:   eventWithInitialValue,
 			WantEvent:    eventWithUpdatedValue,
-			Transformers: transformers,
+			Transformers: binding.Transformers{transformers},
 		},
 	})
 }
@@ -92,8 +95,10 @@ func TestSetExtension(t *testing.T) {
 	eventWithUpdatedValue := e.Clone()
 	require.NoError(t, eventWithUpdatedValue.Context.SetExtension(extName, exUpdatedValue))
 
-	transformers := SetExtension(extName, extInitialValue, func(i2 interface{}) (i interface{}, err error) {
-		require.NotNil(t, i2)
+	transformers := SetExtension(extName, func(i2 interface{}) (i interface{}, err error) {
+		if types.IsZero(i2) {
+			return extInitialValue, nil
+		}
 		str, err := types.Format(i2)
 		if err != nil {
 			return nil, err
@@ -112,37 +117,37 @@ func TestSetExtension(t *testing.T) {
 			Name:         "Add exnum to Mock Structured message",
 			InputMessage: test.MustCreateMockStructuredMessage(e),
 			WantEvent:    eventWithInitialValue,
-			Transformers: transformers,
+			Transformers: binding.Transformers{transformers},
 		},
 		{
 			Name:         "Add exnum to Mock Binary message",
 			InputMessage: test.MustCreateMockBinaryMessage(e),
 			WantEvent:    eventWithInitialValue,
-			Transformers: transformers,
+			Transformers: binding.Transformers{transformers},
 		},
 		{
 			Name:         "Add exnum to Event message",
 			InputEvent:   e,
 			WantEvent:    eventWithInitialValue,
-			Transformers: transformers,
+			Transformers: binding.Transformers{transformers},
 		},
 		{
 			Name:         "Update exnum in Mock Structured message",
 			InputMessage: test.MustCreateMockStructuredMessage(eventWithInitialValue),
 			WantEvent:    eventWithUpdatedValue,
-			Transformers: transformers,
+			Transformers: binding.Transformers{transformers},
 		},
 		{
 			Name:         "Update exnum in Mock Binary message",
 			InputMessage: test.MustCreateMockBinaryMessage(eventWithInitialValue),
 			WantEvent:    eventWithUpdatedValue,
-			Transformers: transformers,
+			Transformers: binding.Transformers{transformers},
 		},
 		{
 			Name:         "Update exnum in Event message",
 			InputEvent:   eventWithInitialValue,
 			WantEvent:    eventWithUpdatedValue,
-			Transformers: transformers,
+			Transformers: binding.Transformers{transformers},
 		},
 	})
 }
