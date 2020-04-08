@@ -29,7 +29,7 @@ func TestSetAttribute(t *testing.T) {
 	eventWithUpdatedValue.SetTime(attributeUpdatedValue.Time)
 
 	transformers := SetAttribute(attributeKind, func(i2 interface{}) (i interface{}, err error) {
-		if i2 == nil {
+		if types.IsZero(i2) {
 			return attributeInitialValue.Time, nil
 		}
 		t, err := types.ToTime(i2)
@@ -96,7 +96,7 @@ func TestSetExtension(t *testing.T) {
 	require.NoError(t, eventWithUpdatedValue.Context.SetExtension(extName, exUpdatedValue))
 
 	transformers := SetExtension(extName, func(i2 interface{}) (i interface{}, err error) {
-		if i2 == nil {
+		if types.IsZero(i2) {
 			return extInitialValue, nil
 		}
 		str, err := types.Format(i2)
