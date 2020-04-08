@@ -136,12 +136,7 @@ func (m *Message) GetAttribute(k spec.Kind) (spec.Attribute, interface{}) {
 }
 
 func (m *Message) GetExtension(name string) interface{} {
-	var b strings.Builder
-	b.Grow(len(name) + len(prefix))
-	b.WriteString(prefix)
-	b.WriteRune(unicode.ToUpper(rune(name[0])))
-	b.WriteString(name[1:])
-	return m.Header[b.String()]
+	return m.Header[extNameToHeaderName(name)]
 }
 
 func (m *Message) Finish(err error) error {

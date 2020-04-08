@@ -2,6 +2,8 @@ package http
 
 import (
 	"net/textproto"
+	"strings"
+	"unicode"
 
 	"github.com/cloudevents/sdk-go/v2/binding/spec"
 )
@@ -19,4 +21,13 @@ func init() {
 			}
 		}
 	}
+}
+
+func extNameToHeaderName(name string) string {
+	var b strings.Builder
+	b.Grow(len(name) + len(prefix))
+	b.WriteString(prefix)
+	b.WriteRune(unicode.ToUpper(rune(name[0])))
+	b.WriteString(name[1:])
+	return b.String()
 }

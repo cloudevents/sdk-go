@@ -119,14 +119,14 @@ func (b *httpRequestWriter) SetAttribute(attribute spec.Attribute, value interfa
 
 func (b *httpRequestWriter) SetExtension(name string, value interface{}) error {
 	if value == nil {
-		b.Header.Del(prefix + name)
+		delete(b.Header, extNameToHeaderName(name))
 	}
 	// Http headers, everything is a string!
 	s, err := types.Format(value)
 	if err != nil {
 		return err
 	}
-	b.Header.Add(prefix+name, s)
+	b.Header[extNameToHeaderName(name)] = []string{s}
 	return nil
 }
 
