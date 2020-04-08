@@ -16,7 +16,7 @@ import (
 
 // WriteRequest fills the provided httpRequest with the message m.
 // Using context you can tweak the encoding processing (more details on binding.Write documentation).
-func WriteRequest(ctx context.Context, m binding.Message, httpRequest *http.Request, transformers ...binding.TransformerFactory) error {
+func WriteRequest(ctx context.Context, m binding.Message, httpRequest *http.Request, transformers ...binding.Transformer) error {
 	structuredWriter := (*httpRequestWriter)(httpRequest)
 	binaryWriter := (*httpRequestWriter)(httpRequest)
 
@@ -103,18 +103,24 @@ func (b *httpRequestWriter) setBody(body io.Reader) error {
 }
 
 func (b *httpRequestWriter) SetAttribute(attribute spec.Attribute, value interface{}) error {
+	mapping := attributeHeadersMapping[attribute.Name()]
+	if value == nil {
+		delete(b.Header, mapping)
+	}
+
 	// Http headers, everything is a string!
 	s, err := types.Format(value)
 	if err != nil {
 		return err
 	}
-
-	mapping := attributeHeadersMapping[attribute.Name()]
 	b.Header[mapping] = append(b.Header[mapping], s)
 	return nil
 }
 
 func (b *httpRequestWriter) SetExtension(name string, value interface{}) error {
+	if value == nil {
+		b.Header.Del(prefix + name)
+	}
 	// Http headers, everything is a string!
 	s, err := types.Format(value)
 	if err != nil {
