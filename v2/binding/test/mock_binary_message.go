@@ -14,6 +14,7 @@ import (
 // MockBinaryMessage implements a binary-mode message as a simple struct.
 // MockBinaryMessage implements both the binding.Message interface and the binding.BinaryWriter
 type MockBinaryMessage struct {
+	Version    spec.Version
 	Metadata   map[spec.Attribute]interface{}
 	Extensions map[string]interface{}
 	Body       []byte
@@ -24,6 +25,7 @@ func MustCreateMockBinaryMessage(e event.Event) binding.Message {
 	version := spec.VS.Version(e.SpecVersion())
 
 	m := MockBinaryMessage{
+		Version:    version,
 		Metadata:   make(map[spec.Attribute]interface{}),
 		Extensions: make(map[string]interface{}),
 	}
@@ -42,6 +44,10 @@ func MustCreateMockBinaryMessage(e event.Event) binding.Message {
 	m.Body = e.Data()
 
 	return &m
+}
+
+func (bm *MockBinaryMessage) ReadEncoding() binding.Encoding {
+	return binding.EncodingBinary
 }
 
 func (bm *MockBinaryMessage) ReadStructured(context.Context, binding.StructuredWriter) error {
@@ -74,8 +80,16 @@ func (bm *MockBinaryMessage) ReadBinary(ctx context.Context, b binding.BinaryWri
 	return b.End(ctx)
 }
 
-func (bm *MockBinaryMessage) ReadEncoding() binding.Encoding {
-	return binding.EncodingBinary
+func (bm *MockBinaryMessage) GetAttribute(k spec.Kind) (spec.Attribute, interface{}) {
+	a := bm.Version.AttributeFromKind(k)
+	if a != nil {
+		return a, bm.Metadata[a]
+	}
+	return nil, nil
+}
+
+func (bm *MockBinaryMessage) GetExtension(name string) interface{} {
+	return bm.Extensions[name]
 }
 
 func (bm *MockBinaryMessage) Finish(error) error { return nil }
@@ -106,4 +120,5 @@ func (bm *MockBinaryMessage) End(ctx context.Context) error {
 }
 
 var _ binding.Message = (*MockBinaryMessage)(nil)
+var _ binding.MessageMetadataReader = (*MockBinaryMessage)(nil)
 var _ binding.BinaryWriter = (*MockBinaryMessage)(nil)

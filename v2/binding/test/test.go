@@ -106,3 +106,5 @@ func MustToEvent(t *testing.T, ctx context.Context, m binding.Message) event.Eve
 	require.NoError(t, err)
 	return *e
 }
+
+//TODO message interfaces compliance check?

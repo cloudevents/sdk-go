@@ -160,3 +160,5 @@ func TestWriteHttpResponseWriter_using_transformers_with_end(t *testing.T) {
 	require.NoError(t, err)
 	test.AssertEventEquals(t, eventIn, *eventOut)
 }
+
+// TODO test a flow where the event was malformed, binary encoding fails and and i wanna reply with 500 or something like that

@@ -1,6 +1,10 @@
 package binding
 
-import "context"
+import (
+	"context"
+
+	"github.com/cloudevents/sdk-go/v2/binding/spec"
+)
 
 // MessageReader defines the read-related portion of the Message interface.
 // The ReadStructured and ReadBinary methods allows to perform an optimized encoding of a Message to a specific data structure.
@@ -29,7 +33,30 @@ type MessageReader interface {
 	//
 	// This allows Senders to avoid re-encoding messages that are
 	// already in suitable binary form.
+	// TODO explain lifecycle of binary writer
 	ReadBinary(context.Context, BinaryWriter) error
+}
+
+//TODO comment
+// This is a MUST for all binary messages
+type MessageMetadataReader interface {
+	GetAttribute(spec.Kind) (spec.Attribute, interface{})
+	GetExtension(string) interface{}
+}
+
+//TODO comment
+type MessageMetadataWriter interface {
+	// Set a standard attribute.
+	//
+	// The value can either be the correct golang type for the attribute, or a canonical
+	// string encoding. See package types to perform the needed conversions
+	SetAttribute(attribute spec.Attribute, value interface{}) error
+
+	// Set an extension attribute.
+	//
+	// The value can either be the correct golang type for the attribute, or a canonical
+	// string encoding. See package types to perform the needed conversions
+	SetExtension(name string, value interface{}) error
 }
 
 // Message is the interface to a binding-specific message containing an event.
@@ -94,6 +121,7 @@ type ExactlyOnceMessage interface {
 // MessageWrapper interface is used to walk through a decorated Message and unwrap it.
 type MessageWrapper interface {
 	Message
+	MessageMetadataReader
 
 	// Method to get the wrapped message
 	GetWrappedMessage() Message
