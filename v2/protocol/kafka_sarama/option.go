@@ -10,7 +10,7 @@ import (
 type SenderOptionFunc func(sender *Sender)
 
 // WithTransformer adds a transformer, which Sender uses while encoding a binding.Message to a sarama.ProducerMessage
-func WithTransformer(transformer binding.TransformerFactory) SenderOptionFunc {
+func WithTransformer(transformer binding.Transformer) SenderOptionFunc {
 	return func(sender *Sender) {
 		sender.transformers = append(sender.transformers, transformer)
 	}

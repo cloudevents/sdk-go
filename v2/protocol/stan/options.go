@@ -2,7 +2,7 @@ package stan
 
 import (
 	"errors"
-	"github.com/cloudevents/sdk-go/v2/binding"
+
 	"github.com/nats-io/stan.go"
 )
 
@@ -79,11 +79,3 @@ func WithUnsubscribeOnClose() ConsumerOption {
 }
 
 type SenderOption func(*Sender) error
-
-// WithTransformer adds a transformer, which Protocol uses while encoding a binding.Message to an stan.Message
-func WithTransformer(transformer binding.TransformerFactory) SenderOption {
-	return func(p *Sender) error {
-		p.Transformers = append(p.Transformers, transformer)
-		return nil
-	}
-}

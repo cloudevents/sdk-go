@@ -13,7 +13,7 @@ type Sender struct {
 	topic        string
 	syncProducer sarama.SyncProducer
 
-	transformers binding.TransformerFactories
+	transformers binding.Transformers
 }
 
 // NewSender returns a binding.Sender that sends messages to a specific receiverTopic using sarama.SyncProducer
@@ -36,7 +36,7 @@ func NewSenderFromClient(client sarama.Client, topic string, options ...SenderOp
 	s := &Sender{
 		topic:        topic,
 		syncProducer: producer,
-		transformers: make(binding.TransformerFactories, 0),
+		transformers: make(binding.Transformers, 0),
 	}
 	for _, o := range options {
 		o(s)

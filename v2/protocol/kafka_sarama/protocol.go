@@ -25,7 +25,7 @@ type Protocol struct {
 
 	// Sender options
 	SenderContextDecorators []func(context.Context) context.Context
-	senderTransformers      binding.TransformerFactories
+	senderTransformers      binding.Transformers
 	senderTopic             string
 
 	// Consumer
