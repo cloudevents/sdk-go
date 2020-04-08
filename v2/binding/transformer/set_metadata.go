@@ -6,7 +6,8 @@ import (
 )
 
 // SetAttribute sets a cloudevents attribute using the provided function.
-// updater gets a zero value as input if no previous value was found. To test a zero value, use types.IsZero()
+// updater gets a zero value as input if no previous value was found. To test a zero value, use types.IsZero().
+// updater must return nil, nil if the user wants to remove the attribute
 func SetAttribute(attribute spec.Kind, updater func(interface{}) (interface{}, error)) binding.TransformerFunc {
 	return func(reader binding.MessageMetadataReader, writer binding.MessageMetadataWriter) error {
 		attr, oldVal := reader.GetAttribute(attribute)
@@ -24,6 +25,7 @@ func SetAttribute(attribute spec.Kind, updater func(interface{}) (interface{}, e
 
 // SetExtension sets a cloudevents extension using the provided function.
 // updater gets a zero value as input if no previous value was found. To test a zero value, use types.IsZero()
+// updater must return nil, nil if the user wants to remove the extension
 func SetExtension(name string, updater func(interface{}) (interface{}, error)) binding.TransformerFunc {
 	return func(reader binding.MessageMetadataReader, writer binding.MessageMetadataWriter) error {
 		oldVal := reader.GetExtension(name)
