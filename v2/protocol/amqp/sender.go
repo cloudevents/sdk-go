@@ -12,7 +12,7 @@ import (
 // sender wraps an amqp.Sender as a binding.Sender
 type sender struct {
 	amqp         *amqp.Sender
-	transformers binding.TransformerFactories
+	transformers binding.Transformers
 }
 
 func (s *sender) Send(ctx context.Context, in binding.Message) error {
@@ -37,7 +37,7 @@ func (s *sender) Close(ctx context.Context) error { return s.amqp.Close(ctx) }
 
 // NewSender creates a new Sender which wraps an amqp.Sender in a binding.Sender
 func NewSender(amqpSender *amqp.Sender, options ...SenderOptionFunc) protocol.Sender {
-	s := &sender{amqp: amqpSender, transformers: make(binding.TransformerFactories, 0)}
+	s := &sender{amqp: amqpSender, transformers: make(binding.Transformers, 0)}
 	for _, o := range options {
 		o(s)
 	}
