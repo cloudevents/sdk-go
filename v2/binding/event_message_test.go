@@ -63,6 +63,8 @@ func TestEventMessage_ReadBinary(t *testing.T) {
 		eventMessage := binding.ToMessage(&inputEvent)
 		outMessage := test.MockBinaryMessage{}
 
+		require.NoError(t, outMessage.Start(context.TODO()))
+
 		require.NoError(t, eventMessage.ReadBinary(context.TODO(), &outMessage))
 
 		outputEvent, err := binding.ToEvent(context.TODO(), &outMessage)
