@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/Azure/go-amqp"
 	"github.com/stretchr/testify/require"
-	"pack.ag/amqp"
 
 	bindingtest "github.com/cloudevents/sdk-go/v2/binding/test"
 	clienttest "github.com/cloudevents/sdk-go/v2/client/test"
