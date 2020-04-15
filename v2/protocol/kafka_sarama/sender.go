@@ -18,12 +18,12 @@ type Sender struct {
 
 // NewSender returns a binding.Sender that sends messages to a specific receiverTopic using sarama.SyncProducer
 func NewSender(brokers []string, saramaConfig *sarama.Config, topic string, options ...SenderOptionFunc) (*Sender, error) {
-	client, err := sarama.NewClient(brokers, saramaConfig)
+	producer, err := sarama.NewSyncProducer(brokers, saramaConfig)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewSenderFromClient(client, topic, options...)
+	return makeSender(producer, topic, options...), nil
 }
 
 // NewSenderFromClient returns a binding.Sender that sends messages to a specific receiverTopic using sarama.SyncProducer
@@ -33,15 +33,18 @@ func NewSenderFromClient(client sarama.Client, topic string, options ...SenderOp
 		return nil, err
 	}
 
+	return makeSender(producer, topic, options...), nil
+}
+
+func makeSender(syncProducer sarama.SyncProducer, topic string, options ...SenderOptionFunc) *Sender {
 	s := &Sender{
 		topic:        topic,
-		syncProducer: producer,
-		transformers: make(binding.Transformers, 0),
+		syncProducer: syncProducer,
 	}
 	for _, o := range options {
 		o(s)
 	}
-	return s, nil
+	return s
 }
 
 func (s *Sender) Send(ctx context.Context, m binding.Message) error {
@@ -55,9 +58,15 @@ func (s *Sender) Send(ctx context.Context, m binding.Message) error {
 	}
 
 	_, _, err = s.syncProducer.SendMessage(&kafkaMessage)
+	// Somebody closed the client while sending the message, so no problem here
+	if err == sarama.ErrClosedClient {
+		return nil
+	}
 	return err
 }
 
 func (s *Sender) Close(ctx context.Context) error {
+	// If the Sender was built with NewSenderFromClient, this Close will close only the producer,
+	// otherwise it will close the whole client
 	return s.syncProducer.Close()
 }
