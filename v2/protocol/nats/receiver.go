@@ -2,14 +2,14 @@ package nats
 
 import (
 	"context"
-	"errors"
-	"github.com/cloudevents/sdk-go/v2/binding"
-	"github.com/nats-io/nats.go"
 	"io"
 	"sync"
-)
 
-var ErrSubscriptionAlreadyOpen = errors.New("subscription already open")
+	"github.com/nats-io/nats.go"
+
+	"github.com/cloudevents/sdk-go/v2/binding"
+	"github.com/cloudevents/sdk-go/v2/protocol"
+)
 
 type msgErr struct {
 	msg binding.Message
@@ -39,7 +39,7 @@ func (r *Receiver) Receive(ctx context.Context) (binding.Message, error) {
 		}
 		return msgErr.msg, nil
 	case <-ctx.Done():
-		return nil, io.EOF
+		return nil, ctx.Err()
 	}
 }
 
@@ -50,9 +50,9 @@ type Consumer struct {
 	Subject    string
 	Subscriber Subscriber
 
-	sub       *nats.Subscription
-	subMtx    sync.Mutex
-	connOwned bool
+	subMtx        sync.Mutex
+	internalClose chan struct{}
+	connOwned     bool
 }
 
 func NewConsumer(url, subject string, natsOpts []nats.Option, opts ...ConsumerOption) (*Consumer, error) {
@@ -74,10 +74,11 @@ func NewConsumer(url, subject string, natsOpts []nats.Option, opts ...ConsumerOp
 
 func NewConsumerFromConn(conn *nats.Conn, subject string, opts ...ConsumerOption) (*Consumer, error) {
 	c := &Consumer{
-		Receiver:   *NewReceiver(),
-		Conn:       conn,
-		Subject:    subject,
-		Subscriber: &RegularSubscriber{},
+		Receiver:      *NewReceiver(),
+		Conn:          conn,
+		Subject:       subject,
+		Subscriber:    &RegularSubscriber{},
+		internalClose: make(chan struct{}, 1),
 	}
 
 	err := c.applyOptions(opts...)
@@ -89,43 +90,38 @@ func NewConsumerFromConn(conn *nats.Conn, subject string, opts ...ConsumerOption
 }
 
 func (c *Consumer) OpenInbound(ctx context.Context) error {
-	var err error
-	c.subMtx.Lock()
-	if c.sub != nil && c.sub.IsValid() {
-		return ErrSubscriptionAlreadyOpen
-	}
-
-	c.sub, err = c.Subscriber.Subscribe(c.Conn, c.Subject, c.MsgHandler)
-	if err != nil {
-		c.sub = nil
-		c.subMtx.Unlock()
-		return err
-	}
-	c.subMtx.Unlock()
-
-	<-ctx.Done()
-
-	return nil
-}
-
-// Receive consumes a message from the subscription
-func (c *Consumer) Receive(ctx context.Context) (binding.Message, error) {
-	return c.Receiver.Receive(ctx)
-}
-
-func (c *Consumer) Close(ctx context.Context) error {
 	c.subMtx.Lock()
 	defer c.subMtx.Unlock()
 
-	if c.connOwned {
-		defer c.Conn.Close()
+	// Subscribe
+	sub, err := c.Subscriber.Subscribe(c.Conn, c.Subject, c.MsgHandler)
+	if err != nil {
+		return err
 	}
 
-	if c.sub != nil {
-		if err := c.sub.Unsubscribe(); err != nil {
-			return err
-		}
+	// Wait until external or internal context done
+	select {
+	case <-ctx.Done():
+	case <-c.internalClose:
 	}
+
+	// Finish to consume messages in the queue and close the subscription
+	return sub.Drain()
+}
+
+func (c *Consumer) Close(ctx context.Context) error {
+	// Before closing, let's be sure OpenInbound completes
+	// We send a signal to close and then we lock on subMtx in order
+	// to wait OpenInbound to finish draining the queue
+	c.internalClose <- struct{}{}
+	c.subMtx.Lock()
+	c.subMtx.Unlock()
+
+	if c.connOwned {
+		c.Conn.Close()
+	}
+
+	close(c.internalClose)
 
 	return nil
 }
@@ -138,3 +134,7 @@ func (c *Consumer) applyOptions(opts ...ConsumerOption) error {
 	}
 	return nil
 }
+
+var _ protocol.Opener = (*Consumer)(nil)
+var _ protocol.Receiver = (*Consumer)(nil)
+var _ protocol.Closer = (*Consumer)(nil)
