@@ -57,7 +57,7 @@ func (r *Receiver) ConsumeClaim(session sarama.ConsumerGroupSession, claim saram
 func (r *Receiver) Receive(ctx context.Context) (binding.Message, error) {
 	select {
 	case <-ctx.Done():
-		return nil, ctx.Err()
+		return nil, io.EOF
 	case msgErr, ok := <-r.incoming:
 		if !ok {
 			return nil, io.EOF

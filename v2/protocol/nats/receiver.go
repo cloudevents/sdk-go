@@ -39,7 +39,7 @@ func (r *Receiver) Receive(ctx context.Context) (binding.Message, error) {
 		}
 		return msgErr.msg, nil
 	case <-ctx.Done():
-		return nil, ctx.Err()
+		return nil, io.EOF
 	}
 }
 
