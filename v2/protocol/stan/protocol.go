@@ -2,8 +2,8 @@ package stan
 
 import (
 	"context"
-	"errors"
 	"fmt"
+
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/protocol"
 
