@@ -1,82 +1,90 @@
-# Development
+# CloudEvents Golang SDK v2
 
-This is a collection of topics related to development of the SDK.
+## Spec and SDK Terms
 
-## Datacodec
+- [Event](https://github.com/cloudevents/spec/blob/master/spec.md#event): 
+  The canonical form of the attributes and payload of the occurrence.
+- [Protocol](https://github.com/cloudevents/spec/blob/master/spec.md#protocol): 
+  Protocol is the messaging protocol used to send/receive events. In sdk-go all supported 
+  Protocols are implemented through specific interfaces in 
+  [`protocol` module](../v2/protocol).
+- [Protocol Binding](https://github.com/cloudevents/spec/blob/master/spec.md#protocol-binding): 
+  Definition of how Events are mapped into Messages for the given Protocol. In sdk-go all
+  supported Protocol bindings are implemented through specific interfaces in 
+  [`binding` module](../v2/binding).
+- [Message](https://github.com/cloudevents/spec/blob/master/spec.md#message): 
+  The encoded form of an Event for a given encoding and protocol. 
+  When a message is received in the sdk-go, the protocol implementation wraps it in a 
+  [`Message`](../v2/binding/message.go)
+  implementation specific to that protocol. This interface defines how to read the Message, 
+  given the Protocol.
+- Message Writer: Logic required to take in a `Message` in a specific encoding and write out to a
+  given Protocol (request, message). A Message Writer can be a 
+  [`StructuredWriter`](../v2/binding/structured_writer.go), 
+  a [`BinaryWriter`](../v2/binding/binary_writer.go) or both, depending on what encodings a 
+  Protocol supports.
+- [`Client`](../v2/client/client.go): Interface to interact with a Protocol implementation 
+  to send/receive Events. Clients also provide protocol agnostic features that can be 
+  applied to events, such as extensions.
+- Extensions: Anything that extends the base requirements from the CloudEvents spec. 
+  There are several
+  [CloudEvents supported extensions](https://github.com/cloudevents/spec/tree/master/extensions).
 
-The CloudEvents spec has different encoding rules for event attributes and event
-data.
+## Investment Level
 
-Package [cloudevents/types][cloudevents.types] implements the CE type system for
-attribute values.
+The amount of the SDK adopters would like to use is up to the adopter. We
+support the following:
 
-Package [datacodec/codec][datacodec.codec] is responsible for encoding and
-decoding the data payload. Some formats have built-in support e.g.
-`application/xml` and `application/json`.
+- [Resource Level](event_data_structure.md): An adopter could use the Event data structure to interact with CloudEvents 
+  and marshal/unmarshal it to JSON.
+- [Message Level](protocol_implementations.md): An adopter could use directly `Message`s implementations and `Write*` functions 
+  to read and write CloudEvents messages from/to the wire, handling by hand the connection, the 
+  consumption and the production of messages from/to the protocol specific APIs.
+- [Protocol Level](protocol_implementations.md): An adopter could use Protocol implementations directly to consume/produce `Message`s
+  without interacting with the protocol specific APIs.
+- [Client Level](../v2/client/client.go): An adopter selects a Protocol implementation and Events can 
+  be directly sent and received without requiring interactions with `Message`s.
 
-The DataCodec is invoked (as of this writing) when `event.SetData` is called, or
-when `event.DataAs` is called when receiving.
+## Personas
 
-event.Context.SetDataContenType() can also be set to a content-type that is not
-known to the datacodec. In that case Event.Data should be set or read directly
-as encoded []byte or string data, which will not be interpreted by this library.
+- [Producer](https://github.com/cloudevents/spec/blob/master/spec.md#producer),
+  the "producer" is a specific instance, process or device that creates the data
+  structure describing the CloudEvent.
+- [Consumer](https://github.com/cloudevents/spec/blob/master/spec.md#consumer),
+  a "consumer" receives the event and acts upon it. It uses the context and data
+  to execute some logic, which might lead to the occurrence of new events.
+- [Intermediary](https://github.com/cloudevents/spec/blob/master/spec.md#intermediary),
+  An "intermediary" receives a message containing an event for the purpose of
+  forwarding it to the next receiver, which might be another intermediary or a
+  Consumer. A typical task for an intermediary is to route the event to
+  receivers based on the information in the Context.
 
-## Transcoding and Forwarding
+## Interaction Models
 
-One of the goals of this sdk is to decouple the encoding from the protocol
-binding as much as possible, and to enable forwarding of messages from one
-protocol to another without loss of efficiency or reliability.
+The SDK enables the following interaction models.
 
-Protocol bindings implement the binding.Message API to achieve this. The event
-can be represented in two ways: in "structured mode" as a (mediaType string,
-[]byte) pair, or decoded as a "binary mode" [Event][cloudevents.event] object.
+### Sender
 
-Structured mode allows forwarding structured events with minimal re-encoding,
-but the event is a "black-box", it's attributes and data are not accessible.
-Binary mode requires decoding and re-encoding of protocol messages, but allows
-the event to be examined and modified by the application.
+Sender, when a Producer is creating new events.
 
-In-memory messages in both modes can be created using the binding package:
+![sender](./images/sender.svg "Sender")
 
-Sending:
+### Receiver
 
-```
- var e cloudevents.Event
+Receiver, when a Consumer is accepting events.
 
- // Binary message:
- sender.Send(ctx, binding.EventMessage(e))
+![receiver](./images/receiver.svg "Receiver")
 
- // Pre-encoded structured message:
- sender.Send(ctx, binding.StructMessage{Format: "media-type", Bytes: bytes})
+### Forwarder
 
- // Format a binary Event as a structued message:
- var f format.Format = ...
- bytes, err := f.Marshal(e)
- m, err := binding.StructuredEncoder{Format: f.MediaType(), Bytes: bytes}
- sender.Send(ctx, m)
-```
+Forwarder, when a Intermediary accepts an event only after it has successfully
+continued the message to one or more Consumers.
 
-Receiving:
+![forwarder](./images/forwarder.svg "Forwarder")
 
-```
-m, err := receiver.Receive(ctx)
+### Mutator
 
-// Extract structured event if it is present
-if format, bytes := m.Structured(); format != nil { /* use structured message */ }
+Mutator, when a Producer or Intermediary blocks on a response from a Consumer,
+replacing the original Event.
 
-// Decode as a binary Event
-e, err := m.Event()
-```
-
-The interface binding.Message also provides generic methods to handle reliable
-delivery Qualities of Service between different protocols, provided both
-protocols support the required QoS.
-
-See pkg/binding/doc.go for more details.
-
-[cloudevents.event]: ../pkg/cloudevents/event.go
-[cloudevents.types]: ../pkg/types/doc.go
-[transport.transport]: ../pkg/cloudevents/transport/transport.go
-[transport.message]: ../pkg/cloudevents/transport/message.go
-[transport.codec]: ../pkg/cloudevents/transport/codec.go
-[datacodec.codec]: ../pkg/event/datacodec/codec.go
+![mutator](./images/mutator.svg "Mutator")
