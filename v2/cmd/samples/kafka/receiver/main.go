@@ -19,6 +19,8 @@ func main() {
 		log.Fatalf("failed to create protocol: %s", err.Error())
 	}
 
+	defer receiver.Close(context.Background())
+
 	c, err := cloudevents.NewClient(receiver)
 	if err != nil {
 		log.Fatalf("failed to create client, %v", err)
