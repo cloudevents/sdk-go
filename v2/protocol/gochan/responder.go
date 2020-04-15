@@ -33,7 +33,7 @@ func (r *Responder) Respond(ctx context.Context) (binding.Message, protocol.Resp
 		if !ok {
 			return nil, nil, io.EOF
 		}
-		return m, func(ctx context.Context, message binding.Message, result protocol.Result) error {
+		return m, func(ctx context.Context, message binding.Message, result protocol.Result, transformers ...binding.Transformer) error {
 			r.Out <- ChanResponderResponse{
 				Message: message,
 				Result:  result,

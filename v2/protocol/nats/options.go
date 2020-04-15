@@ -2,7 +2,7 @@ package nats
 
 import (
 	"errors"
-	"github.com/cloudevents/sdk-go/v2/binding"
+
 	"github.com/nats-io/nats.go"
 )
 
@@ -32,14 +32,6 @@ func WithSenderOptions(opts ...SenderOption) ProtocolOption {
 }
 
 type SenderOption func(*Sender) error
-
-// WithTransformer adds a transformer, which Sender uses while encoding a binding.Message to an nats.Message
-func WithTransformer(transformer binding.Transformer) SenderOption {
-	return func(s *Sender) error {
-		s.Transformers = append(s.Transformers, transformer)
-		return nil
-	}
-}
 
 type ConsumerOption func(*Consumer) error
 

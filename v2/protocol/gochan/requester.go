@@ -14,7 +14,7 @@ type Requester struct {
 	Reply func(message binding.Message) (binding.Message, error)
 }
 
-func (s *Requester) Send(ctx context.Context, m binding.Message) (err error) {
+func (s *Requester) Send(ctx context.Context, m binding.Message, transformers ...binding.Transformer) (err error) {
 	if ctx == nil {
 		return fmt.Errorf("nil Context")
 	} else if m == nil {
@@ -35,7 +35,7 @@ func (s *Requester) Send(ctx context.Context, m binding.Message) (err error) {
 	}
 }
 
-func (s *Requester) Request(ctx context.Context, m binding.Message) (res binding.Message, err error) {
+func (s *Requester) Request(ctx context.Context, m binding.Message, transformers ...binding.Transformer) (res binding.Message, err error) {
 	defer func() {
 		err2 := m.Finish(err)
 		if err == nil {

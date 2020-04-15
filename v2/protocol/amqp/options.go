@@ -48,10 +48,3 @@ func WithReceiverLinkOption(opt amqp.LinkOption) Option {
 
 // SenderOptionFunc is the type of amqp.Sender options
 type SenderOptionFunc func(sender *sender)
-
-// WithTransformer adds a transformer, which Sender uses while encoding a binding.Message to an amqp.Message
-func WithTransformer(transformer binding.Transformer) SenderOptionFunc {
-	return func(sender *sender) {
-		sender.transformers = append(sender.transformers, transformer)
-	}
-}

@@ -26,8 +26,6 @@ type subscriptionWithTopic struct {
 
 // Protocol acts as both a pubsub topic and a pubsub subscription .
 type Protocol struct {
-	transformers binding.Transformers
-
 	// PubSub
 
 	// ReceiveSettings is used to configure Pubsub pull subscription.
@@ -93,7 +91,7 @@ func (t *Protocol) applyOptions(opts ...Option) error {
 }
 
 // Send implements Sender.Send
-func (t *Protocol) Send(ctx context.Context, in binding.Message) error {
+func (t *Protocol) Send(ctx context.Context, in binding.Message, transformers ...binding.Transformer) error {
 	var err error
 	defer func() { _ = in.Finish(err) }()
 
@@ -105,7 +103,7 @@ func (t *Protocol) Send(ctx context.Context, in binding.Message) error {
 	conn := t.getOrCreateConnection(ctx, topic, "")
 
 	msg := &pubsub.Message{}
-	if err := WritePubSubMessage(ctx, in, msg, t.transformers...); err != nil {
+	if err := WritePubSubMessage(ctx, in, msg, transformers...); err != nil {
 		return err
 	}
 

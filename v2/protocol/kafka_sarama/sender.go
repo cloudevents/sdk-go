@@ -12,8 +12,6 @@ import (
 type Sender struct {
 	topic        string
 	syncProducer sarama.SyncProducer
-
-	transformers binding.Transformers
 }
 
 // NewSender returns a binding.Sender that sends messages to a specific receiverTopic using sarama.SyncProducer
@@ -47,13 +45,13 @@ func makeSender(syncProducer sarama.SyncProducer, topic string, options ...Sende
 	return s
 }
 
-func (s *Sender) Send(ctx context.Context, m binding.Message) error {
+func (s *Sender) Send(ctx context.Context, m binding.Message, transformers ...binding.Transformer) error {
 	var err error
 	defer m.Finish(err)
 
 	kafkaMessage := sarama.ProducerMessage{Topic: s.topic}
 
-	if err = WriteProducerMessage(ctx, m, &kafkaMessage, s.transformers...); err != nil {
+	if err = WriteProducerMessage(ctx, m, &kafkaMessage, transformers...); err != nil {
 		return err
 	}
 

@@ -115,8 +115,8 @@ func (t *Protocol) Close(ctx context.Context) (err error) {
 	}
 }
 
-func (t *Protocol) Send(ctx context.Context, in binding.Message) error {
-	return t.Sender.Send(ctx, in)
+func (t *Protocol) Send(ctx context.Context, in binding.Message, transformers ...binding.Transformer) error {
+	return t.Sender.Send(ctx, in, transformers...)
 }
 
 func (t *Protocol) Receive(ctx context.Context) (binding.Message, error) {
