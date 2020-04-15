@@ -33,8 +33,6 @@ func (s *sender) Send(ctx context.Context, in binding.Message) error {
 	return err
 }
 
-func (s *sender) Close(ctx context.Context) error { return s.amqp.Close(ctx) }
-
 // NewSender creates a new Sender which wraps an amqp.Sender in a binding.Sender
 func NewSender(amqpSender *amqp.Sender, options ...SenderOptionFunc) protocol.Sender {
 	s := &sender{amqp: amqpSender, transformers: make(binding.Transformers, 0)}
