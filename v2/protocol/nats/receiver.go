@@ -115,7 +115,7 @@ func (c *Consumer) Close(ctx context.Context) error {
 	// to wait OpenInbound to finish draining the queue
 	c.internalClose <- struct{}{}
 	c.subMtx.Lock()
-	c.subMtx.Unlock()
+	defer c.subMtx.Unlock()
 
 	if c.connOwned {
 		c.Conn.Close()
