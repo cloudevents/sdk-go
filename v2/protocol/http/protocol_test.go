@@ -26,7 +26,7 @@ func TestNew(t *testing.T) {
 			want: &Protocol{
 				transformers:    binding.Transformers{},
 				Client:          http.DefaultClient,
-				ShutdownTimeout: &dst,
+				ShutdownTimeout: dst,
 			},
 		},
 	}

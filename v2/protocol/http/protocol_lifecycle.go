@@ -57,7 +57,7 @@ func (p *Protocol) OpenInbound(ctx context.Context) error {
 	select {
 	case <-ctx.Done():
 		// Try a gracefully shutdown.
-		ctx, cancel := context.WithTimeout(context.Background(), *p.ShutdownTimeout)
+		ctx, cancel := context.WithTimeout(context.Background(), p.ShutdownTimeout)
 		defer cancel()
 		err := p.server.Shutdown(ctx)
 		<-errChan // Wait for server goroutine to exit

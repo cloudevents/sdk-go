@@ -32,7 +32,7 @@ type Protocol struct {
 
 	// ShutdownTimeout defines the timeout given to the http.Server when calling Shutdown.
 	// If nil, DefaultShutdownTimeout is used.
-	ShutdownTimeout *time.Duration
+	ShutdownTimeout time.Duration
 
 	// Port is the port to bind the receiver to. Defaults to 8080.
 	Port *int
@@ -68,9 +68,8 @@ func New(opts ...Option) (*Protocol, error) {
 		p.Client.Transport = p.roundTripper
 	}
 
-	if p.ShutdownTimeout == nil {
-		timeout := DefaultShutdownTimeout
-		p.ShutdownTimeout = &timeout
+	if p.ShutdownTimeout == 0 {
+		p.ShutdownTimeout = DefaultShutdownTimeout
 	}
 
 	return p, nil
