@@ -5,6 +5,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/cloudevents/sdk-go/v2/binding"
+	"github.com/cloudevents/sdk-go/v2/protocol"
+
 	"github.com/nats-io/stan.go"
 )
 
@@ -89,3 +91,6 @@ func (s *Sender) applyOptions(opts ...SenderOption) error {
 	}
 	return nil
 }
+
+var _ protocol.Sender = (*Sender)(nil)
+var _ protocol.Closer = (*Sender)(nil)
