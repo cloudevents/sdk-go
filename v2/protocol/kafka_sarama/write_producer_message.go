@@ -7,7 +7,6 @@ import (
 
 	"github.com/Shopify/sarama"
 
-	ce "github.com/cloudevents/sdk-go/v2"
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/binding/format"
 	"github.com/cloudevents/sdk-go/v2/binding/spec"
@@ -20,57 +19,40 @@ const (
 
 // WriteProducerMessage fills the provided producerMessage with the message m.
 // Using context you can tweak the encoding processing (more details on binding.Write documentation).
-func WriteProducerMessage(ctx context.Context, m binding.Message, producerMessage *sarama.ProducerMessage, transformers ...binding.Transformer) error {
-	enc := (*kafkaProducerMessageWriter)(producerMessage)
 // By default, this function implements the key mapping, trying to set the key of the message based on partitionKey extension.
 // If you want to disable the Key Mapping, decorate the context with `WithSkipKeyMapping`
-func WriteProducerMessage(ctx context.Context, m binding.Message, producerMessage *sarama.ProducerMessage, transformers ...binding.TransformerFactory) error {
+func WriteProducerMessage(ctx context.Context, m binding.Message, producerMessage *sarama.ProducerMessage, transformers ...binding.Transformer) error {
 	writer := (*kafkaProducerMessageWriter)(producerMessage)
 
 	skipKey := binding.GetOrDefaultFromCtx(ctx, skipKeyKey{}, false).(bool)
 
-	// If skipKey = true, then we can just use the default write algorithm
-	if skipKey {
-		_, err := binding.Write(
-			ctx,
-			m,
-			writer,
-			writer,
-			transformers...,
-		)
-		return err
+	var key string
+
+	// If skipKey = false, then we add a transformer that extracts the key
+	if !skipKey {
+		transformers = append(transformers, binding.TransformerFunc(func(r binding.MessageMetadataReader, w binding.MessageMetadataWriter) error {
+			ext := r.GetExtension(partitionKey)
+			if !types.IsZero(ext) {
+				extStr, err := types.Format(ext)
+				if err != nil {
+					return err
+				}
+				key = extStr
+			}
+			return nil
+		}))
 	}
 
-	// if skipKey = false, we can't accept structured encoding. We can
-	encoding := m.ReadEncoding()
-	var err error
-	// Try direct encoding only if the event is a binary event
-	if encoding == binding.EncodingBinary {
-		// Specialized writer that writes the key
-		writer := (*kafkaProducerMessageWithKeyWriter)(producerMessage)
-		encoding, err = binding.DirectWrite(ctx, m, nil, writer, transformers...)
-		if encoding != binding.EncodingUnknown {
-			// Message directly encoded binary -> binary, nothing else to do here
-			return err
-		}
+	_, err := binding.Write(
+		ctx,
+		m,
+		writer,
+		writer,
+		transformers...,
+	)
+	if key != "" {
+		producerMessage.Key = sarama.StringEncoder(key)
 	}
-
-	var e *ce.Event
-	e, err = binding.ToEvent(ctx, m, transformers...)
-	if err != nil {
-		return err
-	}
-
-	// Let's check if event contains a partitionKey to write
-	if val, ok := e.Extensions()[partitionKey]; ok {
-		s, err := types.Format(val)
-		if err != nil {
-			return err
-		}
-		producerMessage.Key = sarama.StringEncoder(s)
-	}
-
-	_, err = binding.WriteEvent(ctx, e, writer, writer)
 	return err
 }
 
@@ -164,6 +146,12 @@ func (b *kafkaProducerMessageWriter) removeHeader(name string) {
 			return
 		}
 	}
+}
+
+type skipKeyKey struct{}
+
+func WithSkipKeyMapping(ctx context.Context) context.Context {
+	return context.WithValue(ctx, skipKeyKey{}, true)
 }
 
 var _ binding.StructuredWriter = (*kafkaProducerMessageWriter)(nil) // Test it conforms to the interface
