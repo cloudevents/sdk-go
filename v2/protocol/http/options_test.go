@@ -308,10 +308,6 @@ func TestWithShutdownTimeout(t *testing.T) {
 	}
 }
 
-func durationptr(duration time.Duration) *time.Duration {
-	return &duration
-}
-
 func intptr(i int) *int {
 	return &i
 }
