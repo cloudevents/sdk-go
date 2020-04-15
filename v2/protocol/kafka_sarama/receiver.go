@@ -73,8 +73,11 @@ type Consumer struct {
 
 	client    sarama.Client
 	ownClient bool
-	topic     string
-	groupId   string
+
+	topic   string
+	groupId string
+
+	cgMtx sync.Mutex
 }
 
 func NewConsumer(brokers []string, saramaConfig *sarama.Config, groupId string, topic string) (*Consumer, error) {
@@ -102,6 +105,8 @@ func NewConsumerFromClient(client sarama.Client, groupId string, topic string) *
 }
 
 func (c *Consumer) OpenInbound(ctx context.Context) error {
+	c.cgMtx.Lock()
+	defer c.cgMtx.Unlock()
 	cg, err := sarama.NewConsumerGroupFromClient(c.groupId, c.client)
 	if err != nil {
 		return err
