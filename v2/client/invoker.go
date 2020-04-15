@@ -64,10 +64,10 @@ func (r *receiveInvoker) Invoke(ctx context.Context, m binding.Message, respFn p
 				cecontext.LoggerFrom(ctx).Error(fmt.Errorf("cloudevent validation failed on response event: %v, %w", verr, err))
 			}
 		}
-		
+
 		// protocol can manual ack by the result
 		if respFn == nil {
-			if result != nil  {
+			if result != nil {
 				err = m.Finish(result)
 				isFinished = true
 			}
