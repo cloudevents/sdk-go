@@ -3,13 +3,12 @@ package kafka_sarama
 import (
 	"bytes"
 	"context"
+	"github.com/cloudevents/sdk-go/v2/protocol"
 	"strings"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/binding/format"
 	"github.com/cloudevents/sdk-go/v2/binding/spec"
-
-	"github.com/Shopify/sarama"
 )
 
 const (
@@ -27,6 +26,8 @@ type Message struct {
 	ContentType string
 	format      format.Format
 	version     spec.Version
+
+	internal *kafkaInternal
 }
 
 // Check if http.Message implements binding.Message
@@ -36,29 +37,31 @@ var _ binding.MessageMetadataReader = (*Message)(nil)
 // NewMessageFromConsumerMessage returns a binding.Message that holds the provided ConsumerMessage.
 // The returned binding.Message *can* be read several times safely
 // This function *doesn't* guarantee that the returned binding.Message is always a kafka_sarama.Message instance
-func NewMessageFromConsumerMessage(cm *sarama.ConsumerMessage) *Message {
+func NewMessageFromConsumerMessage(internal *kafkaInternal) *Message {
 	var contentType string
-	headers := make(map[string][]byte, len(cm.Headers))
-	for _, r := range cm.Headers {
+	headers := make(map[string][]byte, len(internal.consumerMessage.Headers))
+	for _, r := range internal.consumerMessage.Headers {
 		k := strings.ToLower(string(r.Key))
 		if k == contentTypeHeader {
 			contentType = string(r.Value)
 		}
 		headers[k] = r.Value
 	}
-	return NewMessage(cm.Value, contentType, headers)
+
+	return NewMessage(internal.consumerMessage.Value, contentType, headers, internal)
 }
 
 // NewMessage returns a binding.Message that holds the provided kafka message components.
 // The returned binding.Message *can* be read several times safely
 // This function *doesn't* guarantee that the returned binding.Message is always a kafka_sarama.Message instance
-func NewMessage(value []byte, contentType string, headers map[string][]byte) *Message {
+func NewMessage(value []byte, contentType string, headers map[string][]byte, internal *kafkaInternal) *Message {
 	if ft := format.Lookup(contentType); ft != nil {
 		return &Message{
 			Value:       value,
 			ContentType: contentType,
 			Headers:     headers,
 			format:      ft,
+			internal:    internal,
 		}
 	} else if v := specs.Version(string(headers[specs.PrefixedSpecVersionName()])); v != nil {
 		return &Message{
@@ -66,6 +69,7 @@ func NewMessage(value []byte, contentType string, headers map[string][]byte) *Me
 			ContentType: contentType,
 			Headers:     headers,
 			version:     v,
+			internal:    internal,
 		}
 	}
 
@@ -73,6 +77,7 @@ func NewMessage(value []byte, contentType string, headers map[string][]byte) *Me
 		Value:       value,
 		ContentType: contentType,
 		Headers:     headers,
+		internal:    internal,
 	}
 }
 
@@ -133,6 +138,12 @@ func (m *Message) GetExtension(name string) interface{} {
 	return string(m.Headers[prefix+name])
 }
 
-func (m *Message) Finish(error) error {
+func (m *Message) Finish(err error) error {
+	if protocol.IsNACK(err) {
+		return m.internal.Nack()
+	}
+	if protocol.IsACK(err) {
+		m.internal.Ack()
+	}
 	return nil
 }

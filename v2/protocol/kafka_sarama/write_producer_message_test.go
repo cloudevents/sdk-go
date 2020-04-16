@@ -72,7 +72,14 @@ func TestEncodeKafkaProducerMessage(t *testing.T) {
 					require.NoError(t, err)
 				}
 
-				messageOut := NewMessage(value, string(headers[contentTypeHeader]), headers)
+				internal := &kafkaInternal{
+					topic:           "aaa",
+					session:         nil,
+					consumerMessage: nil,
+					nackProducer:    nil,
+				}
+
+				messageOut := NewMessage(value, string(headers[contentTypeHeader]), headers, internal)
 				require.Equal(t, tt.expectedEncoding, messageOut.ReadEncoding())
 
 				eventOut, err := binding.ToEvent(context.TODO(), messageOut)

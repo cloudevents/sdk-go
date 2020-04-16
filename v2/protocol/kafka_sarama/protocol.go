@@ -81,7 +81,11 @@ func NewProtocolFromClient(client sarama.Client, sendToTopic string, receiveFrom
 	if p.receiverTopic == "" {
 		return nil, errors.New("you didn't specify the topic to receive from")
 	}
-	p.Consumer = NewConsumerFromClient(p.Client, p.receiverGroupId, p.receiverTopic)
+	nackProducer, err := sarama.NewSyncProducerFromClient(client)
+	if err != nil {
+		return nil, err
+	}
+	p.Consumer = NewConsumerFromClient(p.Client, p.receiverGroupId, p.receiverTopic, nackProducer)
 
 	return p, nil
 }
@@ -100,7 +104,7 @@ func (p *Protocol) OpenInbound(ctx context.Context) error {
 	defer p.consumerMux.Unlock()
 
 	logger := cecontext.LoggerFrom(ctx)
-	logger.Infof("Starting consumer group to topic {} and group id {}", p.receiverTopic, p.receiverGroupId)
+	logger.Infof("Starting consumer group to topic %s and group id %s", p.receiverTopic, p.receiverGroupId)
 
 	return p.Consumer.OpenInbound(ctx)
 }

@@ -67,7 +67,7 @@ func TestNewMessage(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := kafka_sarama.NewMessageFromConsumerMessage(tt.consumerMessage)
+			got := kafka_sarama.NewMessageFromConsumerMessage(kafka_sarama.NewKafkaInternalFromConsumerMessage(tt.consumerMessage))
 			require.NotNil(t, got)
 			require.Equal(t, tt.expectedEncoding, got.ReadEncoding())
 		})
