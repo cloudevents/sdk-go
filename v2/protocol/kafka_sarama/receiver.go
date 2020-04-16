@@ -99,7 +99,7 @@ func NewConsumer(brokers []string, saramaConfig *sarama.Config, groupId string, 
 		return nil, err
 	}
 	consumer := NewConsumerFromClient(client, groupId, topic, nackProducer)
-  consumer.ownClient = true
+	consumer.ownClient = true
 	return consumer, nil
 }
 
