@@ -11,9 +11,8 @@ import (
 )
 
 type Sender struct {
-	Conn         stan.Conn
-	Subject      string
-	Transformers binding.Transformers
+	Conn    stan.Conn
+	Subject string
 
 	connOwned bool
 }
@@ -42,9 +41,8 @@ func NewSender(clusterID, clientID, subject string, stanOpts []stan.Option, opts
 // connection to the caller
 func NewSenderFromConn(conn stan.Conn, subject string, opts ...SenderOption) (*Sender, error) {
 	s := &Sender{
-		Conn:         conn,
-		Subject:      subject,
-		Transformers: make(binding.Transformers, 0),
+		Conn:    conn,
+		Subject: subject,
 	}
 
 	err := s.applyOptions(opts...)
@@ -55,7 +53,7 @@ func NewSenderFromConn(conn stan.Conn, subject string, opts ...SenderOption) (*S
 	return s, nil
 }
 
-func (s *Sender) Send(ctx context.Context, in binding.Message) (err error) {
+func (s *Sender) Send(ctx context.Context, in binding.Message, transformers ...binding.Transformer) (err error) {
 	defer func() {
 		if err2 := in.Finish(err); err2 != nil {
 			if err == nil {
@@ -67,7 +65,7 @@ func (s *Sender) Send(ctx context.Context, in binding.Message) (err error) {
 	}()
 
 	writer := new(bytes.Buffer)
-	if err = WriteMsg(ctx, in, writer, s.Transformers...); err != nil {
+	if err = WriteMsg(ctx, in, writer, transformers...); err != nil {
 		return err
 	}
 	return s.Conn.Publish(s.Subject, writer.Bytes())

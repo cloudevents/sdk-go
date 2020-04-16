@@ -62,8 +62,8 @@ func NewProtocolFromConn(conn *nats.Conn, sendSubject, receiveSubject string, op
 }
 
 // Send implements Sender.Send
-func (p *Protocol) Send(ctx context.Context, in binding.Message) error {
-	return p.Sender.Send(ctx, in)
+func (p *Protocol) Send(ctx context.Context, in binding.Message, transformers ...binding.Transformer) error {
+	return p.Sender.Send(ctx, in, transformers...)
 }
 
 func (p *Protocol) OpenInbound(ctx context.Context) error {

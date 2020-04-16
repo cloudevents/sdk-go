@@ -31,7 +31,7 @@ func TestEvent(t *testing.T) {
 
 type dummySR chan binding.Message
 
-func (d dummySR) Send(ctx context.Context, m binding.Message) error {
+func (d dummySR) Send(ctx context.Context, m binding.Message, transformers ...binding.Transformer) error {
 	d <- m
 	return nil
 }

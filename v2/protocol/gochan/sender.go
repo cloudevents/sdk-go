@@ -12,7 +12,7 @@ import (
 // Sender implements Sender by sending Messages on a channel.
 type Sender chan<- binding.Message
 
-func (s Sender) Send(ctx context.Context, m binding.Message) (err error) {
+func (s Sender) Send(ctx context.Context, m binding.Message, transformers ...binding.Transformer) (err error) {
 	if ctx == nil {
 		return fmt.Errorf("nil Context")
 	} else if m == nil {
