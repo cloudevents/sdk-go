@@ -5,44 +5,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/binding/test"
 	"github.com/cloudevents/sdk-go/v2/event"
 )
-
-func TestSetUUID(t *testing.T) {
-	eventWithId := test.MinEvent()
-
-	assertUUID := func(t *testing.T, ev event.Event) {
-		require.NotZero(t, ev.Context.GetID())
-		_, err := uuid.Parse(ev.Context.GetID())
-		require.NoError(t, err)
-	}
-
-	test.RunTransformerTests(t, context.Background(), []test.TransformerTestArgs{
-		{
-			Name:         "Set UUID when id already exists to Mock Structured message",
-			InputMessage: test.MustCreateMockStructuredMessage(eventWithId.Clone()),
-			AssertFunc:   assertUUID,
-			Transformers: binding.Transformers{SetUUID},
-		},
-		{
-			Name:         "Set UUID when id already exists to Mock Binary message",
-			InputMessage: test.MustCreateMockBinaryMessage(eventWithId.Clone()),
-			AssertFunc:   assertUUID,
-			Transformers: binding.Transformers{SetUUID},
-		},
-		{
-			Name:         "Set UUID when id already exists to Event message",
-			InputEvent:   eventWithId,
-			AssertFunc:   assertUUID,
-			Transformers: binding.Transformers{SetUUID},
-		},
-	})
-}
 
 func TestAddTimeNow(t *testing.T) {
 	eventWithoutTime := test.MinEvent()
