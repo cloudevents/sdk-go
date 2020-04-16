@@ -42,7 +42,7 @@ func (i *kafkaInternal) Nack() error {
 	return err
 }
 
-// NewKafkaInternalFromConsumerMessage new KafkaInternalMessage from ConsumerMessage used for unit test
+// NewKafkaInternalFromConsumerMessage new kafka internal from consumer message used for unit test
 func NewKafkaInternalFromConsumerMessage(cm *sarama.ConsumerMessage) *kafkaInternal {
 	return &kafkaInternal{
 		consumerMessage: cm,
