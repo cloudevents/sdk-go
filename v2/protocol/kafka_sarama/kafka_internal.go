@@ -14,13 +14,6 @@ type kafkaInternal struct {
 	nackProducer sarama.SyncProducer
 }
 
-// NewKafkaInternalFromConsumerMessage new KafkaInternalMessage from ConsumerMessage used for unit test
-func NewKafkaInternalFromConsumerMessage(cm *sarama.ConsumerMessage) *kafkaInternal {
-	return &kafkaInternal{
-		consumerMessage: cm,
-	}
-}
-
 // Ack indicates successful processing of a Message passed to the Subscriber.Receive callback.
 func (i *kafkaInternal) Ack() {
 	if i.session == nil {
@@ -47,4 +40,11 @@ func (i *kafkaInternal) Nack() error {
 
 	_, _, err = i.nackProducer.SendMessage(&kafkaMessage)
 	return err
+}
+
+// NewKafkaInternalFromConsumerMessage new KafkaInternalMessage from ConsumerMessage used for unit test
+func NewKafkaInternalFromConsumerMessage(cm *sarama.ConsumerMessage) *kafkaInternal {
+	return &kafkaInternal{
+		consumerMessage: cm,
+	}
 }
