@@ -21,14 +21,18 @@ type msgErr struct {
 type Receiver struct {
 	once     sync.Once
 	incoming chan msgErr
+
+	// used for nack, the nack if put the message to the end of the mq
+	nackProducer sarama.SyncProducer
 }
 
 // NewReceiver creates a Receiver which implements sarama.ConsumerGroupHandler
 // The sarama.ConsumerGroup must be started invoking. If you need a Receiver which also manage the ConsumerGroup, use NewConsumer
 // After the first invocation of Receiver.Receive(), the sarama.ConsumerGroup is created and started.
-func NewReceiver() *Receiver {
+func NewReceiver(nackProducer sarama.SyncProducer) *Receiver {
 	return &Receiver{
-		incoming: make(chan msgErr),
+		incoming:     make(chan msgErr),
+		nackProducer: nackProducer,
 	}
 }
 
@@ -45,10 +49,15 @@ func (r *Receiver) Cleanup(sarama.ConsumerGroupSession) error {
 
 func (r *Receiver) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	for message := range claim.Messages() {
-		m := NewMessageFromConsumerMessage(message)
-
+		internal := &kafkaInternal{
+			session:         session,
+			consumerMessage: message,
+			topic:           message.Topic,
+			nackProducer:    r.nackProducer,
+		}
+		m := NewMessageFromConsumerMessage(internal)
 		r.incoming <- msgErr{
-			msg: binding.WithFinish(m, func(err error) { session.MarkMessage(message, "") }),
+			msg: m,
 		}
 	}
 	return nil
@@ -78,14 +87,19 @@ func NewConsumer(brokers []string, saramaConfig *sarama.Config, groupId string, 
 	if err != nil {
 		return nil, err
 	}
-
-	return NewConsumerFromClient(client, groupId, topic), nil
+	nackProducer, err := sarama.NewSyncProducerFromClient(client)
+	if err != nil {
+		return nil, err
+	}
+	return NewConsumerFromClient(client, groupId, topic, nackProducer), nil
 }
 
-func NewConsumerFromClient(client sarama.Client, groupId string, topic string) *Consumer {
+func NewConsumerFromClient(client sarama.Client, groupId string, topic string, nackProducer sarama.SyncProducer) *Consumer {
+
 	return &Consumer{
 		Receiver: Receiver{
-			incoming: make(chan msgErr),
+			incoming:     make(chan msgErr),
+			nackProducer: nackProducer,
 		},
 		client:  client,
 		topic:   topic,

@@ -74,7 +74,11 @@ func NewProtocolFromClient(client sarama.Client, sendToTopic string, receiveFrom
 	if p.receiverTopic == "" {
 		return nil, errors.New("you didn't specify the topic to receive from")
 	}
-	p.Consumer = NewConsumerFromClient(p.Client, p.receiverGroupId, p.receiverTopic)
+	nackProducer, err := sarama.NewSyncProducerFromClient(client)
+	if err != nil {
+		return nil, err
+	}
+	p.Consumer = NewConsumerFromClient(p.Client, p.receiverGroupId, p.receiverTopic, nackProducer)
 
 	return p, nil
 }
