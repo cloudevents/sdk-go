@@ -38,7 +38,11 @@ func (i *kafkaInternal) Nack() error {
 	}
 	kafkaMessage.Timestamp = i.consumerMessage.Timestamp
 
+	// put the message to the end of mq, and mark the message acked
 	_, _, err = i.nackProducer.SendMessage(&kafkaMessage)
+	if err == nil {
+		i.session.MarkMessage(i.consumerMessage, "")
+	}
 	return err
 }
 
