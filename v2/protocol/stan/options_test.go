@@ -1,21 +1,22 @@
 package stan
 
 import (
-	"github.com/cloudevents/sdk-go/v2/binding"
-	"github.com/cloudevents/sdk-go/v2/binding/transformer"
-	"github.com/nats-io/stan.go"
 	"reflect"
 	"testing"
+
+	"github.com/nats-io/stan.go"
+
+	"github.com/cloudevents/sdk-go/v2/binding"
+	"github.com/cloudevents/sdk-go/v2/binding/transformer"
 )
 
 func TestWithQueueSubscriber(t *testing.T) {
-	baseConsumer := Consumer{}
 	type args struct {
 		queue string
 	}
 	type wants struct {
 		err      error
-		consumer Consumer
+		consumer *Consumer
 	}
 	tests := []struct {
 		name  string
@@ -29,7 +30,7 @@ func TestWithQueueSubscriber(t *testing.T) {
 			},
 			wants: wants{
 				err: nil,
-				consumer: Consumer{
+				consumer: &Consumer{
 					Subscriber: &QueueSubscriber{QueueGroup: "my-queue"},
 				},
 			},
@@ -41,13 +42,13 @@ func TestWithQueueSubscriber(t *testing.T) {
 			},
 			wants: wants{
 				err:      ErrInvalidQueueName,
-				consumer: Consumer{},
+				consumer: &Consumer{},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotP := baseConsumer
+			gotP := &Consumer{}
 			gotErr := gotP.applyOptions(WithQueueSubscriber(tt.args.queue))
 			if gotErr != tt.wants.err {
 				t.Errorf("applyOptions(WithQueueSubscriber()) = %v, want %v", gotErr, tt.wants.err)
@@ -61,7 +62,6 @@ func TestWithQueueSubscriber(t *testing.T) {
 }
 
 func TestWithSubscriptionOptions(t *testing.T) {
-	baseConsumer := Consumer{}
 	type args struct {
 		stanSubscriptionOptions []stan.SubscriptionOption
 	}
@@ -99,7 +99,7 @@ func TestWithSubscriptionOptions(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotC := baseConsumer
+			gotC := &Consumer{}
 			gotErr := gotC.applyOptions(WithSubscriptionOptions(tt.args.stanSubscriptionOptions...))
 			if gotErr != tt.wants.err {
 				t.Errorf("applyOptions(WithSubscriptionOptions()) = %v, want %v", gotErr, tt.wants.err)
@@ -181,12 +181,11 @@ func TestWithTransformer(t *testing.T) {
 }
 
 func TestWithUnsubscribeOnClose(t *testing.T) {
-	baseConsumer := Consumer{}
 	type args struct {
 	}
 	type wants struct {
 		err      error
-		consumer Consumer
+		consumer *Consumer
 	}
 	tests := []struct {
 		name  string
@@ -198,7 +197,7 @@ func TestWithUnsubscribeOnClose(t *testing.T) {
 			args: args{},
 			wants: wants{
 				err: nil,
-				consumer: Consumer{
+				consumer: &Consumer{
 					UnsubscribeOnClose: true,
 				},
 			},
@@ -206,7 +205,7 @@ func TestWithUnsubscribeOnClose(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotP := baseConsumer
+			gotP := &Consumer{}
 			gotErr := gotP.applyOptions(WithUnsubscribeOnClose())
 			if gotErr != tt.wants.err {
 				t.Errorf("applyOptions(WithUnsubscribeOnClose()) = %v, want %v", gotErr, tt.wants.err)

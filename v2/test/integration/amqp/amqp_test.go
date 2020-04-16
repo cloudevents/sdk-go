@@ -25,8 +25,6 @@ func TestSendEvent(t *testing.T) {
 	})
 }
 
-// Ideally add AMQP server support to the binding.
-
 // Some test require an AMQP broker or router. If the connection fails
 // the tests are skipped. The env variable TEST_AMQP_URL can be set to the
 // test URL, otherwise the default is "/test"

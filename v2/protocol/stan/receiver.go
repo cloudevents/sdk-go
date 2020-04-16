@@ -6,6 +6,7 @@ import (
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/nats-io/stan.go"
 	"io"
+	"sync"
 )
 
 type msgErr struct {
@@ -79,9 +80,11 @@ type Consumer struct {
 	UnsubscribeOnClose bool
 
 	subscriptionOptions []stan.SubscriptionOption
-	sub                 stan.Subscription
-	connOwned           bool                      // whether this consumer is responsible for closing the connection
 	appliedSubOpts      *stan.SubscriptionOptions // only used locally, stored to avoid recomputing
+
+	subMtx        sync.Mutex
+	internalClose chan struct{}
+	connOwned     bool // whether this consumer is responsible for closing the connection
 }
 
 func NewConsumer(clusterID, clientID, subject string, stanOpts []stan.Option, opts ...ConsumerOption) (*Consumer, error) {
@@ -103,9 +106,10 @@ func NewConsumer(clusterID, clientID, subject string, stanOpts []stan.Option, op
 
 func NewConsumerFromConn(conn stan.Conn, subject string, opts ...ConsumerOption) (*Consumer, error) {
 	c := &Consumer{
-		Conn:       conn,
-		Subject:    subject,
-		Subscriber: &RegularSubscriber{},
+		Conn:          conn,
+		Subject:       subject,
+		Subscriber:    &RegularSubscriber{},
+		internalClose: make(chan struct{}, 1),
 	}
 
 	err := c.applyOptions(opts...)
@@ -129,46 +133,44 @@ func NewConsumerFromConn(conn stan.Conn, subject string, opts ...ConsumerOption)
 
 // OpenInbound implements Opener.OpenInbound.
 func (c *Consumer) OpenInbound(ctx context.Context) error {
-	var err error
-	if c.sub != nil && c.sub.IsValid() {
-		return ErrSubscriptionAlreadyOpen
-	}
+	c.subMtx.Lock()
+	defer c.subMtx.Unlock()
 
-	c.sub, err = c.Subscriber.Subscribe(c.Conn, c.Subject, c.Receiver.MsgHandler, c.subscriptionOptions...)
+	// Subscribe
+	sub, err := c.Subscriber.Subscribe(c.Conn, c.Subject, c.Receiver.MsgHandler, c.subscriptionOptions...)
 	if err != nil {
-		c.sub = nil
 		return err
 	}
-	<-ctx.Done()
 
-	return nil
+	// Wait until external or internal context done
+	select {
+	case <-ctx.Done():
+	case <-c.internalClose:
+	}
+
+	if c.UnsubscribeOnClose {
+		return sub.Unsubscribe()
+	} else {
+		return sub.Close()
+	}
 }
 
 // Close implements Closer.Close.
 // This method only closes the connection if the Consumer opened it. Subscriptions are closed/unsubscribed dependent
 // on the UnsubscribeOnClose field.
 func (c *Consumer) Close(_ context.Context) error {
-	if c.sub == nil || !c.sub.IsValid() {
-		return nil
-	}
-
-	if c.UnsubscribeOnClose {
-		if err := c.sub.Unsubscribe(); err != nil {
-			return err
-		}
-	} else {
-		// c.Conn.Close() would implicitly close any underlying subscriptions but this results in over-complicated
-		// logic, it's easier to just explicitly close like so
-		if err := c.sub.Close(); err != nil {
-			return err
-		}
-	}
-
-	c.sub = nil
+	// Before closing, let's be sure OpenInbound completes
+	// We send a signal to close and then we lock on subMtx in order
+	// to wait OpenInbound to finish draining the queue
+	c.internalClose <- struct{}{}
+	c.subMtx.Lock()
+	defer c.subMtx.Unlock()
 
 	if c.connOwned {
 		return c.Conn.Close()
 	}
+
+	close(c.internalClose)
 
 	return nil
 }

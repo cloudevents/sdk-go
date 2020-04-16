@@ -32,6 +32,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to create nats protocol, %s", err.Error())
 	}
+
+	defer p.Close(ctx)
+
 	c, err := client.New(p)
 	if err != nil {
 		log.Fatalf("failed to create client, %s", err.Error())

@@ -275,7 +275,7 @@ func TestWithShutdownTimeout(t *testing.T) {
 			t:       &Protocol{},
 			timeout: time.Minute * 4,
 			want: &Protocol{
-				ShutdownTimeout: durationptr(time.Minute * 4),
+				ShutdownTimeout: time.Minute * 4,
 			},
 		},
 		"nil protocol": {
@@ -306,10 +306,6 @@ func TestWithShutdownTimeout(t *testing.T) {
 			}
 		})
 	}
-}
-
-func durationptr(duration time.Duration) *time.Duration {
-	return &duration
 }
 
 func intptr(i int) *int {

@@ -78,7 +78,7 @@ func WithSubscriptionOptions(opts ...stan.SubscriptionOption) ConsumerOption {
 	}
 }
 
-// WithUnsubscribeOnClose configures the Protocol to unsubscribe subscriptions on close, rather than just closing.
+// WithUnsubscribeOnClose configures the Consumer to unsubscribe when OpenInbound context is cancelled or when Consumer.Close() is invoked.
 // This causes durable subscriptions to be forgotten by the STAN service and recreated durable subscriptions will
 // act like they are newly created.
 func WithUnsubscribeOnClose() ConsumerOption {
