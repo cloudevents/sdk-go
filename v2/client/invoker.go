@@ -67,7 +67,7 @@ func (r *receiveInvoker) Invoke(ctx context.Context, m binding.Message, respFn p
 
 		// protocol can manual ack by the result
 		if respFn == nil {
-			if result != nil {
+			if !protocol.IsACK(result) {
 				err = m.Finish(result)
 				isFinished = true
 			}
