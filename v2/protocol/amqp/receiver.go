@@ -4,9 +4,10 @@ import (
 	"context"
 	"io"
 
+	"github.com/Azure/go-amqp"
+
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/protocol"
-	"pack.ag/amqp"
 )
 
 // receiver wraps an amqp.Receiver as a binding.Receiver

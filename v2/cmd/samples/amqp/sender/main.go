@@ -9,13 +9,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Azure/go-amqp"
+	"github.com/google/uuid"
+
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/cloudevents/sdk-go/v2/client"
 	"github.com/cloudevents/sdk-go/v2/event"
 	ceamqp "github.com/cloudevents/sdk-go/v2/protocol/amqp"
 	"github.com/cloudevents/sdk-go/v2/types"
-	"github.com/google/uuid"
-	"pack.ag/amqp"
 )
 
 const (

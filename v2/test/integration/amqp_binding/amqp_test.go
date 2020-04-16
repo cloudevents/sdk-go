@@ -9,9 +9,9 @@ import (
 
 	amqp2 "github.com/cloudevents/sdk-go/v2/protocol/amqp"
 
+	"github.com/Azure/go-amqp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"pack.ag/amqp"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
 	. "github.com/cloudevents/sdk-go/v2/binding/test"

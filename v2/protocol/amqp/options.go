@@ -1,8 +1,9 @@
 package amqp
 
 import (
+	"github.com/Azure/go-amqp"
+
 	"github.com/cloudevents/sdk-go/v2/binding"
-	"pack.ag/amqp"
 )
 
 // Option is the function signature required to be considered an amqp.Option.
