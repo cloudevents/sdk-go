@@ -3,7 +3,7 @@ package amqp
 import (
 	"context"
 
-	"pack.ag/amqp"
+	"github.com/Azure/go-amqp"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/protocol"
@@ -16,9 +16,10 @@ type Protocol struct {
 	receiverLinkOpts []amqp.LinkOption
 
 	// AMQP
-	Client  *amqp.Client
-	Session *amqp.Session
-	Node    string
+	Client      *amqp.Client
+	Session     *amqp.Session
+	ownedClient bool
+	Node        string
 
 	// Sender
 	Sender                  *sender
@@ -76,7 +77,13 @@ func NewProtocol(server, queue string, connOption []amqp.ConnOption, sessionOpti
 		return nil, err
 	}
 
-	return NewProtocolFromClient(client, session, queue, opts...)
+	p, err := NewProtocolFromClient(client, session, queue, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	p.ownedClient = true
+	return p, nil
 }
 
 func (t *Protocol) applyOptions(opts ...Option) error {
@@ -88,20 +95,24 @@ func (t *Protocol) applyOptions(opts ...Option) error {
 	return nil
 }
 
-func (t *Protocol) Close(ctx context.Context) error {
-	if t.Sender != nil {
-		if err := t.Sender.Close(ctx); err != nil {
-			return err
+func (t *Protocol) Close(ctx context.Context) (err error) {
+	if t.ownedClient {
+		// Closing the client will close at cascade sender and receiver
+		return t.Client.Close()
+	} else {
+		if t.Sender != nil {
+			if err = t.Sender.amqp.Close(ctx); err != nil {
+				return
+			}
 		}
-	}
 
-	if t.Receiver != nil {
-		if err := t.Receiver.Close(ctx); err != nil {
-			return err
+		if t.Receiver != nil {
+			if err = t.Receiver.amqp.Close(ctx); err != nil {
+				return err
+			}
 		}
+		return
 	}
-
-	return t.Client.Close()
 }
 
 func (t *Protocol) Send(ctx context.Context, in binding.Message) error {

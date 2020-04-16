@@ -2,13 +2,13 @@ package stan
 
 import (
 	"context"
-	"errors"
 	"fmt"
+
 	"github.com/cloudevents/sdk-go/v2/binding"
+	"github.com/cloudevents/sdk-go/v2/protocol"
+
 	"github.com/nats-io/stan.go"
 )
-
-var ErrSubscriptionAlreadyOpen = errors.New("subscription already open")
 
 // Protocol is a reference implementation for using the CloudEvents binding
 // integration. Protocol acts as both a STAN client and a STAN handler.
@@ -91,18 +91,28 @@ func (p *Protocol) Receive(ctx context.Context) (binding.Message, error) {
 }
 
 // Close implements Closer.Close
-func (p *Protocol) Close(ctx context.Context) error {
-	if err := p.Consumer.Close(ctx); err != nil {
-		return err
-	}
-
-	if err := p.Sender.Close(ctx); err != nil {
-		return err
-	}
-
+func (p *Protocol) Close(ctx context.Context) (err error) {
 	if p.connOwned {
-		return p.Conn.Close()
+		defer func() {
+			err2 := p.Conn.Close()
+			if err == nil {
+				err = err2
+			}
+		}()
 	}
 
-	return nil
+	if err = p.Consumer.Close(ctx); err != nil {
+		return
+	}
+
+	if err = p.Sender.Close(ctx); err != nil {
+		return
+	}
+
+	return
 }
+
+var _ protocol.Receiver = (*Protocol)(nil)
+var _ protocol.Sender = (*Protocol)(nil)
+var _ protocol.Opener = (*Protocol)(nil)
+var _ protocol.Closer = (*Protocol)(nil)

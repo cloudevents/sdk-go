@@ -4,9 +4,10 @@ import (
 	"context"
 	"io"
 
+	"github.com/Azure/go-amqp"
+
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/protocol"
-	"pack.ag/amqp"
 )
 
 // receiver wraps an amqp.Receiver as a binding.Receiver
@@ -23,8 +24,6 @@ func (r *receiver) Receive(ctx context.Context) (binding.Message, error) {
 
 	return NewMessage(m), nil
 }
-
-func (r *receiver) Close(ctx context.Context) error { return r.amqp.Close(ctx) }
 
 // NewReceiver create a new Receiver which wraps an amqp.Receiver in a binding.Receiver
 func NewReceiver(amqp *amqp.Receiver) protocol.Receiver {

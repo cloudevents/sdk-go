@@ -38,18 +38,21 @@ func main() {
 		os.Exit(1)
 	}
 
-	for _, contentType := range []string{"application/json", "application/xml"} {
-		p, err := cloudeventsnats.NewSender(env.NATSServer, env.Subject, cloudeventsnats.NatsOptions())
-		if err != nil {
-			log.Printf("failed to create nats protocol, %s", err.Error())
-			os.Exit(1)
-		}
-		c, err := client.New(p)
-		if err != nil {
-			log.Printf("failed to create client, %s", err.Error())
-			os.Exit(1)
-		}
+	p, err := cloudeventsnats.NewSender(env.NATSServer, env.Subject, cloudeventsnats.NatsOptions())
+	if err != nil {
+		log.Printf("failed to create nats protocol, %s", err.Error())
+		os.Exit(1)
+	}
 
+	defer p.Close(context.Background())
+
+	c, err := client.New(p)
+	if err != nil {
+		log.Printf("failed to create client, %s", err.Error())
+		os.Exit(1)
+	}
+
+	for _, contentType := range []string{"application/json", "application/xml"} {
 		for i := 0; i < count; i++ {
 			now := time.Now()
 			e := event.New()
@@ -70,6 +73,4 @@ func main() {
 			time.Sleep(100 * time.Millisecond)
 		}
 	}
-
-	os.Exit(0)
 }

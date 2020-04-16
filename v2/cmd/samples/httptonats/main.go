@@ -36,6 +36,8 @@ func main() {
 		log.Fatalf("failed to create nats protcol, %s", err.Error())
 	}
 
+	defer natsProtocol.Close(ctx)
+
 	httpProtocol, err := cloudeventshttp.New(cloudeventshttp.WithPort(env.Port))
 	if err != nil {
 		log.Fatalf("failed to create http protocol: %s", err.Error())

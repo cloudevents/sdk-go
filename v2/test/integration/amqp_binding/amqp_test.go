@@ -9,9 +9,9 @@ import (
 
 	amqp2 "github.com/cloudevents/sdk-go/v2/protocol/amqp"
 
+	"github.com/Azure/go-amqp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"pack.ag/amqp"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
 	. "github.com/cloudevents/sdk-go/v2/binding/test"
@@ -75,8 +75,6 @@ func TestSendEventReceiveBinary(t *testing.T) {
 		})
 	})
 }
-
-// Ideally add AMQP server support to the binding.
 
 // Some test require an AMQP broker or router. If the connection fails
 // the tests are skipped. The env variable TEST_AMQP_URL can be set to the

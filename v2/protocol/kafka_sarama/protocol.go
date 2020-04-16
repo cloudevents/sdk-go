@@ -18,7 +18,8 @@ const (
 
 type Protocol struct {
 	// Kafka
-	Client sarama.Client
+	Client     sarama.Client
+	ownsClient bool
 
 	// Sender
 	Sender *Sender
@@ -44,7 +45,12 @@ func NewProtocol(brokers []string, saramaConfig *sarama.Config, sendToTopic stri
 		return nil, err
 	}
 
-	return NewProtocolFromClient(client, sendToTopic, receiveFromTopic, opts...)
+	p, err := NewProtocolFromClient(client, sendToTopic, receiveFromTopic, opts...)
+	if err != nil {
+		return nil, err
+	}
+	p.ownsClient = true
+	return p, nil
 }
 
 // NewProtocolFromClient creates a new kafka transport starting from a sarama.Client
@@ -55,6 +61,7 @@ func NewProtocolFromClient(client sarama.Client, sendToTopic string, receiveFrom
 		receiverGroupId:         defaultGroupId,
 		senderTopic:             sendToTopic,
 		receiverTopic:           receiveFromTopic,
+		ownsClient:              false,
 	}
 
 	var err error
@@ -114,6 +121,10 @@ func (p *Protocol) Receive(ctx context.Context) (binding.Message, error) {
 }
 
 func (p *Protocol) Close(ctx context.Context) error {
+	if p.ownsClient {
+		// Just closing the client here closes at cascade consumer and producer
+		return p.Client.Close()
+	}
 	if err := p.Consumer.Close(ctx); err != nil {
 		return err
 	}

@@ -8,10 +8,11 @@ import (
 	"os"
 	"strings"
 
+	amqp "github.com/Azure/go-amqp"
+
 	ce "github.com/cloudevents/sdk-go/v2"
 	"github.com/cloudevents/sdk-go/v2/client"
 	ceamqp "github.com/cloudevents/sdk-go/v2/protocol/amqp"
-	amqp "pack.ag/amqp"
 )
 
 // Parse AMQP_URL env variable. Return server URL, AMQP node (from path) and SASLPlain
@@ -35,11 +36,16 @@ func sampleConfig() (server, node string, opts []ceamqp.Option) {
 
 func main() {
 	host, node, opts := sampleConfig()
-	t, err := ceamqp.NewProtocol(host, node, []amqp.ConnOption{}, []amqp.SessionOption{}, opts...)
+	p, err := ceamqp.NewProtocol(host, node, []amqp.ConnOption{}, []amqp.SessionOption{}, opts...)
 	if err != nil {
 		log.Fatalf("Failed to create AMQP protocol: %v", err)
 	}
-	c, err := client.New(t)
+
+	// Close the connection when finished
+	defer p.Close(context.Background())
+
+	// Create a new client from the given protocol
+	c, err := client.New(p)
 	if err != nil {
 		log.Fatalf("Failed to create client: %v", err)
 	}

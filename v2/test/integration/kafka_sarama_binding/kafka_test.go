@@ -75,26 +75,22 @@ func testClient(t testing.TB) sarama.Client {
 	return client
 }
 
-func testSenderReceiver(t testing.TB, options ...kafka_sarama.SenderOptionFunc) (func(), bindings.Sender, bindings.Receiver) {
+func testSenderReceiver(t testing.TB) (func(), bindings.Sender, bindings.Receiver) {
 	client := testClient(t)
 
 	topicName := "test-ce-client-" + uuid.New().String()
-	r := kafka_sarama.NewConsumerFromClient(client, TEST_GROUP_ID, topicName)
-	s, err := kafka_sarama.NewSenderFromClient(client, topicName, options...)
+	p, err := kafka_sarama.NewProtocolFromClient(client, topicName, topicName, kafka_sarama.WithReceiverGroupId(TEST_GROUP_ID))
 	require.NoError(t, err)
+	require.NotNil(t, p)
 
 	go func() {
-		require.NoError(t, r.OpenInbound(context.TODO()))
+		require.NoError(t, p.OpenInbound(context.TODO()))
 	}()
 
 	return func() {
-		err = r.Close(context.TODO())
-		require.NoError(t, err)
-		err = s.Close(context.TODO())
-		require.NoError(t, err)
-		err = client.Close()
-		require.NoError(t, err)
-	}, s, r
+		require.NoError(t, p.Close(context.TODO()))
+		require.NoError(t, client.Close())
+	}, p, p
 }
 
 func BenchmarkSendReceive(b *testing.B) {

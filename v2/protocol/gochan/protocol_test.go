@@ -6,6 +6,7 @@ import (
 	"github.com/cloudevents/sdk-go/v2/event"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
+	"io"
 	"testing"
 	"time"
 )
@@ -60,7 +61,7 @@ func TestReceive(t *testing.T) {
 		},
 		"timeout": {
 			ctx:     context.TODO(),
-			wantErr: "context deadline exceeded",
+			wantErr: io.EOF.Error(),
 		},
 	}
 	for n, tc := range testCases {
@@ -80,7 +81,7 @@ func TestSendReceive(t *testing.T) {
 	}{
 		"nil": {
 			sendErr:    "nil Message",
-			receiveErr: "context deadline exceeded",
+			receiveErr: io.EOF.Error(),
 		},
 		"empty event": {
 			want: func() binding.Message {

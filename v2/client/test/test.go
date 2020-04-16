@@ -26,12 +26,12 @@ func SendReceive(t *testing.T, protocolFactory func() interface{}, in event.Even
 
 	go func() {
 		ctx, cancel := context.WithCancel(context.TODO())
-		ch := make(chan event.Event)
+		inCh := make(chan event.Event)
 		defer func(channel chan event.Event) {
 			cancel()
 			close(channel)
 			wg.Done()
-		}(ch)
+		}(inCh)
 		go func(channel chan event.Event) {
 			err := c.StartReceiver(ctx, func(e event.Event) {
 				channel <- e
@@ -39,8 +39,8 @@ func SendReceive(t *testing.T, protocolFactory func() interface{}, in event.Even
 			if err != nil {
 				require.NoError(t, err)
 			}
-		}(ch)
-		e := <-ch
+		}(inCh)
+		e := <-inCh
 		outAssert(e)
 	}()
 

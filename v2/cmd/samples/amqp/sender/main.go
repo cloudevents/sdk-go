@@ -9,13 +9,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Azure/go-amqp"
+	"github.com/google/uuid"
+
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/cloudevents/sdk-go/v2/client"
 	"github.com/cloudevents/sdk-go/v2/event"
 	ceamqp "github.com/cloudevents/sdk-go/v2/protocol/amqp"
 	"github.com/cloudevents/sdk-go/v2/types"
-	"github.com/google/uuid"
-	"pack.ag/amqp"
 )
 
 const (
@@ -70,11 +71,16 @@ func (d *Demo) Send(eventContext event.EventContext, i int) error {
 
 func main() {
 	host, node, opts := sampleConfig()
-	t, err := ceamqp.NewProtocol(host, node, []amqp.ConnOption{}, []amqp.SessionOption{}, opts...)
+	p, err := ceamqp.NewProtocol(host, node, []amqp.ConnOption{}, []amqp.SessionOption{}, opts...)
 	if err != nil {
 		log.Fatalf("Failed to create amqp protocol: %v", err)
 	}
-	c, err := client.New(t)
+
+	// Close the connection when finished
+	defer p.Close(context.Background())
+
+	// Create a new client from the given protocol
+	c, err := client.New(p)
 	if err != nil {
 		log.Fatalf("Failed to create client: %v", err)
 	}
