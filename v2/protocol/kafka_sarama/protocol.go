@@ -97,7 +97,7 @@ func (p *Protocol) OpenInbound(ctx context.Context) error {
 	defer p.consumerMux.Unlock()
 
 	logger := cecontext.LoggerFrom(ctx)
-	logger.Infof("Starting consumer group to topic {} and group id {}", p.receiverTopic, p.receiverGroupId)
+	logger.Infof("Starting consumer group to topic %s and group id %s", p.receiverTopic, p.receiverGroupId)
 
 	return p.Consumer.OpenInbound(ctx)
 }
