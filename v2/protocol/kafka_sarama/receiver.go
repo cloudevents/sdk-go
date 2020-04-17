@@ -48,7 +48,11 @@ func (r *Receiver) ConsumeClaim(session sarama.ConsumerGroupSession, claim saram
 		m := NewMessageFromConsumerMessage(message)
 
 		r.incoming <- msgErr{
-			msg: binding.WithFinish(m, func(err error) { session.MarkMessage(message, "") }),
+			msg: binding.WithFinish(m, func(err error) {
+				if protocol.IsACK(err) {
+					session.MarkMessage(message, "")
+				}
+			}),
 		}
 	}
 	return nil
