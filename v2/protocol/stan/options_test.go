@@ -5,9 +5,6 @@ import (
 	"testing"
 
 	"github.com/nats-io/stan.go"
-
-	"github.com/cloudevents/sdk-go/v2/binding"
-	"github.com/cloudevents/sdk-go/v2/binding/transformer"
 )
 
 func TestWithQueueSubscriber(t *testing.T) {
@@ -107,74 +104,6 @@ func TestWithSubscriptionOptions(t *testing.T) {
 
 			if len(gotC.subscriptionOptions) != tt.wants.length {
 				t.Errorf("len(p.subscriptionOptions) = %v, want %v", len(gotC.subscriptionOptions), tt.wants.length)
-			}
-		})
-	}
-}
-
-func TestWithTransformer(t *testing.T) {
-	baseSender := Sender{}
-	type args struct {
-		transformer binding.Transformer
-	}
-	type wants struct {
-		err    error
-		sender Sender
-	}
-	tests := []struct {
-		name  string
-		args  args
-		wants wants
-	}{
-		{
-			name: "nested transformer factories",
-			args: args{
-				transformer: binding.Transformers{transformer.SetUUID, transformer.AddTimeNow},
-			},
-			wants: wants{
-				err: nil,
-				sender: Sender{
-					Transformers: binding.Transformers{
-						binding.Transformers{transformer.SetUUID, transformer.AddTimeNow},
-					},
-				},
-			},
-		},
-		{
-			name: "empty transformers",
-			args: args{
-				transformer: transformer.SetUUID,
-			},
-			wants: wants{
-				err: nil,
-				sender: Sender{
-					Transformers: binding.Transformers{transformer.SetUUID},
-				},
-			},
-		},
-		{
-			name: "no transformer",
-			args: args{
-				transformer: nil,
-			},
-			wants: wants{
-				err: nil,
-				sender: Sender{
-					Transformers: binding.Transformers{nil},
-				},
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			gotP := baseSender
-			gotErr := gotP.applyOptions(WithTransformer(tt.args.transformer))
-			if gotErr != tt.wants.err {
-				t.Errorf("applyOptions(WithTransformer()) = %v, want %v", gotErr, tt.wants.err)
-			}
-
-			if !reflect.DeepEqual(gotP, tt.wants.sender) {
-				t.Errorf("p = %v, want %v", gotP, tt.wants.sender)
 			}
 		})
 	}

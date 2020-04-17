@@ -76,8 +76,8 @@ func (p *Protocol) applyOptions(opts ...ProtocolOption) error {
 }
 
 // Send implements Sender.Send
-func (p *Protocol) Send(ctx context.Context, in binding.Message) error {
-	return p.Sender.Send(ctx, in)
+func (p *Protocol) Send(ctx context.Context, in binding.Message, transformers ...binding.Transformer) error {
+	return p.Sender.Send(ctx, in, transformers...)
 }
 
 // OpenInbound implements Opener.OpenInbound

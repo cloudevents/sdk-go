@@ -2,8 +2,6 @@ package amqp
 
 import (
 	"github.com/Azure/go-amqp"
-
-	"github.com/cloudevents/sdk-go/v2/binding"
 )
 
 // Option is the function signature required to be considered an amqp.Option.
@@ -48,10 +46,3 @@ func WithReceiverLinkOption(opt amqp.LinkOption) Option {
 
 // SenderOptionFunc is the type of amqp.Sender options
 type SenderOptionFunc func(sender *sender)
-
-// WithTransformer adds a transformer, which Sender uses while encoding a binding.Message to an amqp.Message
-func WithTransformer(transformer binding.Transformer) SenderOptionFunc {
-	return func(sender *sender) {
-		sender.transformers = append(sender.transformers, transformer)
-	}
-}
