@@ -22,17 +22,15 @@ type Receiver struct {
 	once     sync.Once
 	incoming chan msgErr
 
-	// used for nack, the nack if put the message to the end of the mq
 	nackProducer sarama.SyncProducer
 }
 
 // NewReceiver creates a Receiver which implements sarama.ConsumerGroupHandler
 // The sarama.ConsumerGroup must be started invoking. If you need a Receiver which also manage the ConsumerGroup, use NewConsumer
 // After the first invocation of Receiver.Receive(), the sarama.ConsumerGroup is created and started.
-func NewReceiver(nackProducer sarama.SyncProducer) *Receiver {
+func NewReceiver() *Receiver {
 	return &Receiver{
-		incoming:     make(chan msgErr),
-		nackProducer: nackProducer,
+		incoming: make(chan msgErr),
 	}
 }
 
@@ -49,15 +47,34 @@ func (r *Receiver) Cleanup(sarama.ConsumerGroupSession) error {
 
 func (r *Receiver) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	for message := range claim.Messages() {
-		internal := &kafkaInternal{
-			session:         session,
-			consumerMessage: message,
-			topic:           message.Topic,
-			nackProducer:    r.nackProducer,
-		}
-		m := NewMessageFromConsumerMessage(internal)
+		m := NewMessageFromConsumerMessage(message)
+
 		r.incoming <- msgErr{
-			msg: m,
+			msg: binding.WithFinish(m, func(err error) {
+				if protocol.IsACK(err) {
+					session.MarkMessage(message, "")
+				}
+				// Nack indicates that the client put the message to the end of the Message Queue
+				if protocol.IsNACK(err) {
+					if r.nackProducer == nil {
+						return
+					}
+					kafkaMessage := sarama.ProducerMessage{
+						Topic: message.Topic,
+						Key:   sarama.ByteEncoder(message.Key),
+						Value: sarama.ByteEncoder(message.Value),
+					}
+					for _, v := range message.Headers {
+						kafkaMessage.Headers = append(kafkaMessage.Headers, *v)
+					}
+					kafkaMessage.Timestamp = message.Timestamp
+					// put the message to the end of mq, and mark the message acked
+					_, _, err = r.nackProducer.SendMessage(&kafkaMessage)
+					if err == nil {
+						session.MarkMessage(message, "")
+					}
+				}
+			}),
 		}
 	}
 	return nil
@@ -94,17 +111,20 @@ func NewConsumer(brokers []string, saramaConfig *sarama.Config, groupId string, 
 	if err != nil {
 		return nil, err
 	}
-	nackProducer, err := sarama.NewSyncProducerFromClient(client)
-	if err != nil {
-		return nil, err
+
+	consumer, errConsumer := NewConsumerFromClient(client, groupId, topic)
+	if errConsumer != nil {
+		return nil, errConsumer
 	}
-	consumer := NewConsumerFromClient(client, groupId, topic, nackProducer)
 	consumer.ownClient = true
 	return consumer, nil
 }
 
-func NewConsumerFromClient(client sarama.Client, groupId string, topic string, nackProducer sarama.SyncProducer) *Consumer {
-
+func NewConsumerFromClient(client sarama.Client, groupId string, topic string) (*Consumer, error) {
+	nackProducer, err := sarama.NewSyncProducerFromClient(client)
+	if err != nil {
+		return nil, err
+	}
 	return &Consumer{
 		Receiver: Receiver{
 			incoming:     make(chan msgErr),
@@ -114,7 +134,7 @@ func NewConsumerFromClient(client sarama.Client, groupId string, topic string, n
 		topic:     topic,
 		groupId:   groupId,
 		ownClient: false,
-	}
+	}, nil
 }
 
 func (c *Consumer) OpenInbound(ctx context.Context) error {

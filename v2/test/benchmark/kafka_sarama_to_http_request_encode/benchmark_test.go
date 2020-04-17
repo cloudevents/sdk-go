@@ -56,7 +56,7 @@ var Err error
 
 func BenchmarkStructured(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		M = kafka_sarama.NewMessageFromConsumerMessage(kafka_sarama.NewKafkaInternalFromConsumerMessage(structuredConsumerMessage))
+		M = kafka_sarama.NewMessageFromConsumerMessage(structuredConsumerMessage)
 		Req, Err = nethttp.NewRequest("POST", "http://localhost", nil)
 		Err = http.WriteRequest(context.TODO(), M, Req)
 	}
@@ -64,7 +64,7 @@ func BenchmarkStructured(b *testing.B) {
 
 func BenchmarkBinary(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		M = kafka_sarama.NewMessageFromConsumerMessage(kafka_sarama.NewKafkaInternalFromConsumerMessage(binaryConsumerMessage))
+		M = kafka_sarama.NewMessageFromConsumerMessage(binaryConsumerMessage)
 		Req, Err = nethttp.NewRequest("POST", "http://localhost", nil)
 		Err = http.WriteRequest(context.TODO(), M, Req)
 	}

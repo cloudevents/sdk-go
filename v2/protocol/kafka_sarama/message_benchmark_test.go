@@ -16,26 +16,26 @@ var Err error
 
 func BenchmarkNewStructuredMessage(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		M = kafka_sarama.NewMessageFromConsumerMessage(kafka_sarama.NewKafkaInternalFromConsumerMessage(structuredConsumerMessage))
+		M = kafka_sarama.NewMessageFromConsumerMessage(structuredConsumerMessage)
 	}
 }
 
 func BenchmarkNewBinaryMessage(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		M = kafka_sarama.NewMessageFromConsumerMessage(kafka_sarama.NewKafkaInternalFromConsumerMessage(binaryConsumerMessage))
+		M = kafka_sarama.NewMessageFromConsumerMessage(binaryConsumerMessage)
 	}
 }
 
 func BenchmarkNewStructuredMessageToEvent(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		M = kafka_sarama.NewMessageFromConsumerMessage(kafka_sarama.NewKafkaInternalFromConsumerMessage(structuredConsumerMessage))
+		M = kafka_sarama.NewMessageFromConsumerMessage(structuredConsumerMessage)
 		Event, Err = binding.ToEvent(context.TODO(), M)
 	}
 }
 
 func BenchmarkNewBinaryMessageToEvent(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		M = kafka_sarama.NewMessageFromConsumerMessage(kafka_sarama.NewKafkaInternalFromConsumerMessage(binaryConsumerMessage))
+		M = kafka_sarama.NewMessageFromConsumerMessage(binaryConsumerMessage)
 		Event, Err = binding.ToEvent(context.TODO(), M)
 	}
 }
