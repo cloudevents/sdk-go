@@ -112,9 +112,9 @@ func TestReceiveCreateTopicAndSubscription(t *testing.T) {
 		t.Errorf("subscription id=%s got exists=%v want=true, err=%v", subID, ok, err)
 	}
 
-	if psconn.sub.ReceiveSettings.NumGoroutines != DefaultReceiveSettings.NumGoroutines {
+	if psconn.subInfo.sub.ReceiveSettings.NumGoroutines != DefaultReceiveSettings.NumGoroutines {
 		t.Errorf("subscription receive settings have NumGoroutines=%d, want %d",
-			psconn.sub.ReceiveSettings.NumGoroutines, DefaultReceiveSettings.NumGoroutines)
+			psconn.subInfo.sub.ReceiveSettings.NumGoroutines, DefaultReceiveSettings.NumGoroutines)
 	}
 
 	cancel()
