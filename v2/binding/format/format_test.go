@@ -34,9 +34,17 @@ func TestLookup(t *testing.T) {
 	require := require.New(t)
 	require.Nil(format.Lookup("nosuch"))
 
-	f := format.Lookup(event.ApplicationCloudEventsJSON)
-	require.Equal(f.MediaType(), event.ApplicationCloudEventsJSON)
-	require.Equal(format.JSON, f)
+	{
+		f := format.Lookup(event.ApplicationCloudEventsJSON)
+		require.Equal(f.MediaType(), event.ApplicationCloudEventsJSON)
+		require.Equal(format.JSON, f)
+	}
+
+	{
+		f := format.Lookup("application/cloudevents+json; charset=utf-8")
+		require.Equal(f.MediaType(), event.ApplicationCloudEventsJSON)
+		require.Equal(format.JSON, f)
+	}
 }
 
 func TestMarshalUnmarshal(t *testing.T) {
