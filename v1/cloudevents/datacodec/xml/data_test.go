@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	cex "github.com/cloudevents/sdk-go/v1/cloudevents/datacodec/xml"
-	"github.com/cloudevents/sdk-go/v1/cloudevents/types"
+	cex "github.com/cloudevents/sdk-go/cloudevents/datacodec/xml"
+	"github.com/cloudevents/sdk-go/cloudevents/types"
 	"github.com/google/go-cmp/cmp"
 )
 

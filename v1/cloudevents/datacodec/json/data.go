@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/cloudevents/sdk-go/v1/cloudevents/observability"
+	"github.com/cloudevents/sdk-go/cloudevents/observability"
 )
 
 // Decode takes `in` as []byte, or base64 string, normalizes in to unquoted and

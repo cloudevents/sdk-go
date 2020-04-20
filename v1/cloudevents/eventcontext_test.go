@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	ce "github.com/cloudevents/sdk-go/v1/cloudevents"
-	"github.com/cloudevents/sdk-go/v1/cloudevents/types"
+	ce "github.com/cloudevents/sdk-go/cloudevents"
+	"github.com/cloudevents/sdk-go/cloudevents/types"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
 )

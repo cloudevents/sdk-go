@@ -13,9 +13,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cloudevents/sdk-go/v1/cloudevents"
-	cehttp "github.com/cloudevents/sdk-go/v1/cloudevents/transport/http"
-	"github.com/cloudevents/sdk-go/v1/cloudevents/types"
+	"github.com/cloudevents/sdk-go/cloudevents"
+	cehttp "github.com/cloudevents/sdk-go/cloudevents/transport/http"
+	"github.com/cloudevents/sdk-go/cloudevents/types"
 	"golang.org/x/sync/errgroup"
 )
 

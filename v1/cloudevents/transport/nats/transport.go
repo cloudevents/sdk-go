@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/cloudevents/sdk-go/v1/cloudevents"
-	context2 "github.com/cloudevents/sdk-go/v1/cloudevents/context"
-	"github.com/cloudevents/sdk-go/v1/cloudevents/transport"
+	"github.com/cloudevents/sdk-go/cloudevents"
+	context2 "github.com/cloudevents/sdk-go/cloudevents/context"
+	"github.com/cloudevents/sdk-go/cloudevents/transport"
 	"github.com/nats-io/nats.go"
 	"go.uber.org/zap"
 )

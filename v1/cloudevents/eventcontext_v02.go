@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/cloudevents/sdk-go/v1/cloudevents/types"
+	"github.com/cloudevents/sdk-go/cloudevents/types"
 )
 
 const (

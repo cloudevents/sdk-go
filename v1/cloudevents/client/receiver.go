@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/cloudevents/sdk-go/v1/cloudevents"
-	"github.com/cloudevents/sdk-go/v1/cloudevents/transport"
+	"github.com/cloudevents/sdk-go/cloudevents"
+	"github.com/cloudevents/sdk-go/cloudevents/transport"
 )
 
 // Receive is the signature of a fn to be invoked for incoming cloudevents.

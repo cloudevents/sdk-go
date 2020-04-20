@@ -3,7 +3,7 @@ package cloudevents_test
 import (
 	"testing"
 
-	ce "github.com/cloudevents/sdk-go/v1/cloudevents"
+	ce "github.com/cloudevents/sdk-go/cloudevents"
 	"github.com/google/go-cmp/cmp"
 )
 

@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/cloudevents/sdk-go/v1/cloudevents/datacodec/json"
-	"github.com/cloudevents/sdk-go/v1/cloudevents/datacodec/text"
-	"github.com/cloudevents/sdk-go/v1/cloudevents/datacodec/xml"
-	"github.com/cloudevents/sdk-go/v1/cloudevents/observability"
+	"github.com/cloudevents/sdk-go/cloudevents/datacodec/json"
+	"github.com/cloudevents/sdk-go/cloudevents/datacodec/text"
+	"github.com/cloudevents/sdk-go/cloudevents/datacodec/xml"
+	"github.com/cloudevents/sdk-go/cloudevents/observability"
 )
 
 // Decoder is the expected function signature for decoding `in` to `out`. What

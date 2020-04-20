@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cloudevents/sdk-go/v1/cloudevents"
-	"github.com/cloudevents/sdk-go/v1/cloudevents/extensions"
-	"github.com/cloudevents/sdk-go/v1/cloudevents/types"
+	"github.com/cloudevents/sdk-go/cloudevents"
+	"github.com/cloudevents/sdk-go/cloudevents/extensions"
+	"github.com/cloudevents/sdk-go/cloudevents/types"
 	"github.com/google/go-cmp/cmp"
 	"go.opencensus.io/trace"
 	"go.opencensus.io/trace/tracestate"

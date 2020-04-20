@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/cloudevents/sdk-go/v1/cloudevents"
-	"github.com/cloudevents/sdk-go/v1/cloudevents/extensions"
-	"github.com/cloudevents/sdk-go/v1/cloudevents/observability"
-	"github.com/cloudevents/sdk-go/v1/cloudevents/transport"
-	"github.com/cloudevents/sdk-go/v1/cloudevents/transport/http"
+	"github.com/cloudevents/sdk-go/cloudevents"
+	"github.com/cloudevents/sdk-go/cloudevents/extensions"
+	"github.com/cloudevents/sdk-go/cloudevents/observability"
+	"github.com/cloudevents/sdk-go/cloudevents/transport"
+	"github.com/cloudevents/sdk-go/cloudevents/transport/http"
 	"go.opencensus.io/trace"
 )
 

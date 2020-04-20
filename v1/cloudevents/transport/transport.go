@@ -3,7 +3,7 @@ package transport
 import (
 	"context"
 
-	"github.com/cloudevents/sdk-go/v1/cloudevents"
+	"github.com/cloudevents/sdk-go/cloudevents"
 )
 
 // Transport is the interface for transport sender to send the converted Message

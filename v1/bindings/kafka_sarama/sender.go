@@ -5,7 +5,7 @@ import (
 
 	"github.com/Shopify/sarama"
 
-	"github.com/cloudevents/sdk-go/v1/binding"
+	"github.com/cloudevents/sdk-go/binding"
 )
 
 type Sender struct {

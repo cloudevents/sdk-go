@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	ce "github.com/cloudevents/sdk-go/v1/cloudevents"
-	"github.com/cloudevents/sdk-go/v1/cloudevents/types"
+	ce "github.com/cloudevents/sdk-go/cloudevents"
+	"github.com/cloudevents/sdk-go/cloudevents/types"
 )
 
 // Kind is a version-independent identifier for a CloudEvent context attribute.

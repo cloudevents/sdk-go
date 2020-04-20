@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cloudevents/sdk-go/v1/cloudevents"
-	"github.com/cloudevents/sdk-go/v1/cloudevents/transport/http"
-	"github.com/cloudevents/sdk-go/v1/cloudevents/types"
+	"github.com/cloudevents/sdk-go/cloudevents"
+	"github.com/cloudevents/sdk-go/cloudevents/transport/http"
+	"github.com/cloudevents/sdk-go/cloudevents/types"
 	"github.com/google/go-cmp/cmp"
 )
 

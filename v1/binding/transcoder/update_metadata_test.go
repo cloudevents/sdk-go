@@ -8,9 +8,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cloudevents/sdk-go/v1/binding"
-	"github.com/cloudevents/sdk-go/v1/binding/spec"
-	"github.com/cloudevents/sdk-go/v1/binding/test"
+	"github.com/cloudevents/sdk-go/binding"
+	"github.com/cloudevents/sdk-go/binding/spec"
+	"github.com/cloudevents/sdk-go/binding/test"
 )
 
 func TestUpdateAttribute(t *testing.T) {

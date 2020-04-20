@@ -6,7 +6,7 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/cloudevents/sdk-go/v1/cloudevents/transport/http"
+	"github.com/cloudevents/sdk-go/cloudevents/transport/http"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 )

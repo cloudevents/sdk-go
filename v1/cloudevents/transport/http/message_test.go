@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"testing"
 
-	cehttp "github.com/cloudevents/sdk-go/v1/cloudevents/transport/http"
+	cehttp "github.com/cloudevents/sdk-go/cloudevents/transport/http"
 	"github.com/google/go-cmp/cmp"
 )
 

@@ -5,10 +5,10 @@ import (
 	"context"
 	"strings"
 
-	ce "github.com/cloudevents/sdk-go/v1"
-	"github.com/cloudevents/sdk-go/v1/binding"
-	"github.com/cloudevents/sdk-go/v1/binding/format"
-	"github.com/cloudevents/sdk-go/v1/binding/spec"
+	ce "github.com/cloudevents/sdk-go"
+	"github.com/cloudevents/sdk-go/binding"
+	"github.com/cloudevents/sdk-go/binding/format"
+	"github.com/cloudevents/sdk-go/binding/spec"
 
 	"github.com/Shopify/sarama"
 )

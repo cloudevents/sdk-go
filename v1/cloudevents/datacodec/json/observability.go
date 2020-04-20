@@ -1,7 +1,7 @@
 package json
 
 import (
-	"github.com/cloudevents/sdk-go/v1/cloudevents/observability"
+	"github.com/cloudevents/sdk-go/cloudevents/observability"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 )

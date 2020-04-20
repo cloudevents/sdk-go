@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/cloudevents/sdk-go/v1/cloudevents/types"
+	"github.com/cloudevents/sdk-go/cloudevents/types"
 	"github.com/google/go-cmp/cmp"
 )
 

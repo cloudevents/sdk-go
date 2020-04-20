@@ -3,7 +3,7 @@ package amqp
 import (
 	"encoding/json"
 
-	"github.com/cloudevents/sdk-go/v1/cloudevents/transport"
+	"github.com/cloudevents/sdk-go/cloudevents/transport"
 )
 
 // type check that this transport message impl matches the contract

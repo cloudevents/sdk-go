@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cloudevents/sdk-go/v1/cloudevents"
-	cecontext "github.com/cloudevents/sdk-go/v1/cloudevents/context"
-	"github.com/cloudevents/sdk-go/v1/cloudevents/transport"
-	"github.com/cloudevents/sdk-go/v1/cloudevents/types"
+	"github.com/cloudevents/sdk-go/cloudevents"
+	cecontext "github.com/cloudevents/sdk-go/cloudevents/context"
+	"github.com/cloudevents/sdk-go/cloudevents/transport"
+	"github.com/cloudevents/sdk-go/cloudevents/types"
 )
 
 const (

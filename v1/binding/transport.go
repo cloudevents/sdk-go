@@ -4,8 +4,8 @@ import (
 	"context"
 	"io"
 
-	ce "github.com/cloudevents/sdk-go/v1/cloudevents"
-	"github.com/cloudevents/sdk-go/v1/cloudevents/transport"
+	ce "github.com/cloudevents/sdk-go/cloudevents"
+	"github.com/cloudevents/sdk-go/cloudevents/transport"
 )
 
 // BindingTransport implements transport.Transport using a Sender and Receiver.

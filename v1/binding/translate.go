@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	ce "github.com/cloudevents/sdk-go/v1"
+	ce "github.com/cloudevents/sdk-go"
 )
 
 const (

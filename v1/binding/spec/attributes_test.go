@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cloudevents/sdk-go/v1/binding/spec"
+	"github.com/cloudevents/sdk-go/binding/spec"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 )

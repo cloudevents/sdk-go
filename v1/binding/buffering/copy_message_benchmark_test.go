@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/cloudevents/sdk-go/v1/binding/test"
+	"github.com/cloudevents/sdk-go/binding/test"
 )
 
 var err error

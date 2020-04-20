@@ -3,8 +3,8 @@ package http
 import (
 	"context"
 
-	"github.com/cloudevents/sdk-go/v1/cloudevents"
-	cecontext "github.com/cloudevents/sdk-go/v1/cloudevents/context"
+	"github.com/cloudevents/sdk-go/cloudevents"
+	cecontext "github.com/cloudevents/sdk-go/cloudevents/context"
 )
 
 // Encoding to use for HTTP transport.

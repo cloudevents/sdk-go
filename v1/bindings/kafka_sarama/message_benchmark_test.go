@@ -6,9 +6,9 @@ import (
 	"context"
 	"testing"
 
-	cloudevents "github.com/cloudevents/sdk-go/v1"
-	"github.com/cloudevents/sdk-go/v1/binding"
-	"github.com/cloudevents/sdk-go/v1/bindings/kafka_sarama"
+	cloudevents "github.com/cloudevents/sdk-go"
+	"github.com/cloudevents/sdk-go/binding"
+	"github.com/cloudevents/sdk-go/bindings/kafka_sarama"
 )
 
 // Avoid DCE

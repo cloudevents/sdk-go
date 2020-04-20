@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"cloud.google.com/go/pubsub"
-	"github.com/cloudevents/sdk-go/v1/cloudevents"
-	pscontext "github.com/cloudevents/sdk-go/v1/cloudevents/transport/pubsub/context"
+	"github.com/cloudevents/sdk-go/cloudevents"
+	pscontext "github.com/cloudevents/sdk-go/cloudevents/transport/pubsub/context"
 )
 
 // Connection acts as either a pubsub topic or a pubsub subscription .

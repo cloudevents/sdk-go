@@ -5,12 +5,12 @@ import (
 
 	"pack.ag/amqp"
 
-	"github.com/cloudevents/sdk-go/v1/binding"
-	"github.com/cloudevents/sdk-go/v1/binding/spec"
-	"github.com/cloudevents/sdk-go/v1/binding/transcoder"
-	bindings_amqp "github.com/cloudevents/sdk-go/v1/bindings/amqp"
-	cecontext "github.com/cloudevents/sdk-go/v1/cloudevents/context"
-	"github.com/cloudevents/sdk-go/v1/cloudevents/transport"
+	"github.com/cloudevents/sdk-go/binding"
+	"github.com/cloudevents/sdk-go/binding/spec"
+	"github.com/cloudevents/sdk-go/binding/transcoder"
+	bindings_amqp "github.com/cloudevents/sdk-go/bindings/amqp"
+	cecontext "github.com/cloudevents/sdk-go/cloudevents/context"
+	"github.com/cloudevents/sdk-go/cloudevents/transport"
 )
 
 // Transport adheres to transport.Transport.

@@ -3,7 +3,7 @@ package pubsub
 import (
 	"context"
 
-	"github.com/cloudevents/sdk-go/v1/cloudevents"
+	"github.com/cloudevents/sdk-go/cloudevents"
 )
 
 // Encoding to use for pubsub transport.

@@ -5,7 +5,7 @@ import (
 
 	"pack.ag/amqp"
 
-	"github.com/cloudevents/sdk-go/v1/binding"
+	"github.com/cloudevents/sdk-go/binding"
 )
 
 // Sender wraps an amqp.Sender as a binding.Sender

@@ -1,4 +1,4 @@
-module github.com/cloudevents/sdk-go/v1
+module github.com/cloudevents/sdk-go
 
 require (
 	cloud.google.com/go v0.40.0

@@ -1,9 +1,9 @@
 package transcoder
 
 import (
-	"github.com/cloudevents/sdk-go/v1/binding"
-	"github.com/cloudevents/sdk-go/v1/binding/spec"
-	ce "github.com/cloudevents/sdk-go/v1/cloudevents"
+	"github.com/cloudevents/sdk-go/binding"
+	"github.com/cloudevents/sdk-go/binding/spec"
+	ce "github.com/cloudevents/sdk-go/cloudevents"
 )
 
 // Returns a TransformerFactory that converts the event context version to the specified one.

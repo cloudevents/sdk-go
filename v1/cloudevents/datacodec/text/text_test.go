@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/cloudevents/sdk-go/v1/cloudevents/datacodec/text"
+	"github.com/cloudevents/sdk-go/cloudevents/datacodec/text"
 	"github.com/stretchr/testify/assert"
 )
 

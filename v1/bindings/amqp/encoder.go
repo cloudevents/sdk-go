@@ -7,10 +7,10 @@ import (
 
 	"pack.ag/amqp"
 
-	"github.com/cloudevents/sdk-go/v1/binding"
-	"github.com/cloudevents/sdk-go/v1/binding/format"
-	"github.com/cloudevents/sdk-go/v1/binding/spec"
-	"github.com/cloudevents/sdk-go/v1/cloudevents/types"
+	"github.com/cloudevents/sdk-go/binding"
+	"github.com/cloudevents/sdk-go/binding/format"
+	"github.com/cloudevents/sdk-go/binding/spec"
+	"github.com/cloudevents/sdk-go/cloudevents/types"
 )
 
 // Fill the provided amqpMessage with the message m.

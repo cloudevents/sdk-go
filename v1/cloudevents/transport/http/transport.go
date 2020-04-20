@@ -17,10 +17,10 @@ import (
 	"go.opencensus.io/plugin/ochttp/propagation/tracecontext"
 	"go.uber.org/zap"
 
-	"github.com/cloudevents/sdk-go/v1/cloudevents"
-	cecontext "github.com/cloudevents/sdk-go/v1/cloudevents/context"
-	"github.com/cloudevents/sdk-go/v1/cloudevents/observability"
-	"github.com/cloudevents/sdk-go/v1/cloudevents/transport"
+	"github.com/cloudevents/sdk-go/cloudevents"
+	cecontext "github.com/cloudevents/sdk-go/cloudevents/context"
+	"github.com/cloudevents/sdk-go/cloudevents/observability"
+	"github.com/cloudevents/sdk-go/cloudevents/transport"
 )
 
 // Transport adheres to transport.Transport.

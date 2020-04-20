@@ -6,11 +6,11 @@ import (
 	"errors"
 	"io"
 
-	cloudevents "github.com/cloudevents/sdk-go/v1"
-	"github.com/cloudevents/sdk-go/v1/binding/format"
-	"github.com/cloudevents/sdk-go/v1/binding/spec"
-	ce "github.com/cloudevents/sdk-go/v1/cloudevents"
-	"github.com/cloudevents/sdk-go/v1/cloudevents/types"
+	cloudevents "github.com/cloudevents/sdk-go"
+	"github.com/cloudevents/sdk-go/binding/format"
+	"github.com/cloudevents/sdk-go/binding/spec"
+	ce "github.com/cloudevents/sdk-go/cloudevents"
+	"github.com/cloudevents/sdk-go/cloudevents/types"
 )
 
 var ErrCannotConvertToEvent = errors.New("cannot convert message to event")

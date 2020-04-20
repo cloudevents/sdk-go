@@ -8,10 +8,10 @@ import (
 
 	"net/http"
 
-	cloudevents "github.com/cloudevents/sdk-go/v1"
-	"github.com/cloudevents/sdk-go/v1/binding"
-	"github.com/cloudevents/sdk-go/v1/binding/test"
-	ce "github.com/cloudevents/sdk-go/v1/cloudevents"
+	cloudevents "github.com/cloudevents/sdk-go"
+	"github.com/cloudevents/sdk-go/binding"
+	"github.com/cloudevents/sdk-go/binding/test"
+	ce "github.com/cloudevents/sdk-go/cloudevents"
 )
 
 func TestEncodeHttpResponse(t *testing.T) {

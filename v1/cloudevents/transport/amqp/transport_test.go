@@ -10,12 +10,12 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cloudevents/sdk-go/v1/binding/spec"
-	"github.com/cloudevents/sdk-go/v1/binding/test"
-	ce "github.com/cloudevents/sdk-go/v1/cloudevents"
-	"github.com/cloudevents/sdk-go/v1/cloudevents/transport"
-	"github.com/cloudevents/sdk-go/v1/cloudevents/transport/amqp"
-	"github.com/cloudevents/sdk-go/v1/cloudevents/types"
+	"github.com/cloudevents/sdk-go/binding/spec"
+	"github.com/cloudevents/sdk-go/binding/test"
+	ce "github.com/cloudevents/sdk-go/cloudevents"
+	"github.com/cloudevents/sdk-go/cloudevents/transport"
+	"github.com/cloudevents/sdk-go/cloudevents/transport/amqp"
+	"github.com/cloudevents/sdk-go/cloudevents/types"
 )
 
 // Requires an external AMQP broker or router, skip if not available.

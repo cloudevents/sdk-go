@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"strings"
 
-	ce "github.com/cloudevents/sdk-go/v1/cloudevents"
+	ce "github.com/cloudevents/sdk-go/cloudevents"
 )
 
 // Format marshals and unmarshals structured events to bytes.
