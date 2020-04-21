@@ -13,18 +13,46 @@ import (
 	"github.com/cloudevents/sdk-go/v2/types"
 )
 
+const (
+	partitionKey = "partitionkey"
+)
+
 // WriteProducerMessage fills the provided producerMessage with the message m.
 // Using context you can tweak the encoding processing (more details on binding.Write documentation).
+// By default, this function implements the key mapping, trying to set the key of the message based on partitionKey extension.
+// If you want to disable the Key Mapping, decorate the context with `WithSkipKeyMapping`
 func WriteProducerMessage(ctx context.Context, m binding.Message, producerMessage *sarama.ProducerMessage, transformers ...binding.Transformer) error {
-	enc := (*kafkaProducerMessageWriter)(producerMessage)
+	writer := (*kafkaProducerMessageWriter)(producerMessage)
+
+	skipKey := binding.GetOrDefaultFromCtx(ctx, skipKeyKey{}, false).(bool)
+
+	var key string
+
+	// If skipKey = false, then we add a transformer that extracts the key
+	if !skipKey {
+		transformers = append(transformers, binding.TransformerFunc(func(r binding.MessageMetadataReader, w binding.MessageMetadataWriter) error {
+			ext := r.GetExtension(partitionKey)
+			if !types.IsZero(ext) {
+				extStr, err := types.Format(ext)
+				if err != nil {
+					return err
+				}
+				key = extStr
+			}
+			return nil
+		}))
+	}
 
 	_, err := binding.Write(
 		ctx,
 		m,
-		enc,
-		enc,
+		writer,
+		writer,
 		transformers...,
 	)
+	if key != "" {
+		producerMessage.Key = sarama.StringEncoder(key)
+	}
 	return err
 }
 
@@ -118,6 +146,12 @@ func (b *kafkaProducerMessageWriter) removeHeader(name string) {
 			return
 		}
 	}
+}
+
+type skipKeyKey struct{}
+
+func WithSkipKeyMapping(ctx context.Context) context.Context {
+	return context.WithValue(ctx, skipKeyKey{}, true)
 }
 
 var _ binding.StructuredWriter = (*kafkaProducerMessageWriter)(nil) // Test it conforms to the interface
