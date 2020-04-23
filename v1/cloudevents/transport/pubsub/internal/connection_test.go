@@ -669,6 +669,7 @@ func TestReceiveCreateDisallowedFail(t *testing.T) {
 				cancel()
 				t.Fatalf("timeout waiting for receive error")
 			}
+			cancel()
 		})
 	}
 }
