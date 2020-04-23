@@ -159,13 +159,17 @@ func (t *Protocol) getOrCreateConnection(ctx context.Context, topic, subscriptio
 
 // Receive implements Receiver.Receive
 func (t *Protocol) Receive(ctx context.Context) (binding.Message, error) {
-	m, ok := <-t.incoming
-	if !ok {
-		return nil, io.EOF
-	}
+	select {
+	case m, ok := <-t.incoming:
+		if !ok {
+			return nil, io.EOF
+		}
 
-	msg := NewMessage(&m)
-	return msg, nil
+		msg := NewMessage(&m)
+		return msg, nil
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	}
 }
 
 func (t *Protocol) startSubscriber(ctx context.Context, sub subscriptionWithTopic, done func(error)) {
