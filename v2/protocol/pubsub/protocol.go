@@ -233,6 +233,10 @@ func (t *Protocol) OpenInbound(ctx context.Context) error {
 	close(quit)
 	close(errc)
 
+	if errs == nil {
+		return nil
+	}
+
 	return errors.New(strings.Join(errs, "\n"))
 }
 
