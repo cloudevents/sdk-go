@@ -19,10 +19,6 @@ type testPubsubClient struct {
 	conn *grpc.ClientConn
 }
 
-type pubSubClientFailureInject struct {
-	*pubsub.Client
-}
-
 type failPattern struct {
 	// Error to return.  nil for no injected error
 	ErrReturn error
@@ -211,7 +207,7 @@ func TestPublishAfterPublishFailure(t *testing.T) {
 		"/google.pubsub.v1.Publisher/GetTopic",
 		"/google.pubsub.v1.Publisher/CreateTopic",
 		"/google.pubsub.v1.Publisher/Publish"} {
-		t.Run(fmt.Sprintf("%s", failureMethod), func(t *testing.T) {
+		t.Run(failureMethod, func(t *testing.T) {
 			ctx := context.Background()
 			pc := &testPubsubClient{}
 			defer pc.Close()
@@ -545,7 +541,7 @@ func TestReceiveCreateSubscriptionAfterFailure(t *testing.T) {
 		"/google.pubsub.v1.Publisher/CreateTopic",
 		"/google.pubsub.v1.Subscriber/GetSubscription",
 		"/google.pubsub.v1.Subscriber/CreateSubscription"} {
-		t.Run(fmt.Sprintf("%s", failureMethod), func(t *testing.T) {
+		t.Run(failureMethod, func(t *testing.T) {
 
 			ctx := context.Background()
 			pc := &testPubsubClient{}
