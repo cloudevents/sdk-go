@@ -93,7 +93,7 @@ func main() {
 
 	// Send that Event.
 	if result := c.Send(ctx, event); !cloudevents.IsACK(result) {
-		log.Fatalf("failed to send, %v", err)}
+		log.Fatalf("failed to send, %v", result)
 	}
 }
 ```
