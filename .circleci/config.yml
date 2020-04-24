@@ -36,6 +36,7 @@ jobs:
 
     steps:
       - checkout
+      - run: git submodule sync && git submodule update --init
       - run: mkdir -p $TEST_RESULTS
       - run: mkdir -p $COVERAGE_RESULTS
 
