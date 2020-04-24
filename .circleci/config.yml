@@ -64,7 +64,7 @@ jobs:
           command: |
             TEST_AMQP_URL=amqp://localhost/test ./hack/integration-test.sh | tee ${TEST_RESULTS}/go-integration-test.out
       - run:
-          name: Run integrations tests
+          name: Run conformance tests
           command: |
             ./hack/conformance-test.sh | tee ${TEST_RESULTS}/go-conformance-test.out
 
