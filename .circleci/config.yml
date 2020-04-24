@@ -63,6 +63,10 @@ jobs:
           name: Run integrations tests
           command: |
             TEST_AMQP_URL=amqp://localhost/test ./hack/integration-test.sh | tee ${TEST_RESULTS}/go-integration-test.out
+      - run:
+          name: Run integrations tests
+          command: |
+            ./hack/conformance-test.sh | tee ${TEST_RESULTS}/go-conformance-test.out
 
       - run:
           name: Generate coverage report

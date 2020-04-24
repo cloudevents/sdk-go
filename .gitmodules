@@ -1,0 +1,4 @@
+[submodule "conformance"]
+	path = conformance
+	url = https://github.com/bsideup/conformance.git
+	branch = cucumber
