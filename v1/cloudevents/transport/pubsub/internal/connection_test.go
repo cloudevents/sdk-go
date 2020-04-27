@@ -291,7 +291,7 @@ func TestPublishCreateTopicAfterDelete(t *testing.T) {
 	verifyTopicDeleteWorks(t, client, psconn, topicID)
 }
 
-// Test that publishing fails if a toic doesn't exist and topic creation isn't allowed
+// Test that publishing fails if a topic doesn't exist and topic creation isn't allowed
 func TestPublishCreateTopicNotAllowedFails(t *testing.T) {
 	ctx := context.Background()
 	pc := &testPubsubClient{}
