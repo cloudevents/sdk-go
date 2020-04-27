@@ -37,11 +37,12 @@ if cloudevents.IsACK(result) {
 } 
 ```
 
-
 ## Working with CloudEvents
 
 _Note:_ Supported
 [CloudEvents specification](https://github.com/cloudevents/spec): [0.3, 1.0].
+
+Complete documentation is hosted at https://cloudevents.github.io/sdk-go/
 
 Import this repo to get the `cloudevents` package:
 
