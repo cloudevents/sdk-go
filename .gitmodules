@@ -1,0 +1,4 @@
+[submodule "conformance"]
+	path = conformance
+	url = https://github.com/cloudevents/conformance.git
+	branch = master

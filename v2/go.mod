@@ -6,6 +6,8 @@ require (
 	github.com/Azure/go-amqp v0.12.7
 	github.com/Shopify/sarama v1.19.0
 	github.com/cloudevents/sdk-go v1.1.2
+	github.com/cucumber/godog v0.9.0
+	github.com/cucumber/messages-go/v10 v10.0.3
 	github.com/google/go-cmp v0.4.0
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/mux v1.6.2
