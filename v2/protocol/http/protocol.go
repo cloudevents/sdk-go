@@ -20,6 +20,12 @@ const (
 	DefaultShutdownTimeout = time.Minute * 1
 )
 
+type msgErr struct {
+	msg    *Message
+	respFn protocol.ResponseFn
+	err    error
+}
+
 // Protocol acts as both a http client and a http handler.
 type Protocol struct {
 	Target          *url.URL
@@ -212,12 +218,6 @@ func (p *Protocol) Respond(ctx context.Context) (binding.Message, protocol.Respo
 	}
 }
 
-type msgErr struct {
-	msg    *Message
-	respFn protocol.ResponseFn
-	err    error
-}
-
 // ServeHTTP implements http.Handler.
 // Blocks until ResponseFn is invoked.
 func (p *Protocol) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
@@ -228,34 +228,44 @@ func (p *Protocol) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	done := make(chan struct{})
-	var finishErr error
 
+	var finishErr error
 	m.OnFinish = func(err error) error {
 		finishErr = err
 		return nil
 	}
 
-	var fn protocol.ResponseFn = func(ctx context.Context, resp binding.Message, er protocol.Result, transformers ...binding.Transformer) error {
+	var fn protocol.ResponseFn = func(ctx context.Context, respMsg binding.Message, res protocol.Result, transformers ...binding.Transformer) error {
 		// Unblock the ServeHTTP after the reply is written
 		defer func() {
 			done <- struct{}{}
 		}()
-		status := http.StatusOK
+
 		if finishErr != nil {
-			http.Error(rw, fmt.Sprintf("cannot forward CloudEvent: %v", finishErr), http.StatusInternalServerError)
+			http.Error(rw, fmt.Sprintf("Cannot forward CloudEvent: %s", finishErr), http.StatusInternalServerError)
 		}
-		if er != nil {
+
+		status := http.StatusOK
+		if res != nil {
 			var result *Result
-			if protocol.ResultAs(er, &result) {
+			switch {
+			case protocol.ResultAs(res, &result):
 				if result.StatusCode > 100 && result.StatusCode < 600 {
 					status = result.StatusCode
 				}
+
+			case respMsg == nil && !protocol.IsACK(res):
+				// if we ended up here with no message and a NACK response,
+				// assume the input could not be processed
+				status = http.StatusBadRequest
 			}
 		}
-		if resp != nil {
-			err := WriteResponseWriter(ctx, resp, status, rw, transformers...)
-			return resp.Finish(err)
+
+		if respMsg != nil {
+			err := WriteResponseWriter(ctx, respMsg, status, rw, transformers...)
+			return respMsg.Finish(err)
 		}
+
 		rw.WriteHeader(status)
 		return nil
 	}
