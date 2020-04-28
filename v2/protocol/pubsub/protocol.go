@@ -172,22 +172,19 @@ func (t *Protocol) Receive(ctx context.Context) (binding.Message, error) {
 	}
 }
 
-func (t *Protocol) startSubscriber(ctx context.Context, sub subscriptionWithTopic, done func(error)) {
+func (t *Protocol) startSubscriber(ctx context.Context, sub subscriptionWithTopic) error {
 	logger := cecontext.LoggerFrom(ctx)
 	logger.Infof("starting subscriber for Topic %q, Subscription %q", sub.topicID, sub.subscriptionID)
 	conn := t.getOrCreateConnection(ctx, sub.topicID, sub.subscriptionID)
 
 	logger.Info("conn is", conn)
 	if conn == nil {
-		err := fmt.Errorf("failed to find connection for Topic: %q, Subscription: %q", sub.topicID, sub.subscriptionID)
-		done(err)
-		return
+		return fmt.Errorf("failed to find connection for Topic: %q, Subscription: %q", sub.topicID, sub.subscriptionID)
 	}
 	// Ok, ready to start pulling.
-	err := conn.Receive(ctx, func(ctx context.Context, m *pubsub.Message) {
+	return conn.Receive(ctx, func(ctx context.Context, m *pubsub.Message) {
 		t.incoming <- *m
 	})
-	done(err)
 }
 
 func (t *Protocol) OpenInbound(ctx context.Context) error {
@@ -201,13 +198,14 @@ func (t *Protocol) OpenInbound(ctx context.Context) error {
 
 	// Start up each subscription.
 	for _, sub := range t.subscriptions {
-		go t.startSubscriber(cctx, sub, func(err error) {
+		go func(ctx context.Context, sub subscriptionWithTopic) {
+			err := t.startSubscriber(cctx, sub)
 			if err != nil {
 				errc <- err
 			} else {
 				quit <- struct{}{}
 			}
-		})
+		}(ctx, sub)
 	}
 
 	// Collect errors and done calls until we have n of them.
