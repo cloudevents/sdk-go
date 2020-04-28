@@ -1,4 +1,9 @@
-# CloudEvents Golang SDK v2
+# Concepts and Architecture of sdk-go
+
+1. [Spec and SDK Terms](#spec-and-sdk-terms)
+1. [Investment Level](#investment-level)
+1. [Personas](#personas)
+1. [Interaction Models](#interaction-models)
 
 ## Spec and SDK Terms
 
