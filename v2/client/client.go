@@ -216,7 +216,7 @@ func (c *ceClient) StartReceiver(ctx context.Context, fn interface{}) error {
 		}
 
 		if err != nil {
-			cecontext.LoggerFrom(ctx).Warn("Error while receiving a message: %s", err.Error())
+			cecontext.LoggerFrom(ctx).Warnf("Error while receiving a message: %s", err)
 			continue
 		}
 

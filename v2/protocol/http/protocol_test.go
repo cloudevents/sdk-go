@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/cloudevents/sdk-go/v2/protocol"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -48,13 +50,15 @@ func TestNew(t *testing.T) {
 }
 
 func protocols(t *testing.T) []*Protocol {
-	ps := make([]*Protocol, 0, 1)
+	ps := make([]*Protocol, 1)
 
 	p, err := New()
 	if err != nil {
-		t.Fail()
+		t.Fatalf("Failed to create test Protocol: %s", err)
 	}
-	ps = append(ps, p)
+
+	ps[0] = p
+
 	return ps
 }
 
@@ -133,14 +137,14 @@ func TestReceive(t *testing.T) {
 			wantErr: "nil Context",
 		},
 		"timeout": {
-			ctx:     context.TODO(),
+			ctx:     newDoneContext(),
 			wantErr: "EOF",
 		},
 	}
 	for n, tc := range testCases {
 		for _, p := range protocols(t) {
 			t.Run(n, func(t *testing.T) {
-				ReceiveTest(t, p, tc.ctx, tc.want, tc.wantErr)
+				ReceiveTest(t, p, tc.ctx, nil, tc.want, tc.wantErr)
 			})
 		}
 	}
@@ -161,27 +165,31 @@ func TestRespond(t *testing.T) {
 		"nil context": {
 			wantErr: "nil Context",
 		},
-		"timeout": {
-			ctx:     context.TODO(),
+		"timeout context": {
+			ctx:     newDoneContext(),
 			wantErr: "EOF",
+		},
+		"non-expiring context": {
+			ctx: context.Background(),
 		},
 	}
 	for n, tc := range testCases {
 		for _, p := range protocols(t) {
 			t.Run(n, func(t *testing.T) {
-				if tc.ctx != nil {
-					var done context.CancelFunc
-					tc.ctx, done = context.WithDeadline(tc.ctx, time.Now().Add(time.Millisecond*10))
-					defer done()
-				}
+				go func() {
+					time.Sleep(time.Millisecond * 10)
+					p.incoming <- msgErr{}
+				}()
 
 				got, fn, err := p.Respond(tc.ctx)
 				if tc.wantErr != "" {
-					if err == nil || err.Error() != tc.wantErr {
-						t.Fatalf("Expected error '%s'. Actual '%v'", tc.wantErr, err)
-					}
-				} else if err != nil {
-					t.Fatalf("Unexpected error: %v", err)
+					assert.EqualError(t, err, tc.wantErr)
+				} else {
+					assert.NoError(t, err)
+				}
+
+				if got != nil {
+					assert.NotNil(t, got, "Nil interface compares to nil")
 				}
 
 				if diff := cmp.Diff(tc.want, got); diff != "" {
@@ -213,6 +221,7 @@ func TestServeHTTP_Receive(t *testing.T) {
 		wantErr string
 	}{
 		"nil": {
+			rw:      httptest.NewRecorder(),
 			wantErr: "unknown Message encoding",
 		},
 	}
@@ -220,26 +229,24 @@ func TestServeHTTP_Receive(t *testing.T) {
 		for _, p := range protocols(t) {
 			t.Run(n, func(t *testing.T) {
 				go p.ServeHTTP(tc.rw, tc.req)
-				ReceiveTest(t, p, context.Background(), tc.want, tc.wantErr)
+				rec := (tc.rw).(*httptest.ResponseRecorder)
+				ReceiveTest(t, p, context.Background(), rec, tc.want, tc.wantErr)
 			})
 		}
 	}
 }
 
-func ReceiveTest(t *testing.T, p *Protocol, ctx context.Context, want binding.Message, wantErr string) {
-	if ctx != nil {
-		var done context.CancelFunc
-		ctx, done = context.WithTimeout(ctx, time.Millisecond*10)
-		defer done()
-	}
-
+func ReceiveTest(t *testing.T, p *Protocol, ctx context.Context, rec *httptest.ResponseRecorder, want binding.Message, wantErr string) {
 	got, err := p.Receive(ctx)
 	if wantErr != "" {
-		if err == nil || err.Error() != wantErr {
-			t.Fatalf("Expected error '%s'. Actual '%v'", wantErr, err)
+		assert.EqualError(t, err, wantErr)
+
+		if rec != nil {
+			defer rec.Result().Body.Close()
+			// TODO perform assertions on result if necessary
 		}
-	} else if err != nil {
-		t.Fatalf("Unexpected error: %v", err)
+	} else {
+		assert.NoError(t, err)
 	}
 
 	if want == nil {
@@ -263,4 +270,10 @@ func (r *roundTripperTest) RoundTrip(req *http.Request) (*http.Response, error) 
 	}
 
 	return &http.Response{StatusCode: code}, nil
+}
+
+func newDoneContext() context.Context {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	return ctx
 }

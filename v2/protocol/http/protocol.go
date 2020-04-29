@@ -201,7 +201,12 @@ func (p *Protocol) Respond(ctx context.Context) (binding.Message, protocol.Respo
 		if !ok {
 			return nil, nil, io.EOF
 		}
+
+		if in.msg == nil {
+			return nil, in.respFn, in.err
+		}
 		return in.msg, in.respFn, in.err
+
 	case <-ctx.Done():
 		return nil, nil, io.EOF
 	}
