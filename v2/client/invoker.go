@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
 	cecontext "github.com/cloudevents/sdk-go/v2/context"
@@ -78,6 +79,7 @@ func (r *receiveInvoker) Invoke(ctx context.Context, m binding.Message, respFn p
 
 	if respFn == nil {
 		// let the protocol ACK based on the result
+		fmt.Println("this has the error returned by the func", result)
 		return result
 	}
 

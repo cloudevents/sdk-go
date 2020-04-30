@@ -220,8 +220,8 @@ func (c *ceClient) StartReceiver(ctx context.Context, fn interface{}) error {
 			continue
 		}
 
-		if err := c.invoker.Invoke(ctx, msg, respFn); err != nil {
-			return err
-		}
+		err := c.invoker.Invoke(ctx, msg, respFn)
+		fmt.Println("this, however, is still nil", err)
+		return err
 	}
 }
