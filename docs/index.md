@@ -107,7 +107,7 @@ err := json.Marshal(bytes, &event)
 | [AMQP Protocol Binding](https://github.com/cloudevents/sdk-go/tree/master/v2/cmd/samples/amqp)         | :heavy_check_mark: | :heavy_check_mark:  |
 | AVRO Event Format             | :x: | :x: |
 | [HTTP Protocol Binding](https://github.com/cloudevents/sdk-go/tree/master/v2/cmd/samples/http)         | :heavy_check_mark: | :heavy_check_mark: |
-| [JSON Event Format](event_data_structure.md##marshalunmarshal-event-to-json)           | :heavy_check_mark: | :heavy_check_mark: |
+| [JSON Event Format](event_data_structure.md#marshalunmarshal-event-to-json)           | :heavy_check_mark: | :heavy_check_mark: |
 | [Kafka Protocol Binding](https://github.com/cloudevents/sdk-go/tree/master/v2/cmd/samples/kafka)        | :heavy_check_mark: | :heavy_check_mark: |
 | MQTT Protocol Binding         | :x: | :x: |
 | [NATS Protocol Binding](https://github.com/cloudevents/sdk-go/tree/master/v2/cmd/samples/nats)         | :heavy_check_mark: | :heavy_check_mark: |
@@ -116,8 +116,8 @@ err := json.Marshal(bytes, &event)
 
 ## Go further
 
-1. [Examples](https://github.com/cloudevents/sdk-go/tree/master/v2/cmd/samples)
-1. [Godoc](https://godoc.org/github.com/cloudevents/sdk-go/v2)
-1. [Architecture and Concepts](concepts.md)
-1. [CloudEvent in-memory representation](event_data_structure.md)
-1. [Protocol Bindings implementations](protocol_implementations.md)
+*. Check out the [examples](https://github.com/cloudevents/sdk-go/tree/master/v2/cmd/samples)
+*. Dig into the [Godoc](https://godoc.org/github.com/cloudevents/sdk-go/v2)
+*. Learn about the [architecture and concepts](concepts.md) of the SDK
+*. How to use the [CloudEvent in-memory representation](event_data_structure.md)
+*. How to use/implement a [Protocol Binding](protocol_implementations.md)
