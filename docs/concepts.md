@@ -1,9 +1,13 @@
-# Concepts and Architecture of sdk-go
+---
+title: Architecture and Concepts
+nav_order: 2
+---
 
-1. [Spec and SDK Terms](#spec-and-sdk-terms)
-1. [Investment Level](#investment-level)
-1. [Personas](#personas)
-1. [Interaction Models](#interaction-models)
+# Architecture and Concepts
+{: .no_toc }
+
+1. TOC
+{:toc}
 
 ## Spec and SDK Terms
 

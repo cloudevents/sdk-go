@@ -6,74 +6,34 @@
 [![Releases](https://img.shields.io/github/release-pre/cloudevents/sdk-go.svg)](https://github.com/cloudevents/sdk-go/releases)
 [![LICENSE](https://img.shields.io/github/license/cloudevents/sdk-go.svg)](https://github.com/cloudevents/sdk-go/blob/master/LICENSE)
 
-## Status
+Official CloudEvents SDK to integrate your application with CloudEvents.
 
-This SDK is still considered work in progress.
+This library will help you to:
 
-**For v1 of the SDK, see** [CloudEvents Go SDK v1](./README_v1.md).
-
-**v2.0.0-preview8:**
-
-In _preview8_ we are focusing on the new Client interface:
-
-```go
-type Client interface {
-	Send(ctx context.Context, event event.Event) protcol.Result
-	Request(ctx context.Context, event event.Event) (*event.Event, protcol.Result)
-	StartReceiver(ctx context.Context, fn interface{}) error
-}
-```
-
-`Send` and `Request` will return the result of the outbound event. This at minimum means the result is testable
-for being an _ACK_ or _NACK_ via:
-
-```go
-if cloudevents.IsACK(result) { 
-	// handle result as an accepted event.
-} else if cloudevents.IsNACK(result) {
-	// handle result as a rejected event.
-} else if result != nil {
-	// handle result as an error.
-} 
-```
-
-## Working with CloudEvents
+* Represent CloudEvents in memory
+* Use [Event Formats](https://github.com/cloudevents/spec/blob/v1.0/spec.md#event-format) to serialize/deserialize CloudEvents
+* Use [Protocol Bindings](https://github.com/cloudevents/spec/blob/v1.0/spec.md#protocol-binding) to send/receive CloudEvents
 
 _Note:_ Supported
-[CloudEvents specification](https://github.com/cloudevents/spec): [0.3, 1.0].
+[CloudEvents specification](https://github.com/cloudevents/spec): 0.3, 1.0
 
-Complete documentation is hosted at https://cloudevents.github.io/sdk-go/
+## Get started
 
-Import this repo to get the `cloudevents` package:
+Add the module as dependency using go mod:
+
+```
+% go get github.com/cloudevents/sdk-go/v2@V2.0.0-RC2
+```
+
+And import the module in your code
 
 ```go
 import cloudevents "github.com/cloudevents/sdk-go/v2"
 ```
 
-To marshal a CloudEvent into JSON, use `event.Event` directly:
+## Send your first CloudEvent
 
-```go
-event := cloudevents.NewEvent()
-event.SetSource("example/uri")
-event.SetType("example.type")
-event.SetData(cloudevents.ApplicationJSON, map[string]string{"hello": "world"})
-
-bytes, err := json.Marshal(event)
-```
-
-To unmarshal JSON back into a CloudEvent:
-
-```go
-event :=  cloudevents.NewEvent()
-
-err := json.Marshal(bytes, &event)
-```
-
-The aim of CloudEvents Specification is to define how to "bind" an event to a
-particular protocol and back. This SDK wraps the protocol binding
-implementations in a client to expose a simple `event.Event` based API.
-
-An example of sending a cloudevents.Event via HTTP:
+To send a CloudEvent using HTTP:
 
 ```go
 func main() {
@@ -99,7 +59,9 @@ func main() {
 }
 ```
 
-An example of receiving a cloudevents.Event via HTTP:
+## Receive your first CloudEvent
+
+To start receiving CloudEvents using HTTP:
 
 ```go
 func receive(event cloudevents.Event) {
@@ -117,27 +79,32 @@ func main() {
 }
 ```
 
-Checkout the sample [sender](./v2/cmd/samples/http/sender) and
-[receiver](./v2/cmd/samples/http/receiver) applications for working demo.
+## Serialize/Deserialize a CloudEvent
 
-It can be more performant to not parse an event all the way to the
-`event.Event`. For this the package [binding](./v2/binding) provides primitives
-convert `event.Event` to `binding.Message`, and then bind an them onto a
-[protocol](./v2/protocol) implementation.
-
-For example, to convert an `event.Event` to a `binding.Message` and then create
-an `http.Request`:
+To marshal a CloudEvent into JSON:
 
 ```go
-msg := cloudevents.ToMessage(&event)
+event := cloudevents.NewEvent()
+event.SetSource("example/uri")
+event.SetType("example.type")
+event.SetData(cloudevents.ApplicationJSON, map[string]string{"hello": "world"})
 
-req, _ = nethttp.NewRequest("POST", "http://localhost", nil)
-err = http.WriteRequest(context.TODO(), msg, req, nil)
-// ...check error.
-
-// Then use req:
-resp, err := http.DefaultClient.Do(req)
+bytes, err := json.Marshal(event)
 ```
+
+To unmarshal JSON back into a CloudEvent:
+
+```go
+event :=  cloudevents.NewEvent()
+
+err := json.Marshal(bytes, &event)
+```
+
+## Go further
+
+* Look at the complete documentation: https://cloudevents.github.io/sdk-go/
+* Dig into the godoc: https://godoc.org/github.com/cloudevents/sdk-go/v2
+* Check out the [samples directory](./v2/cmd/samples) for an extended list of examples showing the different SDK features
 
 ## Community
 

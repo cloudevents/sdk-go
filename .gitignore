@@ -22,6 +22,10 @@ bazel-*
 *.out
 coverage.txt
 
+# Jekyll stuff
+.bundle/
+_site/
+
 # Others
 ## IDE-specific
 *.iml

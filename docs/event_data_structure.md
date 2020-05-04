@@ -1,4 +1,15 @@
+---
+title: Event data structure
+nav_order: 3
+---
+
 # Event data structure
+{: .no_toc }
+
+1. TOC
+{:toc}
+
+## Overview
 
 The `Event` data structure is the representation of a `CloudEvent` in sdk-go. The main features are:
 
