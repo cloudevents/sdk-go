@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/url"
 	"os"
@@ -13,10 +12,7 @@ import (
 	"github.com/google/uuid"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
-	"github.com/cloudevents/sdk-go/v2/client"
-	"github.com/cloudevents/sdk-go/v2/event"
 	ceamqp "github.com/cloudevents/sdk-go/v2/protocol/amqp"
-	"github.com/cloudevents/sdk-go/v2/types"
 )
 
 const (
@@ -42,31 +38,10 @@ func sampleConfig() (server, node string, opts []ceamqp.Option) {
 	return env, strings.TrimPrefix(u.Path, "/"), opts
 }
 
-// Demo is a simple holder for the sending sample.
-type Demo struct {
-	Message string
-	Source  url.URL
-	Target  url.URL
-
-	Client client.Client
-}
-
 // Example is a basic data struct.
 type Example struct {
 	Sequence int    `json:"id"`
 	Message  string `json:"message"`
-}
-
-func (d *Demo) Send(eventContext event.EventContext, i int) error {
-	e := event.Event{
-		Context: eventContext,
-	}
-	_ = e.SetData(cloudevents.ApplicationJSON,
-		&Example{
-			Sequence: i,
-			Message:  d.Message,
-		})
-	return d.Client.Send(context.Background(), e)
 }
 
 func main() {
@@ -80,37 +55,30 @@ func main() {
 	defer p.Close(context.Background())
 
 	// Create a new client from the given protocol
-	c, err := client.New(p)
+	c, err := cloudevents.NewClient(p)
 	if err != nil {
 		log.Fatalf("Failed to create client: %v", err)
 	}
 
-	// Attributes for events
-	source, _ := url.Parse("https://github.com/cloudevents/sdk-go/v2/cmd/samples/sender")
-	contentType := "application/json"
-
-	// Value for event data
-	seq := 0
-
-	d := &Demo{
-		Message: fmt.Sprintf("Hello, %s!", contentType),
-		Source:  *source,
-		Client:  c,
-	}
-
 	for i := 0; i < count; i++ {
-		now := time.Now()
-		ctx := event.EventContextV03{
-			ID:              uuid.New().String(),
-			Type:            "com.cloudevents.sample.sent",
-			Time:            &types.Timestamp{Time: now},
-			Source:          types.URIRef{URL: d.Source},
-			DataContentType: &contentType,
-		}.AsV03()
-		if err := d.Send(ctx, seq); err != nil {
-			log.Fatalf("Failed to send: %v", err)
+		event := cloudevents.NewEvent()
+		event.SetID(uuid.New().String())
+		event.SetSource("https://github.com/cloudevents/sdk-go/v2/cmd/samples/sender")
+		event.SetTime(time.Now())
+		event.SetType("com.cloudevents.sample.sent")
+
+		err := event.SetData(cloudevents.ApplicationJSON,
+			&Example{
+				Sequence: i,
+				Message:  "Hello world!",
+			})
+		if err != nil {
+			log.Fatalf("Failed to set data: %v", err)
 		}
-		seq++
+
+		if result := c.Send(context.Background(), event); !cloudevents.IsACK(result) {
+			log.Fatalf("Failed to send: %v", result)
+		}
 		time.Sleep(100 * time.Millisecond)
 	}
 }

@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
-	"github.com/google/uuid"
 	"github.com/kelseyhightower/envconfig"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
@@ -22,7 +22,7 @@ type Example struct {
 	Message  string `json:"message"`
 }
 
-func eventReceiver(ctx context.Context, event cloudevents.Event) (*cloudevents.Event, error) {
+func gotEvent(event cloudevents.Event) error {
 	fmt.Printf("Got Event Context: %+v\n", event.Context)
 	data := &Example{}
 	if err := event.DataAs(data); err != nil {
@@ -30,21 +30,7 @@ func eventReceiver(ctx context.Context, event cloudevents.Event) (*cloudevents.E
 	}
 	fmt.Printf("Got Data: %+v\n", data)
 	fmt.Printf("----------------------------\n")
-
-	if data.Sequence%3 == 0 {
-		responseEvent := cloudevents.NewEvent()
-		responseEvent.SetID(uuid.New().String())
-		responseEvent.SetSource("/mod3")
-		responseEvent.SetType("samples.http.mod3")
-
-		_ = responseEvent.SetData(cloudevents.ApplicationJSON, Example{
-			Sequence: data.Sequence,
-			Message:  "mod 3!",
-		})
-		return &responseEvent, nil
-	}
-
-	return nil, nil
+	return nil
 }
 
 func main() {
@@ -53,24 +39,22 @@ func main() {
 		log.Fatalf("Failed to process env var: %s", err)
 	}
 
-	ctx := context.Background()
-
 	p, err := cloudevents.NewHTTP(cloudevents.WithPort(env.Port), cloudevents.WithPath(env.Path))
 	if err != nil {
-		log.Fatalf("failed to create protocol: %s", err.Error())
+		log.Fatalf("Failed to create protocol: %s", err.Error())
 	}
-	c, err := cloudevents.NewClient(p,
-		cloudevents.WithUUIDs(),
-		cloudevents.WithTimeNow(),
-	)
+	c, err := cloudevents.NewClient(p)
 	if err != nil {
-		log.Fatalf("failed to create client: %s", err.Error())
+		log.Fatalf("Failed to create client, %v", err)
 	}
 
-	if err := c.StartReceiver(ctx, eventReceiver); err != nil {
-		log.Fatalf("failed to start receiver: %s", err.Error())
-	}
+	// Create a context that expires in 5 seconds
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
-	log.Printf("listening on :%d%s\n", env.Port, env.Path)
-	<-ctx.Done()
+	log.Printf("Starting listening on %d%s @ %s\n", env.Port, env.Path, time.Now())
+	if err := c.StartReceiver(ctx, gotEvent); err != nil {
+		log.Fatalf("Failed to start receiver: %s", err.Error())
+	}
+	log.Printf("Stopped @ %s", time.Now())
 }

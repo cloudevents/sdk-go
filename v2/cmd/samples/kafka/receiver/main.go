@@ -27,7 +27,7 @@ func main() {
 	}
 
 	log.Printf("will listen consuming topic test-topic\n")
-	err = c.StartReceiver(context.TODO(), receive)
+	err = c.StartReceiver(context.Background(), receive)
 	if err != nil {
 		log.Fatalf("failed to start receiver: %s", err)
 	} else {

@@ -2,13 +2,14 @@ package main
 
 import (
 	"context"
-	cloudevents "github.com/cloudevents/sdk-go/v2"
-	ce_stan "github.com/cloudevents/sdk-go/v2/protocol/stan"
 	"log"
+
+	cloudevents "github.com/cloudevents/sdk-go/v2"
+	cestan "github.com/cloudevents/sdk-go/v2/protocol/stan"
 )
 
 func main() {
-	s, err := ce_stan.NewSender("test-cluster", "test-client", "test-subject", ce_stan.StanOptions())
+	s, err := cestan.NewSender("test-cluster", "test-client", "test-subject", cestan.StanOptions())
 	if err != nil {
 		log.Fatalf("failed to create protocol: %v", err)
 	}
@@ -29,9 +30,9 @@ func main() {
 			"message": "Hello, World!",
 		})
 
-		err := c.Send(context.Background(), e)
-		if err != nil {
-			log.Printf("failed to send: %v", err)
+		result := c.Send(context.Background(), e)
+		if !cloudevents.IsACK(result) {
+			log.Printf("failed to send: %v", result)
 		} else {
 			log.Printf("sent: %d", i)
 		}

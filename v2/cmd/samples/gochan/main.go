@@ -36,9 +36,9 @@ func main() {
 			"message": "Hello, World!",
 		})
 
-		err := c.Send(ctx, e)
-		if err != nil {
-			log.Printf("[sender] failed to send: %v", err)
+		res := c.Send(ctx, e)
+		if !cloudevents.IsACK(res) {
+			log.Printf("[sender] failed to send: %v", res)
 		} else {
 			log.Printf("[sender] sent: %d", i)
 		}

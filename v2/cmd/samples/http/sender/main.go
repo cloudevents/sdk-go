@@ -5,6 +5,7 @@ import (
 	"log"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
+	cehttp "github.com/cloudevents/sdk-go/v2/protocol/http"
 )
 
 func main() {
@@ -29,11 +30,13 @@ func main() {
 			"message": "Hello, World!",
 		})
 
-		err := c.Send(ctx, e)
-		if err != nil {
-			log.Printf("failed to send: %v", err)
+		res := c.Send(ctx, e)
+		if !cloudevents.IsACK(res) {
+			log.Printf("Failed to send: %v", res)
 		} else {
-			log.Printf("sent: %d", i)
+			var httpResult *cehttp.Result
+			cloudevents.ResultAs(res, &httpResult)
+			log.Printf("Sent %d with status code %d", i, httpResult.StatusCode)
 		}
 	}
 }

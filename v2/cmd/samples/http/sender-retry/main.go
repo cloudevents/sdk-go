@@ -42,9 +42,9 @@ func send10(ctx context.Context, c cloudevents.Client) {
 		})
 
 		if result := c.Send(ctx, e); !cloudevents.IsACK(result) {
-			log.Printf("failed to send: %s", result.Error())
+			log.Printf("Failed to send: %s", result.Error())
 		} else {
-			log.Printf("sent: %d", i)
+			log.Printf("Sent: %d", i)
 		}
 		time.Sleep(50 * time.Millisecond)
 	}
