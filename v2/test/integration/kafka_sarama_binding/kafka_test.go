@@ -54,7 +54,7 @@ func TestSendBinaryMessageToBinary(t *testing.T) {
 }
 
 // To start a local environment for testing:
-// docker run --rm --net=host -e ADV_HOST=localhost lensesio/fast-data-dev
+// docker run --rm --net=host -e ADV_HOST=localhost -e SAMPLEDATA=0 lensesio/fast-data-dev
 func testClient(t testing.TB) sarama.Client {
 	t.Helper()
 	s := os.Getenv("TEST_KAFKA_BOOTSTRAP_SERVER")
