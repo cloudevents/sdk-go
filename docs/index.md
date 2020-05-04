@@ -1,12 +1,33 @@
 # Golang SDK for CloudEvents
 
-To start using the SDK, add the dependency using Go Modules:
+Official CloudEvents SDK to integrate your application with CloudEvents.
+
+This module will help you to:
+
+* Represent CloudEvents in memory
+* Use [Event Formats](https://github.com/cloudevents/spec/blob/v1.0/spec.md#event-format) to serialize/deserialize CloudEvents
+* Use [Protocol Bindings](https://github.com/cloudevents/spec/blob/v1.0/spec.md#protocol-binding) to send/receive CloudEvents
+
+_Note:_ Supported
+[CloudEvents specification](https://github.com/cloudevents/spec): [0.3, 1.0].
+
+## Get started
+
+Add the module as dependency using go mod:
 
 ```
-% go get github.com/cloudevents/sdk-go/v2
+% go get github.com/cloudevents/sdk-go/v2@V2.0.0-RC2
 ```
 
-An example of sending a CloudEvent via HTTP:
+And import the module in your code
+
+```go
+import cloudevents "github.com/cloudevents/sdk-go/v2"
+```
+
+## Send your first CloudEvent
+
+To send a CloudEvent using HTTP:
 
 ```go
 func main() {
@@ -32,7 +53,9 @@ func main() {
 }
 ```
 
-An example of receiving a CloudEvent via HTTP:
+## Receive your first CloudEvent
+
+To start receiving CloudEvents using HTTP:
 
 ```go
 func receive(event cloudevents.Event) {
@@ -50,10 +73,31 @@ func main() {
 }
 ```
 
+## Serialize/Deserialize a CloudEvent
+
+To marshal a CloudEvent into JSON:
+
+```go
+event := cloudevents.NewEvent()
+event.SetSource("example/uri")
+event.SetType("example.type")
+event.SetData(cloudevents.ApplicationJSON, map[string]string{"hello": "world"})
+
+bytes, err := json.Marshal(event)
+```
+
+To unmarshal JSON back into a CloudEvent:
+
+```go
+event :=  cloudevents.NewEvent()
+
+err := json.Marshal(bytes, &event)
+```
+
 ## Supported specification features
 
 |                               |  [v0.3](https://github.com/cloudevents/spec/tree/v0.3) | [v1.0](https://github.com/cloudevents/spec/tree/v1.0) |
-| --- | --- | --- |
+| ----------------------------- | --- | --- |
 | CloudEvents Core              | :heavy_check_mark: | :heavy_check_mark: |
 | [AMQP Protocol Binding](https://github.com/cloudevents/sdk-go/tree/master/v2/cmd/samples/amqp)         | :heavy_check_mark: | :heavy_check_mark:  |
 | AVRO Event Format             | :x: | :x: |

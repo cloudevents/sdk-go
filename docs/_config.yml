@@ -1,3 +1,4 @@
-theme: jekyll-theme-slate
+title: CloudEvents sdk-go
+theme: jekyll-theme-architect
 plugins:
   - jemoji
