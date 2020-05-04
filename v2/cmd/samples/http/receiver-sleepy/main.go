@@ -49,7 +49,8 @@ func main() {
 	}
 
 	// Create a context that expires in 5 seconds
-	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
 	log.Printf("Starting listening on %d%s @ %s\n", env.Port, env.Path, time.Now())
 	if err := c.StartReceiver(ctx, gotEvent); err != nil {
