@@ -117,6 +117,7 @@ err := json.Marshal(bytes, &event)
 ## Go further
 
 1. [Examples](https://github.com/cloudevents/sdk-go/tree/master/v2/cmd/samples)
+1. [Godoc](https://godoc.org/github.com/cloudevents/sdk-go/v2)
 1. [Architecture and Concepts](concepts.md)
-1. [Event Data Structure documentation](event_data_structure.md)
-1. [Protocol implementations](protocol_implementations.md)
+1. [CloudEvent in-memory representation](event_data_structure.md)
+1. [Protocol Bindings implementations](protocol_implementations.md)

@@ -4,5 +4,7 @@ plugins:
   - jemoji
 
 aux_links:
+  "GitHub Repository":
+    - "https://github.com/cloudevents/sdk-go"
   "CloudEvents home":
     - "https://cloudevents.io/"

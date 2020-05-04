@@ -1,5 +1,5 @@
 ---
-title: Protocol Binding implementations
+title: Protocol Bindings
 nav_order: 4
 ---
 
