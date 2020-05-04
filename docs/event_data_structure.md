@@ -1,3 +1,8 @@
+---
+title: Event data structure
+nav_order: 3
+---
+
 # Event data structure
 
 The `Event` data structure is the representation of a `CloudEvent` in sdk-go. The main features are:

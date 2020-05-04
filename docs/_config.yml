@@ -1,4 +1,8 @@
-title: CloudEvents sdk-go
-theme: jekyll-theme-architect
+title: Golang SDK for CloudEvents
+theme: just-the-docs
 plugins:
   - jemoji
+
+aux_links:
+  "CloudEvents home":
+    - "https://cloudevents.io/"

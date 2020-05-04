@@ -1,4 +1,9 @@
-# Concepts and Architecture of sdk-go
+---
+title: Architecture and Concepts
+nav_order: 2
+---
+
+# Architecture and Concepts
 
 1. [Spec and SDK Terms](#spec-and-sdk-terms)
 1. [Investment Level](#investment-level)

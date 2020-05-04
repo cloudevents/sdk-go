@@ -1,4 +1,9 @@
-# Protocol implementations
+---
+title: Protocol Binding implementations
+nav_order: 4
+---
+
+# Protocol Binding implementations
 
 ## `Message` implementation and `Write<DataStructure>` functions
 

@@ -1,3 +1,8 @@
+---
+title: Home
+nav_order: 1
+---
+
 # Golang SDK for CloudEvents
 
 Official CloudEvents SDK to integrate your application with CloudEvents.
@@ -9,7 +14,7 @@ This module will help you to:
 * Use [Protocol Bindings](https://github.com/cloudevents/spec/blob/v1.0/spec.md#protocol-binding) to send/receive CloudEvents
 
 _Note:_ Supported
-[CloudEvents specification](https://github.com/cloudevents/spec): [0.3, 1.0].
+[CloudEvents specification](https://github.com/cloudevents/spec): 0.3, 1.0
 
 ## Get started
 
