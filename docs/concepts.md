@@ -4,11 +4,10 @@ nav_order: 2
 ---
 
 # Architecture and Concepts
+{: .no_toc }
 
-1. [Spec and SDK Terms](#spec-and-sdk-terms)
-1. [Investment Level](#investment-level)
-1. [Personas](#personas)
-1. [Interaction Models](#interaction-models)
+1. TOC
+{:toc}
 
 ## Spec and SDK Terms
 
