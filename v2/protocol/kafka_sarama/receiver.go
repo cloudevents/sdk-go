@@ -114,9 +114,7 @@ func (c *Consumer) OpenInbound(ctx context.Context) error {
 
 	errCh := make(chan error)
 
-	go func(errs chan error) {
-		errs <- cg.Consume(context.Background(), []string{c.topic}, c)
-	}(errCh)
+	go c.startConsumerGroupLoop(cg, ctx, errCh)
 
 	select {
 	case <-ctx.Done():
@@ -132,6 +130,33 @@ func (c *Consumer) OpenInbound(ctx context.Context) error {
 			return nil
 		}
 		return err
+	}
+}
+
+func (c *Consumer) startConsumerGroupLoop(cg sarama.ConsumerGroup, ctx context.Context, errs chan<- error) {
+	// Need to be wrapped in a for loop
+	// https://godoc.org/github.com/Shopify/sarama#ConsumerGroup
+	for {
+		err := cg.Consume(context.Background(), []string{c.topic}, c)
+
+		select {
+		// If context is closed, then consumer group session was closed by the user
+		case <-ctx.Done():
+			if err != nil {
+				errs <- err
+			}
+			return
+		// Something else happened
+		default:
+			if err == nil || err == sarama.ErrClosedClient || err == sarama.ErrClosedConsumerGroup {
+				// Consumer group closed correctly, we can close that loop
+				return
+			} else {
+				// Another error happened (eg a disconnection to the cluster)
+				// We need to loop again
+				errs <- err
+			}
+		}
 	}
 }
 

@@ -192,9 +192,8 @@ func (c *ceClient) StartReceiver(ctx context.Context, fn interface{}) error {
 	// Start the opener, if set.
 	if c.opener != nil {
 		go func() {
-			// TODO: handle error correctly here.
 			if err := c.opener.OpenInbound(ctx); err != nil {
-				panic(err)
+				cecontext.LoggerFrom(ctx).Errorf("Error while opening the inbound connection: %s", err)
 			}
 		}()
 	}
