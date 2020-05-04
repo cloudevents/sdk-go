@@ -1,3 +1,6 @@
+# To configure the environment locally to test the website, check out
+# https://help.github.com/en/github/working-with-github-pages/testing-your-github-pages-site-locally-with-jekyll
+
 title: Golang SDK for CloudEvents
 remote_theme: pmarsceill/just-the-docs
 plugins:
