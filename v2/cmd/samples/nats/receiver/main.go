@@ -4,12 +4,11 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 
-	"github.com/cloudevents/sdk-go/v2/client"
-	"github.com/cloudevents/sdk-go/v2/event"
-	cloudeventsnats "github.com/cloudevents/sdk-go/v2/protocol/nats"
 	"github.com/kelseyhightower/envconfig"
+
+	cloudevents "github.com/cloudevents/sdk-go/v2"
+	cenats "github.com/cloudevents/sdk-go/v2/protocol/nats"
 )
 
 type envConfig struct {
@@ -23,19 +22,18 @@ type envConfig struct {
 func main() {
 	var env envConfig
 	if err := envconfig.Process("", &env); err != nil {
-		log.Printf("[ERROR] Failed to process env var: %s", err)
-		os.Exit(1)
+		log.Fatalf("Failed to process env var: %s", err)
 	}
 	ctx := context.Background()
 
-	p, err := cloudeventsnats.NewConsumer(env.NATSServer, env.Subject, cloudeventsnats.NatsOptions())
+	p, err := cenats.NewConsumer(env.NATSServer, env.Subject, cenats.NatsOptions())
 	if err != nil {
 		log.Fatalf("failed to create nats protocol, %s", err.Error())
 	}
 
 	defer p.Close(ctx)
 
-	c, err := client.New(p)
+	c, err := cloudevents.NewClient(p)
 	if err != nil {
 		log.Fatalf("failed to create client, %s", err.Error())
 	}
@@ -52,7 +50,7 @@ type Example struct {
 	Message  string `json:"message"`
 }
 
-func receive(ctx context.Context, event event.Event) error {
+func receive(ctx context.Context, event cloudevents.Event) error {
 	fmt.Printf("Got Event Context: %+v\n", event.Context)
 
 	data := &Example{}

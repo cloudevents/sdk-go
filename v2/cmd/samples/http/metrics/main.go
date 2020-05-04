@@ -81,8 +81,8 @@ func mainSender() {
 			}
 			_ = e.SetData(cloudevents.ApplicationJSON, data)
 
-			if resp, err := c.Request(ctx, e); err != nil {
-				log.Printf("failed to send: %v", err)
+			if resp, res := c.Request(ctx, e); !cloudevents.IsACK(res) {
+				log.Printf("failed to send: %v", res)
 			} else if resp != nil {
 				fmt.Printf("got back a response event of type %s", resp.Context.GetType())
 			} else {
@@ -119,7 +119,6 @@ func mainMetrics() {
 	// Register the views
 	if err := view.Register(
 		client.LatencyView,
-		//transporthttp.LatencyView, // TODO: add back http metrics.
 		event.EventMarshalLatencyView,
 		json.LatencyView,
 		xml.LatencyView,

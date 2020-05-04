@@ -10,6 +10,10 @@ import (
 	"github.com/cloudevents/sdk-go/v2/protocol/kafka_sarama"
 )
 
+const (
+	count = 10
+)
+
 func main() {
 	saramaConfig := sarama.NewConfig()
 
@@ -25,7 +29,7 @@ func main() {
 		log.Fatalf("failed to create client, %v", err)
 	}
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < count; i++ {
 		e := cloudevents.NewEvent()
 		e.SetType("com.cloudevents.sample.sent")
 		e.SetSource("https://github.com/cloudevents/sdk-go/v2/cmd/samples/httpb/requester")

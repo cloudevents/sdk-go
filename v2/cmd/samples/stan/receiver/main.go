@@ -3,13 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
-	cloudevents "github.com/cloudevents/sdk-go/v2"
-	ce_stan "github.com/cloudevents/sdk-go/v2/protocol/stan"
 	"log"
+
+	cloudevents "github.com/cloudevents/sdk-go/v2"
+	cestan "github.com/cloudevents/sdk-go/v2/protocol/stan"
 )
 
 func main() {
-	receiver, err := ce_stan.NewConsumer("test-cluster", "test-client", "test-subject", ce_stan.StanOptions())
+	receiver, err := cestan.NewConsumer("test-cluster", "test-client", "test-subject", cestan.StanOptions())
 	if err != nil {
 		log.Fatalf("failed to create protocol: %v", err)
 	}

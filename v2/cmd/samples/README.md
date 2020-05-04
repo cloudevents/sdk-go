@@ -14,8 +14,22 @@ You can grab them and copy-paste in your project to start using sdk-go.
   * [Gorilla receiver](./http/receiver-gorilla): Receive events using [Gorilla](https://www.gorillatoolkit.org/).
   * [Sleepy receiver](./http/receiver-sleepy): Receive events for 5 seconds, then stop the receiver. 
   * [Traced receiver](./http/receiver-traced): Receive events enabling tracing.
-  * [Requester](./http/requester): Request/Response events creating them with different data content types and different encodings.
+  * [Requester](./http/requester): Request/Response events using the CloudEvents Client, creating them with different data content types and different encodings.
   * [Requester with custom client](./http/requester-with-custom-client): Request/Response events with a custom `http.Transport` with TLS configured.
-  * [Responder](./http/responder): Receive and reply to events.
-  * [Sender](./http/sender): Send events.
-  * [Sender with retries](http/sender-retry): Send events, retrying in case of a failure.
+  * [Responder](./http/responder): Receive and reply to events using the CloudEvents Client.
+  * [Sender](./http/sender): Send events using the CloudEvents Client.
+  * [Sender with retries](./http/sender-retry): Send events, retrying in case of a failure.
+  * [Receiver & Requester with metrics enabled](./http/metrics): Request events and handle events with metrics enabled.
+* Kafka
+  * [Receiver](./kafka/receiver): Receive events using the CloudEvents Client. To run the tests look at [Kafka samples README](./kafka/README.md).
+  * [Sender](./kafka/sender): Receive events using the CloudEvents Client. To run the tests look at [Kafka samples README](./kafka/README.md).
+  * [Sender & Receiver](./kafka/sender-receiver): Send and receive events using the same Kafka client. To run the tests look at [Kafka samples README](./kafka/README.md).
+* Message
+  * [Message interoperability](./message-interoperability): Pipe a message from an HTTP receiver directly to NATS using directly the `Protocol`s implementations.
+* NATS
+  * [Receiver](./nats/receiver): Receive events using the CloudEvents Client.
+  * [Sender](./nats/sender): Receive events using the CloudEvents Client.
+* STAN
+  * [Receiver](./stan/receiver): Receive events using the CloudEvents Client.
+  * [Sender](./stan/sender): Receive events using the CloudEvents Client.
+  * [Sender & Receiver](./stan/sender-receiver): Send and receive events using the same NATS client.
