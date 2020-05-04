@@ -7,8 +7,9 @@ import (
 	"log"
 	"net/http"
 
-	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/gorilla/mux"
+
+	cloudevents "github.com/cloudevents/sdk-go/v2"
 )
 
 func main() {

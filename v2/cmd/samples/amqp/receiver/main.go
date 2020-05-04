@@ -8,10 +8,9 @@ import (
 	"os"
 	"strings"
 
-	amqp "github.com/Azure/go-amqp"
+	"github.com/Azure/go-amqp"
 
-	ce "github.com/cloudevents/sdk-go/v2"
-	"github.com/cloudevents/sdk-go/v2/client"
+	cloudevents "github.com/cloudevents/sdk-go/v2"
 	ceamqp "github.com/cloudevents/sdk-go/v2/protocol/amqp"
 )
 
@@ -45,11 +44,11 @@ func main() {
 	defer p.Close(context.Background())
 
 	// Create a new client from the given protocol
-	c, err := client.New(p)
+	c, err := cloudevents.NewClient(p)
 	if err != nil {
 		log.Fatalf("Failed to create client: %v", err)
 	}
-	err = c.StartReceiver(context.Background(), func(e ce.Event) {
+	err = c.StartReceiver(context.Background(), func(e cloudevents.Event) {
 		fmt.Printf("==== Got CloudEvent\n%+v\n----\n", e)
 	})
 	if err != nil {
