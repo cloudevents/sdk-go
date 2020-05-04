@@ -1,5 +1,5 @@
 ---
-title: Protocol Binding implementations
+title: Protocol Bindings
 nav_order: 4
 ---
 
@@ -11,10 +11,23 @@ nav_order: 4
 
 ## Overview
 
-Every supported protocol binding implements the logic to read an incoming CloudEvent message implementing 
-the [`Message` interface](https://github.com/cloudevents/sdk-go/tree/master/v2/binding/message.go) and the logic to write out a CloudEvent message
-providing `Write<DataStructure>` functions.
-Then a bunch of interfaces are implemented to allow the user to interact, through the `Client`, with the given protocol.
+A Protocol binding in sdk-go is implemented defining:
+
+* How to read and write the event back/forth the protocol specific data structured (eg how to read an `Event` starting from `net/http.HttpRequest`)
+* How to let the protocol interact with the `Client`
+
+The former is done implementing the [`Message` interface](https://github.com/cloudevents/sdk-go/tree/master/v2/binding/message.go) and 
+the `Write<DataStructure>` functions, while the latter is done implementing specific `protocol` interfaces.
+
+## Protocol implementations
+
+* [AMQP Protocol Binding](https://github.com/cloudevents/sdk-go/tree/master/v2/protocol/amqp) using [go-amqp](https://github.com/Azure/go-amqp)
+* [HTTP Protocol Binding](https://github.com/cloudevents/sdk-go/tree/master/v2/protocol/http) using [net/http](https://golang.org/pkg/net/http/)
+* [Kafka Protocol Binding](https://github.com/cloudevents/sdk-go/tree/master/v2/protocol/kafka_sarama) using [Sarama](https://github.com/Shopify/sarama)
+* [NATS Protocol Binding](https://github.com/cloudevents/sdk-go/tree/master/v2/protocol/nats) using [nats.go](https://github.com/nats-io/nats.go)
+* [STAN Protocol Binding](https://github.com/cloudevents/sdk-go/tree/master/v2/protocol/stan) using [stan.go](https://github.com/nats-io/stan.go)
+* [PubSub Protocol Binding](https://github.com/cloudevents/sdk-go/tree/master/v2/protocol/pubsub)
+* [Go channels protocol binding](https://github.com/cloudevents/sdk-go/tree/master/v2/protocol/gochan) (useful for mocking purpose)
 
 ## `Message` interface
 
