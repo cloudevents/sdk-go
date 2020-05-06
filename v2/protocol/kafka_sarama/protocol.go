@@ -39,6 +39,8 @@ type Protocol struct {
 
 // NewProtocol creates a new kafka transport.
 func NewProtocol(brokers []string, saramaConfig *sarama.Config, sendToTopic string, receiveFromTopic string, opts ...ProtocolOptionFunc) (*Protocol, error) {
+	// Force this setting because it's required by sarama SyncProducer
+	saramaConfig.Producer.Return.Successes = true
 	client, err := sarama.NewClient(brokers, saramaConfig)
 	if err != nil {
 		return nil, err

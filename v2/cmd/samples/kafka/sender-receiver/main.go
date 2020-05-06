@@ -18,7 +18,6 @@ const (
 
 func main() {
 	saramaConfig := sarama.NewConfig()
-	saramaConfig.Producer.Return.Successes = true
 	saramaConfig.Version = sarama.V2_0_0_0
 
 	// With NewProtocol you can use the same client both to send and receive.
