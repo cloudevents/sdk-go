@@ -13,6 +13,7 @@ import (
 
 func main() {
 	saramaConfig := sarama.NewConfig()
+	saramaConfig.Version = sarama.V2_0_0_0
 
 	receiver, err := kafka_sarama.NewConsumer([]string{"127.0.0.1:9092"}, saramaConfig, "test-group-id", "test-topic")
 	if err != nil {
