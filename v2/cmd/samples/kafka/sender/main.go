@@ -16,6 +16,7 @@ const (
 
 func main() {
 	saramaConfig := sarama.NewConfig()
+	saramaConfig.Version = sarama.V2_0_0_0
 
 	sender, err := kafka_sarama.NewSender([]string{"127.0.0.1:9092"}, saramaConfig, "test-topic")
 	if err != nil {

@@ -16,6 +16,8 @@ type Sender struct {
 
 // NewSender returns a binding.Sender that sends messages to a specific receiverTopic using sarama.SyncProducer
 func NewSender(brokers []string, saramaConfig *sarama.Config, topic string, options ...SenderOptionFunc) (*Sender, error) {
+	// Force this setting because it's required by sarama SyncProducer
+	saramaConfig.Producer.Return.Successes = true
 	producer, err := sarama.NewSyncProducer(brokers, saramaConfig)
 	if err != nil {
 		return nil, err

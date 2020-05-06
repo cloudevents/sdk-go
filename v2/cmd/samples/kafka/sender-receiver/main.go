@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"sync/atomic"
 
 	"github.com/Shopify/sarama"
 
@@ -11,11 +12,16 @@ import (
 	"github.com/cloudevents/sdk-go/v2/protocol/kafka_sarama"
 )
 
+const (
+	count = 10
+)
+
 func main() {
 	saramaConfig := sarama.NewConfig()
+	saramaConfig.Version = sarama.V2_0_0_0
 
 	// With NewProtocol you can use the same client both to send and receive.
-	protocol, err := kafka_sarama.NewProtocol([]string{"127.0.0.1:9092"}, saramaConfig, "send-test-topic", "receive-test-topic")
+	protocol, err := kafka_sarama.NewProtocol([]string{"127.0.0.1:9092"}, saramaConfig, "test-topic", "test-topic")
 	if err != nil {
 		log.Fatalf("failed to create protocol: %s", err.Error())
 	}
@@ -27,10 +33,19 @@ func main() {
 		log.Fatalf("failed to create client, %v", err)
 	}
 
+	// Create a done channel to block until we've received (count) messages
+	done := make(chan struct{})
+
 	// Start the receiver
 	go func() {
 		log.Printf("will listen consuming topic test-topic\n")
-		err = c.StartReceiver(context.TODO(), receive)
+		var recvCount int32
+		err = c.StartReceiver(context.TODO(), func(ctx context.Context, event cloudevents.Event) {
+			receive(ctx, event)
+			if atomic.AddInt32(&recvCount, 1) == count {
+				done <- struct{}{}
+			}
+		})
 		if err != nil {
 			log.Fatalf("failed to start receiver: %s", err)
 		} else {
@@ -39,7 +54,7 @@ func main() {
 	}()
 
 	// Start sending the events
-	for i := 0; i < 10; i++ {
+	for i := 0; i < count; i++ {
 		e := cloudevents.NewEvent()
 		e.SetType("com.cloudevents.sample.sent")
 		e.SetSource("https://github.com/cloudevents/sdk-go/v2/cmd/samples/httpb/requester")
@@ -55,6 +70,8 @@ func main() {
 			log.Printf("sent: %d", i)
 		}
 	}
+
+	<-done
 }
 
 func receive(ctx context.Context, event cloudevents.Event) {
