@@ -37,6 +37,13 @@ func TestWithFinish(t *testing.T) {
 	assert.NoError(t, <-done)
 }
 
+func TestUnwrap(t *testing.T) {
+	testEvent := test.FullEvent()
+
+	m := binding.WithFinish(binding.WithFinish(binding.ToMessage(&testEvent), func(err error) {}), func(err error) {})
+	assert.Equal(t, binding.ToMessage(&testEvent), binding.UnwrapMessage(m))
+}
+
 func TestMessageMetadataHandler(t *testing.T) {
 	var testEvent = test.FullEvent()
 	finishMessage := binding.WithFinish((*binding.EventMessage)(&testEvent), func(err error) {})
