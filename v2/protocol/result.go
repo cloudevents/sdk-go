@@ -60,14 +60,14 @@ var (
 // a transport.Result. This type holds the base ACK/NACK results.
 func NewReceipt(ack bool, messageFmt string, args ...interface{}) Result {
 	return &Receipt{
-		error: fmt.Errorf(messageFmt, args...),
-		ACK:   ack,
+		Err: fmt.Errorf(messageFmt, args...),
+		ACK: ack,
 	}
 }
 
 // Receipt wraps the fields required to understand if a protocol event is acknowledged.
 type Receipt struct {
-	error
+	Err error
 	ACK bool
 }
 
@@ -80,16 +80,16 @@ func (e *Receipt) Is(target error) bool {
 		return e.ACK == o.ACK
 	}
 	// Allow for wrapped errors.
-	return errors.Is(e.error, target)
+	return errors.Is(e.Err, target)
 }
 
 // Error returns the string that is formed by using the format string with the
 // provided args.
 func (e *Receipt) Error() string {
-	return e.error.Error()
+	return e.Err.Error()
 }
 
 // Unwrap returns the wrapped error if exist or nil
 func (e *Receipt) Unwrap() error {
-	return errors.Unwrap(e.error)
+	return errors.Unwrap(e.Err)
 }
