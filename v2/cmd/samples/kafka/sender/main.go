@@ -33,7 +33,7 @@ func main() {
 	for i := 0; i < count; i++ {
 		e := cloudevents.NewEvent()
 		e.SetType("com.cloudevents.sample.sent")
-		e.SetSource("https://github.com/cloudevents/sdk-go/v2/cmd/samples/httpb/requester")
+		e.SetSource("https://github.com/cloudevents/sdk-go/v2/cmd/samples/kafka/sender")
 		_ = e.SetData(cloudevents.ApplicationJSON, map[string]interface{}{
 			"id":      i,
 			"message": "Hello, World!",
