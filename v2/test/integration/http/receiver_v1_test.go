@@ -33,10 +33,28 @@ func TestClientReceiver_Status_Codes(t *testing.T) {
 				}
 			},
 		},
-		"400 if the receiver is expecting an event but the received request doesn't contain a valid event": {
+		"400 if the receiver is expecting an event but the received request doesn't contain a valid event without spec version": {
 			now: now,
 			request: func(url string) *http.Request {
 				req, _ := http.NewRequest("POST", url, bytes.NewReader(toBytes(map[string]interface{}{"hello": "Francesco"})))
+				req.Header.Set("content-type", cloudevents.ApplicationCloudEventsJSON)
+				return req
+			},
+			asRecv: &TapValidation{
+				Header:        map[string][]string{},
+				Status:        fmt.Sprintf("%d %s", 400, http.StatusText(400)),
+				ContentLength: 0,
+			},
+			receiverFuncFactory: func(cancelFunc context.CancelFunc) interface{} {
+				return func(event cloudevents.Event) {
+					cancelFunc()
+				}
+			},
+		},
+		"400 if the receiver is expecting an event but the received request doesn't contain a valid event with spec version": {
+			now: now,
+			request: func(url string) *http.Request {
+				req, _ := http.NewRequest("POST", url, bytes.NewReader(toBytes(map[string]interface{}{"specversion": "1.0"})))
 				req.Header.Set("content-type", cloudevents.ApplicationCloudEventsJSON)
 				return req
 			},
