@@ -258,7 +258,8 @@ func (p *Protocol) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 			case !protocol.IsACK(res):
 				// Map client errors to http status code
-				if errors.As(res, &event.ValidationError{}) {
+				validationError := event.ValidationError{}
+				if errors.As(res, &validationError) {
 					status = http.StatusBadRequest
 				} else if errors.Is(res, binding.ErrUnknownEncoding) {
 					status = http.StatusUnsupportedMediaType
