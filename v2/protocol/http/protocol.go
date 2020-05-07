@@ -261,6 +261,9 @@ func (p *Protocol) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 				validationError := event.ValidationError{}
 				if errors.As(res, &validationError) {
 					status = http.StatusBadRequest
+					rw.Header().Set("content-type", "text/plain")
+					rw.WriteHeader(status)
+					_, _ = rw.Write([]byte(validationError.Error()))
 				} else if errors.Is(res, binding.ErrUnknownEncoding) {
 					status = http.StatusUnsupportedMediaType
 				} else {
