@@ -220,40 +220,6 @@ func TestString(t *testing.T) {
 		event event.Event
 		want  string
 	}{
-		"empty v0.3": {
-			event: event.Event{
-				Context: &event.EventContextV03{},
-			},
-			want: `Validation: invalid
-Validation Error: 
-type: MUST be a non-empty string
-source: REQUIRED
-id: MUST be a non-empty string
-
-Context Attributes,
-  specversion: 0.3
-  type: 
-  source: 
-  id: 
-`,
-		},
-		"empty v1.0": {
-			event: event.Event{
-				Context: &event.EventContextV1{},
-			},
-			want: `Validation: invalid
-Validation Error: 
-id: MUST be a non-empty string
-source: REQUIRED
-type: MUST be a non-empty string
-
-Context Attributes,
-  specversion: 1.0
-  type: 
-  source: 
-  id: 
-`,
-		},
 		"min v0.3": {
 			event: event.Event{
 				Context: MinEventContextV03(),
