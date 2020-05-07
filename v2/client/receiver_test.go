@@ -100,7 +100,7 @@ func TestReceiverFnInvoke_1(t *testing.T) {
 		t.Errorf("unexpected error, wanted nil got = %v", err)
 	}
 
-	resp, result := fn.invoke(wantCtx, wantEvent)
+	resp, result := fn.invoke(wantCtx, &wantEvent)
 
 	if diff := cmp.Diff(wantResp, resp); diff != "" {
 		t.Errorf("unexpected response (-want, +got) = %v", diff)
@@ -134,7 +134,7 @@ func TestReceiverFnInvoke_2(t *testing.T) {
 		t.Errorf("unexpected error, wanted nil got = %v", err)
 	}
 
-	resp, result := fn.invoke(ctx, wantEvent)
+	resp, result := fn.invoke(ctx, &wantEvent)
 
 	if diff := cmp.Diff(wantResp, resp); diff != "" {
 		t.Errorf("unexpected response (-want, +got) = %v", diff)
@@ -168,7 +168,7 @@ func TestReceiverFnInvoke_3(t *testing.T) {
 		t.Errorf("unexpected error, wanted nil got = %v", err)
 	}
 
-	resp, result := fn.invoke(ctx, wantEvent)
+	resp, result := fn.invoke(ctx, &wantEvent)
 
 	if diff := cmp.Diff(wantResp, resp); diff != "" {
 		t.Errorf("unexpected response (-want, +got) = %v", diff)
@@ -194,7 +194,7 @@ func TestReceiverFnInvoke_4(t *testing.T) {
 		t.Errorf("unexpected error, wanted nil got = %v", err)
 	}
 
-	resp, result := fn.invoke(ctx, event.Event{})
+	resp, result := fn.invoke(ctx, &event.Event{})
 
 	if diff := cmp.Diff(wantResp, resp); diff != "" {
 		t.Errorf("unexpected response (-want, +got) = %v", diff)
@@ -219,7 +219,7 @@ func TestReceiverFnInvoke_5(t *testing.T) {
 		t.Errorf("unexpected error, wanted nil got = %v", err)
 	}
 
-	resp, result := fn.invoke(ctx, event.Event{})
+	resp, result := fn.invoke(ctx, &event.Event{})
 
 	if diff := cmp.Diff(wantResp, resp); diff != "" {
 		t.Errorf("unexpected response (-want, +got) = %v", diff)
