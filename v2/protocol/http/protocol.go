@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/cloudevents/sdk-go/v2/binding"
 	cecontext "github.com/cloudevents/sdk-go/v2/context"
+	"github.com/cloudevents/sdk-go/v2/event"
 	"github.com/cloudevents/sdk-go/v2/protocol"
 )
 
@@ -222,7 +224,7 @@ func (p *Protocol) Respond(ctx context.Context) (binding.Message, protocol.Respo
 // Blocks until ResponseFn is invoked.
 func (p *Protocol) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	m := NewMessageFromHttpRequest(req)
-	if m == nil || m.ReadEncoding() == binding.EncodingUnknown {
+	if m == nil {
 		p.incoming <- msgErr{msg: nil, err: binding.ErrUnknownEncoding}
 		return // if there was no message, return.
 	}
@@ -254,10 +256,15 @@ func (p *Protocol) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 					status = result.StatusCode
 				}
 
-			case respMsg == nil && !protocol.IsACK(res):
-				// if we ended up here with no message and a NACK response,
-				// assume the input could not be processed
-				status = http.StatusBadRequest
+			case !protocol.IsACK(res):
+				// Map client errors to http status code
+				if errors.As(res, &event.EventValidationError{}) {
+					status = http.StatusBadRequest
+				} else if errors.Is(res, binding.ErrUnknownEncoding) {
+					status = http.StatusUnsupportedMediaType
+				} else {
+					status = http.StatusInternalServerError
+				}
 			}
 		}
 

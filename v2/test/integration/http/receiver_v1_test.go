@@ -37,7 +37,7 @@ func TestClientReceiver_Status_Codes(t *testing.T) {
 			now: now,
 			request: func(url string) *http.Request {
 				req, _ := http.NewRequest("POST", url, bytes.NewReader(toBytes(map[string]interface{}{"hello": "Francesco"})))
-				req.Header.Set("content-type", cloudevents.ApplicationJSON)
+				req.Header.Set("content-type", cloudevents.ApplicationCloudEventsJSON)
 				return req
 			},
 			asRecv: &TapValidation{
