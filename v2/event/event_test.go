@@ -229,6 +229,7 @@ Validation Error:
 type: MUST be a non-empty string
 source: REQUIRED
 id: MUST be a non-empty string
+
 Context Attributes,
   specversion: 0.3
   type: 
@@ -245,6 +246,7 @@ Validation Error:
 id: MUST be a non-empty string
 source: REQUIRED
 type: MUST be a non-empty string
+
 Context Attributes,
   specversion: 1.0
   type: 

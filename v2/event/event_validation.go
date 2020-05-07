@@ -2,19 +2,27 @@ package event
 
 import (
 	"fmt"
+	"strings"
 )
 
-type EventValidationError map[string]error
+type ValidationError map[string]error
 
-func (e EventValidationError) Error() string {
-	return fmt.Sprintf("validation errors: %+v", map[string]error(e))
+func (e ValidationError) Error() string {
+	b := strings.Builder{}
+	for k, v := range e {
+		b.WriteString(k)
+		b.WriteString(": ")
+		b.WriteString(v.Error())
+		b.WriteRune('\n')
+	}
+	return b.String()
 }
 
 // Validate performs a spec based validation on this event.
 // Validation is dependent on the spec version specified in the event context.
-func (e Event) Validate() EventValidationError {
+func (e Event) Validate() ValidationError {
 	if e.Context == nil {
-		return EventValidationError{"specversion": fmt.Errorf("missing Event.Context")}
+		return ValidationError{"specversion": fmt.Errorf("missing Event.Context")}
 	}
 
 	errs := map[string]error{}

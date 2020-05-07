@@ -164,7 +164,7 @@ func (ec EventContextV1) AsV1() *EventContextV1 {
 
 // Validate returns errors based on requirements from the CloudEvents spec.
 // For more details, see https://github.com/cloudevents/spec/blob/v1.0/spec.md.
-func (ec EventContextV1) Validate() EventValidationError {
+func (ec EventContextV1) Validate() ValidationError {
 	errors := map[string]error{}
 
 	// id

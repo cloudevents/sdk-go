@@ -161,7 +161,7 @@ func (ec EventContextV03) AsV1() *EventContextV1 {
 // As of Feb 26, 2019, commit 17c32ea26baf7714ad027d9917d03d2fff79fc7e
 // + https://github.com/cloudevents/spec/pull/387 -> datacontentencoding
 // + https://github.com/cloudevents/spec/pull/406 -> subject
-func (ec EventContextV03) Validate() EventValidationError {
+func (ec EventContextV03) Validate() ValidationError {
 	errors := map[string]error{}
 
 	// type

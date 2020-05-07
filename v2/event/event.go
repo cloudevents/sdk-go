@@ -109,6 +109,7 @@ func (e Event) Clone() Event {
 	out.Context = e.Context.Clone()
 	out.DataEncoded = cloneBytes(e.DataEncoded)
 	out.DataBase64 = e.DataBase64
+	out.FieldErrors = e.cloneFieldErrors()
 	return out
 }
 
@@ -119,4 +120,15 @@ func cloneBytes(in []byte) []byte {
 	out := make([]byte, len(in))
 	copy(out, in)
 	return out
+}
+
+func (e Event) cloneFieldErrors() map[string]error {
+	if e.FieldErrors == nil {
+		return nil
+	}
+	newFE := make(map[string]error, len(e.FieldErrors))
+	for k, v := range e.FieldErrors {
+		newFE[k] = v
+	}
+	return newFE
 }
