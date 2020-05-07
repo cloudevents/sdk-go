@@ -41,9 +41,13 @@ func TestClientReceiver_Status_Codes(t *testing.T) {
 				return req
 			},
 			asRecv: &TapValidation{
-				Header:        map[string][]string{},
+				Header:        http.Header{"content-type": {"text/plain"}},
 				Status:        fmt.Sprintf("%d %s", http.StatusBadRequest, http.StatusText(http.StatusBadRequest)),
 				ContentLength: 0,
+				Body:          "specversion: unknown : \"\"\n",
+				BodyContains: []string{
+					"specversion: unknown : \"\"",
+				},
 			},
 			receiverFuncFactory: func(cancelFunc context.CancelFunc) interface{} {
 				return func(event cloudevents.Event) {
@@ -59,9 +63,14 @@ func TestClientReceiver_Status_Codes(t *testing.T) {
 				return req
 			},
 			asRecv: &TapValidation{
-				Header:        map[string][]string{},
+				Header:        http.Header{"content-type": {"text/plain"}},
 				Status:        fmt.Sprintf("%d %s", http.StatusBadRequest, http.StatusText(http.StatusBadRequest)),
 				ContentLength: 0,
+				BodyContains: []string{
+					"type: MUST be a non-empty string",
+					"id: MUST be a non-empty string",
+					"source: REQUIRED",
+				},
 			},
 			receiverFuncFactory: func(cancelFunc context.CancelFunc) interface{} {
 				return func(event cloudevents.Event) {

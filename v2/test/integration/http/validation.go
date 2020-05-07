@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/stretchr/testify/require"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 )
@@ -59,9 +60,19 @@ func assertEventEquality(t *testing.T, ctx string, expected, actual *cloudevents
 
 func assertTappedEquality(t *testing.T, ctx string, expected, actual *TapValidation) {
 	canonicalizeHeaders(expected, actual)
-	if diff := cmp.Diff(expected, actual, cmpopts.IgnoreFields(TapValidation{}, "ContentLength")); diff != "" {
+	if diff := cmp.Diff(expected, actual, cmpopts.IgnoreFields(TapValidation{}, "ContentLength", "Body", "BodyContains")); diff != "" {
 		t.Errorf("Unexpected difference in %s (-want, +got): %v", ctx, diff)
 	}
+
+	if expected.Body != "" {
+		require.Equal(t, expected.Body, actual.Body)
+	}
+	if expected.BodyContains != nil {
+		for _, bc := range expected.BodyContains {
+			require.Contains(t, actual.Body, bc)
+		}
+	}
+
 }
 
 func canonicalizeHeaders(rvs ...*TapValidation) {
