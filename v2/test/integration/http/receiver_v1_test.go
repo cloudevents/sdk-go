@@ -24,7 +24,7 @@ func TestClientReceiver_Status_Codes(t *testing.T) {
 			},
 			asRecv: &TapValidation{
 				Header:        map[string][]string{},
-				Status:        fmt.Sprintf("%d %s", 415, http.StatusText(415)),
+				Status:        fmt.Sprintf("%d %s", http.StatusUnsupportedMediaType, http.StatusText(http.StatusUnsupportedMediaType)),
 				ContentLength: 0,
 			},
 			receiverFuncFactory: func(cancelFunc context.CancelFunc) interface{} {
@@ -42,7 +42,7 @@ func TestClientReceiver_Status_Codes(t *testing.T) {
 			},
 			asRecv: &TapValidation{
 				Header:        map[string][]string{},
-				Status:        fmt.Sprintf("%d %s", 400, http.StatusText(400)),
+				Status:        fmt.Sprintf("%d %s", http.StatusBadRequest, http.StatusText(http.StatusBadRequest)),
 				ContentLength: 0,
 			},
 			receiverFuncFactory: func(cancelFunc context.CancelFunc) interface{} {
@@ -60,7 +60,7 @@ func TestClientReceiver_Status_Codes(t *testing.T) {
 			},
 			asRecv: &TapValidation{
 				Header:        map[string][]string{},
-				Status:        fmt.Sprintf("%d %s", 400, http.StatusText(400)),
+				Status:        fmt.Sprintf("%d %s", http.StatusBadRequest, http.StatusText(http.StatusBadRequest)),
 				ContentLength: 0,
 			},
 			receiverFuncFactory: func(cancelFunc context.CancelFunc) interface{} {
@@ -78,7 +78,7 @@ func TestClientReceiver_Status_Codes(t *testing.T) {
 			},
 			asRecv: &TapValidation{
 				Header:        map[string][]string{},
-				Status:        fmt.Sprintf("%d %s", 200, http.StatusText(200)),
+				Status:        fmt.Sprintf("%d %s", http.StatusOK, http.StatusText(http.StatusOK)),
 				ContentLength: 0,
 			},
 			receiverFuncFactory: func(cancelFunc context.CancelFunc) interface{} {
