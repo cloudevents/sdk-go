@@ -55,7 +55,7 @@ jobs:
       - run: go get honnef.co/go/tools/cmd/staticcheck
       - run:
           name: "Run staticcheck"
-          command: pushd v2; staticcheck ./...; popd
+          command: pushd v2; staticcheck -tags conformance  ./...; popd
       - run:
           name: Run unit tests
           command: |
