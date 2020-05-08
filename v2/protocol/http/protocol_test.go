@@ -222,6 +222,7 @@ func TestServeHTTP_Receive(t *testing.T) {
 	}{
 		"nil": {
 			rw:      httptest.NewRecorder(),
+			req:     httptest.NewRequest("POST", "http://unittest", nil),
 			wantErr: "unknown Message encoding",
 		},
 	}
