@@ -1,3 +1,5 @@
+// +build conformance
+
 package conformance
 
 import (

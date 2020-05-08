@@ -7,7 +7,7 @@ set -o pipefail
 # v2 only
 pushd ./v2/test/conformance/
 
-go test -v -timeout 15s
+go test --tags=conformance -v -timeout 15s
 
 # Remove test only deps.
 go mod tidy
