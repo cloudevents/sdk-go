@@ -29,6 +29,7 @@ type ReceiverTapTest struct {
 	request             func(url string) *http.Request
 	asRecv              *TapValidation
 	receiverFuncFactory func(context.CancelFunc) interface{}
+	opts                []client.Option
 }
 
 type ReceiverTapTestCases map[string]ReceiverTapTest

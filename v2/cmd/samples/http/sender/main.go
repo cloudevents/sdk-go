@@ -30,7 +30,6 @@ func main() {
 			"message": "Hello, World!",
 		})
 
-		ctx = cloudevents.WithEncodingStructured(ctx)
 		res := c.Send(ctx, e)
 		if !cloudevents.IsACK(res) {
 			log.Printf("Failed to send: %v", res)
