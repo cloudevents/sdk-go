@@ -60,7 +60,6 @@ func main() {
 		RootCAs:            clientCertPool,
 		InsecureSkipVerify: true,
 	}
-	tlsConfig.BuildNameToCertificate()
 
 	httpTransport := &http.Transport{TLSClientConfig: tlsConfig}
 

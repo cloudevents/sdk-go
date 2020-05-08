@@ -14,6 +14,7 @@ type TapValidation struct {
 	URI           string
 	Header        http.Header
 	Body          string
+	BodyContains  []string
 	Status        string
 	ContentLength int64
 }

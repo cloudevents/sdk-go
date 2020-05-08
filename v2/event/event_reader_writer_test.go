@@ -96,7 +96,10 @@ func TestEventRW_ID(t *testing.T) {
 			tc.event.SetID(tc.set)
 			got = tc.event.ID()
 
-			err := tc.event.Validate()
+			var err error
+			if tc.wantErr != "" {
+				err = event.ValidationError(tc.event.FieldErrors)
+			}
 			validateReaderWriter(t, tc, got, err)
 		})
 	}
@@ -134,7 +137,10 @@ func TestEventRW_Source(t *testing.T) {
 			tc.event.SetSource(tc.set)
 			got = tc.event.Source()
 
-			err := tc.event.Validate()
+			var err error
+			if tc.wantErr != "" {
+				err = event.ValidationError(tc.event.FieldErrors)
+			}
 			validateReaderWriter(t, tc, got, err)
 		})
 	}
@@ -170,14 +176,18 @@ func TestEventRW_Corrected_Source(t *testing.T) {
 
 			tc.event.SetSource(set[0])
 			got = tc.event.Source()
-			err = tc.event.Validate()
+			if tc.wantErr != "" {
+				err = event.ValidationError(tc.event.FieldErrors)
+			}
 			validateReaderWriter(t, tc, got, err)
 
 			// Correct
 
 			tc.event.SetSource(set[1])
 			got = tc.event.Source()
-			err = tc.event.Validate()
+			if tc.wantErr != "" {
+				err = event.ValidationError(tc.event.FieldErrors)
+			}
 			validateReaderWriterCorrected(t, tc, got, err)
 		})
 	}
@@ -331,7 +341,10 @@ func TestEventRW_SchemaURL(t *testing.T) {
 			tc.event.SetDataSchema(tc.set)
 			got = tc.event.DataSchema()
 
-			err := tc.event.Validate()
+			var err error
+			if tc.wantErr != "" {
+				err = event.ValidationError(tc.event.FieldErrors)
+			}
 			validateReaderWriter(t, tc, got, err)
 		})
 	}

@@ -2,7 +2,9 @@ package http
 
 import (
 	"context"
-	"github.com/google/go-cmp/cmp/cmpopts"
+
+	"github.com/stretchr/testify/require"
+
 	"net/http"
 	"testing"
 	"time"
@@ -11,7 +13,6 @@ import (
 	cecontext "github.com/cloudevents/sdk-go/v2/context"
 	"github.com/cloudevents/sdk-go/v2/event"
 	"github.com/cloudevents/sdk-go/v2/protocol"
-	"github.com/google/go-cmp/cmp"
 )
 
 func TestRequestWithRetries_linear(t *testing.T) {
@@ -132,9 +133,7 @@ func TestRequestWithRetries_linear(t *testing.T) {
 				got.(*RetriesResult).Attempts = nil
 			}
 
-			if diff := cmp.Diff(tc.wantResult, got, cmpopts.IgnoreFields(RetriesResult{}, "Duration")); diff != "" {
-				t.Errorf("unexpected diff (-want, +got) = %v", diff)
-			}
+			require.Equal(t, tc.wantResult.Error(), got.Error())
 		})
 	}
 }

@@ -108,7 +108,6 @@ func TestSenderReceiver_structured_v1(t *testing.T) {
 }
 
 func TestSenderReceiver_data_base64_v1(t *testing.T) {
-	t.Skip("TODO: bindings does not yet support base64")
 
 	now := time.Now()
 

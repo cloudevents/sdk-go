@@ -46,13 +46,19 @@ func (r *receiveInvoker) Invoke(ctx context.Context, m binding.Message, respFn p
 
 	e, eventErr := binding.ToEvent(ctx, m)
 	switch {
-	case eventErr != nil:
-		result = protocol.NewReceipt(false, "failed to convert Message to Event: %v", eventErr)
+	case eventErr != nil && r.fn.hasEventIn:
+		return respFn(ctx, nil, protocol.NewReceipt(false, "failed to convert Message to Event: %w", eventErr))
+	case r.fn != nil:
+		// Check if event is valid before invoking the receiver function
+		if e != nil {
+			if validationErr := e.Validate(); validationErr != nil {
+				return respFn(ctx, nil, protocol.NewReceipt(false, "validation error in incoming event: %w", validationErr))
+			}
+		}
 
-	case e != nil && r.fn != nil:
+		// Let's invoke the receiver fn
 		var resp *event.Event
-
-		resp, result = r.fn.invoke(ctx, *e)
+		resp, result = r.fn.invoke(ctx, e)
 
 		if respFn == nil {
 			break

@@ -39,7 +39,7 @@ func TestMarshal(t *testing.T) {
 	}{
 		"empty struct": {
 			event:   event.Event{},
-			wantErr: strptr("json: error calling MarshalJSON for type event.Event: every event conforming to the CloudEvents specification MUST include a context"),
+			wantErr: strptr("json: error calling MarshalJSON for type event.Event: specversion: missing Event.Context\n"),
 		},
 		"struct data v0.3": {
 			event: func() event.Event {

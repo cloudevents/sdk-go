@@ -5,7 +5,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/golang:1.13.4
+      - image: circleci/golang:1.14.2
       - image: lensesio/fast-data-dev
         environment:
           - ADV_HOST=localhost
