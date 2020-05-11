@@ -260,7 +260,7 @@ func (p *Protocol) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	m := NewMessageFromHttpRequest(req)
-	if m == nil {
+	if m == nil || m.ReadEncoding() == binding.EncodingUnknown {
 		p.incoming <- msgErr{msg: nil, err: binding.ErrUnknownEncoding}
 		return // if there was no message, return.
 	}
