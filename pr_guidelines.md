@@ -7,10 +7,9 @@ your code. Thanks for getting involved! :rocket:
 
 * [Getting Started](#getting-started)
 * [Branches](#branches)
-* [Commit Messages](#commit-messages)
 * [Staying current with master](#staying-current-with-master)
 * [Style Guide](#style-guide)
-* [Submitting and Updating a Pull Request](#submitting-and-updating-a-pull-request)
+* [Submitting and Updating a Pull Request](#submitting-and-updating-your-pull-request)
 * [Congratulations!](#congratulations)
 
 ## Getting Started

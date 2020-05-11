@@ -16,11 +16,6 @@ such as typos in the documentation this isn't really necessary.
 For step by step help with managing your pull request, have a look at our
 [PR Guidelines](pr_guidelines.md) document.
 
-### Commit Messages
-
-Please follow the
-[Conventional Commits specification](https://www.conventionalcommits.org/en/v1.0.0/#summary).
-
 ### Sign your work
 
 Each PR must be signed. Be sure your `git` `user.name` and `user.email` are configured
