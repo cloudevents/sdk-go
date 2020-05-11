@@ -195,3 +195,45 @@ func WithClient(client nethttp.Client) Option {
 		return nil
 	}
 }
+
+// WithGetHandler sets the http GET handler func
+func WithGetHandlerFunc(fn nethttp.HandlerFunc) Option {
+	return func(p *Protocol) error {
+		if p == nil {
+			return fmt.Errorf("options handler func can not set nil protocol")
+		}
+		p.GetHandlerFn = fn
+		return nil
+	}
+}
+
+// WithOptionsHandler sets the http OPTIONS handler func
+func WithOptionsHandlerFunc(fn nethttp.HandlerFunc) Option {
+	return func(p *Protocol) error {
+		if p == nil {
+			return fmt.Errorf("options handler func can not set nil protocol")
+		}
+		p.OptionsHandlerFn = fn
+		return nil
+	}
+}
+
+// WithDefaultOptionsHandlerFunc sets the options handler to be the built in handler and configures the options.
+// methods: the supported methods reported to OPTIONS caller.
+// rate: the rate limit reported to OPTIONS caller.
+//
+func WithDefaultOptionsHandlerFunc(methods []string, rate int, origins []string, callback bool) Option {
+	return func(p *Protocol) error {
+		if p == nil {
+			return fmt.Errorf("options handler func can not set nil protocol")
+		}
+		p.OptionsHandlerFn = p.DeleteHandlerFn
+		p.WebhookConfig = &WebhookConfig{
+			AllowedMethods:  methods,
+			AllowedRate:     &rate,
+			AllowedOrigins:  origins,
+			AutoACKCallback: callback,
+		}
+		return nil
+	}
+}
