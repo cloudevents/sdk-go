@@ -43,7 +43,7 @@ func (p *Protocol) OptionsHandler(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	allowedRateRequired := false
-	if _, ok := req.Header["WebHook-Request-Rate"]; ok {
+	if _, ok := req.Header[http.CanonicalHeaderKey("WebHook-Request-Rate")]; ok {
 		// must send WebHook-Allowed-Rate
 		allowedRateRequired = true
 	}
@@ -71,7 +71,7 @@ func (p *Protocol) OptionsHandler(rw http.ResponseWriter, req *http.Request) {
 				}
 
 				// Write out the headers.
-				for k, _ := range headers {
+				for k := range headers {
 					reqAck.Header.Set(k, headers.Get(k))
 				}
 
@@ -90,7 +90,7 @@ func (p *Protocol) OptionsHandler(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	// Write out the headers.
-	for k, _ := range headers {
+	for k := range headers {
 		rw.Header().Set(k, headers.Get(k))
 	}
 }

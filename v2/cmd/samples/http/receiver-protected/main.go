@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/cloudevents/sdk-go/v2/protocol/http"
 	"log"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
@@ -11,19 +10,12 @@ import (
 
 func main() {
 	ctx := context.Background()
-	p, err := cloudevents.NewHTTP()
+	p, err := cloudevents.NewHTTP(
+		cloudevents.WithDefaultOptionsHandlerFunc([]string{"POST", "OPTIONS"}, 100, []string{"http://localhost:8181"}, true),
+	)
 	if err != nil {
 		log.Fatalf("failed to create protocol: %s", err.Error())
 	}
-
-	rate := 100
-	p.WebhookConfig = &http.WebhookConfig{
-		AllowedMethods:  []string{"POST", "OPTIONS"},
-		AllowedRate:     &rate,
-		AutoACKCallback: true,
-		AllowedOrigins:  []string{"http://localhost:8181"},
-	}
-	p.OptionsHandlerFn = p.OptionsHandler
 
 	c, err := cloudevents.NewClient(p)
 	if err != nil {
@@ -41,7 +33,7 @@ func receive(ctx context.Context, event cloudevents.Event) {
 //
 // Testing with:
 //
-// PORT=8181 go run ./cmd/samples/http/raw/
+// PORT=8181 go run ./cmd/tools/http/raw/
 //
 // curl http://localhost:8080 -v -X OPTIONS -H "Origin: http://example.com" -H "WebHook-Request-Origin: http://example.com" -H "WebHook-Request-Callback: http://localhost:8181/do-this?now=true"
 //
