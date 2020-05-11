@@ -1,4 +1,4 @@
-# Contributing to CloudEvents Go SDK
+# Contributing to CloudEvents sdk-go
 
 :+1::tada: First off, thanks for taking the time to contribute! :tada::+1:
 
@@ -27,10 +27,4 @@ git commit --signoff
 
 ### Style Guide
 
-Code style for this module is maintained using [`eslint`](https://www.npmjs.com/package/eslint).
-When you run tests with `npm test` linting is performed first. If you want to
-check your code style for linting errors without running tests, you can just
-run `npm run lint`. If there are errors, you can usually fix them automatically
-by running `npm run fix`.
-
-Linting rules are declared in [.eslintrc](https://github.com/cloudevents/sdk-javascript/blob/master/.eslintrc).
+Code style for this module is maintained using [`go fmt`](https://golang.org/cmd/go/#hdr-Gofmt__reformat__package_sources).

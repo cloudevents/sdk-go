@@ -19,7 +19,7 @@ local development environment. Then add this repository as the upstream.
 
 ```console
 git clone https://github.com/mygithuborg/sdk-go.git
-cd sdk-javascript
+cd sdk-go
 git remote add upstream https://github.com/cloudevents/sdk-go.git
 ```
 
@@ -30,12 +30,12 @@ If you are submitting a pull request that fixes or relates to an existing
 GitHub issue, you can use this in your branch name to keep things organized.
 For example, if you were to create a pull request to fix
 [this error with validation](https://github.com/cloudevents/sdk-go/issues/486)
-you might create a branch named `48-fix-http-agent-error`.
+you might create a branch named `486-fix-if-present-validation`.
 
 ```console
 git fetch upstream
 git reset --hard upstream/master
-git checkout -b 48-fix-if-present-validation
+git checkout -b 486-fix-if-present-validation
 ```
 
 ### Signing your commits
@@ -93,13 +93,13 @@ If you've already pushed some changes to your `origin` fork, you'll
 need to force push these changes.
 
 ```console
-git push -f origin 48-fix-if-present-validation
+git push -f origin 486-fix-if-present-validation
 ```
 
 ## Submitting and Updating Your Pull Request
 
 Before submitting a pull request, you should make sure that all of the tests
-successfully pass by running `npm test`.
+successfully pass.
 
 Once you have sent your pull request, `master` may continue to evolve
 before your pull request has landed. If there are any commits on `master`
@@ -111,7 +111,7 @@ way as before.
 git fetch upstream
 git rebase upstream/master
 # fix any potential conflicts
-git push -f origin 48-fix-if-present-validation
+git push -f origin 486-fix-if-present-validation
 ```
 
 This will cause the pull request to be updated with your changes, and
