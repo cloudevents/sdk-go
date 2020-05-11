@@ -28,3 +28,8 @@ git commit --signoff
 ### Style Guide
 
 Code style for this module is maintained using [`go fmt`](https://golang.org/cmd/go/#hdr-Gofmt__reformat__package_sources).
+
+### Maintainers
+
+If you are a maintainer of this repository, [here](maintainers_guide.pr) is a brief
+guide with helpful tips.
