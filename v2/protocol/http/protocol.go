@@ -41,7 +41,8 @@ type Protocol struct {
 	// If nil, DefaultShutdownTimeout is used.
 	ShutdownTimeout time.Duration
 
-	// Port is the port to bind the receiver to. Defaults to 8080.
+	// Port is the port configured to bind the receiver to. Defaults to 8080.
+	// If you want to know the effective port you're listening to, use GetListeningPort()
 	Port int
 	// Path is the path to bind the receiver to. Defaults to "/".
 	Path string
@@ -62,6 +63,7 @@ type Protocol struct {
 func New(opts ...Option) (*Protocol, error) {
 	p := &Protocol{
 		incoming: make(chan msgErr),
+		Port:     -1,
 	}
 	if err := p.applyOptions(opts...); err != nil {
 		return nil, err

@@ -87,7 +87,7 @@ func formatSpanName(r *http.Request) string {
 func (p *Protocol) listen() (net.Listener, error) {
 	if p.listener.Load() == nil {
 		port := 8080
-		if p.Port != 0 {
+		if p.Port != -1 {
 			port = p.Port
 			if port < 0 || port > 65535 {
 				return nil, fmt.Errorf("invalid port %d", port)

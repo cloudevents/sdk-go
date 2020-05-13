@@ -80,16 +80,14 @@ func WithShutdownTimeout(timeout time.Duration) Option {
 
 func checkListen(t *Protocol, prefix string) error {
 	switch {
-	case t.Port != 0:
-		return fmt.Errorf("%v port already set", prefix)
 	case t.listener.Load() != nil:
-		return fmt.Errorf("%v listener already set", prefix)
+		return fmt.Errorf("error setting %v: listener already set", prefix)
 	}
 	return nil
 }
 
 // WithPort sets the listening port for StartReceiver.
-// Only one of WithListener  or WithPort is allowed.
+// Only one of WithListener or WithPort is allowed.
 func WithPort(port int) Option {
 	return func(t *Protocol) error {
 		if t == nil {
@@ -113,7 +111,7 @@ func WithListener(l net.Listener) Option {
 		if t == nil {
 			return fmt.Errorf("http listener option can not set nil protocol")
 		}
-		if err := checkListen(t, "http port option"); err != nil {
+		if err := checkListen(t, "http listener"); err != nil {
 			return err
 		}
 		t.listener.Store(l)
