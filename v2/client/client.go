@@ -207,9 +207,6 @@ func (c *ceClient) StartReceiver(ctx context.Context, fn interface{}) error {
 		}()
 	}
 
-	var msg binding.Message
-	var respFn protocol.ResponseFn
-
 	// Start Polling.
 	wg := sync.WaitGroup{}
 	for i := 0; i < c.pollGoroutines; i++ {
@@ -217,6 +214,10 @@ func (c *ceClient) StartReceiver(ctx context.Context, fn interface{}) error {
 		go func() {
 			defer wg.Done()
 			for {
+				var msg binding.Message
+				var respFn protocol.ResponseFn
+				var err error
+
 				if c.responder != nil {
 					msg, respFn, err = c.responder.Respond(ctx)
 				} else if c.receiver != nil {

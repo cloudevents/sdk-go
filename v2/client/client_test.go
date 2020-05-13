@@ -397,7 +397,7 @@ func TestClientReceive(t *testing.T) {
 
 				ctx, cancel := context.WithCancel(context.TODO())
 				go func() {
-					err = c.StartReceiver(ctx, func(ctx context.Context, event event.Event) error {
+					err := c.StartReceiver(ctx, func(ctx context.Context, event event.Event) error {
 						go func() {
 							events <- event
 						}()
