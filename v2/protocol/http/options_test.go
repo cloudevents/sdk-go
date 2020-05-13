@@ -402,7 +402,7 @@ func TestWithPort0(t *testing.T) {
 				t.Fatal(err)
 			}
 			defer func() { forceClose(tr) }()
-			port := tr.GetPort()
+			port := tr.GetListeningPort()
 			if port <= 0 {
 				t.Error("no dynamic port")
 			}
@@ -423,7 +423,7 @@ func TestWithListener_forcecloser(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	port := tr.GetPort()
+	port := tr.GetListeningPort()
 	if port <= 0 {
 		t.Error("no dynamic port")
 	}

@@ -80,9 +80,9 @@ func WithShutdownTimeout(timeout time.Duration) Option {
 
 func checkListen(t *Protocol, prefix string) error {
 	switch {
-	case t.Port != nil:
+	case t.Port != 0:
 		return fmt.Errorf("%v port already set", prefix)
-	case t.listener != nil:
+	case t.listener.Load() != nil:
 		return fmt.Errorf("%v listener already set", prefix)
 	}
 	return nil
@@ -101,7 +101,7 @@ func WithPort(port int) Option {
 		if err := checkListen(t, "http port option"); err != nil {
 			return err
 		}
-		t.setPort(port)
+		t.Port = port
 		return nil
 	}
 }
@@ -116,9 +116,8 @@ func WithListener(l net.Listener) Option {
 		if err := checkListen(t, "http port option"); err != nil {
 			return err
 		}
-		t.listener = l
-		_, err := t.listen()
-		return err
+		t.listener.Store(l)
+		return nil
 	}
 }
 

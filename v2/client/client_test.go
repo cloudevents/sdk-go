@@ -409,7 +409,7 @@ func TestClientReceive(t *testing.T) {
 				}()
 				time.Sleep(5 * time.Millisecond) // let the server start
 
-				target, _ := url.Parse(fmt.Sprintf("http://localhost:%d%s", p.GetPort(), p.GetPath()))
+				target, _ := url.Parse(fmt.Sprintf("http://localhost:%d%s", p.GetListeningPort(), p.GetPath()))
 
 				if tc.wantErr != "" {
 					if err == nil {
@@ -529,7 +529,7 @@ func TestTracedClientReceive(t *testing.T) {
 			}()
 			time.Sleep(5 * time.Millisecond) // let the server start
 
-			target := fmt.Sprintf("http://localhost:%d", p.GetPort())
+			target := fmt.Sprintf("http://localhost:%d", p.GetListeningPort())
 			sender := simpleTracingBinaryClient(target)
 
 			ctx, span := trace.StartSpan(context.TODO(), "test-span")
