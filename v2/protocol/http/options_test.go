@@ -5,11 +5,13 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/stretchr/testify/require"
 )
 
 func TestWithTarget(t *testing.T) {
@@ -308,10 +310,6 @@ func TestWithShutdownTimeout(t *testing.T) {
 	}
 }
 
-func intptr(i int) *int {
-	return &i
-}
-
 func TestWithPort(t *testing.T) {
 	testCases := map[string]struct {
 		t       *Protocol
@@ -323,7 +321,7 @@ func TestWithPort(t *testing.T) {
 			t:    &Protocol{},
 			port: 8181,
 			want: &Protocol{
-				Port: intptr(8181),
+				Port: 8181,
 			},
 		},
 		"invalid port, low": {
@@ -336,22 +334,17 @@ func TestWithPort(t *testing.T) {
 			port:    65536,
 			wantErr: `http port option was given an invalid port: 65536`,
 		},
-		"port already set": {
-			t: &Protocol{
-				Port: intptr(8080),
-			},
-			port:    8181,
-			wantErr: `http port option port already set`,
-		},
 		"listener already set": {
 			t: &Protocol{
-				listener: func() net.Listener {
+				listener: func() atomic.Value {
 					l, _ := net.Listen("tcp", ":0")
-					return l
+					v := atomic.Value{}
+					v.Store(l)
+					return v
 				}(),
 			},
 			port:    8181,
-			wantErr: `http port option listener already set`,
+			wantErr: `error setting http port option: listener already set`,
 		},
 		"nil protocol": {
 			wantErr: `http port option can not set nil protocol`,
@@ -393,7 +386,7 @@ func forceClose(tr *Protocol) {
 func TestWithPort0(t *testing.T) {
 	testCases := map[string]func() (*Protocol, error){
 		"WithPort0": func() (*Protocol, error) { return New(WithPort(0)) },
-		"SetPort0":  func() (*Protocol, error) { return &Protocol{Port: new(int)}, nil },
+		"SetPort0":  func() (*Protocol, error) { return &Protocol{Port: 0}, nil },
 	}
 	for name, f := range testCases {
 		t.Run(name, func(t *testing.T) {
@@ -402,13 +395,14 @@ func TestWithPort0(t *testing.T) {
 				t.Fatal(err)
 			}
 			defer func() { forceClose(tr) }()
-			port := tr.GetPort()
-			if port <= 0 {
-				t.Error("no dynamic port")
-			}
-			if d := cmp.Diff(port, *tr.Port); d != "" {
-				t.Error(d)
-			}
+			// Start listening
+			listener, err := tr.listen()
+			require.NoError(t, err)
+			require.NotNil(t, listener)
+
+			// Check the listening port is correct
+			port := tr.GetListeningPort()
+			require.Greater(t, port, 0)
 		})
 	}
 }
@@ -423,7 +417,7 @@ func TestWithListener_forcecloser(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	port := tr.GetPort()
+	port := tr.GetListeningPort()
 	if port <= 0 {
 		t.Error("no dynamic port")
 	}
@@ -446,21 +440,23 @@ func TestWithListener(t *testing.T) {
 				return l
 			}(),
 			want: &Protocol{
-				Port: intptr(0),
+				Port: 0,
 			},
 		},
 		"listener already set": {
 			t: &Protocol{
-				listener: func() net.Listener {
+				listener: func() atomic.Value {
 					l, _ := net.Listen("tcp", ":0")
-					return l
+					v := atomic.Value{}
+					v.Store(l)
+					return v
 				}(),
 			},
 			listener: func() net.Listener {
 				l, _ := net.Listen("tcp", ":0")
 				return l
 			}(),
-			wantErr: `http port option listener already set`,
+			wantErr: `error setting http listener: listener already set`,
 		},
 		"nil protocol": {
 			wantErr: `http listener option can not set nil protocol`,

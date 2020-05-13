@@ -28,6 +28,7 @@ func TestNew(t *testing.T) {
 			want: &Protocol{
 				Client:          http.DefaultClient,
 				ShutdownTimeout: dst,
+				Port:            -1,
 			},
 		},
 	}

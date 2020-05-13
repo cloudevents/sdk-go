@@ -5,10 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
 	"net/url"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
@@ -41,8 +41,9 @@ type Protocol struct {
 	// If nil, DefaultShutdownTimeout is used.
 	ShutdownTimeout time.Duration
 
-	// Port is the port to bind the receiver to. Defaults to 8080.
-	Port *int
+	// Port is the port configured to bind the receiver to. Defaults to 8080.
+	// If you want to know the effective port you're listening to, use GetListeningPort()
+	Port int
 	// Path is the path to bind the receiver to. Defaults to "/".
 	Path string
 
@@ -50,8 +51,9 @@ type Protocol struct {
 	reMu sync.Mutex
 	// Handler is the handler the http Server will use. Use this to reuse the
 	// http server. If nil, the Protocol will create a one.
-	Handler           *http.ServeMux
-	listener          net.Listener
+	Handler *http.ServeMux
+
+	listener          atomic.Value
 	roundTripper      http.RoundTripper
 	server            *http.Server
 	handlerRegistered bool
@@ -61,6 +63,7 @@ type Protocol struct {
 func New(opts ...Option) (*Protocol, error) {
 	p := &Protocol{
 		incoming: make(chan msgErr),
+		Port:     -1,
 	}
 	if err := p.applyOptions(opts...); err != nil {
 		return nil, err
