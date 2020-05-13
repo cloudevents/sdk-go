@@ -3,7 +3,6 @@ package format
 import (
 	"encoding/json"
 	"fmt"
-	"mime"
 	"strings"
 
 	"github.com/cloudevents/sdk-go/v2/event"
@@ -47,8 +46,10 @@ func init() {
 
 // Lookup returns the format for contentType, or nil if not found.
 func Lookup(contentType string) Format {
-	mediaType, _, _ := mime.ParseMediaType(contentType)
-	return formats[mediaType]
+	if i := strings.IndexRune(contentType, ';'); i != -1 {
+		return formats[contentType[0:i]]
+	}
+	return formats[contentType]
 }
 
 func unknown(mediaType string) error {
