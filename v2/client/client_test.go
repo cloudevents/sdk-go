@@ -436,7 +436,7 @@ func TestClientReceive(t *testing.T) {
 					ContentLength: int64(len([]byte(tc.req.Body))),
 				}
 
-				_, err = http.DefaultClient.Do(req)
+				_, _ = http.DefaultClient.Do(req)
 
 				//// Make a copy of the request.
 				//body, err := ioutil.ReadAll(resp.Body)
@@ -465,7 +465,7 @@ func TestClientReceive(t *testing.T) {
 
 				// try the request again, expecting an error:
 
-				if _, err = http.DefaultClient.Do(req); err == nil {
+				if _, err := http.DefaultClient.Do(req); err == nil {
 					t.Fatalf("expected error to when sending request to stopped client")
 				}
 			})

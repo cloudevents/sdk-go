@@ -310,10 +310,6 @@ func TestWithShutdownTimeout(t *testing.T) {
 	}
 }
 
-func intptr(i int) *int {
-	return &i
-}
-
 func TestWithPort(t *testing.T) {
 	testCases := map[string]struct {
 		t       *Protocol
