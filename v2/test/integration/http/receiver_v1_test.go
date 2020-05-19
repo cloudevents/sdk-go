@@ -93,6 +93,42 @@ func TestClientReceiver_Status_Codes(t *testing.T) {
 			receiverFuncFactory: func(cancelFunc context.CancelFunc) interface{} {
 				return func() *cloudevents.Event {
 					defer cancelFunc()
+					return nil // acts as a 200 OK
+				}
+			},
+		},
+		"405 if the receiver is not expecting a GET request": {
+			now: now,
+			request: func(url string) *http.Request {
+				req, _ := http.NewRequest("GET", url, nil)
+				return req
+			},
+			asRecv: &TapValidation{
+				Header:        map[string][]string{},
+				Status:        fmt.Sprintf("%d %s", http.StatusMethodNotAllowed, http.StatusText(http.StatusMethodNotAllowed)),
+				ContentLength: 0,
+			},
+			receiverFuncFactory: func(cancelFunc context.CancelFunc) interface{} {
+				return func() *cloudevents.Event {
+					defer cancelFunc()
+					return nil
+				}
+			},
+		},
+		"405 if the receiver is not expecting an OPTIONS request": {
+			now: now,
+			request: func(url string) *http.Request {
+				req, _ := http.NewRequest("OPTIONS", url, nil)
+				return req
+			},
+			asRecv: &TapValidation{
+				Header:        map[string][]string{},
+				Status:        fmt.Sprintf("%d %s", http.StatusMethodNotAllowed, http.StatusText(http.StatusMethodNotAllowed)),
+				ContentLength: 0,
+			},
+			receiverFuncFactory: func(cancelFunc context.CancelFunc) interface{} {
+				return func() *cloudevents.Event {
+					defer cancelFunc()
 					return nil
 				}
 			},
@@ -101,7 +137,7 @@ func TestClientReceiver_Status_Codes(t *testing.T) {
 
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
-			ClientReceiver(t, tc)
+			ClientReceiver(t, tc, tc.opts...)
 		})
 	}
 }

@@ -221,9 +221,9 @@ func TestServeHTTP_Receive(t *testing.T) {
 		want    binding.Message
 		wantErr string
 	}{
-		"nil": {
-			rw:      httptest.NewRecorder(),
-			wantErr: "unknown Message encoding",
+		"non-event": {
+			rw:  httptest.NewRecorder(),
+			req: httptest.NewRequest("POST", "http://unittest", nil),
 		},
 	}
 	for n, tc := range testCases {

@@ -600,3 +600,87 @@ func TestWithRoundTripper(t *testing.T) {
 		})
 	}
 }
+
+func TestWithGetHandlerFunc(t *testing.T) {
+	testCases := map[string]struct {
+		t       *Protocol
+		fn      http.HandlerFunc
+		wantErr string
+	}{
+		"nil protocol": {
+			wantErr: "http GET handler func can not set nil protocol",
+		},
+		"non-nil protocol": {
+			t:  &Protocol{},
+			fn: func(http.ResponseWriter, *http.Request) {},
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+			err := tc.t.applyOptions(WithGetHandlerFunc(tc.fn))
+			if tc.wantErr != "" {
+				if err == nil || err.Error() != tc.wantErr {
+					t.Fatalf("Expected error '%s'. Actual '%v'", tc.wantErr, err)
+				}
+			} else if err != nil {
+				t.Fatalf("Unexpected error: %v", err)
+			}
+		})
+	}
+}
+
+func TestWithOptionsHandlerFunc(t *testing.T) {
+	testCases := map[string]struct {
+		t       *Protocol
+		fn      http.HandlerFunc
+		wantErr string
+	}{
+		"nil protocol": {
+			wantErr: "http OPTIONS handler func can not set nil protocol",
+		},
+		"non-nil protocol": {
+			t:  &Protocol{},
+			fn: func(http.ResponseWriter, *http.Request) {},
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+			err := tc.t.applyOptions(WithOptionsHandlerFunc(tc.fn))
+			if tc.wantErr != "" {
+				if err == nil || err.Error() != tc.wantErr {
+					t.Fatalf("Expected error '%s'. Actual '%v'", tc.wantErr, err)
+				}
+			} else if err != nil {
+				t.Fatalf("Unexpected error: %v", err)
+			}
+		})
+	}
+}
+
+func TestWithDefaultOptionsHandlerFunc(t *testing.T) {
+	testCases := map[string]struct {
+		t       *Protocol
+		fn      http.HandlerFunc
+		wantErr string
+	}{
+		"nil protocol": {
+			wantErr: "http OPTIONS handler func can not set nil protocol",
+		},
+		"non-nil protocol": {
+			t:  &Protocol{},
+			fn: func(http.ResponseWriter, *http.Request) {},
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+			err := tc.t.applyOptions(WithOptionsHandlerFunc(tc.fn))
+			if tc.wantErr != "" {
+				if err == nil || err.Error() != tc.wantErr {
+					t.Fatalf("Expected error '%s'. Actual '%v'", tc.wantErr, err)
+				}
+			} else if err != nil {
+				t.Fatalf("Unexpected error: %v", err)
+			}
+		})
+	}
+}
