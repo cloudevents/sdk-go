@@ -397,7 +397,7 @@ func TestClientReceive(t *testing.T) {
 
 				ctx, cancel := context.WithCancel(context.TODO())
 				go func() {
-					err = c.StartReceiver(ctx, func(ctx context.Context, event event.Event) error {
+					err := c.StartReceiver(ctx, func(ctx context.Context, event event.Event) error {
 						go func() {
 							events <- event
 						}()
@@ -409,7 +409,7 @@ func TestClientReceive(t *testing.T) {
 				}()
 				time.Sleep(5 * time.Millisecond) // let the server start
 
-				target, _ := url.Parse(fmt.Sprintf("http://localhost:%d%s", p.GetPort(), p.GetPath()))
+				target, _ := url.Parse(fmt.Sprintf("http://localhost:%d%s", p.GetListeningPort(), p.GetPath()))
 
 				if tc.wantErr != "" {
 					if err == nil {
@@ -436,7 +436,7 @@ func TestClientReceive(t *testing.T) {
 					ContentLength: int64(len([]byte(tc.req.Body))),
 				}
 
-				_, err = http.DefaultClient.Do(req)
+				_, _ = http.DefaultClient.Do(req)
 
 				//// Make a copy of the request.
 				//body, err := ioutil.ReadAll(resp.Body)
@@ -465,7 +465,7 @@ func TestClientReceive(t *testing.T) {
 
 				// try the request again, expecting an error:
 
-				if _, err = http.DefaultClient.Do(req); err == nil {
+				if _, err := http.DefaultClient.Do(req); err == nil {
 					t.Fatalf("expected error to when sending request to stopped client")
 				}
 			})
@@ -529,7 +529,7 @@ func TestTracedClientReceive(t *testing.T) {
 			}()
 			time.Sleep(5 * time.Millisecond) // let the server start
 
-			target := fmt.Sprintf("http://localhost:%d", p.GetPort())
+			target := fmt.Sprintf("http://localhost:%d", p.GetListeningPort())
 			sender := simpleTracingBinaryClient(target)
 
 			ctx, span := trace.StartSpan(context.TODO(), "test-span")
