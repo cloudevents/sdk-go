@@ -263,9 +263,10 @@ func (p *Protocol) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	m := NewMessageFromHttpRequest(req)
-	if m == nil || m.ReadEncoding() == binding.EncodingUnknown {
+	if m == nil {
+		// Should never get here unless ServeHTTP is called directly.
 		p.incoming <- msgErr{msg: nil, err: binding.ErrUnknownEncoding}
-		rw.WriteHeader(http.StatusUnsupportedMediaType)
+		rw.WriteHeader(http.StatusBadRequest)
 		return // if there was no message, return.
 	}
 

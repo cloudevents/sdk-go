@@ -78,7 +78,7 @@ func TestClientReceiver_Status_Codes(t *testing.T) {
 				}
 			},
 		},
-		"415 if the receiver is not expecting an event and the received request doesn't contain an event": {
+		"200 if the receiver is not expecting an event and the received request doesn't contain an event": {
 			now: now,
 			request: func(url string) *http.Request {
 				req, _ := http.NewRequest("POST", url, bytes.NewReader(toBytes(map[string]interface{}{"hello": "Francesco"})))
@@ -87,13 +87,13 @@ func TestClientReceiver_Status_Codes(t *testing.T) {
 			},
 			asRecv: &TapValidation{
 				Header:        map[string][]string{},
-				Status:        fmt.Sprintf("%d %s", http.StatusUnsupportedMediaType, http.StatusText(http.StatusUnsupportedMediaType)),
+				Status:        fmt.Sprintf("%d %s", http.StatusOK, http.StatusText(http.StatusOK)),
 				ContentLength: 0,
 			},
 			receiverFuncFactory: func(cancelFunc context.CancelFunc) interface{} {
 				return func() *cloudevents.Event {
 					defer cancelFunc()
-					return nil
+					return nil // acts as a 200 OK
 				}
 			},
 		},
