@@ -75,11 +75,26 @@ func TestNil_As(t *testing.T) {
 }
 
 func TestNew_Error(t *testing.T) {
-	err := NewResult(500, "this is an example error, %s", "yep")
+	cases := []struct {
+		name string
+		err  error
+		want string
+	}{{
+		name: "no wrapped error",
+		err:  NewResult(500, "this is an example error, %s", "yep"),
+		want: "500: this is an example error, yep",
+	}, {
+		name: "wrapped error",
+		err:  NewResult(400, "outer error: %w", errors.New("inner error")),
+		want: "400: outer error: inner error",
+	}}
 
-	const want = "500: this is an example error, yep"
-	got := err.Error()
-	if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("Unexpected diff (-want, +got) = %v", diff)
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := tc.err.Error()
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("Unexpected diff (-want, +got) = %v", diff)
+			}
+		})
 	}
 }
