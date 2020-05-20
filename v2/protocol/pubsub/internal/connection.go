@@ -76,11 +76,7 @@ var DefaultReceiveSettings = pubsub.ReceiveSettings{
 	// Pubsub default receive settings will fill in other values.
 	// https://godoc.org/cloud.google.com/go/pubsub#Client.Subscription
 
-	// Override the default number of goroutines.
-	// This is a magical number now. This has shown throughput improvements empirically
-	// by at least 10x (compared to the default value).
-	NumGoroutines: 1000,
-	Synchronous:   false,
+	Synchronous: false,
 }
 
 func (c *Connection) getOrCreateTopicInfo(ctx context.Context, getAlreadyOpenOnly bool) (*topicInfo, error) {
