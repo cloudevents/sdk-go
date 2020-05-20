@@ -78,6 +78,182 @@ func simpleStructuredClient(target string) client.Client {
 	return c
 }
 
+func TestClientRequest(t *testing.T) {
+	now := time.Now()
+
+	binData := []byte(`{"msg":"hello","sq":42}`)
+	structureData := []byte(
+		fmt.Sprintf(`{"data":{"msg":"hello","sq":42},"datacontenttype":"application/json","id":"AABBCCDDEE","source":"/unit/test/client","specversion":"0.3","time":%q,"type":"unit.test.client"}`,
+			now.UTC().Format(time.RFC3339Nano)))
+
+	binLen := int64(len(binData))
+	structureLen := int64(len(structureData))
+
+	testCases := map[string]struct {
+		c       func(target string) client.Client
+		event   event.Event
+		resp    *http.Response
+		want    *requestValidation
+		wantRes string
+	}{
+		"binary simple v0.3": {
+			c: simpleBinaryClient,
+			event: func() event.Event {
+				e := event.Event{
+					Context: event.EventContextV03{
+						Type:   "unit.test.client",
+						Source: *types.ParseURIRef("/unit/test/client"),
+						Time:   &types.Timestamp{Time: now},
+						ID:     "AABBCCDDEE",
+					}.AsV03(),
+				}
+				_ = e.SetData(event.ApplicationJSON, &map[string]interface{}{
+					"sq":  42,
+					"msg": "hello",
+				})
+				return e
+			}(),
+			resp: &http.Response{
+				StatusCode: http.StatusOK,
+				Header: map[string][]string{
+					"ce-specversion": {"0.3"},
+					"ce-id":          {"AABBCCDDEE"},
+					"ce-time":        {now.UTC().Format(time.RFC3339Nano)},
+					"ce-type":        {"unit.test.client"},
+					"ce-source":      {"/unit/test/client"},
+					"content-type":   {"application/json"},
+				},
+				Body:          ioutil.NopCloser(bytes.NewBuffer(binData)),
+				ContentLength: binLen,
+			},
+			want: &requestValidation{
+				Headers: map[string][]string{
+					"ce-specversion": {"0.3"},
+					"ce-id":          {"AABBCCDDEE"},
+					"ce-time":        {now.UTC().Format(time.RFC3339Nano)},
+					"ce-type":        {"unit.test.client"},
+					"ce-source":      {"/unit/test/client"},
+					"content-type":   {"application/json"},
+				},
+				Body: binData,
+			},
+		},
+		"structured simple v0.3": {
+			c: simpleStructuredClient,
+			event: func() event.Event {
+				e := event.Event{
+					Context: event.EventContextV03{
+						Type:   "unit.test.client",
+						Source: *types.ParseURIRef("/unit/test/client"),
+						Time:   &types.Timestamp{Time: now},
+						ID:     "AABBCCDDEE",
+					}.AsV03(),
+				}
+				_ = e.SetData(event.ApplicationJSON, &map[string]interface{}{
+					"sq":  42,
+					"msg": "hello",
+				})
+				return e
+			}(),
+			resp: &http.Response{
+				StatusCode: http.StatusOK,
+				Header: map[string][]string{
+					"content-type": {"application/cloudevents+json"},
+				},
+				Body:          ioutil.NopCloser(bytes.NewBuffer(structureData)),
+				ContentLength: structureLen,
+			},
+			want: &requestValidation{
+				Headers: map[string][]string{
+					"content-type": {"application/cloudevents+json"},
+				},
+				Body: structureData,
+			},
+		},
+		"error response": {
+			c: simpleBinaryClient,
+			event: func() event.Event {
+				e := event.Event{
+					Context: event.EventContextV03{
+						Type:   "unit.test.client",
+						Source: *types.ParseURIRef("/unit/test/client"),
+						Time:   &types.Timestamp{Time: now},
+						ID:     "AABBCCDDEE",
+					}.AsV03(),
+				}
+				_ = e.SetData(event.ApplicationJSON, &map[string]interface{}{
+					"sq":  42,
+					"msg": "hello",
+				})
+				return e
+			}(),
+			resp: &http.Response{
+				StatusCode: http.StatusBadRequest,
+				Header: map[string][]string{
+					"ce-specversion": {"0.3"},
+					"ce-id":          {"AABBCCDDEE"},
+					"ce-time":        {now.UTC().Format(time.RFC3339Nano)},
+					"ce-type":        {"unit.test.client"},
+					"ce-source":      {"/unit/test/client"},
+					"content-type":   {"application/json"},
+				},
+				Body:          ioutil.NopCloser(bytes.NewBuffer(binData)),
+				ContentLength: binLen,
+			},
+			want: &requestValidation{
+				Headers: map[string][]string{
+					"ce-specversion": {"0.3"},
+					"ce-id":          {"AABBCCDDEE"},
+					"ce-time":        {now.UTC().Format(time.RFC3339Nano)},
+					"ce-type":        {"unit.test.client"},
+					"ce-source":      {"/unit/test/client"},
+					"content-type":   {"application/json"},
+				},
+				Body: binData,
+			},
+			wantRes: "400: ",
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+			handler := &fakeHandler{
+				t:        t,
+				response: tc.resp,
+				requests: make([]requestValidation, 0),
+			}
+			server := httptest.NewServer(handler)
+			defer server.Close()
+
+			c := tc.c(server.URL)
+
+			gotEvent, result := c.Request(context.TODO(), tc.event)
+			if tc.wantRes != "" {
+				if result == nil {
+					t.Fatalf("failed to return expected error, got nil")
+				}
+				want := tc.wantRes
+				got := result.Error()
+				if !strings.Contains(got, want) {
+					t.Fatalf("failed to return expected error, got %q, want %q", result, want)
+				}
+				return
+			} else {
+				if !protocol.IsACK(result) {
+					t.Fatalf("expected ACK, got: %s", result)
+				}
+
+				if diff := cmp.Diff(&tc.event, gotEvent); diff != "" {
+					t.Errorf("Event replied (-want,+got): %v", diff)
+				}
+			}
+
+			rv := handler.popRequest(t)
+
+			assertEquality(t, server.URL, *tc.want, rv)
+		})
+	}
+}
+
 func TestClientSend(t *testing.T) {
 	now := time.Now()
 
