@@ -2,9 +2,11 @@ package http
 
 import (
 	"fmt"
-	"github.com/cloudevents/sdk-go/v2/client"
+	"net/http"
 	"testing"
 	"time"
+
+	"github.com/cloudevents/sdk-go/v2/client"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 )
@@ -151,6 +153,39 @@ func TestClientLoopback_binary_base64_v03tov03(t *testing.T) {
 				Body:          `eyJ1bml0dGVzdCI6InJlc3BvbnNlIn0=`, // {"unittest":"response"}
 				Status:        "200 OK",
 				ContentLength: 32,
+			},
+		},
+		"Loopback v0.3 with error": {
+			now: now,
+			event: &cloudevents.Event{
+				Context: cloudevents.EventContextV1{
+					ID:              "ABC-123",
+					Type:            "unit.test.client.sent",
+					Source:          *cloudevents.ParseURIRef("/unit/test/client"),
+					Subject:         strptr("resource"),
+					DataContentType: cloudevents.StringOfApplicationJSON(),
+				}.AsV1(),
+				DataEncoded: toBytes(map[string]interface{}{"hello": "unittest"}),
+			},
+			result: cloudevents.NewHTTPResult(http.StatusBadRequest, "unit test %s", http.StatusText(http.StatusBadRequest)),
+			asSent: &TapValidation{
+				Method: "POST",
+				URI:    "/",
+				Header: map[string][]string{
+					"ce-specversion": {"0.3"},
+					"ce-id":          {"ABC-123"},
+					"ce-time":        {now.UTC().Format(time.RFC3339Nano)},
+					"ce-type":        {"unit.test.client.sent"},
+					"ce-source":      {"/unit/test/client"},
+					"ce-subject":     {"resource"},
+					"content-type":   {"application/json"},
+				},
+				Body:          `{"hello":"unittest"}`,
+				ContentLength: 20,
+			},
+			asRecv: &TapValidation{
+				Header: http.Header{},
+				Status: "400 Bad Request",
 			},
 		},
 	}

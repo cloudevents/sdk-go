@@ -149,7 +149,7 @@ func (c *ceClient) Request(ctx context.Context, e event.Event) (*event.Event, pr
 			}
 		}()
 	}
-	if protocol.IsNACK(err) {
+	if !protocol.IsACK(err) {
 		return nil, err
 	}
 
