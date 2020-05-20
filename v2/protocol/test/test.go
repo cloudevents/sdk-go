@@ -33,17 +33,26 @@ func SendReceive(t *testing.T, ctx context.Context, in binding.Message, s protoc
 
 	go func() {
 		defer wg.Done()
+		mx := sync.Mutex{}
 		finished := false
 		in = binding.WithFinish(in, func(err error) {
 			require.NoError(t, err)
+			mx.Lock()
 			finished = true
+			mx.Unlock()
 		})
 		result := s.Send(ctx, in)
+
+		mx.Lock()
 		if !protocol.IsACK(result) {
 			require.NoError(t, result)
 		}
+		mx.Unlock()
+
 		time.Sleep(5 * time.Millisecond) // let the receiver receive.
+		mx.Lock()
 		require.True(t, finished)
+		mx.Unlock()
 	}()
 
 	wg.Wait()

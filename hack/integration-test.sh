@@ -4,8 +4,8 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-# v2 only
-pushd ./v2
+# v2/test only
+pushd ./v2/test
 
 # Run integration tests not in parallel
 # Prepare coverage file only if not exists
