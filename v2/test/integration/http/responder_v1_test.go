@@ -7,12 +7,13 @@ import (
 	"time"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
+	"github.com/cloudevents/sdk-go/v2/protocol"
 )
 
 func TestClientResponder_Empty(t *testing.T) {
 	now := time.Now()
 
-	template := func(statusCode int) TapTest {
+	template := func(statusCode int, wantResult protocol.Result) TapTest {
 		return TapTest{
 			now: now,
 			event: &cloudevents.Event{
@@ -46,17 +47,41 @@ func TestClientResponder_Empty(t *testing.T) {
 				Status:        fmt.Sprintf("%d %s", statusCode, http.StatusText(statusCode)),
 				ContentLength: 0,
 			},
+			wantResult: wantResult,
 		}
 	}
 
 	testCases := TapTestCases{
-		"Responder v1.0 - 200": template(http.StatusOK),
-		"Responder v1.0 - 202": template(http.StatusAccepted),
-		"Responder v1.0 - 204": template(http.StatusNoContent),
-		"Responder v1.0 - 400": template(http.StatusBadRequest),
-		"Responder v1.0 - 401": template(http.StatusUnauthorized),
-		"Responder v1.0 - 404": template(http.StatusNotFound),
-		"Responder v1.0 - 500": template(http.StatusInternalServerError),
+		// For 2xx, results should be ACK.
+		"Responder v1.0 - 200": template(
+			http.StatusOK,
+			protocol.ResultACK,
+		),
+		"Responder v1.0 - 202": template(
+			http.StatusAccepted,
+			protocol.ResultACK,
+		),
+		"Responder v1.0 - 204": template(
+			http.StatusNoContent,
+			protocol.ResultACK,
+		),
+		// For 4xx/5xx, http results with status code should be returned.
+		"Responder v1.0 - 400": template(
+			http.StatusBadRequest,
+			cloudevents.NewHTTPResult(http.StatusBadRequest, "unit test %s", http.StatusText(http.StatusBadRequest)),
+		),
+		"Responder v1.0 - 401": template(
+			http.StatusUnauthorized,
+			cloudevents.NewHTTPResult(http.StatusUnauthorized, "unit test %s", http.StatusText(http.StatusUnauthorized)),
+		),
+		"Responder v1.0 - 404": template(
+			http.StatusNotFound,
+			cloudevents.NewHTTPResult(http.StatusNotFound, "unit test %s", http.StatusText(http.StatusNotFound)),
+		),
+		"Responder v1.0 - 500": template(
+			http.StatusInternalServerError,
+			cloudevents.NewHTTPResult(http.StatusInternalServerError, "unit test %s", http.StatusText(http.StatusInternalServerError)),
+		),
 	}
 
 	for n, tc := range testCases {
@@ -69,8 +94,8 @@ func TestClientResponder_Empty(t *testing.T) {
 func TestClientResponder_Response(t *testing.T) {
 	now := time.Now()
 
-	template := func(statusCode int) TapTest {
-		return TapTest{
+	template := func(statusCode int, requireResp bool, wantResult protocol.Result) TapTest {
+		tt := TapTest{
 			now: now,
 			event: &cloudevents.Event{
 				Context: cloudevents.EventContextV1{
@@ -107,16 +132,6 @@ func TestClientResponder_Response(t *testing.T) {
 				}.AsV1(),
 				DataEncoded: toBytes(map[string]interface{}{"unittest": "response"}),
 			},
-			want: &cloudevents.Event{
-				Context: cloudevents.EventContextV1{
-					ID:              "321-CBA",
-					Type:            "unit.test.client.response",
-					Time:            &cloudevents.Timestamp{Time: now},
-					Source:          *cloudevents.ParseURIRef("/unit/test/client"),
-					DataContentType: cloudevents.StringOfApplicationJSON(),
-				}.AsV1(),
-				DataEncoded: toBytes(map[string]interface{}{"unittest": "response"}),
-			},
 			asRecv: &TapValidation{
 				Header: map[string][]string{
 					"ce-specversion": {"1.0"},
@@ -130,17 +145,60 @@ func TestClientResponder_Response(t *testing.T) {
 				Status:        fmt.Sprintf("%d %s", statusCode, http.StatusText(statusCode)),
 				ContentLength: 23,
 			},
+			wantResult: wantResult,
 		}
+
+		if requireResp {
+			tt.want = tt.resp
+		}
+		// When status is NoContent, no payload will be received.
+		// So unset the following fields.
+		if statusCode == http.StatusNoContent {
+			tt.want.DataEncoded = nil
+			tt.asRecv.Body = ""
+		}
+
+		return tt
 	}
 
 	testCases := TapTestCases{
-		"Responder v1.0 - 200": template(http.StatusOK),
-		"Responder v1.0 - 202": template(http.StatusAccepted),
-		"Responder v1.0 - 204": template(http.StatusNoContent),
-		"Responder v1.0 - 400": template(http.StatusBadRequest),
-		"Responder v1.0 - 401": template(http.StatusUnauthorized),
-		"Responder v1.0 - 404": template(http.StatusNotFound),
-		"Responder v1.0 - 500": template(http.StatusInternalServerError),
+		// 2xx should receive responded event with ACK result.
+		"Responder v1.0 - 200": template(
+			http.StatusOK,
+			true,
+			protocol.ResultACK,
+		),
+		"Responder v1.0 - 202": template(
+			http.StatusAccepted,
+			true,
+			protocol.ResultACK,
+		),
+		"Responder v1.0 - 204": template(
+			http.StatusNoContent,
+			true,
+			protocol.ResultACK,
+		),
+		// 4xx/5xx should receive nil event and http results with status code.
+		"Responder v1.0 - 400": template(
+			http.StatusBadRequest,
+			false,
+			cloudevents.NewHTTPResult(http.StatusBadRequest, "unit test %s", http.StatusText(http.StatusBadRequest)),
+		),
+		"Responder v1.0 - 401": template(
+			http.StatusUnauthorized,
+			false,
+			cloudevents.NewHTTPResult(http.StatusUnauthorized, "unit test %s", http.StatusText(http.StatusUnauthorized)),
+		),
+		"Responder v1.0 - 404": template(
+			http.StatusNotFound,
+			false,
+			cloudevents.NewHTTPResult(http.StatusNotFound, "unit test %s", http.StatusText(http.StatusNotFound)),
+		),
+		"Responder v1.0 - 500": template(
+			http.StatusInternalServerError,
+			false,
+			cloudevents.NewHTTPResult(http.StatusInternalServerError, "unit test %s", http.StatusText(http.StatusInternalServerError)),
+		),
 	}
 
 	for n, tc := range testCases {

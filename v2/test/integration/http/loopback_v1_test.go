@@ -161,7 +161,7 @@ func TestClientLoopback_binary_v1tov1(t *testing.T) {
 				}.AsV1(),
 				DataEncoded: toBytes(map[string]interface{}{"hello": "unittest"}),
 			},
-			result: cloudevents.NewHTTPResult(http.StatusBadRequest, "unit test %s", http.StatusText(http.StatusBadRequest)),
+			result: cloudevents.NewHTTPResult(http.StatusForbidden, "unit test %s", http.StatusText(http.StatusForbidden)),
 			asSent: &TapValidation{
 				Method: "POST",
 				URI:    "/",
@@ -179,8 +179,9 @@ func TestClientLoopback_binary_v1tov1(t *testing.T) {
 			},
 			asRecv: &TapValidation{
 				Header: http.Header{},
-				Status: "400 Bad Request",
+				Status: "403 Forbidden",
 			},
+			wantResult: cloudevents.NewHTTPResult(http.StatusForbidden, "unit test %s", http.StatusText(http.StatusForbidden)),
 		},
 	}
 

@@ -118,6 +118,7 @@ func (t *tapHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set(k, v)
 		}
 	}
+	w.WriteHeader(resp.StatusCode)
 	body, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Printf("failed to read the resp body")
