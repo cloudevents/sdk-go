@@ -85,7 +85,7 @@ func ClientLoopback(t *testing.T, tc TapTest, copts ...client.Option) {
 				t.Errorf("expected ACK, got %s", result)
 			}
 		} else if !cloudevents.ResultIs(result, tc.wantResult) {
-			t.Fatalf("expected %s, got %s", tc.wantResult, result)
+			t.Fatalf("expected %q, got %q", tc.wantResult, result)
 		}
 	}
 

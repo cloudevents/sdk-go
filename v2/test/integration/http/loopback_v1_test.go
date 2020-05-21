@@ -3,9 +3,11 @@ package http
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cloudevents/sdk-go/v2/client"
+	"net/http"
 	"testing"
 	"time"
+
+	"github.com/cloudevents/sdk-go/v2/client"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 )
@@ -146,6 +148,40 @@ func TestClientLoopback_binary_v1tov1(t *testing.T) {
 				Status:        "200 OK",
 				ContentLength: 23,
 			},
+		},
+		"Loopback v1.0 with error": {
+			now: now,
+			event: &cloudevents.Event{
+				Context: cloudevents.EventContextV1{
+					ID:              "ABC-123",
+					Type:            "unit.test.client.sent",
+					Source:          *cloudevents.ParseURIRef("/unit/test/client"),
+					Subject:         strptr("resource"),
+					DataContentType: cloudevents.StringOfApplicationJSON(),
+				}.AsV1(),
+				DataEncoded: toBytes(map[string]interface{}{"hello": "unittest"}),
+			},
+			result: cloudevents.NewHTTPResult(http.StatusForbidden, "unit test %s", http.StatusText(http.StatusForbidden)),
+			asSent: &TapValidation{
+				Method: "POST",
+				URI:    "/",
+				Header: map[string][]string{
+					"ce-specversion": {"1.0"},
+					"ce-id":          {"ABC-123"},
+					"ce-time":        {now.UTC().Format(time.RFC3339Nano)},
+					"ce-type":        {"unit.test.client.sent"},
+					"ce-source":      {"/unit/test/client"},
+					"ce-subject":     {"resource"},
+					"content-type":   {"application/json"},
+				},
+				Body:          `{"hello":"unittest"}`,
+				ContentLength: 20,
+			},
+			asRecv: &TapValidation{
+				Header: http.Header{},
+				Status: "403 Forbidden",
+			},
+			wantResult: cloudevents.NewHTTPResult(http.StatusForbidden, "unit test %s", http.StatusText(http.StatusForbidden)),
 		},
 	}
 
