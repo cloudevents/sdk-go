@@ -3,6 +3,8 @@
 This directory contains samples for most CloudEvents sdk-go features. 
 You can grab them and copy-paste in your project to start using sdk-go.
 
+<!-- TODO: update all samples to use the latest release rather than local. -->
+
 * AMQP
   * [AMQP Sender](./amqp/sender): Send events using the CloudEvents Client. To run the tests look at [AMQP samples README](./amqp/README.md).
   * [AMQP Receiver](./amqp/receiver): Receive events using the CloudEvents Client. To run the tests look at [AMQP samples README](./amqp/README.md).
@@ -25,8 +27,8 @@ You can grab them and copy-paste in your project to start using sdk-go.
   * [Sender](./kafka/sender): Receive events using the CloudEvents Client. To run the tests look at [Kafka samples README](./kafka/README.md).
   * [Sender & Receiver](./kafka/sender-receiver): Send and receive events using the same Kafka client. To run the tests look at [Kafka samples README](./kafka/README.md).
 * Message
-  * [Message interoperability](./message-interoperability): Pipe a message from an HTTP receiver directly to NATS using directly the `Protocol`s implementations.
-  * [Handle non CloudEvents](./message-handle-non-cloudevents): Pipe messages from one Kafka topic to another and transform non CloudEvents to valid CloudEvents.
+  * [Message interoperability](./nats/message-interoperability): Pipe a message from an HTTP receiver directly to NATS using directly the `Protocol`s implementations.
+  * [Handle non CloudEvents](./kafka/message-handle-non-cloudevents): Pipe messages from one Kafka topic to another and transform non CloudEvents to valid CloudEvents.
 * NATS
   * [Receiver](./nats/receiver): Receive events using the CloudEvents Client.
   * [Sender](./nats/sender): Receive events using the CloudEvents Client.

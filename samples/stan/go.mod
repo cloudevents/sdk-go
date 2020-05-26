@@ -1,4 +1,4 @@
-module github.com/cloudevents/sdk-go/v2/samples
+module github.com/cloudevents/sdk-go/samples/stan
 
 go 1.13
 
