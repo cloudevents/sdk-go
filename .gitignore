@@ -33,4 +33,5 @@ _site/
 *.iml
 test/benchmark/e2e/http/results/
 tmp/
+test/coverage.tmp
 

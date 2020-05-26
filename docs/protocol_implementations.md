@@ -21,12 +21,12 @@ the `Write<DataStructure>` functions, while the latter is done implementing spec
 
 ## Protocol implementations
 
-* [AMQP Protocol Binding](https://github.com/cloudevents/sdk-go/tree/master/v2/protocol/amqp) using [go-amqp](https://github.com/Azure/go-amqp)
+* [AMQP Protocol Binding](https://github.com/cloudevents/sdk-go/tree/master/protocol/amqp) using [go-amqp](https://github.com/Azure/go-amqp)
 * [HTTP Protocol Binding](https://github.com/cloudevents/sdk-go/tree/master/v2/protocol/http) using [net/http](https://golang.org/pkg/net/http/)
-* [Kafka Protocol Binding](https://github.com/cloudevents/sdk-go/tree/master/v2/protocol/kafka_sarama) using [Sarama](https://github.com/Shopify/sarama)
-* [NATS Protocol Binding](https://github.com/cloudevents/sdk-go/tree/master/v2/protocol/nats) using [nats.go](https://github.com/nats-io/nats.go)
-* [STAN Protocol Binding](https://github.com/cloudevents/sdk-go/tree/master/v2/protocol/stan) using [stan.go](https://github.com/nats-io/stan.go)
-* [PubSub Protocol Binding](https://github.com/cloudevents/sdk-go/tree/master/v2/protocol/pubsub)
+* [Kafka Protocol Binding](https://github.com/cloudevents/sdk-go/tree/master/protocol/kafka_sarama) using [Sarama](https://github.com/Shopify/sarama)
+* [NATS Protocol Binding](https://github.com/cloudevents/sdk-go/tree/master/protocol/nats) using [nats.go](https://github.com/nats-io/nats.go)
+* [STAN Protocol Binding](https://github.com/cloudevents/sdk-go/tree/master/protocol/stan) using [stan.go](https://github.com/nats-io/stan.go)
+* [PubSub Protocol Binding](https://github.com/cloudevents/sdk-go/tree/master/protocol/pubsub)
 * [Go channels protocol binding](https://github.com/cloudevents/sdk-go/tree/master/v2/protocol/gochan) (useful for mocking purpose)
 
 ## `Message` interface

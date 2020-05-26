@@ -104,19 +104,19 @@ err := json.Marshal(bytes, &event)
 |                               |  [v0.3](https://github.com/cloudevents/spec/tree/v0.3) | [v1.0](https://github.com/cloudevents/spec/tree/v1.0) |
 | ----------------------------- | --- | --- |
 | CloudEvents Core              | :heavy_check_mark: | :heavy_check_mark: |
-| [AMQP Protocol Binding](https://github.com/cloudevents/sdk-go/tree/master/v2/samples/amqp)         | :heavy_check_mark: | :heavy_check_mark:  |
+| [AMQP Protocol Binding](https://github.com/cloudevents/sdk-go/tree/master/samples/amqp)         | :heavy_check_mark: | :heavy_check_mark:  |
 | AVRO Event Format             | :x: | :x: |
-| [HTTP Protocol Binding](https://github.com/cloudevents/sdk-go/tree/master/v2/samples/http)         | :heavy_check_mark: | :heavy_check_mark: |
+| [HTTP Protocol Binding](https://github.com/cloudevents/sdk-go/tree/master/samples/http)         | :heavy_check_mark: | :heavy_check_mark: |
 | [JSON Event Format](event_data_structure.md#marshalunmarshal-event-to-json)           | :heavy_check_mark: | :heavy_check_mark: |
-| [Kafka Protocol Binding](https://github.com/cloudevents/sdk-go/tree/master/v2/samples/kafka)        | :heavy_check_mark: | :heavy_check_mark: |
+| [Kafka Protocol Binding](https://github.com/cloudevents/sdk-go/tree/master/samples/kafka)        | :heavy_check_mark: | :heavy_check_mark: |
 | MQTT Protocol Binding         | :x: | :x: |
-| [NATS Protocol Binding](https://github.com/cloudevents/sdk-go/tree/master/v2/samples/nats)         | :heavy_check_mark: | :heavy_check_mark: |
-| [STAN Protocol Binding](https://github.com/cloudevents/sdk-go/tree/master/v2/samples/stan)         | :heavy_check_mark: | :heavy_check_mark: |
+| [NATS Protocol Binding](https://github.com/cloudevents/sdk-go/tree/master/samples/nats)         | :heavy_check_mark: | :heavy_check_mark: |
+| [STAN Protocol Binding](https://github.com/cloudevents/sdk-go/tree/master/samples/stan)         | :heavy_check_mark: | :heavy_check_mark: |
 | Web hook                      | :x: | :x: |
 
 ## Go further
 
-*. Check out the [examples](https://github.com/cloudevents/sdk-go/tree/master/v2/samples)
+*. Check out the [examples](https://github.com/cloudevents/sdk-go/tree/master/samples)
 *. Dig into the [Godoc](https://godoc.org/github.com/cloudevents/sdk-go/v2)
 *. Learn about the [architecture and concepts](concepts.md) of the SDK
 *. How to use the [CloudEvent in-memory representation](event_data_structure.md)
