@@ -2,6 +2,10 @@ package nats
 
 import (
 	"context"
+	"github.com/nats-io/nats.go"
+	"os"
+	"testing"
+
 	ce_nats "github.com/cloudevents/sdk-go/protocol/nats/v2"
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/event"
@@ -10,8 +14,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
-	"testing"
+
+	. "github.com/cloudevents/sdk-go/v2/binding/test"
 )
 
 func TestSendStructuredMessagedToStructures(t *testing.T) {

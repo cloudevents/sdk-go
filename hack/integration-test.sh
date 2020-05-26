@@ -16,7 +16,7 @@ if [ ! -f $COVERAGE ]; then
   echo 'mode: atomic' > $COVERAGE
 fi
 COVERPKG=$(go list ./... | grep -v /vendor | tr "\n" ",")
-for gomodule in $(go list ./test/integration/... | grep -v /cmd | grep -v /vendor)
+for gomodule in $(go list ./integration/... | grep -v /cmd | grep -v /vendor)
 do
   go test -v -parallel 1 -timeout 60s -race -covermode=atomic -coverprofile=coverage.tmp -coverpkg "$COVERPKG" "$gomodule" 2>&1 | sed 's/ of statements in.*//; /warning: no packages being tested depend on matches for pattern /d'
   tail -n +2 coverage.tmp >> $COVERAGE

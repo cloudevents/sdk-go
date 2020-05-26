@@ -5,6 +5,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/Azure/go-amqp"
+
 	"github.com/stretchr/testify/require"
 
 	protocolamqp "github.com/cloudevents/sdk-go/protocol/amqp/v2"

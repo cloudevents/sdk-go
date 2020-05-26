@@ -7,15 +7,18 @@ import (
 	"os"
 	"testing"
 
-	amqp2 "github.com/cloudevents/sdk-go/protocol/amqp/v2"
+	"github.com/Azure/go-amqp"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	protocolamqp "github.com/cloudevents/sdk-go/protocol/amqp/v2"
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/event"
 	bindings "github.com/cloudevents/sdk-go/v2/protocol"
 	"github.com/cloudevents/sdk-go/v2/protocol/test"
+
+	. "github.com/cloudevents/sdk-go/v2/binding/test"
 )
 
 func TestSendSkipBinary(t *testing.T) {
@@ -97,13 +100,13 @@ func testClient(t testing.TB) (client *amqp.Client, session *amqp.Session, addr 
 	return client, session, addr
 }
 
-func testSenderReceiver(t testing.TB, senderOptions ...amqp2.SenderOptionFunc) (io.Closer, bindings.Sender, bindings.Receiver) {
+func testSenderReceiver(t testing.TB, senderOptions ...protocolamqp.SenderOptionFunc) (io.Closer, bindings.Sender, bindings.Receiver) {
 	c, ss, a := testClient(t)
 	r, err := ss.NewReceiver(amqp.LinkSourceAddress(a))
 	require.NoError(t, err)
 	s, err := ss.NewSender(amqp.LinkTargetAddress(a))
 	require.NoError(t, err)
-	return c, amqp2.NewSender(s, senderOptions...), amqp2.NewReceiver(r)
+	return c, protocolamqp.NewSender(s, senderOptions...), protocolamqp.NewReceiver(r)
 }
 
 func BenchmarkSendReceive(b *testing.B) {

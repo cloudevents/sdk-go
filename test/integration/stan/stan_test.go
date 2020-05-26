@@ -2,6 +2,11 @@ package stan
 
 import (
 	"context"
+	"github.com/nats-io/nats.go"
+	"github.com/nats-io/stan.go"
+	"os"
+	"testing"
+
 	ce_stan "github.com/cloudevents/sdk-go/protocol/stan/v2"
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/event"
@@ -10,8 +15,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
-	"testing"
+
+	. "github.com/cloudevents/sdk-go/v2/binding/test"
 )
 
 const (
