@@ -21,7 +21,7 @@ func TestMain(m *testing.M) {
 		opt.Paths = flag.Args()
 	} else {
 		opt.Paths = []string{
-			"../../../conformance/features/",
+			"../../conformance/features/",
 		}
 	}
 
