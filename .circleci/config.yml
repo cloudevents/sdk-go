@@ -71,7 +71,7 @@ jobs:
 
       - run:
           name: Generate coverage report
-          command: go tool cover -html=coverage.txt -o ${COVERAGE_RESULTS}/coverage.html
+          command: pushd test; go tool cover -html=../coverage.txt -o ${COVERAGE_RESULTS}/coverage.html; popd
 
       - save_cache:
           key: gomod-cache-{{ checksum "v2/go.sum" }}
