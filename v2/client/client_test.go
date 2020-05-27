@@ -407,7 +407,7 @@ func TestClientReceive(t *testing.T) {
 						t.Errorf("failed to start receiver %s", err.Error())
 					}
 				}()
-				time.Sleep(5 * time.Millisecond) // let the server start
+				time.Sleep(1 * time.Second) // let the server start
 
 				target, _ := url.Parse(fmt.Sprintf("http://localhost:%d%s", p.GetListeningPort(), p.GetPath()))
 
