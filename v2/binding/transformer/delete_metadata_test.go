@@ -9,11 +9,12 @@ import (
 
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/binding/spec"
-	"github.com/cloudevents/sdk-go/v2/binding/test"
+	. "github.com/cloudevents/sdk-go/v2/binding/test"
+	. "github.com/cloudevents/sdk-go/v2/test"
 )
 
 func TestDeleteAttribute(t *testing.T) {
-	withSubjectEvent := test.MinEvent()
+	withSubjectEvent := MinEvent()
 	withSubjectEvent.Context = withSubjectEvent.Context.AsV1()
 	require.NoError(t, withSubjectEvent.Context.SetSubject("aaa"))
 
@@ -23,16 +24,16 @@ func TestDeleteAttribute(t *testing.T) {
 	noSubjectEvent := withSubjectEvent.Clone()
 	require.NoError(t, noSubjectEvent.Context.SetSubject(""))
 
-	test.RunTransformerTests(t, context.Background(), []test.TransformerTestArgs{
+	RunTransformerTests(t, context.Background(), []TransformerTestArgs{
 		{
 			Name:         "Remove subject from Mock Structured message",
-			InputMessage: test.MustCreateMockStructuredMessage(withSubjectEvent.Clone()),
+			InputMessage: MustCreateMockStructuredMessage(t, withSubjectEvent.Clone()),
 			WantEvent:    noSubjectEvent,
 			Transformers: binding.Transformers{DeleteAttribute(spec.Subject)},
 		},
 		{
 			Name:         "Remove subject from Mock Binary message",
-			InputMessage: test.MustCreateMockBinaryMessage(withSubjectEvent.Clone()),
+			InputMessage: MustCreateMockBinaryMessage(withSubjectEvent.Clone()),
 			WantEvent:    noSubjectEvent,
 			Transformers: binding.Transformers{DeleteAttribute(spec.Subject)},
 		},
@@ -44,13 +45,13 @@ func TestDeleteAttribute(t *testing.T) {
 		},
 		{
 			Name:         "Remove time from Mock Structured message",
-			InputMessage: test.MustCreateMockStructuredMessage(withTimeEvent.Clone()),
+			InputMessage: MustCreateMockStructuredMessage(t, withTimeEvent.Clone()),
 			WantEvent:    withSubjectEvent.Clone(),
 			Transformers: binding.Transformers{DeleteAttribute(spec.Time)},
 		},
 		{
 			Name:         "Remove time from Mock Binary message",
-			InputMessage: test.MustCreateMockBinaryMessage(withTimeEvent.Clone()),
+			InputMessage: MustCreateMockBinaryMessage(withTimeEvent.Clone()),
 			WantEvent:    withSubjectEvent.Clone(),
 			Transformers: binding.Transformers{DeleteAttribute(spec.Time)},
 		},
@@ -62,13 +63,13 @@ func TestDeleteAttribute(t *testing.T) {
 		},
 		{
 			Name:         "Do nothing with Mock Structured message",
-			InputMessage: test.MustCreateMockStructuredMessage(withSubjectEvent.Clone()),
+			InputMessage: MustCreateMockStructuredMessage(t, withSubjectEvent.Clone()),
 			WantEvent:    withSubjectEvent.Clone(),
 			Transformers: binding.Transformers{DeleteAttribute(spec.Time)},
 		},
 		{
 			Name:         "Do nothing with Mock Binary message",
-			InputMessage: test.MustCreateMockBinaryMessage(withSubjectEvent.Clone()),
+			InputMessage: MustCreateMockBinaryMessage(withSubjectEvent.Clone()),
 			WantEvent:    withSubjectEvent.Clone(),
 			Transformers: binding.Transformers{DeleteAttribute(spec.Time)},
 		},
@@ -82,7 +83,7 @@ func TestDeleteAttribute(t *testing.T) {
 }
 
 func TestDeleteExtension(t *testing.T) {
-	e := test.MinEvent()
+	e := MinEvent()
 	e.Context = e.Context.AsV1()
 
 	extName := "aaa"
@@ -90,16 +91,16 @@ func TestDeleteExtension(t *testing.T) {
 	expectedEventWithExtension := e.Clone()
 	require.NoError(t, expectedEventWithExtension.Context.SetExtension(extName, extValue))
 
-	test.RunTransformerTests(t, context.Background(), []test.TransformerTestArgs{
+	RunTransformerTests(t, context.Background(), []TransformerTestArgs{
 		{
 			Name:         "No change to Mock Structured message",
-			InputMessage: test.MustCreateMockStructuredMessage(expectedEventWithExtension.Clone()),
+			InputMessage: MustCreateMockStructuredMessage(t, expectedEventWithExtension.Clone()),
 			WantEvent:    expectedEventWithExtension.Clone(),
 			Transformers: binding.Transformers{DeleteExtension("ccc")},
 		},
 		{
 			Name:         "No change to Mock Binary message",
-			InputMessage: test.MustCreateMockBinaryMessage(expectedEventWithExtension.Clone()),
+			InputMessage: MustCreateMockBinaryMessage(expectedEventWithExtension.Clone()),
 			WantEvent:    expectedEventWithExtension.Clone(),
 			Transformers: binding.Transformers{DeleteExtension("ccc")},
 		},
@@ -111,13 +112,13 @@ func TestDeleteExtension(t *testing.T) {
 		},
 		{
 			Name:         "Delete extension 'aaa' from Mock Structured message",
-			InputMessage: test.MustCreateMockStructuredMessage(expectedEventWithExtension.Clone()),
+			InputMessage: MustCreateMockStructuredMessage(t, expectedEventWithExtension.Clone()),
 			WantEvent:    e.Clone(),
 			Transformers: binding.Transformers{DeleteExtension(extName)},
 		},
 		{
 			Name:         "Delete extension 'aaa' from Mock Binary message",
-			InputMessage: test.MustCreateMockBinaryMessage(expectedEventWithExtension.Clone()),
+			InputMessage: MustCreateMockBinaryMessage(expectedEventWithExtension.Clone()),
 			WantEvent:    e.Clone(),
 			Transformers: binding.Transformers{DeleteExtension(extName)},
 		},

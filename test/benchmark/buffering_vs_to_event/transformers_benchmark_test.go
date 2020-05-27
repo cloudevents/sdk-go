@@ -8,8 +8,9 @@ import (
 
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/binding/buffering"
-	"github.com/cloudevents/sdk-go/v2/binding/test"
+	bindingtest "github.com/cloudevents/sdk-go/v2/binding/test"
 	"github.com/cloudevents/sdk-go/v2/event"
+	"github.com/cloudevents/sdk-go/v2/test"
 	"github.com/cloudevents/sdk-go/v2/types"
 )
 
@@ -21,7 +22,7 @@ func BenchmarkBase(b *testing.B) {
 	initialEvent := test.FullEvent()
 	initialEvent.SetExtension("aaa", "bbb")
 	for i := 0; i < b.N; i++ {
-		M = test.MustCreateMockBinaryMessage(initialEvent)
+		M = bindingtest.MustCreateMockBinaryMessage(initialEvent)
 	}
 }
 
@@ -30,7 +31,7 @@ func BenchmarkToEventAndUpdateExtensions(b *testing.B) {
 	ctx := context.TODO()
 	initialEvent.SetExtension("aaa", "bbb")
 	for i := 0; i < b.N; i++ {
-		M = test.MustCreateMockBinaryMessage(initialEvent)
+		M = bindingtest.MustCreateMockBinaryMessage(initialEvent)
 		E, _ = binding.ToEvent(ctx, M)
 		if v, ok := E.Extensions()["aaa"]; ok {
 			vStr, err := types.Format(v)
@@ -60,7 +61,7 @@ func BenchmarkBufferingAndUpdateExtensions(b *testing.B) {
 	initialEvent.SetExtension("aaa", "bbb")
 
 	for i := 0; i < b.N; i++ {
-		M = test.MustCreateMockBinaryMessage(initialEvent)
+		M = bindingtest.MustCreateMockBinaryMessage(initialEvent)
 		M, _ = buffering.CopyMessage(ctx, M, transformers)
 	}
 }

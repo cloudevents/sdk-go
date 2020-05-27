@@ -10,14 +10,17 @@ import (
 	"github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/cloudevents/sdk-go/v2/binding"
-	"github.com/cloudevents/sdk-go/v2/binding/test"
+	"github.com/cloudevents/sdk-go/v2/binding/format"
 	"github.com/cloudevents/sdk-go/v2/protocol/http"
 )
 
 var (
 	event                     = test.FullEvent()
 	structuredConsumerMessage = &sarama.ConsumerMessage{
-		Value: test.MustJSON(event),
+		Value: func() []byte {
+			b, _ := format.JSON.Marshal(&event)
+			return b
+		}(),
 		Headers: []*sarama.RecordHeader{{
 			Key:   []byte("Content-Type"),
 			Value: []byte(cloudevents.ApplicationCloudEventsJSON),

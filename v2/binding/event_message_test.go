@@ -7,8 +7,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
-	"github.com/cloudevents/sdk-go/v2/binding/test"
+	bindingtest "github.com/cloudevents/sdk-go/v2/binding/test"
 	"github.com/cloudevents/sdk-go/v2/event"
+	"github.com/cloudevents/sdk-go/v2/test"
 )
 
 type mockFormat struct {
@@ -35,7 +36,7 @@ func TestStructuredModeCustomFormat(t *testing.T) {
 	format := mockFormat{t: t, expectedEvent: e}
 
 	ctx := binding.UseFormatForEvent(context.TODO(), &format)
-	enc := test.MockStructuredMessage{}
+	enc := bindingtest.MockStructuredMessage{}
 	message := binding.EventMessage(e)
 
 	err := message.ReadStructured(ctx, &enc)
@@ -46,7 +47,7 @@ func TestStructuredModeCustomFormat(t *testing.T) {
 func TestEventMessage_ReadStructured(t *testing.T) {
 	test.EachEvent(t, test.Events(), func(t *testing.T, inputEvent event.Event) {
 		eventMessage := binding.ToMessage(&inputEvent)
-		outMessage := test.MockStructuredMessage{}
+		outMessage := bindingtest.MockStructuredMessage{}
 
 		require.NoError(t, eventMessage.ReadStructured(context.TODO(), &outMessage))
 
@@ -54,14 +55,14 @@ func TestEventMessage_ReadStructured(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, outputEvent)
 
-		test.AssertEventEquals(t, test.ExToStr(t, inputEvent), test.ExToStr(t, *outputEvent))
+		test.AssertEventEquals(t, test.ConvertEventExtensionsToString(t, inputEvent), test.ConvertEventExtensionsToString(t, *outputEvent))
 	})
 }
 
 func TestEventMessage_ReadBinary(t *testing.T) {
 	test.EachEvent(t, test.Events(), func(t *testing.T, inputEvent event.Event) {
 		eventMessage := binding.ToMessage(&inputEvent)
-		outMessage := test.MockBinaryMessage{}
+		outMessage := bindingtest.MockBinaryMessage{}
 
 		require.NoError(t, outMessage.Start(context.TODO()))
 

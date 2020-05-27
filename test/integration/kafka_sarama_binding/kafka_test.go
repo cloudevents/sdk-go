@@ -18,6 +18,7 @@ import (
 	"github.com/cloudevents/sdk-go/v2/protocol/test"
 
 	. "github.com/cloudevents/sdk-go/v2/binding/test"
+	. "github.com/cloudevents/sdk-go/v2/test"
 )
 
 const (
@@ -28,13 +29,13 @@ func TestSendStructuredMessageToStructured(t *testing.T) {
 	close, s, r := testSenderReceiver(t)
 	defer close()
 	EachEvent(t, Events(), func(t *testing.T, eventIn event.Event) {
-		eventIn = ExToStr(t, eventIn)
+		eventIn = ConvertEventExtensionsToString(t, eventIn)
 
-		in := MustCreateMockStructuredMessage(eventIn)
+		in := MustCreateMockStructuredMessage(t, eventIn)
 		test.SendReceive(t, binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingStructured), in, s, r, func(out binding.Message) {
 			eventOut := MustToEvent(t, context.Background(), out)
 			assert.Equal(t, binding.EncodingStructured, out.ReadEncoding())
-			AssertEventEquals(t, eventIn, ExToStr(t, eventOut))
+			AssertEventEquals(t, eventIn, ConvertEventExtensionsToString(t, eventOut))
 		})
 	})
 }
@@ -43,13 +44,13 @@ func TestSendBinaryMessageToBinary(t *testing.T) {
 	close, s, r := testSenderReceiver(t)
 	defer close()
 	EachEvent(t, Events(), func(t *testing.T, eventIn event.Event) {
-		eventIn = ExToStr(t, eventIn)
+		eventIn = ConvertEventExtensionsToString(t, eventIn)
 
 		in := MustCreateMockBinaryMessage(eventIn)
 		test.SendReceive(t, binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingBinary), in, s, r, func(out binding.Message) {
 			eventOut := MustToEvent(t, context.Background(), out)
 			assert.Equal(t, binding.EncodingBinary, out.ReadEncoding())
-			AssertEventEquals(t, eventIn, ExToStr(t, eventOut))
+			AssertEventEquals(t, eventIn, ConvertEventExtensionsToString(t, eventOut))
 		})
 	})
 }
