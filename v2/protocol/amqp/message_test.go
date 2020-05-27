@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
-	"github.com/cloudevents/sdk-go/v2/binding/test"
 	"github.com/cloudevents/sdk-go/v2/event"
+	. "github.com/cloudevents/sdk-go/v2/test"
 )
 
 func TestNewMessage_success(t *testing.T) {
@@ -27,7 +27,7 @@ func TestNewMessage_success(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		test.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
+		EachEvent(t, Events(), func(t *testing.T, eventIn event.Event) {
 			t.Run(tt.name, func(t *testing.T) {
 				eventIn = eventIn.Clone()
 

@@ -10,12 +10,13 @@ import (
 
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/binding/spec"
-	"github.com/cloudevents/sdk-go/v2/binding/test"
+	. "github.com/cloudevents/sdk-go/v2/binding/test"
+	. "github.com/cloudevents/sdk-go/v2/test"
 	"github.com/cloudevents/sdk-go/v2/types"
 )
 
 func TestSetAttribute(t *testing.T) {
-	e := test.MinEvent()
+	e := MinEvent()
 	e.Context = e.Context.AsV1()
 
 	attributeKind := spec.Time
@@ -40,16 +41,16 @@ func TestSetAttribute(t *testing.T) {
 		return t.Add(1 * time.Hour), nil
 	})
 
-	test.RunTransformerTests(t, context.Background(), []test.TransformerTestArgs{
+	RunTransformerTests(t, context.Background(), []TransformerTestArgs{
 		{
 			Name:         "Add time to Mock Structured message",
-			InputMessage: test.MustCreateMockStructuredMessage(e),
+			InputMessage: MustCreateMockStructuredMessage(t, e),
 			WantEvent:    eventWithInitialValue,
 			Transformers: binding.Transformers{transformers},
 		},
 		{
 			Name:         "Add time to Mock Binary message",
-			InputMessage: test.MustCreateMockBinaryMessage(e),
+			InputMessage: MustCreateMockBinaryMessage(e),
 			WantEvent:    eventWithInitialValue,
 			Transformers: binding.Transformers{transformers},
 		},
@@ -61,13 +62,13 @@ func TestSetAttribute(t *testing.T) {
 		},
 		{
 			Name:         "Update time in Mock Structured message",
-			InputMessage: test.MustCreateMockStructuredMessage(eventWithInitialValue),
+			InputMessage: MustCreateMockStructuredMessage(t, eventWithInitialValue),
 			WantEvent:    eventWithUpdatedValue,
 			Transformers: binding.Transformers{transformers},
 		},
 		{
 			Name:         "Update time in Mock Binary message",
-			InputMessage: test.MustCreateMockBinaryMessage(eventWithInitialValue),
+			InputMessage: MustCreateMockBinaryMessage(eventWithInitialValue),
 			WantEvent:    eventWithUpdatedValue,
 			Transformers: binding.Transformers{transformers},
 		},
@@ -82,7 +83,7 @@ func TestSetAttribute(t *testing.T) {
 
 // Test a common flow: If the metadata is not existing, initialize with a value. Otherwise, update it
 func TestSetExtension(t *testing.T) {
-	e := test.MinEvent()
+	e := MinEvent()
 	e.Context = e.Context.AsV1()
 
 	extName := "exnum"
@@ -112,16 +113,16 @@ func TestSetExtension(t *testing.T) {
 		return strconv.Itoa(n), nil
 	})
 
-	test.RunTransformerTests(t, context.Background(), []test.TransformerTestArgs{
+	RunTransformerTests(t, context.Background(), []TransformerTestArgs{
 		{
 			Name:         "Add exnum to Mock Structured message",
-			InputMessage: test.MustCreateMockStructuredMessage(e),
+			InputMessage: MustCreateMockStructuredMessage(t, e),
 			WantEvent:    eventWithInitialValue,
 			Transformers: binding.Transformers{transformers},
 		},
 		{
 			Name:         "Add exnum to Mock Binary message",
-			InputMessage: test.MustCreateMockBinaryMessage(e),
+			InputMessage: MustCreateMockBinaryMessage(e),
 			WantEvent:    eventWithInitialValue,
 			Transformers: binding.Transformers{transformers},
 		},
@@ -133,13 +134,13 @@ func TestSetExtension(t *testing.T) {
 		},
 		{
 			Name:         "Update exnum in Mock Structured message",
-			InputMessage: test.MustCreateMockStructuredMessage(eventWithInitialValue),
+			InputMessage: MustCreateMockStructuredMessage(t, eventWithInitialValue),
 			WantEvent:    eventWithUpdatedValue,
 			Transformers: binding.Transformers{transformers},
 		},
 		{
 			Name:         "Update exnum in Mock Binary message",
-			InputMessage: test.MustCreateMockBinaryMessage(eventWithInitialValue),
+			InputMessage: MustCreateMockBinaryMessage(eventWithInitialValue),
 			WantEvent:    eventWithUpdatedValue,
 			Transformers: binding.Transformers{transformers},
 		},

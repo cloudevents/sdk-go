@@ -8,6 +8,7 @@ import (
 	bindings "github.com/cloudevents/sdk-go/v2/protocol"
 	ce_stan "github.com/cloudevents/sdk-go/v2/protocol/stan"
 	"github.com/cloudevents/sdk-go/v2/protocol/test"
+	. "github.com/cloudevents/sdk-go/v2/test"
 	"github.com/google/uuid"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/stan.go"
@@ -63,14 +64,14 @@ func TestSendStructuredMessagedToStructures(t *testing.T) {
 			cleanup, s, r := testProtocol(t, conn, tt.args.opts...)
 			defer cleanup()
 			EachEvent(t, Events(), func(t *testing.T, eventIn event.Event) {
-				eventIn = ExToStr(t, eventIn)
+				eventIn = ConvertEventExtensionsToString(t, eventIn)
 
-				in := MustCreateMockStructuredMessage(eventIn)
+				in := MustCreateMockStructuredMessage(t, eventIn)
 
 				test.SendReceive(t, binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingStructured), in, s, r, func(out binding.Message) {
 					eventOut := MustToEvent(t, context.Background(), out)
 					assert.Equal(t, binding.EncodingStructured, out.ReadEncoding())
-					AssertEventEquals(t, eventIn, ExToStr(t, eventOut))
+					AssertEventEquals(t, eventIn, ConvertEventExtensionsToString(t, eventOut))
 				})
 			})
 		})

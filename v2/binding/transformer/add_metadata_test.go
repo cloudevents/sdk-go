@@ -9,9 +9,9 @@ import (
 
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/binding/spec"
-	"github.com/cloudevents/sdk-go/v2/types"
-
 	. "github.com/cloudevents/sdk-go/v2/binding/test"
+	. "github.com/cloudevents/sdk-go/v2/test"
+	"github.com/cloudevents/sdk-go/v2/types"
 )
 
 func TestAddAttribute(t *testing.T) {
@@ -30,7 +30,7 @@ func TestAddAttribute(t *testing.T) {
 	RunTransformerTests(t, context.Background(), []TransformerTestArgs{
 		{
 			Name:         "No change to id to Mock Structured message",
-			InputMessage: MustCreateMockStructuredMessage(e.Clone()),
+			InputMessage: MustCreateMockStructuredMessage(t, e.Clone()),
 			WantEvent:    e.Clone(),
 			Transformers: binding.Transformers{AddAttribute(spec.ID, "new-id")},
 		},
@@ -48,7 +48,7 @@ func TestAddAttribute(t *testing.T) {
 		},
 		{
 			Name:         "Add subject to Mock Structured message",
-			InputMessage: MustCreateMockStructuredMessage(e.Clone()),
+			InputMessage: MustCreateMockStructuredMessage(t, e.Clone()),
 			WantEvent:    expectedEventWithSubject,
 			Transformers: binding.Transformers{AddAttribute(spec.Subject, subject)},
 		},
@@ -66,7 +66,7 @@ func TestAddAttribute(t *testing.T) {
 		},
 		{
 			Name:         "Add time to Mock Structured message",
-			InputMessage: MustCreateMockStructuredMessage(e.Clone()),
+			InputMessage: MustCreateMockStructuredMessage(t, e.Clone()),
 			WantEvent:    expectedEventWithTime,
 			Transformers: binding.Transformers{AddAttribute(spec.Time, timestamp)},
 		},
@@ -97,7 +97,7 @@ func TestAddExtension(t *testing.T) {
 	RunTransformerTests(t, context.Background(), []TransformerTestArgs{
 		{
 			Name:         "No change to extension 'aaa' to Mock Structured message",
-			InputMessage: MustCreateMockStructuredMessage(expectedEventWithExtension.Clone()),
+			InputMessage: MustCreateMockStructuredMessage(t, expectedEventWithExtension.Clone()),
 			WantEvent:    expectedEventWithExtension.Clone(),
 			Transformers: binding.Transformers{AddExtension(extName, extValue)},
 		},
@@ -115,7 +115,7 @@ func TestAddExtension(t *testing.T) {
 		},
 		{
 			Name:         "Add extension 'aaa' to Mock Structured message",
-			InputMessage: MustCreateMockStructuredMessage(e.Clone()),
+			InputMessage: MustCreateMockStructuredMessage(t, e.Clone()),
 			WantEvent:    expectedEventWithExtension.Clone(),
 			Transformers: binding.Transformers{AddExtension(extName, extValue)},
 		},

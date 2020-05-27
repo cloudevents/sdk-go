@@ -8,33 +8,34 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
-	"github.com/cloudevents/sdk-go/v2/binding/test"
+	. "github.com/cloudevents/sdk-go/v2/binding/test"
 	"github.com/cloudevents/sdk-go/v2/event"
+	. "github.com/cloudevents/sdk-go/v2/test"
 )
 
 func TestAddTimeNow(t *testing.T) {
-	eventWithoutTime := test.MinEvent()
+	eventWithoutTime := MinEvent()
 	eventCtx := eventWithoutTime.Context.AsV1()
 	eventCtx.Time = nil
 	eventWithoutTime.Context = eventCtx
 
-	eventWithTime := test.MinEvent()
+	eventWithTime := MinEvent()
 	eventWithTime.SetTime(time.Now().Add(2 * time.Hour).UTC())
 
 	assertTimeNow := func(t *testing.T, ev event.Event) {
 		require.False(t, ev.Context.GetTime().IsZero())
 	}
 
-	test.RunTransformerTests(t, context.Background(), []test.TransformerTestArgs{
+	RunTransformerTests(t, context.Background(), []TransformerTestArgs{
 		{
 			Name:         "No change to time to Mock Structured message",
-			InputMessage: test.MustCreateMockStructuredMessage(eventWithTime.Clone()),
+			InputMessage: MustCreateMockStructuredMessage(t, eventWithTime.Clone()),
 			WantEvent:    eventWithTime.Clone(),
 			Transformers: binding.Transformers{AddTimeNow},
 		},
 		{
 			Name:         "No change to time to Mock Binary message",
-			InputMessage: test.MustCreateMockBinaryMessage(eventWithTime.Clone()),
+			InputMessage: MustCreateMockBinaryMessage(eventWithTime.Clone()),
 			WantEvent:    eventWithTime.Clone(),
 			Transformers: binding.Transformers{AddTimeNow},
 		},
@@ -46,7 +47,7 @@ func TestAddTimeNow(t *testing.T) {
 		},
 		{
 			Name:         "Add time.Now() to Mock Binary message",
-			InputMessage: test.MustCreateMockBinaryMessage(eventWithoutTime.Clone()),
+			InputMessage: MustCreateMockBinaryMessage(eventWithoutTime.Clone()),
 			AssertFunc:   assertTimeNow,
 			Transformers: binding.Transformers{AddTimeNow},
 		},

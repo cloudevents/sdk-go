@@ -9,9 +9,10 @@ import (
 
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/binding/buffering"
-	"github.com/cloudevents/sdk-go/v2/binding/test"
+	bindingtest "github.com/cloudevents/sdk-go/v2/binding/test"
 	"github.com/cloudevents/sdk-go/v2/binding/transformer"
 	"github.com/cloudevents/sdk-go/v2/event"
+	"github.com/cloudevents/sdk-go/v2/test"
 )
 
 func TestWriteHttpResponseWriter(t *testing.T) {
@@ -23,16 +24,18 @@ func TestWriteHttpResponseWriter(t *testing.T) {
 		expectContentLength bool
 	}{
 		{
-			name:                "Structured to Structured",
-			context:             context.TODO(),
-			messageFactory:      test.MustCreateMockStructuredMessage,
+			name:    "Structured to Structured",
+			context: context.TODO(),
+			messageFactory: func(e event.Event) binding.Message {
+				return bindingtest.MustCreateMockStructuredMessage(t, e)
+			},
 			expectedEncoding:    binding.EncodingStructured,
 			expectContentLength: true,
 		},
 		{
 			name:                "Binary to Binary",
 			context:             context.TODO(),
-			messageFactory:      test.MustCreateMockBinaryMessage,
+			messageFactory:      bindingtest.MustCreateMockBinaryMessage,
 			expectedEncoding:    binding.EncodingBinary,
 			expectContentLength: true,
 		},
@@ -40,7 +43,7 @@ func TestWriteHttpResponseWriter(t *testing.T) {
 			name:    "Structured to buffered to Structured",
 			context: context.TODO(),
 			messageFactory: func(e event.Event) binding.Message {
-				m := test.MustCreateMockStructuredMessage(e)
+				m := bindingtest.MustCreateMockStructuredMessage(t, e)
 
 				buffered, err := buffering.BufferMessage(context.TODO(), m)
 				require.NoError(t, err)
@@ -54,7 +57,7 @@ func TestWriteHttpResponseWriter(t *testing.T) {
 			name:    "Binary to buffered to Binary",
 			context: context.TODO(),
 			messageFactory: func(e event.Event) binding.Message {
-				m := test.MustCreateMockBinaryMessage(e)
+				m := bindingtest.MustCreateMockBinaryMessage(e)
 
 				buffered, err := buffering.BufferMessage(context.TODO(), m)
 				require.NoError(t, err)
@@ -108,7 +111,7 @@ func TestWriteHttpResponseWriter(t *testing.T) {
 			t.Run(tt.name, func(t *testing.T) {
 				res := httptest.NewRecorder()
 
-				eventIn = test.ExToStr(t, eventIn)
+				eventIn = test.ConvertEventExtensionsToString(t, eventIn)
 				messageIn := tt.messageFactory(eventIn)
 
 				shouldHaveContentLength := tt.expectContentLength && (eventIn.Data() != nil || messageIn.ReadEncoding() == binding.EncodingStructured)
@@ -136,7 +139,7 @@ func TestWriteHttpResponseWriter(t *testing.T) {
 }
 
 func TestWriteHttpResponseWriter_using_transformers_with_end(t *testing.T) {
-	eventIn := test.ExToStr(t, test.FullEvent())
+	eventIn := test.ConvertEventExtensionsToString(t, test.FullEvent())
 	initialReq := httptest.NewRequest("POST", "http://localhost", nil)
 	require.NoError(t, WriteRequest(binding.WithForceBinary(context.TODO()), binding.ToMessage(&eventIn), initialReq))
 
@@ -162,9 +165,9 @@ func TestWriteHttpResponseWriter_using_transformers_with_end(t *testing.T) {
 }
 
 func TestWriteHttpResponseWriter_using_transformers_fails(t *testing.T) {
-	eventIn := test.ExToStr(t, test.FullEvent())
-	messageIn := test.MustCreateMockBinaryMessage(eventIn)
-	messageIn.(*test.MockBinaryMessage).Extensions["badext"] = struct {
+	eventIn := test.ConvertEventExtensionsToString(t, test.FullEvent())
+	messageIn := bindingtest.MustCreateMockBinaryMessage(eventIn)
+	messageIn.(*bindingtest.MockBinaryMessage).Extensions["badext"] = struct {
 		val string
 	}{
 		val: "aaa",

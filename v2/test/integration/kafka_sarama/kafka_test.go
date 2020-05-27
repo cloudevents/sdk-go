@@ -9,10 +9,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 
-	bindingtest "github.com/cloudevents/sdk-go/v2/binding/test"
 	clienttest "github.com/cloudevents/sdk-go/v2/client/test"
 	"github.com/cloudevents/sdk-go/v2/event"
 	"github.com/cloudevents/sdk-go/v2/protocol/kafka_sarama"
+	"github.com/cloudevents/sdk-go/v2/test"
 )
 
 const (
@@ -20,12 +20,12 @@ const (
 )
 
 func TestSendEvent(t *testing.T) {
-	bindingtest.EachEvent(t, bindingtest.Events(), func(t *testing.T, eventIn event.Event) {
-		eventIn = bindingtest.ExToStr(t, eventIn)
+	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
+		eventIn = test.ConvertEventExtensionsToString(t, eventIn)
 		clienttest.SendReceive(t, func() interface{} {
 			return protocolFactory(t)
 		}, eventIn, func(e event.Event) {
-			bindingtest.AssertEventEquals(t, eventIn, bindingtest.ExToStr(t, e))
+			test.AssertEventEquals(t, eventIn, test.ConvertEventExtensionsToString(t, e))
 		})
 	})
 }

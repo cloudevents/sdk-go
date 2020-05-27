@@ -4,14 +4,15 @@ import (
 	"context"
 	"testing"
 
-	"github.com/cloudevents/sdk-go/v2/binding/test"
+	. "github.com/cloudevents/sdk-go/v2/binding/test"
+	. "github.com/cloudevents/sdk-go/v2/test"
 )
 
 var err error
 
 func BenchmarkBufferMessageFromStructured(b *testing.B) {
-	e := test.FullEvent()
-	input := test.MustCreateMockStructuredMessage(e)
+	e := FullEvent()
+	input := MustCreateMockStructuredMessage(b, e)
 	ctx := context.Background()
 	for i := 0; i < b.N; i++ {
 		outputMessage, _ := BufferMessage(ctx, input)
@@ -20,8 +21,8 @@ func BenchmarkBufferMessageFromStructured(b *testing.B) {
 }
 
 func BenchmarkBufferMessageFromBinary(b *testing.B) {
-	e := test.FullEvent()
-	input := test.MustCreateMockBinaryMessage(e)
+	e := FullEvent()
+	input := MustCreateMockBinaryMessage(e)
 	ctx := context.Background()
 	for i := 0; i < b.N; i++ {
 		outputMessage, _ := BufferMessage(ctx, input)

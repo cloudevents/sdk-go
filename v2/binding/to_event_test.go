@@ -8,8 +8,9 @@ import (
 
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/binding/spec"
-	"github.com/cloudevents/sdk-go/v2/binding/test"
+	. "github.com/cloudevents/sdk-go/v2/binding/test"
 	"github.com/cloudevents/sdk-go/v2/event"
+	. "github.com/cloudevents/sdk-go/v2/test"
 )
 
 type toEventTestCase struct {
@@ -20,20 +21,20 @@ type toEventTestCase struct {
 }
 
 func TestToEvent_success(t *testing.T) {
-	test.EachEvent(t, test.Events(), func(t *testing.T, v event.Event) {
+	EachEvent(t, Events(), func(t *testing.T, v event.Event) {
 		testCases := []toEventTestCase{
 			{
-				name:    "From mock structured/" + test.NameOf(v),
-				message: test.MustCreateMockStructuredMessage(v),
+				name:    "From mock structured/" + TestNameOf(v),
+				message: MustCreateMockStructuredMessage(t, v),
 				want:    v,
 			},
 			{
-				name:    "From mock binary/" + test.NameOf(v),
-				message: test.MustCreateMockBinaryMessage(v),
+				name:    "From mock binary/" + TestNameOf(v),
+				message: MustCreateMockBinaryMessage(v),
 				want:    v,
 			},
 			{
-				name:  "From event/" + test.NameOf(v),
+				name:  "From event/" + TestNameOf(v),
 				event: v,
 				want:  v,
 			},
@@ -50,18 +51,18 @@ func TestToEvent_success(t *testing.T) {
 				}
 				got, err := binding.ToEvent(context.Background(), inputMessage)
 				require.NoError(t, err)
-				test.AssertEventEquals(t, test.ExToStr(t, tt.want), test.ExToStr(t, *got))
+				AssertEventEquals(t, ConvertEventExtensionsToString(t, tt.want), ConvertEventExtensionsToString(t, *got))
 			})
 		}
 	})
 }
 
 func TestToEvent_bad_spec_version_binary(t *testing.T) {
-	inputEvent := test.FullEvent()
+	inputEvent := FullEvent()
 
-	inputMessage := test.MustCreateMockBinaryMessage(inputEvent)
+	inputMessage := MustCreateMockBinaryMessage(inputEvent)
 	// Injecting bad spec version
-	inputMessage.(*test.MockBinaryMessage).Metadata[spec.VS.Version(inputEvent.SpecVersion()).AttributeFromKind(spec.SpecVersion)] = "0.1.1"
+	inputMessage.(*MockBinaryMessage).Metadata[spec.VS.Version(inputEvent.SpecVersion()).AttributeFromKind(spec.SpecVersion)] = "0.1.1"
 
 	got, err := binding.ToEvent(context.Background(), inputMessage)
 	require.Nil(t, got)
@@ -69,7 +70,7 @@ func TestToEvent_bad_spec_version_binary(t *testing.T) {
 }
 
 func TestToEvent_success_wrapped_event_message(t *testing.T) {
-	inputEvent := test.FullEvent()
+	inputEvent := FullEvent()
 
 	cloned := inputEvent.Clone()
 	inputMessage := binding.WithFinish(binding.ToMessage(&cloned), func(err error) {})
@@ -77,37 +78,37 @@ func TestToEvent_success_wrapped_event_message(t *testing.T) {
 	got, err := binding.ToEvent(context.Background(), inputMessage)
 	require.NoError(t, err)
 	require.NotNil(t, got)
-	test.AssertEventEquals(t, *got, inputEvent)
+	AssertEventEquals(t, *got, inputEvent)
 
 }
 
 func TestToEvent_unknown(t *testing.T) {
-	got, err := binding.ToEvent(context.Background(), test.UnknownMessage)
+	got, err := binding.ToEvent(context.Background(), UnknownMessage)
 	require.Nil(t, got)
 	require.Equal(t, binding.ErrUnknownEncoding, err)
 }
 
 func TestToEvent_wrapped_unknown(t *testing.T) {
-	got, err := binding.ToEvent(context.Background(), binding.WithFinish(test.UnknownMessage, func(err error) {}))
+	got, err := binding.ToEvent(context.Background(), binding.WithFinish(UnknownMessage, func(err error) {}))
 	require.Nil(t, got)
 	require.Equal(t, binding.ErrUnknownEncoding, err)
 }
 
 func TestToEvent_transformers_applied_once(t *testing.T) {
-	test.EachEvent(t, test.Events(), func(t *testing.T, v event.Event) {
+	EachEvent(t, Events(), func(t *testing.T, v event.Event) {
 		testCases := []toEventTestCase{
 			{
-				name:    "From mock structured/" + test.NameOf(v),
-				message: test.MustCreateMockStructuredMessage(v),
+				name:    "From mock structured/" + TestNameOf(v),
+				message: MustCreateMockStructuredMessage(t, v),
 				want:    v,
 			},
 			{
-				name:    "From mock binary/" + test.NameOf(v),
-				message: test.MustCreateMockBinaryMessage(v),
+				name:    "From mock binary/" + TestNameOf(v),
+				message: MustCreateMockBinaryMessage(v),
 				want:    v,
 			},
 			{
-				name:  "From event/" + test.NameOf(v),
+				name:  "From event/" + TestNameOf(v),
 				event: v,
 				want:  v,
 			},
@@ -123,13 +124,13 @@ func TestToEvent_transformers_applied_once(t *testing.T) {
 					inputMessage = binding.ToMessage(&e)
 				}
 
-				transformer := test.MockTransformer{}
+				transformer := MockTransformer{}
 
 				got, err := binding.ToEvent(context.Background(), inputMessage, &transformer)
 				require.NoError(t, err)
-				test.AssertEventEquals(t, test.ExToStr(t, tt.want), test.ExToStr(t, *got))
+				AssertEventEquals(t, ConvertEventExtensionsToString(t, tt.want), ConvertEventExtensionsToString(t, *got))
 
-				test.AssertTransformerInvokedOneTime(t, &transformer)
+				AssertTransformerInvokedOneTime(t, &transformer)
 			})
 			t.Run("With two Transformers "+tt.name, func(t *testing.T) {
 				var inputMessage binding.Message
@@ -140,15 +141,15 @@ func TestToEvent_transformers_applied_once(t *testing.T) {
 					inputMessage = binding.ToMessage(&e)
 				}
 
-				transformer1 := test.MockTransformer{}
-				transformer2 := test.MockTransformer{}
+				transformer1 := MockTransformer{}
+				transformer2 := MockTransformer{}
 
 				got, err := binding.ToEvent(context.Background(), inputMessage, &transformer1, &transformer2)
 				require.NoError(t, err)
-				test.AssertEventEquals(t, test.ExToStr(t, tt.want), test.ExToStr(t, *got))
+				AssertEventEquals(t, ConvertEventExtensionsToString(t, tt.want), ConvertEventExtensionsToString(t, *got))
 
-				test.AssertTransformerInvokedOneTime(t, &transformer1)
-				test.AssertTransformerInvokedOneTime(t, &transformer2)
+				AssertTransformerInvokedOneTime(t, &transformer1)
+				AssertTransformerInvokedOneTime(t, &transformer2)
 			})
 		}
 	})
