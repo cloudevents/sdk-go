@@ -4,11 +4,10 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-for amod in $(find . | grep "go\.mod" | awk '{gsub(/\/go.mod/,""); print $0}' | grep -v "./v2/test")
-
+for gomodule in $(find . | grep "go\.mod" | awk '{gsub(/\/go.mod/,""); print $0}' | grep -v "./v2/test")
 do
-  echo --- Testing $amod ---
-  pushd $amod
+  echo --- Testing $gomodule ---
+  pushd $gomodule
   touch ./coverage.tmp
   echo 'mode: atomic' > ./coverage.txt
   COVERPKG=$(go list ./... | grep -v /vendor | grep -v /test | tr "\n" ",")
