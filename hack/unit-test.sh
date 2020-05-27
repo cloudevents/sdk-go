@@ -7,10 +7,10 @@ set -o pipefail
 COVERAGE="`pwd`/coverage.txt"
 echo 'mode: atomic' > $COVERAGE
 
-for amod in $(find . | grep "go\.mod" | awk '{gsub(/\/go.mod/,""); print $0}' | grep -v "./test" | grep -v "./conformance")
+for gomodule in $(find . | grep "go\.mod" | awk '{gsub(/\/go.mod/,""); print $0}' | grep -v "./test" | grep -v "./conformance")
 do
-  echo --- Testing $amod ---
-  pushd $amod
+  echo --- Testing $gomodule ---
+  pushd $gomodule
   touch ./coverage.tmp
   COVERPKG=$(go list ./... | grep -v /vendor | grep -v /test | tr "\n" ",")
 
