@@ -73,7 +73,7 @@ func HasData(want []byte) EventMatcher {
 	}
 }
 
-// HasData checks if the event doesn't contain data
+// HasNoData checks if the event doesn't contain data
 func HasNoData() EventMatcher {
 	return func(t testing.TB, have event.Event) {
 		require.Nil(t, have.Data())
@@ -101,7 +101,7 @@ func IsValid() EventMatcher {
 	}
 }
 
-// IsValid checks if the event is invalid
+// IsInvalid checks if the event is invalid
 func IsInvalid() EventMatcher {
 	return func(t testing.TB, have event.Event) {
 		require.Error(t, have.Validate())
