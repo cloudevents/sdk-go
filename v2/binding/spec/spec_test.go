@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/cloudevents/sdk-go/v2/binding/spec"
-	"github.com/cloudevents/sdk-go/v2/binding/test"
 	"github.com/cloudevents/sdk-go/v2/event"
+	"github.com/cloudevents/sdk-go/v2/test"
 	tassert "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

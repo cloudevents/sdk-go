@@ -11,6 +11,7 @@ import (
 	"github.com/cloudevents/sdk-go/v2/binding"
 	. "github.com/cloudevents/sdk-go/v2/binding/test"
 	"github.com/cloudevents/sdk-go/v2/event"
+	. "github.com/cloudevents/sdk-go/v2/test"
 )
 
 type copyMessageTestCase struct {
@@ -27,7 +28,7 @@ func TestCopyMessage_success(t *testing.T) {
 			{
 				name:     "from structured",
 				encoding: binding.EncodingStructured,
-				message:  MustCreateMockStructuredMessage(v),
+				message:  MustCreateMockStructuredMessage(t, v),
 				want:     v,
 			},
 			{
@@ -66,7 +67,7 @@ func TestCopyMessage_success(t *testing.T) {
 					got, err := binding.ToEvent(context.Background(), cpy)
 					assert.NoError(t, err)
 					require.Equal(t, tt.encoding, cpy.ReadEncoding())
-					AssertEventEquals(t, ExToStr(t, tt.want), ExToStr(t, *got))
+					AssertEventEquals(t, ConvertEventExtensionsToString(t, tt.want), ConvertEventExtensionsToString(t, *got))
 				}
 				require.NoError(t, cpy.Finish(nil))
 				require.Equal(t, false, finished)
@@ -83,7 +84,7 @@ func TestCopyMessage_success(t *testing.T) {
 					got, err := binding.ToEvent(context.Background(), cpy)
 					assert.NoError(t, err)
 					require.Equal(t, tt.encoding, cpy.ReadEncoding())
-					AssertEventEquals(t, ExToStr(t, tt.want), ExToStr(t, *got))
+					AssertEventEquals(t, ConvertEventExtensionsToString(t, tt.want), ConvertEventExtensionsToString(t, *got))
 				}
 				require.NoError(t, cpy.Finish(nil))
 				require.Equal(t, true, finished)
@@ -103,7 +104,7 @@ func TestCopyMessage_transformers_applied_once(t *testing.T) {
 		tests := []copyMessageTestCase{
 			{
 				name:    "From structured",
-				message: MustCreateMockStructuredMessage(v),
+				message: MustCreateMockStructuredMessage(t, v),
 				want:    v,
 			},
 			{
@@ -134,7 +135,7 @@ func TestCopyMessage_transformers_applied_once(t *testing.T) {
 				require.NotNil(t, cpy)
 				got, err := binding.ToEvent(context.Background(), cpy)
 				assert.NoError(t, err)
-				AssertEventEquals(t, ExToStr(t, tt.want), ExToStr(t, *got))
+				AssertEventEquals(t, ConvertEventExtensionsToString(t, tt.want), ConvertEventExtensionsToString(t, *got))
 
 				AssertTransformerInvokedOneTime(t, &transformer)
 			})
@@ -155,7 +156,7 @@ func TestCopyMessage_transformers_applied_once(t *testing.T) {
 				require.NotNil(t, cpy)
 				got, err := binding.ToEvent(context.Background(), cpy)
 				assert.NoError(t, err)
-				AssertEventEquals(t, ExToStr(t, tt.want), ExToStr(t, *got))
+				AssertEventEquals(t, ConvertEventExtensionsToString(t, tt.want), ConvertEventExtensionsToString(t, *got))
 
 				AssertTransformerInvokedOneTime(t, &transformer1)
 				AssertTransformerInvokedOneTime(t, &transformer2)

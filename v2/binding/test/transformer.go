@@ -8,6 +8,7 @@ import (
 
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/event"
+	. "github.com/cloudevents/sdk-go/v2/test"
 )
 
 type TransformerTestArgs struct {
