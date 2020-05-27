@@ -1,4 +1,4 @@
-module github.com/cloudevents/sdk-go/v2/tools
+module github.com/cloudevents/sdk-go/tools
 
 go 1.13
 

@@ -2,7 +2,7 @@ module github.com/cloudevents/sdk-go/protocol/pubsub/v2
 
 go 1.13
 
-replace github.com/cloudevents/sdk-go/v2 => ../../v2
+replace github.com/cloudevents/sdk-go/v2 => ../../../v2
 
 require (
 	cloud.google.com/go/pubsub v1.3.1

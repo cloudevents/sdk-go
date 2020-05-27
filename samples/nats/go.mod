@@ -4,7 +4,7 @@ go 1.13
 
 replace github.com/cloudevents/sdk-go/v2 => ../../v2
 
-replace github.com/cloudevents/sdk-go/protocol/nats/v2 => ../../protocol/nats
+replace github.com/cloudevents/sdk-go/protocol/nats/v2 => ../../protocol/nats/v2
 
 require (
 	github.com/cloudevents/sdk-go/protocol/nats/v2 v2.0.0-00010101000000-000000000000
