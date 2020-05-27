@@ -6,7 +6,7 @@ set -o pipefail
 
 COVERAGE="`pwd`/coverage.txt"
 
-# v2/test only
+# ./test only
 pushd ./test
 
 # Run integration tests not in parallel
