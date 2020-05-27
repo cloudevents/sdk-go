@@ -15,7 +15,7 @@ import (
 	"github.com/cloudevents/sdk-go/v2/types"
 )
 
-// NoExtensions returns a copy of events with no Extensions.
+// WithoutExtensions returns a copy of events with no Extensions.
 // Use for testing where extensions are not supported.
 func WithoutExtensions(events []event.Event) []event.Event {
 	result := make([]event.Event, len(events))
@@ -43,7 +43,7 @@ func MustToEvent(t testing.TB, ctx context.Context, m binding.Message) event.Eve
 	return *e
 }
 
-// ExToStr returns a copy of the event.Event where all extensions are converted to strings. Fails the test if conversion fails
+// ConvertEventExtensionsToString returns a copy of the event.Event where all extensions are converted to strings. Fails the test if conversion fails
 func ConvertEventExtensionsToString(t testing.TB, e event.Event) event.Event {
 	out := e.Clone()
 	for k, v := range e.Extensions() {
