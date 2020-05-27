@@ -53,9 +53,9 @@ for i in "${MODULES[@]}"; do
     fi
     echo "  $tag"
     if [ "$CREATE_TAGS" -eq "1" ]; then
-      git tag $TAG
+      git tag $tag
     fi
     if [ "$PUSH_TAGS" -eq "1" ]; then
-      git push upstream $TAG
+      git push upstream $tag
     fi
 done

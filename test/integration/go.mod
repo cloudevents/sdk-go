@@ -17,11 +17,11 @@ replace github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 => ../../protocol
 require (
 	github.com/Azure/go-amqp v0.12.7
 	github.com/Shopify/sarama v1.19.0
-	github.com/cloudevents/sdk-go/protocol/amqp/v2 v2.0.0-00010101000000-000000000000
-	github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.0.0-00010101000000-000000000000
-	github.com/cloudevents/sdk-go/protocol/nats/v2 v2.0.0-00010101000000-000000000000
-	github.com/cloudevents/sdk-go/protocol/stan/v2 v2.0.0-00010101000000-000000000000
-	github.com/cloudevents/sdk-go/v2 v2.0.0-00010101000000-000000000000
+	github.com/cloudevents/sdk-go/protocol/amqp/v2 v2.0.0
+	github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.0.0
+	github.com/cloudevents/sdk-go/protocol/nats/v2 v2.0.0
+	github.com/cloudevents/sdk-go/protocol/stan/v2 v2.0.0
+	github.com/cloudevents/sdk-go/v2 v2.0.0
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
 	github.com/google/go-cmp v0.4.1
 	github.com/google/uuid v1.1.1
