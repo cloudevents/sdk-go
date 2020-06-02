@@ -3,6 +3,7 @@ package stan
 import (
 	"bytes"
 	"context"
+	"github.com/cloudevents/sdk-go/v2/protocol"
 	"github.com/nats-io/stan.go"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
@@ -53,9 +54,13 @@ func (m *Message) ReadBinary(context.Context, binding.BinaryWriter) error {
 }
 
 func (m *Message) Finish(err error) error {
-	if m.manualAcks && err == nil {
+	if !m.manualAcks {
+		return err
+	}
+
+	if protocol.IsACK(err) {
 		return m.Msg.Ack()
 	}
 
-	return nil
+	return err
 }
