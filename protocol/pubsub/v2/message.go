@@ -68,6 +68,9 @@ func (m *Message) ReadStructured(ctx context.Context, encoder binding.Structured
 	if m.version != nil {
 		return binding.ErrNotStructured
 	}
+	if m.format == nil {
+		return binding.ErrNotStructured
+	}
 	return encoder.SetStructuredEvent(ctx, m.format, bytes.NewReader(m.internal.Data))
 }
 
