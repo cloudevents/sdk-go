@@ -20,13 +20,6 @@ func TestAssertEvent(t *testing.T) {
 		have:       FullEvent(),
 		assertions: []EventMatcher{IsValid(), ContainsAttributes("id", "specversion")},
 	}, {
-		name: "has context attributes",
-		have: FullEvent(),
-		assertions: []EventMatcher{IsValid(), HasAttributes(map[string]interface{}{
-			"id":          FullEvent().ID(),
-			"specversion": event.CloudEventsVersionV1,
-		})},
-	}, {
 		name:       "has exactly extensions",
 		have:       FullEvent(),
 		assertions: []EventMatcher{IsValid(), HasExactlyExtensions(FullEvent().Extensions())},
@@ -42,6 +35,20 @@ func TestAssertEvent(t *testing.T) {
 		name:       "has data",
 		have:       FullEvent(),
 		assertions: []EventMatcher{IsValid(), HasData(FullEvent().Data())},
+	}, {
+		name: "has attributes",
+		have: FullEvent(),
+		assertions: []EventMatcher{
+			IsValid(),
+			HasId(FullEvent().ID()),
+			HasSource(FullEvent().Source()),
+			HasSpecVersion(FullEvent().SpecVersion()),
+			HasType(FullEvent().Type()),
+			HasDataContentType(FullEvent().DataContentType()),
+			HasDataSchema(FullEvent().DataSchema()),
+			HasTime(FullEvent().Time()),
+			HasSubject(FullEvent().Subject()),
+		},
 	}}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
