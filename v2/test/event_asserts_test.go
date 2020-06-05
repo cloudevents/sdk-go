@@ -18,11 +18,11 @@ func TestAssertEvent(t *testing.T) {
 	}, {
 		name:       "contains context attributes",
 		have:       FullEvent(),
-		assertions: []EventMatcher{IsValid(), ContainsContextAttributes("id", "specversion")},
+		assertions: []EventMatcher{IsValid(), ContainsAttributes("id", "specversion")},
 	}, {
 		name: "has context attributes",
 		have: FullEvent(),
-		assertions: []EventMatcher{IsValid(), HasContextAttributes(map[string]interface{}{
+		assertions: []EventMatcher{IsValid(), HasAttributes(map[string]interface{}{
 			"id":          FullEvent().ID(),
 			"specversion": event.CloudEventsVersionV1,
 		})},

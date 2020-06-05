@@ -24,8 +24,8 @@ func AllOf(matchers ...EventMatcher) EventMatcher {
 	}
 }
 
-// ContainsContextAttributes checks if the event contains at least the provided context attributes
-func ContainsContextAttributes(attrs ...string) EventMatcher {
+// ContainsAttributes checks if the event contains at least the provided context attributes
+func ContainsAttributes(attrs ...string) EventMatcher {
 	return func(have event.Event) error {
 		haveVersion := spec.VS.Version(have.SpecVersion())
 		for _, k := range attrs {
@@ -41,8 +41,8 @@ func ContainsContextAttributes(attrs ...string) EventMatcher {
 	}
 }
 
-// HasContextAttributes checks if the event contains at least the provided context attributes and their values
-func HasContextAttributes(m map[string]interface{}) EventMatcher {
+// HasAttributes checks if the event contains at least the provided context attributes and their values
+func HasAttributes(m map[string]interface{}) EventMatcher {
 	return func(have event.Event) error {
 		haveVersion := spec.VS.Version(have.SpecVersion())
 		for k, v := range m {
@@ -56,6 +56,11 @@ func HasContextAttributes(m map[string]interface{}) EventMatcher {
 		}
 		return nil
 	}
+}
+
+// HasAttribute checks if the event contains the provided attribute
+func HasAttribute(key string, value interface{}) EventMatcher {
+	return HasAttributes(map[string]interface{}{key: value})
 }
 
 // ContainsExtensions checks if the event contains at least the provided extension names
