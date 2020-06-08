@@ -3,6 +3,7 @@ package test
 import (
 	"testing"
 
+	"github.com/cloudevents/sdk-go/v2/binding/spec"
 	"github.com/cloudevents/sdk-go/v2/event"
 )
 
@@ -18,7 +19,7 @@ func TestAssertEvent(t *testing.T) {
 	}, {
 		name:       "contains context attributes",
 		have:       FullEvent(),
-		assertions: []EventMatcher{IsValid(), ContainsAttributes("id", "specversion")},
+		assertions: []EventMatcher{IsValid(), ContainsAttributes(spec.ID, spec.SpecVersion)},
 	}, {
 		name:       "has exactly extensions",
 		have:       FullEvent(),

@@ -58,16 +58,16 @@ func HasTime(t time.Time) EventMatcher {
 }
 
 // ContainsAttributes checks if the event contains at least the provided context attributes
-func ContainsAttributes(attrs ...string) EventMatcher {
+func ContainsAttributes(attrs ...spec.Kind) EventMatcher {
 	return func(have event.Event) error {
 		haveVersion := spec.VS.Version(have.SpecVersion())
 		for _, k := range attrs {
-			attr := haveVersion.Attribute(k)
+			attr := haveVersion.AttributeFromKind(k)
 			if isEmpty(attr) {
-				return fmt.Errorf("attribute name '%s' unrecognized", k)
+				return fmt.Errorf("attribute name '%s' unrecognized", k.String())
 			}
 			if isEmpty(attr.Get(have.Context)) {
-				return fmt.Errorf("missing or nil/empty attribute '%s'", k)
+				return fmt.Errorf("missing or nil/empty attribute '%s'", k.String())
 			}
 		}
 		return nil
