@@ -3,6 +3,7 @@ package test
 import (
 	"fmt"
 	"reflect"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 
@@ -24,34 +25,49 @@ func AllOf(matchers ...EventMatcher) EventMatcher {
 	}
 }
 
-// ContainsContextAttributes checks if the event contains at least the provided context attributes
-func ContainsContextAttributes(attrs ...string) EventMatcher {
+func HasId(id string) EventMatcher {
+	return HasAttributeKind(spec.ID, id)
+}
+
+func HasType(ty string) EventMatcher {
+	return HasAttributeKind(spec.Type, ty)
+}
+
+func HasSpecVersion(specVersion string) EventMatcher {
+	return HasAttributeKind(spec.SpecVersion, specVersion)
+}
+
+func HasSource(source string) EventMatcher {
+	return HasAttributeKind(spec.Source, source)
+}
+
+func HasDataContentType(dataContentType string) EventMatcher {
+	return HasAttributeKind(spec.DataContentType, dataContentType)
+}
+
+func HasDataSchema(schema string) EventMatcher {
+	return HasAttributeKind(spec.DataSchema, schema)
+}
+
+func HasSubject(subject string) EventMatcher {
+	return HasAttributeKind(spec.Subject, subject)
+}
+
+func HasTime(t time.Time) EventMatcher {
+	return HasAttributeKind(spec.Time, t)
+}
+
+// ContainsAttributes checks if the event contains at least the provided context attributes
+func ContainsAttributes(attrs ...spec.Kind) EventMatcher {
 	return func(have event.Event) error {
 		haveVersion := spec.VS.Version(have.SpecVersion())
 		for _, k := range attrs {
-			attr := haveVersion.Attribute(k)
+			attr := haveVersion.AttributeFromKind(k)
 			if isEmpty(attr) {
-				return fmt.Errorf("attribute name '%s' unrecognized", k)
+				return fmt.Errorf("attribute name '%s' unrecognized", k.String())
 			}
 			if isEmpty(attr.Get(have.Context)) {
-				return fmt.Errorf("missing or nil/empty attribute '%s'", k)
-			}
-		}
-		return nil
-	}
-}
-
-// HasContextAttributes checks if the event contains at least the provided context attributes and their values
-func HasContextAttributes(m map[string]interface{}) EventMatcher {
-	return func(have event.Event) error {
-		haveVersion := spec.VS.Version(have.SpecVersion())
-		for k, v := range m {
-			attr := haveVersion.Attribute(k)
-			if isEmpty(attr) {
-				return fmt.Errorf("attribute name '%s' unrecognized", k)
-			}
-			if !reflect.DeepEqual(v, attr.Get(have.Context)) {
-				return fmt.Errorf("expecting attribute '%s' equal to '%s', got '%s'", k, v, attr.Get(have.Context))
+				return fmt.Errorf("missing or nil/empty attribute '%s'", k.String())
 			}
 		}
 		return nil
@@ -167,6 +183,20 @@ func IsInvalid() EventMatcher {
 	return func(have event.Event) error {
 		if err := have.Validate(); err == nil {
 			return fmt.Errorf("expecting invalid event")
+		}
+		return nil
+	}
+}
+
+func HasAttributeKind(kind spec.Kind, value interface{}) EventMatcher {
+	return func(have event.Event) error {
+		haveVersion := spec.VS.Version(have.SpecVersion())
+		attr := haveVersion.AttributeFromKind(kind)
+		if isEmpty(attr) {
+			return fmt.Errorf("attribute '%s' not existing in the spec version '%s' of this event", kind.String(), haveVersion.String())
+		}
+		if !reflect.DeepEqual(value, attr.Get(have.Context)) {
+			return fmt.Errorf("expecting attribute '%s' equal to '%s', got '%s'", kind.String(), value, attr.Get(have.Context))
 		}
 		return nil
 	}

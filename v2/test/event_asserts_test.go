@@ -3,6 +3,7 @@ package test
 import (
 	"testing"
 
+	"github.com/cloudevents/sdk-go/v2/binding/spec"
 	"github.com/cloudevents/sdk-go/v2/event"
 )
 
@@ -18,14 +19,7 @@ func TestAssertEvent(t *testing.T) {
 	}, {
 		name:       "contains context attributes",
 		have:       FullEvent(),
-		assertions: []EventMatcher{IsValid(), ContainsContextAttributes("id", "specversion")},
-	}, {
-		name: "has context attributes",
-		have: FullEvent(),
-		assertions: []EventMatcher{IsValid(), HasContextAttributes(map[string]interface{}{
-			"id":          FullEvent().ID(),
-			"specversion": event.CloudEventsVersionV1,
-		})},
+		assertions: []EventMatcher{IsValid(), ContainsAttributes(spec.ID, spec.SpecVersion)},
 	}, {
 		name:       "has exactly extensions",
 		have:       FullEvent(),
@@ -42,6 +36,20 @@ func TestAssertEvent(t *testing.T) {
 		name:       "has data",
 		have:       FullEvent(),
 		assertions: []EventMatcher{IsValid(), HasData(FullEvent().Data())},
+	}, {
+		name: "has attributes",
+		have: FullEvent(),
+		assertions: []EventMatcher{
+			IsValid(),
+			HasId(FullEvent().ID()),
+			HasSource(FullEvent().Source()),
+			HasSpecVersion(FullEvent().SpecVersion()),
+			HasType(FullEvent().Type()),
+			HasDataContentType(FullEvent().DataContentType()),
+			HasDataSchema(FullEvent().DataSchema()),
+			HasTime(FullEvent().Time()),
+			HasSubject(FullEvent().Subject()),
+		},
 	}}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
