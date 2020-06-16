@@ -104,7 +104,7 @@ err := json.Marshal(bytes, &event)
 
 * Look at the complete documentation: https://cloudevents.github.io/sdk-go/
 * Dig into the godoc: https://godoc.org/github.com/cloudevents/sdk-go/v2
-* Check out the [samples directory](./v2/samples) for an extended list of examples showing the different SDK features
+* Check out the [samples directory](./samples) for an extended list of examples showing the different SDK features
 
 ## Community
 
