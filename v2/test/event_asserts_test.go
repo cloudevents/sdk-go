@@ -3,6 +3,8 @@ package test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/cloudevents/sdk-go/v2/binding/spec"
 	"github.com/cloudevents/sdk-go/v2/event"
 )
@@ -54,6 +56,45 @@ func TestAssertEvent(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			AssertEvent(t, tt.have, tt.assertions...)
+		})
+	}
+}
+
+func TestAssertAnyOf(t *testing.T) {
+	tests := []struct {
+		name      string
+		have      event.Event
+		anyOf     []EventMatcher
+		shouldErr bool
+	}{{
+		name:      "any of the two ids matching",
+		have:      FullEvent(),
+		anyOf:     []EventMatcher{HasId("min-event"), HasId("full-event")},
+		shouldErr: false,
+	}, {
+		name:      "any of the two ids matching - reverse",
+		have:      FullEvent(),
+		anyOf:     []EventMatcher{HasId("full-event"), HasId("min-event")},
+		shouldErr: false,
+	}, {
+		name:      "none matching",
+		have:      FullEvent(),
+		anyOf:     []EventMatcher{HasId("other-event"), HasId("min-event")},
+		shouldErr: true,
+	}, {
+		name:      "both matching",
+		have:      FullEvent(),
+		anyOf:     []EventMatcher{HasId("full-event"), HasId("full-event")},
+		shouldErr: false,
+	},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.shouldErr {
+				require.NoError(t, AnyOf(tt.anyOf...)(tt.have))
+			} else {
+				require.NoError(t, AnyOf(tt.anyOf...)(tt.have))
+			}
 		})
 	}
 }

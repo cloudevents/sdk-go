@@ -1,8 +1,10 @@
 package test
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
@@ -22,6 +24,26 @@ func AllOf(matchers ...EventMatcher) EventMatcher {
 			}
 		}
 		return nil
+	}
+}
+
+// AnyOf returns a matcher which match if at least one of the provided matchers matches
+func AnyOf(matchers ...EventMatcher) EventMatcher {
+	return func(have event.Event) error {
+		var errs []error
+		for _, m := range matchers {
+			if err := m(have); err == nil {
+				return nil
+			} else {
+				errs = append(errs, err)
+			}
+		}
+		var sb strings.Builder
+		sb.WriteString("Cannot match any of the provided matchers\n")
+		for i, err := range errs {
+			sb.WriteString(fmt.Sprintf("%d: %s\n", i+1, err))
+		}
+		return errors.New(sb.String())
 	}
 }
 
@@ -121,6 +143,17 @@ func HasData(want []byte) EventMatcher {
 	return func(have event.Event) error {
 		if diff := cmp.Diff(string(want), string(have.Data())); diff != "" {
 			return fmt.Errorf("data not matching (-want, +got) = %v", diff)
+		}
+		return nil
+	}
+}
+
+// DataContains matches that the data field of the event, converted to a string, contains the provided string
+func DataContains(expectedContainedString string) EventMatcher {
+	return func(have event.Event) error {
+		dataAsString := string(have.Data())
+		if !strings.Contains(dataAsString, expectedContainedString) {
+			return fmt.Errorf("data '%s' doesn't contain '%s'", dataAsString, expectedContainedString)
 		}
 		return nil
 	}
