@@ -108,6 +108,34 @@ func ContainsExtensions(exts ...string) EventMatcher {
 	}
 }
 
+// ContainsExactlyExtensions checks if the event contains only the provided extension names and no more
+func ContainsExactlyExtensions(exts ...string) EventMatcher {
+	return func(have event.Event) error {
+		// Copy in a temporary set first
+		extsInEvent := map[string]struct{}{}
+		for k, _ := range have.Extensions() {
+			extsInEvent[k] = struct{}{}
+		}
+
+		for _, ext := range exts {
+			if _, ok := have.Extensions()[ext]; !ok {
+				return fmt.Errorf("expecting extension '%s'", ext)
+			} else {
+				delete(extsInEvent, ext)
+			}
+		}
+
+		if len(extsInEvent) != 0 {
+			var unexpectedKeys []string
+			for k, _ := range extsInEvent {
+				unexpectedKeys = append(unexpectedKeys, k)
+			}
+			return fmt.Errorf("not expecting extensions '%v'", unexpectedKeys)
+		}
+		return nil
+	}
+}
+
 // HasExactlyExtensions checks if the event contains exactly the provided extensions
 func HasExactlyExtensions(ext map[string]interface{}) EventMatcher {
 	return func(have event.Event) error {
