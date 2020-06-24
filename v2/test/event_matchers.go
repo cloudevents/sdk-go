@@ -136,6 +136,24 @@ func ContainsExactlyExtensions(exts ...string) EventMatcher {
 	}
 }
 
+// HasExactlyAttributesEqualTo checks if the event has exactly the provided spec attributes (excluding extension attributes)
+func HasExactlyAttributesEqualTo(want event.EventContext) EventMatcher {
+	return func(have event.Event) error {
+		if want.GetSpecVersion() != have.SpecVersion() {
+			return fmt.Errorf("not matching specversion: want = '%s', got = '%s'", want.GetSpecVersion(), have.SpecVersion())
+		}
+		vs := spec.VS.Version(want.GetSpecVersion())
+
+		for _, a := range vs.Attributes() {
+			if !reflect.DeepEqual(a.Get(want), a.Get(have.Context)) {
+				return fmt.Errorf("expecting attribute '%s' equal to '%s', got '%s'", a.PrefixedName(), a.Get(want), a.Get(have.Context))
+			}
+		}
+
+		return nil
+	}
+}
+
 // HasExactlyExtensions checks if the event contains exactly the provided extensions
 func HasExactlyExtensions(ext map[string]interface{}) EventMatcher {
 	return func(have event.Event) error {
@@ -202,22 +220,9 @@ func IsEqualTo(want event.Event) EventMatcher {
 	return AllOf(IsContextEqualTo(want.Context), IsDataEqualTo(want))
 }
 
-// IsContextEqualTo performs a semantic equality check of the event context (like AssertEventContextEquals)
+// IsContextEqualTo performs a semantic equality check of the event context, including extension attributes (like AssertEventContextEquals)
 func IsContextEqualTo(want event.EventContext) EventMatcher {
-	return AllOf(func(have event.Event) error {
-		if want.GetSpecVersion() != have.SpecVersion() {
-			return fmt.Errorf("not matching specversion: want = '%s', got = '%s'", want.GetSpecVersion(), have.SpecVersion())
-		}
-		vs := spec.VS.Version(want.GetSpecVersion())
-
-		for _, a := range vs.Attributes() {
-			if !reflect.DeepEqual(a.Get(want), a.Get(have.Context)) {
-				return fmt.Errorf("expecting attribute '%s' equal to '%s', got '%s'", a.PrefixedName(), a.Get(want), a.Get(have.Context))
-			}
-		}
-
-		return nil
-	}, HasExactlyExtensions(want.GetExtensions()))
+	return AllOf(HasExactlyAttributesEqualTo(want), HasExactlyExtensions(want.GetExtensions()))
 }
 
 // IsDataEqualTo checks if the data field matches with want
