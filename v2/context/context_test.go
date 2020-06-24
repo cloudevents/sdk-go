@@ -17,11 +17,6 @@ func TestTargetContext(t *testing.T) {
 		ctx    context.Context
 		want   *url.URL
 	}{
-		"nil context": {},
-		"nil context, set url": {
-			target: "http://example.com",
-			want:   exampleDotCom,
-		},
 		"todo context, set url": {
 			ctx:    context.TODO(),
 			target: "http://example.com",

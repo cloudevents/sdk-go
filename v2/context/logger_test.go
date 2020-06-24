@@ -24,13 +24,6 @@ func TestLoggerContext(t *testing.T) {
 		ctx    context.Context
 		want   *zap.SugaredLogger
 	}{
-		"nil context": {
-			want: fallbackLogger,
-		},
-		"nil context, set nop logger": {
-			logger: nopLogger,
-			want:   nopLogger,
-		},
 		"todo context, set logger": {
 			ctx:    context.TODO(),
 			logger: namedLogger,
