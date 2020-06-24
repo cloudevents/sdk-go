@@ -9,6 +9,7 @@ import (
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/cloudevents/sdk-go/v2/client"
+	"github.com/stretchr/testify/require"
 )
 
 func TestEventReceiverServeHTTP_WithContext(t *testing.T) {
@@ -23,7 +24,7 @@ func TestEventReceiverServeHTTP_WithContext(t *testing.T) {
 		})
 	}
 
-	handler := func(ctx context.Context) error {
+	eventReceiver := func(ctx context.Context) error {
 		v, ok := ctx.Value(ctxKeyTest).(string)
 		if !ok {
 			t.Errorf("invalid context value type: %v", v)
@@ -40,7 +41,7 @@ func TestEventReceiverServeHTTP_WithContext(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	rh, err := client.NewHTTPReceiveHandler(context.Background(), p, handler)
+	httpHandler, err := client.NewHTTPReceiveHandler(context.Background(), p, eventReceiver)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -50,7 +51,7 @@ func TestEventReceiverServeHTTP_WithContext(t *testing.T) {
 	}
 
 	mux := http.NewServeMux()
-	mux.Handle("/test", middleware(rh))
+	mux.Handle("/test", middleware(httpHandler))
 	ts := httptest.NewServer(mux)
 	t.Cleanup(ts.Close)
 
@@ -61,7 +62,5 @@ func TestEventReceiverServeHTTP_WithContext(t *testing.T) {
 	ctx = cloudevents.ContextWithTarget(ctx, ts.URL+"/test")
 
 	result := c.Send(ctx, event)
-	if cloudevents.IsNACK(result) || !cloudevents.IsACK(result) {
-		t.Errorf("should be ACK: %v", result)
-	}
+	require.True(t, cloudevents.IsACK(result))
 }
