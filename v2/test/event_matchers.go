@@ -113,7 +113,7 @@ func ContainsExactlyExtensions(exts ...string) EventMatcher {
 	return func(have event.Event) error {
 		// Copy in a temporary set first
 		extsInEvent := map[string]struct{}{}
-		for k, _ := range have.Extensions() {
+		for k := range have.Extensions() {
 			extsInEvent[k] = struct{}{}
 		}
 
@@ -127,7 +127,7 @@ func ContainsExactlyExtensions(exts ...string) EventMatcher {
 
 		if len(extsInEvent) != 0 {
 			var unexpectedKeys []string
-			for k, _ := range extsInEvent {
+			for k := range extsInEvent {
 				unexpectedKeys = append(unexpectedKeys, k)
 			}
 			return fmt.Errorf("not expecting extensions '%v'", unexpectedKeys)
