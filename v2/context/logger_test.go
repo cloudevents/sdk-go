@@ -24,7 +24,6 @@ func TestLoggerContext(t *testing.T) {
 		ctx    context.Context
 		want   *zap.SugaredLogger
 	}{
-		"nil context, panic": {},
 		"todo context, set logger": {
 			ctx:    context.TODO(),
 			logger: namedLogger,
@@ -38,14 +37,6 @@ func TestLoggerContext(t *testing.T) {
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
-			if tc.ctx == nil {
-				defer func() {
-					err := recover()
-					if err == "" {
-						t.Error("should panic in nil context")
-					}
-				}()
-			}
 
 			ctx := WithLogger(tc.ctx, tc.logger)
 			got := LoggerFrom(ctx)
