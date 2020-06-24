@@ -59,14 +59,17 @@ jobs:
       - run:
           name: Run unit tests
           command: |
+            set -o pipefail
             ./hack/unit-test.sh | tee ${TEST_RESULTS}/go-unit-test.out
       - run:
           name: Run integrations tests
           command: |
+            set -o pipefail
             TEST_AMQP_URL=amqp://localhost/test ./hack/integration-test.sh | tee ${TEST_RESULTS}/go-integration-test.out
       - run:
           name: Run conformance tests
           command: |
+            set -o pipefail
             ./hack/conformance-test.sh | tee ${TEST_RESULTS}/go-conformance-test.out
 
       - run:
