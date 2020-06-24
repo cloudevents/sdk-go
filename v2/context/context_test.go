@@ -18,10 +18,6 @@ func TestTargetContext(t *testing.T) {
 		want   *url.URL
 	}{
 		"nil context": {},
-		"nil context, set url": {
-			target: "http://example.com",
-			want:   exampleDotCom,
-		},
 		"todo context, set url": {
 			ctx:    context.TODO(),
 			target: "http://example.com",
@@ -39,6 +35,12 @@ func TestTargetContext(t *testing.T) {
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
+			defer func() {
+				err := recover()
+				if err == "" {
+					t.Error("should panic in nil context")
+				}
+			}()
 
 			ctx := cecontext.WithTarget(tc.ctx, tc.target)
 
