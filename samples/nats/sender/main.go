@@ -60,8 +60,10 @@ func main() {
 				Message:  fmt.Sprintf("Hello, %s!", contentType),
 			})
 
-			if result := c.Send(context.Background(), e); !cloudevents.IsACK(result) {
-				log.Fatalf("failed to send: %v", result)
+			if result := c.Send(context.Background(), e); cloudevents.Undelivered(result) {
+				log.Printf("failed to send: %v", err)
+			} else {
+				log.Printf("sent: %d, accepted: %t", i, cloudevents.IsACK(result))
 			}
 			time.Sleep(100 * time.Millisecond)
 		}

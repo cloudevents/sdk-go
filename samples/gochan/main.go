@@ -36,11 +36,10 @@ func main() {
 			"message": "Hello, World!",
 		})
 
-		res := c.Send(ctx, e)
-		if !cloudevents.IsACK(res) {
+		if res := c.Send(ctx, e); cloudevents.Undelivered(res) {
 			log.Printf("[sender] failed to send: %v", res)
 		} else {
-			log.Printf("[sender] sent: %d", i)
+			log.Printf("[sender] sent: %d, accepted: %t", i, cloudevents.IsACK(res))
 		}
 	}
 	// Wait for the timeout.
