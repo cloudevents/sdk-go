@@ -30,9 +30,41 @@ Steps:
      git checkout -b $branch
      git push -u origin $branch
      ```
-1. Tag the new branch with the correct release tag,
+
+1. Tag the new branch with the correct release tag, i.e:
     ```
     tag=v2.1.0
     git tag $tag
     git push origin $tag
+    ```
+1. Run `./hack/tag-release.sh --tag --push` to update and tag the dependencies. Or do it manualy with the following:
+   
+  1. Update the each protocol to use the new release rather than the replace directive in their `go mod` files. Example for `stan`:
+    ```
+    tag=v2.1.0
+    pushd protocol/stan/v2
+    go mod edit -dropreplace github.com/cloudevents/sdk-go/v2
+    go get -d github.com/cloudevents/sdk-go/v2@$tag
+    popd
+    ```
+    _NOTE_: to reverse the `dropreplace` command, run `go mod edit -replace github.com/cloudevents/sdk-go/v2=../../../v2`
+
+  1. Release each protocol with a new tag that lets go mod follow the tag to the source in the form `<path>/v<major>.<minor>.<patch>`, i.e.:
+    ```
+    tag=protocol/stan/v2.1.0
+    pushd protocol/stan/v2
+    git tag $tag
+    git push origin $tag
+    popd
+    ```
+
+1. Run `./hack/tag-release.sh --samples` to update the sample dependencies (both the core sdk and protcol) after all releases are published. Or do it manualy with the following:
+    ```
+    tag=v2.1.0
+    pushd sample/stan
+    go mod edit -dropreplace github.com/cloudevents/sdk-go/protocol/stan/v2
+    go get -d github.com/cloudevents/sdk-go/protocol/stan/v2@$tag
+    go mod edit -dropreplace github.com/cloudevents/sdk-go/v2
+    go get -d github.com/cloudevents/sdk-go/v2@$tag
+    popd
     ```
