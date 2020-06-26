@@ -24,7 +24,7 @@ _Note:_ Supported go version: 1.13+
 Add the module as dependency using go mod:
 
 ```
-% go get github.com/cloudevents/sdk-go/v2@v2.0.0
+% go get github.com/cloudevents/sdk-go/v2@v2.1.0
 ```
 
 And import the module in your code
@@ -55,7 +55,7 @@ func main() {
 	ctx := cloudevents.ContextWithTarget(context.Background(), "http://localhost:8080/")
 
 	// Send that Event.
-	if result := c.Send(ctx, event); !cloudevents.IsACK(result) {
+	if result := c.Send(ctx, event); cloudevents.IsUndelivered(result) {
 		log.Fatalf("failed to send, %v", result)
 	}
 }
