@@ -39,7 +39,7 @@ func main() {
 			"message": "Hello, World!",
 		})
 
-		if result := c.Send(context.Background(), e); cloudevents.Undelivered(result) {
+		if result := c.Send(context.Background(), e); cloudevents.IsUndelivered(result) {
 			log.Printf("failed to send: %v", err)
 		} else {
 			log.Printf("sent: %d, accepted: %t", i, cloudevents.IsACK(result))

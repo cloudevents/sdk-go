@@ -53,11 +53,11 @@ func IsNACK(target Result) bool {
 	return ResultIs(target, ResultNACK)
 }
 
-// Undelivered true means the target result is not an ACK/NACK, but some other
+// IsUndelivered true means the target result is not an ACK/NACK, but some other
 // error unrelated to delivery not from the intended recipient. Likely target
 // is an error that represents some part of the protocol is misconfigured or
 // the event that was attempting to be sent was invalid.
-func Undelivered(target Result) bool {
+func IsUndelivered(target Result) bool {
 	return !ResultIs(target, ResultACK) && !ResultIs(target, ResultNACK)
 }
 

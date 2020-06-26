@@ -113,9 +113,9 @@ var (
 	ResultACK  = protocol.ResultACK
 	ResultNACK = protocol.ResultNACK
 
-	IsACK       = protocol.IsACK
-	IsNACK      = protocol.IsNACK
-	Undelivered = protocol.Undelivered
+	IsACK         = protocol.IsACK
+	IsNACK        = protocol.IsNACK
+	IsUndelivered = protocol.IsUndelivered
 
 	// HTTP Results
 

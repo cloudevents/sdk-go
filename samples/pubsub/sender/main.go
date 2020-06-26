@@ -50,7 +50,7 @@ func main() {
 		Message:  "HELLO",
 	})
 
-	if result := c.Send(context.Background(), event); cloudevents.Undelivered(result) {
+	if result := c.Send(context.Background(), event); cloudevents.IsUndelivered(result) {
 		log.Printf("failed to send: %v", err)
 		os.Exit(1)
 	} else {

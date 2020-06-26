@@ -76,7 +76,7 @@ func main() {
 			log.Fatalf("Failed to set data: %v", err)
 		}
 
-		if result := c.Send(context.Background(), event); cloudevents.Undelivered(result) {
+		if result := c.Send(context.Background(), event); cloudevents.IsUndelivered(result) {
 			log.Fatalf("Failed to send: %v", result)
 		} else if cloudevents.IsNACK(result) {
 			log.Printf("Event not accepted: %v", result)
