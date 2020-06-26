@@ -13,10 +13,15 @@ VERSION=v2.1.0
 
 CREATE_TAGS=0 # default is a dry run
 PUSH_TAGS=0   # Assumes `upstream` is the remote name for sdk-go.
+SAMPLES=0
 
 # Pick one:
 REMOTE="origin"   # if checked out directly
 #REMOTE="upstream" # if checked out with a fork
+
+REPOINT=(
+  "github.com/cloudevents/sdk-go/v2"
+)
 
 # Loop through arguments and process them
 for arg in "$@"
@@ -30,10 +35,21 @@ do
         PUSH_TAGS=1
         shift
         ;;
+        # --samples is used to repoint the dep used for samples to the newly released submodules
+        --samples)
+        SAMPLES=1
+        REPOINT=(
+          "github.com/cloudevents/sdk-go/v2"
+          "github.com/cloudevents/sdk-go/protocol/amqp/v2"
+          "github.com/cloudevents/sdk-go/protocol/stan/v2"
+          "github.com/cloudevents/sdk-go/protocol/nats/v2"
+          "github.com/cloudevents/sdk-go/protocol/pubsub/v2"
+          "github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2"
+        )
+        shift
+        ;;
     esac
 done
-
-CE_SDK_V2=github.com/cloudevents/sdk-go/v2
 
 echo --- All Modules ---
 for gomodule in $(find . | grep "go\.mod" | awk '{gsub(/\/go.mod/,""); print $0}' | grep -v "./v2/test" | grep -v "./test")
@@ -46,21 +62,33 @@ do
     continue
   fi
   
-  pushd $gomodule > /dev/null
-  
-  repoint=$CE_SDK_V2
-  
-  if grep -Fq "$repoint" go.mod
-  then
-    tag="$VERSION"
-    echo "    repointing dep on $CE_SDK_V2@$tag"
-    go mod edit -dropreplace $repoint
-    go get -d $repoint@$tag
-    go mod tidy
+  if [ "$SAMPLES" -eq "1" ]; then
+    if [[ $gomodule != "./samples"* ]]
+    then
+      echo "    skipping non-sample module"
+      continue
+    fi
   fi
+  
+  pushd $gomodule > /dev/null
+  for repoint in "${REPOINT[@]}"; do
+    if grep -Fq "$repoint" go.mod
+    then
+      tag="$VERSION"
+      echo "    repointing dep on $repoint@$tag"
+      go mod edit -dropreplace $repoint
+      go get -d $repoint@$tag
+      go mod tidy
+    fi
+  done
   popd > /dev/null
-    
+
 done
+
+if [ "$SAMPLES" -eq "1" ]; then
+  echo "Done."
+  exit 0
+fi
 
 echo --- Tagging ---
 
