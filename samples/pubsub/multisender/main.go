@@ -63,11 +63,11 @@ func main() {
 			Message:  "HELLO " + topic,
 		})
 
-		err = c.Send(ctx, event)
-
-		if err != nil {
+		if result := c.Send(ctx, event); cloudevents.IsUndelivered(result) {
 			log.Printf("failed to send: %v", err)
 			os.Exit(1)
+		} else {
+			log.Printf("sent, accepted: %t", cloudevents.IsACK(result))
 		}
 	}
 

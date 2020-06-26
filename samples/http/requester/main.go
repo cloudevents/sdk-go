@@ -73,7 +73,7 @@ func main() {
 					ctx = cloudevents.WithEncodingStructured(ctx)
 				}
 
-				if resp, res := c.Request(ctx, event); !cloudevents.IsACK(res) {
+				if resp, res := c.Request(ctx, event); cloudevents.IsUndelivered(res) {
 					log.Printf("Failed to request: %v", res)
 				} else if resp != nil {
 					fmt.Printf("Response:\n%s\n", resp)

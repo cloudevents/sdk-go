@@ -41,10 +41,12 @@ func send10(ctx context.Context, c cloudevents.Client) {
 			"message": "Hello, World!",
 		})
 
-		if result := c.Send(ctx, e); !cloudevents.IsACK(result) {
+		if result := c.Send(ctx, e); cloudevents.IsUndelivered(result) {
 			log.Printf("Failed to send: %s", result.Error())
-		} else {
+		} else if cloudevents.IsACK(result) {
 			log.Printf("Sent: %d", i)
+		} else if cloudevents.IsNACK(result) {
+			log.Printf("Sent but not accepted: %s", result.Error())
 		}
 		time.Sleep(50 * time.Millisecond)
 	}

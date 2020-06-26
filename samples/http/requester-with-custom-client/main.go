@@ -90,7 +90,7 @@ func main() {
 			Message:  "Hello world!",
 		})
 
-		if resp, res := c.Request(context.TODO(), event); !cloudevents.IsACK(res) {
+		if resp, res := c.Request(context.TODO(), event); cloudevents.IsUndelivered(res) {
 			log.Printf("Failed to request: %v", res)
 		} else if resp != nil {
 			fmt.Printf("Response:\n%s\n", resp)

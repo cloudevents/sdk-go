@@ -31,7 +31,7 @@ func main() {
 		})
 
 		res := c.Send(ctx, e)
-		if !cloudevents.IsACK(res) {
+		if cloudevents.IsUndelivered(res) {
 			log.Printf("Failed to send: %v", res)
 		} else {
 			var httpResult *cehttp.Result
