@@ -56,7 +56,7 @@ for gomodule in $(find . | grep "go\.mod" | awk '{gsub(/\/go.mod/,""); print $0}
 do
   echo "  $gomodule"
   
-  if [[ $gomodule = "./v2" ]]
+  if [[ $gomodule == "./v2" ]]
   then
     echo "    skipping main module"
     continue
@@ -64,6 +64,12 @@ do
   
   if [ "$SAMPLES" -eq "1" ]; then
     if [[ $gomodule != "./samples"* ]]
+    then
+      echo "    skipping non-sample module"
+      continue
+    fi
+  else
+    if [[ $gomodule == "./samples"* ]]
     then
       echo "    skipping non-sample module"
       continue
