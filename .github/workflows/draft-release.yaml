@@ -12,6 +12,8 @@ jobs:
   release-tags:
     name: draft-release
 
+    runs-on: ubuntu-latest
+
     steps:
 
     - name: Create Draft Release
