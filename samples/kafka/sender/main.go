@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/Shopify/sarama"
+	"github.com/google/uuid"
 
 	"github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
@@ -32,6 +33,7 @@ func main() {
 
 	for i := 0; i < count; i++ {
 		e := cloudevents.NewEvent()
+		e.SetID(uuid.New().String())
 		e.SetType("com.cloudevents.sample.sent")
 		e.SetSource("https://github.com/cloudevents/sdk-go/v2/samples/kafka/sender")
 		_ = e.SetData(cloudevents.ApplicationJSON, map[string]interface{}{
@@ -39,7 +41,11 @@ func main() {
 			"message": "Hello, World!",
 		})
 
-		if result := c.Send(context.Background(), e); cloudevents.IsUndelivered(result) {
+		if result := c.Send(
+			// Set the producer message key
+			kafka_sarama.WithMessageKey(context.Background(), sarama.StringEncoder(e.ID())),
+			e,
+		); cloudevents.IsUndelivered(result) {
 			log.Printf("failed to send: %v", err)
 		} else {
 			log.Printf("sent: %d, accepted: %t", i, cloudevents.IsACK(result))
