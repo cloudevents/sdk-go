@@ -53,6 +53,10 @@ func (s *Sender) Send(ctx context.Context, m binding.Message, transformers ...bi
 
 	kafkaMessage := sarama.ProducerMessage{Topic: s.topic}
 
+	if k := ctx.Value(withMessageKey{}); k != nil {
+		kafkaMessage.Key = k.(sarama.Encoder)
+	}
+
 	if err = WriteProducerMessage(ctx, m, &kafkaMessage, transformers...); err != nil {
 		return err
 	}
@@ -69,4 +73,11 @@ func (s *Sender) Close(ctx context.Context) error {
 	// If the Sender was built with NewSenderFromClient, this Close will close only the producer,
 	// otherwise it will close the whole client
 	return s.syncProducer.Close()
+}
+
+type withMessageKey struct{}
+
+// WithMessageKey allows to set the key used when sending the producer message
+func WithMessageKey(ctx context.Context, key sarama.Encoder) context.Context {
+	return context.WithValue(ctx, withMessageKey{}, key)
 }
