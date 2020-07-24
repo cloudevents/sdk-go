@@ -14,13 +14,15 @@ Test keys are:
 ### Build
 
 ```shell script
-go build main.go
+go build -o main go
 ```
 
 ### Run all tests
 
 ```shell script
-./main --bench=baseline > baseline.csv && ./main --bench=receiver-sender > receiver-sender.csv && ./main --bench=client > client.csv
+./main --bench=baseline-binary
+./main --bench=binding-binary-to-binary 
+./main --bench=client-binary
 ```
 
 ### Plot results
@@ -36,3 +38,12 @@ Example:
 ```shell script
 gnuplot -c plot_parallelism_ns.gnuplot 16
 ```
+
+#### Plotter
+
+To view some results without gnuplot (from the plotter directory),
+
+```shell script
+../main --bench=baseline-binary && go run plot.go baseline-binary.cvs
+```
+

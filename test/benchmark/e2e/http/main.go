@@ -224,13 +224,17 @@ var bench = flag.String(
 	"baseline-binary",
 	"[baseline-structured, baseline-binary, binding-structured-to-structured, binding-structured-to-binary, binding-binary-to-structured, binding-binary-to-binary, client-binary, client-structured]",
 )
-var out = flag.String("out", "out.csv", "Output file")
+var out = flag.String("out", "", "Output file, defaults to <bench-name>.csv")
 var maxPayloadKb = flag.Int("max-payload", 32, "Max payload size in kb")
 var maxParallelism = flag.Int("max-parallelism", runtime.NumCPU()*2, "Max parallelism")
 var maxOutputSenders = flag.Int("max-output-senders", 1, "Max output senders")
 
 func main() {
 	flag.Parse()
+
+	if *out == "" {
+		*out = fmt.Sprintf("%s.cvs", *bench)
+	}
 
 	if *cpuprofile != "" {
 		f, _ := os.Create(*cpuprofile)
