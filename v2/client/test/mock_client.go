@@ -38,7 +38,7 @@ func NewMockSenderClient(t *testing.T, chanSize int, opts ...client.Option) (cli
 
 // NewMockRequesterClient returns a client that can perform Send() event and Request() event.
 // All sent messages are delivered to the returned channel.
-func NewMockRequesterClient(t *testing.T, chanSize int, replierFn func(inMessage event.Event) (*event.Event, error), opts ...client.Option) (client.Client, <-chan event.Event) {
+func NewMockRequesterClient(t *testing.T, chanSize int, replierFn func(inMessage event.Event) (*event.Event, protocol.Result), opts ...client.Option) (client.Client, <-chan event.Event) {
 	require.NotZero(t, chanSize)
 	require.NotNil(t, replierFn)
 

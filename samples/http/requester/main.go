@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	count = 1
+	count = 10
 )
 
 type envConfig struct {
@@ -76,22 +76,22 @@ func main() {
 				if resp, res := c.Request(ctx, event); cloudevents.IsUndelivered(res) {
 					log.Printf("Failed to request: %v", res)
 				} else if resp != nil {
-					fmt.Printf("Response:\n%s\n", resp)
-					fmt.Printf("Got Event Response Context: %+v\n", resp.Context)
-					data := &Example{}
-					if err := resp.DataAs(data); err != nil {
-						fmt.Printf("Got Data Error: %s\n", err.Error())
-					}
-					fmt.Printf("Got Response Data: %+v\n", data)
-					fmt.Printf("----------------------------\n")
-				} else {
-					// Parse result
 					var httpResult *cehttp.Result
 					cloudevents.ResultAs(res, &httpResult)
 					log.Printf("Event sent at %s", time.Now())
 					log.Printf("Response status code %d", httpResult.StatusCode)
-				}
+					if resp != nil {
+						fmt.Printf("Response:\n%s\n", resp)
+						fmt.Printf("Got Event Response Context: %+v\n", resp.Context)
 
+						data := &Example{}
+						if err := resp.DataAs(data); err != nil {
+							fmt.Printf("Got Data Error: %s\n", err.Error())
+						}
+						fmt.Printf("Got Response Data: %+v\n", data)
+						fmt.Printf("----------------------------\n")
+					}
+				}
 				seq++
 				time.Sleep(500 * time.Millisecond)
 			}

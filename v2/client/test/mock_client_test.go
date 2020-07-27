@@ -23,7 +23,7 @@ func TestMockSenderClient(t *testing.T) {
 func TestMockRequesterClient(t *testing.T) {
 	replyEvent := test.MinEvent()
 
-	client, eventCh := NewMockRequesterClient(t, 1, func(inMessage event.Event) (event *event.Event, err error) {
+	client, eventCh := NewMockRequesterClient(t, 1, func(inMessage event.Event) (*event.Event, protocol.Result) {
 		return &replyEvent, nil
 	})
 	inputEvent := test.FullEvent()
@@ -36,7 +36,11 @@ func TestMockRequesterClient(t *testing.T) {
 	require.NoError(t, err)
 	received = <-eventCh
 	test.AssertEventEquals(t, inputEvent, received)
-	test.AssertEventEquals(t, replyEvent, *actualReply)
+	if actualReply != nil {
+		test.AssertEventEquals(t, replyEvent, *actualReply)
+	} else {
+		t.Fatalf("Expected reply, but got nil")
+	}
 }
 
 func TestMockReceiverClient(t *testing.T) {

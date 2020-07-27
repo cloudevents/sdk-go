@@ -94,7 +94,7 @@ func TestClientResponder_Empty(t *testing.T) {
 func TestClientResponder_Response(t *testing.T) {
 	now := time.Now()
 
-	template := func(statusCode int, requireResp bool, wantResult protocol.Result) TapTest {
+	template := func(statusCode int, wantResult protocol.Result) TapTest {
 		tt := TapTest{
 			now: now,
 			event: &cloudevents.Event{
@@ -147,10 +147,8 @@ func TestClientResponder_Response(t *testing.T) {
 			},
 			wantResult: wantResult,
 		}
+		tt.want = tt.resp
 
-		if requireResp {
-			tt.want = tt.resp
-		}
 		// When status is NoContent, no payload will be received.
 		// So unset the following fields.
 		if statusCode == http.StatusNoContent {
@@ -165,38 +163,31 @@ func TestClientResponder_Response(t *testing.T) {
 		// 2xx should receive responded event with ACK result.
 		"Responder v1.0 - 200": template(
 			http.StatusOK,
-			true,
 			protocol.ResultACK,
 		),
 		"Responder v1.0 - 202": template(
 			http.StatusAccepted,
-			true,
 			protocol.ResultACK,
 		),
 		"Responder v1.0 - 204": template(
 			http.StatusNoContent,
-			true,
 			protocol.ResultACK,
 		),
 		// 4xx/5xx should receive nil event and http results with status code.
 		"Responder v1.0 - 400": template(
 			http.StatusBadRequest,
-			false,
 			cloudevents.NewHTTPResult(http.StatusBadRequest, "unit test %s", http.StatusText(http.StatusBadRequest)),
 		),
 		"Responder v1.0 - 401": template(
 			http.StatusUnauthorized,
-			false,
 			cloudevents.NewHTTPResult(http.StatusUnauthorized, "unit test %s", http.StatusText(http.StatusUnauthorized)),
 		),
 		"Responder v1.0 - 404": template(
 			http.StatusNotFound,
-			false,
 			cloudevents.NewHTTPResult(http.StatusNotFound, "unit test %s", http.StatusText(http.StatusNotFound)),
 		),
 		"Responder v1.0 - 500": template(
 			http.StatusInternalServerError,
-			false,
 			cloudevents.NewHTTPResult(http.StatusInternalServerError, "unit test %s", http.StatusText(http.StatusInternalServerError)),
 		),
 	}

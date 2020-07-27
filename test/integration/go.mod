@@ -16,7 +16,7 @@ replace github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 => ../../protocol
 
 require (
 	github.com/Azure/go-amqp v0.12.7
-	github.com/Shopify/sarama v1.19.0
+	github.com/Shopify/sarama v1.25.0
 	github.com/cloudevents/sdk-go/protocol/amqp/v2 v2.0.0
 	github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.0.0
 	github.com/cloudevents/sdk-go/protocol/nats/v2 v2.0.0
