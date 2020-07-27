@@ -13,6 +13,8 @@ import (
 
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/binding/spec"
+	bindingtest "github.com/cloudevents/sdk-go/v2/binding/test"
+	"github.com/cloudevents/sdk-go/v2/binding/transformer"
 	"github.com/cloudevents/sdk-go/v2/event"
 	"github.com/cloudevents/sdk-go/v2/test"
 )
@@ -118,6 +120,18 @@ func TestMessageMetadataReader(t *testing.T) {
 
 	got := binding.MessageMetadataReader(NewMessageFromHttpRequest(req))
 	require.Equal(t, eventIn.Extensions()["exstring"], got.GetExtension("exstring"))
+	_, id := got.GetAttribute(spec.ID)
+	require.Equal(t, eventIn.ID(), id)
+}
+
+func TestMessageTransformDeleteExtension(t *testing.T) {
+	eventIn := test.FullEvent()
+	req := httptest.NewRequest("POST", "http://localhost", nil)
+	msg := bindingtest.MustCreateMockBinaryMessage(eventIn)
+	require.NoError(t, WriteRequest(binding.WithForceBinary(context.TODO()), msg, req, transformer.DeleteExtension("exstring")))
+
+	got := binding.MessageMetadataReader(NewMessageFromHttpRequest(req))
+	require.Equal(t, nil, got.GetExtension("exstring"))
 	_, id := got.GetAttribute(spec.ID)
 	require.Equal(t, eventIn.ID(), id)
 }
