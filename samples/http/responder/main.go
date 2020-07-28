@@ -36,12 +36,25 @@ func eventReceiver(ctx context.Context, event cloudevents.Event) (*cloudevents.E
 		responseEvent.SetID(uuid.New().String())
 		responseEvent.SetSource("/mod3")
 		responseEvent.SetType("samples.http.mod3")
+		responseEvent.SetSubject(fmt.Sprintf("%s#%d", event.Source(), data.Sequence))
 
 		_ = responseEvent.SetData(cloudevents.ApplicationJSON, Example{
 			Sequence: data.Sequence,
 			Message:  "mod 3!",
 		})
 		return &responseEvent, nil
+	} else if data.Sequence%7 == 0 {
+		responseEvent := cloudevents.NewEvent()
+		responseEvent.SetID(uuid.New().String())
+		responseEvent.SetSource("/mod7")
+		responseEvent.SetType("samples.http.mod7")
+		responseEvent.SetSubject(fmt.Sprintf("%s#%d", event.Source(), data.Sequence))
+
+		_ = responseEvent.SetData(cloudevents.ApplicationJSON, Example{
+			Sequence: data.Sequence,
+			Message:  "mod 7 has issues!",
+		})
+		return &responseEvent, cloudevents.NewHTTPResult(500, "this is a mod 7 server error message")
 	}
 
 	return nil, nil
