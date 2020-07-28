@@ -73,22 +73,19 @@ func main() {
 					ctx = cloudevents.WithEncodingStructured(ctx)
 				}
 
-				if resp, res := c.Request(ctx, event); cloudevents.IsUndelivered(res) {
-					log.Printf("Failed to request: %v", res)
-				} else if resp != nil {
+				resp, result := c.Request(ctx, event)
+				if cloudevents.IsUndelivered(result) {
+					log.Printf("Failed to deliver request: %v", result)
+				} else {
+					// Event was delivered, but possibly not accepted and without a response.
+					log.Printf("Event delivered at %s, Acknowledged==%t ", time.Now(), cloudevents.IsACK(result))
 					var httpResult *cehttp.Result
-					cloudevents.ResultAs(res, &httpResult)
-					log.Printf("Event sent at %s", time.Now())
-					log.Printf("Response status code %d", httpResult.StatusCode)
+					if cloudevents.ResultAs(result, &httpResult) {
+						log.Printf("Response status code %d", httpResult.StatusCode)
+					}
+					// Request can get a response of nil, which is ok.
 					if resp != nil {
-						fmt.Printf("Response:\n%s\n", resp)
-						fmt.Printf("Got Event Response Context: %+v\n", resp.Context)
-
-						data := &Example{}
-						if err := resp.DataAs(data); err != nil {
-							fmt.Printf("Got Data Error: %s\n", err.Error())
-						}
-						fmt.Printf("Got Response Data: %+v\n", data)
+						fmt.Printf("Response,\n%s\n", resp)
 						fmt.Printf("----------------------------\n")
 					}
 				}
