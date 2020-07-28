@@ -10,9 +10,13 @@ Official CloudEvents SDK to integrate your application with CloudEvents.
 
 This library will help you to:
 
-* Represent CloudEvents in memory
-* Use [Event Formats](https://github.com/cloudevents/spec/blob/v1.0/spec.md#event-format) to serialize/deserialize CloudEvents
-* Use [Protocol Bindings](https://github.com/cloudevents/spec/blob/v1.0/spec.md#protocol-binding) to send/receive CloudEvents
+- Represent CloudEvents in memory
+- Use
+  [Event Formats](https://github.com/cloudevents/spec/blob/v1.0/spec.md#event-format)
+  to serialize/deserialize CloudEvents
+- Use
+  [Protocol Bindings](https://github.com/cloudevents/spec/blob/v1.0/spec.md#protocol-binding)
+  to send/receive CloudEvents
 
 _Note:_ Supported
 [CloudEvents specification](https://github.com/cloudevents/spec): 0.3, 1.0
@@ -104,9 +108,10 @@ err := json.Unmarshal(bytes, &event)
 
 ## Go further
 
-* Look at the complete documentation: https://cloudevents.github.io/sdk-go/
-* Dig into the godoc: https://godoc.org/github.com/cloudevents/sdk-go/v2
-* Check out the [samples directory](./samples) for an extended list of examples showing the different SDK features
+- Look at the complete documentation: https://cloudevents.github.io/sdk-go/
+- Dig into the godoc: https://godoc.org/github.com/cloudevents/sdk-go/v2
+- Check out the [samples directory](./samples) for an extended list of examples
+  showing the different SDK features
 
 ## Community
 
