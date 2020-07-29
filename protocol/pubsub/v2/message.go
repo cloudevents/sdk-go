@@ -96,7 +96,7 @@ func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) 
 	}
 
 	if m.internal.Data != nil {
-		return encoder.SetData(bytes.NewReader(m.internal.Data))
+		return encoder.SetData(bytes.NewBuffer(m.internal.Data))
 	}
 
 	return
