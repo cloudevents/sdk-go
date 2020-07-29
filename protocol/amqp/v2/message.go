@@ -100,7 +100,7 @@ func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) 
 
 	data := m.AMQP.GetData()
 	if len(data) != 0 { // Some data
-		err = encoder.SetData(bytes.NewReader(data))
+		err = encoder.SetData(bytes.NewBuffer(data))
 		if err != nil {
 			return err
 		}
