@@ -14,7 +14,6 @@ type Sender struct {
 	syncProducer sarama.SyncProducer
 }
 
-
 // NewSender returns a binding.Sender that sends messages to a specific receiverTopic using sarama.SyncProducer
 func NewSender(brokers []string, saramaConfig *sarama.Config, topic string, options ...SenderOptionFunc) (*Sender, error) {
 	// Force this setting because it's required by sarama SyncProducer
