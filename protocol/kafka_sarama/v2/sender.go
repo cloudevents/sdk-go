@@ -36,6 +36,11 @@ func NewSenderFromClient(client sarama.Client, topic string, options ...SenderOp
 	return makeSender(producer, topic, options...), nil
 }
 
+// NewSenderFromSyncProducer returns a binding.Sender that sends messages to a specific topic using sarama.SyncProducer
+func NewSenderFromSyncProducer(topic string, syncProducer sarama.SyncProducer, options ...SenderOptionFunc) (*Sender, error) {
+	return makeSender(syncProducer, topic, options...), nil
+}
+
 func makeSender(syncProducer sarama.SyncProducer, topic string, options ...SenderOptionFunc) *Sender {
 	s := &Sender{
 		topic:        topic,
