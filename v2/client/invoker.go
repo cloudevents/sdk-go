@@ -71,7 +71,7 @@ func (r *receiveInvoker) Invoke(ctx context.Context, m binding.Message, respFn p
 			}
 			// Validate the event conforms to the CloudEvents Spec.
 			if vErr := resp.Validate(); vErr != nil {
-				cecontext.LoggerFrom(ctx).Errorf("cloudevent validation failed on response event: %w", vErr)
+				cecontext.LoggerFrom(ctx).Errorf("cloudevent validation failed on response event: %v", vErr)
 			}
 		}
 
