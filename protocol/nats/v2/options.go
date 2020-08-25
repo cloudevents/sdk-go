@@ -45,3 +45,14 @@ func WithQueueSubscriber(queue string) ConsumerOption {
 		return nil
 	}
 }
+
+// WithPullConsumer configures the Consumer to join a Nats jetstream pull based consumer when subscribing
+func WithPullConsumer(stream string) ConsumerOption {
+	return func(c *Consumer) error {
+		if stream == "" {
+			return ErrInvalidQueueName
+		}
+		c.Subscriber = NewPullConsumer(stream)
+		return nil
+	}
+}

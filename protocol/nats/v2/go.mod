@@ -7,6 +7,6 @@ replace github.com/cloudevents/sdk-go/v2 => ../../../v2
 require (
 	github.com/cloudevents/sdk-go/v2 v2.0.0
 	github.com/google/go-cmp v0.4.1 // indirect
-	github.com/nats-io/nats-server/v2 v2.1.7 // indirect
-	github.com/nats-io/nats.go v1.10.0
+	github.com/nats-io/jsm.go v0.0.18
+	github.com/nats-io/nats.go v1.10.1-0.20200606002146-fc6fed82929a
 )
