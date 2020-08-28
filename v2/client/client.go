@@ -233,9 +233,14 @@ func (c *ceClient) StartReceiver(ctx context.Context, fn interface{}) error {
 					continue
 				}
 
-				if err := c.invoker.Invoke(ctx, msg, respFn); err != nil {
-					cecontext.LoggerFrom(ctx).Warnf("Error while handling a message: %s", err)
-				}
+				// Do not block on the invoker.
+				wg.Add(1)
+				go func() {
+					if err := c.invoker.Invoke(ctx, msg, respFn); err != nil {
+						cecontext.LoggerFrom(ctx).Warnf("Error while handling a message: %s", err)
+					}
+					wg.Done()
+				}()
 			}
 		}()
 	}

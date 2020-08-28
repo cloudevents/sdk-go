@@ -36,11 +36,39 @@ func TestBlockingSenderReceiver(t *testing.T) {
 	now := time.Now()
 
 	testCases := BlockingSenderReceiverTestCases{
-		"10": {
+		"10 at 1 second": {
 			now: now,
 			event: &cloudevents.Event{
 				Context: cloudevents.EventContextV1{
-					Type:            "unit.test.client.sent",
+					Type:            "unit.test.client.sent.10.1",
+					Source:          *cloudevents.ParseURIRef("/unit/test/client"),
+					Subject:         strptr("resource"),
+					DataContentType: cloudevents.StringOfApplicationJSON(),
+				}.AsV1(),
+				DataEncoded: toBytes(map[string]interface{}{"hello": "unittest"}),
+			},
+			receiverWait: 1 * time.Second,
+			want:         10,
+		},
+		"100 at 1 second": {
+			now: now,
+			event: &cloudevents.Event{
+				Context: cloudevents.EventContextV1{
+					Type:            "unit.test.client.sent.100.1",
+					Source:          *cloudevents.ParseURIRef("/unit/test/client"),
+					Subject:         strptr("resource"),
+					DataContentType: cloudevents.StringOfApplicationJSON(),
+				}.AsV1(),
+				DataEncoded: toBytes(map[string]interface{}{"hello": "unittest"}),
+			},
+			receiverWait: 1 * time.Second,
+			want:         100,
+		},
+		"100 at 10 seconds": {
+			now: now,
+			event: &cloudevents.Event{
+				Context: cloudevents.EventContextV1{
+					Type:            "unit.test.client.sent.100.10",
 					Source:          *cloudevents.ParseURIRef("/unit/test/client"),
 					Subject:         strptr("resource"),
 					DataContentType: cloudevents.StringOfApplicationJSON(),
@@ -48,7 +76,7 @@ func TestBlockingSenderReceiver(t *testing.T) {
 				DataEncoded: toBytes(map[string]interface{}{"hello": "unittest"}),
 			},
 			receiverWait: 10 * time.Second,
-			want:         10,
+			want:         100,
 		},
 	}
 
@@ -86,8 +114,6 @@ func ReceiverBlocking(t *testing.T, tc BlockingSenderReceiverTest, copts ...clie
 
 	got := new(atomic.Int32)
 
-	then := time.Now()
-
 	go func() {
 		if err := ce.StartReceiver(recvCtx, func(event cloudevents.Event) {
 			t.Logf("%s - sleep", event.ID())
@@ -101,6 +127,8 @@ func ReceiverBlocking(t *testing.T, tc BlockingSenderReceiverTest, copts ...clie
 	}()
 
 	time.Sleep(time.Second) // wait for the receiver to start.
+
+	then := time.Now()
 
 	sendCtx, sendCancel := context.WithTimeout(context.Background(), tc.receiverWait*2)
 	defer sendCancel()
@@ -132,5 +160,4 @@ func ReceiverBlocking(t *testing.T, tc BlockingSenderReceiverTest, copts ...clie
 	if dm > tw {
 		t.Errorf("expected test duration to be ~%d ms, actual %d ms", tc.receiverWait.Milliseconds(), dm)
 	}
-
 }
