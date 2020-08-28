@@ -50,11 +50,11 @@ func TestBlockingSenderReceiver(t *testing.T) {
 			receiverWait: 1 * time.Second,
 			want:         10,
 		},
-		"100 at 5 second": {
+		"50 at 5 second": {
 			now: now,
 			event: &cloudevents.Event{
 				Context: cloudevents.EventContextV1{
-					Type:            "unit.test.client.sent.100.5",
+					Type:            "unit.test.client.sent.50.5",
 					Source:          *cloudevents.ParseURIRef("/unit/test/client"),
 					Subject:         strptr("resource"),
 					DataContentType: cloudevents.StringOfApplicationJSON(),
@@ -62,13 +62,13 @@ func TestBlockingSenderReceiver(t *testing.T) {
 				DataEncoded: toBytes(map[string]interface{}{"hello": "unittest"}),
 			},
 			receiverWait: 5 * time.Second,
-			want:         100,
+			want:         50,
 		},
-		"200 at 10 seconds": {
+		"100 at 10 seconds": {
 			now: now,
 			event: &cloudevents.Event{
 				Context: cloudevents.EventContextV1{
-					Type:            "unit.test.client.sent.200.10",
+					Type:            "unit.test.client.sent.100.10",
 					Source:          *cloudevents.ParseURIRef("/unit/test/client"),
 					Subject:         strptr("resource"),
 					DataContentType: cloudevents.StringOfApplicationJSON(),
@@ -76,7 +76,7 @@ func TestBlockingSenderReceiver(t *testing.T) {
 				DataEncoded: toBytes(map[string]interface{}{"hello": "unittest"}),
 			},
 			receiverWait: 10 * time.Second,
-			want:         200,
+			want:         100,
 		},
 	}
 
