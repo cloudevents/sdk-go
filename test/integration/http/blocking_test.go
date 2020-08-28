@@ -87,6 +87,8 @@ func TestBlockingSenderReceiver(t *testing.T) {
 	}
 }
 
+const verbose = false
+
 func ReceiverBlocking(t *testing.T, tc BlockingSenderReceiverTest, copts ...client.Option) {
 	opts := make([]cehttp.Option, 0)
 	opts = append(opts, cloudevents.WithPort(0)) // random port
@@ -116,11 +118,15 @@ func ReceiverBlocking(t *testing.T, tc BlockingSenderReceiverTest, copts ...clie
 
 	go func() {
 		if err := ce.StartReceiver(recvCtx, func(event cloudevents.Event) {
-			t.Logf("%s - sleep", event.ID())
+			if verbose {
+				t.Logf("%s - sleep", event.ID())
+			}
 			got.Inc()
 			time.Sleep(tc.receiverWait)
 			wg.Done()
-			t.Logf("%s - done", event.ID())
+			if verbose {
+				t.Logf("%s - done", event.ID())
+			}
 		}); err != nil {
 			t.Errorf("[receiver] unexpected error: %s", err)
 		}
