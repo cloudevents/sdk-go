@@ -26,8 +26,8 @@ func New() *SendReceiver {
 	}
 }
 
-func (sr *SendReceiver) Send(ctx context.Context, in binding.Message) (err error) {
-	return sr.sender.Send(ctx, in)
+func (sr *SendReceiver) Send(ctx context.Context, in binding.Message, transformers ...binding.Transformer) (err error) {
+	return sr.sender.Send(ctx, in, transformers...)
 }
 
 func (sr *SendReceiver) Receive(ctx context.Context) (binding.Message, error) {
