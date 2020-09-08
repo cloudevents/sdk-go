@@ -69,16 +69,20 @@ func (p *Protocol) doWithRetry(ctx context.Context, params *cecontext.RetryParam
 		{
 			var httpResult *Result
 			if errors.As(result, &httpResult) {
-				// Potentially retry when:
-				// - 404 Not Found
-				// - 413 Payload Too Large with Retry-After (NOT SUPPORTED)
-				// - 425 Too Early
-				// - 429 Too Many Requests
-				// - 503 Service Unavailable (with or without Retry-After) (IGNORE Retry-After)
-				// - 504 Gateway Timeout
+				// Retry error codes - string isn't used, it's just there so
+				// people know what each error code's title is
+				doRetry := map[int]string{
+					404: "Not Found",
+					413: "Payload Too Large",
+					425: "Too Early",
+					429: "Too Many Requests",
+					502: "Bad Gateway",
+					503: "Service Unavailable",
+					504: "Gateway Timeout",
+				}
 
 				sc := httpResult.StatusCode
-				if sc == 404 || sc == 425 || sc == 429 || sc == 503 || sc == 504 {
+				if _, ok := doRetry[sc]; ok {
 					// retry!
 					goto DoBackoff
 				} else {
