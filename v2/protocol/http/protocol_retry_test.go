@@ -84,21 +84,22 @@ func TestRequestWithRetries_linear(t *testing.T) {
 			},
 			wantRequestCount: 2,
 		},
-		"10 retries, 425, 429, 503, 504, 200, ACK": {
-			statusCodes: []int{425, 429, 503, 504, 200},
+		"10 retries, 425, 429, 502, 503, 504, 200, ACK": {
+			statusCodes: []int{425, 429, 502, 503, 504, 200},
 			delay:       time.Nanosecond,
 			retries:     10,
 			wantResult: &RetriesResult{
 				Result:  NewResult(200, "%w", protocol.ResultACK),
-				Retries: 4,
+				Retries: 5,
 				Attempts: []protocol.Result{
 					NewResult(425, "%w", protocol.ResultNACK),
 					NewResult(429, "%w", protocol.ResultNACK),
+					NewResult(502, "%w", protocol.ResultNACK),
 					NewResult(503, "%w", protocol.ResultNACK),
 					NewResult(504, "%w", protocol.ResultNACK),
 				},
 			},
-			wantRequestCount: 5,
+			wantRequestCount: 6,
 		},
 		"retries, timeout, 200, ACK": {
 			delay:       time.Nanosecond,
