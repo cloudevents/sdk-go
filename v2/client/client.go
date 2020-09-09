@@ -228,6 +228,10 @@ func (c *ceClient) StartReceiver(ctx context.Context, fn interface{}) error {
 					return
 				}
 
+				if err == context.Canceled { // Context canceled
+					return
+				}
+
 				if err != nil {
 					cecontext.LoggerFrom(ctx).Warnf("Error while receiving a message: %s", err)
 					continue
