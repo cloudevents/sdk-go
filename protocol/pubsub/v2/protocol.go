@@ -168,7 +168,7 @@ func (t *Protocol) Receive(ctx context.Context) (binding.Message, error) {
 		msg := NewMessage(&m)
 		return msg, nil
 	case <-ctx.Done():
-		return nil, ctx.Err()
+		return nil, io.EOF
 	}
 }
 
