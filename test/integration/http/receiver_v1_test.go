@@ -133,6 +133,25 @@ func TestClientReceiver_Status_Codes(t *testing.T) {
 				}
 			},
 		},
+		"500 if the receiver function panics": {
+			now: now,
+			request: func(url string) *http.Request {
+				req, _ := http.NewRequest("POST", url, bytes.NewReader(toBytes(map[string]interface{}{"hello": "Francesco"})))
+				req.Header.Set("content-type", "application/json")
+				return req
+			},
+			asRecv: &TapValidation{
+				Header:        map[string][]string{},
+				Status:        fmt.Sprintf("%d %s", http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError)),
+				ContentLength: 0,
+			},
+			receiverFuncFactory: func(cancelFunc context.CancelFunc) interface{} {
+				return func() *cloudevents.Event {
+					defer cancelFunc()
+					panic("testing panic in receiver function")
+				}
+			},
+		},
 	}
 
 	for n, tc := range testCases {
