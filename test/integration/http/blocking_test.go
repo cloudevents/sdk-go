@@ -161,7 +161,7 @@ func ReceiverBlocking(t *testing.T, tc BlockingSenderReceiverTest, copts ...clie
 	// Look at how long the test took.
 
 	dm := duration.Milliseconds()
-	tw := tc.receiverWait.Milliseconds() * 105 / 100 // 105% budget.
+	tw := tc.receiverWait.Milliseconds() * 110 / 100 // 110% budget.
 
 	if dm > tw {
 		t.Errorf("expected test duration to be ~%d ms, actual %d ms", tc.receiverWait.Milliseconds(), dm)
