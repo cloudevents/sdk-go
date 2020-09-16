@@ -1,0 +1,40 @@
+name: Go Format
+
+on:
+  push:
+    branches: [ 'master', 'release-*' ]
+  pull_request:
+    branches: [ 'master', 'release-*' ]
+
+jobs:
+
+  format:
+    name: Format
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Setup Go 1.14.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.14.x
+        id: go
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Go Format
+        shell: bash
+        run: |
+          gofmt -s -w $(find -type f -name '*.go' -print)
+
+      - name: Verify
+        shell: bash
+        run: |
+          if [[ $(git diff-index --name-only HEAD --) ]]; then
+              echo "Found diffs in:"
+              git diff-index --name-only HEAD --
+              echo "${{ github.repository }} is out of style. Please run go fmt."
+              exit 1
+          fi
+          echo "${{ github.repository }} is formatted correctly."
