@@ -113,16 +113,16 @@ func (r *receiverFn) validateInParamSignature(fnType reflect.Type) error {
 	switch fnType.NumIn() {
 	case 2:
 		// has to be (context.Context, event.Event)
-		if !fnType.In(1).ConvertibleTo(eventType) {
-			return fmt.Errorf("%s; cannot convert parameter 2 from %s to event.Event", inParamUsage, fnType.In(1))
+		if !eventType.ConvertibleTo(fnType.In(1)) {
+			return fmt.Errorf("%s; cannot convert parameter 2 to %s from event.Event", inParamUsage, fnType.In(1))
 		} else {
 			r.hasEventIn = true
 		}
 		fallthrough
 	case 1:
-		if !fnType.In(0).ConvertibleTo(contextType) {
-			if !fnType.In(0).ConvertibleTo(eventType) {
-				return fmt.Errorf("%s; cannot convert parameter 1 from %s to context.Context or event.Event", inParamUsage, fnType.In(0))
+		if !contextType.ConvertibleTo(fnType.In(0)) {
+			if !eventType.ConvertibleTo(fnType.In(0)) {
+				return fmt.Errorf("%s; cannot convert parameter 1 to %s from context.Context or event.Event", inParamUsage, fnType.In(0))
 			} else if r.hasEventIn {
 				return fmt.Errorf("%s; duplicate parameter of type event.Event", inParamUsage)
 			} else {

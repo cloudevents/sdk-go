@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/cloudevents/sdk-go/v2/event"
 	"github.com/cloudevents/sdk-go/v2/protocol"
@@ -38,6 +39,9 @@ func TestReceiverFnValidTypes(t *testing.T) {
 		"ctx in, Event+Result out":       func(context.Context) (*event.Event, protocol.Result) { return nil, nil },
 		"Event in, Event+Result out":     func(event.Event) (*event.Event, protocol.Result) { return nil, nil },
 		"ctx+Event in, Event+Result out": func(context.Context, event.Event) (*event.Event, protocol.Result) { return nil, nil },
+
+		"input contravariance; may accept supertype": func(event.EventReader) {},
+		"output covariance; may return subtype":      func() *myErr { return nil },
 	} {
 		t.Run(name, func(t *testing.T) {
 			if _, err := receiver(fn); err != nil {
@@ -65,6 +69,8 @@ func TestReceiverFnInvalidTypes(t *testing.T) {
 		"Event as non-ptr out":     func() event.Event { return event.Event{} },
 		"extra Event in":           func(event.Event, event.Event) {},
 		"not a function":           map[string]string(nil),
+
+		"input covariance; must not accept subtype": func(*myCtx) {},
 	} {
 		t.Run(name, func(t *testing.T) {
 			if _, err := receiver(fn); err == nil {
@@ -228,4 +234,30 @@ func TestReceiverFnInvoke_5(t *testing.T) {
 	if diff := cmp.Diff(wantResult.Error(), result.Error()); diff != "" {
 		t.Errorf("unexpected error (-want, +got) = %v", diff)
 	}
+}
+
+type myErr struct {
+}
+
+func (m *myErr) Error() string {
+	panic("implement me")
+}
+
+type myCtx struct {
+}
+
+func (m myCtx) Deadline() (deadline time.Time, ok bool) {
+	panic("implement me")
+}
+
+func (m myCtx) Done() <-chan struct{} {
+	panic("implement me")
+}
+
+func (m myCtx) Err() error {
+	panic("implement me")
+}
+
+func (m myCtx) Value(key interface{}) interface{} {
+	panic("implement me")
 }
