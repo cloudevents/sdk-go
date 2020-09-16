@@ -2,6 +2,8 @@ package client
 
 import (
 	"context"
+	cecontext "github.com/cloudevents/sdk-go/v2/context"
+	"go.uber.org/zap"
 	"net/http"
 	"sync"
 
@@ -36,9 +38,9 @@ func (r *EventReceiver) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 	msg, respFn, err := r.p.Respond(ctx)
 	if err != nil {
-		//lint:ignore SA9003 TODO: Branch left empty
+		cecontext.LoggerFrom(context.TODO()).Debugw("failed to call Respond", zap.Error(err))
 	} else if err := r.invoker.Invoke(ctx, msg, respFn); err != nil {
-		// TODO
+		cecontext.LoggerFrom(context.TODO()).Debugw("failed to call Invoke", zap.Error(err))
 	}
 	// Block until ServeHTTP has returned
 	wg.Wait()

@@ -63,7 +63,7 @@ func TestWithTarget(t *testing.T) {
 			target: "%",
 			wantErr: "http target option failed to parse target url: " + func() string {
 				//lint:ignore SA1007 I want to create a bad url to test the error message
-				_, err := url.Parse("%")
+				_, err := url.Parse("%") //nolint // I want to create a bad url to test the error message
 				return err.Error()
 			}(),
 		},
