@@ -20,7 +20,10 @@ jobs:
     services:
       kafka:
         image: lensesio/fast-data-dev
+        env:
+          ADV_HOST: localhost
         ports:
+          - 9091:9091
           - 9092:9092
 
       natss:
