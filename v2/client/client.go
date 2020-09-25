@@ -170,6 +170,9 @@ func (c *ceClient) Request(ctx context.Context, e event.Event) (*event.Event, pr
 // StartReceiver sets up the given fn to handle Receive.
 // See Client.StartReceiver for details. This is a blocking call.
 func (c *ceClient) StartReceiver(ctx context.Context, fn interface{}) error {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	c.receiverMu.Lock()
 	defer c.receiverMu.Unlock()
 
@@ -196,15 +199,6 @@ func (c *ceClient) StartReceiver(ctx context.Context, fn interface{}) error {
 	defer func() {
 		c.invoker = nil
 	}()
-
-	// Start the opener, if set.
-	if c.opener != nil {
-		go func() {
-			if err := c.opener.OpenInbound(ctx); err != nil {
-				cecontext.LoggerFrom(ctx).Errorf("Error while opening the inbound connection: %s", err)
-			}
-		}()
-	}
 
 	// Start Polling.
 	wg := sync.WaitGroup{}
@@ -244,8 +238,18 @@ func (c *ceClient) StartReceiver(ctx context.Context, fn interface{}) error {
 			}
 		}()
 	}
+
+	// Start the opener, if set.
+	if c.opener != nil {
+		if err = c.opener.OpenInbound(ctx); err != nil {
+			err = fmt.Errorf("error while opening the inbound connection: %s", err)
+			cancel()
+		}
+	}
+
 	wg.Wait()
-	return nil
+
+	return err
 }
 
 // noRespFn is used to simply forward the protocol.Result for receivers that aren't responders
