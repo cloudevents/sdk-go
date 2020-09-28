@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	github.com/Azure/go-amqp v0.12.7
-	github.com/cloudevents/sdk-go/v2 v2.3.0
+	github.com/cloudevents/sdk-go/v2 v2.3.1
 	github.com/google/go-cmp v0.4.1 // indirect
 	github.com/stretchr/testify v1.5.1
 )
