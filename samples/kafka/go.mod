@@ -1,6 +1,6 @@
 module github.com/cloudevents/sdk-go/samples/kafka
 
-go 1.13
+go 1.14
 
 require (
 	github.com/Shopify/sarama v1.25.0

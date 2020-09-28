@@ -1,5 +1,7 @@
 module github.com/cloudevents/sdk-go/v2
 
+go 1.14
+
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/golang/protobuf v1.3.2 // indirect
@@ -24,5 +26,3 @@ require (
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 )
-
-go 1.13
