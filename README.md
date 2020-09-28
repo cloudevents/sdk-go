@@ -28,7 +28,7 @@ _Note:_ Supported go version: 1.13+
 Add the module as dependency using go mod:
 
 ```
-% go get github.com/cloudevents/sdk-go/v2@v2.2.0
+% go get github.com/cloudevents/sdk-go/v2@v2.3.1
 ```
 
 And import the module in your code
@@ -130,8 +130,8 @@ err := json.Unmarshal(bytes, &event)
 Each SDK may have its own unique processes, tooling and guidelines, common
 governance related material can be found in the
 [CloudEvents `community`](https://github.com/cloudevents/spec/tree/master/community)
-directory. In particular, in there you will find information concerning
-how SDK projects are
+directory. In particular, in there you will find information concerning how SDK
+projects are
 [managed](https://github.com/cloudevents/spec/blob/master/community/SDK-GOVERNANCE.md),
 [guidelines](https://github.com/cloudevents/spec/blob/master/community/SDK-maintainer-guidelines.md)
 for how PR reviews and approval, and our

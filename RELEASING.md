@@ -43,7 +43,12 @@ Steps:
    git push origin $tag
    ```
 
-1. Run `./hack/tag-release.sh --tag --push` to update and tag the dependencies.
+1. Update and run `./hack/tag-release.sh` to update the dependencies.
+
+   _Note:_ `./hack/tag-release.sh` has the tag config that needs to be updated.
+
+   Then push the changes to the `release-x.y` branch.
+
    Or do it manualy with the following:
 
    1. Update the each protocol to use the new release rather than the replace
@@ -71,9 +76,22 @@ Steps:
       popd
       ```
 
-1. Run `./hack/tag-release.sh --samples` to update the sample dependencies (both
+1. Run `./hack/tag-release.sh --tag --push` to create a release of each
+   sub-module.
+   
+   Or do it manualy for each of the sub-modules with something like
+   the following:
+
+   ```shell
+   tag=protocol/stan-v2.1.0
+   git tag $tag
+   git push origin $tag
+   popd
+   ```
+
+1) Run `./hack/tag-release.sh --samples` to update the sample dependencies (both
    the core sdk and protcol) after all releases are published. Or do it manualy
-   with the following:
+   with something like the following:
 
    ```shell
    tag=v2.1.0
