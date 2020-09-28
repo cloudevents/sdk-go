@@ -217,7 +217,7 @@ func TestURL(t *testing.T) {
 	x.str("world", &url.URL{Path: "world"})
 
 	//lint:ignore SA1007 I want to create a bad url to test the error message
-	_, err := url.Parse("%bad %url")
+	_, err := url.Parse("%bad %url") //nolint // I want to create a bad url to test the error message
 	x.err("%bad %url", err.Error())
 	x.err(nil, "invalid CloudEvents value: <nil>")
 	x.err((*url.URL)(nil), "invalid CloudEvents value: (*url.URL)(nil)")

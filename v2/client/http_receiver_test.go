@@ -53,7 +53,7 @@ func TestEventReceiverServeHTTP_WithContext(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.Handle("/test", middleware(httpHandler))
 	ts := httptest.NewServer(mux)
-	t.Cleanup(ts.Close)
+	defer ts.Close()
 
 	event := cloudevents.NewEvent()
 	event.SetSource("testSource")

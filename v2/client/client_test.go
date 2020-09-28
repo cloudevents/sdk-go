@@ -433,7 +433,7 @@ func TestClientReceive(t *testing.T) {
 					URL:           target,
 					Header:        tc.req.Headers,
 					Body:          ioutil.NopCloser(bytes.NewReader(tc.req.Body)),
-					ContentLength: int64(len([]byte(tc.req.Body))),
+					ContentLength: int64(len(tc.req.Body)),
 				}
 
 				_, _ = http.DefaultClient.Do(req)

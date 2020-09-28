@@ -9,7 +9,10 @@ echo 'mode: atomic' > $COVERAGE
 
 for gomodule in $(find . | grep "go\.mod" | awk '{gsub(/\/go.mod/,""); print $0}' | grep -v "./test" | grep -v "./conformance")
 do
+  echo
   echo --- Testing $gomodule ---
+  echo
+  
   pushd $gomodule
   touch ./coverage.tmp
   COVERPKG=$(go list ./... | grep -v /vendor | grep -v /test | tr "\n" ",")
