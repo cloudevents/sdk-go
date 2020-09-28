@@ -1,6 +1,6 @@
 module github.com/cloudevents/sdk-go/samples/nats
 
-go 1.13
+go 1.14
 
 require (
 	github.com/cloudevents/sdk-go/protocol/nats/v2 v2.3.1

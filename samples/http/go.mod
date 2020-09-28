@@ -1,6 +1,6 @@
 module github.com/cloudevents/sdk-go/samples/http
 
-go 1.13
+go 1.14
 
 require (
 	contrib.go.opencensus.io/exporter/prometheus v0.1.0

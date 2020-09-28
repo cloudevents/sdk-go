@@ -1,6 +1,6 @@
 module github.com/cloudevents/sdk-go/test/benchmark
 
-go 1.13
+go 1.14
 
 replace github.com/cloudevents/sdk-go/v2 => ../../v2
 

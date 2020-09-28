@@ -1,6 +1,6 @@
 module github.com/cloudevents/sdk-go/samples/pubsub
 
-go 1.13
+go 1.14
 
 require (
 	github.com/cloudevents/sdk-go/protocol/pubsub/v2 v2.3.1

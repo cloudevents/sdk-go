@@ -1,6 +1,6 @@
 module github.com/cloudevents/sdk-go/protocol/stan/v2
 
-go 1.13
+go 1.14
 
 replace github.com/cloudevents/sdk-go/v2 => ../../../v2
 
