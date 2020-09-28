@@ -27,7 +27,7 @@ jobs:
           - 9092:9092
 
       natss:
-        image: nats-streaming:0.17.0
+        image: nats-streaming:0.18.0
         ports:
           - 4222:4222
 
