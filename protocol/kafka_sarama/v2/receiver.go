@@ -152,7 +152,9 @@ func (c *Consumer) startConsumerGroupLoop(cg sarama.ConsumerGroup, ctx context.C
 			return
 		// Something else happened
 		default:
-			if err == nil || err == sarama.ErrClosedClient || err == sarama.ErrClosedConsumerGroup {
+			if err == nil {
+				continue
+			} else if err == sarama.ErrClosedClient || err == sarama.ErrClosedConsumerGroup {
 				// Consumer group closed correctly, we can close that loop
 				return
 			} else {
