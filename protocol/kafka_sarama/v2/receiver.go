@@ -32,11 +32,15 @@ func NewReceiver() *Receiver {
 	}
 }
 
-func (r *Receiver) Setup(sess sarama.ConsumerGroupSession) error {
+func (r *Receiver) Setup(sarama.ConsumerGroupSession) error {
 	return nil
 }
 
 func (r *Receiver) Cleanup(sarama.ConsumerGroupSession) error {
+	return nil
+}
+
+func (r *Receiver) Close(context.Context) error {
 	r.once.Do(func() {
 		close(r.incoming)
 	})
@@ -71,6 +75,7 @@ func (r *Receiver) Receive(ctx context.Context) (binding.Message, error) {
 }
 
 var _ protocol.Receiver = (*Receiver)(nil)
+var _ protocol.Closer = (*Receiver)(nil)
 
 type Consumer struct {
 	Receiver
@@ -138,6 +143,7 @@ func (c *Consumer) OpenInbound(ctx context.Context) error {
 }
 
 func (c *Consumer) startConsumerGroupLoop(cg sarama.ConsumerGroup, ctx context.Context, errs chan<- error) {
+	defer c.Receiver.Close(ctx)
 	// Need to be wrapped in a for loop
 	// https://godoc.org/github.com/Shopify/sarama#ConsumerGroup
 	for {
