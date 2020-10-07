@@ -3,10 +3,11 @@ package http
 import (
 	"context"
 	"errors"
-	"go.uber.org/zap"
 	"net/http"
 	"net/url"
 	"time"
+
+	"go.uber.org/zap"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
 	cecontext "github.com/cloudevents/sdk-go/v2/context"
@@ -69,20 +70,8 @@ func (p *Protocol) doWithRetry(ctx context.Context, params *cecontext.RetryParam
 		{
 			var httpResult *Result
 			if errors.As(result, &httpResult) {
-				// Retry error codes - string isn't used, it's just there so
-				// people know what each error code's title is
-				doRetry := map[int]string{
-					404: "Not Found",
-					413: "Payload Too Large",
-					425: "Too Early",
-					429: "Too Many Requests",
-					502: "Bad Gateway",
-					503: "Service Unavailable",
-					504: "Gateway Timeout",
-				}
-
 				sc := httpResult.StatusCode
-				if _, ok := doRetry[sc]; ok {
+				if p.isRetriableFunc(sc) {
 					// retry!
 					goto DoBackoff
 				} else {

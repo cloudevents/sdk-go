@@ -278,3 +278,28 @@ func newDoneContext() context.Context {
 	cancel()
 	return ctx
 }
+
+func TestDefaultIsRetriable(t *testing.T) {
+	testCases := map[string]struct {
+		statusCode  int
+		isRetriable bool
+	}{
+		"400": {400, false},
+		"404": {404, true},
+		"408": {408, false},
+		"413": {413, true},
+		"425": {425, true},
+		"429": {429, true},
+		"500": {500, false},
+		"502": {502, true},
+		"503": {503, true},
+		"504": {504, true},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+			if got := defaultIsRetriableFunc(tc.statusCode); got != tc.isRetriable {
+				t.Errorf("expected %v for %d but got %v", tc.isRetriable, tc.statusCode, got)
+			}
+		})
+	}
+}

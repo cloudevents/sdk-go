@@ -30,6 +30,19 @@ type msgErr struct {
 	err    error
 }
 
+// Default error codes that we retry on - string isn't used, it's just there so
+// people know what each error code's title is.
+// To modify this use Option
+var defaultRetriableErrors = map[int]string{
+	404: "Not Found",
+	413: "Payload Too Large",
+	425: "Too Early",
+	429: "Too Many Requests",
+	502: "Bad Gateway",
+	503: "Service Unavailable",
+	504: "Gateway Timeout",
+}
+
 // Protocol acts as both a http client and a http handler.
 type Protocol struct {
 	Target          *url.URL
@@ -69,6 +82,8 @@ type Protocol struct {
 	server            *http.Server
 	handlerRegistered bool
 	middleware        []Middleware
+
+	isRetriableFunc IsRetriable
 }
 
 func New(opts ...Option) (*Protocol, error) {
@@ -90,6 +105,10 @@ func New(opts ...Option) (*Protocol, error) {
 
 	if p.ShutdownTimeout == 0 {
 		p.ShutdownTimeout = DefaultShutdownTimeout
+	}
+
+	if p.isRetriableFunc == nil {
+		p.isRetriableFunc = defaultIsRetriableFunc
 	}
 
 	return p, nil
@@ -350,4 +369,9 @@ func (p *Protocol) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	p.incoming <- msgErr{msg: m, respFn: fn} // Send to Request
 	// Block until ResponseFn is invoked
 	wg.Wait()
+}
+
+func defaultIsRetriableFunc(sc int) bool {
+	_, ok := defaultRetriableErrors[sc]
+	return ok
 }

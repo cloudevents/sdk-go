@@ -684,3 +684,36 @@ func TestWithDefaultOptionsHandlerFunc(t *testing.T) {
 		})
 	}
 }
+
+func TestWithIsRetriableFunc(t *testing.T) {
+	testCases := map[string]struct {
+		p           *Protocol
+		isRetriable IsRetriable
+		wantErr     string
+	}{
+		"nil protocol": {
+			wantErr: "isRetriable handler func can not set nil protocol",
+		},
+		"non-nil protocol, nil handler": {
+			p:           &Protocol{},
+			isRetriable: nil,
+			wantErr:     "isRetriable handler can not be nil",
+		},
+		"non-nil protocol": {
+			p:           &Protocol{},
+			isRetriable: func(int) bool { return false },
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+			err := tc.p.applyOptions(WithIsRetriableFunc(tc.isRetriable))
+			if tc.wantErr != "" {
+				if err == nil || err.Error() != tc.wantErr {
+					t.Fatalf("Expected error '%s'. Actual '%v'", tc.wantErr, err)
+				}
+			} else if err != nil {
+				t.Fatalf("Unexpected error: %v", err)
+			}
+		})
+	}
+}
