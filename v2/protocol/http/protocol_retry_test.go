@@ -32,6 +32,9 @@ func TestRequestWithRetries_linear(t *testing.T) {
 		wantRequestCount int
 
 		skipResults bool
+
+		// Custom IsRetriable handler
+		isRetriableFunc IsRetriable
 	}{
 		"no retries, ACK": {
 			statusCodes: []int{200},
@@ -71,6 +74,33 @@ func TestRequestWithRetries_linear(t *testing.T) {
 				Attempts: []protocol.Result{NewResult(425, "%w", protocol.ResultNACK)},
 			},
 			wantRequestCount: 2,
+		},
+		"no retries with default handler, 500, 200, ACK": {
+			statusCodes: []int{500, 200},
+			delay:       time.Nanosecond,
+			retries:     3,
+			wantResult: &RetriesResult{
+				Result:   NewResult(500, "%w", protocol.ResultNACK),
+				Duration: time.Nanosecond,
+				Attempts: []protocol.Result{NewResult(500, "%w", protocol.ResultNACK)},
+			},
+			wantRequestCount: 1,
+		},
+		"3 retry with custom handler, 500, 500, 200, ACK": {
+			statusCodes: []int{500, 500, 200},
+			delay:       time.Nanosecond,
+			retries:     3,
+			wantResult: &RetriesResult{
+				Result:   NewResult(200, "%w", protocol.ResultACK),
+				Duration: time.Nanosecond,
+				Retries:  2,
+				Attempts: []protocol.Result{
+					NewResult(500, "%w", protocol.ResultNACK),
+					NewResult(500, "%w", protocol.ResultNACK),
+				},
+			},
+			wantRequestCount: 3,
+			isRetriableFunc:  func(sc int) bool { return sc == 500 },
 		},
 		"1 retry, 425, 429, 200, NACK": {
 			statusCodes: []int{425, 429, 200},
@@ -118,8 +148,15 @@ func TestRequestWithRetries_linear(t *testing.T) {
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 			roundTripper := roundTripperTest{statusCodes: tc.statusCodes}
+			opts := []Option{
+				WithClient(http.Client{Timeout: time.Second}),
+				WithRoundTripper(&roundTripper),
+			}
+			if tc.isRetriableFunc != nil {
+				opts = append(opts, WithIsRetriableFunc(tc.isRetriableFunc))
+			}
 
-			p, err := New(WithClient(http.Client{Timeout: time.Second}), WithRoundTripper(&roundTripper))
+			p, err := New(opts...)
 			if err != nil {
 				t.Fatalf("no protocol")
 			}
