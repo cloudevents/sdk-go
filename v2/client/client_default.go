@@ -11,8 +11,8 @@ import (
 // The WithTimeNow, and WithUUIDs client options are also applied to the
 // client, all outbound events will have a time and id set if not already
 // present.
-func NewDefault() (Client, error) {
-	p, err := http.NewObserved()
+func NewDefault(opts ...http.Option) (Client, error) {
+	p, err := http.NewObserved(opts...)
 	if err != nil {
 		return nil, err
 	}
