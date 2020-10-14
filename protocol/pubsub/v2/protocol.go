@@ -2,10 +2,8 @@ package pubsub
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
-	"strings"
 	"sync"
 
 	"cloud.google.com/go/pubsub"
@@ -13,6 +11,7 @@ import (
 	"github.com/cloudevents/sdk-go/v2/binding"
 	cecontext "github.com/cloudevents/sdk-go/v2/context"
 	"github.com/cloudevents/sdk-go/v2/protocol"
+	"golang.org/x/sync/errgroup"
 )
 
 const (
@@ -188,54 +187,16 @@ func (t *Protocol) startSubscriber(ctx context.Context, sub subscriptionWithTopi
 }
 
 func (t *Protocol) OpenInbound(ctx context.Context) error {
-	cctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-	n := len(t.subscriptions)
-
-	// Make the channels for quit and errors.
-	quit := make(chan struct{}, n)
-	errc := make(chan error, n)
-
+	eg, ctx := errgroup.WithContext(ctx)
 	// Start up each subscription.
 	for _, sub := range t.subscriptions {
-		go func(ctx context.Context, sub subscriptionWithTopic) {
-			err := t.startSubscriber(cctx, sub)
-			if err != nil {
-				errc <- err
-			} else {
-				quit <- struct{}{}
-			}
-		}(ctx, sub)
+		ctx, sub := ctx, sub
+		eg.Go(func() error {
+			return t.startSubscriber(ctx, sub)
+		})
 	}
 
-	// Collect errors and done calls until we have n of them.
-	errs := []string(nil)
-	for success := 0; success < n; success++ {
-		var err error
-		select {
-		case <-ctx.Done(): // Block for parent context to finish.
-			success--
-		case err = <-errc: // Collect errors
-		case <-quit:
-		}
-		if cancel != nil {
-			// Stop all other subscriptions.
-			cancel()
-			cancel = nil
-		}
-		if err != nil {
-			errs = append(errs, err.Error())
-		}
-	}
-
-	close(quit)
-	close(errc)
-
-	if errs == nil {
-		return nil
-	}
-
-	return errors.New(strings.Join(errs, "\n"))
+	return eg.Wait()
 }
 
 // Close implements Closer.Close
