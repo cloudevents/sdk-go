@@ -17,32 +17,52 @@ import (
 )
 
 // Client interface defines the runtime contract the CloudEvents client supports.
-type Client interface {
+type Sender interface {
 	// Send will transmit the given event over the client's configured transport.
 	Send(ctx context.Context, event event.Event) protocol.Result
 
 	// Request will transmit the given event over the client's configured
 	// transport and return any response event.
 	Request(ctx context.Context, event event.Event) (*event.Event, protocol.Result)
+}
 
-	// StartReceiver will register the provided function for callback on receipt
-	// of a cloudevent. It will also start the underlying protocol as it has
-	// been configured.
-	// This call is blocking.
-	// Valid fn signatures are:
-	// * func()
-	// * func() error
-	// * func(context.Context)
-	// * func(context.Context) protocol.Result
-	// * func(event.Event)
-	// * func(event.Event) protocol.Result
-	// * func(context.Context, event.Event)
-	// * func(context.Context, event.Event) protocol.Result
-	// * func(event.Event) *event.Event
-	// * func(event.Event) (*event.Event, protocol.Result)
-	// * func(context.Context, event.Event) *event.Event
-	// * func(context.Context, event.Event) (*event.Event, protocol.Result)
-	StartReceiver(ctx context.Context, fn interface{}) error
+type ReceiverEvent interface {
+	Event() event.Event
+	Ack()
+	Reply(event *event.Event)
+	ReplyWithResult(*event.Event, protocol.Result)
+}
+
+// Client interface defines the runtime contract the CloudEvents client supports.
+type Receiver interface {
+	Channel() <-chan ReceiverEvent
+}
+
+type Client interface {
+	protocol.Closer
+	Sender
+	Receiver
+}
+
+// StartHandler will register the provided function for callback on receipt
+// of a cloudevent. It will also start the underlying protocol as it has
+// been configured.
+// This call is blocking.
+// Valid fn signatures are:
+// * func()
+// * func() error
+// * func(context.Context)
+// * func(context.Context) protocol.Result
+// * func(event.Event)
+// * func(event.Event) protocol.Result
+// * func(context.Context, event.Event)
+// * func(context.Context, event.Event) protocol.Result
+// * func(event.Event) *event.Event
+// * func(event.Event) (*event.Event, protocol.Result)
+// * func(context.Context, event.Event) *event.Event
+// * func(context.Context, event.Event) (*event.Event, protocol.Result)
+func StartHandler(ctx context.Context, fn interface{}) error {
+
 }
 
 // New produces a new client with the provided transport object and applied
