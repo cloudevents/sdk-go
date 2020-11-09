@@ -36,3 +36,5 @@ You can grab them and copy-paste in your project to start using sdk-go.
   * [Receiver](./stan/receiver): Receive events using the CloudEvents Client.
   * [Sender](./stan/sender): Receive events using the CloudEvents Client.
   * [Sender & Receiver](./stan/sender-receiver): Send and receive events using the same NATS client.
+* WebSockets
+  * [Client](./ws/client): Sends and receive events, from client side, using the CloudEvents Client.
