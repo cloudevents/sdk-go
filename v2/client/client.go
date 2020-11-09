@@ -17,34 +17,22 @@ import (
 )
 
 // Client interface defines the runtime contract the CloudEvents client supports.
-type Sender interface {
+type Client interface {
 	// Send will transmit the given event over the client's configured transport.
 	Send(ctx context.Context, event event.Event) protocol.Result
 
 	// Request will transmit the given event over the client's configured
 	// transport and return any response event.
 	Request(ctx context.Context, event event.Event) (*event.Event, protocol.Result)
+
+	Receive(ctx context.Context) (event.Event, error)
+
+	Respond(ctx context.Context) (event.Event, ResponseFn, error)
 }
 
-type ReceiverEvent interface {
-	Event() event.Event
-	Ack()
-	Reply(event *event.Event)
-	ReplyWithResult(*event.Event, protocol.Result)
-}
+type ResponseFn func(ctx context.Context, e *event.Event, r protocol.Result) error
 
-// Client interface defines the runtime contract the CloudEvents client supports.
-type Receiver interface {
-	Channel() <-chan ReceiverEvent
-}
-
-type Client interface {
-	protocol.Closer
-	Sender
-	Receiver
-}
-
-// StartHandler will register the provided function for callback on receipt
+// StartEventHandler will register the provided function for callback on receipt
 // of a cloudevent. It will also start the underlying protocol as it has
 // been configured.
 // This call is blocking.
@@ -61,7 +49,7 @@ type Client interface {
 // * func(event.Event) (*event.Event, protocol.Result)
 // * func(context.Context, event.Event) *event.Event
 // * func(context.Context, event.Event) (*event.Event, protocol.Result)
-func StartHandler(ctx context.Context, fn interface{}) error {
+func StartEventHandler(ctx context.Context, fn interface{}) error {
 
 }
 
