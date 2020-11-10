@@ -12,14 +12,12 @@ import (
 
 func main() {
 	ctx := context.Background()
-	s, err := cews.Dial(ctx, "http://localhost:8080", nil)
+	p, err := cews.Dial(ctx, "http://localhost:8080", nil)
 	if err != nil {
 		log.Fatalf("failed to dial: %v", err)
 	}
 
-	defer s.Close(ctx)
-
-	c, err := cloudevents.NewClient(s, cloudevents.WithTimeNow(), cloudevents.WithUUIDs())
+	c, err := cloudevents.NewClient(p, cloudevents.WithTimeNow(), cloudevents.WithUUIDs())
 	if err != nil {
 		log.Fatalf("failed to create client: %v", err)
 	}

@@ -1,9 +1,10 @@
-package binding
+package utils
 
 import (
 	"context"
 	"io"
 
+	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/binding/format"
 )
 
@@ -18,20 +19,25 @@ func NewStructuredMessage(format format.Format, reader io.Reader) *genericStruct
 	return &genericStructuredMessage{reader: reader, format: format}
 }
 
-var _ Message = (*genericStructuredMessage)(nil)
+var _ binding.Message = (*genericStructuredMessage)(nil)
 
-func (m *genericStructuredMessage) ReadEncoding() Encoding {
-	return EncodingStructured
+func (m *genericStructuredMessage) ReadEncoding() binding.Encoding {
+	return binding.EncodingStructured
 }
 
-func (m *genericStructuredMessage) ReadStructured(ctx context.Context, encoder StructuredWriter) error {
+func (m *genericStructuredMessage) ReadStructured(ctx context.Context, encoder binding.StructuredWriter) error {
 	return encoder.SetStructuredEvent(ctx, m.format, m.reader)
 }
 
-func (m *genericStructuredMessage) ReadBinary(ctx context.Context, encoder BinaryWriter) error {
-	return ErrNotBinary
+func (m *genericStructuredMessage) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) error {
+	return binding.ErrNotBinary
 }
 
 func (m *genericStructuredMessage) Finish(err error) error {
-	return nil
+	if closer, ok := m.reader.(io.ReadCloser); ok {
+		if err2 := closer.Close(); err2 != nil {
+			return err2
+		}
+	}
+	return err
 }
