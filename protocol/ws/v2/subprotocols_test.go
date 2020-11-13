@@ -9,7 +9,7 @@ import (
 	"github.com/cloudevents/sdk-go/v2/binding/format"
 )
 
-func Test_resolveFormat(t *testing.T) {
+func TestResolveFormat(t *testing.T) {
 	tests := []struct {
 		name            string
 		subprotocol     string
@@ -31,7 +31,7 @@ func Test_resolveFormat(t *testing.T) {
 	}
 }
 
-func Test_resolveFormat_error(t *testing.T) {
+func TestResolveFormatError(t *testing.T) {
 	_, _, err := resolveFormat("lalala")
 	require.Error(t, err, "subprotocol not supported: lalala")
 }

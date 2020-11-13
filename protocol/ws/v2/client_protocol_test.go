@@ -26,7 +26,7 @@ func pingEvent() cloudevents.Event {
 }
 
 func TestClientProtocolPingPong(t *testing.T) {
-	server := httptest.NewServer(PingPongHandler(t))
+	server := httptest.NewServer(pingPongHandler(t))
 	defer server.Close()
 
 	p, err := Dial(context.TODO(), server.URL, nil)
@@ -47,7 +47,7 @@ func TestClientProtocolPingPong(t *testing.T) {
 }
 
 func TestClientProtocolPingPongWithClient(t *testing.T) {
-	server := httptest.NewServer(PingPongHandler(t))
+	server := httptest.NewServer(pingPongHandler(t))
 	defer server.Close()
 
 	p, err := Dial(context.TODO(), server.URL, nil)
@@ -74,7 +74,7 @@ func TestClientProtocolPingPongWithClient(t *testing.T) {
 	AssertEvent(t, pong, HasId("2"), HasType("pong"))
 }
 
-func PingPongHandler(t *testing.T) http.HandlerFunc {
+func pingPongHandler(t *testing.T) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		c, err := websocket.Accept(writer, request, &websocket.AcceptOptions{Subprotocols: SupportedSubprotocols})
 
