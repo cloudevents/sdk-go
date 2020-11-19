@@ -3,8 +3,10 @@ package client_test
 import (
 	"context"
 	"errors"
+	cehttp "github.com/cloudevents/sdk-go/v2/protocol/http"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
@@ -63,4 +65,52 @@ func TestEventReceiverServeHTTP_WithContext(t *testing.T) {
 
 	result := c.Send(ctx, event)
 	require.True(t, cloudevents.IsACK(result))
+}
+
+func TestEventReceiverServeHTTP_Options(t *testing.T) {
+	p, err := cloudevents.NewHTTP()
+	if err != nil {
+		t.Fatal(err)
+	}
+	httpHandler, err := client.NewHTTPReceiveHandler(context.Background(), p, func() {})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	mux := http.NewServeMux()
+	mux.Handle("/test", httpHandler)
+	ts := httptest.NewServer(mux)
+	defer ts.Close()
+
+	req, err := http.NewRequest(http.MethodOptions, ts.URL+"/test", nil)
+	require.NoError(t, err)
+	res, err := ts.Client().Do(req)
+	t.Logf("foo")
+	require.NoError(t, err)
+	require.NotNil(t, res)
+}
+
+func TestEventReceiverServeHTTP_Webhook(t *testing.T) {
+	p, err := cloudevents.NewHTTP(cloudevents.WithDefaultOptionsHandlerFunc([]string{http.MethodPost}, cehttp.DefaultAllowedRate, []string{"*"}, false))
+	if err != nil {
+		t.Fatal(err)
+	}
+	p.OptionsHandlerFn = p.OptionsHandler
+	httpHandler, err := client.NewHTTPReceiveHandler(context.Background(), p, func() {})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	mux := http.NewServeMux()
+	mux.Handle("/test", httpHandler)
+	ts := httptest.NewServer(mux)
+	defer ts.Close()
+
+	req, err := http.NewRequest(http.MethodOptions, ts.URL+"/test", nil)
+	require.NoError(t, err)
+	res, err := ts.Client().Do(req)
+	t.Logf("foo")
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	require.Equal(t, strconv.Itoa(cehttp.DefaultAllowedRate), res.Header.Get("WebHook-Allowed-Rate"))
 }

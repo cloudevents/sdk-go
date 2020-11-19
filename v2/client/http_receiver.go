@@ -3,11 +3,9 @@ package client
 import (
 	"context"
 	cecontext "github.com/cloudevents/sdk-go/v2/context"
+	thttp "github.com/cloudevents/sdk-go/v2/protocol/http"
 	"go.uber.org/zap"
 	"net/http"
-	"sync"
-
-	thttp "github.com/cloudevents/sdk-go/v2/protocol/http"
 )
 
 func NewHTTPReceiveHandler(ctx context.Context, p *thttp.Protocol, fn interface{}) (*EventReceiver, error) {
@@ -28,20 +26,15 @@ type EventReceiver struct {
 }
 
 func (r *EventReceiver) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	wg := sync.WaitGroup{}
-	wg.Add(1)
+	// Prepare to handle the message if there's one (context cancellation will ensure this closes)
 	go func() {
-		r.p.ServeHTTP(rw, req)
-		wg.Done()
+		ctx := req.Context()
+		msg, respFn, err := r.p.Respond(ctx)
+		if err != nil {
+			cecontext.LoggerFrom(context.TODO()).Debugw("failed to call Respond", zap.Error(err))
+		} else if err := r.invoker.Invoke(ctx, msg, respFn); err != nil {
+			cecontext.LoggerFrom(context.TODO()).Debugw("failed to call Invoke", zap.Error(err))
+		}
 	}()
-
-	ctx := req.Context()
-	msg, respFn, err := r.p.Respond(ctx)
-	if err != nil {
-		cecontext.LoggerFrom(context.TODO()).Debugw("failed to call Respond", zap.Error(err))
-	} else if err := r.invoker.Invoke(ctx, msg, respFn); err != nil {
-		cecontext.LoggerFrom(context.TODO()).Debugw("failed to call Invoke", zap.Error(err))
-	}
-	// Block until ServeHTTP has returned
-	wg.Wait()
+	r.p.ServeHTTP(rw, req)
 }
