@@ -303,8 +303,8 @@ func validateData(t *testing.T, tc DataTest, got, as interface{}, err error) {
 	}
 }
 
-func mustEncodeWithDataCodec(t *testing.T, ct string, in interface{}) []byte {
+func mustEncodeWithDataCodec(tb testing.TB, ct string, in interface{}) []byte {
 	data, err := datacodec.Encode(context.TODO(), ct, in)
-	require.NoError(t, err)
+	require.NoError(tb, err)
 	return data
 }

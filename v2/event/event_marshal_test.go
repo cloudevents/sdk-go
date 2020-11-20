@@ -753,8 +753,8 @@ func TestUnmarshal(t *testing.T) {
 	}
 }
 
-func mustJsonMarshal(t *testing.T, body interface{}) []byte {
+func mustJsonMarshal(tb testing.TB, body interface{}) []byte {
 	b, err := json.Marshal(body)
-	require.NoError(t, err)
+	require.NoError(tb, err)
 	return b
 }
