@@ -1,7 +1,6 @@
 package event_test
 
 import (
-	"net/url"
 	"strings"
 	"testing"
 	"time"
@@ -15,13 +14,9 @@ import (
 func TestValidateV1(t *testing.T) {
 	now := types.Timestamp{Time: time.Now()}
 
-	sourceUrl, _ := url.Parse("http://example.com/source")
-	source := &types.URIRef{URL: *sourceUrl}
-
+	source := types.ParseURIRef("http://example.com/source")
 	subject := "a subject"
-
-	DataSchema, _ := url.Parse("http://example.com/schema")
-	schema := &types.URI{URL: *DataSchema}
+	dataSchema := types.ParseURI("http://example.com/schema")
 
 	extensions := make(map[string]interface{})
 	extensions["test"] = "extended"
@@ -42,7 +37,7 @@ func TestValidateV1(t *testing.T) {
 				ID:              "ABC-123",
 				Time:            &now,
 				Type:            "com.example.simple",
-				DataSchema:      schema,
+				DataSchema:      dataSchema,
 				DataContentType: event.StringOfApplicationJSON(),
 				Source:          *source,
 				Subject:         &subject,
@@ -85,6 +80,15 @@ func TestValidateV1(t *testing.T) {
 				ID:         "ABC-123",
 				Type:       "com.example.simple",
 				DataSchema: &types.URI{},
+				Source:     *source,
+			},
+			want: []string{"dataschema:"},
+		},
+		"non absolute DataSchema": {
+			ctx: event.EventContextV1{
+				ID:         "ABC-123",
+				Type:       "com.example.simple",
+				DataSchema: types.ParseURI("/hello"),
 				Source:     *source,
 			},
 			want: []string{"dataschema:"},
