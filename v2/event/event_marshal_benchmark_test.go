@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -214,168 +215,168 @@ func BenchmarkMarshal(b *testing.B) {
 func BenchmarkUnmarshal(b *testing.B) {
 	now := types.Timestamp{Time: time.Now().UTC()}
 
-	testCases := map[string][]byte{
-		"struct data v0.3": mustJsonMarshal(b, map[string]interface{}{
-			"specversion":     "0.3",
-			"datacontenttype": "application/json",
-			"data": map[string]interface{}{
+	testCases := map[string]string{
+		"struct data v0.3": new(orderedJsonObjectBuilder).Start().
+			Add("specversion", "0.3").
+			Add("datacontenttype", "application/json").
+			Add("data", map[string]interface{}{
 				"a": 42,
 				"b": "testing",
-			},
-			"id":        "ABC-123",
-			"time":      now.Format(time.RFC3339Nano),
-			"type":      "com.example.test",
-			"exbool":    true,
-			"exint":     42,
-			"exstring":  "exstring",
-			"exbinary":  "AAECAw==",
-			"exurl":     "http://example.com/source",
-			"extime":    now.Format(time.RFC3339Nano),
-			"schemaurl": "http://example.com/schema",
-			"source":    "http://example.com/source",
-		}),
-		"string data v0.3": mustJsonMarshal(b, map[string]interface{}{
-			"specversion":     "0.3",
-			"datacontenttype": "application/json",
-			"data":            "This is a string.",
-			"id":              "ABC-123",
-			"time":            now.Format(time.RFC3339Nano),
-			"type":            "com.example.test",
-			"exbool":          true,
-			"exint":           42,
-			"exstring":        "exstring",
-			"exbinary":        "AAECAw==",
-			"exurl":           "http://example.com/source",
-			"extime":          now.Format(time.RFC3339Nano),
-			"schemaurl":       "http://example.com/schema",
-			"source":          "http://example.com/source",
-		}),
-		"nil data v0.3": mustJsonMarshal(b, map[string]interface{}{
-			"specversion":     "0.3",
-			"datacontenttype": "application/json",
-			"id":              "ABC-123",
-			"time":            now.Format(time.RFC3339Nano),
-			"type":            "com.example.test",
-			"exbool":          true,
-			"exint":           42,
-			"exstring":        "exstring",
-			"exbinary":        "AAECAw==",
-			"exurl":           "http://example.com/source",
-			"extime":          now.Format(time.RFC3339Nano),
-			"schemaurl":       "http://example.com/schema",
-			"source":          "http://example.com/source",
-		}),
-		"data, attributes and extensions and specversion with struct data v0.3": mustJsonMarshal(b, map[string]interface{}{
-			"data": map[string]interface{}{
+			}).
+			Add("id", "ABC-123").
+			Add("time", now.Format(time.RFC3339Nano)).
+			Add("type", "com.example.test").
+			Add("exbool", true).
+			Add("exint", 42).
+			Add("exstring", "exstring").
+			Add("exbinary", "AAECAw==").
+			Add("exurl", "http://example.com/source").
+			Add("extime", now.Format(time.RFC3339Nano)).
+			Add("schemaurl", "http://example.com/schema").
+			Add("source", "http://example.com/source").
+			End(),
+		"string data v0.3": new(orderedJsonObjectBuilder).Start().
+			Add("specversion", "0.3").
+			Add("datacontenttype", "application/json").
+			Add("data", "This is a string.").
+			Add("id", "ABC-123").
+			Add("time", now.Format(time.RFC3339Nano)).
+			Add("type", "com.example.test").
+			Add("exbool", true).
+			Add("exint", 42).
+			Add("exstring", "exstring").
+			Add("exbinary", "AAECAw==").
+			Add("exurl", "http://example.com/source").
+			Add("extime", now.Format(time.RFC3339Nano)).
+			Add("schemaurl", "http://example.com/schema").
+			Add("source", "http://example.com/source").
+			End(),
+		"nil data v0.3": new(orderedJsonObjectBuilder).Start().
+			Add("specversion", "0.3").
+			Add("datacontenttype", "application/json").
+			Add("id", "ABC-123").
+			Add("time", now.Format(time.RFC3339Nano)).
+			Add("type", "com.example.test").
+			Add("exbool", true).
+			Add("exint", 42).
+			Add("exstring", "exstring").
+			Add("exbinary", "AAECAw==").
+			Add("exurl", "http://example.com/source").
+			Add("extime", now.Format(time.RFC3339Nano)).
+			Add("schemaurl", "http://example.com/schema").
+			Add("source", "http://example.com/source").
+			End(),
+		"data, attributes and extensions and specversion with struct data v0.3": new(orderedJsonObjectBuilder).Start().
+			Add("data", map[string]interface{}{
 				"a": 42,
 				"b": "testing",
-			},
-			"id":              "ABC-123",
-			"time":            now.Format(time.RFC3339Nano),
-			"type":            "com.example.test",
-			"exbool":          true,
-			"exint":           42,
-			"exstring":        "exstring",
-			"exbinary":        "AAECAw==",
-			"exurl":           "http://example.com/source",
-			"extime":          now.Format(time.RFC3339Nano),
-			"schemaurl":       "http://example.com/schema",
-			"source":          "http://example.com/source",
-			"datacontenttype": "application/json",
-			"specversion":     "0.3",
-		}),
-		"struct data v1.0": mustJsonMarshal(b, map[string]interface{}{
-			"specversion":     "1.0",
-			"datacontenttype": "application/json",
-			"data": map[string]interface{}{
+			}).
+			Add("id", "ABC-123").
+			Add("time", now.Format(time.RFC3339Nano)).
+			Add("type", "com.example.test").
+			Add("exbool", true).
+			Add("exint", 42).
+			Add("exstring", "exstring").
+			Add("exbinary", "AAECAw==").
+			Add("exurl", "http://example.com/source").
+			Add("extime", now.Format(time.RFC3339Nano)).
+			Add("schemaurl", "http://example.com/schema").
+			Add("source", "http://example.com/source").
+			Add("datacontenttype", "application/json").
+			Add("specversion", "0.3").
+			End(),
+		"struct data v1.0": new(orderedJsonObjectBuilder).Start().
+			Add("specversion", "1.0").
+			Add("datacontenttype", "application/json").
+			Add("data", map[string]interface{}{
 				"a": 42,
 				"b": "testing",
-			},
-			"id":         "ABC-123",
-			"time":       now.Format(time.RFC3339Nano),
-			"type":       "com.example.test",
-			"exbool":     true,
-			"exint":      42,
-			"exstring":   "exstring",
-			"exbinary":   "AAECAw==",
-			"exurl":      "http://example.com/source",
-			"extime":     now.Format(time.RFC3339Nano),
-			"dataschema": "http://example.com/schema",
-			"source":     "http://example.com/source",
-		}),
-		"data, attributes and extensions and specversion with struct data v1.0": mustJsonMarshal(b, map[string]interface{}{
-			"data": map[string]interface{}{
+			}).
+			Add("id", "ABC-123").
+			Add("time", now.Format(time.RFC3339Nano)).
+			Add("type", "com.example.test").
+			Add("exbool", true).
+			Add("exint", 42).
+			Add("exstring", "exstring").
+			Add("exbinary", "AAECAw==").
+			Add("exurl", "http://example.com/source").
+			Add("extime", now.Format(time.RFC3339Nano)).
+			Add("dataschema", "http://example.com/schema").
+			Add("source", "http://example.com/source").
+			End(),
+		"data, attributes and extensions and specversion with struct data v1.0": new(orderedJsonObjectBuilder).Start().
+			Add("data", map[string]interface{}{
 				"a": 42,
 				"b": "testing",
-			},
-			"id":              "ABC-123",
-			"time":            now.Format(time.RFC3339Nano),
-			"type":            "com.example.test",
-			"exbool":          true,
-			"exint":           42,
-			"exstring":        "exstring",
-			"exbinary":        "AAECAw==",
-			"exurl":           "http://example.com/source",
-			"extime":          now.Format(time.RFC3339Nano),
-			"dataschema":      "http://example.com/schema",
-			"source":          "http://example.com/source",
-			"datacontenttype": "application/json",
-			"specversion":     "1.0",
-		}),
-		"string data v1.0": mustJsonMarshal(b, map[string]interface{}{
-			"specversion":     "1.0",
-			"datacontenttype": "application/json",
-			"data":            "This is a string.",
-			"id":              "ABC-123",
-			"time":            now.Format(time.RFC3339Nano),
-			"type":            "com.example.test",
-			"exbool":          true,
-			"exint":           42,
-			"exstring":        "exstring",
-			"exbinary":        "AAECAw==",
-			"exurl":           "http://example.com/source",
-			"extime":          now.Format(time.RFC3339Nano),
-			"dataschema":      "http://example.com/schema",
-			"source":          "http://example.com/source",
-		}),
-		"base64 json encoded data v1.0": mustJsonMarshal(b, map[string]interface{}{
-			"specversion":     "1.0",
-			"datacontenttype": "application/json",
-			"data_base64":     base64.StdEncoding.EncodeToString([]byte(`{"hello":"world"}`)),
-			"id":              "ABC-123",
-			"time":            now.Format(time.RFC3339Nano),
-			"type":            "com.example.test",
-			"dataschema":      "http://example.com/schema",
-			"source":          "http://example.com/source",
-		}),
-		"base64 xml encoded data v1.0": mustJsonMarshal(b, map[string]interface{}{
-			"specversion":     "1.0",
-			"datacontenttype": "application/json",
-			"data_base64":     base64.StdEncoding.EncodeToString(mustEncodeWithDataCodec(b, event.ApplicationXML, &XMLDataExample{AnInt: 10})),
-			"id":              "ABC-123",
-			"time":            now.Format(time.RFC3339Nano),
-			"type":            "com.example.test",
-			"dataschema":      "http://example.com/schema",
-			"source":          "http://example.com/source",
-		}),
-		"nil data v1.0": mustJsonMarshal(b, map[string]interface{}{
-			"specversion":     "1.0",
-			"datacontenttype": "application/json",
-			"id":              "ABC-123",
-			"time":            now.Format(time.RFC3339Nano),
-			"type":            "com.example.test",
-			"exbool":          true,
-			"exint":           42,
-			"exstring":        "exstring",
-			"exbinary":        "AAECAw==",
-			"exurl":           "http://example.com/source",
-			"extime":          now.Format(time.RFC3339Nano),
-			"dataschema":      "http://example.com/schema",
-			"source":          "http://example.com/source",
-		}),
+			}).
+			Add("id", "ABC-123").
+			Add("time", now.Format(time.RFC3339Nano)).
+			Add("type", "com.example.test").
+			Add("exbool", true).
+			Add("exint", 42).
+			Add("exstring", "exstring").
+			Add("exbinary", "AAECAw==").
+			Add("exurl", "http://example.com/source").
+			Add("extime", now.Format(time.RFC3339Nano)).
+			Add("dataschema", "http://example.com/schema").
+			Add("source", "http://example.com/source").
+			Add("datacontenttype", "application/json").
+			Add("specversion", "1.0").
+			End(),
+		"string data v1.0": new(orderedJsonObjectBuilder).Start().
+			Add("specversion", "1.0").
+			Add("datacontenttype", "application/json").
+			Add("data", "This is a string.").
+			Add("id", "ABC-123").
+			Add("time", now.Format(time.RFC3339Nano)).
+			Add("type", "com.example.test").
+			Add("exbool", true).
+			Add("exint", 42).
+			Add("exstring", "exstring").
+			Add("exbinary", "AAECAw==").
+			Add("exurl", "http://example.com/source").
+			Add("extime", now.Format(time.RFC3339Nano)).
+			Add("dataschema", "http://example.com/schema").
+			Add("source", "http://example.com/source").
+			End(),
+		"base64 json encoded data v1.0": new(orderedJsonObjectBuilder).Start().
+			Add("specversion", "1.0").
+			Add("datacontenttype", "application/json").
+			Add("data_base64", base64.StdEncoding.EncodeToString([]byte(`{"hello":"world"}`))).
+			Add("id", "ABC-123").
+			Add("time", now.Format(time.RFC3339Nano)).
+			Add("type", "com.example.test").
+			Add("dataschema", "http://example.com/schema").
+			Add("source", "http://example.com/source").
+			End(),
+		"base64 xml encoded data v1.0": new(orderedJsonObjectBuilder).Start().
+			Add("specversion", "1.0").
+			Add("datacontenttype", "application/json").
+			Add("data_base64", base64.StdEncoding.EncodeToString(mustEncodeWithDataCodec(b, event.ApplicationXML, &XMLDataExample{AnInt: 10}))).
+			Add("id", "ABC-123").
+			Add("time", now.Format(time.RFC3339Nano)).
+			Add("type", "com.example.test").
+			Add("dataschema", "http://example.com/schema").
+			Add("source", "http://example.com/source").
+			End(),
+		"nil data v1.0": new(orderedJsonObjectBuilder).Start().
+			Add("specversion", "1.0").
+			Add("datacontenttype", "application/json").
+			Add("id", "ABC-123").
+			Add("time", now.Format(time.RFC3339Nano)).
+			Add("type", "com.example.test").
+			Add("exbool", true).
+			Add("exint", 42).
+			Add("exstring", "exstring").
+			Add("exbinary", "AAECAw==").
+			Add("exurl", "http://example.com/source").
+			Add("extime", now.Format(time.RFC3339Nano)).
+			Add("dataschema", "http://example.com/schema").
+			Add("source", "http://example.com/source").
+			End(),
 	}
 	for n, tc := range testCases {
-		bytes := tc
+		bytes := []byte(tc)
 		b.Run(n, func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				Event = event.Event{}
@@ -383,4 +384,34 @@ func BenchmarkUnmarshal(b *testing.B) {
 			}
 		})
 	}
+}
+
+// This is a little hack we need to create a json ordered.
+// This makes the bench reproducible for unmarshal
+type orderedJsonObjectBuilder strings.Builder
+
+func (b *orderedJsonObjectBuilder) Start() *orderedJsonObjectBuilder {
+	(*strings.Builder)(b).WriteRune('{')
+
+	return b
+}
+
+func (b *orderedJsonObjectBuilder) Add(key string, value interface{}) *orderedJsonObjectBuilder {
+	(*strings.Builder)(b).WriteRune('"')
+	(*strings.Builder)(b).WriteString(key)
+	(*strings.Builder)(b).WriteString("\":")
+
+	v, err := json.Marshal(value)
+	if err != nil {
+		panic(err)
+	}
+	(*strings.Builder)(b).Write(v)
+	(*strings.Builder)(b).WriteRune(',')
+
+	return b
+}
+
+func (b *orderedJsonObjectBuilder) End() string {
+	str := (*strings.Builder)(b).String()
+	return str[0:len(str)-1] + "}"
 }
