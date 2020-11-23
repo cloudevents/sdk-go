@@ -14,12 +14,12 @@ import (
 
 // TODO TBD where to put this stuff
 
-const BeginObject uint8 = 1
 const SpecVersionV03Flag uint8 = 1 << 4
-const SpecVersionV1Flag uint8 = 1 << 4
-const DataContentEncodingFlag uint8 = 1 << 5
-const DataContentTypeFlag uint8 = 1 << 6
-const EndObject uint8 = 1 << 7
+const SpecVersionV1Flag uint8 = 1 << 5
+const DataBase64Flag uint8 = 1 << 6
+const DataContentTypeFlag uint8 = 1 << 7
+
+const preallocQueueSize = 8 // entry = 16 bytes, 8*16 = 128 bytes = 2 cache lines on x86_64
 
 func checkFlag(state uint8, flag uint8) bool {
 	return state&flag != 0
@@ -30,16 +30,11 @@ func appendFlag(state *uint8, flag uint8) {
 }
 
 func nextString(dec *json.Decoder, key string) (string, error) {
-	token, err := dec.Token()
-	if err != nil {
-		return "", err
+	var str string
+	if err := dec.Decode(&str); err != nil {
+		return "", fmt.Errorf("%s should be a valid json string: %w", key, err)
 	}
-
-	if val, ok := token.(string); !ok {
-		return "", fmt.Errorf("%s should be a string, actual '%v'", key, token)
-	} else {
-		return val, nil
-	}
+	return str, nil
 }
 
 func nextRaw(dec *json.Decoder) (json.RawMessage, error) {
@@ -51,117 +46,118 @@ func nextRaw(dec *json.Decoder) (json.RawMessage, error) {
 	return raw, nil
 }
 
-func drainTokenQueue(tokenQueue *tokenQueue, event *Event, state *uint8, dataToken **entry) error {
+func drainTokenQueue(tokenQueue *tokenQueue, event *Event, state *uint8, cachedDataPointer *json.RawMessage) error {
 	switch ctx := event.Context.(type) {
 	case *EventContextV03:
-		for e := tokenQueue.pop(); e != nil; e = tokenQueue.pop() {
-			switch e.key {
+		for i := 0; i < tokenQueue.i; i++ {
+			switch tokenQueue.slice[i].key {
 			case "id":
-				if err := json.Unmarshal(e.value, &ctx.ID); err != nil {
+				if err := json.Unmarshal(tokenQueue.slice[i].value, &ctx.ID); err != nil {
 					return err
 				}
 			case "type":
-				if err := json.Unmarshal(e.value, &ctx.Type); err != nil {
+				if err := json.Unmarshal(tokenQueue.slice[i].value, &ctx.Type); err != nil {
 					return err
 				}
 			case "source":
-				if err := json.Unmarshal(e.value, &ctx.Source); err != nil {
+				if err := json.Unmarshal(tokenQueue.slice[i].value, &ctx.Source); err != nil {
 					return err
 				}
 			case "subject":
 				ctx.Subject = new(string)
-				if err := json.Unmarshal(e.value, ctx.Subject); err != nil {
+				if err := json.Unmarshal(tokenQueue.slice[i].value, ctx.Subject); err != nil {
 					return err
 				}
 			case "time":
 				ctx.Time = new(types.Timestamp)
-				if err := json.Unmarshal(e.value, ctx.Time); err != nil {
+				if err := json.Unmarshal(tokenQueue.slice[i].value, ctx.Time); err != nil {
 					return err
 				}
 			case "schemaurl":
 				ctx.SchemaURL = new(types.URIRef)
-				if err := json.Unmarshal(e.value, ctx.SchemaURL); err != nil {
+				if err := json.Unmarshal(tokenQueue.slice[i].value, ctx.SchemaURL); err != nil {
 					return err
 				}
 			case "datacontenttype":
 				ctx.DataContentType = new(string)
-				if err := json.Unmarshal(e.value, ctx.DataContentType); err != nil {
+				if err := json.Unmarshal(tokenQueue.slice[i].value, ctx.DataContentType); err != nil {
 					return err
 				}
 				appendFlag(state, DataContentTypeFlag)
 			case "datacontentencoding":
 				ctx.DataContentEncoding = new(string)
-				if err := json.Unmarshal(e.value, ctx.DataContentEncoding); err != nil {
+				if err := json.Unmarshal(tokenQueue.slice[i].value, ctx.DataContentEncoding); err != nil {
 					return err
 				}
 				if *ctx.DataContentEncoding != Base64 {
 					return fmt.Errorf("invalid datacontentencoding value: '%s'", *ctx.DataContentEncoding)
 				}
-				appendFlag(state, DataContentEncodingFlag)
+				appendFlag(state, DataBase64Flag)
 			case "data":
-				*dataToken = &entry{key: e.key, value: e.value}
+				*cachedDataPointer = tokenQueue.slice[i].value
 			default:
 				var val interface{}
-				if err := json.Unmarshal(e.value, &val); err != nil {
+				if err := json.Unmarshal(tokenQueue.slice[i].value, &val); err != nil {
 					return err
 				}
 				if ctx.Extensions == nil {
 					ctx.Extensions = make(map[string]interface{}, 1)
 				}
-				if err := ctx.SetExtension(e.key, val); err != nil {
+				if err := ctx.SetExtension(tokenQueue.slice[i].key, val); err != nil {
 					return err
 				}
 			}
 		}
 	case *EventContextV1:
-		for e := tokenQueue.pop(); e != nil; e = tokenQueue.pop() {
-			switch e.key {
+		for i := 0; i < tokenQueue.i; i++ {
+			switch tokenQueue.slice[i].key {
 			case "id":
-				if err := json.Unmarshal(e.value, &ctx.ID); err != nil {
+				if err := json.Unmarshal(tokenQueue.slice[i].value, &ctx.ID); err != nil {
 					return err
 				}
 			case "type":
-				if err := json.Unmarshal(e.value, &ctx.Type); err != nil {
+				if err := json.Unmarshal(tokenQueue.slice[i].value, &ctx.Type); err != nil {
 					return err
 				}
 			case "source":
-				if err := json.Unmarshal(e.value, &ctx.Source); err != nil {
+				if err := json.Unmarshal(tokenQueue.slice[i].value, &ctx.Source); err != nil {
 					return err
 				}
 			case "subject":
 				ctx.Subject = new(string)
-				if err := json.Unmarshal(e.value, ctx.Subject); err != nil {
+				if err := json.Unmarshal(tokenQueue.slice[i].value, ctx.Subject); err != nil {
 					return err
 				}
 			case "time":
 				ctx.Time = new(types.Timestamp)
-				if err := json.Unmarshal(e.value, ctx.Time); err != nil {
+				if err := json.Unmarshal(tokenQueue.slice[i].value, ctx.Time); err != nil {
 					return err
 				}
 			case "dataschema":
 				ctx.DataSchema = new(types.URI)
-				if err := json.Unmarshal(e.value, ctx.DataSchema); err != nil {
+				if err := json.Unmarshal(tokenQueue.slice[i].value, ctx.DataSchema); err != nil {
 					return err
 				}
 			case "datacontenttype":
 				ctx.DataContentType = new(string)
-				if err := json.Unmarshal(e.value, ctx.DataContentType); err != nil {
+				if err := json.Unmarshal(tokenQueue.slice[i].value, ctx.DataContentType); err != nil {
 					return err
 				}
 				appendFlag(state, DataContentTypeFlag)
 			case "data":
-				*dataToken = &entry{key: e.key, value: e.value}
+				*cachedDataPointer = tokenQueue.slice[i].value
 			case "data_base64":
-				*dataToken = &entry{key: e.key, value: e.value}
+				appendFlag(state, DataBase64Flag)
+				*cachedDataPointer = tokenQueue.slice[i].value
 			default:
 				var val interface{}
-				if err := json.Unmarshal(e.value, &val); err != nil {
+				if err := json.Unmarshal(tokenQueue.slice[i].value, &val); err != nil {
 					return err
 				}
 				if ctx.Extensions == nil {
 					ctx.Extensions = make(map[string]interface{}, 1)
 				}
-				if err := ctx.SetExtension(e.key, val); err != nil {
+				if err := ctx.SetExtension(tokenQueue.slice[i].key, val); err != nil {
 					return err
 				}
 			}
@@ -190,7 +186,7 @@ func bestCaseProcessNext(dec *json.Decoder, state uint8, key string, e *Event) e
 			ctx.SchemaURL = new(types.URIRef)
 			return dec.Decode(ctx.SchemaURL)
 		case "data":
-			return consumeData(e, state, key, dec)
+			return consumeData(e, checkFlag(state, DataBase64Flag), dec)
 		default:
 			var val interface{}
 			if err := dec.Decode(&val); err != nil {
@@ -219,9 +215,9 @@ func bestCaseProcessNext(dec *json.Decoder, state uint8, key string, e *Event) e
 			ctx.DataSchema = new(types.URI)
 			return dec.Decode(ctx.DataSchema)
 		case "data":
-			return consumeData(e, state, key, dec)
+			return consumeData(e, false, dec)
 		case "data_base64":
-			return consumeData(e, state, key, dec)
+			return consumeData(e, true, dec)
 		default:
 			var val interface{}
 			if err := dec.Decode(&val); err != nil {
@@ -239,7 +235,6 @@ func bestCaseProcessNext(dec *json.Decoder, state uint8, key string, e *Event) e
 type entry struct {
 	key   string
 	value json.RawMessage
-	next  *entry
 }
 
 //TODO make this public?
@@ -259,50 +254,32 @@ func unmarshalJSON(reader io.Reader, e *Event) error {
 	//                              Data
 
 	var state uint8 = 0
-	tokenQueue := &tokenQueue{}
-	var dataToken *entry
+	tokenQueue := &tokenQueue{
+		slice: make([]entry, preallocQueueSize),
+		i:     0,
+	}
+	var cachedData json.RawMessage
 
-	for {
+	// Get first token, which should be '{'
+	token, err := dec.Token()
+	if err != nil {
+		return err
+	}
+	if delim, ok := token.(json.Delim); !ok || delim.String() != "{" {
+		return errors.New("CloudEvent should be a json object")
+	}
+
+	for dec.More() {
 		token, err := dec.Token()
-		if err == io.EOF {
-			if !checkFlag(state, EndObject) {
-				return errors.New("unexpected EOF, there isn't any '}' symbol in the input")
-			}
-			// If there is a dataToken cached, we always defer at the end the processing
-			// because nor datacontenttype or datacontentencoding are mandatory.
-			if dataToken != nil {
-				if err := drainData(e, state, dataToken.key, dataToken.value); err != nil {
-					return err
-				}
-			}
-			return nil
-		}
 		if err != nil {
 			return err
 		}
 
-		// Let's check if we're in the main object
-		if !checkFlag(state, BeginObject) {
-			if delim, ok := token.(json.Delim); !ok || delim.String() != "{" {
-				return errors.New("CloudEvent should be a json object")
-			}
-			appendFlag(&state, BeginObject)
-			continue
-		}
-
-		// We need to figure out if this token is a key or the end of the object
 		var key string
-		switch token.(type) {
-		case json.Delim:
-			if token.(json.Delim).String() == "}" {
-				appendFlag(&state, EndObject)
-				continue
-			}
-		case string:
-			key = token.(string)
-			break
-		default:
-			return fmt.Errorf("unexpected token '%v', expecting a string or '}'", token)
+		if str, ok := token.(string); ok {
+			key = str
+		} else {
+			return fmt.Errorf("unexpected token '%v', expecting a string", token)
 		}
 
 		// We have a key, now we need to figure out what to do
@@ -330,7 +307,7 @@ func unmarshalJSON(reader io.Reader, e *Event) error {
 				return fmt.Errorf("unexpected specversion '%s'", token)
 			}
 
-			if err := drainTokenQueue(tokenQueue, e, &state, &dataToken); err != nil {
+			if err := drainTokenQueue(tokenQueue, e, &state, &cachedData); err != nil {
 				return err
 			}
 			continue
@@ -342,10 +319,7 @@ func unmarshalJSON(reader io.Reader, e *Event) error {
 			if err != nil {
 				return err
 			}
-			tokenQueue.push(&entry{
-				key:   key,
-				value: raw,
-			})
+			tokenQueue.push(key, raw)
 			continue
 		}
 
@@ -368,8 +342,8 @@ func unmarshalJSON(reader io.Reader, e *Event) error {
 		}
 
 		// If it's a datacontentencoding and it's v0.3, trigger state change
-		if key == "datacontentencoding" && checkFlag(state, SpecVersionV03Flag) {
-			if checkFlag(state, DataContentEncodingFlag) {
+		if checkFlag(state, SpecVersionV03Flag) && key == "datacontentencoding" {
+			if checkFlag(state, DataBase64Flag) {
 				return fmt.Errorf("datacontentencoding was already provided")
 			}
 
@@ -383,35 +357,56 @@ func unmarshalJSON(reader io.Reader, e *Event) error {
 			}
 
 			e.Context.(*EventContextV03).DataContentEncoding = &dct
-			appendFlag(&state, DataContentEncodingFlag)
+			appendFlag(&state, DataBase64Flag)
 			continue
 		}
 
 		// We can parse all attributes, except data.
 		// If it's data or data_base64 and we don't have the attributes to process it, then we enqueue
-		if ((key == "data" || key == "data_base64") && !checkFlag(state, SpecVersionV1Flag&DataContentTypeFlag)) &&
-			key == "data" && checkFlag(state, SpecVersionV03Flag&DataContentTypeFlag&DataContentEncodingFlag) {
+		if (!checkFlag(state, SpecVersionV1Flag&DataContentTypeFlag) && (key == "data" || key == "data_base64")) &&
+			(!checkFlag(state, SpecVersionV03Flag&DataContentTypeFlag&DataBase64Flag) && key == "data") {
 			raw, err := nextRaw(dec)
 			if err != nil {
 				return err
 			}
-			dataToken = &entry{
-				key:   key,
-				value: raw,
+			if key == "data_base64" {
+				appendFlag(&state, DataBase64Flag)
 			}
+			cachedData = raw
 			continue
 		}
 
 		// At this point or this value is an attribute (excluding datacontenttype and datacontentencoding), or this value is data and this condition is valid:
-		// (SpecVersionV1Flag & DataContentTypeFlag) || (SpecVersionV03Flag & DataContentTypeFlag & DataContentEncodingFlag)
+		// (SpecVersionV1Flag & DataContentTypeFlag) || (SpecVersionV03Flag & DataContentTypeFlag & DataBase64Flag)
 		if err := bestCaseProcessNext(dec, state, key, e); err != nil {
 			return err
 		}
 	}
+
+	// Get what I expect to be the last token
+	token, err = dec.Token()
+	if token.(json.Delim).String() != "}" {
+		return fmt.Errorf("unexpected token '%v', expecting '}'", token)
+	}
+
+	token, err = dec.Token()
+	if err != io.EOF {
+		return fmt.Errorf("unexpected token '%v', expecting EOF", token)
+	}
+
+	// If there is a dataToken cached, we always defer at the end the processing
+	// because nor datacontenttype or datacontentencoding are mandatory.
+	if cachedData != nil {
+		if err := drainData(e, checkFlag(state, DataBase64Flag), cachedData); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
-func drainData(e *Event, state uint8, key string, value json.RawMessage) error {
-	if checkFlag(state, DataContentEncodingFlag) || key == "data_base64" {
+func drainData(e *Event, isBase64 bool, value json.RawMessage) error {
+	if isBase64 {
 		e.DataBase64 = true
 		return json.Unmarshal(value, &e.DataEncoded)
 	}
@@ -429,8 +424,9 @@ func drainData(e *Event, state uint8, key string, value json.RawMessage) error {
 	return nil
 }
 
-func consumeData(e *Event, state uint8, key string, dec *json.Decoder) error {
-	if checkFlag(state, DataContentEncodingFlag) || key == "data_base64" {
+func consumeData(e *Event, isBase64 bool, dec *json.Decoder) error {
+	if isBase64 {
+		e.DataBase64 = true
 		return dec.Decode(&e.DataEncoded)
 	}
 
@@ -452,33 +448,20 @@ func consumeData(e *Event, state uint8, key string, dec *json.Decoder) error {
 }
 
 type tokenQueue struct {
-	last  *entry
-	first *entry
+	slice []entry
+	i     int
 }
 
-func (q *tokenQueue) push(new *entry) {
-	if q.last == nil {
-		q.first = new
-		q.last = new
-		return
+func (q *tokenQueue) push(key string, raw json.RawMessage) {
+	if q.i < len(q.slice) {
+		q.slice[q.i].key = key
+		q.slice[q.i].value = raw
+	} else {
+		e := entry{key: key, value: raw}
+		q.slice = append(q.slice, e)
 	}
-	q.last.next = new
-	q.last = new
-}
 
-func (q *tokenQueue) pop() *entry {
-	if q.first == nil {
-		return nil
-	}
-	if q.last == q.first {
-		e := q.first
-		q.first = nil
-		q.last = nil
-		return e
-	}
-	e := q.first
-	q.first = q.first.next
-	return e
+	q.i++
 }
 
 // UnmarshalJSON implements the json unmarshal method used when this type is
