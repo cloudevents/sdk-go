@@ -51,10 +51,10 @@ func nextRaw(dec *json.Decoder) (json.RawMessage, error) {
 	return raw, nil
 }
 
-func drainTokenQueue(tokenQueue []entry, event *Event, state *uint8, dataToken **entry) error {
+func drainTokenQueue(tokenQueue *tokenQueue, event *Event, state *uint8, dataToken **entry) error {
 	switch ctx := event.Context.(type) {
 	case *EventContextV03:
-		for _, e := range tokenQueue {
+		for e := tokenQueue.pop(); e != nil; e = tokenQueue.pop() {
 			switch e.key {
 			case "id":
 				if err := json.Unmarshal(e.value, &ctx.ID); err != nil {
@@ -114,7 +114,7 @@ func drainTokenQueue(tokenQueue []entry, event *Event, state *uint8, dataToken *
 			}
 		}
 	case *EventContextV1:
-		for _, e := range tokenQueue {
+		for e := tokenQueue.pop(); e != nil; e = tokenQueue.pop() {
 			switch e.key {
 			case "id":
 				if err := json.Unmarshal(e.value, &ctx.ID); err != nil {
@@ -239,6 +239,7 @@ func bestCaseProcessNext(dec *json.Decoder, state uint8, key string, e *Event) e
 type entry struct {
 	key   string
 	value json.RawMessage
+	next  *entry
 }
 
 //TODO make this public?
@@ -258,7 +259,7 @@ func unmarshalJSON(reader io.Reader, e *Event) error {
 	//                              Data
 
 	var state uint8 = 0
-	var tokenQueue []entry
+	tokenQueue := &tokenQueue{}
 	var dataToken *entry
 
 	for {
@@ -341,7 +342,7 @@ func unmarshalJSON(reader io.Reader, e *Event) error {
 			if err != nil {
 				return err
 			}
-			tokenQueue = append(tokenQueue, entry{
+			tokenQueue.push(&entry{
 				key:   key,
 				value: raw,
 			})
@@ -448,6 +449,36 @@ func consumeData(e *Event, state uint8, key string, dec *json.Decoder) error {
 	}
 	e.DataEncoded = value
 	return nil
+}
+
+type tokenQueue struct {
+	last  *entry
+	first *entry
+}
+
+func (q *tokenQueue) push(new *entry) {
+	if q.last == nil {
+		q.first = new
+		q.last = new
+		return
+	}
+	q.last.next = new
+	q.last = new
+}
+
+func (q *tokenQueue) pop() *entry {
+	if q.first == nil {
+		return nil
+	}
+	if q.last == q.first {
+		e := q.first
+		q.first = nil
+		q.last = nil
+		return e
+	}
+	e := q.first
+	q.first = q.first.next
+	return e
 }
 
 // UnmarshalJSON implements the json unmarshal method used when this type is
