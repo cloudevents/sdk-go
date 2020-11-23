@@ -226,10 +226,8 @@ func (ec EventContextV1) Validate() ValidationError {
 	//  OPTIONAL
 	//  If present, MUST adhere to the format specified in RFC 3986
 	if ec.DataSchema != nil {
-		dataSchema := strings.TrimSpace(ec.DataSchema.String())
-		// empty string is not RFC 3986 compatible.
-		if dataSchema == "" {
-			errors["dataschema"] = fmt.Errorf("if present, MUST adhere to the format specified in RFC 3986")
+		if !ec.DataSchema.Validate() {
+			errors["dataschema"] = fmt.Errorf("if present, MUST adhere to the format specified in RFC 3986, Section 4.3. Absolute URI")
 		}
 	}
 
