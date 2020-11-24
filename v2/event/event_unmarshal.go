@@ -13,14 +13,12 @@ import (
 	"github.com/cloudevents/sdk-go/v2/types"
 )
 
-// TODO TBD where to put this stuff
+const specVersionV03Flag uint8 = 1 << 4
+const specVersionV1Flag uint8 = 1 << 5
+const dataBase64Flag uint8 = 1 << 6
+const dataContentTypeFlag uint8 = 1 << 7
 
-const SpecVersionV03Flag uint8 = 1 << 4
-const SpecVersionV1Flag uint8 = 1 << 5
-const DataBase64Flag uint8 = 1 << 6
-const DataContentTypeFlag uint8 = 1 << 7
-
-const preallocQueueSize = 8 // entry = 16 bytes, 8*16 = 128 bytes = 2 cache lines on x86_64
+const preallocQueueSize = 16 // entry = 16 bytes, 16*16 = 256 bytes = 4 cache lines on x86_64
 
 func checkFlag(state uint8, flag uint8) bool {
 	return state&flag != 0
@@ -30,159 +28,13 @@ func appendFlag(state *uint8, flag uint8) {
 	*state = (*state) | flag
 }
 
-func drainTokenQueue(tokenQueue *tokenQueue, event *Event, state *uint8, cachedDataPointer *[]byte) error {
-	switch ctx := event.Context.(type) {
-	case *EventContextV03:
-		for i := 0; i < tokenQueue.i; i++ {
-			val := tokenQueue.slice[i].value
-			var err error
-			switch tokenQueue.slice[i].key {
-			case "id":
-				ctx.ID = val.ToString()
-			case "type":
-				ctx.Type = val.ToString()
-			case "source":
-				ctx.Source, err = toUriRef(val)
-			case "subject":
-				ctx.Subject, err = toStrPtr(val)
-			case "time":
-				ctx.Time, err = toTimestamp(val)
-			case "schemaurl":
-				ctx.SchemaURL, err = toUriRefPtr(val)
-			case "datacontenttype":
-				ctx.DataContentType, err = toStrPtr(val)
-				appendFlag(state, DataContentTypeFlag)
-			case "datacontentencoding":
-				ctx.DataContentEncoding, err = toStrPtr(val)
-				if *ctx.DataContentEncoding != Base64 {
-					err = fmt.Errorf("invalid datacontentencoding value: '%s'", *ctx.DataContentEncoding)
-				}
-				appendFlag(state, DataBase64Flag)
-			case "data":
-				stream := jsoniter.NewStream(jsoniter.ConfigFastest, nil, 1024)
-				val.WriteTo(stream)
-				*cachedDataPointer = stream.Buffer()
-				err = stream.Error
-			default:
-				value := val.GetInterface()
-				if ctx.Extensions == nil {
-					ctx.Extensions = make(map[string]interface{}, 1)
-				}
-				if err := ctx.SetExtension(tokenQueue.slice[i].key, value); err != nil {
-					return err
-				}
-			}
-			if err != nil {
-				return err
-			}
-		}
-	case *EventContextV1:
-		for i := 0; i < tokenQueue.i; i++ {
-			val := tokenQueue.slice[i].value
-			var err error
-			switch tokenQueue.slice[i].key {
-			case "id":
-				ctx.ID = val.ToString()
-			case "type":
-				ctx.Type = val.ToString()
-			case "source":
-				ctx.Source, err = toUriRef(val)
-			case "subject":
-				ctx.Subject, err = toStrPtr(val)
-			case "time":
-				ctx.Time, err = toTimestamp(val)
-			case "dataschema":
-				ctx.DataSchema, err = toUriPtr(val)
-			case "datacontenttype":
-				ctx.DataContentType, err = toStrPtr(val)
-				appendFlag(state, DataContentTypeFlag)
-			case "data":
-				stream := jsoniter.NewStream(jsoniter.ConfigFastest, nil, 1024)
-				val.WriteTo(stream)
-				*cachedDataPointer = stream.Buffer()
-				err = stream.Error
-			case "data_base64":
-				stream := jsoniter.NewStream(jsoniter.ConfigFastest, nil, 1024)
-				val.WriteTo(stream)
-				*cachedDataPointer = stream.Buffer()
-				err = stream.Error
-				appendFlag(state, DataBase64Flag)
-			default:
-				value := val.GetInterface()
-				if ctx.Extensions == nil {
-					ctx.Extensions = make(map[string]interface{}, 1)
-				}
-				if err := ctx.SetExtension(tokenQueue.slice[i].key, value); err != nil {
-					return err
-				}
-			}
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
-func bestCaseProcessNext(iter *jsoniter.Iterator, state uint8, key string, e *Event) error {
-	switch ctx := e.Context.(type) {
-	case *EventContextV03:
-		switch key {
-		case "id":
-			ctx.ID = iter.ReadString()
-		case "type":
-			ctx.Type = iter.ReadString()
-		case "source":
-			ctx.Source = readUriRef(iter)
-		case "subject":
-			ctx.Subject = readStrPtr(iter)
-		case "time":
-			ctx.Time = readTimestamp(iter)
-		case "schemaurl":
-			ctx.SchemaURL = readUriRefPtr(iter)
-		case "data":
-			return consumeData(e, checkFlag(state, DataBase64Flag), iter)
-		default:
-			if ctx.Extensions == nil {
-				ctx.Extensions = make(map[string]interface{}, 1)
-			}
-			return ctx.SetExtension(key, iter.ReadAny())
-		}
-	case *EventContextV1:
-		switch key {
-		case "id":
-			ctx.ID = iter.ReadString()
-		case "type":
-			ctx.Type = iter.ReadString()
-		case "source":
-			ctx.Source = readUriRef(iter)
-		case "subject":
-			ctx.Subject = readStrPtr(iter)
-		case "time":
-			ctx.Time = readTimestamp(iter)
-		case "dataschema":
-			ctx.DataSchema = readUriPtr(iter)
-		case "data":
-			return consumeData(e, false, iter)
-		case "data_base64":
-			return consumeData(e, true, iter)
-		default:
-			if ctx.Extensions == nil {
-				ctx.Extensions = make(map[string]interface{}, 1)
-			}
-			return ctx.SetExtension(key, iter.ReadAny())
-		}
-	}
-	return nil
-}
-
 type entry struct {
 	key   string
 	value jsoniter.Any
 }
 
-//TODO make this public?
-func unmarshalJSON(reader io.Reader, e *Event) error {
+// ReadJson allows you to read the bytes reader as an event
+func ReadJson(out *Event, reader io.Reader) error {
 	iterator := jsoniter.Parse(jsoniter.ConfigFastest, reader, 1024)
 
 	// Parsing dependency graph:
@@ -215,7 +67,7 @@ func unmarshalJSON(reader io.Reader, e *Event) error {
 
 		// If it's a specversion, trigger state change
 		if key == "specversion" {
-			if checkFlag(state, SpecVersionV1Flag|SpecVersionV03Flag) {
+			if checkFlag(state, specVersionV1Flag|specVersionV03Flag) {
 				return fmt.Errorf("specversion was already provided")
 			}
 			sv := iterator.ReadString()
@@ -223,23 +75,107 @@ func unmarshalJSON(reader io.Reader, e *Event) error {
 			// Check proper specversion
 			switch sv {
 			case CloudEventsVersionV1:
-				e.Context = &EventContextV1{}
-				appendFlag(&state, SpecVersionV1Flag)
+				out.Context = &EventContextV1{}
+				appendFlag(&state, specVersionV1Flag)
 			case CloudEventsVersionV03:
-				e.Context = &EventContextV03{}
-				appendFlag(&state, SpecVersionV03Flag)
+				out.Context = &EventContextV03{}
+				appendFlag(&state, specVersionV03Flag)
 			default:
 				return fmt.Errorf("unexpected specversion '%s'", sv)
 			}
 
-			if err := drainTokenQueue(tokenQueue, e, &state, &cachedData); err != nil {
-				return err
+			// Now we have a specversion, so drain the token queue
+			switch ctx := out.Context.(type) {
+			case *EventContextV03:
+				for i := 0; i < tokenQueue.i; i++ {
+					val := tokenQueue.slice[i].value
+					var err error
+					switch tokenQueue.slice[i].key {
+					case "id":
+						ctx.ID = val.ToString()
+					case "type":
+						ctx.Type = val.ToString()
+					case "source":
+						ctx.Source, err = toUriRef(val)
+					case "subject":
+						ctx.Subject, err = toStrPtr(val)
+					case "time":
+						ctx.Time, err = toTimestamp(val)
+					case "schemaurl":
+						ctx.SchemaURL, err = toUriRefPtr(val)
+					case "datacontenttype":
+						ctx.DataContentType, err = toStrPtr(val)
+						appendFlag(&state, dataContentTypeFlag)
+					case "datacontentencoding":
+						ctx.DataContentEncoding, err = toStrPtr(val)
+						if *ctx.DataContentEncoding != Base64 {
+							err = fmt.Errorf("invalid datacontentencoding value: '%s'", *ctx.DataContentEncoding)
+						}
+						appendFlag(&state, dataBase64Flag)
+					case "data":
+						stream := jsoniter.NewStream(jsoniter.ConfigFastest, nil, 1024)
+						val.WriteTo(stream)
+						cachedData = stream.Buffer()
+						err = stream.Error
+					default:
+						value := val.GetInterface()
+						if ctx.Extensions == nil {
+							ctx.Extensions = make(map[string]interface{}, 1)
+						}
+						err = ctx.SetExtension(tokenQueue.slice[i].key, value)
+					}
+					if err != nil {
+						return err
+					}
+				}
+			case *EventContextV1:
+				for i := 0; i < tokenQueue.i; i++ {
+					val := tokenQueue.slice[i].value
+					var err error
+					switch tokenQueue.slice[i].key {
+					case "id":
+						ctx.ID = val.ToString()
+					case "type":
+						ctx.Type = val.ToString()
+					case "source":
+						ctx.Source, err = toUriRef(val)
+					case "subject":
+						ctx.Subject, err = toStrPtr(val)
+					case "time":
+						ctx.Time, err = toTimestamp(val)
+					case "dataschema":
+						ctx.DataSchema, err = toUriPtr(val)
+					case "datacontenttype":
+						ctx.DataContentType, err = toStrPtr(val)
+						appendFlag(&state, dataContentTypeFlag)
+					case "data":
+						stream := jsoniter.NewStream(jsoniter.ConfigFastest, nil, 1024)
+						val.WriteTo(stream)
+						cachedData = stream.Buffer()
+						err = stream.Error
+					case "data_base64":
+						stream := jsoniter.NewStream(jsoniter.ConfigFastest, nil, 1024)
+						val.WriteTo(stream)
+						cachedData = stream.Buffer()
+						err = stream.Error
+						appendFlag(&state, dataBase64Flag)
+					default:
+						value := val.GetInterface()
+						if ctx.Extensions == nil {
+							ctx.Extensions = make(map[string]interface{}, 1)
+						}
+						err = ctx.SetExtension(tokenQueue.slice[i].key, value)
+					}
+					if err != nil {
+						return err
+					}
+				}
 			}
 			continue
 		}
 
 		// If no specversion, enqueue unconditionally
-		if !checkFlag(state, SpecVersionV03Flag|SpecVersionV1Flag) {
+		if !checkFlag(state, specVersionV03Flag|specVersionV1Flag) {
 			tokenQueue.push(key, iterator.ReadAny())
 			continue
 		}
@@ -248,20 +184,25 @@ func unmarshalJSON(reader io.Reader, e *Event) error {
 
 		// If it's a datacontenttype, trigger state change
 		if key == "datacontenttype" {
-			if checkFlag(state, DataContentTypeFlag) {
+			if checkFlag(state, dataContentTypeFlag) {
 				return fmt.Errorf("datacontenttype was already provided")
 			}
 
 			dct := iterator.ReadString()
 
-			e.SetDataContentType(dct)
-			appendFlag(&state, DataContentTypeFlag)
+			switch ctx := out.Context.(type) {
+			case *EventContextV03:
+				ctx.DataContentType = &dct
+			case *EventContextV1:
+				ctx.DataContentType = &dct
+			}
+			appendFlag(&state, dataContentTypeFlag)
 			continue
 		}
 
 		// If it's a datacontentencoding and it's v0.3, trigger state change
-		if checkFlag(state, SpecVersionV03Flag) && key == "datacontentencoding" {
-			if checkFlag(state, DataBase64Flag) {
+		if checkFlag(state, specVersionV03Flag) && key == "datacontentencoding" {
+			if checkFlag(state, dataBase64Flag) {
 				return fmt.Errorf("datacontentencoding was already provided")
 			}
 
@@ -271,26 +212,74 @@ func unmarshalJSON(reader io.Reader, e *Event) error {
 				return fmt.Errorf("invalid datacontentencoding value: '%s'", dce)
 			}
 
-			e.Context.(*EventContextV03).DataContentEncoding = &dce
-			appendFlag(&state, DataBase64Flag)
+			out.Context.(*EventContextV03).DataContentEncoding = &dce
+			appendFlag(&state, dataBase64Flag)
 			continue
 		}
 
 		// We can parse all attributes, except data.
-		// If it's data or data_base64 and we don't have the attributes to process it, then we enqueue
-		if (!checkFlag(state, SpecVersionV1Flag&DataContentTypeFlag) && (key == "data" || key == "data_base64")) &&
-			(!checkFlag(state, SpecVersionV03Flag&DataContentTypeFlag&DataBase64Flag) && key == "data") {
+		// If it's data or data_base64 and we don't have the attributes to process it, then we cache it
+		// The expanded form of this condition is:
+		// (checkFlag(state, specVersionV1Flag) && !checkFlag(state, dataContentTypeFlag) && (key == "data" || key == "data_base64")) ||
+		// (checkFlag(state, specVersionV03Flag) && !(checkFlag(state, dataContentTypeFlag) && checkFlag(state, dataBase64Flag)) && key == "data")
+		if (state&(specVersionV1Flag|dataContentTypeFlag) == specVersionV1Flag && (key == "data" || key == "data_base64")) ||
+			((state&specVersionV03Flag == specVersionV03Flag) && (state&(dataContentTypeFlag|dataBase64Flag) != (dataContentTypeFlag | dataBase64Flag)) && key == "data") {
 			if key == "data_base64" {
-				appendFlag(&state, DataBase64Flag)
+				appendFlag(&state, dataBase64Flag)
 			}
 			cachedData = iterator.SkipAndReturnBytes()
 			continue
 		}
 
 		// At this point or this value is an attribute (excluding datacontenttype and datacontentencoding), or this value is data and this condition is valid:
-		// (SpecVersionV1Flag & DataContentTypeFlag) || (SpecVersionV03Flag & DataContentTypeFlag & DataBase64Flag)
-		if err := bestCaseProcessNext(iterator, state, key, e); err != nil {
-			return err
+		// (specVersionV1Flag & dataContentTypeFlag) || (specVersionV03Flag & dataContentTypeFlag & dataBase64Flag)
+		switch ctx := out.Context.(type) {
+		case *EventContextV03:
+			switch key {
+			case "id":
+				ctx.ID = iterator.ReadString()
+			case "type":
+				ctx.Type = iterator.ReadString()
+			case "source":
+				ctx.Source = readUriRef(iterator)
+			case "subject":
+				ctx.Subject = readStrPtr(iterator)
+			case "time":
+				ctx.Time = readTimestamp(iterator)
+			case "schemaurl":
+				ctx.SchemaURL = readUriRefPtr(iterator)
+			case "data":
+				iterator.Error = consumeData(out, checkFlag(state, dataBase64Flag), iterator)
+			default:
+				if ctx.Extensions == nil {
+					ctx.Extensions = make(map[string]interface{}, 1)
+				}
+				iterator.Error = ctx.SetExtension(key, iterator.ReadAny().GetInterface())
+			}
+		case *EventContextV1:
+			switch key {
+			case "id":
+				ctx.ID = iterator.ReadString()
+			case "type":
+				ctx.Type = iterator.ReadString()
+			case "source":
+				ctx.Source = readUriRef(iterator)
+			case "subject":
+				ctx.Subject = readStrPtr(iterator)
+			case "time":
+				ctx.Time = readTimestamp(iterator)
+			case "dataschema":
+				ctx.DataSchema = readUriPtr(iterator)
+			case "data":
+				iterator.Error = consumeData(out, false, iterator)
+			case "data_base64":
+				iterator.Error = consumeData(out, true, iterator)
+			default:
+				if ctx.Extensions == nil {
+					ctx.Extensions = make(map[string]interface{}, 1)
+				}
+				iterator.Error = ctx.SetExtension(key, iterator.ReadAny().GetInterface())
+			}
 		}
 	}
 
@@ -301,17 +290,10 @@ func unmarshalJSON(reader io.Reader, e *Event) error {
 	// If there is a dataToken cached, we always defer at the end the processing
 	// because nor datacontenttype or datacontentencoding are mandatory.
 	if cachedData != nil {
-		if err := drainData(e, checkFlag(state, DataBase64Flag), cachedData); err != nil {
-			return err
-		}
+		iter := jsoniter.ParseBytes(jsoniter.ConfigFastest, cachedData)
+		return consumeData(out, checkFlag(state, dataBase64Flag), iter)
 	}
-
 	return nil
-}
-
-func drainData(e *Event, isBase64 bool, value []byte) error {
-	iter := jsoniter.ParseBytes(jsoniter.ConfigFastest, value)
-	return consumeData(e, isBase64, iter)
 }
 
 func consumeData(e *Event, isBase64 bool, iter *jsoniter.Iterator) error {
@@ -321,8 +303,12 @@ func consumeData(e *Event, isBase64 bool, iter *jsoniter.Iterator) error {
 		// Allocate payload byte buffer
 		base64Encoded := iter.ReadStringAsSlice()
 		e.DataEncoded = make([]byte, base64.StdEncoding.DecodedLen(len(base64Encoded)))
-		_, err := base64.StdEncoding.Decode(e.DataEncoded, base64Encoded)
-		return err
+		len, err := base64.StdEncoding.Decode(e.DataEncoded, base64Encoded)
+		if err != nil {
+			return err
+		}
+		e.DataEncoded = e.DataEncoded[0:len]
+		return nil
 	}
 
 	ct := e.DataContentType()
@@ -359,6 +345,7 @@ func readUriRef(iter *jsoniter.Iterator) types.URIRef {
 	uriRef := types.ParseURIRef(str)
 	if uriRef == nil {
 		iter.Error = fmt.Errorf("cannot parse uri ref: %v", str)
+		return types.URIRef{}
 	}
 	return *uriRef
 }
@@ -441,10 +428,8 @@ func toTimestamp(val jsoniter.Any) (*types.Timestamp, error) {
 // UnmarshalJSON implements the json unmarshal method used when this type is
 // unmarshaled using json.Unmarshal.
 func (e *Event) UnmarshalJSON(b []byte) error {
-	//TODO wrap observability later
 	_, r := observability.NewReporter(context.Background(), eventJSONObserved{o: reportUnmarshal})
-
-	err := unmarshalJSON(bytes.NewReader(b), e)
+	err := ReadJson(e, bytes.NewReader(b))
 
 	// Report the observable
 	if err != nil {

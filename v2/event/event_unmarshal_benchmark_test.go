@@ -3,7 +3,6 @@ package event_test
 import (
 	"encoding/base64"
 	"encoding/json"
-	"strings"
 	"testing"
 	"time"
 
@@ -185,34 +184,4 @@ func BenchmarkUnmarshal(b *testing.B) {
 			}
 		})
 	}
-}
-
-// This is a little hack we need to create a json ordered.
-// This makes the bench reproducible for unmarshal
-type orderedJsonObjectBuilder strings.Builder
-
-func (b *orderedJsonObjectBuilder) Start() *orderedJsonObjectBuilder {
-	(*strings.Builder)(b).WriteRune('{')
-
-	return b
-}
-
-func (b *orderedJsonObjectBuilder) Add(key string, value interface{}) *orderedJsonObjectBuilder {
-	(*strings.Builder)(b).WriteRune('"')
-	(*strings.Builder)(b).WriteString(key)
-	(*strings.Builder)(b).WriteString("\":")
-
-	v, err := json.Marshal(value)
-	if err != nil {
-		panic(err)
-	}
-	(*strings.Builder)(b).Write(v)
-	(*strings.Builder)(b).WriteRune(',')
-
-	return b
-}
-
-func (b *orderedJsonObjectBuilder) End() string {
-	str := (*strings.Builder)(b).String()
-	return str[0:len(str)-1] + "}"
 }
