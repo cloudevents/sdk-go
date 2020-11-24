@@ -230,6 +230,44 @@ func TestUnmarshal(t *testing.T) {
 				DataEncoded: mustJsonMarshal(t, "This is a string."),
 			},
 		},
+		"array data v1.0": {
+			body: mustJsonMarshal(t, map[string]interface{}{
+				"specversion":     "1.0",
+				"datacontenttype": "application/json",
+				"data":            []string{"This is a string array"},
+				"id":              "ABC-123",
+				"time":            now.Format(time.RFC3339Nano),
+				"type":            "com.example.test",
+				"exbool":          true,
+				"exint":           42,
+				"exstring":        "exstring",
+				"exbinary":        "AAECAw==",
+				"exurl":           "http://example.com/source",
+				"extime":          now.Format(time.RFC3339Nano),
+				"dataschema":      "http://example.com/schema",
+				"source":          "http://example.com/source",
+			}),
+			want: &event.Event{
+				Context: event.EventContextV1{
+					Type:            "com.example.test",
+					Source:          *sourceV1,
+					DataSchema:      schemaV1,
+					ID:              "ABC-123",
+					Time:            &now,
+					DataContentType: event.StringOfApplicationJSON(),
+					Extensions: map[string]interface{}{
+						"exbool":   true, // Boolean should be preserved
+						"exint":    int32(42),
+						"exstring": "exstring",
+						// Since byte, url and time are encoded as string, the unmarshal should just convert them to string
+						"exbinary": "AAECAw==",
+						"exurl":    "http://example.com/source",
+						"extime":   now.Format(time.RFC3339Nano),
+					},
+				}.AsV1(),
+				DataEncoded: mustJsonMarshal(t, []string{"This is a string array"}),
+			},
+		},
 		"base64 json encoded data v1.0": {
 			body: mustJsonMarshal(t, map[string]interface{}{
 				"specversion":     "1.0",

@@ -86,30 +86,30 @@ func ReadJson(out *Event, reader io.Reader) error {
 			}
 
 			// Now we have a specversion, so drain the token queue
-			switch ctx := out.Context.(type) {
+			switch eventContext := out.Context.(type) {
 			case *EventContextV03:
 				for i := 0; i < tokenQueue.i; i++ {
 					val := tokenQueue.slice[i].value
 					var err error
 					switch tokenQueue.slice[i].key {
 					case "id":
-						ctx.ID = val.ToString()
+						eventContext.ID = val.ToString()
 					case "type":
-						ctx.Type = val.ToString()
+						eventContext.Type = val.ToString()
 					case "source":
-						ctx.Source, err = toUriRef(val)
+						eventContext.Source, err = toUriRef(val)
 					case "subject":
-						ctx.Subject, err = toStrPtr(val)
+						eventContext.Subject, err = toStrPtr(val)
 					case "time":
-						ctx.Time, err = toTimestamp(val)
+						eventContext.Time, err = toTimestamp(val)
 					case "schemaurl":
-						ctx.SchemaURL, err = toUriRefPtr(val)
+						eventContext.SchemaURL, err = toUriRefPtr(val)
 					case "datacontenttype":
-						ctx.DataContentType, err = toStrPtr(val)
+						eventContext.DataContentType, err = toStrPtr(val)
 						appendFlag(&state, dataContentTypeFlag)
 					case "datacontentencoding":
-						ctx.DataContentEncoding, err = toStrPtr(val)
-						if *ctx.DataContentEncoding != Base64 {
+						eventContext.DataContentEncoding, err = toStrPtr(val)
+						if *eventContext.DataContentEncoding != Base64 {
 							err = ValidationError{"datacontentencoding": errors.New("invalid datacontentencoding value, the only allowed value is 'base64'")}
 						}
 						appendFlag(&state, dataBase64Flag)
@@ -120,10 +120,10 @@ func ReadJson(out *Event, reader io.Reader) error {
 						err = stream.Error
 					default:
 						value := val.GetInterface()
-						if ctx.Extensions == nil {
-							ctx.Extensions = make(map[string]interface{}, 1)
+						if eventContext.Extensions == nil {
+							eventContext.Extensions = make(map[string]interface{}, 1)
 						}
-						err = ctx.SetExtension(tokenQueue.slice[i].key, value)
+						err = eventContext.SetExtension(tokenQueue.slice[i].key, value)
 					}
 					if err != nil {
 						return err
@@ -135,19 +135,19 @@ func ReadJson(out *Event, reader io.Reader) error {
 					var err error
 					switch tokenQueue.slice[i].key {
 					case "id":
-						ctx.ID = val.ToString()
+						eventContext.ID = val.ToString()
 					case "type":
-						ctx.Type = val.ToString()
+						eventContext.Type = val.ToString()
 					case "source":
-						ctx.Source, err = toUriRef(val)
+						eventContext.Source, err = toUriRef(val)
 					case "subject":
-						ctx.Subject, err = toStrPtr(val)
+						eventContext.Subject, err = toStrPtr(val)
 					case "time":
-						ctx.Time, err = toTimestamp(val)
+						eventContext.Time, err = toTimestamp(val)
 					case "dataschema":
-						ctx.DataSchema, err = toUriPtr(val)
+						eventContext.DataSchema, err = toUriPtr(val)
 					case "datacontenttype":
-						ctx.DataContentType, err = toStrPtr(val)
+						eventContext.DataContentType, err = toStrPtr(val)
 						appendFlag(&state, dataContentTypeFlag)
 					case "data":
 						stream := jsoniter.NewStream(jsoniter.ConfigFastest, nil, 1024)
@@ -162,10 +162,10 @@ func ReadJson(out *Event, reader io.Reader) error {
 						appendFlag(&state, dataBase64Flag)
 					default:
 						value := val.GetInterface()
-						if ctx.Extensions == nil {
-							ctx.Extensions = make(map[string]interface{}, 1)
+						if eventContext.Extensions == nil {
+							eventContext.Extensions = make(map[string]interface{}, 1)
 						}
-						err = ctx.SetExtension(tokenQueue.slice[i].key, value)
+						err = eventContext.SetExtension(tokenQueue.slice[i].key, value)
 					}
 					if err != nil {
 						return err
@@ -234,52 +234,52 @@ func ReadJson(out *Event, reader io.Reader) error {
 
 		// At this point or this value is an attribute (excluding datacontenttype and datacontentencoding), or this value is data and this condition is valid:
 		// (specVersionV1Flag & dataContentTypeFlag) || (specVersionV03Flag & dataContentTypeFlag & dataBase64Flag)
-		switch ctx := out.Context.(type) {
+		switch eventContext := out.Context.(type) {
 		case *EventContextV03:
 			switch key {
 			case "id":
-				ctx.ID = iterator.ReadString()
+				eventContext.ID = iterator.ReadString()
 			case "type":
-				ctx.Type = iterator.ReadString()
+				eventContext.Type = iterator.ReadString()
 			case "source":
-				ctx.Source = readUriRef(iterator)
+				eventContext.Source = readUriRef(iterator)
 			case "subject":
-				ctx.Subject = readStrPtr(iterator)
+				eventContext.Subject = readStrPtr(iterator)
 			case "time":
-				ctx.Time = readTimestamp(iterator)
+				eventContext.Time = readTimestamp(iterator)
 			case "schemaurl":
-				ctx.SchemaURL = readUriRefPtr(iterator)
+				eventContext.SchemaURL = readUriRefPtr(iterator)
 			case "data":
 				iterator.Error = consumeData(out, checkFlag(state, dataBase64Flag), iterator)
 			default:
-				if ctx.Extensions == nil {
-					ctx.Extensions = make(map[string]interface{}, 1)
+				if eventContext.Extensions == nil {
+					eventContext.Extensions = make(map[string]interface{}, 1)
 				}
-				iterator.Error = ctx.SetExtension(key, iterator.ReadAny().GetInterface())
+				iterator.Error = eventContext.SetExtension(key, iterator.ReadAny().GetInterface())
 			}
 		case *EventContextV1:
 			switch key {
 			case "id":
-				ctx.ID = iterator.ReadString()
+				eventContext.ID = iterator.ReadString()
 			case "type":
-				ctx.Type = iterator.ReadString()
+				eventContext.Type = iterator.ReadString()
 			case "source":
-				ctx.Source = readUriRef(iterator)
+				eventContext.Source = readUriRef(iterator)
 			case "subject":
-				ctx.Subject = readStrPtr(iterator)
+				eventContext.Subject = readStrPtr(iterator)
 			case "time":
-				ctx.Time = readTimestamp(iterator)
+				eventContext.Time = readTimestamp(iterator)
 			case "dataschema":
-				ctx.DataSchema = readUriPtr(iterator)
+				eventContext.DataSchema = readUriPtr(iterator)
 			case "data":
 				iterator.Error = consumeData(out, false, iterator)
 			case "data_base64":
 				iterator.Error = consumeData(out, true, iterator)
 			default:
-				if ctx.Extensions == nil {
-					ctx.Extensions = make(map[string]interface{}, 1)
+				if eventContext.Extensions == nil {
+					eventContext.Extensions = make(map[string]interface{}, 1)
 				}
-				iterator.Error = ctx.SetExtension(key, iterator.ReadAny().GetInterface())
+				iterator.Error = eventContext.SetExtension(key, iterator.ReadAny().GetInterface())
 			}
 		}
 	}
@@ -439,9 +439,8 @@ func (e *Event) UnmarshalJSON(b []byte) error {
 	// Report the observable
 	if err != nil {
 		r.Error()
-	} else {
-		r.OK()
+		return err
 	}
-	return err
-
+	r.OK()
+	return nil
 }
