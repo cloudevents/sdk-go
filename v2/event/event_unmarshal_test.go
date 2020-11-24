@@ -824,6 +824,12 @@ func TestUnmarshalWithOrderingError(t *testing.T) {
 			Add("dataschema", "http://example.com/schema").
 			Add("source", "http://example.com/source").
 			End(),
+		"no specversion": new(orderedJsonObjectBuilder).Start().
+			Add("id", "ABC-123").
+			Add("type", "com.example.test").
+			Add("dataschema", "http://example.com/schema").
+			Add("source", "http://example.com/source").
+			End(),
 		"wrong time": new(orderedJsonObjectBuilder).Start().
 			Add("specversion", "1.0").
 			Add("id", "ABC-123").

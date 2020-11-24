@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"io"
 
@@ -81,7 +82,7 @@ func ReadJson(out *Event, reader io.Reader) error {
 				out.Context = &EventContextV03{}
 				appendFlag(&state, specVersionV03Flag)
 			default:
-				return fmt.Errorf("unexpected specversion '%s'", sv)
+				return ValidationError{"specversion": errors.New("unknown value: " + sv)}
 			}
 
 			// Now we have a specversion, so drain the token queue
@@ -109,7 +110,7 @@ func ReadJson(out *Event, reader io.Reader) error {
 					case "datacontentencoding":
 						ctx.DataContentEncoding, err = toStrPtr(val)
 						if *ctx.DataContentEncoding != Base64 {
-							err = fmt.Errorf("invalid datacontentencoding value: '%s'", *ctx.DataContentEncoding)
+							err = ValidationError{"datacontentencoding": errors.New("invalid datacontentencoding value, the only allowed value is 'base64'")}
 						}
 						appendFlag(&state, dataBase64Flag)
 					case "data":
@@ -203,13 +204,13 @@ func ReadJson(out *Event, reader io.Reader) error {
 		// If it's a datacontentencoding and it's v0.3, trigger state change
 		if checkFlag(state, specVersionV03Flag) && key == "datacontentencoding" {
 			if checkFlag(state, dataBase64Flag) {
-				return fmt.Errorf("datacontentencoding was already provided")
+				return ValidationError{"datacontentencoding": errors.New("datacontentencoding was specified twice")}
 			}
 
 			dce := iterator.ReadString()
 
 			if dce != Base64 {
-				return fmt.Errorf("invalid datacontentencoding value: '%s'", dce)
+				return ValidationError{"datacontentencoding": errors.New("invalid datacontentencoding value, the only allowed value is 'base64'")}
 			}
 
 			out.Context.(*EventContextV03).DataContentEncoding = &dce
@@ -281,6 +282,10 @@ func ReadJson(out *Event, reader io.Reader) error {
 				iterator.Error = ctx.SetExtension(key, iterator.ReadAny().GetInterface())
 			}
 		}
+	}
+
+	if state&(specVersionV03Flag|specVersionV1Flag) == 0 {
+		return ValidationError{"specversion": errors.New("no specversion")}
 	}
 
 	if iterator.Error != nil {
