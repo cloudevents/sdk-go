@@ -44,9 +44,9 @@ func TestClientReceiver_Status_Codes(t *testing.T) {
 				Header:        http.Header{"content-type": {"text/plain"}},
 				Status:        fmt.Sprintf("%d %s", http.StatusBadRequest, http.StatusText(http.StatusBadRequest)),
 				ContentLength: 0,
-				Body:          "specversion: unknown : \"\"\n",
+				Body:          "specversion: no specversion\n",
 				BodyContains: []string{
-					"specversion: unknown : \"\"",
+					"specversion: no specversion",
 				},
 			},
 			receiverFuncFactory: func(cancelFunc context.CancelFunc) interface{} {
