@@ -13,7 +13,8 @@ import (
 	"github.com/cloudevents/sdk-go/v2/observability"
 )
 
-// WriteJson assumes the input event is valid
+// WriteJson writes the in event in the provided writer.
+// Note: this function assumes the input event is valid.
 func WriteJson(in *Event, writer io.Writer) error {
 	stream := jsoniter.NewStream(jsoniter.ConfigFastest, writer, 1024)
 	stream.WriteObjectStart()
