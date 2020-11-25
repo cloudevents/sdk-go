@@ -19,7 +19,7 @@ const specVersionV1Flag uint8 = 1 << 5
 const dataBase64Flag uint8 = 1 << 6
 const dataContentTypeFlag uint8 = 1 << 7
 
-const preallocQueueSize = 8 // at most the 5 overlapping fields, fitting cache lines.
+const preallocQueueSize = 4 // at most the 4 overlapping fields, fitting cache lines.
 
 func checkFlag(state uint8, flag uint8) bool {
 	return state&flag != 0
@@ -151,12 +151,6 @@ func readJsonFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 							err = ValidationError{"datacontentencoding": errors.New("invalid datacontentencoding value, the only allowed value is 'base64'")}
 						}
 						appendFlag(&state, dataBase64Flag)
-					case "data":
-						stream := jsoniter.ConfigFastest.BorrowStream(nil)
-						defer jsoniter.ConfigFastest.ReturnStream(stream)
-						val.WriteTo(stream)
-						cachedData = stream.Buffer()
-						err = stream.Error
 					default:
 						err = eventContext.SetExtension(entry.key, val.GetInterface())
 					}
@@ -171,12 +165,6 @@ func readJsonFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 					switch entry.key {
 					case "dataschema":
 						eventContext.DataSchema, err = toUriPtr(val)
-					case "data":
-						stream := jsoniter.ConfigFastest.BorrowStream(nil)
-						defer jsoniter.ConfigFastest.ReturnStream(stream)
-						val.WriteTo(stream)
-						cachedData = stream.Buffer()
-						err = stream.Error
 					case "data_base64":
 						stream := jsoniter.ConfigFastest.BorrowStream(nil)
 						defer jsoniter.ConfigFastest.ReturnStream(stream)
@@ -195,7 +183,7 @@ func readJsonFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 			continue
 		}
 
-		// If no specversion, enqueue unconditionally
+		// If no specversion ...
 		if !checkFlag(state, specVersionV03Flag|specVersionV1Flag) {
 			// Most of these keys can be parsed regardless of the specversion ...
 			switch key {
@@ -212,7 +200,9 @@ func readJsonFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 			case "datacontenttype":
 				datacontenttype = readStrPtr(iterator)
 				appendFlag(&state, dataContentTypeFlag)
-			case "data", "data_base64", "dataschema", "schemaurl", "datacontentencoding":
+			case "data":
+				cachedData = iterator.SkipAndReturnBytes()
+			case "data_base64", "dataschema", "schemaurl", "datacontentencoding":
 				// ... except these, they need to be parsed after specversion is known.
 				tokenQueue = append(tokenQueue, entry{key: key, value: iterator.ReadAny()})
 			default:
@@ -359,9 +349,14 @@ func consumeData(e *Event, isBase64 bool, iter *jsoniter.Iterator) error {
 	ct := e.DataContentType()
 	if ct != ApplicationJSON && ct != TextJSON {
 		// If not json, then data is encoded as string
-		src := iter.ReadStringAsSlice()
-		e.DataEncoded = make([]byte, len(src))
-		copy(e.DataEncoded, src)
+		src := iter.ReadString()
+
+		// Write through stream to unescape and copy.
+		stream := jsoniter.ConfigFastest.BorrowStream(nil)
+		defer jsoniter.ConfigFastest.ReturnStream(stream)
+		stream.WriteString(src)
+		b := stream.Buffer()
+		e.DataEncoded = b[1 : len(b)-1] // Remove the quotes.
 		return nil
 	}
 	e.DataEncoded = iter.SkipAndReturnBytes()
