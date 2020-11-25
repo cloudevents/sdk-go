@@ -275,7 +275,7 @@ func ReadJson(out *Event, reader io.Reader) error {
 				if eventContext.Extensions == nil {
 					eventContext.Extensions = make(map[string]interface{}, 1)
 				}
-				iterator.Error = eventContext.SetExtension(key, iterator.ReadAny().GetInterface())
+				iterator.Error = eventContext.SetExtension(key, iterator.Read())
 			}
 		case *EventContextV1:
 			switch key {
@@ -299,7 +299,7 @@ func ReadJson(out *Event, reader io.Reader) error {
 				if eventContext.Extensions == nil {
 					eventContext.Extensions = make(map[string]interface{}, 1)
 				}
-				iterator.Error = eventContext.SetExtension(key, iterator.ReadAny().GetInterface())
+				iterator.Error = eventContext.SetExtension(key, iterator.Read())
 			}
 		}
 	}
