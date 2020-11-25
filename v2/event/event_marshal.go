@@ -29,7 +29,6 @@ func WriteJson(in *Event, writer io.Writer) error {
 		// Set a bunch of variables we need later
 		ext = eventContext.Extensions
 		dct = eventContext.DataContentType
-		isBase64 = eventContext.DataContentEncoding != nil
 
 		stream.WriteObjectField("specversion")
 		stream.WriteString(CloudEventsVersionV03)
@@ -53,6 +52,7 @@ func WriteJson(in *Event, writer io.Writer) error {
 		}
 
 		if eventContext.DataContentEncoding != nil {
+			isBase64 = true
 			stream.WriteMore()
 			stream.WriteObjectField("datacontentencoding")
 			stream.WriteString(*eventContext.DataContentEncoding)
