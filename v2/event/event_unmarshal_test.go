@@ -829,6 +829,34 @@ func TestUnmarshalWithOrdering(t *testing.T) {
 				DataBase64:  true,
 			},
 		},
+		"base64 json encoded data v0.3 with data/data_base64 -> datacontenttype -> specversion -> datacontentencoding": {
+			body: new(orderedJsonObjectBuilder).Start().
+				Add("data_base64", "foo").
+				Add("data", base64.StdEncoding.EncodeToString([]byte(`{"hello":"world"}`))).
+				Add("id", "ABC-123").
+				Add("time", now.Format(time.RFC3339Nano)).
+				Add("type", "com.example.test").
+				Add("source", "http://example.com/source").
+				Add("datacontenttype", "application/json").
+				Add("specversion", "0.3").
+				Add("datacontentencoding", "base64").
+				End(),
+			want: &event.Event{
+				Context: event.EventContextV03{
+					Type:                "com.example.test",
+					Source:              *sourceV1,
+					ID:                  "ABC-123",
+					Time:                &now,
+					DataContentEncoding: strptr(event.Base64),
+					DataContentType:     event.StringOfApplicationJSON(),
+					Extensions: map[string]interface{}{
+						"data_base64": "foo",
+					},
+				}.AsV03(),
+				DataEncoded: mustJsonMarshal(t, map[string]interface{}{"hello": "world"}),
+				DataBase64:  true,
+			},
+		},
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
