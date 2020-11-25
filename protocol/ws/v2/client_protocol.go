@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"sync"
 
 	"nhooyr.io/websocket"
@@ -28,6 +29,24 @@ type ClientProtocol struct {
 
 	receiverLock sync.Mutex
 	connOwned    bool // whether this protocol created the connection
+}
+
+// Dial wraps websocket.Dial and creates the ClientProtocol.
+func Accept(ctx context.Context, w http.ResponseWriter, r *http.Request, opts *websocket.AcceptOptions) (*ClientProtocol, error) {
+	if opts == nil {
+		opts = &websocket.AcceptOptions{}
+	}
+	opts.Subprotocols = SupportedSubprotocols
+	c, err := websocket.Accept(w, r, opts)
+	if err != nil {
+		return nil, err
+	}
+	p, err := NewClientProtocol(c)
+	if err != nil {
+		return nil, err
+	}
+	p.connOwned = true
+	return p, nil
 }
 
 // Dial wraps websocket.Dial and creates the ClientProtocol.
