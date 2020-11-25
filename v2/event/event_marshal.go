@@ -16,7 +16,8 @@ import (
 // WriteJson writes the in event in the provided writer.
 // Note: this function assumes the input event is valid.
 func WriteJson(in *Event, writer io.Writer) error {
-	stream := jsoniter.NewStream(jsoniter.ConfigFastest, writer, 1024)
+	stream := jsoniter.ConfigFastest.BorrowStream(writer)
+	defer jsoniter.ConfigFastest.ReturnStream(stream)
 	stream.WriteObjectStart()
 
 	var ext map[string]interface{}
