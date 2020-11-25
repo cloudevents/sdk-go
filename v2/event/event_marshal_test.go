@@ -67,14 +67,14 @@ func TestMarshal(t *testing.T) {
 				"specversion":     "0.3",
 				"datacontenttype": "application/json",
 				"data": map[string]interface{}{
-					"a": float64(42),
+					"a": 42,
 					"b": "testing",
 				},
 				"id":        "ABC-123",
 				"time":      now.Format(time.RFC3339Nano),
 				"type":      "com.example.test",
 				"exbool":    true,
-				"exint":     float64(42),
+				"exint":     42,
 				"exstring":  "exstring",
 				"exbinary":  "AAECAw==",
 				"exurl":     "http://example.com/source",
@@ -109,7 +109,7 @@ func TestMarshal(t *testing.T) {
 				"time":            now.Format(time.RFC3339Nano),
 				"type":            "com.example.test",
 				"exbool":          true,
-				"exint":           float64(42),
+				"exint":           42,
 				"exstring":        "exstring",
 				"exbinary":        "AAECAw==",
 				"exurl":           "http://example.com/source",
@@ -148,7 +148,7 @@ func TestMarshal(t *testing.T) {
 				"time":            now.Format(time.RFC3339Nano),
 				"type":            "com.example.test",
 				"exbool":          true,
-				"exint":           float64(42),
+				"exint":           42,
 				"exstring":        "exstring",
 				"exbinary":        "AAECAw==",
 				"exurl":           "http://example.com/source",
@@ -186,14 +186,14 @@ func TestMarshal(t *testing.T) {
 				"specversion":     "1.0",
 				"datacontenttype": "application/json",
 				"data": map[string]interface{}{
-					"a": float64(42),
+					"a": 42,
 					"b": "testing",
 				},
 				"id":         "ABC-123",
 				"time":       now.Format(time.RFC3339Nano),
 				"type":       "com.example.test",
 				"exbool":     true,
-				"exint":      float64(42),
+				"exint":      42,
 				"exstring":   "exstring",
 				"exbinary":   "AAECAw==",
 				"exurl":      "http://example.com/source",
@@ -228,7 +228,7 @@ func TestMarshal(t *testing.T) {
 				"time":            now.Format(time.RFC3339Nano),
 				"type":            "com.example.test",
 				"exbool":          true,
-				"exint":           float64(42),
+				"exint":           42,
 				"exstring":        "exstring",
 				"exbinary":        "AAECAw==",
 				"exurl":           "http://example.com/source",
@@ -267,7 +267,7 @@ func TestMarshal(t *testing.T) {
 				"time":            now.Format(time.RFC3339Nano),
 				"type":            "com.example.test",
 				"exbool":          true,
-				"exint":           float64(42),
+				"exint":           42,
 				"exstring":        "exstring",
 				"exbinary":        "AAECAw==",
 				"exurl":           "http://example.com/source",
@@ -368,7 +368,7 @@ func TestMarshal(t *testing.T) {
 			want: map[string]interface{}{
 				"specversion":     "1.0",
 				"datacontenttype": "application/json",
-				"data":            float64(101),
+				"data":            101,
 				"id":              "ABC-123",
 				"time":            now.Format(time.RFC3339Nano),
 				"type":            "com.example.test",
@@ -392,11 +392,7 @@ func TestMarshal(t *testing.T) {
 				return
 			}
 
-			// so we can understand the diff, turn bytes to map
-			var got map[string]interface{}
-			require.NoError(t, json.Unmarshal(gotBytes, &got))
-
-			require.Equal(t, tc.want, got)
+			assertJsonEquals(t, tc.want, gotBytes)
 		})
 	}
 }
@@ -405,4 +401,17 @@ func mustJsonMarshal(tb testing.TB, body interface{}) []byte {
 	b, err := json.Marshal(body)
 	require.NoError(tb, err)
 	return b
+}
+
+func assertJsonEquals(t *testing.T, want map[string]interface{}, got []byte) {
+	var gotToCompare map[string]interface{}
+	require.NoError(t, json.Unmarshal(got, &gotToCompare))
+
+	// Marshal and unmarshal want to make sure the types are correct
+	wantBytes, err := json.Marshal(want)
+	require.NoError(t, err)
+	var wantToCompare map[string]interface{}
+	require.NoError(t, json.Unmarshal(wantBytes, &wantToCompare))
+
+	require.Equal(t, wantToCompare, gotToCompare)
 }

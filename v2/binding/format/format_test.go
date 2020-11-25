@@ -1,6 +1,7 @@
 package format_test
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -23,7 +24,15 @@ func TestJSON(t *testing.T) {
 	require.NoError(e.SetData(event.ApplicationJSON, "foo"))
 	b, err := format.JSON.Marshal(&e)
 	require.NoError(err)
-	require.Equal(`{"data":"foo","datacontenttype":"application/json","ex":"val","id":"id","source":"source","specversion":"0.3","type":"type"}`, string(b))
+	assertJsonEquals(t, map[string]interface{}{
+		"data":            "foo",
+		"datacontenttype": "application/json",
+		"ex":              "val",
+		"id":              "id",
+		"source":          "source",
+		"specversion":     "0.3",
+		"type":            "type",
+	}, b)
 
 	var e2 event.Event
 	require.NoError(format.JSON.Unmarshal(b, &e2))
@@ -65,7 +74,14 @@ func TestMarshalUnmarshal(t *testing.T) {
 	require.NoError(e.SetData(event.ApplicationJSON, "foo"))
 	b, err := format.Marshal(format.JSON.MediaType(), &e)
 	require.NoError(err)
-	require.Equal(`{"data":"foo","datacontenttype":"application/json","id":"id","source":"source","specversion":"0.3","type":"type"}`, string(b))
+	assertJsonEquals(t, map[string]interface{}{
+		"data":            "foo",
+		"datacontenttype": "application/json",
+		"id":              "id",
+		"source":          "source",
+		"specversion":     "0.3",
+		"type":            "type",
+	}, b)
 
 	var e2 event.Event
 	require.NoError(format.Unmarshal(format.JSON.MediaType(), b, &e2))
@@ -98,4 +114,17 @@ func TestAdd(t *testing.T) {
 	err = format.Unmarshal("dummy", b, &e)
 	require.NoError(err)
 	require.Equal([]byte("undummy!"), e.Data())
+}
+
+func assertJsonEquals(t *testing.T, want map[string]interface{}, got []byte) {
+	var gotToCompare map[string]interface{}
+	require.NoError(t, json.Unmarshal(got, &gotToCompare))
+
+	// Marshal and unmarshal want to make sure the types are correct
+	wantBytes, err := json.Marshal(want)
+	require.NoError(t, err)
+	var wantToCompare map[string]interface{}
+	require.NoError(t, json.Unmarshal(wantBytes, &wantToCompare))
+
+	require.Equal(t, wantToCompare, gotToCompare)
 }
