@@ -51,10 +51,7 @@ func ReadJson(out *Event, reader io.Reader) error {
 	//                              Data
 
 	var state uint8 = 0
-	tokenQueue := &tokenQueue{
-		slice: make([]entry, preallocQueueSize),
-		i:     0,
-	}
+	tokenQueue := make([]entry, 0, preallocQueueSize)
 	var cachedData []byte
 
 	for key := iterator.ReadObject(); key != ""; key = iterator.ReadObject() {
@@ -88,10 +85,10 @@ func ReadJson(out *Event, reader io.Reader) error {
 			// Now we have a specversion, so drain the token queue
 			switch eventContext := out.Context.(type) {
 			case *EventContextV03:
-				for i := 0; i < tokenQueue.i; i++ {
-					val := tokenQueue.slice[i].value
+				for _, entry := range tokenQueue {
+					val := entry.value
 					var err error
-					switch tokenQueue.slice[i].key {
+					switch entry.key {
 					case "id":
 						eventContext.ID = val.ToString()
 					case "type":
@@ -123,17 +120,17 @@ func ReadJson(out *Event, reader io.Reader) error {
 						if eventContext.Extensions == nil {
 							eventContext.Extensions = make(map[string]interface{}, 1)
 						}
-						err = eventContext.SetExtension(tokenQueue.slice[i].key, value)
+						err = eventContext.SetExtension(entry.key, value)
 					}
 					if err != nil {
 						return err
 					}
 				}
 			case *EventContextV1:
-				for i := 0; i < tokenQueue.i; i++ {
-					val := tokenQueue.slice[i].value
+				for _, entry := range tokenQueue {
+					val := entry.value
 					var err error
-					switch tokenQueue.slice[i].key {
+					switch entry.key {
 					case "id":
 						eventContext.ID = val.ToString()
 					case "type":
@@ -165,7 +162,7 @@ func ReadJson(out *Event, reader io.Reader) error {
 						if eventContext.Extensions == nil {
 							eventContext.Extensions = make(map[string]interface{}, 1)
 						}
-						err = eventContext.SetExtension(tokenQueue.slice[i].key, value)
+						err = eventContext.SetExtension(entry.key, value)
 					}
 					if err != nil {
 						return err
@@ -177,7 +174,7 @@ func ReadJson(out *Event, reader io.Reader) error {
 
 		// If no specversion, enqueue unconditionally
 		if !checkFlag(state, specVersionV03Flag|specVersionV1Flag) {
-			tokenQueue.push(key, iterator.ReadAny())
+			tokenQueue = append(tokenQueue, entry{key: key, value: iterator.ReadAny()})
 			continue
 		}
 
@@ -326,23 +323,6 @@ func consumeData(e *Event, isBase64 bool, iter *jsoniter.Iterator) error {
 	}
 	e.DataEncoded = iter.SkipAndReturnBytes()
 	return nil
-}
-
-type tokenQueue struct {
-	slice []entry
-	i     int
-}
-
-func (q *tokenQueue) push(key string, raw jsoniter.Any) {
-	if q.i < len(q.slice) {
-		q.slice[q.i].key = key
-		q.slice[q.i].value = raw
-	} else {
-		e := entry{key: key, value: raw}
-		q.slice = append(q.slice, e)
-	}
-
-	q.i++
 }
 
 func readUriRef(iter *jsoniter.Iterator) types.URIRef {
