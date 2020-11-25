@@ -74,6 +74,51 @@ func TestClientProtocolPingPongWithClient(t *testing.T) {
 	AssertEvent(t, pong, HasId("2"), HasType("pong"))
 }
 
+func TestClientServerProtocolPingPong(t *testing.T) {
+	server := httptest.NewServer(pingPongProtocolHandler(t))
+	defer server.Close()
+
+	p, err := Dial(context.TODO(), server.URL, nil)
+	require.NoError(t, err)
+
+	ping := pingEvent()
+	require.NoError(t, p.Send(context.TODO(), binding.ToMessage(&ping)))
+
+	receivedMessage, err := p.Receive(context.TODO())
+	require.NoError(t, err)
+
+	pong, err := binding.ToEvent(context.TODO(), receivedMessage)
+	require.NoError(t, err)
+
+	AssertEvent(t, *pong, HasId("2"), HasType("pong"))
+
+	require.NoError(t, p.Close(context.TODO()))
+}
+
+func pingPongProtocolHandler(t *testing.T) http.HandlerFunc {
+	return func(writer http.ResponseWriter, request *http.Request) {
+		ctx := request.Context()
+		p, err := Accept(ctx, writer, request, &websocket.AcceptOptions{Subprotocols: SupportedSubprotocols})
+
+		require.NoError(t, err)
+		require.Equal(t, JsonSubprotocol, p.conn.Subprotocol())
+
+		m, err := p.Receive(ctx)
+		require.NoError(t, err)
+
+		ping, err := binding.ToEvent(ctx, m)
+		require.NoError(t, err)
+		AssertEvent(t, *ping, HasId("1"), HasType("ping"))
+
+		pong := ping.Clone()
+		pong.SetID("2")
+		pong.SetType("pong")
+
+		require.NoError(t, p.Send(ctx, binding.ToMessage(&pong)))
+		require.NoError(t, p.Close(ctx))
+	}
+}
+
 func pingPongHandler(t *testing.T) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		c, err := websocket.Accept(writer, request, &websocket.AcceptOptions{Subprotocols: SupportedSubprotocols})

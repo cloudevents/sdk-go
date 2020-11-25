@@ -17,11 +17,11 @@ import (
 	"github.com/cloudevents/sdk-go/v2/protocol"
 )
 
-// ClientProtocol implements protocol.Receiver, protocol.Sender and protocol.Closer.
+// Protocol implements protocol.Receiver, protocol.Sender and protocol.Closer.
 // Note: when you use client.StartReceiver with this protocol, you can use just one
 // goroutine to poll this protocol, because the protocol itself cannot handle multiple
 // received messages at same time (WS has no multiplexing!)
-type ClientProtocol struct {
+type Protocol struct {
 	conn *websocket.Conn
 
 	format      format.Format
@@ -31,8 +31,8 @@ type ClientProtocol struct {
 	connOwned    bool // whether this protocol created the connection
 }
 
-// Dial wraps websocket.Dial and creates the ClientProtocol.
-func Accept(ctx context.Context, w http.ResponseWriter, r *http.Request, opts *websocket.AcceptOptions) (*ClientProtocol, error) {
+// Dial wraps websocket.Dial and creates the Protocol.
+func Accept(ctx context.Context, w http.ResponseWriter, r *http.Request, opts *websocket.AcceptOptions) (*Protocol, error) {
 	if opts == nil {
 		opts = &websocket.AcceptOptions{}
 	}
@@ -41,7 +41,7 @@ func Accept(ctx context.Context, w http.ResponseWriter, r *http.Request, opts *w
 	if err != nil {
 		return nil, err
 	}
-	p, err := NewClientProtocol(c)
+	p, err := NewProtocol(c)
 	if err != nil {
 		return nil, err
 	}
@@ -49,8 +49,8 @@ func Accept(ctx context.Context, w http.ResponseWriter, r *http.Request, opts *w
 	return p, nil
 }
 
-// Dial wraps websocket.Dial and creates the ClientProtocol.
-func Dial(ctx context.Context, u string, opts *websocket.DialOptions) (*ClientProtocol, error) {
+// Dial wraps websocket.Dial and creates the Protocol.
+func Dial(ctx context.Context, u string, opts *websocket.DialOptions) (*Protocol, error) {
 	if opts == nil {
 		opts = &websocket.DialOptions{}
 	}
@@ -59,7 +59,7 @@ func Dial(ctx context.Context, u string, opts *websocket.DialOptions) (*ClientPr
 	if err != nil {
 		return nil, err
 	}
-	p, err := NewClientProtocol(c)
+	p, err := NewProtocol(c)
 	if err != nil {
 		return nil, err
 	}
@@ -67,14 +67,14 @@ func Dial(ctx context.Context, u string, opts *websocket.DialOptions) (*ClientPr
 	return p, nil
 }
 
-// NewClientProtocol wraps a websocket.Conn in a type that implements protocol.Receiver, protocol.Sender and protocol.Closer.
-// Look at ClientProtocol for more details.
-func NewClientProtocol(c *websocket.Conn) (*ClientProtocol, error) {
+// NewProtocol wraps a websocket.Conn in a type that implements protocol.Receiver, protocol.Sender and protocol.Closer.
+// Look at Protocol for more details.
+func NewProtocol(c *websocket.Conn) (*Protocol, error) {
 	f, messageType, err := resolveFormat(c.Subprotocol())
 	if err != nil {
 		return nil, err
 	}
-	return &ClientProtocol{
+	return &Protocol{
 		conn:        c,
 		format:      f,
 		messageType: messageType,
@@ -82,7 +82,7 @@ func NewClientProtocol(c *websocket.Conn) (*ClientProtocol, error) {
 	}, nil
 }
 
-func (c *ClientProtocol) Send(ctx context.Context, m binding.Message, transformers ...binding.Transformer) error {
+func (c *Protocol) Send(ctx context.Context, m binding.Message, transformers ...binding.Transformer) error {
 	writer, err := c.conn.Writer(ctx, c.messageType)
 	if err != nil {
 		return err
@@ -90,7 +90,7 @@ func (c *ClientProtocol) Send(ctx context.Context, m binding.Message, transforme
 	return utils.WriteStructured(ctx, m, writer, transformers...)
 }
 
-func (c *ClientProtocol) Receive(ctx context.Context) (binding.Message, error) {
+func (c *Protocol) Receive(ctx context.Context) (binding.Message, error) {
 	c.receiverLock.Lock()
 	m, err := c.UnsafeReceive(ctx)
 	if m != nil {
@@ -105,7 +105,7 @@ func (c *ClientProtocol) Receive(ctx context.Context) (binding.Message, error) {
 
 // UnsafeReceive is like Receive, except it doesn't guard from multiple invocations
 // from different goroutines.
-func (c *ClientProtocol) UnsafeReceive(ctx context.Context) (binding.Message, error) {
+func (c *Protocol) UnsafeReceive(ctx context.Context) (binding.Message, error) {
 	messageType, reader, err := c.conn.Reader(ctx)
 	if errors.Is(err, io.EOF) || errors.Is(err, websocket.CloseError{}) || (ctx.Err() != nil && errors.Is(err, ctx.Err())) {
 		return nil, io.EOF
@@ -128,7 +128,7 @@ func consumeStream(reader io.Reader) {
 	ioutil.ReadAll(reader)
 }
 
-func (c *ClientProtocol) Close(ctx context.Context) error {
+func (c *Protocol) Close(ctx context.Context) error {
 	if c.connOwned {
 		statusCode := websocket.StatusNormalClosure
 		if val := ctx.Value(codeKey{}); val != nil {
@@ -145,6 +145,6 @@ func (c *ClientProtocol) Close(ctx context.Context) error {
 	return nil
 }
 
-var _ protocol.Receiver = (*ClientProtocol)(nil)
-var _ protocol.Sender = (*ClientProtocol)(nil)
-var _ protocol.Closer = (*ClientProtocol)(nil)
+var _ protocol.Receiver = (*Protocol)(nil)
+var _ protocol.Sender = (*Protocol)(nil)
+var _ protocol.Closer = (*Protocol)(nil)
