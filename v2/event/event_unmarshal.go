@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"sync"
 
 	jsoniter "github.com/json-iterator/go"
 
@@ -34,9 +35,28 @@ type entry struct {
 	value jsoniter.Any
 }
 
+var iterPool = sync.Pool{
+	New: func() interface{} {
+		return jsoniter.Parse(jsoniter.ConfigFastest, nil, 1024)
+	},
+}
+
+func borrowIterator(reader io.Reader) *jsoniter.Iterator {
+	iter := iterPool.Get().(*jsoniter.Iterator)
+	iter.Reset(reader)
+	return iter
+}
+
+func returnIterator(iter *jsoniter.Iterator) {
+	iter.Error = nil
+	iter.Attachment = nil
+	iterPool.Put(iter)
+}
+
 // ReadJson allows you to read the bytes reader as an event
 func ReadJson(out *Event, reader io.Reader) error {
-	iterator := jsoniter.Parse(jsoniter.ConfigFastest, reader, 1024)
+	iterator := borrowIterator(reader)
+	defer returnIterator(iterator)
 
 	// Parsing dependency graph:
 	//         SpecVersion
@@ -111,7 +131,8 @@ func ReadJson(out *Event, reader io.Reader) error {
 						}
 						appendFlag(&state, dataBase64Flag)
 					case "data":
-						stream := jsoniter.NewStream(jsoniter.ConfigFastest, nil, 1024)
+						stream := jsoniter.ConfigFastest.BorrowStream(nil)
+						defer jsoniter.ConfigFastest.ReturnStream(stream)
 						val.WriteTo(stream)
 						cachedData = stream.Buffer()
 						err = stream.Error
@@ -147,12 +168,14 @@ func ReadJson(out *Event, reader io.Reader) error {
 						eventContext.DataContentType, err = toStrPtr(val)
 						appendFlag(&state, dataContentTypeFlag)
 					case "data":
-						stream := jsoniter.NewStream(jsoniter.ConfigFastest, nil, 1024)
+						stream := jsoniter.ConfigFastest.BorrowStream(nil)
+						defer jsoniter.ConfigFastest.ReturnStream(stream)
 						val.WriteTo(stream)
 						cachedData = stream.Buffer()
 						err = stream.Error
 					case "data_base64":
-						stream := jsoniter.NewStream(jsoniter.ConfigFastest, nil, 1024)
+						stream := jsoniter.ConfigFastest.BorrowStream(nil)
+						defer jsoniter.ConfigFastest.ReturnStream(stream)
 						val.WriteTo(stream)
 						cachedData = stream.Buffer()
 						err = stream.Error
