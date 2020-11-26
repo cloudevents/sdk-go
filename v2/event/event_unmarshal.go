@@ -19,7 +19,7 @@ const specVersionV1Flag uint8 = 1 << 5
 const dataBase64Flag uint8 = 1 << 6
 const dataContentTypeFlag uint8 = 1 << 7
 
-const preallocQueueSize = 5 // at most the 5 overlapping fields
+const preallocQueueSize = 8 // at most the 5 overlapping fields, fitting cache lines.
 
 func checkFlag(state uint8, flag uint8) bool {
 	return state&flag != 0
@@ -216,9 +216,6 @@ func readJsonFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 				// ... except these, they need to be parsed after specversion is known.
 				tokenQueue = append(tokenQueue, entry{key: key, value: iterator.ReadAny()})
 			default:
-				if extensions == nil {
-					extensions = make(map[string]interface{}, 1)
-				}
 				extensions[key] = iterator.Read()
 			}
 			continue
