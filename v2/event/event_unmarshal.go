@@ -1,7 +1,6 @@
 package event
 
 import (
-	"bytes"
 	"context"
 	"encoding/base64"
 	"errors"
@@ -53,11 +52,15 @@ func returnIterator(iter *jsoniter.Iterator) {
 	iterPool.Put(iter)
 }
 
-// ReadJson allows you to read the bytes reader as an event
 func ReadJson(out *Event, reader io.Reader) error {
 	iterator := borrowIterator(reader)
 	defer returnIterator(iterator)
 
+	return readJsonFromIterator(out, iterator)
+}
+
+// ReadJson allows you to read the bytes reader as an event
+func readJsonFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 	// Parsing dependency graph:
 	//         SpecVersion
 	//          ^     ^
@@ -437,7 +440,10 @@ func toTimestamp(val jsoniter.Any) (*types.Timestamp, error) {
 // unmarshaled using json.Unmarshal.
 func (e *Event) UnmarshalJSON(b []byte) error {
 	_, r := observability.NewReporter(context.Background(), eventJSONObserved{o: reportUnmarshal})
-	err := ReadJson(e, bytes.NewReader(b))
+
+	iterator := jsoniter.ConfigFastest.BorrowIterator(b)
+	defer jsoniter.ConfigFastest.ReturnIterator(iterator)
+	err := readJsonFromIterator(e, iterator)
 
 	// Report the observable
 	if err != nil {
