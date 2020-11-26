@@ -19,19 +19,12 @@ const specVersionV1Flag uint8 = 1 << 5
 const dataBase64Flag uint8 = 1 << 6
 const dataContentTypeFlag uint8 = 1 << 7
 
-const preallocQueueSize = 4 // at most the 4 overlapping fields, fitting cache lines.
-
 func checkFlag(state uint8, flag uint8) bool {
 	return state&flag != 0
 }
 
 func appendFlag(state *uint8, flag uint8) {
 	*state = (*state) | flag
-}
-
-type entry struct {
-	key   string
-	value jsoniter.Any
 }
 
 var iterPool = sync.Pool{
@@ -74,10 +67,10 @@ func readJsonFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 	//                              Data
 
 	var state uint8 = 0
-	tokenQueue := make([]entry, 0, preallocQueueSize)
 	var cachedData []byte
 
 	var (
+		// Universally parseable fields.
 		id              string
 		typ             string
 		source          types.URIRef
@@ -85,6 +78,12 @@ func readJsonFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 		time            *types.Timestamp
 		datacontenttype *string
 		extensions      = make(map[string]interface{})
+
+		// These fields require knowledge about the specversion to be parsed.
+		schemaurl           jsoniter.Any
+		datacontentencoding jsoniter.Any
+		dataschema          jsoniter.Any
+		dataBase64          jsoniter.Any
 	)
 
 	for key := iterator.ReadObject(); key != ""; key = iterator.ReadObject() {
@@ -106,7 +105,7 @@ func readJsonFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 			// Check proper specversion
 			switch sv {
 			case CloudEventsVersionV1:
-				out.Context = &EventContextV1{
+				con := &EventContextV1{
 					ID:              id,
 					Type:            typ,
 					Source:          source,
@@ -114,9 +113,38 @@ func readJsonFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 					Time:            time,
 					DataContentType: datacontenttype,
 				}
+
+				// Add the fields relevant for the version ...
+				if dataschema != nil {
+					var err error
+					con.DataSchema, err = toUriPtr(dataschema)
+					if err != nil {
+						return err
+					}
+				}
+				if dataBase64 != nil {
+					stream := jsoniter.ConfigFastest.BorrowStream(nil)
+					defer jsoniter.ConfigFastest.ReturnStream(stream)
+					dataBase64.WriteTo(stream)
+					cachedData = stream.Buffer()
+					if stream.Error != nil {
+						return stream.Error
+					}
+					appendFlag(&state, dataBase64Flag)
+				}
+
+				// ... add all remaining fields as extensions.
+				if schemaurl != nil {
+					extensions["schemaurl"] = schemaurl.GetInterface()
+				}
+				if datacontentencoding != nil {
+					extensions["datacontentencoding"] = datacontentencoding.GetInterface()
+				}
+
+				out.Context = con
 				appendFlag(&state, specVersionV1Flag)
 			case CloudEventsVersionV03:
-				out.Context = &EventContextV03{
+				con := &EventContextV03{
 					ID:              id,
 					Type:            typ,
 					Source:          source,
@@ -124,6 +152,34 @@ func readJsonFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 					Time:            time,
 					DataContentType: datacontenttype,
 				}
+				var err error
+				// Add the fields relevant for the version ...
+				if schemaurl != nil {
+					con.SchemaURL, err = toUriRefPtr(schemaurl)
+					if err != nil {
+						return err
+					}
+				}
+				if datacontentencoding != nil {
+					con.DataContentEncoding, err = toStrPtr(datacontentencoding)
+					if *con.DataContentEncoding != Base64 {
+						err = ValidationError{"datacontentencoding": errors.New("invalid datacontentencoding value, the only allowed value is 'base64'")}
+					}
+					if err != nil {
+						return err
+					}
+					appendFlag(&state, dataBase64Flag)
+				}
+
+				// ... add all remaining fields as extensions.
+				if dataschema != nil {
+					extensions["dataschema"] = dataschema.GetInterface()
+				}
+				if dataBase64 != nil {
+					extensions["data_base64"] = dataBase64.GetInterface()
+				}
+
+				out.Context = con
 				appendFlag(&state, specVersionV03Flag)
 			default:
 				return ValidationError{"specversion": errors.New("unknown value: " + sv)}
@@ -135,57 +191,11 @@ func readJsonFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 					return err
 				}
 			}
-
-			// Now we have a specversion, so drain the token queue
-			switch eventContext := out.Context.(type) {
-			case *EventContextV03:
-				for _, entry := range tokenQueue {
-					val := entry.value
-					var err error
-					switch entry.key {
-					case "schemaurl":
-						eventContext.SchemaURL, err = toUriRefPtr(val)
-					case "datacontentencoding":
-						eventContext.DataContentEncoding, err = toStrPtr(val)
-						if *eventContext.DataContentEncoding != Base64 {
-							err = ValidationError{"datacontentencoding": errors.New("invalid datacontentencoding value, the only allowed value is 'base64'")}
-						}
-						appendFlag(&state, dataBase64Flag)
-					default:
-						err = eventContext.SetExtension(entry.key, val.GetInterface())
-					}
-					if err != nil {
-						return err
-					}
-				}
-			case *EventContextV1:
-				for _, entry := range tokenQueue {
-					val := entry.value
-					var err error
-					switch entry.key {
-					case "dataschema":
-						eventContext.DataSchema, err = toUriPtr(val)
-					case "data_base64":
-						stream := jsoniter.ConfigFastest.BorrowStream(nil)
-						defer jsoniter.ConfigFastest.ReturnStream(stream)
-						val.WriteTo(stream)
-						cachedData = stream.Buffer()
-						err = stream.Error
-						appendFlag(&state, dataBase64Flag)
-					default:
-						err = eventContext.SetExtension(entry.key, val.GetInterface())
-					}
-					if err != nil {
-						return err
-					}
-				}
-			}
 			continue
 		}
 
 		// If no specversion ...
 		if !checkFlag(state, specVersionV03Flag|specVersionV1Flag) {
-			// Most of these keys can be parsed regardless of the specversion ...
 			switch key {
 			case "id":
 				id = iterator.ReadString()
@@ -202,9 +212,14 @@ func readJsonFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 				appendFlag(&state, dataContentTypeFlag)
 			case "data":
 				cachedData = iterator.SkipAndReturnBytes()
-			case "data_base64", "dataschema", "schemaurl", "datacontentencoding":
-				// ... except these, they need to be parsed after specversion is known.
-				tokenQueue = append(tokenQueue, entry{key: key, value: iterator.ReadAny()})
+			case "data_base64":
+				dataBase64 = iterator.ReadAny()
+			case "dataschema":
+				dataschema = iterator.ReadAny()
+			case "schemaurl":
+				schemaurl = iterator.ReadAny()
+			case "datacontentencoding":
+				datacontentencoding = iterator.ReadAny()
 			default:
 				extensions[key] = iterator.Read()
 			}
