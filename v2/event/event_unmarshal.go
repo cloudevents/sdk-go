@@ -325,9 +325,36 @@ func readJsonFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 	// If there is a dataToken cached, we always defer at the end the processing
 	// because nor datacontenttype or datacontentencoding are mandatory.
 	if cachedData != nil {
-		iter := jsoniter.ParseBytes(jsoniter.ConfigFastest, cachedData)
-		return consumeData(out, checkFlag(state, dataBase64Flag), iter)
+		return consumeDataAsBytes(out, checkFlag(state, dataBase64Flag), cachedData)
 	}
+	return nil
+}
+
+func consumeDataAsBytes(e *Event, isBase64 bool, b []byte) error {
+	if isBase64 {
+		e.DataBase64 = true
+
+		// Allocate payload byte buffer
+		base64Encoded := b[1 : len(b)-1] // remove quotes
+		e.DataEncoded = make([]byte, base64.StdEncoding.DecodedLen(len(base64Encoded)))
+		len, err := base64.StdEncoding.Decode(e.DataEncoded, base64Encoded)
+		if err != nil {
+			return err
+		}
+		e.DataEncoded = e.DataEncoded[0:len]
+		return nil
+	}
+
+	ct := e.DataContentType()
+	if ct != ApplicationJSON && ct != TextJSON {
+		// If not json, then data is encoded as string
+		iter := jsoniter.ParseBytes(jsoniter.ConfigFastest, b)
+		src := iter.ReadString() // handles escaping
+		e.DataEncoded = []byte(src)
+		return nil
+	}
+
+	e.DataEncoded = b
 	return nil
 }
 
