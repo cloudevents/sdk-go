@@ -19,7 +19,7 @@ const specVersionV1Flag uint8 = 1 << 5
 const dataBase64Flag uint8 = 1 << 6
 const dataContentTypeFlag uint8 = 1 << 7
 
-const preallocQueueSize = 16 // entry = 16 bytes, 16*16 = 256 bytes = 4 cache lines on x86_64
+const preallocQueueSize = 5 // at most the 5 overlapping fields
 
 func checkFlag(state uint8, flag uint8) bool {
 	return state&flag != 0
@@ -77,6 +77,16 @@ func readJsonFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 	tokenQueue := make([]entry, 0, preallocQueueSize)
 	var cachedData []byte
 
+	var (
+		id              string
+		typ             string
+		source          types.URIRef
+		subject         *string
+		time            *types.Timestamp
+		datacontenttype *string
+		extensions      = make(map[string]interface{})
+	)
+
 	for key := iterator.ReadObject(); key != ""; key = iterator.ReadObject() {
 		// Check if we have some error in our error cache
 		if iterator.Error != nil {
@@ -96,13 +106,34 @@ func readJsonFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 			// Check proper specversion
 			switch sv {
 			case CloudEventsVersionV1:
-				out.Context = &EventContextV1{}
+				out.Context = &EventContextV1{
+					ID:              id,
+					Type:            typ,
+					Source:          source,
+					Subject:         subject,
+					Time:            time,
+					DataContentType: datacontenttype,
+				}
 				appendFlag(&state, specVersionV1Flag)
 			case CloudEventsVersionV03:
-				out.Context = &EventContextV03{}
+				out.Context = &EventContextV03{
+					ID:              id,
+					Type:            typ,
+					Source:          source,
+					Subject:         subject,
+					Time:            time,
+					DataContentType: datacontenttype,
+				}
 				appendFlag(&state, specVersionV03Flag)
 			default:
 				return ValidationError{"specversion": errors.New("unknown value: " + sv)}
+			}
+
+			// Apply all extensions to the context object.
+			for key, val := range extensions {
+				if err := out.Context.SetExtension(key, val); err != nil {
+					return err
+				}
 			}
 
 			// Now we have a specversion, so drain the token queue
@@ -112,21 +143,8 @@ func readJsonFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 					val := entry.value
 					var err error
 					switch entry.key {
-					case "id":
-						eventContext.ID = val.ToString()
-					case "type":
-						eventContext.Type = val.ToString()
-					case "source":
-						eventContext.Source, err = toUriRef(val)
-					case "subject":
-						eventContext.Subject, err = toStrPtr(val)
-					case "time":
-						eventContext.Time, err = toTimestamp(val)
 					case "schemaurl":
 						eventContext.SchemaURL, err = toUriRefPtr(val)
-					case "datacontenttype":
-						eventContext.DataContentType, err = toStrPtr(val)
-						appendFlag(&state, dataContentTypeFlag)
 					case "datacontentencoding":
 						eventContext.DataContentEncoding, err = toStrPtr(val)
 						if *eventContext.DataContentEncoding != Base64 {
@@ -155,21 +173,8 @@ func readJsonFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 					val := entry.value
 					var err error
 					switch entry.key {
-					case "id":
-						eventContext.ID = val.ToString()
-					case "type":
-						eventContext.Type = val.ToString()
-					case "source":
-						eventContext.Source, err = toUriRef(val)
-					case "subject":
-						eventContext.Subject, err = toStrPtr(val)
-					case "time":
-						eventContext.Time, err = toTimestamp(val)
 					case "dataschema":
 						eventContext.DataSchema, err = toUriPtr(val)
-					case "datacontenttype":
-						eventContext.DataContentType, err = toStrPtr(val)
-						appendFlag(&state, dataContentTypeFlag)
 					case "data":
 						stream := jsoniter.ConfigFastest.BorrowStream(nil)
 						defer jsoniter.ConfigFastest.ReturnStream(stream)
@@ -200,7 +205,28 @@ func readJsonFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 
 		// If no specversion, enqueue unconditionally
 		if !checkFlag(state, specVersionV03Flag|specVersionV1Flag) {
-			tokenQueue = append(tokenQueue, entry{key: key, value: iterator.ReadAny()})
+			switch key {
+			case "id":
+				id = iterator.ReadString()
+			case "type":
+				typ = iterator.ReadString()
+			case "source":
+				source = readUriRef(iterator)
+			case "subject":
+				subject = readStrPtr(iterator)
+			case "time":
+				time = readTimestamp(iterator)
+			case "datacontenttype":
+				datacontenttype = readStrPtr(iterator)
+				appendFlag(&state, dataContentTypeFlag)
+			case "data", "data_base64", "dataschema", "schemaurl", "datacontentencoding":
+				tokenQueue = append(tokenQueue, entry{key: key, value: iterator.ReadAny()})
+			default:
+				if extensions == nil {
+					extensions = make(map[string]interface{}, 1)
+				}
+				extensions[key] = iterator.Read()
+			}
 			continue
 		}
 
@@ -385,18 +411,6 @@ func readTimestamp(iter *jsoniter.Iterator) *types.Timestamp {
 	return t
 }
 
-func toUriRef(val jsoniter.Any) (types.URIRef, error) {
-	str := val.ToString()
-	if val.LastError() != nil {
-		return types.URIRef{}, val.LastError()
-	}
-	uriRef := types.ParseURIRef(str)
-	if uriRef == nil {
-		return types.URIRef{}, fmt.Errorf("cannot parse uri ref: %v", str)
-	}
-	return *uriRef, nil
-}
-
 func toStrPtr(val jsoniter.Any) (*string, error) {
 	str := val.ToString()
 	if val.LastError() != nil {
@@ -422,18 +436,6 @@ func toUriPtr(val jsoniter.Any) (*types.URI, error) {
 		return nil, val.LastError()
 	}
 	return types.ParseURI(str), nil
-}
-
-func toTimestamp(val jsoniter.Any) (*types.Timestamp, error) {
-	str := val.ToString()
-	if val.LastError() != nil {
-		return nil, val.LastError()
-	}
-	t, err := types.ParseTimestamp(str)
-	if err != nil {
-		return nil, err
-	}
-	return t, nil
 }
 
 // UnmarshalJSON implements the json unmarshal method used when this type is
