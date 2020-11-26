@@ -349,16 +349,11 @@ func consumeData(e *Event, isBase64 bool, iter *jsoniter.Iterator) error {
 	ct := e.DataContentType()
 	if ct != ApplicationJSON && ct != TextJSON {
 		// If not json, then data is encoded as string
-		src := iter.ReadString()
-
-		// Write through stream to unescape and copy.
-		stream := jsoniter.ConfigFastest.BorrowStream(nil)
-		defer jsoniter.ConfigFastest.ReturnStream(stream)
-		stream.WriteString(src)
-		b := stream.Buffer()
-		e.DataEncoded = b[1 : len(b)-1] // Remove the quotes.
+		src := iter.ReadString() // handles escaping
+		e.DataEncoded = []byte(src)
 		return nil
 	}
+
 	e.DataEncoded = iter.SkipAndReturnBytes()
 	return nil
 }
