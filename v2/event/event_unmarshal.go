@@ -158,11 +158,7 @@ func readJsonFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 						cachedData = stream.Buffer()
 						err = stream.Error
 					default:
-						value := val.GetInterface()
-						if eventContext.Extensions == nil {
-							eventContext.Extensions = make(map[string]interface{}, 1)
-						}
-						err = eventContext.SetExtension(entry.key, value)
+						err = eventContext.SetExtension(entry.key, val.GetInterface())
 					}
 					if err != nil {
 						return err
@@ -189,11 +185,7 @@ func readJsonFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 						err = stream.Error
 						appendFlag(&state, dataBase64Flag)
 					default:
-						value := val.GetInterface()
-						if eventContext.Extensions == nil {
-							eventContext.Extensions = make(map[string]interface{}, 1)
-						}
-						err = eventContext.SetExtension(entry.key, value)
+						err = eventContext.SetExtension(entry.key, val.GetInterface())
 					}
 					if err != nil {
 						return err
@@ -205,6 +197,7 @@ func readJsonFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 
 		// If no specversion, enqueue unconditionally
 		if !checkFlag(state, specVersionV03Flag|specVersionV1Flag) {
+			// Most of these keys can be parsed regardless of the specversion ...
 			switch key {
 			case "id":
 				id = iterator.ReadString()
@@ -220,6 +213,7 @@ func readJsonFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 				datacontenttype = readStrPtr(iterator)
 				appendFlag(&state, dataContentTypeFlag)
 			case "data", "data_base64", "dataschema", "schemaurl", "datacontentencoding":
+				// ... except these, they need to be parsed after specversion is known.
 				tokenQueue = append(tokenQueue, entry{key: key, value: iterator.ReadAny()})
 			default:
 				if extensions == nil {
