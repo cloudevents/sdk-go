@@ -883,6 +883,30 @@ func TestUnmarshalWithOrdering(t *testing.T) {
 				DataBase64:  false,
 			},
 		},
+		"xml data v1.0": {
+			body: new(orderedJsonObjectBuilder).Start().
+				Add("specversion", "1.0").
+				Add("datacontenttype", event.ApplicationXML).
+				Add("data", string(mustEncodeWithDataCodec(t, event.ApplicationXML, XMLDataExample{AnInt: 5, AString: "aaa"}))).
+				Add("id", "ABC-123").
+				Add("time", now.Format(time.RFC3339Nano)).
+				Add("type", "com.example.test").
+				Add("dataschema", "http://example.com/schema").
+				Add("source", "http://example.com/source").
+				End(),
+			want: &event.Event{
+				Context: event.EventContextV1{
+					Type:            "com.example.test",
+					Source:          *sourceV1,
+					DataSchema:      schemaV1,
+					ID:              "ABC-123",
+					Time:            &now,
+					DataContentType: event.StringOfApplicationXML(),
+				}.AsV1(),
+				DataBase64:  false,
+				DataEncoded: mustEncodeWithDataCodec(t, event.ApplicationXML, &XMLDataExample{AnInt: 5, AString: "aaa"}),
+			},
+		},
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
