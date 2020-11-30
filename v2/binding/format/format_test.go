@@ -1,6 +1,8 @@
 package format_test
 
 import (
+	"bytes"
+	"io"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -21,12 +23,13 @@ func TestJSON(t *testing.T) {
 	}
 	e.SetExtension("ex", "val")
 	require.NoError(e.SetData(event.ApplicationJSON, "foo"))
-	b, err := format.JSON.Marshal(&e)
+	var b bytes.Buffer
+	err := format.JSON.Marshal(&b, &e)
 	require.NoError(err)
-	require.Equal(`{"data":"foo","datacontenttype":"application/json","ex":"val","id":"id","source":"source","specversion":"0.3","type":"type"}`, string(b))
+	require.Equal(`{"data":"foo","datacontenttype":"application/json","ex":"val","id":"id","source":"source","specversion":"0.3","type":"type"}`, b.String())
 
 	var e2 event.Event
-	require.NoError(format.JSON.Unmarshal(b, &e2))
+	require.NoError(format.JSON.Unmarshal(&b, &e2))
 	require.Equal(e, e2)
 }
 
@@ -63,25 +66,36 @@ func TestMarshalUnmarshal(t *testing.T) {
 		}.AsV03(),
 	}
 	require.NoError(e.SetData(event.ApplicationJSON, "foo"))
-	b, err := format.Marshal(format.JSON.MediaType(), &e)
+	var b bytes.Buffer
+	err := format.Marshal(format.JSON.MediaType(), &b, &e)
 	require.NoError(err)
-	require.Equal(`{"data":"foo","datacontenttype":"application/json","id":"id","source":"source","specversion":"0.3","type":"type"}`, string(b))
+	require.Equal(`{"data":"foo","datacontenttype":"application/json","id":"id","source":"source","specversion":"0.3","type":"type"}`, b.String())
 
 	var e2 event.Event
-	require.NoError(format.Unmarshal(format.JSON.MediaType(), b, &e2))
+	require.NoError(format.Unmarshal(format.JSON.MediaType(), &b, &e2))
 	require.Equal(e, e2)
+}
 
-	_, err = format.Marshal("nosuchformat", &e)
-	require.EqualError(err, "unknown event format media-type \"nosuchformat\"")
-	err = format.Unmarshal("nosuchformat", nil, &e)
-	require.EqualError(err, "unknown event format media-type \"nosuchformat\"")
+func TestNoFormat(t *testing.T) {
+	var e event.Event
+	var b bytes.Buffer
+
+	err := format.Marshal("nosuchformat", &b, &e)
+	require.EqualError(t, err, "unknown event format media-type \"nosuchformat\"")
+	err = format.Unmarshal("nosuchformat", &b, &e)
+	require.EqualError(t, err, "unknown event format media-type \"nosuchformat\"")
 }
 
 type dummyFormat struct{}
 
-func (dummyFormat) MediaType() string                    { return "dummy" }
-func (dummyFormat) Marshal(*event.Event) ([]byte, error) { return []byte("dummy!"), nil }
-func (dummyFormat) Unmarshal(b []byte, e *event.Event) error {
+func (dummyFormat) MediaType() string {
+	return "dummy"
+}
+func (dummyFormat) Marshal(w io.Writer, e *event.Event) error {
+	_, err := w.Write([]byte("dummy!"))
+	return err
+}
+func (dummyFormat) Unmarshal(r io.Reader, e *event.Event) error {
 	e.DataEncoded = []byte("undummy!")
 	return nil
 }
@@ -92,10 +106,13 @@ func TestAdd(t *testing.T) {
 	require.Equal(dummyFormat{}, format.Lookup("dummy"))
 
 	e := event.Event{}
-	b, err := format.Marshal("dummy", &e)
+	var b bytes.Buffer
+	err := format.Marshal("dummy", &b, &e)
 	require.NoError(err)
-	require.Equal("dummy!", string(b))
-	err = format.Unmarshal("dummy", b, &e)
+	require.Equal("dummy!", b.String())
+
+	b.Reset()
+	err = format.Unmarshal("dummy", &b, &e)
 	require.NoError(err)
 	require.Equal([]byte("undummy!"), e.Data())
 }

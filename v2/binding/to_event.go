@@ -61,13 +61,8 @@ type messageToEventBuilder event.Event
 var _ StructuredWriter = (*messageToEventBuilder)(nil)
 var _ BinaryWriter = (*messageToEventBuilder)(nil)
 
-func (b *messageToEventBuilder) SetStructuredEvent(ctx context.Context, format format.Format, ev io.Reader) error {
-	var buf bytes.Buffer
-	_, err := io.Copy(&buf, ev)
-	if err != nil {
-		return err
-	}
-	return format.Unmarshal(buf.Bytes(), (*event.Event)(b))
+func (b *messageToEventBuilder) SetStructuredEvent(ctx context.Context, format format.Format, reader io.Reader) error {
+	return format.Unmarshal(reader, (*event.Event)(b))
 }
 
 func (b *messageToEventBuilder) Start(ctx context.Context) error {

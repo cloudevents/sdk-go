@@ -3,6 +3,7 @@ package binding
 import (
 	"bytes"
 	"context"
+	"io"
 
 	"github.com/cloudevents/sdk-go/v2/binding/format"
 	"github.com/cloudevents/sdk-go/v2/binding/spec"
@@ -33,11 +34,12 @@ func (m *EventMessage) ReadEncoding() Encoding {
 
 func (m *EventMessage) ReadStructured(ctx context.Context, builder StructuredWriter) error {
 	f := GetOrDefaultFromCtx(ctx, formatEventStructured, format.JSON).(format.Format)
-	b, err := f.Marshal((*event.Event)(m))
-	if err != nil {
+	reader, writer := io.Pipe()
+
+	if err := f.Marshal(writer, (*event.Event)(m)); err != nil {
 		return err
 	}
-	return builder.SetStructuredEvent(ctx, f, bytes.NewReader(b))
+	return builder.SetStructuredEvent(ctx, f, reader)
 }
 
 func (m *EventMessage) ReadBinary(ctx context.Context, b BinaryWriter) (err error) {

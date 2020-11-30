@@ -1,8 +1,8 @@
 package format
 
 import (
-	"encoding/json"
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/cloudevents/sdk-go/v2/event"
@@ -12,10 +12,10 @@ import (
 type Format interface {
 	// MediaType identifies the format
 	MediaType() string
-	// Marshal event to bytes
-	Marshal(*event.Event) ([]byte, error)
-	// Unmarshal bytes to event
-	Unmarshal([]byte, *event.Event) error
+	// Marshal event to the provided writer
+	Marshal(io.Writer, *event.Event) error
+	// Unmarshal bytes from the provided reader
+	Unmarshal(io.Reader, *event.Event) error
 }
 
 // Prefix for event-format media types.
@@ -24,17 +24,20 @@ const Prefix = "application/cloudevents"
 // IsFormat returns true if mediaType begins with "application/cloudevents"
 func IsFormat(mediaType string) bool { return strings.HasPrefix(mediaType, Prefix) }
 
-// JSON is the built-in "application/cloudevents+json" format.
-var JSON = jsonFmt{}
-
 type jsonFmt struct{}
 
 func (jsonFmt) MediaType() string { return event.ApplicationCloudEventsJSON }
 
-func (jsonFmt) Marshal(e *event.Event) ([]byte, error) { return json.Marshal(e) }
-func (jsonFmt) Unmarshal(b []byte, e *event.Event) error {
-	return json.Unmarshal(b, e)
+func (jsonFmt) Marshal(w io.Writer, e *event.Event) error {
+	return event.WriteJson(w, e)
 }
+
+func (jsonFmt) Unmarshal(r io.Reader, e *event.Event) error {
+	return event.ReadJson(e, r)
+}
+
+// JSON is the built-in "application/cloudevents+json" format.
+var JSON Format = jsonFmt{}
 
 // built-in formats
 var formats map[string]Format
@@ -62,17 +65,17 @@ func unknown(mediaType string) error {
 func Add(f Format) { formats[f.MediaType()] = f }
 
 // Marshal an event to bytes using the mediaType event format.
-func Marshal(mediaType string, e *event.Event) ([]byte, error) {
+func Marshal(mediaType string, writer io.Writer, e *event.Event) error {
 	if f := formats[mediaType]; f != nil {
-		return f.Marshal(e)
+		return f.Marshal(writer, e)
 	}
-	return nil, unknown(mediaType)
+	return unknown(mediaType)
 }
 
 // Unmarshal bytes to an event using the mediaType event format.
-func Unmarshal(mediaType string, b []byte, e *event.Event) error {
+func Unmarshal(mediaType string, reader io.Reader, e *event.Event) error {
 	if f := formats[mediaType]; f != nil {
-		return f.Unmarshal(b, e)
+		return f.Unmarshal(reader, e)
 	}
 	return unknown(mediaType)
 }
