@@ -50,7 +50,8 @@ type Client interface {
 func New(obj interface{}, opts ...Option) (Client, error) {
 	c := &ceClient{
 		// Running runtime.GOMAXPROCS(0) doesn't update the value, just returns the current one
-		pollGoroutines: runtime.GOMAXPROCS(0),
+		pollGoroutines:       runtime.GOMAXPROCS(0),
+		observabilityService: noopObservabilityService{},
 	}
 
 	if p, ok := obj.(protocol.Sender); ok {
@@ -82,6 +83,8 @@ type ceClient struct {
 	responder protocol.Responder
 	// Optional.
 	opener protocol.Opener
+
+	observabilityService ObservabilityService
 
 	outboundContextDecorators []func(context.Context) context.Context
 	invoker                   Invoker
@@ -121,7 +124,10 @@ func (c *ceClient) Send(ctx context.Context, e event.Event) protocol.Result {
 	return c.sender.Send(ctx, (*binding.EventMessage)(&e))
 }
 
-func (c *ceClient) Request(ctx context.Context, e event.Event) (*event.Event, protocol.Result) {
+func (c *ceClient) Request(ctx context.Context, e event.Event) (resp *event.Event, res protocol.Result) {
+	ctx, cb := c.observabilityService.RecordRequestEvent(ctx, e)
+	defer cb(res, resp)
+
 	if c.requester == nil {
 		return nil, errors.New("requester not set")
 	}
@@ -140,17 +146,17 @@ func (c *ceClient) Request(ctx context.Context, e event.Event) (*event.Event, pr
 	}
 
 	// If provided a requester, use it to do request/response.
-	var resp *event.Event
-	msg, err := c.requester.Request(ctx, (*binding.EventMessage)(&e))
+	var msg binding.Message
+	msg, res = c.requester.Request(ctx, (*binding.EventMessage)(&e))
 	if msg != nil {
 		defer func() {
-			if err := msg.Finish(err); err != nil {
+			if err := msg.Finish(res); err != nil {
 				cecontext.LoggerFrom(ctx).Warnw("failed calling message.Finish", zap.Error(err))
 			}
 		}()
 	}
-	if protocol.IsUndelivered(err) {
-		return nil, err
+	if protocol.IsUndelivered(res) {
+		return
 	}
 
 	// try to turn msg into an event, it might not work and that is ok.
@@ -159,12 +165,12 @@ func (c *ceClient) Request(ctx context.Context, e event.Event) (*event.Event, pr
 		// If the protocol returns no error, it is an ACK on the request, but we had
 		// issues turning the response into an event, so make an ACK Result and pass
 		// down the ToEvent error as well.
-		err = protocol.NewReceipt(true, "failed to convert response into event: %s\n%w", rserr.Error(), err)
+		res = protocol.NewReceipt(true, "failed to convert response into event: %s\n%w", rserr.Error(), err)
 	} else {
 		resp = rs
 	}
 
-	return resp, err
+	return
 }
 
 // StartReceiver sets up the given fn to handle Receive.

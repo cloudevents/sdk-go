@@ -5,10 +5,42 @@ import (
 	"github.com/cloudevents/sdk-go/v2/event"
 	"github.com/cloudevents/sdk-go/v2/extensions"
 	"github.com/cloudevents/sdk-go/v2/observability"
+	"github.com/cloudevents/sdk-go/v2/protocol"
+
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/trace"
 )
+
+// ObservabilityService is an interface users can implement to record metrics, create tracing spans, and plug other observability tools in the Client
+type ObservabilityService interface {
+	// This is invoked before the user function is invoked.
+	// The returned callback will be invoked after the user finishes to process the event with the eventual processing error
+	RecordReceivedEvent(ctx context.Context, event event.Event) (context.Context, func(result protocol.Result))
+	// This is invoked before the event is sent.
+	// The returned callback will be invoked when the response is received
+	RecordSendingEvent(ctx context.Context, event event.Event) (context.Context, func(result protocol.Result))
+
+	// This is invoked before the event is requested.
+	// The returned callback will be invoked when the response is received
+	RecordRequestEvent(ctx context.Context, event event.Event) (context.Context, func(result protocol.Result, event *event.Event))
+}
+
+type noopObservabilityService struct{}
+
+func (n noopObservabilityService) RecordReceivedEvent(ctx context.Context, event event.Event) (context.Context, func(result protocol.Result)) {
+	return ctx, func(result protocol.Result) {}
+}
+
+func (n noopObservabilityService) RecordSendingEvent(ctx context.Context, event event.Event) (context.Context, func(result protocol.Result)) {
+	return ctx, func(result protocol.Result) {}
+}
+
+func (n noopObservabilityService) RecordRequestEvent(ctx context.Context, e event.Event) (context.Context, func(result protocol.Result, event *event.Event)) {
+	return ctx, func(result protocol.Result, event *event.Event) {}
+}
+
+// TODO remove all of this stuff below, unless some useful constants
 
 var (
 	// LatencyMs measures the latency in milliseconds for the CloudEvents

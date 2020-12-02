@@ -44,6 +44,7 @@ func (c *obsClient) applyOptions(opts ...Option) error {
 // an error if there was an an issue validating the outbound event or the
 // transport returns an error.
 func (c *obsClient) Send(ctx context.Context, e event.Event) protocol.Result {
+
 	ctx, r := observability.NewReporter(ctx, reportSend)
 	ctx, span := trace.StartSpan(ctx, observability.ClientSpanName, trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
