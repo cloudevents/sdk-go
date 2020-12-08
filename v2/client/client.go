@@ -223,7 +223,7 @@ func (c *ceClient) StartReceiver(ctx context.Context, fn interface{}) error {
 				}
 
 				if err != nil {
-					cecontext.LoggerFrom(ctx).Warnf("Error while receiving a message: %s", err)
+					cecontext.LoggerFrom(ctx).Warn("Error while receiving a message: ", err)
 					continue
 				}
 
@@ -231,7 +231,7 @@ func (c *ceClient) StartReceiver(ctx context.Context, fn interface{}) error {
 				wg.Add(1)
 				go func() {
 					if err := c.invoker.Invoke(ctx, msg, respFn); err != nil {
-						cecontext.LoggerFrom(ctx).Warnf("Error while handling a message: %s", err)
+						cecontext.LoggerFrom(ctx).Warn("Error while handling a message: ", err)
 					}
 					wg.Done()
 				}()
@@ -242,7 +242,7 @@ func (c *ceClient) StartReceiver(ctx context.Context, fn interface{}) error {
 	// Start the opener, if set.
 	if c.opener != nil {
 		if err = c.opener.OpenInbound(ctx); err != nil {
-			err = fmt.Errorf("error while opening the inbound connection: %s", err)
+			err = fmt.Errorf("error while opening the inbound connection: %w", err)
 			cancel()
 		}
 	}
