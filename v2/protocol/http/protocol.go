@@ -62,7 +62,7 @@ type Protocol struct {
 	// To support Opener:
 
 	// ShutdownTimeout defines the timeout given to the http.Server when calling Shutdown.
-	// If nil, DefaultShutdownTimeout is used.
+	// If 0, DefaultShutdownTimeout is used.
 	ShutdownTimeout time.Duration
 
 	// Port is the port configured to bind the receiver to. Defaults to 8080.

@@ -3,7 +3,6 @@ module github.com/cloudevents/sdk-go/v2
 go 1.14
 
 require (
-	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/golang/protobuf v1.3.2 // indirect
 	github.com/google/go-cmp v0.4.0
 	github.com/google/uuid v1.1.1
