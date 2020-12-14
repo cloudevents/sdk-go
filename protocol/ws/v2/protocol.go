@@ -107,7 +107,7 @@ func (c *Protocol) Receive(ctx context.Context) (binding.Message, error) {
 // from different goroutines.
 func (c *Protocol) UnsafeReceive(ctx context.Context) (binding.Message, error) {
 	messageType, reader, err := c.conn.Reader(ctx)
-	if errors.Is(err, io.EOF) || errors.Is(err, websocket.CloseError{}) || (ctx.Err() != nil && errors.Is(err, ctx.Err())) {
+	if errors.Is(err, io.EOF) || errors.Is(err, &websocket.CloseError{}) || (ctx.Err() != nil && errors.Is(err, ctx.Err())) {
 		return nil, io.EOF
 	}
 	if err != nil {
