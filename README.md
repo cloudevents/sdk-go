@@ -91,6 +91,7 @@ To marshal a CloudEvent into JSON:
 
 ```go
 event := cloudevents.NewEvent()
+event.SetID("example-uuid-32943bac6fea")
 event.SetSource("example/uri")
 event.SetType("example.type")
 event.SetData(cloudevents.ApplicationJSON, map[string]string{"hello": "world"})
