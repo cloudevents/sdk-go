@@ -46,7 +46,7 @@ func main() {
 			kafka_sarama.WithMessageKey(context.Background(), sarama.StringEncoder(e.ID())),
 			e,
 		); cloudevents.IsUndelivered(result) {
-			log.Printf("failed to send: %v", err)
+			log.Printf("failed to send: %v", result)
 		} else {
 			log.Printf("sent: %d, accepted: %t", i, cloudevents.IsACK(result))
 		}

@@ -64,7 +64,7 @@ func main() {
 		})
 
 		if result := c.Send(context.Background(), e); cloudevents.IsUndelivered(result) {
-			log.Printf("failed to send: %v", err)
+			log.Printf("failed to send: %v", result)
 		} else {
 			log.Printf("sent: %d, accepted: %t", i, cloudevents.IsACK(result))
 		}

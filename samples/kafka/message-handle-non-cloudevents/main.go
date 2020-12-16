@@ -61,7 +61,7 @@ func main() {
 				event.SetType("generated.examples")
 				event.SetSource("https://github.com/cloudevents/sdk-go/v2/samples/kafka/sender")
 
-				err := event.SetData(kafkaMessage.ContentType, kafkaMessage.Value)
+				err = event.SetData(kafkaMessage.ContentType, kafkaMessage.Value)
 				if err != nil {
 					log.Printf("Error while setting the event data: %s", err.Error())
 					continue
