@@ -28,8 +28,7 @@ func TestHeaderFrom(t *testing.T) {
 			args: args{
 				ctx: WithCustomHeader(context.TODO(), map[string][]string{"header": {"value"}}),
 			},
-			want: map[string][]string{"header": {"value"},
-			},
+			want: map[string][]string{"header": {"value"}},
 		},
 	}
 	for _, tt := range tests {
