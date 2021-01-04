@@ -49,12 +49,13 @@ func (r *Receiver) Close(context.Context) error {
 
 func (r *Receiver) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	for message := range claim.Messages() {
-		m := NewMessageFromConsumerMessage(message)
+		msg := message
+		m := NewMessageFromConsumerMessage(msg)
 
 		r.incoming <- msgErr{
 			msg: binding.WithFinish(m, func(err error) {
 				if protocol.IsACK(err) {
-					session.MarkMessage(message, "")
+					session.MarkMessage(msg, "")
 				}
 			}),
 		}
