@@ -41,17 +41,17 @@ var (
 // validate and invoke the provided function.
 // Valid fn signatures are:
 // * func()
-// * func() error
+// * func() protocol.Result
 // * func(context.Context)
-// * func(context.Context) transport.Result
+// * func(context.Context) protocol.Result
 // * func(event.Event)
 // * func(event.Event) transport.Result
 // * func(context.Context, event.Event)
-// * func(context.Context, event.Event) transport.Result
+// * func(context.Context, event.Event) protocol.Result
 // * func(event.Event) *event.Event
-// * func(event.Event) (*event.Event, transport.Result)
-// * func(context.Context, event.Event, *event.Event
-// * func(context.Context, event.Event) (*event.Event, transport.Result)
+// * func(event.Event) (*event.Event, protocol.Result)
+// * func(context.Context, event.Event) *event.Event
+// * func(context.Context, event.Event) (*event.Event, protocol.Result)
 //
 func receiver(fn interface{}) (*receiverFn, error) {
 	fnType := reflect.TypeOf(fn)
