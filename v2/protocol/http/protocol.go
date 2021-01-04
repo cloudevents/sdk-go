@@ -181,11 +181,9 @@ func (p *Protocol) Request(ctx context.Context, m binding.Message, transformers 
 }
 
 func (p *Protocol) makeRequest(ctx context.Context) *http.Request {
-	// TODO: support custom headers from context?
 	req := &http.Request{
 		Method: http.MethodPost,
-		Header: make(http.Header),
-		// TODO: HeaderFrom(ctx),
+		Header: HeaderFrom(ctx),
 	}
 
 	if p.RequestTemplate != nil {
