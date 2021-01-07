@@ -2,15 +2,12 @@ package event
 
 import (
 	"bytes"
-	"context"
 	"encoding/base64"
 	"fmt"
 	"io"
 	"strings"
 
 	jsoniter "github.com/json-iterator/go"
-
-	"github.com/cloudevents/sdk-go/v2/observability"
 )
 
 // WriteJson writes the in event in the provided writer.
@@ -193,21 +190,7 @@ func WriteJson(in *Event, writer io.Writer) error {
 // MarshalJSON implements a custom json marshal method used when this type is
 // marshaled using json.Marshal.
 func (e Event) MarshalJSON() ([]byte, error) {
-	_, r := observability.NewReporter(context.Background(), eventJSONObserved{o: reportMarshal, v: e.SpecVersion()})
-
-	if err := e.Validate(); err != nil {
-		r.Error()
-		return nil, err
-	}
-
 	var buf bytes.Buffer
 	err := WriteJson(&e, &buf)
-
-	// Report the observable
-	if err != nil {
-		r.Error()
-		return nil, err
-	}
-	r.OK()
-	return buf.Bytes(), nil
+	return buf.Bytes(), err
 }
