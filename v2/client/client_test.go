@@ -3,6 +3,7 @@ package client_test
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -81,6 +82,19 @@ func simpleStructuredClient(target string) client.Client {
 func TestClientSend(t *testing.T) {
 	now := time.Now()
 
+	structuredEvent := event.Event{
+		Context: event.EventContextV03{
+			Type:   "unit.test.client",
+			Source: *types.ParseURIRef("/unit/test/client"),
+			Time:   &types.Timestamp{Time: now},
+			ID:     "AABBCCDDEE",
+		}.AsV03(),
+	}
+	_ = structuredEvent.SetData(event.ApplicationJSON, &map[string]interface{}{
+		"sq":  42,
+		"msg": "hello",
+	})
+
 	testCases := map[string]struct {
 		c       func(target string) client.Client
 		event   event.Event
@@ -121,22 +135,8 @@ func TestClientSend(t *testing.T) {
 			},
 		},
 		"structured simple v0.3": {
-			c: simpleStructuredClient,
-			event: func() event.Event {
-				e := event.Event{
-					Context: event.EventContextV03{
-						Type:   "unit.test.client",
-						Source: *types.ParseURIRef("/unit/test/client"),
-						Time:   &types.Timestamp{Time: now},
-						ID:     "AABBCCDDEE",
-					}.AsV03(),
-				}
-				_ = e.SetData(event.ApplicationJSON, &map[string]interface{}{
-					"sq":  42,
-					"msg": "hello",
-				})
-				return e
-			}(),
+			c:     simpleStructuredClient,
+			event: structuredEvent,
 			resp: &http.Response{
 				StatusCode: http.StatusAccepted,
 			},
@@ -144,9 +144,10 @@ func TestClientSend(t *testing.T) {
 				Headers: map[string][]string{
 					"content-type": {"application/cloudevents+json"},
 				},
-				Body: []byte(fmt.Sprintf(`{"data":{"msg":"hello","sq":42},"datacontenttype":"application/json","id":"AABBCCDDEE","source":"/unit/test/client","specversion":"0.3","time":%q,"type":"unit.test.client"}`,
-					now.UTC().Format(time.RFC3339Nano)),
-				),
+				Body: func() []byte {
+					b, _ := json.Marshal(structuredEvent)
+					return b
+				}(),
 			},
 		},
 	}
