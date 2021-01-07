@@ -163,7 +163,7 @@ func (c *ceClient) Request(ctx context.Context, e event.Event) (*event.Event, pr
 		}()
 	}
 	if protocol.IsUndelivered(err) {
-		return resp, err
+		return nil, err
 	}
 
 	// try to turn msg into an event, it might not work and that is ok.
@@ -172,7 +172,7 @@ func (c *ceClient) Request(ctx context.Context, e event.Event) (*event.Event, pr
 		// If the protocol returns no error, it is an ACK on the request, but we had
 		// issues turning the response into an event, so make an ACK Result and pass
 		// down the ToEvent error as well.
-		err = protocol.NewReceipt(true, "failed to convert response into event: %w", rserr)
+		err = protocol.NewReceipt(true, "failed to convert response into event: %v\n%w", rserr, err)
 	} else {
 		resp = rs
 	}

@@ -19,7 +19,7 @@ func (o opencensusObservabilityService) RecordReceivedMalformedEvent(ctx context
 	r.Error()
 }
 
-func (o opencensusObservabilityService) RecordInvokerCalled(ctx context.Context, event *cloudevents.Event) (context.Context, func(errOrResult error)) {
+func (o opencensusObservabilityService) RecordCallingInvoker(ctx context.Context, event *cloudevents.Event) (context.Context, func(errOrResult error)) {
 	ctx, r := NewReporter(ctx, reportReceive)
 	return ctx, func(errOrResult error) {
 		if protocol.IsACK(errOrResult) {

@@ -61,10 +61,6 @@ func (r *receiveInvoker) Invoke(ctx context.Context, m binding.Message, respFn p
 			}
 		}
 
-		var cb func(error)
-		ctx, cb = r.observabilityService.RecordInvokerCalled(ctx, e)
-		defer cb(err)
-
 		// Let's invoke the receiver fn
 		var resp *event.Event
 		resp, result = func() (resp *event.Event, result protocol.Result) {
@@ -74,7 +70,13 @@ func (r *receiveInvoker) Invoke(ctx context.Context, m binding.Message, respFn p
 					cecontext.LoggerFrom(ctx).Error(result)
 				}
 			}()
-			resp, result = r.fn.invoke(extractContextFromMessage(m, ctx), e)
+			ctx = extractContextFromMessage(m, ctx)
+
+			var cb func(error)
+			ctx, cb = r.observabilityService.RecordCallingInvoker(ctx, e)
+			defer cb(result)
+
+			resp, result = r.fn.invoke(ctx, e)
 			return
 		}()
 
