@@ -3,7 +3,6 @@ package event
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"strings"
 )
 
