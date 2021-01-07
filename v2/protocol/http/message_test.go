@@ -53,6 +53,20 @@ func TestNewMessageFromHttpRequest(t *testing.T) {
 	}
 }
 
+type testContextKey struct{}
+
+func TestNewMessageFromHttpRequestContainsContext(t *testing.T) {
+	eventIn := test.FullEvent()
+	ctx := context.WithValue(context.Background(), testContextKey{}, "world")
+
+	req := httptest.NewRequest("POST", "http://localhost", nil).WithContext(ctx)
+	require.NoError(t, WriteRequest(ctx, (*binding.EventMessage)(&eventIn), req))
+
+	got := NewMessageFromHttpRequest(req)
+
+	require.Equal(t, ctx, got.Context())
+}
+
 func TestNewMessageFromHttpRequestUnknown(t *testing.T) {
 	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
 		req := httptest.NewRequest("POST", "http://localhost", bytes.NewReader([]byte("{}")))

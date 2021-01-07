@@ -110,21 +110,11 @@ func TestCodecDecode(t *testing.T) {
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 			got, _ := types.Allocate(tc.want)
-			gotObs, _ := types.Allocate(tc.want)
 
 			err := cej.Decode(context.TODO(), tc.in, got)
-			errObs := cej.DecodeObserved(context.TODO(), tc.in, gotObs)
-
-			if diff := cmpErrors(tc.wantErr, errObs); diff != "" {
-				t.Errorf("obs unexpected error (-want, +got) = %v", diff)
-			}
 
 			if diff := cmpErrors(tc.wantErr, err); diff != "" {
 				t.Errorf("unexpected error (-want, +got) = %v", diff)
-			}
-
-			if diff := cmp.Diff(gotObs, got); diff != "" {
-				t.Errorf("obs unexpected obj diff between observed and direct (-want, +got) = %v", diff)
 			}
 
 			if tc.wantErr == "" && tc.want != nil {
@@ -220,15 +210,6 @@ func TestCodecEncode(t *testing.T) {
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 			got, err := cej.Encode(context.TODO(), tc.in)
-
-			gotObs, errObs := cej.EncodeObserved(context.TODO(), tc.in)
-
-			if diff := cmpErrors(tc.wantErr, errObs); diff != "" {
-				t.Errorf("obs unexpected error (-want, +got) = %v", diff)
-			}
-			if diff := cmp.Diff(gotObs, got); diff != "" {
-				t.Errorf("obs unexpected obj diff between observed and direct (-want, +got) = %v", diff)
-			}
 
 			if diff := cmpErrors(tc.wantErr, err); diff != "" {
 				t.Errorf("unexpected error (-want, +got) = %v", diff)

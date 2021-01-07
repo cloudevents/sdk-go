@@ -15,8 +15,6 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/lightstep/tracecontext.go/traceparent"
-	"go.opencensus.io/trace"
 
 	"github.com/cloudevents/sdk-go/v2/client"
 	"github.com/cloudevents/sdk-go/v2/event"
@@ -45,20 +43,6 @@ func simpleBinaryClient(target string) client.Client {
 	}
 
 	c, err := client.New(p, client.WithForceBinary())
-	if err != nil {
-		return nil
-	}
-	return c
-}
-
-func simpleTracingBinaryClient(target string) client.Client {
-	p, err := cehttp.New(cehttp.WithTarget(target))
-	if err != nil {
-		log.Printf("failed to create protocol, %v", err)
-		return nil
-	}
-
-	c, err := client.NewObserved(p, client.WithTracePropagation())
 	if err != nil {
 		return nil
 	}
@@ -183,112 +167,6 @@ func TestClientSend(t *testing.T) {
 			rv := handler.popRequest(t)
 
 			assertEquality(t, server.URL, *tc.want, rv)
-		})
-	}
-}
-
-func TestTracingClientSend(t *testing.T) {
-	now := time.Now()
-
-	testCases := map[string]struct {
-		c        func(target string) client.Client
-		event    event.Event
-		resp     *http.Response
-		tpHeader string
-		sample   bool
-	}{
-		"send unsampled": {
-			c: simpleTracingBinaryClient,
-			event: func() event.Event {
-				e := event.Event{
-					Context: event.EventContextV1{
-						Type:   "unit.test.client",
-						Source: *types.ParseURIRef("/unit/test/client"),
-						Time:   &types.Timestamp{Time: now},
-						ID:     "AABBCCDDEE",
-					}.AsV1(),
-				}
-				_ = e.SetData(event.ApplicationJSON, &map[string]interface{}{
-					"sq":  42,
-					"msg": "hello",
-				})
-				return e
-			}(),
-			resp: &http.Response{
-				StatusCode: http.StatusAccepted,
-			},
-			tpHeader: "ce-traceparent",
-		},
-		"send sampled": {
-			c: simpleTracingBinaryClient,
-			event: func() event.Event {
-				e := event.Event{
-					Context: event.EventContextV1{
-						Type:   "unit.test.client",
-						Source: *types.ParseURIRef("/unit/test/client"),
-						Time:   &types.Timestamp{Time: now},
-						ID:     "AABBCCDDEE",
-					}.AsV1(),
-				}
-				_ = e.SetData(event.ApplicationJSON, &map[string]interface{}{
-					"sq":  42,
-					"msg": "hello",
-				})
-				return e
-			}(),
-			resp: &http.Response{
-				StatusCode: http.StatusAccepted,
-			},
-			sample:   true,
-			tpHeader: "ce-traceparent",
-		},
-	}
-	for n, tc := range testCases {
-		t.Run(n, func(t *testing.T) {
-			handler := &fakeHandler{
-				t:        t,
-				response: tc.resp,
-				requests: make([]requestValidation, 0),
-			}
-			server := httptest.NewServer(handler)
-			defer server.Close()
-
-			c := tc.c(server.URL)
-
-			var sampler trace.Sampler
-			if tc.sample {
-				sampler = trace.AlwaysSample()
-			} else {
-				sampler = trace.NeverSample()
-			}
-			ctx, span := trace.StartSpan(context.TODO(), "test-span", trace.WithSampler(sampler))
-			sc := span.SpanContext()
-
-			result := c.Send(ctx, tc.event)
-			span.End()
-
-			if !protocol.IsACK(result) {
-				t.Fatalf("failed to send event: %s", result)
-			}
-
-			rv := handler.popRequest(t)
-
-			var got traceparent.TraceParent
-			if tp := rv.Headers.Get(tc.tpHeader); tp == "" {
-				t.Fatal("missing traceparent header")
-			} else {
-				var err error
-				got, err = traceparent.ParseString(tp)
-				if err != nil {
-					t.Fatalf("invalid traceparent: %s", err)
-				}
-			}
-			if got.TraceID != sc.TraceID {
-				t.Errorf("unexpected trace id: want %s got %s", sc.TraceID, got.TraceID)
-			}
-			if got.Flags.Recorded != tc.sample {
-				t.Errorf("unexpected recorded flag: want %t got %t", tc.sample, got.Flags.Recorded)
-			}
 		})
 	}
 }
@@ -471,85 +349,6 @@ func TestClientReceive(t *testing.T) {
 				}
 			})
 		}
-	}
-}
-
-func TestTracedClientReceive(t *testing.T) {
-	now := time.Now()
-
-	testCases := map[string]struct {
-		optsFn func(port int, path string) []cehttp.Option
-		event  event.Event
-	}{
-		"simple binary v0.3": {
-			optsFn: simpleBinaryOptions,
-			event: func() event.Event {
-				e := event.Event{
-					Context: event.EventContextV03{
-						Type:   "unit.test.client",
-						Source: *types.ParseURIRef("/unit/test/client"),
-						Time:   &types.Timestamp{Time: now},
-						ID:     "AABBCCDDEE",
-					}.AsV03(),
-				}
-				_ = e.SetData(event.ApplicationJSON, &map[string]string{
-					"sq":  "42",
-					"msg": "hello",
-				})
-				return e
-			}(),
-		},
-	}
-	for n, tc := range testCases {
-		t.Run(n, func(t *testing.T) {
-			spanContexts := make(chan trace.SpanContext)
-
-			p, err := cehttp.New(tc.optsFn(0, "")...)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			c, err := client.New(p)
-			if err != nil {
-				t.Errorf("failed to make client %s", err.Error())
-			}
-
-			ctx, cancel := context.WithCancel(context.TODO())
-			go func() {
-				err = c.StartReceiver(ctx, func(ctx context.Context, e event.Event) (*event.Event, protocol.Result) {
-					go func() {
-						_, span := client.TraceSpan(ctx, e)
-						defer span.End()
-						spanContexts <- span.SpanContext()
-					}()
-					return nil, nil
-				})
-				if err != nil {
-					t.Errorf("failed to start receiver %s", err.Error())
-				}
-			}()
-			time.Sleep(5 * time.Millisecond) // let the server start
-
-			target := fmt.Sprintf("http://localhost:%d", p.GetListeningPort())
-			sender := simpleTracingBinaryClient(target)
-
-			ctx, span := trace.StartSpan(context.TODO(), "test-span")
-			result := sender.Send(ctx, tc.event)
-			span.End()
-
-			if !protocol.IsACK(result) {
-				t.Fatalf("failed to send event: %s", result)
-			}
-
-			got := <-spanContexts
-
-			if span.SpanContext().TraceID != got.TraceID {
-				t.Errorf("unexpected traceID. want: %s, got %s", span.SpanContext().TraceID, got.TraceID)
-			}
-
-			// Now stop the client
-			cancel()
-		})
 	}
 }
 

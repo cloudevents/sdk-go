@@ -5,19 +5,17 @@ import (
 )
 
 // NewDefault provides the good defaults for the common case using an HTTP
-// Protocol client. The http transport has had WithBinaryEncoding http
-// transport option applied to it. The client will always send Binary
-// encoding but will inspect the outbound event context and match the version.
+// Protocol client.
 // The WithTimeNow, and WithUUIDs client options are also applied to the
 // client, all outbound events will have a time and id set if not already
 // present.
 func NewDefault(opts ...http.Option) (Client, error) {
-	p, err := http.NewObserved(opts...)
+	p, err := http.New(opts...)
 	if err != nil {
 		return nil, err
 	}
 
-	c, err := NewObserved(p, WithTimeNow(), WithUUIDs())
+	c, err := New(p, WithTimeNow(), WithUUIDs())
 	if err != nil {
 		return nil, err
 	}

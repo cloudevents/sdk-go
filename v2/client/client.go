@@ -50,7 +50,8 @@ type Client interface {
 func New(obj interface{}, opts ...Option) (Client, error) {
 	c := &ceClient{
 		// Running runtime.GOMAXPROCS(0) doesn't update the value, just returns the current one
-		pollGoroutines: runtime.GOMAXPROCS(0),
+		pollGoroutines:       runtime.GOMAXPROCS(0),
+		observabilityService: noopObservabilityService{},
 	}
 
 	if p, ok := obj.(protocol.Sender); ok {
@@ -83,6 +84,8 @@ type ceClient struct {
 	// Optional.
 	opener protocol.Opener
 
+	observabilityService ObservabilityService
+
 	outboundContextDecorators []func(context.Context) context.Context
 	invoker                   Invoker
 	receiverMu                sync.Mutex
@@ -100,30 +103,40 @@ func (c *ceClient) applyOptions(opts ...Option) error {
 }
 
 func (c *ceClient) Send(ctx context.Context, e event.Event) protocol.Result {
+	var err error
+	ctx, cb := c.observabilityService.RecordSendingEvent(ctx, e)
+	defer cb(err)
 	if c.sender == nil {
-		return errors.New("sender not set")
-	}
-
-	for _, f := range c.outboundContextDecorators {
-		ctx = f(ctx)
-	}
-
-	if len(c.eventDefaulterFns) > 0 {
-		for _, fn := range c.eventDefaulterFns {
-			e = fn(ctx, e)
-		}
-	}
-
-	if err := e.Validate(); err != nil {
+		err = errors.New("sender not set")
 		return err
 	}
 
-	return c.sender.Send(ctx, (*binding.EventMessage)(&e))
+	for _, f := range c.outboundContextDecorators {
+		ctx = f(ctx)
+	}
+
+	if len(c.eventDefaulterFns) > 0 {
+		for _, fn := range c.eventDefaulterFns {
+			e = fn(ctx, e)
+		}
+	}
+	if err = e.Validate(); err != nil {
+		return err
+	}
+	err = c.sender.Send(ctx, (*binding.EventMessage)(&e))
+	return err
 }
 
 func (c *ceClient) Request(ctx context.Context, e event.Event) (*event.Event, protocol.Result) {
+	var resp *event.Event
+	var err error
+
+	ctx, cb := c.observabilityService.RecordRequestEvent(ctx, e)
+	defer cb(err, resp)
+
 	if c.requester == nil {
-		return nil, errors.New("requester not set")
+		err = errors.New("requester not set")
+		return nil, err
 	}
 	for _, f := range c.outboundContextDecorators {
 		ctx = f(ctx)
@@ -135,13 +148,13 @@ func (c *ceClient) Request(ctx context.Context, e event.Event) (*event.Event, pr
 		}
 	}
 
-	if err := e.Validate(); err != nil {
+	if err = e.Validate(); err != nil {
 		return nil, err
 	}
 
 	// If provided a requester, use it to do request/response.
-	var resp *event.Event
-	msg, err := c.requester.Request(ctx, (*binding.EventMessage)(&e))
+	var msg binding.Message
+	msg, err = c.requester.Request(ctx, (*binding.EventMessage)(&e))
 	if msg != nil {
 		defer func() {
 			if err := msg.Finish(err); err != nil {
@@ -159,7 +172,7 @@ func (c *ceClient) Request(ctx context.Context, e event.Event) (*event.Event, pr
 		// If the protocol returns no error, it is an ACK on the request, but we had
 		// issues turning the response into an event, so make an ACK Result and pass
 		// down the ToEvent error as well.
-		err = protocol.NewReceipt(true, "failed to convert response into event: %s\n%w", rserr.Error(), err)
+		err = protocol.NewReceipt(true, "failed to convert response into event: %v\n%w", rserr, err)
 	} else {
 		resp = rs
 	}
@@ -180,7 +193,7 @@ func (c *ceClient) StartReceiver(ctx context.Context, fn interface{}) error {
 		return fmt.Errorf("client already has a receiver")
 	}
 
-	invoker, err := newReceiveInvoker(fn, c.eventDefaulterFns...) // TODO: this will have to pick between a observed invoker or not.
+	invoker, err := newReceiveInvoker(fn, c.observabilityService, c.eventDefaulterFns...) // TODO: this will have to pick between a observed invoker or not.
 	if err != nil {
 		return err
 	}

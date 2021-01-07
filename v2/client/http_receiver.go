@@ -9,7 +9,7 @@ import (
 )
 
 func NewHTTPReceiveHandler(ctx context.Context, p *thttp.Protocol, fn interface{}) (*EventReceiver, error) {
-	invoker, err := newReceiveInvoker(fn)
+	invoker, err := newReceiveInvoker(fn, noopObservabilityService{})
 	if err != nil {
 		return nil, err
 	}
