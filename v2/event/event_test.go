@@ -224,8 +224,7 @@ func TestString(t *testing.T) {
 			event: event.Event{
 				Context: MinEventContextV03(),
 			},
-			want: `Validation: valid
-Context Attributes,
+			want: `Context Attributes,
   specversion: 0.3
   type: com.example.simple
   source: http://example.com/source
@@ -236,8 +235,7 @@ Context Attributes,
 			event: event.Event{
 				Context: MinEventContextV1(),
 			},
-			want: `Validation: valid
-Context Attributes,
+			want: `Context Attributes,
   specversion: 1.0
   type: com.example.simple
   source: http://example.com/source
@@ -249,8 +247,7 @@ Context Attributes,
 				Context:     FullEventContextV03(now),
 				DataEncoded: []byte(`{"a":"apple","b":"banana"}`),
 			},
-			want: fmt.Sprintf(`Validation: valid
-Context Attributes,
+			want: fmt.Sprintf(`Context Attributes,
   specversion: 0.3
   type: com.example.simple
   source: http://example.com/source
@@ -275,8 +272,7 @@ Data,
 				Context:     FullEventContextV1(now),
 				DataEncoded: []byte(`{"a":"apple","b":"banana"}`),
 			},
-			want: fmt.Sprintf(`Validation: valid
-Context Attributes,
+			want: fmt.Sprintf(`Context Attributes,
   specversion: 1.0
   type: com.example.simple
   source: http://example.com/source
