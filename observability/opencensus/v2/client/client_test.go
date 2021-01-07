@@ -1,4 +1,4 @@
-package v2
+package client
 
 import (
 	"bytes"
@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.opencensus.io/trace"
 
+	obshttp "github.com/cloudevents/sdk-go/observability/opencensus/v2/http"
 	"github.com/cloudevents/sdk-go/v2/client"
 	"github.com/cloudevents/sdk-go/v2/event"
 	"github.com/cloudevents/sdk-go/v2/protocol"
@@ -22,7 +23,7 @@ import (
 )
 
 func simpleTracingBinaryClient(t *testing.T, target string) client.Client {
-	p, err := NewObservedHTTP(cehttp.WithTarget(target))
+	p, err := obshttp.NewObservedHTTP(cehttp.WithTarget(target))
 	require.NoError(t, err)
 
 	c, err := client.New(p, client.WithObservabilityService(New()))
@@ -58,7 +59,7 @@ func TestTracedClientReceive(t *testing.T) {
 		t.Run(n, func(t *testing.T) {
 			spanContexts := make(chan trace.SpanContext, 1)
 
-			p, err := NewObservedHTTP(cehttp.WithPort(0))
+			p, err := obshttp.NewObservedHTTP(cehttp.WithPort(0))
 			require.NoError(t, err)
 			c, err := client.New(p, client.WithObservabilityService(New()))
 			require.NoError(t, err)

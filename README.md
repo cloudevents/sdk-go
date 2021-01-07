@@ -42,8 +42,7 @@ To send a CloudEvent using HTTP:
 
 ```go
 func main() {
-	// The default client is HTTP.
-	c, err := cloudevents.NewDefaultClient()
+	c, err := cloudevents.NewClientHTTP()
 	if err != nil {
 		log.Fatalf("failed to create client, %v", err)
 	}
@@ -76,7 +75,7 @@ func receive(event cloudevents.Event) {
 
 func main() {
 	// The default client is HTTP.
-	c, err := cloudevents.NewDefaultClient()
+	c, err := cloudevents.NewClientHTTP()
 	if err != nil {
 		log.Fatalf("failed to create client, %v", err)
 	}

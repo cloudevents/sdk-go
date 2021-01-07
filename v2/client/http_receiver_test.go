@@ -47,7 +47,7 @@ func TestEventReceiverServeHTTP_WithContext(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	c, err := cloudevents.NewDefaultClient()
+	c, err := cloudevents.NewClientHTTP()
 	if err != nil {
 		t.Fatal(err)
 	}
