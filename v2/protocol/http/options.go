@@ -182,6 +182,24 @@ func WithRoundTripper(roundTripper nethttp.RoundTripper) Option {
 	}
 }
 
+// WithRoundTripperDecorator decorates the default HTTP RoundTripper chosen.
+func WithRoundTripperDecorator(decorator func(roundTripper nethttp.RoundTripper) nethttp.RoundTripper) Option {
+	return func(p *Protocol) error {
+		if p == nil {
+			return fmt.Errorf("http round tripper option can not set nil protocol")
+		}
+		if p.roundTripper == nil {
+			if p.Client == nil {
+				p.roundTripper = nethttp.DefaultTransport
+			} else {
+				p.roundTripper = p.Client.Transport
+			}
+		}
+		p.roundTripper = decorator(p.roundTripper)
+		return nil
+	}
+}
+
 // WithClient sets the protocol client
 func WithClient(client nethttp.Client) Option {
 	return func(p *Protocol) error {

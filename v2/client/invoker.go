@@ -18,9 +18,10 @@ type Invoker interface {
 
 var _ Invoker = (*receiveInvoker)(nil)
 
-func newReceiveInvoker(fn interface{}, fns ...EventDefaulter) (Invoker, error) {
+func newReceiveInvoker(fn interface{}, observabilityService ObservabilityService, fns ...EventDefaulter) (Invoker, error) {
 	r := &receiveInvoker{
-		eventDefaulterFns: fns,
+		eventDefaulterFns:    fns,
+		observabilityService: observabilityService,
 	}
 
 	if fn, err := receiver(fn); err != nil {
@@ -33,8 +34,9 @@ func newReceiveInvoker(fn interface{}, fns ...EventDefaulter) (Invoker, error) {
 }
 
 type receiveInvoker struct {
-	fn                *receiverFn
-	eventDefaulterFns []EventDefaulter
+	fn                   *receiverFn
+	observabilityService ObservabilityService
+	eventDefaulterFns    []EventDefaulter
 }
 
 func (r *receiveInvoker) Invoke(ctx context.Context, m binding.Message, respFn protocol.ResponseFn) (err error) {
@@ -48,14 +50,20 @@ func (r *receiveInvoker) Invoke(ctx context.Context, m binding.Message, respFn p
 	e, eventErr := binding.ToEvent(ctx, m)
 	switch {
 	case eventErr != nil && r.fn.hasEventIn:
+		r.observabilityService.RecordReceivedMalformedEvent(ctx, eventErr)
 		return respFn(ctx, nil, protocol.NewReceipt(false, "failed to convert Message to Event: %w", eventErr))
 	case r.fn != nil:
 		// Check if event is valid before invoking the receiver function
 		if e != nil {
 			if validationErr := e.Validate(); validationErr != nil {
+				r.observabilityService.RecordReceivedMalformedEvent(ctx, validationErr)
 				return respFn(ctx, nil, protocol.NewReceipt(false, "validation error in incoming event: %w", validationErr))
 			}
 		}
+
+		var cb func(error)
+		ctx, cb = r.observabilityService.RecordReceivedEvent(ctx, *e)
+		defer cb(err)
 
 		// Let's invoke the receiver fn
 		var resp *event.Event
@@ -66,7 +74,7 @@ func (r *receiveInvoker) Invoke(ctx context.Context, m binding.Message, respFn p
 					cecontext.LoggerFrom(ctx).Error(result)
 				}
 			}()
-			resp, result = r.fn.invoke(ctx, e)
+			resp, result = r.fn.invoke(extractContextFromMessage(m, ctx), e)
 			return
 		}()
 
@@ -106,4 +114,14 @@ func (r *receiveInvoker) IsReceiver() bool {
 
 func (r *receiveInvoker) IsResponder() bool {
 	return r.fn.hasEventOut
+}
+
+func extractContextFromMessage(message binding.Message, fallback context.Context) context.Context {
+	if mctx, ok := message.(binding.MessageContext); ok {
+		return mctx.Context()
+	} else if mctx, ok := binding.UnwrapMessage(message).(binding.MessageContext); ok {
+		return mctx.Context()
+	} else {
+		return fallback
+	}
 }

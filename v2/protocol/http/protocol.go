@@ -15,8 +15,6 @@ import (
 	cecontext "github.com/cloudevents/sdk-go/v2/context"
 	"github.com/cloudevents/sdk-go/v2/event"
 	"github.com/cloudevents/sdk-go/v2/protocol"
-	"go.opencensus.io/plugin/ochttp"
-	"go.opencensus.io/plugin/ochttp/propagation/tracecontext"
 )
 
 const (
@@ -114,26 +112,10 @@ func New(opts ...Option) (*Protocol, error) {
 	return p, nil
 }
 
-func tracecontextMiddleware(h http.Handler) http.Handler {
-	return &ochttp.Handler{
-		Propagation: &tracecontext.HTTPFormat{},
-		Handler:     h,
-	}
-}
-
 // NewObserved creates an HTTP protocol with trace propagating middleware.
-func NewObserved(opts ...Option) (*Protocol, error) {
-	p, err := New(opts...)
-	if err != nil {
-		return nil, err
-	}
-	p.roundTripper = &ochttp.Transport{
-		Propagation: &tracecontext.HTTPFormat{},
-		Base:        p.roundTripper,
-	}
-	p.middleware = append(p.middleware, tracecontextMiddleware)
-	return p, nil
-}
+// Deprecated: now this behaves like New and it will be removed in future releases,
+// setup the http observed protocol using the opencensus separate module NewObservedHttp
+var NewObserved = New
 
 func (p *Protocol) applyOptions(opts ...Option) error {
 	for _, fn := range opts {

@@ -1,7 +1,6 @@
 package event
 
 import (
-	"context"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -10,7 +9,6 @@ import (
 
 	jsoniter "github.com/json-iterator/go"
 
-	"github.com/cloudevents/sdk-go/v2/observability"
 	"github.com/cloudevents/sdk-go/v2/types"
 )
 
@@ -464,17 +462,7 @@ func toUriPtr(val jsoniter.Any) (*types.URI, error) {
 // UnmarshalJSON implements the json unmarshal method used when this type is
 // unmarshaled using json.Unmarshal.
 func (e *Event) UnmarshalJSON(b []byte) error {
-	_, r := observability.NewReporter(context.Background(), eventJSONObserved{o: reportUnmarshal})
-
 	iterator := jsoniter.ConfigFastest.BorrowIterator(b)
 	defer jsoniter.ConfigFastest.ReturnIterator(iterator)
-	err := readJsonFromIterator(e, iterator)
-
-	// Report the observable
-	if err != nil {
-		r.Error()
-		return err
-	}
-	r.OK()
-	return nil
+	return readJsonFromIterator(e, iterator)
 }

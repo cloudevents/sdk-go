@@ -14,11 +14,10 @@ import (
 	"github.com/cloudevents/sdk-go/v2/event"
 	"github.com/cloudevents/sdk-go/v2/test"
 
+	"github.com/google/go-cmp/cmp"
+
 	"github.com/cloudevents/sdk-go/v2/extensions"
 	"github.com/cloudevents/sdk-go/v2/types"
-	"github.com/google/go-cmp/cmp"
-	"go.opencensus.io/trace"
-	"go.opencensus.io/trace/tracestate"
 )
 
 type Data struct {
@@ -207,96 +206,6 @@ func decodeSID(s string) (sid [8]byte, err error) {
 	buf, err := hex.DecodeString(s)
 	copy(sid[:], buf)
 	return
-}
-
-func TestConvertSpanContext(t *testing.T) {
-	tid, err := decodeTID("4bf92f3577b34da6a3ce929d0e0e4736")
-	if err != nil {
-		t.Fatalf("failed to decode traceID: %v", err)
-	}
-	sid, err := decodeSID("00f067aa0ba902b7")
-	if err != nil {
-		t.Fatalf("failed to decode spanID: %v", err)
-	}
-	ts, err := tracestate.New(nil,
-		tracestate.Entry{
-			Key:   "rojo",
-			Value: "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
-		},
-		tracestate.Entry{
-			Key:   "tenant@congo",
-			Value: "lZWRzIHRoNhcm5hbCBwbGVhc3VyZS4",
-		},
-	)
-	if err != nil {
-		t.Fatalf("failed to make tracestate: %v", err)
-	}
-	tests := []struct {
-		name string
-		sc   trace.SpanContext
-		ext  extensions.DistributedTracingExtension
-	}{{
-		name: "with tracestate",
-		sc: trace.SpanContext{
-			TraceID:      trace.TraceID(tid),
-			SpanID:       sid,
-			TraceOptions: 1,
-			Tracestate:   ts,
-		},
-		ext: extensions.DistributedTracingExtension{
-			TraceParent: "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
-			TraceState:  "rojo=00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01,tenant@congo=lZWRzIHRoNhcm5hbCBwbGVhc3VyZS4",
-		},
-	}, {
-		name: "without tracestate",
-		sc: trace.SpanContext{
-			TraceID:      trace.TraceID(tid),
-			SpanID:       sid,
-			TraceOptions: 1,
-		},
-		ext: extensions.DistributedTracingExtension{
-			TraceParent: "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
-		},
-	}, {
-		name: "unsampled",
-		sc: trace.SpanContext{
-			TraceID:      trace.TraceID(tid),
-			SpanID:       sid,
-			TraceOptions: 0,
-		},
-		ext: extensions.DistributedTracingExtension{
-			TraceParent: "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-00",
-		},
-	}}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run("FromSpanContext: "+tt.name, func(t *testing.T) {
-			t.Parallel()
-			got := extensions.FromSpanContext(tt.sc)
-			if diff := cmp.Diff(tt.ext, got); diff != "" {
-				t.Errorf("\nunexpected (-want, +got) = %v", diff)
-			}
-		})
-		t.Run("ToSpanContext: "+tt.name, func(t *testing.T) {
-			t.Parallel()
-			got, err := tt.ext.ToSpanContext()
-			if err != nil {
-				t.Error(err)
-			}
-			if diff := cmp.Diff(
-				tt.sc, got,
-				cmp.Transformer(
-					"entries",
-					func(ts tracestate.Tracestate) []tracestate.Entry {
-						return ts.Entries()
-					},
-				),
-			); diff != "" {
-				t.Errorf("\nunexpected (-want, +got) = %v", diff)
-			}
-		})
-	}
 }
 
 func TestDistributedTracingExtension_ReadTransformer_empty(t *testing.T) {

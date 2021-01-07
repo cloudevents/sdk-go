@@ -103,33 +103,40 @@ func (c *ceClient) applyOptions(opts ...Option) error {
 }
 
 func (c *ceClient) Send(ctx context.Context, e event.Event) protocol.Result {
+	var err error
+	ctx, cb := c.observabilityService.RecordSendingEvent(ctx, e)
+	defer cb(err)
 	if c.sender == nil {
-		return errors.New("sender not set")
-	}
-
-	for _, f := range c.outboundContextDecorators {
-		ctx = f(ctx)
-	}
-
-	if len(c.eventDefaulterFns) > 0 {
-		for _, fn := range c.eventDefaulterFns {
-			e = fn(ctx, e)
-		}
-	}
-
-	if err := e.Validate(); err != nil {
+		err = errors.New("sender not set")
 		return err
 	}
 
-	return c.sender.Send(ctx, (*binding.EventMessage)(&e))
+	for _, f := range c.outboundContextDecorators {
+		ctx = f(ctx)
+	}
+
+	if len(c.eventDefaulterFns) > 0 {
+		for _, fn := range c.eventDefaulterFns {
+			e = fn(ctx, e)
+		}
+	}
+	if err = e.Validate(); err != nil {
+		return err
+	}
+	err = c.sender.Send(ctx, (*binding.EventMessage)(&e))
+	return err
 }
 
-func (c *ceClient) Request(ctx context.Context, e event.Event) (resp *event.Event, res protocol.Result) {
+func (c *ceClient) Request(ctx context.Context, e event.Event) (*event.Event, protocol.Result) {
+	var resp *event.Event
+	var err error
+
 	ctx, cb := c.observabilityService.RecordRequestEvent(ctx, e)
-	defer cb(res, resp)
+	defer cb(err, resp)
 
 	if c.requester == nil {
-		return nil, errors.New("requester not set")
+		err = errors.New("requester not set")
+		return nil, err
 	}
 	for _, f := range c.outboundContextDecorators {
 		ctx = f(ctx)
@@ -141,22 +148,22 @@ func (c *ceClient) Request(ctx context.Context, e event.Event) (resp *event.Even
 		}
 	}
 
-	if err := e.Validate(); err != nil {
+	if err = e.Validate(); err != nil {
 		return nil, err
 	}
 
 	// If provided a requester, use it to do request/response.
 	var msg binding.Message
-	msg, res = c.requester.Request(ctx, (*binding.EventMessage)(&e))
+	msg, err = c.requester.Request(ctx, (*binding.EventMessage)(&e))
 	if msg != nil {
 		defer func() {
-			if err := msg.Finish(res); err != nil {
+			if err := msg.Finish(err); err != nil {
 				cecontext.LoggerFrom(ctx).Warnw("failed calling message.Finish", zap.Error(err))
 			}
 		}()
 	}
-	if protocol.IsUndelivered(res) {
-		return
+	if protocol.IsUndelivered(err) {
+		return resp, err
 	}
 
 	// try to turn msg into an event, it might not work and that is ok.
@@ -165,12 +172,12 @@ func (c *ceClient) Request(ctx context.Context, e event.Event) (resp *event.Even
 		// If the protocol returns no error, it is an ACK on the request, but we had
 		// issues turning the response into an event, so make an ACK Result and pass
 		// down the ToEvent error as well.
-		res = protocol.NewReceipt(true, "failed to convert response into event: %s\n%w", rserr.Error(), err)
+		err = protocol.NewReceipt(true, "failed to convert response into event: %w", rserr)
 	} else {
 		resp = rs
 	}
 
-	return
+	return resp, err
 }
 
 // StartReceiver sets up the given fn to handle Receive.
@@ -186,7 +193,7 @@ func (c *ceClient) StartReceiver(ctx context.Context, fn interface{}) error {
 		return fmt.Errorf("client already has a receiver")
 	}
 
-	invoker, err := newReceiveInvoker(fn, c.eventDefaulterFns...) // TODO: this will have to pick between a observed invoker or not.
+	invoker, err := newReceiveInvoker(fn, c.observabilityService, c.eventDefaulterFns...) // TODO: this will have to pick between a observed invoker or not.
 	if err != nil {
 		return err
 	}

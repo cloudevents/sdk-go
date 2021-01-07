@@ -1,7 +1,6 @@
 package extensions
 
 import (
-	"context"
 	"reflect"
 	"strings"
 
@@ -9,10 +8,6 @@ import (
 	"github.com/cloudevents/sdk-go/v2/event"
 
 	"github.com/cloudevents/sdk-go/v2/types"
-	"github.com/lightstep/tracecontext.go/traceparent"
-	"github.com/lightstep/tracecontext.go/tracestate"
-	"go.opencensus.io/trace"
-	octs "go.opencensus.io/trace/tracestate"
 )
 
 const (
@@ -89,76 +84,4 @@ func (d *DistributedTracingExtension) WriteTransformer() binding.TransformerFunc
 		}
 		return nil
 	}
-}
-
-// FromSpanContext populates DistributedTracingExtension from a SpanContext.
-func FromSpanContext(sc trace.SpanContext) DistributedTracingExtension {
-	tp := traceparent.TraceParent{
-		TraceID: sc.TraceID,
-		SpanID:  sc.SpanID,
-		Flags: traceparent.Flags{
-			Recorded: sc.IsSampled(),
-		},
-	}
-
-	entries := make([]string, 0, len(sc.Tracestate.Entries()))
-	for _, entry := range sc.Tracestate.Entries() {
-		entries = append(entries, strings.Join([]string{entry.Key, entry.Value}, "="))
-	}
-
-	return DistributedTracingExtension{
-		TraceParent: tp.String(),
-		TraceState:  strings.Join(entries, ","),
-	}
-}
-
-// ToSpanContext creates a SpanContext from a DistributedTracingExtension instance.
-func (d DistributedTracingExtension) ToSpanContext() (trace.SpanContext, error) {
-	tp, err := traceparent.ParseString(d.TraceParent)
-	if err != nil {
-		return trace.SpanContext{}, err
-	}
-	sc := trace.SpanContext{
-		TraceID: tp.TraceID,
-		SpanID:  tp.SpanID,
-	}
-	if tp.Flags.Recorded {
-		sc.TraceOptions |= 1
-	}
-
-	if ts, err := tracestate.ParseString(d.TraceState); err == nil {
-		entries := make([]octs.Entry, 0, len(ts))
-		for _, member := range ts {
-			var key string
-			if member.Tenant != "" {
-				// Due to github.com/lightstep/tracecontext.go/issues/6,
-				// the meaning of Vendor and Tenant are swapped here.
-				key = member.Vendor + "@" + member.Tenant
-			} else {
-				key = member.Vendor
-			}
-			entries = append(entries, octs.Entry{Key: key, Value: member.Value})
-		}
-		sc.Tracestate, _ = octs.New(nil, entries...)
-	}
-
-	return sc, nil
-}
-
-func (d DistributedTracingExtension) StartChildSpan(ctx context.Context, name string, opts ...trace.StartOption) (context.Context, *trace.Span) {
-	if sc, err := d.ToSpanContext(); err == nil {
-		tSpan := trace.FromContext(ctx)
-		ctx, span := trace.StartSpanWithRemoteParent(ctx, name, sc, opts...)
-		if tSpan != nil {
-			// Add link to the previous in-process trace.
-			tsc := tSpan.SpanContext()
-			span.AddLink(trace.Link{
-				TraceID: tsc.TraceID,
-				SpanID:  tsc.SpanID,
-				Type:    trace.LinkTypeParent,
-			})
-		}
-		return ctx, span
-	}
-	return ctx, nil
 }
