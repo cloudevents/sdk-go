@@ -117,6 +117,8 @@ func WriteJson(in *Event, writer io.Writer) error {
 			stream.WriteObjectField("time")
 			stream.WriteString(eventContext.Time.String())
 		}
+	default:
+		return fmt.Errorf("missing event context")
 	}
 
 	// Let's do a check on the error

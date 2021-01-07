@@ -36,7 +36,7 @@ func TestMarshal(t *testing.T) {
 	}{
 		"empty struct": {
 			event:   event.Event{},
-			wantErr: strptr("json: error calling MarshalJSON for type event.Event: specversion: missing Event.Context\n"),
+			wantErr: strptr("json: error calling MarshalJSON for type event.Event: missing event context\n"),
 		},
 		"struct data v0.3": {
 			event: func() event.Event {

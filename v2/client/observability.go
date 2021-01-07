@@ -13,7 +13,7 @@ type ObservabilityService interface {
 	// This is invoked before the user function is invoked.
 	// The returned callback will be invoked after the user finishes to process the event with the eventual processing error
 	// The error provided to the callback could be both a processing error, or a result
-	RecordReceivedEvent(ctx context.Context, event event.Event) (context.Context, func(errOrResult error))
+	RecordInvokerCalled(ctx context.Context, event *event.Event) (context.Context, func(errOrResult error))
 	// This is invoked before the event is sent.
 	// The returned callback will be invoked when the response is received
 	// The error provided to the callback could be both a processing error, or a result
@@ -28,7 +28,7 @@ type noopObservabilityService struct{}
 
 func (n noopObservabilityService) RecordReceivedMalformedEvent(ctx context.Context, err error) {}
 
-func (n noopObservabilityService) RecordReceivedEvent(ctx context.Context, event event.Event) (context.Context, func(errOrResult error)) {
+func (n noopObservabilityService) RecordInvokerCalled(ctx context.Context, event *event.Event) (context.Context, func(errOrResult error)) {
 	return ctx, func(errOrResult error) {}
 }
 
