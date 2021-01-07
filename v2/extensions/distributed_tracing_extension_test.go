@@ -2,7 +2,6 @@ package extensions_test
 
 import (
 	"context"
-	"encoding/hex"
 	"net/url"
 	"testing"
 	"time"
@@ -194,18 +193,6 @@ func testAddTracingAttributesFunc(t *testing.T, st extensions.DistributedTracing
 	if diff := cmp.Diff(ecv.want, got); diff != "" {
 		t.Errorf("\nunexpected (-want, +got) = %v", diff)
 	}
-}
-
-func decodeTID(s string) (tid [16]byte, err error) {
-	buf, err := hex.DecodeString(s)
-	copy(tid[:], buf)
-	return
-}
-
-func decodeSID(s string) (sid [8]byte, err error) {
-	buf, err := hex.DecodeString(s)
-	copy(sid[:], buf)
-	return
 }
 
 func TestDistributedTracingExtension_ReadTransformer_empty(t *testing.T) {
