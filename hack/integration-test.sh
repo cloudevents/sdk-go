@@ -18,7 +18,7 @@ fi
 COVERPKG=$(go list ./... | grep -v /vendor | tr "\n" ",")
 for gomodule in $(go list ./... | grep -v /cmd | grep -v /vendor)
 do
-  go test -v -parallel 1 -timeout 5m -race -covermode=atomic -coverprofile=coverage.tmp -coverpkg "$COVERPKG" "$gomodule" 2>&1 | sed 's/ of statements in.*//; /warning: no packages being tested depend on matches for pattern /d'
+  go test -v -parallel 1 -timeout 10m -race -covermode=atomic -coverprofile=coverage.tmp -coverpkg "$COVERPKG" "$gomodule" 2>&1 | sed 's/ of statements in.*//; /warning: no packages being tested depend on matches for pattern /d'
   tail -n +2 coverage.tmp >> $COVERAGE
 done
 rm coverage.tmp
