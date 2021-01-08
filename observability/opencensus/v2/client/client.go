@@ -1,9 +1,9 @@
 package client
 
 import (
-	"github.com/cloudevents/sdk-go/v2/protocol/http"
 	obshttp "github.com/cloudevents/sdk-go/observability/opencensus/v2/http"
 	"github.com/cloudevents/sdk-go/v2/client"
+	"github.com/cloudevents/sdk-go/v2/protocol/http"
 )
 
 func NewClientHTTP(topt []http.Option, copt []client.Option) (client.Client, error) {

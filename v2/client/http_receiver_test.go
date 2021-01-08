@@ -3,11 +3,12 @@ package client_test
 import (
 	"context"
 	"errors"
-	cehttp "github.com/cloudevents/sdk-go/v2/protocol/http"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
 	"testing"
+
+	cehttp "github.com/cloudevents/sdk-go/v2/protocol/http"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/cloudevents/sdk-go/v2/client"

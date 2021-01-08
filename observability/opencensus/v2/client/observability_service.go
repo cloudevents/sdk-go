@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+
 	"go.opencensus.io/trace"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
