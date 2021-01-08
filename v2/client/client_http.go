@@ -24,6 +24,7 @@ func NewHTTP(opts ...http.Option) (Client, error) {
 }
 
 // NewDefault has been replaced by NewHTTP
-// Deprecated. To get the same as NewDefault provided, please use the following:
-// TODO
+// Deprecated. To get the same as NewDefault provided, please use NewHTTP with
+// the observability service passed as an option, or client.NewClientHTTP from
+// package github.com/cloudevents/sdk-go/observability/opencensus/v2/client
 var NewDefault = NewHTTP
