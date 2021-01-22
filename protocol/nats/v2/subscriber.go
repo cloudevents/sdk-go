@@ -56,7 +56,12 @@ const defaultTimeout = 10 * time.Second
 
 // Subscribe implements Subscriber.Subscribe
 func (s *PullConsumer) Subscribe(conn *nats.Conn, consumer string, cb nats.MsgHandler) (Subscription, error) {
-	c, err := jsm.LoadConsumer(s.Stream, consumer, jsm.WithConnection(conn))
+	mgr, err := jsm.New(conn, jsm.WithTimeout(defaultTimeout))
+	if err != nil {
+		return nil, err
+	}
+
+	c, err := mgr.LoadConsumer(s.Stream, consumer)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +72,7 @@ func (s *PullConsumer) Subscribe(conn *nats.Conn, consumer string, cb nats.MsgHa
 			case <-s.stopCh:
 				break
 			default:
-				msg, err := c.NextMsg(jsm.WithTimeout(defaultTimeout))
+				msg, err := c.NextMsg()
 				if err == nats.ErrTimeout {
 					continue
 				}
