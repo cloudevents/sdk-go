@@ -89,3 +89,4 @@ func receiverProtocolFactory(t *testing.T) *protocolamqp.Protocol {
 
 	return p
 }
+

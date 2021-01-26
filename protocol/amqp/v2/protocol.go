@@ -100,7 +100,6 @@ func NewSenderProtocolFromClient(client *amqp.Client, session *amqp.Session, add
 	if err := t.applyOptions(opts...); err != nil {
 		return nil, err
 	}
-
 	t.senderLinkOpts = append(t.senderLinkOpts, amqp.LinkTargetAddress(address))
 	// Create a sender
 	amqpSender, err := session.NewSender(t.senderLinkOpts...)
@@ -108,7 +107,7 @@ func NewSenderProtocolFromClient(client *amqp.Client, session *amqp.Session, add
 		_ = client.Close()
 		_ = session.Close(context.Background())
 		return nil, err
-	}
+	}:q
 	t.Sender = NewSender(amqpSender).(*sender)
 	t.SenderContextDecorators = []func(context.Context) context.Context{}
 
@@ -135,7 +134,6 @@ func NewReceiverProtocolFromClient(client *amqp.Client, session *amqp.Session, a
 		return nil, err
 	}
 	t.Receiver = NewReceiver(amqpReceiver).(*receiver)
-
 	return t, nil
 }
 
@@ -164,7 +162,6 @@ func NewSenderProtocol(server, address string, connOption []amqp.ConnOption, ses
 
 // NewReceiverProtocol creates a new receiver amqp transport.
 func NewReceiverProtocol(server, address string, connOption []amqp.ConnOption, sessionOption []amqp.SessionOption, opts ...Option) (*Protocol, error) {
-
 	client, err := amqp.Dial(server, connOption...)
 	if err != nil {
 		return nil, err
@@ -178,6 +175,7 @@ func NewReceiverProtocol(server, address string, connOption []amqp.ConnOption, s
 	}
 
 	p, err := NewReceiverProtocolFromClient(client, session, address, opts...)
+
 	if err != nil {
 		return nil, err
 	}
