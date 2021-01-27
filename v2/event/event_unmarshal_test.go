@@ -376,6 +376,38 @@ func TestUnmarshal(t *testing.T) {
 				}.AsV1(),
 			},
 		},
+		"null attributes v1.0": {
+			body: mustJsonMarshal(t, map[string]interface{}{
+				"specversion":     "1.0",
+				"datacontenttype": "application/json",
+				"id":              "ABC-123",
+				"time":            nil,
+				"type":            "com.example.test",
+				"exbool":          nil,
+				"exint":           42,
+				"exstring":        "exstring",
+				"exbinary":        "AAECAw==",
+				"exurl":           nil,
+				"extime":          now.Format(time.RFC3339Nano),
+				"dataschema":      nil,
+				"source":          "http://example.com/source",
+			}),
+			want: &event.Event{
+				Context: event.EventContextV1{
+					Type:            "com.example.test",
+					Source:          *sourceV1,
+					ID:              "ABC-123",
+					DataContentType: event.StringOfApplicationJSON(),
+					Extensions: map[string]interface{}{
+						"exint":    int32(42),
+						"exstring": "exstring",
+						// Since byte, url and time are encoded as string, the unmarshal should just convert them to string
+						"exbinary": "AAECAw==",
+						"extime":   now.Format(time.RFC3339Nano),
+					},
+				}.AsV1(),
+			},
+		},
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
