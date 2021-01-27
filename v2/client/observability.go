@@ -3,11 +3,15 @@ package client
 import (
 	"context"
 
+	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/event"
 )
 
 // ObservabilityService is an interface users can implement to record metrics, create tracing spans, and plug other observability tools in the Client
 type ObservabilityService interface {
+	// InboundContextDecorators is a method that returns the InboundContextDecorators that must be mounted in the Client to properly propagate some tracing informations.
+	InboundContextDecorators() []func(context.Context, binding.Message) context.Context
+
 	// RecordReceivedMalformedEvent is invoked when an event was received but it's malformed or invalid.
 	RecordReceivedMalformedEvent(ctx context.Context, err error)
 	// RecordCallingInvoker is invoked before the user function is invoked.
@@ -25,6 +29,10 @@ type ObservabilityService interface {
 }
 
 type noopObservabilityService struct{}
+
+func (n noopObservabilityService) InboundContextDecorators() []func(context.Context, binding.Message) context.Context {
+	return nil
+}
 
 func (n noopObservabilityService) RecordReceivedMalformedEvent(ctx context.Context, err error) {}
 

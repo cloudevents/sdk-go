@@ -45,6 +45,7 @@ type Message struct {
 
 // Check if http.Message implements binding.Message
 var _ binding.Message = (*Message)(nil)
+var _ binding.MessageContext = (*Message)(nil)
 var _ binding.MessageMetadataReader = (*Message)(nil)
 
 // NewMessage returns a binding.Message with header and data.

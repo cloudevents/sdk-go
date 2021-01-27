@@ -90,6 +90,7 @@ func WithObservabilityService(service ObservabilityService) Option {
 	return func(i interface{}) error {
 		if c, ok := i.(*ceClient); ok {
 			c.observabilityService = service
+			c.inboundContextDecorators = append(c.inboundContextDecorators, service.InboundContextDecorators()...)
 		}
 		return nil
 	}

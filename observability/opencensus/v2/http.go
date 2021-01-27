@@ -1,14 +1,11 @@
 package v2
 
 import (
-	"context"
 	"net/http"
 
 	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/plugin/ochttp/propagation/tracecontext"
-	"go.opencensus.io/trace"
 
-	"github.com/cloudevents/sdk-go/v2/binding"
 	cehttp "github.com/cloudevents/sdk-go/v2/protocol/http"
 )
 
@@ -30,18 +27,6 @@ func tracecontextMiddleware(h http.Handler) http.Handler {
 		Handler:        h,
 		FormatSpanName: formatSpanName,
 	}
-}
-
-func TracePropagatorContextDecorator(ctx context.Context, msg binding.Message) context.Context {
-	httpMsg := binding.UnwrapMessage(msg).(*cehttp.Message)
-	if httpMsg.Context() == nil {
-		return ctx
-	}
-	span := trace.FromContext(httpMsg.Context())
-	if span == nil {
-		return ctx
-	}
-	return trace.NewContext(ctx, span)
 }
 
 // NewObservedHTTP creates an HTTP protocol with trace propagating middleware.
