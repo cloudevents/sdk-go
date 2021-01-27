@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"fmt"
 	"github.com/cloudevents/sdk-go/v2/binding"
 )
@@ -90,6 +91,19 @@ func WithObservabilityService(service ObservabilityService) Option {
 	return func(i interface{}) error {
 		if c, ok := i.(*ceClient); ok {
 			c.observabilityService = service
+			c.inboundContextDecorators = append(c.inboundContextDecorators, service.InboundContextDecorators()...)
+		}
+		return nil
+	}
+}
+
+// WithInboundContextDecorator configures a new inbound context decorator.
+// Inbound context decorators are invoked to wrap additional informations from the binding.Message
+// and propagate these informations in the context passed to the event receiver.
+func WithInboundContextDecorator(dec func(context.Context, binding.Message) context.Context) Option {
+	return func(i interface{}) error {
+		if c, ok := i.(*ceClient); ok {
+			c.inboundContextDecorators = append(c.inboundContextDecorators, dec)
 		}
 		return nil
 	}

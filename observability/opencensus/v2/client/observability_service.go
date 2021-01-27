@@ -6,6 +6,7 @@ import (
 	"go.opencensus.io/trace"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
+	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/client"
 	"github.com/cloudevents/sdk-go/v2/observability"
 
@@ -13,6 +14,10 @@ import (
 )
 
 type opencensusObservabilityService struct{}
+
+func (o opencensusObservabilityService) InboundContextDecorators() []func(context.Context, binding.Message) context.Context {
+	return []func(context.Context, binding.Message) context.Context{tracePropagatorContextDecorator}
+}
 
 func (o opencensusObservabilityService) RecordReceivedMalformedEvent(ctx context.Context, err error) {
 	ctx, r := NewReporter(ctx, reportReceive)
@@ -66,4 +71,22 @@ func (o opencensusObservabilityService) RecordRequestEvent(ctx context.Context, 
 
 func New() client.ObservabilityService {
 	return opencensusObservabilityService{}
+}
+
+func tracePropagatorContextDecorator(ctx context.Context, msg binding.Message) context.Context {
+	var messageCtx context.Context
+	if mctx, ok := msg.(binding.MessageContext); ok {
+		messageCtx = mctx.Context()
+	} else if mctx, ok := binding.UnwrapMessage(msg).(binding.MessageContext); ok {
+		messageCtx = mctx.Context()
+	}
+
+	if messageCtx == nil {
+		return ctx
+	}
+	span := trace.FromContext(messageCtx)
+	if span == nil {
+		return ctx
+	}
+	return trace.NewContext(ctx, span)
 }

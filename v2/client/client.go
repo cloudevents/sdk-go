@@ -86,6 +86,7 @@ type ceClient struct {
 
 	observabilityService ObservabilityService
 
+	inboundContextDecorators  []func(context.Context, binding.Message) context.Context
 	outboundContextDecorators []func(context.Context) context.Context
 	invoker                   Invoker
 	receiverMu                sync.Mutex
@@ -197,7 +198,7 @@ func (c *ceClient) StartReceiver(ctx context.Context, fn interface{}) error {
 		return fmt.Errorf("client already has a receiver")
 	}
 
-	invoker, err := newReceiveInvoker(fn, c.observabilityService, c.eventDefaulterFns...) // TODO: this will have to pick between a observed invoker or not.
+	invoker, err := newReceiveInvoker(fn, c.observabilityService, c.inboundContextDecorators, c.eventDefaulterFns...)
 	if err != nil {
 		return err
 	}
