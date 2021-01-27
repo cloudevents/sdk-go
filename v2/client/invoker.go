@@ -18,10 +18,11 @@ type Invoker interface {
 
 var _ Invoker = (*receiveInvoker)(nil)
 
-func newReceiveInvoker(fn interface{}, observabilityService ObservabilityService, fns ...EventDefaulter) (Invoker, error) {
+func newReceiveInvoker(fn interface{}, observabilityService ObservabilityService, inboundContextDecorators []func(context.Context, binding.Message) context.Context, fns ...EventDefaulter) (Invoker, error) {
 	r := &receiveInvoker{
-		eventDefaulterFns:    fns,
-		observabilityService: observabilityService,
+		eventDefaulterFns:        fns,
+		observabilityService:     observabilityService,
+		inboundContextDecorators: inboundContextDecorators,
 	}
 
 	if fn, err := receiver(fn); err != nil {
@@ -34,9 +35,10 @@ func newReceiveInvoker(fn interface{}, observabilityService ObservabilityService
 }
 
 type receiveInvoker struct {
-	fn                   *receiverFn
-	observabilityService ObservabilityService
-	eventDefaulterFns    []EventDefaulter
+	fn                       *receiverFn
+	observabilityService     ObservabilityService
+	eventDefaulterFns        []EventDefaulter
+	inboundContextDecorators []func(context.Context, binding.Message) context.Context
 }
 
 func (r *receiveInvoker) Invoke(ctx context.Context, m binding.Message, respFn protocol.ResponseFn) (err error) {
@@ -70,7 +72,7 @@ func (r *receiveInvoker) Invoke(ctx context.Context, m binding.Message, respFn p
 					cecontext.LoggerFrom(ctx).Error(result)
 				}
 			}()
-			ctx = extractContextFromMessage(m, ctx)
+			ctx = computeInboundContext(m, ctx, r.inboundContextDecorators)
 
 			var cb func(error)
 			ctx, cb = r.observabilityService.RecordCallingInvoker(ctx, e)
@@ -118,12 +120,10 @@ func (r *receiveInvoker) IsResponder() bool {
 	return r.fn.hasEventOut
 }
 
-func extractContextFromMessage(message binding.Message, fallback context.Context) context.Context {
-	if mctx, ok := message.(binding.MessageContext); ok {
-		return mctx.Context()
-	} else if mctx, ok := binding.UnwrapMessage(message).(binding.MessageContext); ok {
-		return mctx.Context()
-	} else {
-		return fallback
+func computeInboundContext(message binding.Message, fallback context.Context, inboundContextDecorators []func(context.Context, binding.Message) context.Context) context.Context {
+	result := fallback
+	for _, f := range inboundContextDecorators {
+		result = f(result, message)
 	}
+	return result
 }
