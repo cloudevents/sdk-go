@@ -83,8 +83,11 @@ var (
 
 	// Client Creation
 
-	NewClient             = client.New
-	NewClientObserved     = client.NewObserved
+	NewClient     = client.New
+	NewClientHTTP = client.NewHTTP
+	// Deprecated: please use New with the observability options.
+	NewClientObserved = client.NewObserved
+	// Deprecated: Please use NewClientHTTP with the observability options.
 	NewDefaultClient      = client.NewDefault
 	NewHTTPReceiveHandler = client.NewHTTPReceiveHandler
 

@@ -14,20 +14,17 @@ import (
 	"go.opencensus.io/trace"
 	"go.opencensus.io/zpages"
 
+	obsclient "github.com/cloudevents/sdk-go/observability/opencensus/v2/client"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/cloudevents/sdk-go/v2/client"
 	cecontext "github.com/cloudevents/sdk-go/v2/context"
 	"github.com/cloudevents/sdk-go/v2/event"
-	"github.com/cloudevents/sdk-go/v2/event/datacodec"
-	"github.com/cloudevents/sdk-go/v2/event/datacodec/json"
-	"github.com/cloudevents/sdk-go/v2/event/datacodec/xml"
-	"github.com/cloudevents/sdk-go/v2/types"
 )
 
 func main() {
 	ctx := context.Background()
 
-	c, err := client.NewDefault()
+	c, err := client.NewHTTP()
 	if err != nil {
 		log.Fatalf("failed to create client, %v", err)
 	}
@@ -57,36 +54,28 @@ func gotEvent(event event.Event) {
 	fmt.Printf("%s: %d - %q\n", event.Context.GetType(), data.Sequence, data.Message)
 }
 
-var source = types.ParseURIRef("https://github.com/cloudevents/sdk-go/v2/samples/sender")
-
 func mainSender() {
 	ctx := cecontext.WithTarget(context.Background(), "http://localhost:8181/")
 
-	c, err := client.NewDefault()
+	c, err := obsclient.NewClientHTTP(nil, nil)
 	if err != nil {
 		log.Fatalf("failed to create client, %v", err)
 	}
 
 	for { //ever
 		for i := 0; i < 1000; i++ {
-			data := &Example{
+			e := cloudevents.NewEvent()
+			e.SetType("com.cloudevents.sample.sent")
+			e.SetSource("https://github.com/cloudevents/sdk-go/v2/samples/sender")
+			_ = e.SetData(cloudevents.ApplicationJSON, &Example{
 				Sequence: i,
 				Message:  "Hello, World!",
-			}
-			e := event.Event{
-				Context: event.EventContextV1{
-					Type:   "com.cloudevents.sample.sent",
-					Source: *source,
-				}.AsV1(),
-			}
-			_ = e.SetData(cloudevents.ApplicationJSON, data)
+			})
 
-			if resp, res := c.Request(ctx, e); !cloudevents.IsACK(res) {
-				log.Printf("failed to send: %v", res)
+			if resp, result := c.Request(ctx, e); cloudevents.IsUndelivered(result) {
+				log.Printf("failed to send: %v", result)
 			} else if resp != nil {
 				fmt.Printf("got back a response event of type %s", resp.Context.GetType())
-			} else {
-				log.Printf("%s: %d - %s", e.Context.GetType(), data.Sequence, data.Message)
 			}
 			time.Sleep(2000 * time.Millisecond)
 		}
@@ -97,18 +86,18 @@ func mainMetrics() {
 
 	printExporter := &exporter.PrintExporter{}
 
-	exporter, err := prometheus.NewExporter(prometheus.Options{})
+	exp, err := prometheus.NewExporter(prometheus.Options{})
 	if err != nil {
 		log.Fatalf("Failed to create the Stackdriver stats exporter: %v", err)
 	}
 
 	h := http.NewServeMux()
 
-	h.Handle("/metrics", exporter)
+	h.Handle("/metrics", exp)
 	zpages.Handle(h, "/debug")
 
 	// Register the stats exporter
-	view.RegisterExporter(exporter)
+	view.RegisterExporter(exp)
 
 	trace.RegisterExporter(printExporter)
 	// Always trace for this demo. In a production application, you should
@@ -118,11 +107,7 @@ func mainMetrics() {
 
 	// Register the views
 	if err := view.Register(
-		client.LatencyView,
-		event.EventMarshalLatencyView,
-		json.LatencyView,
-		xml.LatencyView,
-		datacodec.LatencyView,
+		obsclient.LatencyView,
 	); err != nil {
 		log.Fatalf("Failed to register views: %v", err)
 	}

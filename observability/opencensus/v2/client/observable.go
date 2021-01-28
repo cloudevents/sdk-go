@@ -1,4 +1,4 @@
-package v2
+package client
 
 import (
 	"go.opencensus.io/stats"

@@ -105,8 +105,6 @@ func (c *ceClient) applyOptions(opts ...Option) error {
 
 func (c *ceClient) Send(ctx context.Context, e event.Event) protocol.Result {
 	var err error
-	ctx, cb := c.observabilityService.RecordSendingEvent(ctx, e)
-	defer cb(err)
 	if c.sender == nil {
 		err = errors.New("sender not set")
 		return err
@@ -124,6 +122,11 @@ func (c *ceClient) Send(ctx context.Context, e event.Event) protocol.Result {
 	if err = e.Validate(); err != nil {
 		return err
 	}
+
+	// Event has been defaulted and validated, record we are going to preform send.
+	ctx, cb := c.observabilityService.RecordSendingEvent(ctx, e)
+	defer cb(err)
+
 	err = c.sender.Send(ctx, (*binding.EventMessage)(&e))
 	return err
 }
@@ -131,9 +134,6 @@ func (c *ceClient) Send(ctx context.Context, e event.Event) protocol.Result {
 func (c *ceClient) Request(ctx context.Context, e event.Event) (*event.Event, protocol.Result) {
 	var resp *event.Event
 	var err error
-
-	ctx, cb := c.observabilityService.RecordRequestEvent(ctx, e)
-	defer cb(err, resp)
 
 	if c.requester == nil {
 		err = errors.New("requester not set")
@@ -152,6 +152,10 @@ func (c *ceClient) Request(ctx context.Context, e event.Event) (*event.Event, pr
 	if err = e.Validate(); err != nil {
 		return nil, err
 	}
+
+	// Event has been defaulted and validated, record we are going to perform request.
+	ctx, cb := c.observabilityService.RecordRequestEvent(ctx, e)
+	defer cb(err, resp)
 
 	// If provided a requester, use it to do request/response.
 	var msg binding.Message
