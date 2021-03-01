@@ -30,9 +30,9 @@ func TestSenderReceiverEvent(t *testing.T) {
 	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
 		eventIn = test.ConvertEventExtensionsToString(t, eventIn)
 		clienttest.SendReceive(t, func() interface{} {
-			s:= senderProtocolFactory(t)
-			r:= receiverProtocolFactory(t)
-			s.Receiver=r.Receiver
+			s := senderProtocolFactory(t)
+			r := receiverProtocolFactory(t)
+			s.Receiver = r.Receiver
 			return s
 		}, eventIn, func(e event.Event) {
 			test.AssertEventEquals(t, eventIn, test.ConvertEventExtensionsToString(t, e))
@@ -89,4 +89,3 @@ func receiverProtocolFactory(t *testing.T) *protocolamqp.Protocol {
 
 	return p
 }
-

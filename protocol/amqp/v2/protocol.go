@@ -2,8 +2,6 @@ package amqp
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"github.com/Azure/go-amqp"
 
@@ -107,7 +105,7 @@ func NewSenderProtocolFromClient(client *amqp.Client, session *amqp.Session, add
 		_ = client.Close()
 		_ = session.Close(context.Background())
 		return nil, err
-	}:q
+	}
 	t.Sender = NewSender(amqpSender).(*sender)
 	t.SenderContextDecorators = []func(context.Context) context.Context{}
 
