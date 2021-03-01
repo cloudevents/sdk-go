@@ -58,7 +58,6 @@ func receiverProtocolFactory(t *testing.T) *protocolamqp.Protocol {
 	return p
 }
 
-
 // Some test require an AMQP broker or router. If the connection fails
 // the tests are skipped. The env variable TEST_AMQP_URL can be set to the
 // test URL, otherwise the default is "/test"
