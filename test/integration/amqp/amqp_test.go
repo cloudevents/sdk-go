@@ -26,6 +26,38 @@ func TestSendEvent(t *testing.T) {
 	})
 }
 
+func TestSenderReceiverEvent(t *testing.T) {
+	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
+		eventIn = test.ConvertEventExtensionsToString(t, eventIn)
+		clienttest.SendReceive(t, func() interface{} {
+			s := senderProtocolFactory(t)
+			r := receiverProtocolFactory(t)
+			s.Receiver = r.Receiver
+			return s
+		}, eventIn, func(e event.Event) {
+			test.AssertEventEquals(t, eventIn, test.ConvertEventExtensionsToString(t, e))
+		})
+	})
+}
+
+func senderProtocolFactory(t *testing.T) *protocolamqp.Protocol {
+	c, ss, a := testClient(t)
+
+	p, err := protocolamqp.NewSenderProtocolFromClient(c, ss, a)
+	require.NoError(t, err)
+
+	return p
+}
+
+func receiverProtocolFactory(t *testing.T) *protocolamqp.Protocol {
+	c, ss, a := testClient(t)
+
+	p, err := protocolamqp.NewReceiverProtocolFromClient(c, ss, a)
+	require.NoError(t, err)
+
+	return p
+}
+
 // Some test require an AMQP broker or router. If the connection fails
 // the tests are skipped. The env variable TEST_AMQP_URL can be set to the
 // test URL, otherwise the default is "/test"
