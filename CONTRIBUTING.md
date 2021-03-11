@@ -31,5 +31,5 @@ Code style for this module is maintained using [`go fmt`](https://golang.org/cmd
 
 ### Maintainers
 
-If you are a maintainer of this repository, [here](maintainers_guide.pr) is a brief
+If you are a maintainer of this repository, [here](maintainer_guidelines.md) is a brief
 guide with helpful tips.
