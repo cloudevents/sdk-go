@@ -4,6 +4,7 @@ on:
     tags:
     - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
     - 'protocol/**' # Push events to matching protocol/foo/bar/v*, i.e. protocol/foo/bar/v1.0, protocol/foo/bar/v20.15.10
+    - 'observability/**' # Push events to matching observability/foo/bar/v*
     
 name: Create Draft Releases
 
