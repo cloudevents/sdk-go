@@ -44,6 +44,7 @@ do
           "github.com/cloudevents/sdk-go/protocol/nats/v2"
           "github.com/cloudevents/sdk-go/protocol/pubsub/v2"
           "github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2"
+          "github.com/cloudevents/sdk-go/protocol/ws/v2"
           "github.com/cloudevents/sdk-go/v2"                       # NOTE: this needs to be last.
         )
         shift
@@ -104,6 +105,7 @@ MODULES=(
   "protocol/nats"
   "protocol/pubsub"
   "protocol/kafka_sarama"
+  "protocol/ws"
 )
 
 for i in "${MODULES[@]}"; do
