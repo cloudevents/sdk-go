@@ -350,16 +350,16 @@ func consumeDataAsBytes(e *Event, isBase64 bool, b []byte) error {
 		// Allocate payload byte buffer
 		base64Encoded := b[1 : len(b)-1] // remove quotes
 		e.DataEncoded = make([]byte, base64.StdEncoding.DecodedLen(len(base64Encoded)))
-		len, err := base64.StdEncoding.Decode(e.DataEncoded, base64Encoded)
+		length, err := base64.StdEncoding.Decode(e.DataEncoded, base64Encoded)
 		if err != nil {
 			return err
 		}
-		e.DataEncoded = e.DataEncoded[0:len]
+		e.DataEncoded = e.DataEncoded[0:length]
 		return nil
 	}
 
-	ct := e.DataContentType()
-	if ct != ApplicationJSON && ct != TextJSON {
+	mt, _ := e.Context.GetDataMediaType()
+	if mt != ApplicationJSON && mt != TextJSON {
 		// If not json, then data is encoded as string
 		iter := jsoniter.ParseBytes(jsoniter.ConfigFastest, b)
 		src := iter.ReadString() // handles escaping
@@ -378,16 +378,16 @@ func consumeData(e *Event, isBase64 bool, iter *jsoniter.Iterator) error {
 		// Allocate payload byte buffer
 		base64Encoded := iter.ReadStringAsSlice()
 		e.DataEncoded = make([]byte, base64.StdEncoding.DecodedLen(len(base64Encoded)))
-		len, err := base64.StdEncoding.Decode(e.DataEncoded, base64Encoded)
+		length, err := base64.StdEncoding.Decode(e.DataEncoded, base64Encoded)
 		if err != nil {
 			return err
 		}
-		e.DataEncoded = e.DataEncoded[0:len]
+		e.DataEncoded = e.DataEncoded[0:length]
 		return nil
 	}
 
-	ct := e.DataContentType()
-	if ct != ApplicationJSON && ct != TextJSON {
+	mt, _ := e.Context.GetDataMediaType()
+	if mt != ApplicationJSON && mt != TextJSON {
 		// If not json, then data is encoded as string
 		src := iter.ReadString() // handles escaping
 		e.DataEncoded = []byte(src)
