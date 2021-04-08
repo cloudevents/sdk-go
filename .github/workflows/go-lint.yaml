@@ -1,8 +1,6 @@
 name: Code Style
 
 on:
-  push:
-    branches: [ 'master', 'release-*' ]
   pull_request:
     branches: [ 'master', 'release-*' ]
 
