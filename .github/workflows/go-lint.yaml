@@ -1,8 +1,10 @@
 name: Code Style
 
 on:
+  push:
+    branches: [ 'main', 'release-*' ]
   pull_request:
-    branches: [ 'master', 'release-*' ]
+    branches: [ 'main', 'release-*' ]
 
 jobs:
 
