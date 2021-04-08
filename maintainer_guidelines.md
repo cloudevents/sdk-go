@@ -16,15 +16,15 @@ Here are a few tips for repository maintainers.
 
 ## Branch Management
 
-The `master` branch is is the bleeding edge. New major versions of the module
+The `main` branch is is the bleeding edge. New major versions of the module
 are cut from this branch and tagged. If you intend to submit a pull request
-you should use `master HEAD` as your starting point.
+you should use `main HEAD` as your starting point.
 
 Each major release will result in a new branch and tag. For example, the
 release of version 1.0.0 of the project results in a `v1.0.0` tag on the
 release commit, and a new branch `release-1.y.z` for subsequent minor and patch
 level releases of that major version if necessary. However, development will continue
-apace on `master` for the next major version - e.g. 2.0.0. Version branches
+apace on `main` for the next major version - e.g. 2.0.0. Version branches
 are only created for each major version. Minor and patch level releases
 are simply tagged.
 

@@ -3,7 +3,7 @@
 At the time of writing, there are two major versions being releases,
 
 - v1.+ are released from the `release-1.y.z` branch.
-- v2.+ are released from the `master` branch.
+- v2.+ are released from the `main` branch.
 
 General rules that apply to both releases:
 
