@@ -14,15 +14,18 @@ import (
 type receiver struct{ amqp *amqp.Receiver }
 
 func (r *receiver) Receive(ctx context.Context) (binding.Message, error) {
-	m, err := r.amqp.Receive(ctx)
-	if err != nil {
+	var msg binding.Message
+
+	if err := r.amqp.HandleMessage(ctx, func(m *amqp.Message) error {
+		msg = NewMessage(m)
+		return nil
+	}); err != nil {
 		if err == ctx.Err() {
 			return nil, io.EOF
 		}
 		return nil, err
 	}
-
-	return NewMessage(m), nil
+	return msg, nil
 }
 
 // NewReceiver create a new Receiver which wraps an amqp.Receiver in a binding.Receiver

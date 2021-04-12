@@ -16,7 +16,7 @@ replace github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 => ../../protocol
 
 require (
 	contrib.go.opencensus.io/exporter/prometheus v0.1.0
-	github.com/Azure/go-amqp v0.12.7
+	github.com/Azure/go-amqp v0.13.6
 	github.com/Shopify/sarama v1.25.0
 	github.com/cloudevents/sdk-go v1.2.0
 	github.com/cloudevents/sdk-go/protocol/amqp/v2 v2.0.0
