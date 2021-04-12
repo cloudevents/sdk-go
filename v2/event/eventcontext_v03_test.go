@@ -162,6 +162,10 @@ func TestGetMediaTypeV03(t *testing.T) {
 		"nil": {
 			want: "",
 		},
+		"just encoding": {
+			t:    "charset=utf-8",
+			want: "",
+		},
 		"text/html with encoding": {
 			t:    "text/html; charset=utf-8",
 			want: "text/html",
