@@ -27,7 +27,7 @@ func (ec EventContextV1) GetDataMediaType() (string, error) {
 		if i == -1 {
 			return dct, nil
 		}
-		return dct[0:i], nil
+		return strings.TrimSpace(dct[0:i]), nil
 	}
 	return "", nil
 }
