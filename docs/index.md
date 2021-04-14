@@ -25,7 +25,7 @@ _Note:_ Supported
 Add the module as dependency using go mod:
 
 ```
-% go get github.com/cloudevents/sdk-go/v2@v2.2.0
+% go get github.com/cloudevents/sdk-go/v2@v2.4.1
 ```
 
 And import the module in your code

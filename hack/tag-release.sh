@@ -6,7 +6,7 @@ set -o pipefail
 
 # This is run after the major release is published.
 
-VERSION=v2.4.0
+VERSION=v2.4.1
 
 # It is intended that this file is run locally. For a full release tag, confirm the version is correct, and then:
 #   ./hack/tag-release.sh --tag --push

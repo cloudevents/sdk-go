@@ -3,8 +3,6 @@
 This directory contains samples for most CloudEvents sdk-go features. 
 You can grab them and copy-paste in your project to start using sdk-go.
 
-<!-- TODO: update all samples to use the latest release rather than local. -->
-
 * AMQP
   * [AMQP Sender](./amqp/sender): Send events using the CloudEvents Client. To run the tests look at [AMQP samples README](./amqp/README.md).
   * [AMQP Receiver](./amqp/receiver): Receive events using the CloudEvents Client. To run the tests look at [AMQP samples README](./amqp/README.md).

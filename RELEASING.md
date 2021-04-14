@@ -38,7 +38,7 @@ Steps:
 1. Tag the new branch with the correct release tag, i.e:
 
    ```shell
-   tag=v2.1.0
+   tag=v2.4.1
    git tag $tag
    git push origin $tag
    ```
@@ -49,7 +49,7 @@ Steps:
 
    Then push the changes to the `release-x.y` branch.
 
-   Or do it manualy with the following:
+   Or do it manually with the following:
 
    1. Update the each protocol to use the new release rather than the replace
       directive in their `go mod` files. Example for `stan`:
@@ -79,7 +79,7 @@ Steps:
 1. Run `./hack/tag-release.sh --tag --push` to create a release of each
    sub-module.
    
-   Or do it manualy for each of the sub-modules with something like
+   Or do it manually for each of the sub-modules with something like
    the following:
 
    ```shell
@@ -90,7 +90,7 @@ Steps:
    ```
 
 1) Run `./hack/tag-release.sh --samples` to update the sample dependencies (both
-   the core sdk and protcol) after all releases are published. Or do it manualy
+   the core sdk and protocol) after all releases are published. Or do it manually
    with something like the following:
 
    ```shell
