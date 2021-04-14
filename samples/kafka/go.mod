@@ -8,3 +8,7 @@ require (
 	github.com/cloudevents/sdk-go/v2 v2.4.1
 	github.com/google/uuid v1.1.1
 )
+
+replace github.com/cloudevents/sdk-go/v2 => ../../v2
+
+replace github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 => ../../protocol/kafka_sarama/v2

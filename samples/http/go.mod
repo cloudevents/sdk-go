@@ -11,3 +11,7 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	go.opencensus.io v0.22.3
 )
+
+replace github.com/cloudevents/sdk-go/v2 => ../../v2
+
+replace github.com/cloudevents/sdk-go/observability/opencensus/v2 => ../../observability/opencensus/v2
