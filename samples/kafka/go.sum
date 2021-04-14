@@ -2,10 +2,10 @@ github.com/Shopify/sarama v1.25.0 h1:ch1ywjRLjfJtU+EaiJ+l0rWffQ6TRpyYmW4DX7Cb2SU
 github.com/Shopify/sarama v1.25.0/go.mod h1:y/CFFTO9eaMTNriwu/Q+W4eioLqiDMGkA1W+gmdfj8w=
 github.com/Shopify/toxiproxy v2.1.4+incompatible h1:TKdv8HiTLgE5wdJuEML90aBgNWsokNbMijUGhmcoBJc=
 github.com/Shopify/toxiproxy v2.1.4+incompatible/go.mod h1:OXgGpZ6Cli1/URJOF1DMxUHB2q5Ap20/P/eIdh4G0pI=
-github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.4.0 h1:JuJVi2fRvN6XUU6s3LAvAjgj3qTGvPbBxoVXNI7fLBM=
-github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.4.0/go.mod h1:wKKVZn9w3cqrmOAQRFEa0hZS8xvPnaqPw2Rj7Tq8e9w=
-github.com/cloudevents/sdk-go/v2 v2.4.0 h1:IkzAOizTvn+M13KWDLFOiTb44YBuwAvbenzSg43bWM4=
-github.com/cloudevents/sdk-go/v2 v2.4.0/go.mod h1:MZiMwmAh5tGj+fPFvtHv9hKurKqXtdB9haJYMJ/7GJY=
+github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.4.1 h1:OdBCW2/cxHaGzY9JI8wfFPI0OcmpZ8y97e1ZxWNsVFc=
+github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.4.1/go.mod h1:8aqqE69pYzEgN2sCa6+8fTQ+FpE7QMwYnLkDKyKVtYw=
+github.com/cloudevents/sdk-go/v2 v2.4.1 h1:rZJoz9QVLbWQmnvLPDFEmv17Czu+CfSPwMO6lhJ72xQ=
+github.com/cloudevents/sdk-go/v2 v2.4.1/go.mod h1:MZiMwmAh5tGj+fPFvtHv9hKurKqXtdB9haJYMJ/7GJY=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=

@@ -1,7 +1,7 @@
-github.com/cloudevents/sdk-go/protocol/ws/v2 v2.4.0 h1:8I8SbvMSJLVElArlTBgDhHH5TONiMh0EeRgfKKPz4yc=
-github.com/cloudevents/sdk-go/protocol/ws/v2 v2.4.0/go.mod h1:pUqsMoIshL0LuhfwQpE+i74UJ3PoI86EDnWiNZvBCSk=
-github.com/cloudevents/sdk-go/v2 v2.4.0 h1:IkzAOizTvn+M13KWDLFOiTb44YBuwAvbenzSg43bWM4=
-github.com/cloudevents/sdk-go/v2 v2.4.0/go.mod h1:MZiMwmAh5tGj+fPFvtHv9hKurKqXtdB9haJYMJ/7GJY=
+github.com/cloudevents/sdk-go/protocol/ws/v2 v2.4.1 h1:lTpEgD4uavqqkT8dLqVSJU9bVfN/Vnju5v2sVhs2k2I=
+github.com/cloudevents/sdk-go/protocol/ws/v2 v2.4.1/go.mod h1:WjpzncHr7iVysNa+lXduKRbClsyAUBdYriK5b9/w50s=
+github.com/cloudevents/sdk-go/v2 v2.4.1 h1:rZJoz9QVLbWQmnvLPDFEmv17Czu+CfSPwMO6lhJ72xQ=
+github.com/cloudevents/sdk-go/v2 v2.4.1/go.mod h1:MZiMwmAh5tGj+fPFvtHv9hKurKqXtdB9haJYMJ/7GJY=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=

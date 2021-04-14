@@ -1,9 +1,9 @@
 github.com/Azure/go-amqp v0.12.7 h1:/Uyqh30J5JrDFAOERQtEqP0qPWkrNXxr94vRnSa54Ac=
 github.com/Azure/go-amqp v0.12.7/go.mod h1:qApuH6OFTSKZFmCOxccvAv5rLizBQf4v8pRmG138DPo=
-github.com/cloudevents/sdk-go/protocol/amqp/v2 v2.4.0 h1:elz00R4LrTl/DX4OwUnFeHSfQ8tHiySRC9ISO0raKoQ=
-github.com/cloudevents/sdk-go/protocol/amqp/v2 v2.4.0/go.mod h1:Ebqyfc/NhuyKOh701+rApsgae8pz98dM8jKYaGY5gJE=
-github.com/cloudevents/sdk-go/v2 v2.4.0 h1:IkzAOizTvn+M13KWDLFOiTb44YBuwAvbenzSg43bWM4=
-github.com/cloudevents/sdk-go/v2 v2.4.0/go.mod h1:MZiMwmAh5tGj+fPFvtHv9hKurKqXtdB9haJYMJ/7GJY=
+github.com/cloudevents/sdk-go/protocol/amqp/v2 v2.4.1 h1:1BU7e8KfX9QQ5XIaqi4UFUCGjiYU+WDBWVE3oRY8Gc8=
+github.com/cloudevents/sdk-go/protocol/amqp/v2 v2.4.1/go.mod h1:2LCGtKuIk0gbWNiwjGbglpN3oudqUwUoQiMT7wbYf2Y=
+github.com/cloudevents/sdk-go/v2 v2.4.1 h1:rZJoz9QVLbWQmnvLPDFEmv17Czu+CfSPwMO6lhJ72xQ=
+github.com/cloudevents/sdk-go/v2 v2.4.1/go.mod h1:MZiMwmAh5tGj+fPFvtHv9hKurKqXtdB9haJYMJ/7GJY=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
