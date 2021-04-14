@@ -38,7 +38,7 @@ Steps:
 1. Tag the new branch with the correct release tag, i.e:
 
    ```shell
-   tag=v2.1.0
+   tag=v2.4.1
    git tag $tag
    git push origin $tag
    ```
