@@ -1,13 +1,14 @@
 package test
 
 import (
+	"io/ioutil"
 	"os"
 	"path"
 	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 
 	"github.com/cloudevents/sdk-go/sql/v2/parser"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
@@ -48,19 +49,19 @@ const (
 )
 
 type TckFile struct {
-	Name  string        `yaml:"name"`
-	Tests []TckTestCase `yaml:"tests"`
+	Name  string        `json:"name"`
+	Tests []TckTestCase `json:"tests"`
 }
 
 type TckTestCase struct {
-	Name       string `yaml:"name"`
-	Expression string `yaml:"expression"`
+	Name       string `json:"name"`
+	Expression string `json:"expression"`
 
-	Result interface{} `yaml:"result"`
-	Error  ErrorType   `yaml:"error"`
+	Result interface{} `json:"result"`
+	Error  ErrorType   `json:"error"`
 
-	Event          *cloudevents.Event     `yaml:"event"`
-	EventOverrides map[string]interface{} `yaml:"eventOverrides"`
+	Event          *cloudevents.Event     `json:"event"`
+	EventOverrides map[string]interface{} `json:"eventOverrides"`
 }
 
 func (tc TckTestCase) InputEvent(t *testing.T) cloudevents.Event {
@@ -85,6 +86,8 @@ func (tc TckTestCase) ExpectedResult() interface{} {
 	switch tc.Result.(type) {
 	case int:
 		return int32(tc.Result.(int))
+	case float64:
+		return int32(tc.Result.(float64))
 	}
 	return tc.Result
 }
@@ -103,8 +106,11 @@ func TestTCK(t *testing.T) {
 		file, err := os.Open(testFilePath)
 		require.NoError(t, err)
 
+		fileBytes, err := ioutil.ReadAll(file)
+		require.NoError(t, err)
+
 		tckFileModel := TckFile{}
-		require.NoError(t, yaml.NewDecoder(file).Decode(&tckFileModel))
+		require.NoError(t, yaml.Unmarshal(fileBytes, &tckFileModel))
 
 		tckFiles = append(tckFiles, tckFileModel)
 	}
@@ -130,7 +136,8 @@ func TestTCK(t *testing.T) {
 					require.NoError(t, err)
 					require.NotNil(t, expr)
 
-					result, err := expr.Evaluate(testCase.InputEvent(t))
+					inputEvent := testCase.InputEvent(t)
+					result, err := expr.Evaluate(inputEvent)
 
 					if testCase.Error != "" {
 						require.NotNil(t, err)

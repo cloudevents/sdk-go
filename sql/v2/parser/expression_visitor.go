@@ -33,6 +33,8 @@ func (v *expressionVisitor) Visit(tree antlr.ParseTree) interface{} {
 		return v.VisitAtomExpression(tree.(*gen.AtomExpressionContext))
 	case *gen.UnaryNumericExpressionContext:
 		return v.VisitUnaryNumericExpression(tree.(*gen.UnaryNumericExpressionContext))
+	case *gen.UnaryLogicExpressionContext:
+		return v.VisitUnaryLogicExpression(tree.(*gen.UnaryLogicExpressionContext))
 	case *gen.BooleanAtomContext:
 		return v.VisitBooleanAtom(tree.(*gen.BooleanAtomContext))
 	case *gen.BooleanLiteralContext:
@@ -45,6 +47,14 @@ func (v *expressionVisitor) Visit(tree antlr.ParseTree) interface{} {
 		return v.VisitStringAtom(tree.(*gen.StringAtomContext))
 	case *gen.StringLiteralContext:
 		return v.VisitStringLiteral(tree.(*gen.StringLiteralContext))
+	case *gen.ExistsExpressionContext:
+		return v.VisitExistsExpression(tree.(*gen.ExistsExpressionContext))
+	case *gen.InExpressionContext:
+		return v.VisitInExpression(tree.(*gen.InExpressionContext))
+	case *gen.IdentifierAtomContext:
+		return v.VisitIdentifierAtom(tree.(*gen.IdentifierAtomContext))
+	case *gen.IdentifierContext:
+		return v.VisitIdentifier(tree.(*gen.IdentifierContext))
 	}
 	return nil
 }
@@ -66,7 +76,19 @@ func (v *expressionVisitor) VisitErrorNode(node antlr.ErrorNode) interface{} {
 // gen.CESQLParserVisitor implementation
 
 func (v *expressionVisitor) VisitInExpression(ctx *gen.InExpressionContext) interface{} {
-	return v.VisitChildren(ctx)
+	leftExpression := v.Visit(ctx.Expression()).(cesql.Expression)
+
+	var setExpression []cesql.Expression
+
+	for _, expr := range ctx.SetExpression().(*gen.SetExpressionContext).AllExpression() {
+		setExpression = append(setExpression, v.Visit(expr).(cesql.Expression))
+	}
+
+	if ctx.NOT() != nil {
+		return expression.NewNotExpression(expression.NewInExpression(leftExpression, setExpression))
+	}
+
+	return expression.NewInExpression(leftExpression, setExpression)
 }
 
 func (v *expressionVisitor) VisitBinaryComparisonExpression(ctx *gen.BinaryComparisonExpressionContext) interface{} {
@@ -74,7 +96,7 @@ func (v *expressionVisitor) VisitBinaryComparisonExpression(ctx *gen.BinaryCompa
 }
 
 func (v *expressionVisitor) VisitExistsExpression(ctx *gen.ExistsExpressionContext) interface{} {
-	return v.VisitChildren(ctx)
+	return expression.NewExistsExpression(strings.ToLower(ctx.Identifier().GetText()))
 }
 
 func (v *expressionVisitor) VisitBinaryLogicExpression(ctx *gen.BinaryLogicExpressionContext) interface{} {
@@ -94,7 +116,9 @@ func (v *expressionVisitor) VisitBinaryMultiplicativeExpression(ctx *gen.BinaryM
 }
 
 func (v *expressionVisitor) VisitUnaryLogicExpression(ctx *gen.UnaryLogicExpressionContext) interface{} {
-	return v.VisitChildren(ctx)
+	return expression.NewNotExpression(
+		v.Visit(ctx.Expression()).(cesql.Expression),
+	)
 }
 
 func (v *expressionVisitor) VisitUnaryNumericExpression(ctx *gen.UnaryNumericExpressionContext) interface{} {
@@ -111,12 +135,8 @@ func (v *expressionVisitor) VisitBinaryAdditiveExpression(ctx *gen.BinaryAdditiv
 	return v.VisitChildren(ctx)
 }
 
-func (v *expressionVisitor) VisitIdentifierAtom(ctx *gen.IdentifierAtomContext) interface{} {
-	return v.VisitChildren(ctx)
-}
-
 func (v *expressionVisitor) VisitIdentifier(ctx *gen.IdentifierContext) interface{} {
-	return v.VisitChildren(ctx)
+	return expression.NewIdentifierExpression(strings.ToLower(ctx.GetText()))
 }
 
 func (v *expressionVisitor) VisitFunctionIdentifier(ctx *gen.FunctionIdentifierContext) interface{} {
@@ -179,5 +199,9 @@ func (v *expressionVisitor) VisitIntegerAtom(ctx *gen.IntegerAtomContext) interf
 }
 
 func (v *expressionVisitor) VisitStringAtom(ctx *gen.StringAtomContext) interface{} {
+	return v.VisitChildren(ctx)
+}
+
+func (v *expressionVisitor) VisitIdentifierAtom(ctx *gen.IdentifierAtomContext) interface{} {
 	return v.VisitChildren(ctx)
 }
