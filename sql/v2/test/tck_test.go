@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v2"
 
-	cesql "github.com/cloudevents/sdk-go/sql/v2"
+	"github.com/cloudevents/sdk-go/sql/v2/parser"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/cloudevents/sdk-go/v2/binding/spec"
 	"github.com/cloudevents/sdk-go/v2/event"
@@ -81,6 +81,14 @@ func (tc TckTestCase) InputEvent(t *testing.T) cloudevents.Event {
 	return inputEvent
 }
 
+func (tc TckTestCase) ExpectedResult() interface{} {
+	switch tc.Result.(type) {
+	case int:
+		return int32(tc.Result.(int))
+	}
+	return tc.Result
+}
+
 func TestTCK(t *testing.T) {
 	tckFiles := make([]TckFile, 0, len(TCKFileNames))
 
@@ -102,18 +110,23 @@ func TestTCK(t *testing.T) {
 	}
 
 	for i, file := range tckFiles {
+		i := i
 		t.Run(file.Name, func(t *testing.T) {
 			for j, testCase := range tckFiles[i].Tests {
+				j := j
 				t.Run(testCase.Name, func(t *testing.T) {
 					t.Parallel()
 					testCase := tckFiles[i].Tests[j]
 
+					t.Logf("Test expression: '%s'", testCase.Expression)
+
 					if testCase.Error == ParseError {
-						_, err := cesql.Parse(testCase.Expression)
+						_, err := parser.Parse(testCase.Expression)
 						require.NotNil(t, err)
+						return
 					}
 
-					expr, err := cesql.Parse(testCase.Expression)
+					expr, err := parser.Parse(testCase.Expression)
 					require.NoError(t, err)
 					require.NotNil(t, expr)
 
@@ -123,7 +136,7 @@ func TestTCK(t *testing.T) {
 						require.NotNil(t, err)
 					} else {
 						require.NoError(t, err)
-						require.Equal(t, testCase.Result, result)
+						require.Equal(t, testCase.ExpectedResult(), result)
 					}
 				})
 			}
