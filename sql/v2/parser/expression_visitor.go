@@ -68,6 +68,8 @@ func (v *expressionVisitor) Visit(tree antlr.ParseTree) interface{} {
 		return v.VisitBinaryComparisonExpression(tree.(*gen.BinaryComparisonExpressionContext))
 	case *gen.LikeExpressionContext:
 		return v.VisitLikeExpression(tree.(*gen.LikeExpressionContext))
+	case *gen.FunctionInvocationExpressionContext:
+		return v.VisitFunctionInvocationExpression(tree.(*gen.FunctionInvocationExpressionContext))
 	}
 	return nil
 }
@@ -187,7 +189,16 @@ func (v *expressionVisitor) VisitLikeExpression(ctx *gen.LikeExpressionContext) 
 }
 
 func (v *expressionVisitor) VisitFunctionInvocationExpression(ctx *gen.FunctionInvocationExpressionContext) interface{} {
-	return v.VisitChildren(ctx)
+	paramsCtx := ctx.FunctionParameterList().(*gen.FunctionParameterListContext)
+
+	name := ctx.FunctionIdentifier().GetText()
+
+	var args []cesql.Expression
+	for _, expr := range paramsCtx.AllExpression() {
+		args = append(args, v.Visit(expr).(cesql.Expression))
+	}
+
+	return expression.NewFunctionInvocationExpression(strings.ToUpper(name), args)
 }
 
 func (v *expressionVisitor) VisitBinaryMultiplicativeExpression(ctx *gen.BinaryMultiplicativeExpressionContext) interface{} {
@@ -241,14 +252,6 @@ func (v *expressionVisitor) VisitBinaryAdditiveExpression(ctx *gen.BinaryAdditiv
 
 func (v *expressionVisitor) VisitIdentifier(ctx *gen.IdentifierContext) interface{} {
 	return expression.NewIdentifierExpression(strings.ToLower(ctx.GetText()))
-}
-
-func (v *expressionVisitor) VisitFunctionIdentifier(ctx *gen.FunctionIdentifierContext) interface{} {
-	return v.VisitChildren(ctx)
-}
-
-func (v *expressionVisitor) VisitFunctionParameterList(ctx *gen.FunctionParameterListContext) interface{} {
-	return v.VisitChildren(ctx)
 }
 
 func (v *expressionVisitor) VisitBooleanLiteral(ctx *gen.BooleanLiteralContext) interface{} {
@@ -306,11 +309,19 @@ func (v *expressionVisitor) VisitSetExpression(ctx *gen.SetExpressionContext) in
 	return v.VisitChildren(ctx)
 }
 
+func (v *expressionVisitor) VisitFunctionIdentifier(ctx *gen.FunctionIdentifierContext) interface{} {
+	return v.VisitChildren(ctx)
+}
+
+func (v *expressionVisitor) VisitFunctionParameterList(ctx *gen.FunctionParameterListContext) interface{} {
+	return v.VisitChildren(ctx)
+}
+
 // noop expression. This is necessary to continue to walk through the tree, even if there's a failure in the parsing
 
 type noopExpression struct{}
 
-func (n noopExpression) Evaluate(event cloudevents.Event) (interface{}, error) {
+func (n noopExpression) Evaluate(cloudevents.Event) (interface{}, error) {
 	return 0, nil
 }
 
