@@ -9,6 +9,7 @@ import (
 	cesql "github.com/cloudevents/sdk-go/sql/v2"
 	"github.com/cloudevents/sdk-go/sql/v2/expression"
 	"github.com/cloudevents/sdk-go/sql/v2/gen"
+	cloudevents "github.com/cloudevents/sdk-go/v2"
 )
 
 type expressionVisitor struct {
@@ -55,6 +56,18 @@ func (v *expressionVisitor) Visit(tree antlr.ParseTree) interface{} {
 		return v.VisitIdentifierAtom(tree.(*gen.IdentifierAtomContext))
 	case *gen.IdentifierContext:
 		return v.VisitIdentifier(tree.(*gen.IdentifierContext))
+	case *gen.BinaryMultiplicativeExpressionContext:
+		return v.VisitBinaryMultiplicativeExpression(tree.(*gen.BinaryMultiplicativeExpressionContext))
+	case *gen.BinaryAdditiveExpressionContext:
+		return v.VisitBinaryAdditiveExpression(tree.(*gen.BinaryAdditiveExpressionContext))
+	case *gen.SubExpressionContext:
+		return v.VisitSubExpression(tree.(*gen.SubExpressionContext))
+	case *gen.BinaryLogicExpressionContext:
+		return v.VisitBinaryLogicExpression(tree.(*gen.BinaryLogicExpressionContext))
+	case *gen.BinaryComparisonExpressionContext:
+		return v.VisitBinaryComparisonExpression(tree.(*gen.BinaryComparisonExpressionContext))
+	case *gen.LikeExpressionContext:
+		return v.VisitLikeExpression(tree.(*gen.LikeExpressionContext))
 	}
 	return nil
 }
@@ -92,7 +105,37 @@ func (v *expressionVisitor) VisitInExpression(ctx *gen.InExpressionContext) inte
 }
 
 func (v *expressionVisitor) VisitBinaryComparisonExpression(ctx *gen.BinaryComparisonExpressionContext) interface{} {
-	return v.VisitChildren(ctx)
+	if ctx.LESS() != nil {
+		return expression.NewLessExpression(
+			v.Visit(ctx.Expression(0)).(cesql.Expression),
+			v.Visit(ctx.Expression(1)).(cesql.Expression),
+		)
+	} else if ctx.LESS_OR_EQUAL() != nil {
+		return expression.NewLessOrEqualExpression(
+			v.Visit(ctx.Expression(0)).(cesql.Expression),
+			v.Visit(ctx.Expression(1)).(cesql.Expression),
+		)
+	} else if ctx.GREATER() != nil {
+		return expression.NewGreaterExpression(
+			v.Visit(ctx.Expression(0)).(cesql.Expression),
+			v.Visit(ctx.Expression(1)).(cesql.Expression),
+		)
+	} else if ctx.GREATER_OR_EQUAL() != nil {
+		return expression.NewGreaterOrEqualExpression(
+			v.Visit(ctx.Expression(0)).(cesql.Expression),
+			v.Visit(ctx.Expression(1)).(cesql.Expression),
+		)
+	} else if ctx.EQUAL() != nil {
+		return expression.NewEqualExpression(
+			v.Visit(ctx.Expression(0)).(cesql.Expression),
+			v.Visit(ctx.Expression(1)).(cesql.Expression),
+		)
+	} else {
+		return expression.NewNotEqualExpression(
+			v.Visit(ctx.Expression(0)).(cesql.Expression),
+			v.Visit(ctx.Expression(1)).(cesql.Expression),
+		)
+	}
 }
 
 func (v *expressionVisitor) VisitExistsExpression(ctx *gen.ExistsExpressionContext) interface{} {
@@ -100,11 +143,47 @@ func (v *expressionVisitor) VisitExistsExpression(ctx *gen.ExistsExpressionConte
 }
 
 func (v *expressionVisitor) VisitBinaryLogicExpression(ctx *gen.BinaryLogicExpressionContext) interface{} {
-	return v.VisitChildren(ctx)
+	if ctx.AND() != nil {
+		return expression.NewAndExpression(
+			v.Visit(ctx.Expression(0)).(cesql.Expression),
+			v.Visit(ctx.Expression(1)).(cesql.Expression),
+		)
+	} else if ctx.OR() != nil {
+		return expression.NewOrExpression(
+			v.Visit(ctx.Expression(0)).(cesql.Expression),
+			v.Visit(ctx.Expression(1)).(cesql.Expression),
+		)
+	} else {
+		return expression.NewXorExpression(
+			v.Visit(ctx.Expression(0)).(cesql.Expression),
+			v.Visit(ctx.Expression(1)).(cesql.Expression),
+		)
+	}
 }
 
 func (v *expressionVisitor) VisitLikeExpression(ctx *gen.LikeExpressionContext) interface{} {
-	return v.VisitChildren(ctx)
+	patternContext := ctx.StringLiteral().(*gen.StringLiteralContext)
+
+	var pattern string
+	if patternContext.DQUOTED_STRING_LITERAL() != nil {
+		// Parse double quoted string
+		pattern = dQuotedStringToString(patternContext.DQUOTED_STRING_LITERAL().GetText())
+	} else {
+		// Parse single quoted string
+		pattern = sQuotedStringToString(patternContext.SQUOTED_STRING_LITERAL().GetText())
+	}
+
+	likeExpression, err := expression.NewLikeExpression(v.Visit(ctx.Expression()).(cesql.Expression), pattern)
+	if err != nil {
+		v.parsingErrors = append(v.parsingErrors, err)
+		return noopExpression{}
+	}
+
+	if ctx.NOT() != nil {
+		return expression.NewNotExpression(likeExpression)
+	}
+
+	return likeExpression
 }
 
 func (v *expressionVisitor) VisitFunctionInvocationExpression(ctx *gen.FunctionInvocationExpressionContext) interface{} {
@@ -112,7 +191,22 @@ func (v *expressionVisitor) VisitFunctionInvocationExpression(ctx *gen.FunctionI
 }
 
 func (v *expressionVisitor) VisitBinaryMultiplicativeExpression(ctx *gen.BinaryMultiplicativeExpressionContext) interface{} {
-	return v.VisitChildren(ctx)
+	if ctx.STAR() != nil {
+		return expression.NewMultiplicationExpression(
+			v.Visit(ctx.Expression(0)).(cesql.Expression),
+			v.Visit(ctx.Expression(1)).(cesql.Expression),
+		)
+	} else if ctx.MODULE() != nil {
+		return expression.NewModuleExpression(
+			v.Visit(ctx.Expression(0)).(cesql.Expression),
+			v.Visit(ctx.Expression(1)).(cesql.Expression),
+		)
+	} else {
+		return expression.NewDivisionExpression(
+			v.Visit(ctx.Expression(0)).(cesql.Expression),
+			v.Visit(ctx.Expression(1)).(cesql.Expression),
+		)
+	}
 }
 
 func (v *expressionVisitor) VisitUnaryLogicExpression(ctx *gen.UnaryLogicExpressionContext) interface{} {
@@ -128,11 +222,21 @@ func (v *expressionVisitor) VisitUnaryNumericExpression(ctx *gen.UnaryNumericExp
 }
 
 func (v *expressionVisitor) VisitSubExpression(ctx *gen.SubExpressionContext) interface{} {
-	return v.VisitChildren(ctx)
+	return v.Visit(ctx.Expression())
 }
 
 func (v *expressionVisitor) VisitBinaryAdditiveExpression(ctx *gen.BinaryAdditiveExpressionContext) interface{} {
-	return v.VisitChildren(ctx)
+	if ctx.PLUS() != nil {
+		return expression.NewSumExpression(
+			v.Visit(ctx.Expression(0)).(cesql.Expression),
+			v.Visit(ctx.Expression(1)).(cesql.Expression),
+		)
+	} else {
+		return expression.NewDifferenceExpression(
+			v.Visit(ctx.Expression(0)).(cesql.Expression),
+			v.Visit(ctx.Expression(1)).(cesql.Expression),
+		)
+	}
 }
 
 func (v *expressionVisitor) VisitIdentifier(ctx *gen.IdentifierContext) interface{} {
@@ -147,10 +251,6 @@ func (v *expressionVisitor) VisitFunctionParameterList(ctx *gen.FunctionParamete
 	return v.VisitChildren(ctx)
 }
 
-func (v *expressionVisitor) VisitSetExpression(ctx *gen.SetExpressionContext) interface{} {
-	return v.VisitChildren(ctx)
-}
-
 func (v *expressionVisitor) VisitBooleanLiteral(ctx *gen.BooleanLiteralContext) interface{} {
 	return expression.NewLiteralExpression(ctx.TRUE() != nil)
 }
@@ -159,14 +259,10 @@ func (v *expressionVisitor) VisitStringLiteral(ctx *gen.StringLiteralContext) in
 	var str string
 	if ctx.DQUOTED_STRING_LITERAL() != nil {
 		// Parse double quoted string
-		str = ctx.DQUOTED_STRING_LITERAL().GetText()
-		str = str[1 : len(str)-1]
-		str = strings.ReplaceAll(str, "\\\"", "\"")
+		str = dQuotedStringToString(ctx.DQUOTED_STRING_LITERAL().GetText())
 	} else {
 		// Parse single quoted string
-		str = ctx.SQUOTED_STRING_LITERAL().GetText()
-		str = str[1 : len(str)-1]
-		str = strings.ReplaceAll(str, "\\'", "'")
+		str = sQuotedStringToString(ctx.SQUOTED_STRING_LITERAL().GetText())
 	}
 
 	return expression.NewLiteralExpression(str)
@@ -204,4 +300,28 @@ func (v *expressionVisitor) VisitStringAtom(ctx *gen.StringAtomContext) interfac
 
 func (v *expressionVisitor) VisitIdentifierAtom(ctx *gen.IdentifierAtomContext) interface{} {
 	return v.VisitChildren(ctx)
+}
+
+func (v *expressionVisitor) VisitSetExpression(ctx *gen.SetExpressionContext) interface{} {
+	return v.VisitChildren(ctx)
+}
+
+// noop expression. This is necessary to continue to walk through the tree, even if there's a failure in the parsing
+
+type noopExpression struct{}
+
+func (n noopExpression) Evaluate(event cloudevents.Event) (interface{}, error) {
+	return 0, nil
+}
+
+// Utilities
+
+func dQuotedStringToString(str string) string {
+	str = str[1 : len(str)-1]
+	return strings.ReplaceAll(str, "\\\"", "\"")
+}
+
+func sQuotedStringToString(str string) string {
+	str = str[1 : len(str)-1]
+	return strings.ReplaceAll(str, "\\'", "'")
 }

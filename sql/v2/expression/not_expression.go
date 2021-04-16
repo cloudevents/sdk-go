@@ -6,9 +6,7 @@ import (
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 )
 
-type notExpression struct {
-	child cesql.Expression
-}
+type notExpression baseUnaryExpression
 
 func (l notExpression) Evaluate(event cloudevents.Event) (interface{}, error) {
 	val, err := l.child.Evaluate(event)
