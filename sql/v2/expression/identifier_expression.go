@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	cesql "github.com/cloudevents/sdk-go/sql/v2"
-	"github.com/cloudevents/sdk-go/sql/v2/runtime"
+	"github.com/cloudevents/sdk-go/sql/v2/utils"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 )
 
@@ -13,7 +13,7 @@ type identifierExpression struct {
 }
 
 func (l identifierExpression) Evaluate(event cloudevents.Event) (interface{}, error) {
-	value := runtime.GetAttribute(event, l.identifier)
+	value := utils.GetAttribute(event, l.identifier)
 	if value == nil {
 		return nil, fmt.Errorf("missing attribute '%s'", l.identifier)
 	}

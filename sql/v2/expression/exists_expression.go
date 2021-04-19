@@ -2,7 +2,7 @@ package expression
 
 import (
 	cesql "github.com/cloudevents/sdk-go/sql/v2"
-	"github.com/cloudevents/sdk-go/sql/v2/runtime"
+	"github.com/cloudevents/sdk-go/sql/v2/utils"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 )
 
@@ -11,7 +11,7 @@ type existsExpression struct {
 }
 
 func (l existsExpression) Evaluate(event cloudevents.Event) (interface{}, error) {
-	return runtime.ContainsAttribute(event, l.identifier), nil
+	return utils.ContainsAttribute(event, l.identifier), nil
 }
 
 func NewExistsExpression(identifier string) cesql.Expression {

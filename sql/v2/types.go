@@ -1,4 +1,4 @@
-package runtime
+package v2
 
 type Type uint8
 
@@ -8,6 +8,10 @@ const (
 	BooleanType
 	AnyType
 )
+
+func TypePtr(t Type) *Type {
+	return &t
+}
 
 func (t Type) IsSameType(val interface{}) bool {
 	return TypeFromVal(val) == t

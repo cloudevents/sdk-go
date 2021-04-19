@@ -3,20 +3,23 @@ package runtime
 import (
 	"errors"
 	"strings"
+
+	cesql "github.com/cloudevents/sdk-go/sql/v2"
+	"github.com/cloudevents/sdk-go/sql/v2/function"
 )
 
 type functionItem struct {
-	fixedArgsFunctions map[int]Function
-	variadicFunction   Function
+	fixedArgsFunctions map[int]cesql.Function
+	variadicFunction   cesql.Function
 }
 
 type functionTable map[string]*functionItem
 
-func (table functionTable) AddFunction(function Function) error {
+func (table functionTable) AddFunction(function cesql.Function) error {
 	item := table[function.Name()]
 	if item == nil {
 		item = &functionItem{
-			fixedArgsFunctions: make(map[int]Function),
+			fixedArgsFunctions: make(map[int]cesql.Function),
 		}
 		table[function.Name()] = item
 	}
@@ -50,7 +53,7 @@ func (table functionTable) AddFunction(function Function) error {
 	}
 }
 
-func (table functionTable) ResolveFunction(name string, args int) Function {
+func (table functionTable) ResolveFunction(name string, args int) cesql.Function {
 	item := table[strings.ToUpper(name)]
 	if item == nil {
 		return nil
@@ -70,13 +73,30 @@ func (table functionTable) ResolveFunction(name string, args int) Function {
 var globalFunctionTable = functionTable{}
 
 func init() {
-	for _, fn := range []Function{} {
+	for _, fn := range []cesql.Function{
+		function.IntFunction,
+		function.BoolFunction,
+		function.StringFunction,
+		function.IsBoolFunction,
+		function.IsIntFunction,
+		function.AbsFunction,
+		function.LengthFunction,
+		function.ConcatFunction,
+		function.ConcatWSFunction,
+		function.LowerFunction,
+		function.UpperFunction,
+		function.TrimFunction,
+		function.LeftFunction,
+		function.RightFunction,
+		function.SubstringFunction,
+		function.SubstringWithLengthFunction,
+	} {
 		if err := globalFunctionTable.AddFunction(fn); err != nil {
 			panic(err)
 		}
 	}
 }
 
-func ResolveFunction(name string, args int) Function {
+func ResolveFunction(name string, args int) cesql.Function {
 	return globalFunctionTable.ResolveFunction(name, args)
 }

@@ -2,7 +2,7 @@ package expression
 
 import (
 	cesql "github.com/cloudevents/sdk-go/sql/v2"
-	"github.com/cloudevents/sdk-go/sql/v2/runtime"
+	"github.com/cloudevents/sdk-go/sql/v2/utils"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 )
 
@@ -22,12 +22,12 @@ func (s integerComparisonExpression) Evaluate(event cloudevents.Event) (interfac
 		return nil, err
 	}
 
-	leftVal, err = runtime.Cast(leftVal, runtime.IntegerType)
+	leftVal, err = utils.Cast(leftVal, cesql.IntegerType)
 	if err != nil {
 		return nil, err
 	}
 
-	rightVal, err = runtime.Cast(rightVal, runtime.IntegerType)
+	rightVal, err = utils.Cast(rightVal, cesql.IntegerType)
 	if err != nil {
 		return nil, err
 	}

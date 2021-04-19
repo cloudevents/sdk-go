@@ -5,6 +5,7 @@ import (
 
 	cesql "github.com/cloudevents/sdk-go/sql/v2"
 	"github.com/cloudevents/sdk-go/sql/v2/runtime"
+	"github.com/cloudevents/sdk-go/sql/v2/utils"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 )
 
@@ -27,7 +28,12 @@ func (expr functionInvocationExpression) Evaluate(event cloudevents.Event) (inte
 			return nil, err
 		}
 
-		arg, err = runtime.Cast(arg, fn.ArgType(i))
+		argType := fn.ArgType(i)
+		if argType == nil {
+			return nil, fmt.Errorf("cannot resolve arg type at index %d", i)
+		}
+
+		arg, err = utils.Cast(arg, *argType)
 		if err != nil {
 			return nil, err
 		}

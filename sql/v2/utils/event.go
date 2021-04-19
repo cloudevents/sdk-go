@@ -1,10 +1,12 @@
-package runtime
+package utils
 
 import (
 	"fmt"
+	"time"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/cloudevents/sdk-go/v2/binding/spec"
+	"github.com/cloudevents/sdk-go/v2/types"
 )
 
 func GetAttribute(event cloudevents.Event, attributeName string) interface{} {
@@ -38,6 +40,10 @@ func GetAttribute(event cloudevents.Event, attributeName string) interface{} {
 		return int32(val.(int64))
 	case uint64:
 		return int32(val.(uint64))
+	case time.Time:
+		return val.(time.Time).Format(time.RFC3339Nano)
+	case []byte:
+		return types.FormatBinary(val.([]byte))
 	}
 	return fmt.Sprintf("%v", val)
 }

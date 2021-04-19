@@ -2,7 +2,7 @@ package expression
 
 import (
 	cesql "github.com/cloudevents/sdk-go/sql/v2"
-	"github.com/cloudevents/sdk-go/sql/v2/runtime"
+	"github.com/cloudevents/sdk-go/sql/v2/utils"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 )
 
@@ -23,7 +23,7 @@ func (l inExpression) Evaluate(event cloudevents.Event) (interface{}, error) {
 			return nil, err
 		}
 
-		rightValue, err = runtime.Cast(rightValue, runtime.TypeFromVal(leftValue))
+		rightValue, err = utils.Cast(rightValue, cesql.TypeFromVal(leftValue))
 		if err != nil {
 			return nil, err
 		}
