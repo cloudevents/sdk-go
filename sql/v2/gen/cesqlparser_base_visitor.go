@@ -1,3 +1,8 @@
+/*
+ Copyright 2021 The CloudEvents Authors
+ SPDX-License-Identifier: Apache-2.0
+*/
+
 // Code generated from CESQLParser.g4 by ANTLR 4.9. DO NOT EDIT.
 
 package gen // CESQLParser
