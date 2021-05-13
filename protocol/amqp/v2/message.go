@@ -127,10 +127,10 @@ func (m *Message) GetExtension(name string) interface{} {
 
 func (m *Message) Finish(err error) error {
 	if err != nil {
-		return m.AMQP.Reject(&amqp.Error{
+		return m.AMQP.Reject(context.Background(), &amqp.Error{
 			Condition:   condition,
 			Description: err.Error(),
 		})
 	}
-	return m.AMQP.Accept()
+	return m.AMQP.Accept(context.Background())
 }
