@@ -8,7 +8,6 @@ package http
 import (
 	"context"
 	"errors"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"time"
@@ -43,12 +42,7 @@ func (p *Protocol) doOnce(req *http.Request) (binding.Message, protocol.Result) 
 	if resp.StatusCode/100 == 2 {
 		result = protocol.ResultACK
 	} else {
-		respbody, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			result = protocol.ResultNACK
-		} else {
-			result = protocol.NewReceipt(false, "%s", string(respbody))
-		}
+		result = protocol.ResultNACK
 	}
 
 	return NewMessage(resp.Header, resp.Body), NewResult(resp.StatusCode, "%w", result)
