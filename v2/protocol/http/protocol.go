@@ -141,7 +141,7 @@ func (p *Protocol) Send(ctx context.Context, m binding.Message, transformers ...
 	}
 
 	msg, err := p.Request(ctx, m, transformers...)
-	if err != nil {
+	if err != nil && !protocol.IsACK(err) {
 		var res *Result
 		if protocol.ResultAs(err, &res) {
 			if message, ok := msg.(*Message); ok {
