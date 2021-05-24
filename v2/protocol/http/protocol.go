@@ -6,6 +6,7 @@
 package http
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -139,7 +140,18 @@ func (p *Protocol) Send(ctx context.Context, m binding.Message, transformers ...
 		return fmt.Errorf("nil Message")
 	}
 
-	_, err := p.Request(ctx, m, transformers...)
+	msg, err := p.Request(ctx, m, transformers...)
+	if err != nil && !protocol.IsACK(err) {
+		var res *Result
+		if protocol.ResultAs(err, &res) {
+			if message, ok := msg.(*Message); ok {
+				buf := new(bytes.Buffer)
+				buf.ReadFrom(message.BodyReader)
+				errorStr := buf.String()
+				err = NewResult(res.StatusCode, "%s", errorStr)
+			}
+		}
+	}
 	return err
 }
 
