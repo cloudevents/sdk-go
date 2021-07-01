@@ -101,17 +101,10 @@ func sdkToProto(e *event.Event) (*pb.CloudEvent, error) {
 	container.Data = &pb.CloudEvent_BinaryData{
 		BinaryData: e.Data(),
 	}
-	// NOTE: This is commented out until we add the data codec in a later patch
-	// or PR. Embedded here for illustration of how we will implement the
-	// requirement to use ProtoData IFF the data content type is protobuf.
 	if e.DataContentType() == ContentTypeProtobuf {
-		anymsg := &anypb.Any{}
-		if err := proto.Unmarshal(e.Data(), anymsg); err != nil {
-			if e.DataSchema() == "" {
-				return nil, fmt.Errorf("cannot encode direct protobuf message without dataschema. set dataschema to the appropriate protobuf type like type.googleapis.com/packge.v1.Type or make sure you are using the appropriate data content type %s", ContentTypeProtobuf)
-			}
-			anymsg.TypeUrl = e.DataSchema()
-			anymsg.Value = e.Data()
+		anymsg := &anypb.Any{
+			TypeUrl: e.DataSchema(),
+			Value:   e.Data(),
 		}
 		container.Data = &pb.CloudEvent_ProtoData{
 			ProtoData: anymsg,
@@ -240,9 +233,8 @@ func protoToSDK(container *pb.CloudEvent) (*event.Event, error) {
 			return nil, fmt.Errorf("failed to convert text type (%s) data: %s", contentType, err)
 		}
 	case *pb.CloudEvent_ProtoData:
-		if err := e.SetData(ContentTypeProtobuf, dt.ProtoData); err != nil {
-			return nil, fmt.Errorf("failed to convert protobuf type (%s) data: %s", contentType, err)
-		}
+		e.SetDataContentType(ContentTypeProtobuf)
+		e.DataEncoded = dt.ProtoData.Value
 	}
 	for name, value := range container.Attributes {
 		v, err := valueFrom(value)
