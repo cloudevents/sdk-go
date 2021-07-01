@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	"google.golang.org/protobuf/proto"
+
+	"github.com/cloudevents/sdk-go/v2/event/datacodec"
 )
 
 const (
@@ -12,6 +14,11 @@ const (
 	// message.
 	ContentTypeProtobuf = "application/protobuf"
 )
+
+func init() {
+	datacodec.AddDecoder(ContentTypeProtobuf, DecodeData)
+	datacodec.AddEncoder(ContentTypeProtobuf, EncodeData)
+}
 
 // DecodeData converts an encoded protobuf message back into the message (out).
 // The message must be a type compatible with whatever was given to EncodeData.

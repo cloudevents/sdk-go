@@ -8,17 +8,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cloudevents/sdk-go/v2/event"
-	"github.com/cloudevents/sdk-go/v2/event/datacodec"
 	"github.com/cloudevents/sdk-go/v2/types"
 
 	format "github.com/cloudevents/sdk-go/binding/format/protobuf/v2"
 	pb "github.com/cloudevents/sdk-go/binding/format/protobuf/v2/internal/pb"
 )
-
-func init() {
-	datacodec.AddDecoder(format.ContentTypeProtobuf, format.DecodeData)
-	datacodec.AddEncoder(format.ContentTypeProtobuf, format.EncodeData)
-}
 
 func TestProtobufFormatWithoutProtobufCodec(t *testing.T) {
 	require := require.New(t)
