@@ -8,19 +8,18 @@ package jsm
 import (
 	"bytes"
 	"context"
+
 	"github.com/nats-io/nats.go"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/binding/format"
-	"github.com/nats-io/jsm.go"
 )
 
 // Message implements binding.Message by wrapping an *nats.Msg.
 // This message *can* be read several times safely
 type Message struct {
-	Msg        *nats.Msg
-	StreamInfo *jsm.MsgInfo
-	encoding   binding.Encoding
+	Msg      *nats.Msg
+	encoding binding.Encoding
 }
 
 // NewMessage wraps an *nats.Msg in a binding.Message.

@@ -7,10 +7,8 @@ package jsm
 
 import (
 	"context"
-	"github.com/nats-io/jsm.go"
 	"io"
 	"sync"
-	"time"
 
 	"github.com/nats-io/nats.go"
 
@@ -81,24 +79,21 @@ func NewConsumer(url, stream, subject string, natsOpts []nats.Option, jsmOpts []
 }
 
 func NewConsumerFromConn(conn *nats.Conn, stream, subject string, jsmOpts []nats.JSOpt, opts ...ConsumerOption) (*Consumer, error) {
-	mgr, err := jsm.New(conn)
-	if err != nil {
-		return nil, err
-	}
-
-	template, err := jsm.NewStreamConfiguration(jsm.DefaultStream, jsm.MaxAge(24*365*time.Hour), jsm.FileStorage())
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = mgr.NewStreamFromDefault(stream, *template, jsm.Subjects(stream+".*"))
-	if err != nil {
-		return nil, err
-	}
-
 	jsm, err := conn.JetStream(jsmOpts...)
 	if err != nil {
 		return nil, err
+	}
+
+	streamInfo, err := jsm.StreamInfo(stream, jsmOpts...)
+
+	if streamInfo == nil && err != nil {
+		_, err = jsm.AddStream(&nats.StreamConfig{
+			Name:     stream,
+			Subjects: []string{stream + ".*"},
+		})
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	c := &Consumer{

@@ -36,7 +36,7 @@ func main() {
 	}
 	ctx := context.Background()
 
-	natsProtocol, err := cloudeventsjsm.NewSender(env.NATSServer, "ORDERS", env.Subject, cloudeventsjsm.NatsOptions(), nil)
+	natsProtocol, err := cloudeventsjsm.NewSender(env.NATSServer, "ORDER", env.Subject, cloudeventsjsm.NatsOptions(), nil)
 	if err != nil {
 		log.Fatalf("failed to create nats protcol, %s", err.Error())
 	}
