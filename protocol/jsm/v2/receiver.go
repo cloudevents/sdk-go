@@ -86,7 +86,7 @@ func NewConsumerFromConn(conn *nats.Conn, stream, subject string, jsmOpts []nats
 
 	streamInfo, err := jsm.StreamInfo(stream, jsmOpts...)
 
-	if streamInfo == nil && err != nil {
+	if streamInfo == nil || err != nil && err.Error() == "stream not found" {
 		_, err = jsm.AddStream(&nats.StreamConfig{
 			Name:     stream,
 			Subjects: []string{stream + ".*"},
