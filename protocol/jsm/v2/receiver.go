@@ -55,19 +55,20 @@ type Consumer struct {
 	Jsm        nats.JetStreamContext
 	Subject    string
 	Subscriber Subscriber
+	SubOpt     []nats.SubOpt
 
 	subMtx        sync.Mutex
 	internalClose chan struct{}
 	connOwned     bool
 }
 
-func NewConsumer(url, stream, subject string, natsOpts []nats.Option, jsmOpts []nats.JSOpt, opts ...ConsumerOption) (*Consumer, error) {
+func NewConsumer(url, stream, subject string, natsOpts []nats.Option, jsmOpts []nats.JSOpt, subOpts []nats.SubOpt, opts ...ConsumerOption) (*Consumer, error) {
 	conn, err := nats.Connect(url, natsOpts...)
 	if err != nil {
 		return nil, err
 	}
 
-	c, err := NewConsumerFromConn(conn, stream, subject, jsmOpts, opts...)
+	c, err := NewConsumerFromConn(conn, stream, subject, jsmOpts, subOpts, opts...)
 	if err != nil {
 		conn.Close()
 		return nil, err
@@ -78,7 +79,7 @@ func NewConsumer(url, stream, subject string, natsOpts []nats.Option, jsmOpts []
 	return c, err
 }
 
-func NewConsumerFromConn(conn *nats.Conn, stream, subject string, jsmOpts []nats.JSOpt, opts ...ConsumerOption) (*Consumer, error) {
+func NewConsumerFromConn(conn *nats.Conn, stream, subject string, jsmOpts []nats.JSOpt, subOpts []nats.SubOpt, opts ...ConsumerOption) (*Consumer, error) {
 	jsm, err := conn.JetStream(jsmOpts...)
 	if err != nil {
 		return nil, err
@@ -101,6 +102,7 @@ func NewConsumerFromConn(conn *nats.Conn, stream, subject string, jsmOpts []nats
 		Conn:          conn,
 		Jsm:           jsm,
 		Subject:       subject,
+		SubOpt:        subOpts,
 		Subscriber:    &RegularSubscriber{},
 		internalClose: make(chan struct{}, 1),
 	}
@@ -118,7 +120,7 @@ func (c *Consumer) OpenInbound(ctx context.Context) error {
 	defer c.subMtx.Unlock()
 
 	// Subscribe
-	sub, err := c.Subscriber.Subscribe(c.Jsm, c.Subject, c.MsgHandler)
+	sub, err := c.Subscriber.Subscribe(c.Jsm, c.Subject, c.MsgHandler, c.SubOpt...)
 	if err != nil {
 		return err
 	}

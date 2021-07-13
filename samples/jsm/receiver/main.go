@@ -31,7 +31,7 @@ func main() {
 	}
 	ctx := context.Background()
 
-	p, err := cejsm.NewConsumer(env.NATSServer, "ORDER", env.Subject, cejsm.NatsOptions(), nil)
+	p, err := cejsm.NewConsumer(env.NATSServer, "ORDER", env.Subject, cejsm.NatsOptions(), nil, nil)
 	if err != nil {
 		log.Fatalf("failed to create nats protocol, %s", err.Error())
 	}
