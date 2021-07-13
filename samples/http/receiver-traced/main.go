@@ -9,18 +9,22 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
+	"go.opencensus.io/plugin/ochttp"
 )
 
 func main() {
 	ctx := context.Background()
-	p, err := cloudevents.NewHTTP()
+	p, err := cloudevents.NewHTTP(cloudevents.WithMiddleware(func(next http.Handler) http.Handler {
+		return &ochttp.Handler{Handler: next}
+	}))
 	if err != nil {
 		log.Fatalf("failed to create protocol: %s", err.Error())
 	}
 
-	c, err := cloudevents.NewClientObserved(p, cloudevents.WithTracePropagation)
+	c, err := cloudevents.NewClient(p)
 	if err != nil {
 		log.Fatalf("failed to create client, %v", err)
 	}
@@ -30,9 +34,5 @@ func main() {
 }
 
 func receive(ctx context.Context, e cloudevents.Event) {
-	// TODO: slinky, this changed and is now missing. Update.
-	//_, span := client.TraceSpan(ctx, e)
-	//defer span.End()
-
 	fmt.Printf("%s", e)
 }
