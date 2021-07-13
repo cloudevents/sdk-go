@@ -24,7 +24,7 @@ type Sender struct {
 	connOwned bool
 }
 
-// NewSender creates a new protocol.Sender responsible for opening and closing the STAN connection
+// NewSender creates a new protocol.Sender responsible for opening and closing the NATS connection
 func NewSender(url, stream, subject string, natsOpts []nats.Option, jsmOpts []nats.JSOpt, opts ...SenderOption) (*Sender, error) {
 	conn, err := nats.Connect(url, natsOpts...)
 	if err != nil {
