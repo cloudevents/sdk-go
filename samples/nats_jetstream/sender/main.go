@@ -14,7 +14,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/kelseyhightower/envconfig"
 
-	cejsm "github.com/cloudevents/sdk-go/protocol/jsm/v2"
+	cejsm "github.com/cloudevents/sdk-go/protocol/nats_jetstream/v2"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 )
 

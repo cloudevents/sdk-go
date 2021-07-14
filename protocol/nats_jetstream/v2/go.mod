@@ -1,4 +1,4 @@
-module github.com/cloudevents/sdk-go/protocol/jsm/v2
+module github.com/cloudevents/sdk-go/protocol/nats_jetstream/v2
 
 go 1.14
 

@@ -3,7 +3,7 @@
  SPDX-License-Identifier: Apache-2.0
 */
 
-package jsm
+package nats_jetstream
 
 import (
 	"bytes"
@@ -30,18 +30,22 @@ func NewMessage(msg *nats.Msg) *Message {
 
 var _ binding.Message = (*Message)(nil)
 
+// ReadEncoding return the type of the message Encoding.
 func (m *Message) ReadEncoding() binding.Encoding {
 	return m.encoding
 }
 
+// ReadStructured transfers a structured-mode event to a StructuredWriter.
 func (m *Message) ReadStructured(ctx context.Context, encoder binding.StructuredWriter) error {
 	return encoder.SetStructuredEvent(ctx, format.JSON, bytes.NewReader(m.Msg.Data))
 }
 
+// ReadBinary transfers a binary-mode event to an BinaryWriter.
 func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) error {
 	return binding.ErrNotBinary
 }
 
+// Finish *must* be called when message from a Receiver can be forgotten by the receiver.
 func (m *Message) Finish(err error) error {
 	return nil
 }

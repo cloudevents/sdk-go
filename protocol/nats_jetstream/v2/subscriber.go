@@ -3,7 +3,7 @@
  SPDX-License-Identifier: Apache-2.0
 */
 
-package jsm
+package nats_jetstream
 
 import (
 	"github.com/nats-io/nats.go"

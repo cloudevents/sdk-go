@@ -3,7 +3,7 @@
  SPDX-License-Identifier: Apache-2.0
 */
 
-package jsm
+package nats_jetstream
 
 import (
 	"context"
@@ -24,6 +24,7 @@ type Receiver struct {
 	incoming chan msgErr
 }
 
+// NewReceiver creates a new protocol.Receiver responsible for receiving messages.
 func NewReceiver() *Receiver {
 	return &Receiver{
 		incoming: make(chan msgErr),
@@ -36,6 +37,7 @@ func (r *Receiver) MsgHandler(msg *nats.Msg) {
 	r.incoming <- msgErr{msg: NewMessage(msg)}
 }
 
+// Receive implements Receiver.Receive.
 func (r *Receiver) Receive(ctx context.Context) (binding.Message, error) {
 	select {
 	case msgErr, ok := <-r.incoming:

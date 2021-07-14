@@ -13,7 +13,7 @@ import (
 
 	"github.com/kelseyhightower/envconfig"
 
-	cloudeventsjsm "github.com/cloudevents/sdk-go/protocol/jsm/v2"
+	cloudeventsjsm "github.com/cloudevents/sdk-go/protocol/nats_jetstream/v2"
 	cloudeventshttp "github.com/cloudevents/sdk-go/v2/protocol/http"
 )
 

@@ -3,7 +3,7 @@
  SPDX-License-Identifier: Apache-2.0
 */
 
-package jsm
+package nats_jetstream
 
 import (
 	"bytes"
@@ -77,6 +77,8 @@ func NewSenderFromConn(conn *nats.Conn, stream, subject string, jsmOpts []nats.J
 	return s, nil
 }
 
+// Close implements Sender.Sender
+// Sender sends messages.
 func (s *Sender) Send(ctx context.Context, in binding.Message, transformers ...binding.Transformer) (err error) {
 	defer func() {
 		if err2 := in.Finish(err); err2 != nil {
