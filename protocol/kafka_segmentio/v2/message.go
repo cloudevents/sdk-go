@@ -13,7 +13,6 @@ import (
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/binding/format"
 	"github.com/cloudevents/sdk-go/v2/binding/spec"
-
 	"github.com/segmentio/kafka-go"
 )
 
@@ -45,7 +44,7 @@ func NewMessageFromConsumerMessage(cm *kafka.Message) *Message {
 	var contentType string
 	headers := make(map[string][]byte, len(cm.Headers))
 	for _, r := range cm.Headers {
-		k := strings.ToLower(string(r.Key))
+		k := strings.ToLower(r.Key)
 		if k == contentTypeHeader {
 			contentType = string(r.Value)
 		}

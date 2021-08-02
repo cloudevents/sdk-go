@@ -7,26 +7,20 @@ package kafka_segmentio
 
 import (
 	"context"
-	"sync"
+	"fmt"
 
 	"github.com/segmentio/kafka-go"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
+	"github.com/cloudevents/sdk-go/v2/protocol"
 )
-
-type msgErr struct {
-	msg binding.Message
-	err error
-}
 
 type Consumer struct {
 	reader    *kafka.Reader
 	ownReader bool
 
 	topic   string
-	groupId string
-
-	cgMtx sync.Mutex
+	groupID string
 }
 
 func NewConsumer(brokers []string, readerConfig kafka.ReaderConfig, topic string) (*Consumer, error) {
@@ -42,9 +36,15 @@ func NewConsumerFromReader(reader *kafka.Reader, groupId string, topic string) *
 	return &Consumer{
 		reader:    reader,
 		topic:     topic,
-		groupId:   groupId,
+		groupID:   groupId,
 		ownReader: false,
 	}
+}
+
+func (c *Consumer) Receive(ctx context.Context) (binding.Message, error) {
+	msg, err := c.reader.FetchMessage(ctx)
+	fmt.Print("cloudevents kafka_segmentio msg received: %+v\n", msg)
+	return NewMessageFromConsumerMessage(&msg), err
 }
 
 func (c *Consumer) Close(ctx context.Context) error {
@@ -53,3 +53,7 @@ func (c *Consumer) Close(ctx context.Context) error {
 	}
 	return nil
 }
+
+var _ protocol.Receiver = (*Consumer)(nil)
+
+var _ protocol.Closer = (*Consumer)(nil)

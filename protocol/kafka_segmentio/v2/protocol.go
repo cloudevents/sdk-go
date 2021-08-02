@@ -8,16 +8,11 @@ package kafka_segmentio
 import (
 	"context"
 	"errors"
-	"sync"
 
 	"github.com/segmentio/kafka-go"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/protocol"
-)
-
-const (
-	defaultGroupID = "cloudevents-sdk-go"
 )
 
 type Protocol struct {
@@ -33,8 +28,7 @@ type Protocol struct {
 	senderTopic             string
 
 	// Consumer
-	Consumer    *Consumer
-	consumerMux sync.Mutex
+	Consumer *Consumer
 
 	// Consumer options
 	receiverTopic   string
@@ -43,15 +37,15 @@ type Protocol struct {
 
 // NewProtocol creates a new kafka transport.
 func NewProtocol(brokers []string, writerConfig kafka.WriterConfig, readerConfig kafka.ReaderConfig, sendToTopic string, receiveFromTopic string, opts ...ProtocolOptionFunc) (*Protocol, error) {
-	p, err := NewProtocolFromClient(writerConfig, readerConfig, sendToTopic, receiveFromTopic, opts...)
+	p, err := NewProtocolFromConfigs(writerConfig, readerConfig, sendToTopic, receiveFromTopic, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return p, nil
 }
 
-// NewProtocolFromClient creates a new kafka transport starting from a kafka writerConfigs
-func NewProtocolFromClient(writerConfig kafka.WriterConfig, readerConfig kafka.ReaderConfig, sendToTopic string, receiveFromTopic string, opts ...ProtocolOptionFunc) (*Protocol, error) {
+// NewProtocolFromConfigs creates a new kafka transport from a kafka writerConfig and readerConfig
+func NewProtocolFromConfigs(writerConfig kafka.WriterConfig, readerConfig kafka.ReaderConfig, sendToTopic string, receiveFromTopic string, opts ...ProtocolOptionFunc) (*Protocol, error) {
 	p := &Protocol{
 		writerConfig:            writerConfig,
 		readerConfig:            readerConfig,
@@ -69,7 +63,7 @@ func NewProtocolFromClient(writerConfig kafka.WriterConfig, readerConfig kafka.R
 	if p.senderTopic == "" {
 		return nil, errors.New("you didn't specify the topic to send to")
 	}
-	p.Sender, err = NewSenderFromClient(p.writerConfig, p.senderTopic)
+	p.Sender, err = NewSenderFromConfig(p.writerConfig, p.senderTopic)
 	if err != nil {
 		return nil, err
 	}
@@ -95,6 +89,9 @@ func (p *Protocol) Send(ctx context.Context, in binding.Message, transformers ..
 		ctx = f(ctx)
 	}
 	return p.Sender.Send(ctx, in, transformers...)
+}
+func (p *Protocol) Receive(ctx context.Context) (binding.Message, error) {
+	return p.Consumer.Receive(ctx)
 }
 
 func (p *Protocol) Close(ctx context.Context) error {
