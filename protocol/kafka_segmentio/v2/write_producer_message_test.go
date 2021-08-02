@@ -168,7 +168,7 @@ func TestEncodeKafkaProducerMessage(t *testing.T) {
 				//Little hack to go back to Message
 				headers := make(map[string][]byte)
 				for _, h := range kafkaMessage.Headers {
-					headers[strings.ToLower(string(h.Key))] = h.Value
+					headers[strings.ToLower(h.Key)] = h.Value
 				}
 
 				var value []byte

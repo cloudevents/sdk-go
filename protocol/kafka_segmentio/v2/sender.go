@@ -10,7 +10,6 @@ import (
 	"fmt"
 
 	"github.com/segmentio/kafka-go"
-
 	"github.com/cloudevents/sdk-go/v2/binding"
 )
 
@@ -22,18 +21,18 @@ type Sender struct {
 
 // NewSender returns a binding.Sender that sends messages to a specific receiverTopic using kafka.Writer
 func NewSender(brokers []string, writerConfig kafka.WriterConfig, receiverTopic string, options ...SenderOptionFunc) (*Sender, error) {
-	producer := kafka.NewWriter(writerConfig)
-	return makeSender(producer, receiverTopic, options...), nil
+	writer := kafka.NewWriter(writerConfig)
+	return makeSender(writer, receiverTopic, options...), nil
 }
 
-// NewSenderFromClient returns a binding.Sender that sends messages to a specific receiverTopic using kafka.Writer
-func NewSenderFromClient(writerConfig kafka.WriterConfig, receiverTopic string, options ...SenderOptionFunc) (*Sender, error) {
-	producer := kafka.NewWriter(writerConfig)
-	return makeSender(producer, receiverTopic, options...), nil
+// NewSenderFromConfig returns a binding.Sender that sends messages to a specific receiverTopic using kafka.Writer
+func NewSenderFromConfig(writerConfig kafka.WriterConfig, receiverTopic string, options ...SenderOptionFunc) (*Sender, error) {
+	writer := kafka.NewWriter(writerConfig)
+	return makeSender(writer, receiverTopic, options...), nil
 }
 
-// NewSenderFromSyncProducer returns a binding.Sender that sends messages to a specific topic using kafka.Writer
-func NewSenderFromSyncProducer(receiverTopic string, writer *kafka.Writer, options ...SenderOptionFunc) (*Sender, error) {
+// NewSenderFromWriter returns a binding.Sender that sends messages to a specific topic using kafka.Writer
+func NewSenderFromWriter(receiverTopic string, writer *kafka.Writer, options ...SenderOptionFunc) (*Sender, error) {
 	return makeSender(writer, receiverTopic, options...), nil
 }
 
