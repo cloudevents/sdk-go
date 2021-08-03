@@ -7,7 +7,6 @@ package kafka_segmentio
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/segmentio/kafka-go"
 
@@ -43,7 +42,6 @@ func NewConsumerFromReader(reader *kafka.Reader, groupId string, topic string) *
 
 func (c *Consumer) Receive(ctx context.Context) (binding.Message, error) {
 	msg, err := c.reader.FetchMessage(ctx)
-	fmt.Print("cloudevents kafka_segmentio msg received: %+v\n", msg)
 	return NewMessageFromConsumerMessage(&msg), err
 }
 
