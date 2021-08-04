@@ -34,6 +34,11 @@ func (p *Protocol) do(ctx context.Context, req *http.Request) (binding.Message, 
 
 func (p *Protocol) doOnce(req *http.Request) (binding.Message, protocol.Result) {
 	resp, err := p.Client.Do(req)
+
+	if resp != nil {
+		defer resp.Body.Close()
+	}
+
 	if err != nil {
 		return nil, protocol.NewReceipt(false, "%w", err)
 	}
