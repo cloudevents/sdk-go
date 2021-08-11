@@ -8,10 +8,11 @@ package stan
 import (
 	"context"
 	"fmt"
-	"github.com/cloudevents/sdk-go/v2/binding"
-	"github.com/nats-io/stan.go"
 	"io"
 	"sync"
+
+	"github.com/cloudevents/sdk-go/v2/binding"
+	"github.com/nats-io/stan.go"
 )
 
 type msgErr struct {
@@ -20,11 +21,15 @@ type msgErr struct {
 }
 
 // Receiver implements protocol.Receiver for STAN subscriptions
+// Deprecated: Please use the nats_jetstream package for nats streaming.
+// See https://pkg.go.dev/github.com/cloudevents/sdk-go/protocol/nats_jetstream/v2.
 type Receiver struct {
 	incoming    chan msgErr
 	messageOpts []MessageOption
 }
 
+// Deprecated: Please use the nats_jetstream package for nats streaming.
+// See https://pkg.go.dev/github.com/cloudevents/sdk-go/protocol/nats_jetstream/v2.
 func NewReceiver(opts ...ReceiverOption) (*Receiver, error) {
 	r := &Receiver{
 		incoming: make(chan msgErr),
@@ -76,6 +81,8 @@ func (r *Receiver) applyOptions(opts ...ReceiverOption) error {
 // - protocol.Opener
 // - protocol.Closer
 // - protocol.Receiver
+// Deprecated: Please use the nats_jetstream package for nats streaming.
+// See https://pkg.go.dev/github.com/cloudevents/sdk-go/protocol/nats_jetstream/v2.
 type Consumer struct {
 	Receiver
 
@@ -92,6 +99,8 @@ type Consumer struct {
 	connOwned     bool // whether this consumer is responsible for closing the connection
 }
 
+// Deprecated: Please use the nats_jetstream package for nats streaming.
+// See https://pkg.go.dev/github.com/cloudevents/sdk-go/protocol/nats_jetstream/v2.
 func NewConsumer(clusterID, clientID, subject string, stanOpts []stan.Option, opts ...ConsumerOption) (*Consumer, error) {
 	conn, err := stan.Connect(clusterID, clientID, stanOpts...)
 	if err != nil {
@@ -109,6 +118,8 @@ func NewConsumer(clusterID, clientID, subject string, stanOpts []stan.Option, op
 	return c, err
 }
 
+// Deprecated: Please use the nats_jetstream package for nats streaming.
+// See https://pkg.go.dev/github.com/cloudevents/sdk-go/protocol/nats_jetstream/v2.
 func NewConsumerFromConn(conn stan.Conn, subject string, opts ...ConsumerOption) (*Consumer, error) {
 	c := &Consumer{
 		Conn:          conn,

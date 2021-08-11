@@ -1,6 +1,6 @@
 # Go SDK for [CloudEvents](https://github.com/cloudevents/spec)
 
-[![go-doc](https://godoc.org/github.com/cloudevents/sdk-go?status.svg)](https://godoc.org/github.com/cloudevents/sdk-go)
+[![go-doc](https://godoc.org/github.com/cloudevents/sdk-go/v2?status.svg)](https://godoc.org/github.com/cloudevents/sdk-go)
 [![Go Report Card](https://goreportcard.com/badge/github.com/cloudevents/sdk-go)](https://goreportcard.com/report/github.com/cloudevents/sdk-go)
 [![Releases](https://img.shields.io/github/release-pre/cloudevents/sdk-go.svg)](https://github.com/cloudevents/sdk-go/releases)
 [![LICENSE](https://img.shields.io/github/license/cloudevents/sdk-go.svg)](https://github.com/cloudevents/sdk-go/blob/main/LICENSE)

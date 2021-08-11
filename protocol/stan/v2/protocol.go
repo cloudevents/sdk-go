@@ -17,6 +17,8 @@ import (
 
 // Protocol is a reference implementation for using the CloudEvents binding
 // integration. Protocol acts as both a STAN client and a STAN handler.
+// Deprecated: Please use the nats_jetstream package for nats streaming.
+// See https://pkg.go.dev/github.com/cloudevents/sdk-go/protocol/nats_jetstream/v2.
 type Protocol struct {
 	Conn stan.Conn
 
@@ -30,6 +32,8 @@ type Protocol struct {
 }
 
 // NewProtocol creates a new STAN protocol including managing the lifecycle of the connection
+// Deprecated: Please use the nats_jetstream package for nats streaming.
+// See https://pkg.go.dev/github.com/cloudevents/sdk-go/protocol/nats_jetstream/v2.
 func NewProtocol(clusterID, clientID, sendSubject, receiveSubject string, stanOpts []stan.Option, opts ...ProtocolOption) (*Protocol, error) {
 	conn, err := stan.Connect(clusterID, clientID, stanOpts...)
 	if err != nil {
@@ -50,6 +54,8 @@ func NewProtocol(clusterID, clientID, sendSubject, receiveSubject string, stanOp
 }
 
 // NewProtocolFromConn creates a new STAN protocol but leaves managing the lifecycle of the connection up to the caller
+// Deprecated: Please use the nats_jetstream package for nats streaming.
+// See https://pkg.go.dev/github.com/cloudevents/sdk-go/protocol/nats_jetstream/v2.
 func NewProtocolFromConn(conn stan.Conn, sendSubject, receiveSubject string, opts ...ProtocolOption) (*Protocol, error) {
 	var err error
 	p := &Protocol{

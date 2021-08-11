@@ -9,12 +9,15 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/protocol"
 
 	"github.com/nats-io/stan.go"
 )
 
+// Deprecated: Please use the nats_jetstream package for nats streaming.
+// See https://pkg.go.dev/github.com/cloudevents/sdk-go/protocol/nats_jetstream/v2.
 type Sender struct {
 	Conn    stan.Conn
 	Subject string
@@ -23,6 +26,8 @@ type Sender struct {
 }
 
 // NewSender creates a new protocol.Sender responsible for opening and closing the STAN connection
+// Deprecated: Please use the nats_jetstream package for nats streaming.
+// See https://pkg.go.dev/github.com/cloudevents/sdk-go/protocol/nats_jetstream/v2.
 func NewSender(clusterID, clientID, subject string, stanOpts []stan.Option, opts ...SenderOption) (*Sender, error) {
 	conn, err := stan.Connect(clusterID, clientID, stanOpts...)
 	if err != nil {
@@ -44,6 +49,8 @@ func NewSender(clusterID, clientID, subject string, stanOpts []stan.Option, opts
 
 // NewSenderFromConn creates a new protocol.Sender which leaves responsibility for opening and closing the STAN
 // connection to the caller
+// Deprecated: Please use the nats_jetstream package for nats streaming.
+// See https://pkg.go.dev/github.com/cloudevents/sdk-go/protocol/nats_jetstream/v2.
 func NewSenderFromConn(conn stan.Conn, subject string, opts ...SenderOption) (*Sender, error) {
 	s := &Sender{
 		Conn:    conn,

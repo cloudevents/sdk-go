@@ -8,6 +8,7 @@ package stan
 import (
 	"bytes"
 	"context"
+
 	"github.com/cloudevents/sdk-go/v2/protocol"
 	"github.com/nats-io/stan.go"
 
@@ -17,6 +18,8 @@ import (
 
 // Message implements binding.Message by wrapping an *stan.Msg.
 // This message *can* be read several times safely
+// Deprecated: Please use the nats_jetstream package for nats streaming.
+// See https://pkg.go.dev/github.com/cloudevents/sdk-go/protocol/nats_jetstream/v2.
 type Message struct {
 	Msg        *stan.Msg
 	manualAcks bool
@@ -24,6 +27,8 @@ type Message struct {
 
 // NewMessage wraps a *nats.Msg in a binding.Message.
 // The returned message *can* be read several times safely
+// Deprecated: Please use the nats_jetstream package for nats streaming.
+// See https://pkg.go.dev/github.com/cloudevents/sdk-go/protocol/nats_jetstream/v2.
 func NewMessage(msg *stan.Msg, opts ...MessageOption) (*Message, error) {
 	m := &Message{Msg: msg}
 
