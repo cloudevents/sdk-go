@@ -99,7 +99,7 @@ To unmarshal JSON back into a CloudEvent:
 ```go
 event :=  cloudevents.NewEvent()
 
-err := json.Marshal(bytes, &event)
+err := json.Unmarshal(bytes, &event)
 ```
 
 ## Supported specification features
