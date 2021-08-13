@@ -9,7 +9,7 @@ set -o pipefail
 
 # This is run after the major release is published.
 
-VERSION=v2.4.1
+VERSION=v2.5.0
 
 # It is intended that this file is run locally. For a full release tag, confirm the version is correct, and then:
 #   ./hack/tag-release.sh --tag --push
@@ -45,6 +45,7 @@ do
           "github.com/cloudevents/sdk-go/protocol/amqp/v2"
           "github.com/cloudevents/sdk-go/protocol/stan/v2"
           "github.com/cloudevents/sdk-go/protocol/nats/v2"
+          "github.com/cloudevents/sdk-go/protocol/nats_jetstream/v2"
           "github.com/cloudevents/sdk-go/protocol/pubsub/v2"
           "github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2"
           "github.com/cloudevents/sdk-go/protocol/ws/v2"
@@ -108,6 +109,7 @@ MODULES=(
   "protocol/amqp"
   "protocol/stan"
   "protocol/nats"
+  "protocol/nats_jetstream"
   "protocol/pubsub"
   "protocol/kafka_sarama"
   "protocol/ws"
