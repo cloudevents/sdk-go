@@ -6,6 +6,7 @@ import (
 	stdtime "time"
 
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/cloudevents/sdk-go/v2/binding/format"
@@ -30,9 +31,6 @@ var (
 
 const (
 	ApplicationCloudEventsProtobuf = "application/cloudevents+protobuf"
-	// applicationProtobuf embedded here but unexported temporarily until it
-	// is moved to the datacodec implementation.
-	applicationProtobuf = "application/protobuf"
 )
 
 // StringOfApplicationCloudEventsProtobuf  returns a string pointer to
@@ -103,22 +101,15 @@ func sdkToProto(e *event.Event) (*pb.CloudEvent, error) {
 	container.Data = &pb.CloudEvent_BinaryData{
 		BinaryData: e.Data(),
 	}
-	// NOTE: This is commented out until we add the data codec in a later patch
-	// or PR. Embedded here for illustration of how we will implement the
-	// requirement to use ProtoData IFF the data content type is protobuf.
-	// if e.DataContentType() == event.ApplicationProtobuf {
-	// 	anymsg := &anypb.Any{}
-	// 	if err := proto.Unmarshal(e.Data(), anymsg); err != nil {
-	// 		if e.DataSchema() == "" {
-	// 			return nil, fmt.Errorf("cannot encode direct protobuf message without dataschema. set dataschema to the appropriate protobuf type like type.googleapis.com/packge.v1.Type or make sure you are using the appropriate data content type %s", event.ApplicationProtobuf)
-	// 		}
-	// 		anymsg.TypeUrl = e.DataSchema()
-	// 		anymsg.Value = e.Data()
-	// 	}
-	// 	container.Data = &pb.CloudEvent_ProtoData{
-	// 		ProtoData: anymsg,
-	// 	}
-	// }
+	if e.DataContentType() == ContentTypeProtobuf {
+		anymsg := &anypb.Any{
+			TypeUrl: e.DataSchema(),
+			Value:   e.Data(),
+		}
+		container.Data = &pb.CloudEvent_ProtoData{
+			ProtoData: anymsg,
+		}
+	}
 	return container, nil
 }
 
@@ -242,9 +233,8 @@ func protoToSDK(container *pb.CloudEvent) (*event.Event, error) {
 			return nil, fmt.Errorf("failed to convert text type (%s) data: %s", contentType, err)
 		}
 	case *pb.CloudEvent_ProtoData:
-		if err := e.SetData(applicationProtobuf, dt.ProtoData); err != nil {
-			return nil, fmt.Errorf("failed to convert protobuf type (%s) data: %s", contentType, err)
-		}
+		e.SetDataContentType(ContentTypeProtobuf)
+		e.DataEncoded = dt.ProtoData.Value
 	}
 	for name, value := range container.Attributes {
 		v, err := valueFrom(value)
