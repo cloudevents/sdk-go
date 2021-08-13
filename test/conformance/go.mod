@@ -16,8 +16,8 @@ replace github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 => ../../protocol
 
 require (
 	github.com/Shopify/sarama v1.25.0
-	github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.0.0
-	github.com/cloudevents/sdk-go/v2 v2.0.0
+	github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.5.0
+	github.com/cloudevents/sdk-go/v2 v2.5.0
 	github.com/cucumber/godog v0.9.0
 	github.com/cucumber/messages-go/v10 v10.0.3
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
