@@ -24,7 +24,7 @@ require (
 	github.com/cloudevents/sdk-go/protocol/nats/v2 v2.0.0
 	github.com/cloudevents/sdk-go/protocol/pubsub/v2 v2.0.0
 	github.com/cloudevents/sdk-go/protocol/stan/v2 v2.0.0
-	github.com/cloudevents/sdk-go/v2 v2.0.0
+	github.com/cloudevents/sdk-go/v2 v2.5.0
 	github.com/google/go-cmp v0.5.1
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/mux v1.7.3

@@ -6,6 +6,7 @@ on:
     - 'protocol/**' # Push events to matching protocol/foo/bar/v*, i.e. protocol/foo/bar/v1.0, protocol/foo/bar/v20.15.10
     - 'observability/**' # Push events to matching observability/foo/bar/v*
     - 'sql/**' # Push events to matching sql/v*
+    - 'binding/**' # Push events to matching binding/foo/bar/v*
     
 name: Create Draft Releases
 
