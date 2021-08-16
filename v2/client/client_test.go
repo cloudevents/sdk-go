@@ -16,6 +16,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -266,7 +267,7 @@ func TestClientReceive(t *testing.T) {
 	for n, tc := range testCases {
 		for _, path := range []string{"", "/", "/unittest/"} {
 			t.Run(n+" at path "+path, func(t *testing.T) {
-
+				wg := &sync.WaitGroup{}
 				events := make(chan event.Event)
 
 				p, err := cehttp.New(tc.optsFn(0, "")...)
@@ -280,7 +281,9 @@ func TestClientReceive(t *testing.T) {
 				}
 
 				ctx, cancel := context.WithCancel(context.TODO())
+				wg.Add(1)
 				go func() {
+					defer wg.Done()
 					err := c.StartReceiver(ctx, func(ctx context.Context, event event.Event) error {
 						go func() {
 							events <- event
@@ -352,6 +355,9 @@ func TestClientReceive(t *testing.T) {
 				if _, err := http.DefaultClient.Do(req); err == nil {
 					t.Fatalf("expected error to when sending request to stopped client")
 				}
+				// need to wait until receiver goroutines finish
+				// in case they result in test error
+				wg.Wait()
 			})
 		}
 	}

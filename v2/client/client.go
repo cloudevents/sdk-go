@@ -224,11 +224,10 @@ func (c *ceClient) StartReceiver(ctx context.Context, fn interface{}) error {
 	}()
 
 	// Start Polling.
+	errChan := make(chan error)
 	wg := sync.WaitGroup{}
 	for i := 0; i < c.pollGoroutines; i++ {
-		wg.Add(1)
 		go func() {
-			defer wg.Done()
 			for {
 				var msg binding.Message
 				var respFn protocol.ResponseFn
@@ -241,13 +240,9 @@ func (c *ceClient) StartReceiver(ctx context.Context, fn interface{}) error {
 					respFn = noRespFn
 				}
 
-				if err == io.EOF { // Normal close
-					return
-				}
-
 				if err != nil {
-					cecontext.LoggerFrom(ctx).Warn("Error while receiving a message: ", err)
-					continue
+					errChan <- err
+					return
 				}
 
 				// Do not block on the invoker.
@@ -270,6 +265,16 @@ func (c *ceClient) StartReceiver(ctx context.Context, fn interface{}) error {
 		}
 	}
 
+	select {
+	case chanErr := <-errChan:
+		if chanErr != io.EOF {
+			err = chanErr
+		}
+	case <-ctx.Done():
+		// TODO: it might be important to actually return error from context
+		cecontext.LoggerFrom(ctx).Info("Error from closed context: ", ctx.Err())
+	}
+	// wait for all invoker processes to finish
 	wg.Wait()
 
 	return err
