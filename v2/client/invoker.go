@@ -81,9 +81,9 @@ func (r *receiveInvoker) Invoke(ctx context.Context, m binding.Message, respFn p
 
 			var cb func(error)
 			ctx, cb = r.observabilityService.RecordCallingInvoker(ctx, e)
-			defer cb(result)
 
 			resp, result = r.fn.invoke(ctx, e)
+			defer cb(result)
 			return
 		}()
 
