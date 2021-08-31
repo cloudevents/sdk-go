@@ -17,7 +17,10 @@ import (
 func main() {
 	ctx := cloudevents.ContextWithTarget(context.Background(), "http://localhost:8080/")
 
-	p, err := cloudevents.NewHTTP()
+	p, err := cloudevents.NewHTTP(
+		// Activate protobuf format for the CloudEvent envelope.
+		cehttp.WithHeader(cehttp.ContentType, pbcloudevents.ApplicationCloudEventsProtobuf),
+	)
 	if err != nil {
 		log.Fatalf("failed to create protocol: %s", err.Error())
 	}
@@ -32,7 +35,7 @@ func main() {
 		e := cloudevents.NewEvent()
 		e.SetType("com.cloudevents.sample.sent")
 		e.SetSource("https://github.com/cloudevents/sdk-go/v2/samples/http/sender-protobuf")
-		e.SetDataSchema(string(data.ProtoReflect().Descriptor().FullName()))
+		e.SetDataSchema("my-schema-registry://" + string(data.ProtoReflect().Descriptor().FullName()))
 		_ = e.SetData(pbcloudevents.ContentTypeProtobuf, data)
 
 		res := c.Send(ctx, e)
@@ -40,8 +43,10 @@ func main() {
 			log.Printf("Failed to send: %v", res)
 		} else {
 			var httpResult *cehttp.Result
-			cloudevents.ResultAs(res, &httpResult)
-			log.Printf("Sent %d with status code %d", i, httpResult.StatusCode)
+			if cloudevents.ResultAs(res, &httpResult) {
+				log.Printf("Sent %d with status code %d", i, httpResult.StatusCode)
+			}
+			log.Printf("Send did not return an HTTP response: %s", res)
 		}
 	}
 }
