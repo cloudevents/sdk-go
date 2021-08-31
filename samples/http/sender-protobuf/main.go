@@ -17,10 +17,7 @@ import (
 func main() {
 	ctx := cloudevents.ContextWithTarget(context.Background(), "http://localhost:8080/")
 
-	p, err := cloudevents.NewHTTP(
-		// Activate protobuf format for the CloudEvent envelope.
-		cehttp.WithHeader(cehttp.ContentType, pbcloudevents.ApplicationCloudEventsProtobuf),
-	)
+	p, err := cloudevents.NewHTTP()
 	if err != nil {
 		log.Fatalf("failed to create protocol: %s", err.Error())
 	}
