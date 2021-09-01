@@ -15,6 +15,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/lightstep/tracecontext.go/traceparent"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.opencensus.io/trace"
+
 	obshttp "github.com/cloudevents/sdk-go/observability/opencensus/v2/http"
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/client"
@@ -23,10 +28,6 @@ import (
 	"github.com/cloudevents/sdk-go/v2/protocol"
 	cehttp "github.com/cloudevents/sdk-go/v2/protocol/http"
 	"github.com/cloudevents/sdk-go/v2/types"
-	"github.com/lightstep/tracecontext.go/traceparent"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"go.opencensus.io/trace"
 )
 
 func simpleTracingBinaryClient(t *testing.T, target string, os client.ObservabilityService) client.Client {
