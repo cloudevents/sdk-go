@@ -1,0 +1,35 @@
+name: Observability
+
+on:
+  push:
+    branches: [ 'main', 'release-*' ]
+  pull_request:
+    branches: [ 'main', 'release-*' ]
+
+jobs:
+
+  observability:
+    name: CloudEvents
+    strategy:
+      matrix:
+        go-version: [1.14.x, 1.15.x]
+        platform: [ubuntu-latest]
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+
+      - name: Setup Go ${{ matrix.go-version }}
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go-version }}
+        id: go
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Update git submodule
+        run: git submodule sync && git submodule update --init
+
+      - name: Build
+        run: ./hack/observability-test.sh
