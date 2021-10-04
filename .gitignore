@@ -34,5 +34,3 @@ _site/
 test/benchmark/e2e/http/results/
 tmp/
 test/coverage.tmp
-protocol/kafka_sarama/v2/vendor
-protocol/kafka_segmentio/v2/vendor
