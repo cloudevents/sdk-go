@@ -5,10 +5,12 @@ go 1.14
 replace github.com/cloudevents/sdk-go/v2 => ../../../v2
 
 require (
-	cloud.google.com/go/pubsub v1.3.1
+	cloud.google.com/go/pubsub v1.17.0
 	github.com/cloudevents/sdk-go/v2 v2.5.0
-	github.com/google/go-cmp v0.5.0
-	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a
-	google.golang.org/api v0.24.0
-	google.golang.org/grpc v1.29.1
+	github.com/google/go-cmp v0.5.6
+	github.com/stretchr/testify v1.7.0
+	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
+	google.golang.org/api v0.54.0
+	google.golang.org/genproto v0.0.0-20210824181836-a4879c3d0e89
+	google.golang.org/grpc v1.40.0
 )

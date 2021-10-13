@@ -733,3 +733,74 @@ func TestPublishReceiveRoundtrip(t *testing.T) {
 		t.Errorf("received unexpected messages (-want +got):\n%s", diff)
 	}
 }
+
+// Test a full round trip of a message with ordering key
+func TestPublishReceiveRoundtripWithOrderingKey(t *testing.T) {
+	ctx := context.Background()
+	pc := &testPubsubClient{}
+	defer pc.Close()
+
+	projectID, topicID, subID := "test-project", "test-topic", "test-sub"
+	client, err := pc.New(ctx, projectID, nil)
+	if err != nil {
+		t.Fatalf("failed to create pubsub client: %v", err)
+	}
+	defer client.Close()
+
+	psconn := &Connection{
+		MessageOrdering:         true,
+		AllowCreateSubscription: true,
+		AllowCreateTopic:        true,
+		Client:                  client,
+		ProjectID:               projectID,
+		TopicID:                 topicID,
+		SubscriptionID:          subID,
+	}
+
+	wantMsgs := make(map[string]string)
+	wantMsgsOrdering := make(map[string]string)
+	gotMsgs := make(map[string]string)
+	gotMsgsOrdering := make(map[string]string)
+
+	wg := &sync.WaitGroup{}
+
+	ctx2, cancel := context.WithCancel(ctx)
+	mux := &sync.Mutex{}
+	// Pubsub will drop all messages if there is no subscription.
+	// Call Receive first so that subscription can be created before
+	// we publish any message.
+	go psconn.Receive(ctx2, func(_ context.Context, msg *pubsub.Message) {
+		mux.Lock()
+		defer mux.Unlock()
+		gotMsgs[string(msg.Data)] = string(msg.Data)
+		gotMsgsOrdering[string(msg.Data)] = string(msg.OrderingKey)
+		msg.Ack()
+		wg.Done()
+	})
+	// Wait a little bit for the subscription creation to complete.
+	time.Sleep(time.Second)
+
+	for i := 0; i < 10; i++ {
+		data := fmt.Sprintf("data-%d", i)
+		wantMsgs[data] = data
+
+		order := fmt.Sprintf("order-%d", i)
+		wantMsgsOrdering[data] = order
+
+		if _, err := psconn.Publish(ctx, &pubsub.Message{Data: []byte(data), OrderingKey: order}); err != nil {
+			t.Errorf("failed to publish message: %v", err)
+		}
+		wg.Add(1)
+	}
+
+	wg.Wait()
+	cancel()
+
+	if diff := cmp.Diff(gotMsgs, wantMsgs); diff != "" {
+		t.Errorf("received unexpected messages (-want +got):\n%s", diff)
+	}
+
+	if diff := cmp.Diff(gotMsgsOrdering, wantMsgsOrdering); diff != "" {
+		t.Errorf("received unexpected message ordering keys (-want +got):\n%s", diff)
+	}
+}

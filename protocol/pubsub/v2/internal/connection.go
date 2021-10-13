@@ -70,6 +70,9 @@ type Connection struct {
 	// Default is 25 hours.
 	// This can only be set prior to first call of any function.
 	RetentionDuration *time.Duration
+	// MessageOrdering enables message ordering for all topics and subscriptions.
+	// This can only be set prior to first call of any function.
+	MessageOrdering bool
 }
 
 const (
@@ -121,6 +124,11 @@ func (c *Connection) getOrCreateTopicInfo(ctx context.Context, getAlreadyOpenOnl
 		}
 		// Success.
 		ti.topic = topic
+
+		// EnableMessageOrdering is a runtime parameter only and not part of the topic
+		// Pub/Sub configuration. The Pub/Sub SDK requires this to be set to accept Pub/Sub
+		// messages with an ordering key set.
+		ti.topic.EnableMessageOrdering = c.MessageOrdering
 	})
 	if ti.topic == nil {
 		// Initialization failed, remove this attempt so that future callers
@@ -133,6 +141,7 @@ func (c *Connection) getOrCreateTopicInfo(ctx context.Context, getAlreadyOpenOnl
 
 		return nil, fmt.Errorf("unable to get or create topic %q, %v", c.TopicID, ti.err)
 	}
+
 	return ti, nil
 }
 
@@ -221,9 +230,10 @@ func (c *Connection) getOrCreateSubscriptionInfo(ctx context.Context, getAlready
 			// with the given name.
 			// TODO: allow to use push config + allow setting the SubscriptionConfig.
 			sub, si.err = c.Client.CreateSubscription(ctx, c.SubscriptionID, pubsub.SubscriptionConfig{
-				Topic:             topic,
-				AckDeadline:       *c.AckDeadline,
-				RetentionDuration: *c.RetentionDuration,
+				Topic:                 topic,
+				AckDeadline:           *c.AckDeadline,
+				RetentionDuration:     *c.RetentionDuration,
+				EnableMessageOrdering: c.MessageOrdering,
 			})
 			if si.err != nil {
 				return

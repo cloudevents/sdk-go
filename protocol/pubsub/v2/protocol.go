@@ -43,6 +43,9 @@ type Protocol struct {
 	// subscription if it does not exist.
 	AllowCreateSubscription bool
 
+	// MessageOrdering enables message ordering for all topics and subscriptions.
+	MessageOrdering bool
+
 	projectID string
 	topicID   string
 
@@ -107,6 +110,14 @@ func (t *Protocol) Send(ctx context.Context, in binding.Message, transformers ..
 	conn := t.getOrCreateConnection(ctx, topic, "")
 
 	msg := &pubsub.Message{}
+
+	if key, ok := ctx.Value(withOrderingKey{}).(string); ok {
+		if !t.MessageOrdering {
+			return fmt.Errorf("ordering key cannot be used when message ordering is disabled")
+		}
+		msg.OrderingKey = key
+	}
+
 	if err := WritePubSubMessage(ctx, in, msg, transformers...); err != nil {
 		return err
 	}
@@ -147,6 +158,7 @@ func (t *Protocol) getOrCreateConnection(ctx context.Context, topic, subscriptio
 		ReceiveSettings:         t.ReceiveSettings,
 		Client:                  t.client,
 		ProjectID:               t.projectID,
+		MessageOrdering:         t.MessageOrdering,
 		TopicID:                 topic,
 		SubscriptionID:          subscription,
 	}
@@ -215,3 +227,10 @@ var _ protocol.Opener = (*Protocol)(nil)
 var _ protocol.Sender = (*Protocol)(nil)
 var _ protocol.Receiver = (*Protocol)(nil)
 var _ protocol.Closer = (*Protocol)(nil)
+
+type withOrderingKey struct{}
+
+// WithOrderingKey allows to set the Pub/Sub ordering key for publishing events.
+func WithOrderingKey(ctx context.Context, key string) context.Context {
+	return context.WithValue(ctx, withOrderingKey{}, key)
+}
