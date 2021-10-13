@@ -241,8 +241,8 @@ func TestTime(t *testing.T) {
 
 	x.err(nil, "invalid CloudEvents value: <nil>")
 	x.err(5, "cannot convert 5 to time.Time")
-	x.err((*time.Time)(nil), "invalid CloudEvents value: (*time.Time)(nil)")
-	x.err((*types.Timestamp)(nil), "invalid CloudEvents value: (*types.Timestamp)(nil)")
+	x.err((*time.Time)(nil), fmt.Sprintf("invalid CloudEvents value: %#v", (*time.Time)(nil)))
+	x.err((*types.Timestamp)(nil), fmt.Sprintf("invalid CloudEvents value: %#v", (*types.Timestamp)(nil)))
 	x.err("not a time", "parsing time \"not a time\" as \"2006-01-02T15:04:05.999999999Z07:00\": cannot parse \"not a time\" as \"2006\"")
 }
 
