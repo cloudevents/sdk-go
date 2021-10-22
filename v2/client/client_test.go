@@ -12,10 +12,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -355,6 +357,48 @@ func TestClientReceive(t *testing.T) {
 			})
 		}
 	}
+}
+
+func TestClientContext(t *testing.T) {
+	listener, err := net.Listen("tcp", ":0")
+	if err != nil {
+		t.Fatalf("error creating listener: %v", err)
+	}
+	defer listener.Close()
+	type key string
+
+	c, err := client.NewHTTP(cehttp.WithListener(listener), cehttp.WithMiddleware(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := context.WithValue(r.Context(), key("inner"), "bar")
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}))
+
+	if err != nil {
+		t.Fatalf("error creating client: %v", err)
+	}
+	var wg sync.WaitGroup
+	wg.Add(1)
+	handler := func(ctx context.Context) {
+		if v := ctx.Value(key("outer")); v != "foo" {
+			t.Errorf("expected context to have outer value, got %v", v)
+		}
+		if v := ctx.Value(key("inner")); v != "bar" {
+			t.Errorf("expected context to have inner value, got %v", v)
+		}
+		wg.Done()
+	}
+	go func() {
+		c.StartReceiver(context.WithValue(context.Background(), key("outer"), "foo"), handler)
+	}()
+
+	body := strings.NewReader(`{"data":{"msg":"hello","sq":"42"},"datacontenttype":"application/json","id":"AABBCCDDEE","source":"/unit/test/client","specversion":"0.3","time":%q,"type":"unit.test.client"}`)
+	resp, err := http.Post(fmt.Sprintf("http://%s", listener.Addr().String()), "application/cloudevents+json", body)
+	if err != nil {
+		t.Errorf("err sending request, response: %v, err: %v", resp, err)
+	}
+
+	wg.Wait()
 }
 
 type requestValidation struct {
