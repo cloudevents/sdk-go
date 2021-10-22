@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/cloudevents/sdk-go/protocol/ws/v2 v2.5.0
-	github.com/cloudevents/sdk-go/v2 v2.5.0
+	github.com/cloudevents/sdk-go/v2 v2.6.0
 )
 
 replace github.com/cloudevents/sdk-go/v2 => ../../v2
