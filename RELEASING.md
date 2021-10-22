@@ -16,16 +16,42 @@ For v1 releases, just perform a GitHub release flow, and that is it.
 
 ## Releasing v2.+
 
-Releasing v2 is more tricky, the project has been broken into modules and are
-released independently but there is a depency chain.
+_Note_: What is released is controlled by
+[hack/tag-release.sh](./hack/tag-release.sh) script. Make sure the modules and
+go modules are up-to-date. 
 
-_Note_: Any tag that matches `v*` or `protocol*` will produce a draft GitHub
-release using GitHub Actions.
+Using GitHub Actions,
+
+Steps: 
+
+1. Create a branch, in the form `release-v<major>.<minor>`, i.e:
+
+   ```shell
+   branch=release-v2.1
+   git checkout -b $branch
+   git push -u origin $branch
+   ```
+
+   Or using the GitHub UI: search for `release-v2.1` and then click create
+   branch.
+
+2. Update the release description.
+
+That's it.
+
+---
+
+_UPDATE_: The following document is not required when using GitHub Actions. We
+will keep the process documented for manual usage of the shell script or 100%
+manual.
+
+Releasing v2 is more tricky, the project has been broken into modules and are
+released independently but there is a dependency chain.
 
 _Note_: The following steps assume the repo is checked out directly. Switch to
 `origin` to the remote name used if using a fork with a remote.
 
-Steps:
+Manual Steps:
 
 1. Create a branch, in the form `release-<major>.<minor>`, i.e:
 
