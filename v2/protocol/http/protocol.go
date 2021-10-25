@@ -283,16 +283,18 @@ func (p *Protocol) Respond(ctx context.Context) (binding.Message, protocol.Respo
 // ServeHTTP implements http.Handler.
 // Blocks until ResponseFn is invoked.
 func (p *Protocol) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	// always apply limiter first
-	ok, reset, err := p.limiter.Take(context.TODO(), req)
+	// always apply limiter first using req context
+	ok, reset, err := p.limiter.Allow(req.Context(), req)
 	if err != nil {
-		p.incoming <- msgErr{msg: nil, err: fmt.Errorf("acquire rate limit token: %v", err)}
+		p.incoming <- msgErr{msg: nil, err: fmt.Errorf("unable to acquire rate limit token: %w", err)}
 		rw.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	if !ok {
 		rw.Header().Add("Retry-After", strconv.Itoa(int(reset)))
 		http.Error(rw, "limit exceeded", 429)
+		return
 	}
 
 	// Filter the GET style methods:
