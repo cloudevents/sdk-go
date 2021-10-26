@@ -10,6 +10,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 	"time"
 
@@ -19,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/time/rate"
 )
 
 func TestNew(t *testing.T) {
@@ -260,6 +262,95 @@ func ReceiveTest(t *testing.T, p *Protocol, ctx context.Context, rec *httptest.R
 	} else {
 		require.IsType(t, want, got)
 	}
+}
+
+func TestServeHTTP_ReceiveWithLimiter(t *testing.T) {
+	var testCases = map[string]struct {
+		limiter RateLimiter
+		delay   time.Duration // client send
+
+		// expect 405 if not rate limited (429) due to using GET to shorten test and
+		// avoid internal response handling logic
+		wantCodes []int
+	}{
+		"10rps limit, 5 requests, no delay, 405,405,405,405,405": {
+			limiter:   newRateLimiterTest(10),
+			delay:     0,
+			wantCodes: []int{405, 405, 405, 405, 405},
+		},
+		"1rps limit, 5 requests, 100ms delay, 405,429,429,429,429": {
+			limiter:   newRateLimiterTest(1),
+			delay:     time.Millisecond * 100,
+			wantCodes: []int{405, 429, 429, 429, 429},
+		},
+		"2rps limit, 4 requests, 0.5s delay, 405,200,200,200": {
+			limiter:   newRateLimiterTest(2),
+			delay:     time.Millisecond * 500,
+			wantCodes: []int{405, 405, 405, 405},
+		},
+		// limiter disabled (backwards-compatibility)
+		"no limit, 5 requests, no delay, 405,405,405,405,405": {
+			limiter:   nil,
+			delay:     0,
+			wantCodes: []int{405, 405, 405, 405, 405},
+		},
+		// rate limit all
+		"0rps limit, 5 requests, no delay, 429,429,429,429": {
+			limiter:   newRateLimiterTest(0),
+			delay:     time.Millisecond * 500,
+			wantCodes: []int{429, 429, 429, 429},
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+			p, err := New(WithRateLimiter(tc.limiter))
+			require.NoError(t, err, "create protocol")
+
+			for _, code := range tc.wantCodes {
+				time.Sleep(tc.delay)
+
+				// using GET will give 405 if not rate limited and bypass any internal message
+				// processing/async logic for faster and reproducible rate limit tests
+				req := httptest.NewRequest("GET", "http://unittest", nil)
+				rw := httptest.NewRecorder()
+
+				p.ServeHTTP(rw, req)
+				res := rw.Result()
+				require.Equal(t, code, res.StatusCode)
+
+				if res.StatusCode == 429 {
+					retryAfterWant := tc.limiter.(*rateLimiterTest).resetSeconds
+					retryAfterGot := res.Header.Get("Retry-After")
+					require.Equal(t, strconv.Itoa(retryAfterWant), retryAfterGot)
+				}
+			}
+		})
+	}
+}
+
+type rateLimiterTest struct {
+	limiter      *rate.Limiter
+	resetSeconds int // defines Retry-After
+}
+
+func newRateLimiterTest(rps float64) RateLimiter {
+	rl := rateLimiterTest{
+		limiter:      rate.NewLimiter(rate.Limit(rps), int(rps)),
+		resetSeconds: 2,
+	}
+
+	return &rl
+}
+
+func (rl *rateLimiterTest) Allow(_ context.Context, _ *http.Request) (bool, uint64, error) {
+	if !rl.limiter.Allow() {
+		return false, uint64(rl.resetSeconds), nil
+	}
+	return true, 0, nil
+}
+
+func (rl *rateLimiterTest) Close(_ context.Context) error {
+	return nil
 }
 
 type roundTripperTest struct {

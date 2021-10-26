@@ -277,3 +277,13 @@ func WithIsRetriableFunc(isRetriable IsRetriable) Option {
 		return nil
 	}
 }
+
+func WithRateLimiter(rl RateLimiter) Option {
+	return func(p *Protocol) error {
+		if p == nil {
+			return fmt.Errorf("http OPTIONS handler func can not set nil protocol")
+		}
+		p.limiter = rl
+		return nil
+	}
+}
