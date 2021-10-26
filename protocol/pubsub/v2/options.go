@@ -16,9 +16,10 @@ import (
 type Option func(*Protocol) error
 
 const (
-	DefaultProjectEnvKey      = "GOOGLE_CLOUD_PROJECT"
-	DefaultTopicEnvKey        = "PUBSUB_TOPIC"
-	DefaultSubscriptionEnvKey = "PUBSUB_SUBSCRIPTION"
+	DefaultProjectEnvKey         = "GOOGLE_CLOUD_PROJECT"
+	DefaultTopicEnvKey           = "PUBSUB_TOPIC"
+	DefaultSubscriptionEnvKey    = "PUBSUB_SUBSCRIPTION"
+	DefaultMessageOrderingEnvKey = "PUBSUB_MESSAGE_ORDERING"
 )
 
 // WithClient sets the pubsub client for pubsub transport. Use this for explicit
@@ -158,4 +159,29 @@ func WithReceiveSettings(rs *pubsub.ReceiveSettings) Option {
 		t.ReceiveSettings = rs
 		return nil
 	}
+}
+
+// WithMessageOrdering enables message ordering for all topics and subscriptions.
+func WithMessageOrdering() Option {
+	return func(t *Protocol) error {
+		t.MessageOrdering = true
+		return nil
+	}
+}
+
+// WithMessageOrderingFromEnv enables message ordering for all topics and
+// subscriptions from a given environment variable name.
+func WithMessageOrderingFromEnv(key string) Option {
+	return func(t *Protocol) error {
+		if v := os.Getenv(key); v != "" {
+			t.MessageOrdering = true
+		}
+		return nil
+	}
+}
+
+// WithMessageOrderingFromDefaultEnv enables message ordering for all topics and
+// subscriptions from the environment variable named 'PUBSUB_MESSAGE_ORDERING'.
+func WithMessageOrderingFromDefaultEnv() Option {
+	return WithMessageOrderingFromEnv(DefaultMessageOrderingEnvKey)
 }
