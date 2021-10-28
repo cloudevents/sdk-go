@@ -195,3 +195,61 @@ func TestGetMediaTypeV03(t *testing.T) {
 		})
 	}
 }
+
+func TestEventContextV03_SetExtension(t *testing.T) {
+	source := types.ParseURIRef("http://example.com/source")
+
+	testCases := map[string]struct {
+		ctx          event.EventContextV03
+		extensionKey string
+		want         []string
+	}{
+		"valid extension": {
+			ctx: event.EventContextV03{
+				ID:     "ABC-123",
+				Type:   "com.example.simple",
+				Source: *source,
+			},
+			extensionKey: "validkey",
+			want:         []string{""},
+		},
+		"invalid extension uses subject": {
+			ctx: event.EventContextV03{
+				ID:     "ABC-123",
+				Type:   "com.example.simple",
+				Source: *source,
+			},
+			extensionKey: "subject",
+			want:         []string{"bad key"},
+		},
+		"invalid extension uses schemaurl": {
+			ctx: event.EventContextV03{
+				ID:     "ABC-123",
+				Type:   "com.example.simple",
+				Source: *source,
+			},
+			extensionKey: "schemaurl",
+			want:         []string{"bad key"},
+		},
+	}
+
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+			got := tc.ctx.SetExtension(tc.extensionKey, "somevalue")
+			var gotErr string
+			if got != nil {
+				gotErr = got.Error()
+
+				if len(tc.want) == 0 {
+					t.Errorf("unexpected no error, got %q", gotErr)
+				}
+			}
+
+			for _, want := range tc.want {
+				if !strings.Contains(gotErr, want) {
+					t.Errorf("unexpected error, expected to contain %q, got: %q ", want, gotErr)
+				}
+			}
+		})
+	}
+}
