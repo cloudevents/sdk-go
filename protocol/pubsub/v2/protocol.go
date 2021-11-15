@@ -26,6 +26,7 @@ const (
 type subscriptionWithTopic struct {
 	topicID        string
 	subscriptionID string
+	filter         string
 }
 
 // Protocol acts as both a pubsub topic and a pubsub subscription .

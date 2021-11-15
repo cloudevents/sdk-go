@@ -73,6 +73,12 @@ type Connection struct {
 	// MessageOrdering enables message ordering for all topics and subscriptions.
 	// This can only be set prior to first call of any function.
 	MessageOrdering bool
+	// Filter is an expression written in the Cloud Pub/Sub filter language. If
+	// non-empty, then only `PubsubMessage`s whose `attributes` field matches the
+	// filter are delivered on this subscription. If empty, then no messages are
+	// filtered out. Cannot be changed after the subscription is created.
+	// This can only be set prior to first call of any function.
+	Filter string
 }
 
 const (
@@ -234,6 +240,7 @@ func (c *Connection) getOrCreateSubscriptionInfo(ctx context.Context, getAlready
 				AckDeadline:           *c.AckDeadline,
 				RetentionDuration:     *c.RetentionDuration,
 				EnableMessageOrdering: c.MessageOrdering,
+				Filter:                c.Filter,
 			})
 			if si.err != nil {
 				return

@@ -115,6 +115,37 @@ func WithSubscriptionAndTopicID(subscriptionID, topicID string) Option {
 	}
 }
 
+// WithSubscriptionIDAndFilter sets the subscription and topic IDs for pubsub transport.
+// This option can be used multiple times.
+func WithSubscriptionIDAndFilter(subscriptionID, filter string) Option {
+	return func(t *Protocol) error {
+		if t.subscriptions == nil {
+			t.subscriptions = make([]subscriptionWithTopic, 0)
+		}
+		t.subscriptions = append(t.subscriptions, subscriptionWithTopic{
+			subscriptionID: subscriptionID,
+			filter:         filter,
+		})
+		return nil
+	}
+}
+
+// WithSubscriptionTopicIDAndFilter sets the subscription with filter option and topic IDs for pubsub transport.
+// This option can be used multiple times.
+func WithSubscriptionTopicIDAndFilter(subscriptionID, topicID, filter string) Option {
+	return func(t *Protocol) error {
+		if t.subscriptions == nil {
+			t.subscriptions = make([]subscriptionWithTopic, 0)
+		}
+		t.subscriptions = append(t.subscriptions, subscriptionWithTopic{
+			subscriptionID: subscriptionID,
+			topicID:        topicID,
+			filter:         filter,
+		})
+		return nil
+	}
+}
+
 // WithSubscriptionIDFromEnv sets the subscription ID for pubsub transport from
 // a given environment variable name.
 func WithSubscriptionIDFromEnv(key string) Option {
@@ -133,6 +164,33 @@ func WithSubscriptionIDFromEnv(key string) Option {
 // transport from the environment variable named 'PUBSUB_SUBSCRIPTION'.
 func WithSubscriptionIDFromDefaultEnv() Option {
 	return WithSubscriptionIDFromEnv(DefaultSubscriptionEnvKey)
+}
+
+// WithFilter sets the subscription filter for pubsub transport.
+func WithFilter(filter string) Option {
+	return func(t *Protocol) error {
+		if t.subscriptions == nil {
+			t.subscriptions = make([]subscriptionWithTopic, 0)
+		}
+		t.subscriptions = append(t.subscriptions, subscriptionWithTopic{
+			filter: filter,
+		})
+		return nil
+	}
+}
+
+// WithFilterFromEnv sets the subscription filter for pubsub transport from
+// a given environment variable name.
+func WithFilterFromEnv(key string) Option {
+	return func(t *Protocol) error {
+		v := os.Getenv(key)
+		if v == "" {
+			return fmt.Errorf("unable to load subscription filter, %q environment variable not set", key)
+		}
+
+		opt := WithFilter(v)
+		return opt(t)
+	}
 }
 
 // AllowCreateTopic sets if the transport can create a topic if it does not
