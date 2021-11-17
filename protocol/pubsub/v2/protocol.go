@@ -144,7 +144,7 @@ func (t *Protocol) getConnection(ctx context.Context, topic, subscription string
 	return nil
 }
 
-func (t *Protocol) getOrCreateConnection(ctx context.Context, topic, subscription string) *internal.Connection {
+func (t *Protocol) getOrCreateConnection(ctx context.Context, topic, subscription, filter string) *internal.Connection {
 	t.gccMux.Lock()
 	defer t.gccMux.Unlock()
 
