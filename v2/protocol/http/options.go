@@ -248,7 +248,7 @@ func WithDefaultOptionsHandlerFunc(methods []string, rate int, origins []string,
 		if p == nil {
 			return fmt.Errorf("http OPTIONS handler func can not set nil protocol")
 		}
-		p.OptionsHandlerFn = p.DeleteHandlerFn
+		p.OptionsHandlerFn = p.OptionsHandler
 		p.WebhookConfig = &WebhookConfig{
 			AllowedMethods:  methods,
 			AllowedRate:     &rate,
