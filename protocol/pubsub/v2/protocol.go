@@ -108,7 +108,7 @@ func (t *Protocol) Send(ctx context.Context, in binding.Message, transformers ..
 		topic = t.topicID
 	}
 
-	conn := t.getOrCreateConnection(ctx, topic, "")
+	conn := t.getOrCreateConnection(ctx, topic, "", "")
 
 	msg := &pubsub.Message{}
 
@@ -144,7 +144,7 @@ func (t *Protocol) getConnection(ctx context.Context, topic, subscription string
 	return nil
 }
 
-func (t *Protocol) getOrCreateConnection(ctx context.Context, topic, subscription string) *internal.Connection {
+func (t *Protocol) getOrCreateConnection(ctx context.Context, topic, subscription, filter string) *internal.Connection {
 	t.gccMux.Lock()
 	defer t.gccMux.Unlock()
 
@@ -162,6 +162,7 @@ func (t *Protocol) getOrCreateConnection(ctx context.Context, topic, subscriptio
 		MessageOrdering:         t.MessageOrdering,
 		TopicID:                 topic,
 		SubscriptionID:          subscription,
+		Filter:                  filter,
 	}
 	// Save for later.
 	if subscription != "" {
@@ -192,7 +193,7 @@ func (t *Protocol) Receive(ctx context.Context) (binding.Message, error) {
 func (t *Protocol) startSubscriber(ctx context.Context, sub subscriptionWithTopic) error {
 	logger := cecontext.LoggerFrom(ctx)
 	logger.Infof("starting subscriber for Topic %q, Subscription %q", sub.topicID, sub.subscriptionID)
-	conn := t.getOrCreateConnection(ctx, sub.topicID, sub.subscriptionID)
+	conn := t.getOrCreateConnection(ctx, sub.topicID, sub.subscriptionID, sub.filter)
 
 	logger.Info("conn is", conn)
 	if conn == nil {
