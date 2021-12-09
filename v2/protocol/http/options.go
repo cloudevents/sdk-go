@@ -287,3 +287,15 @@ func WithRateLimiter(rl RateLimiter) Option {
 		return nil
 	}
 }
+
+// WithRequestDataAtContextMiddleware adds to the Context RequestData.
+// This enables a user's dispatch handler to inspect HTTP request information by
+// retrieving it from the Context.
+func WithRequestDataAtContextMiddleware() Option {
+	return WithMiddleware(func(next nethttp.Handler) nethttp.Handler {
+		return nethttp.HandlerFunc(func(w nethttp.ResponseWriter, r *nethttp.Request) {
+			ctx := WithRequestDataAtContext(r.Context(), r)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	})
+}
