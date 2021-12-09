@@ -722,3 +722,98 @@ func TestWithIsRetriableFunc(t *testing.T) {
 		})
 	}
 }
+
+func TestWithRequestDataAtContextMiddleware(t *testing.T) {
+	const tURL = "https://testhost:8080/test/path"
+	const tRemoteAddr = "remote.address:1234"
+	const tHost = "testhost:8080"
+
+	tHeader := http.Header{
+		"Key": []string{"value"},
+	}
+
+	u, err := url.Parse(tURL)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tRequestData := &RequestData{
+		Host:       tHost,
+		URL:        u,
+		RemoteAddr: tRemoteAddr,
+		Header:     tHeader,
+	}
+
+	testCases := map[string]struct {
+		t                     *Protocol
+		options               []Option
+		wantApplyOptionsErr   string
+		expectMiddlewareCount int
+		expectRequestData     *RequestData
+	}{
+		"nil protocol": {
+			wantApplyOptionsErr: "http middleware option can not set nil protocol",
+			options:             []Option{WithRequestDataAtContextMiddleware()},
+		},
+		"protocol with RequestData middleware": {
+			t:                     &Protocol{},
+			options:               []Option{WithRequestDataAtContextMiddleware()},
+			expectMiddlewareCount: 1,
+			expectRequestData:     tRequestData,
+		},
+		"protocol without RequestData middleware": {
+			t:                     &Protocol{},
+			expectMiddlewareCount: 0,
+			expectRequestData:     nil,
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+			err := tc.t.applyOptions(tc.options...)
+
+			if tc.wantApplyOptionsErr != "" {
+				if err == nil || err.Error() != tc.wantApplyOptionsErr {
+					t.Fatalf("Expected error '%s'. Actual '%v'", tc.wantApplyOptionsErr, err)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("Unexpected error: %v", err)
+				return
+			}
+
+			if len(tc.t.middleware) != tc.expectMiddlewareCount {
+				t.Fatalf("Expected number of registered middleware %d. Actual '%v'", tc.expectMiddlewareCount, len(tc.t.middleware))
+				return
+			}
+
+			ms := mockOptionsServer{
+				handler: func(w http.ResponseWriter, r *http.Request) {
+					rd := RequestDataFromContext(r.Context())
+					require.Equal(t, rd, tc.expectRequestData)
+				},
+			}
+
+			handler := attachMiddleware(ms, tc.t.middleware)
+
+			req, err := http.NewRequest("POST", tURL, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			req.RemoteAddr = tRemoteAddr
+			req.Header = tHeader
+
+			handler.ServeHTTP(nil, req)
+		})
+	}
+}
+
+// mockOptionsServer implements http.Handler passing
+// unmodified calls to the internal handler.
+type mockOptionsServer struct {
+	handler http.HandlerFunc
+}
+
+func (m mockOptionsServer) ServeHTTP(res http.ResponseWriter, req *http.Request) {
+	m.handler(res, req)
+}
