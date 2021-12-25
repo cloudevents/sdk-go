@@ -42,7 +42,8 @@ func (b *amqpMessageWriter) SetStructuredEvent(ctx context.Context, format forma
 		return err
 	}
 	b.Data = [][]byte{val}
-	b.Properties = &amqp.MessageProperties{ContentType: format.MediaType()}
+	mediaType := format.MediaType()
+	b.Properties = &amqp.MessageProperties{ContentType: &mediaType}
 	return nil
 }
 
@@ -68,14 +69,14 @@ func (b *amqpMessageWriter) SetData(reader io.Reader) error {
 func (b *amqpMessageWriter) SetAttribute(attribute spec.Attribute, value interface{}) error {
 	if attribute.Kind() == spec.DataContentType {
 		if value == nil {
-			b.Properties.ContentType = ""
+			b.Properties.ContentType = nil
 			return nil
 		}
 		s, err := types.Format(value)
 		if err != nil {
 			return err
 		}
-		b.Properties.ContentType = s
+		b.Properties.ContentType = &s
 	} else {
 		if value == nil {
 			delete(b.ApplicationProperties, prefix+attribute.Name())
