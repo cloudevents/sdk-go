@@ -46,7 +46,9 @@ func TestNewMessage_success(t *testing.T) {
 				message := amqp.Message{}
 				require.NoError(t, WriteMessage(ctx, binding.ToMessage(&eventIn), &message))
 
-				got := NewMessage(&message)
+				rcv := amqp.Receiver{}
+
+				got := NewMessage(&message, &rcv)
 				require.Equal(t, tt.encoding, got.ReadEncoding())
 			})
 		})
@@ -55,7 +57,8 @@ func TestNewMessage_success(t *testing.T) {
 
 func TestNewMessage_message_unknown(t *testing.T) {
 	message := amqp.NewMessage([]byte("hello-world"))
+	rcv := amqp.Receiver{}
 
-	got := NewMessage(message)
+	got := NewMessage(message, &rcv)
 	require.Equal(t, binding.EncodingUnknown, got.ReadEncoding())
 }

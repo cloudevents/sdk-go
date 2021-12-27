@@ -34,7 +34,7 @@ func (r *receiver) Receive(ctx context.Context) (binding.Message, error) {
 		return nil, err
 	}
 
-	return NewMessage(m), nil
+	return NewMessage(m, r.amqp), nil
 }
 
 // NewReceiver create a new Receiver which wraps an amqp.Receiver in a binding.Receiver

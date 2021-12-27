@@ -29,7 +29,8 @@ var (
 // Message implements binding.Message by wrapping an *amqp.Message.
 // This message *can* be read several times safely
 type Message struct {
-	AMQP *amqp.Message
+	AMQP    *amqp.Message
+	AMQPrcv *amqp.Receiver
 
 	version spec.Version
 	format  format.Format
@@ -37,14 +38,16 @@ type Message struct {
 
 // NewMessage wrap an *amqp.Message in a binding.Message.
 // The returned message *can* be read several times safely
-func NewMessage(message *amqp.Message) *Message {
-	if message.Properties != nil && format.IsFormat(message.Properties.ContentType) {
-		return &Message{AMQP: message, format: format.Lookup(message.Properties.ContentType)}
+func NewMessage(message *amqp.Message, receiver *amqp.Receiver) *Message {
+	var vn spec.Version
+	var fmt format.Format
+	if message.Properties != nil && message.Properties.ContentType != nil &&
+		format.IsFormat(*message.Properties.ContentType) {
+		fmt = format.Lookup(*message.Properties.ContentType)
 	} else if sv := getSpecVersion(message); sv != nil {
-		return &Message{AMQP: message, version: sv}
-	} else {
-		return &Message{AMQP: message}
+		vn = sv
 	}
+	return &Message{AMQP: message, AMQPrcv: receiver, format: fmt, version: vn}
 }
 
 var _ binding.Message = (*Message)(nil)
@@ -82,7 +85,7 @@ func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) 
 	}
 	var err error
 
-	if m.AMQP.Properties != nil && m.AMQP.Properties.ContentType != "" {
+	if m.AMQP.Properties != nil && m.AMQP.Properties.ContentType != nil {
 		err = encoder.SetAttribute(m.version.AttributeFromKind(spec.DataContentType), m.AMQP.Properties.ContentType)
 		if err != nil {
 			return err
@@ -127,10 +130,10 @@ func (m *Message) GetExtension(name string) interface{} {
 
 func (m *Message) Finish(err error) error {
 	if err != nil {
-		return m.AMQP.Reject(context.Background(), &amqp.Error{
+		return m.AMQPrcv.RejectMessage(context.Background(), m.AMQP, &amqp.Error{
 			Condition:   condition,
 			Description: err.Error(),
 		})
 	}
-	return m.AMQP.Accept(context.Background())
+	return m.AMQPrcv.AcceptMessage(context.Background(), m.AMQP)
 }
