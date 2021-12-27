@@ -25,3 +25,8 @@ To regenerate the parser, make sure you have [ANTLR4 installed](https://github.c
 ```shell
 antlr4 -Dlanguage=Go -package gen -o gen -visitor -no-listener CESQLParser.g4
 ```
+
+Then you need to run this sed command as a workaround until this ANTLR [issue](https://github.com/antlr/antlr4/issues/2433) is resolved. Without this, building for 32bit platforms will throw an int overflow error: 
+```shell
+sed -i 's/(1<</(int64(1)<</g' gen/cesqlparser_parser.go
+```

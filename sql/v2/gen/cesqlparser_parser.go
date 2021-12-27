@@ -1098,7 +1098,7 @@ func (p *CESQLParserParser) expression(_p int) (localctx IExpressionContext) {
 					p.SetState(41)
 					_la = p.GetTokenStream().LA(1)
 
-					if !(((_la)&-(0x1f+1)) == 0 && ((1<<uint(_la))&((1<<CESQLParserParserSTAR)|(1<<CESQLParserParserDIVIDE)|(1<<CESQLParserParserMODULE))) != 0) {
+					if !(((_la)&-(0x1f+1)) == 0 && ((int64(1)<<uint(_la))&((int64(1)<<CESQLParserParserSTAR)|(int64(1)<<CESQLParserParserDIVIDE)|(int64(1)<<CESQLParserParserMODULE))) != 0) {
 						p.GetErrorHandler().RecoverInline(p)
 					} else {
 						p.GetErrorHandler().ReportMatch(p)
@@ -1146,7 +1146,7 @@ func (p *CESQLParserParser) expression(_p int) (localctx IExpressionContext) {
 					p.SetState(47)
 					_la = p.GetTokenStream().LA(1)
 
-					if !(((_la)&-(0x1f+1)) == 0 && ((1<<uint(_la))&((1<<CESQLParserParserEQUAL)|(1<<CESQLParserParserNOT_EQUAL)|(1<<CESQLParserParserGREATER)|(1<<CESQLParserParserGREATER_OR_EQUAL)|(1<<CESQLParserParserLESS)|(1<<CESQLParserParserLESS_GREATER)|(1<<CESQLParserParserLESS_OR_EQUAL))) != 0) {
+					if !(((_la)&-(0x1f+1)) == 0 && ((int64(1)<<uint(_la))&((int64(1)<<CESQLParserParserEQUAL)|(int64(1)<<CESQLParserParserNOT_EQUAL)|(int64(1)<<CESQLParserParserGREATER)|(int64(1)<<CESQLParserParserGREATER_OR_EQUAL)|(int64(1)<<CESQLParserParserLESS)|(int64(1)<<CESQLParserParserLESS_GREATER)|(int64(1)<<CESQLParserParserLESS_OR_EQUAL))) != 0) {
 						p.GetErrorHandler().RecoverInline(p)
 					} else {
 						p.GetErrorHandler().ReportMatch(p)
@@ -1170,7 +1170,7 @@ func (p *CESQLParserParser) expression(_p int) (localctx IExpressionContext) {
 					p.SetState(50)
 					_la = p.GetTokenStream().LA(1)
 
-					if !(((_la)&-(0x1f+1)) == 0 && ((1<<uint(_la))&((1<<CESQLParserParserAND)|(1<<CESQLParserParserOR)|(1<<CESQLParserParserXOR))) != 0) {
+					if !(((_la)&-(0x1f+1)) == 0 && ((int64(1)<<uint(_la))&((int64(1)<<CESQLParserParserAND)|(int64(1)<<CESQLParserParserOR)|(int64(1)<<CESQLParserParserXOR))) != 0) {
 						p.GetErrorHandler().RecoverInline(p)
 					} else {
 						p.GetErrorHandler().ReportMatch(p)
@@ -2132,7 +2132,7 @@ func (p *CESQLParserParser) FunctionParameterList() (localctx IFunctionParameter
 	p.GetErrorHandler().Sync(p)
 	_la = p.GetTokenStream().LA(1)
 
-	if ((_la-2)&-(0x1f+1)) == 0 && ((1<<uint((_la-2)))&((1<<(CESQLParserParserLR_BRACKET-2))|(1<<(CESQLParserParserNOT-2))|(1<<(CESQLParserParserMINUS-2))|(1<<(CESQLParserParserEXISTS-2))|(1<<(CESQLParserParserTRUE-2))|(1<<(CESQLParserParserFALSE-2))|(1<<(CESQLParserParserDQUOTED_STRING_LITERAL-2))|(1<<(CESQLParserParserSQUOTED_STRING_LITERAL-2))|(1<<(CESQLParserParserINTEGER_LITERAL-2))|(1<<(CESQLParserParserIDENTIFIER-2))|(1<<(CESQLParserParserIDENTIFIER_WITH_NUMBER-2))|(1<<(CESQLParserParserFUNCTION_IDENTIFIER_WITH_UNDERSCORE-2)))) != 0 {
+	if ((_la-2)&-(0x1f+1)) == 0 && ((int64(1)<<uint((_la-2)))&((int64(1)<<(CESQLParserParserLR_BRACKET-2))|(int64(1)<<(CESQLParserParserNOT-2))|(int64(1)<<(CESQLParserParserMINUS-2))|(int64(1)<<(CESQLParserParserEXISTS-2))|(int64(1)<<(CESQLParserParserTRUE-2))|(int64(1)<<(CESQLParserParserFALSE-2))|(int64(1)<<(CESQLParserParserDQUOTED_STRING_LITERAL-2))|(int64(1)<<(CESQLParserParserSQUOTED_STRING_LITERAL-2))|(int64(1)<<(CESQLParserParserINTEGER_LITERAL-2))|(int64(1)<<(CESQLParserParserIDENTIFIER-2))|(int64(1)<<(CESQLParserParserIDENTIFIER_WITH_NUMBER-2))|(int64(1)<<(CESQLParserParserFUNCTION_IDENTIFIER_WITH_UNDERSCORE-2)))) != 0 {
 		{
 			p.SetState(86)
 			p.expression(0)
