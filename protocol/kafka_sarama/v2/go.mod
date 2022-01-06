@@ -2,11 +2,9 @@ module github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2
 
 go 1.14
 
-replace github.com/cloudevents/sdk-go/v2 => ../../../v2
-
 require (
 	github.com/Shopify/sarama v1.25.0
-	github.com/cloudevents/sdk-go/v2 v2.5.0
+	github.com/cloudevents/sdk-go/v2 v2.8.0
 	github.com/eapache/go-resiliency v1.2.0 // indirect
 	github.com/frankban/quicktest v1.10.0 // indirect
 	github.com/pierrec/lz4 v2.5.2+incompatible // indirect
