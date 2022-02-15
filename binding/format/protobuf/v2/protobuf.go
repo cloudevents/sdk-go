@@ -56,7 +56,7 @@ func (protobufFmt) MediaType() string {
 }
 
 func (protobufFmt) Marshal(e *event.Event) ([]byte, error) {
-	pbe, err := sdkToProto(e)
+	pbe, err := ToProto(e)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +67,7 @@ func (protobufFmt) Unmarshal(b []byte, e *event.Event) error {
 	if err := proto.Unmarshal(b, pbe); err != nil {
 		return err
 	}
-	e2, err := protoToSDK(pbe)
+	e2, err := FromProto(pbe)
 	if err != nil {
 		return err
 	}
@@ -76,7 +76,7 @@ func (protobufFmt) Unmarshal(b []byte, e *event.Event) error {
 }
 
 // convert an SDK event to a protobuf variant of the event that can be marshaled.
-func sdkToProto(e *event.Event) (*pb.CloudEvent, error) {
+func ToProto(e *event.Event) (*pb.CloudEvent, error) {
 	container := &pb.CloudEvent{
 		Id:          e.ID(),
 		Source:      e.Source(),
@@ -191,7 +191,7 @@ func valueFrom(attr *pb.CloudEventAttributeValue) (interface{}, error) {
 }
 
 // Convert from a protobuf variant into the generic, SDK event.
-func protoToSDK(container *pb.CloudEvent) (*event.Event, error) {
+func FromProto(container *pb.CloudEvent) (*event.Event, error) {
 	e := event.New()
 	e.SetID(container.Id)
 	e.SetSource(container.Source)
