@@ -76,7 +76,7 @@ func (protobufFmt) Unmarshal(b []byte, e *event.Event) error {
 }
 
 // convert an SDK event to a protobuf variant of the event that can be marshaled.
-func sdkToProto(e *event.Event) (*pb.CloudEvent, error) {
+func SdkToProto(e *event.Event) (*pb.CloudEvent, error) {
 	container := &pb.CloudEvent{
 		Id:          e.ID(),
 		Source:      e.Source(),
@@ -191,7 +191,7 @@ func valueFrom(attr *pb.CloudEventAttributeValue) (interface{}, error) {
 }
 
 // Convert from a protobuf variant into the generic, SDK event.
-func protoToSDK(container *pb.CloudEvent) (*event.Event, error) {
+func ProtoToSDK(container *pb.CloudEvent) (*event.Event, error) {
 	e := event.New()
 	e.SetID(container.Id)
 	e.SetSource(container.Source)
