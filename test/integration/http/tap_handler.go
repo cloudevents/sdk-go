@@ -25,7 +25,8 @@ type TapValidation struct {
 }
 
 type tapHandler struct {
-	handler http.Handler
+	handler    http.Handler
+	statusCode int
 
 	req  map[string]TapValidation
 	resp map[string]TapValidation
@@ -112,6 +113,9 @@ func (t *tapHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if t.handler == nil {
 		w.WriteHeader(500)
 		return
+	}
+	if t.statusCode > 299 {
+		w.WriteHeader(t.statusCode)
 	}
 
 	rec := httptest.NewRecorder()
