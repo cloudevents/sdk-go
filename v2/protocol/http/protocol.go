@@ -157,7 +157,7 @@ func (p *Protocol) Send(ctx context.Context, m binding.Message, transformers ...
 				buf := new(bytes.Buffer)
 				buf.ReadFrom(message.BodyReader)
 				errorStr := buf.String()
-				err = NewResult(res.StatusCode, "%s", errorStr)
+				err = NewResult(res.StatusCode, "%w: %s", err, errorStr)
 			}
 		}
 	}
