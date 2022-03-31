@@ -72,18 +72,8 @@ func TestSenderReceiver_binary_v1(t *testing.T) {
 				DataEncoded: toBytes(map[string]interface{}{"hello": "unittest"}),
 			},
 			serverReturnedStatusCode: http.StatusInternalServerError,
-			want: &cloudevents.Event{
-				Context: cloudevents.EventContextV1{
-					ID:              "ABC-123",
-					Type:            "unit.test.client.sent",
-					Time:            &cloudevents.Timestamp{Time: now},
-					Source:          *cloudevents.ParseURIRef("/unit/test/client"),
-					Subject:         strptr("resource"),
-					DataContentType: cloudevents.StringOfApplicationJSON(),
-				}.AsV1(),
-				DataEncoded: toBytes(map[string]interface{}{"hello": "unittest"}),
-			},
-			wantResult: cloudevents.ResultNACK,
+			want:                     nil,
+			wantResult:               cloudevents.ResultNACK,
 			asSent: &TapValidation{
 				Method: "POST",
 				URI:    "/",
