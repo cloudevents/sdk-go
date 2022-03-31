@@ -116,6 +116,7 @@ func (t *tapHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if t.statusCode > 299 {
 		w.WriteHeader(t.statusCode)
+		return
 	}
 
 	rec := httptest.NewRecorder()
