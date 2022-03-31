@@ -27,17 +27,20 @@ import (
 // Client is a set to binary or
 
 type DirectTapTest struct {
-	now        time.Time
-	event      *cloudevents.Event
-	want       *cloudevents.Event
-	wantResult cloudevents.Result
-	asSent     *TapValidation
+	now                      time.Time
+	event                    *cloudevents.Event
+	serverReturnedStatusCode int
+	want                     *cloudevents.Event
+	wantResult               cloudevents.Result
+	asSent                   *TapValidation
 }
 
 type DirectTapTestCases map[string]DirectTapTest
 
 func ClientDirect(t *testing.T, tc DirectTapTest, copts ...client.Option) {
 	tap := NewTap()
+	tap.statusCode = tc.serverReturnedStatusCode
+
 	server := httptest.NewServer(tap)
 	defer server.Close()
 
@@ -83,6 +86,7 @@ func ClientDirect(t *testing.T, tc DirectTapTest, copts ...client.Option) {
 				t.Errorf("expected ACK, got %s", result)
 			}
 		} else if !cloudevents.ResultIs(result, tc.wantResult) {
+			t.Errorf("result.IsUndelivered = %v", cloudevents.IsUndelivered(result))
 			t.Fatalf("expected %s, got %s", tc.wantResult, result)
 		}
 	}

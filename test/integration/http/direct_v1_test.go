@@ -8,6 +8,7 @@ package http
 import (
 	"fmt"
 	"github.com/cloudevents/sdk-go/v2/client"
+	"net/http"
 	"testing"
 	"time"
 
@@ -42,6 +43,37 @@ func TestSenderReceiver_binary_v1(t *testing.T) {
 				}.AsV1(),
 				DataEncoded: toBytes(map[string]interface{}{"hello": "unittest"}),
 			},
+			asSent: &TapValidation{
+				Method: "POST",
+				URI:    "/",
+				Header: map[string][]string{
+					"ce-specversion": {"1.0"},
+					"ce-id":          {"ABC-123"},
+					"ce-time":        {now.UTC().Format(time.RFC3339Nano)},
+					"ce-type":        {"unit.test.client.sent"},
+					"ce-source":      {"/unit/test/client"},
+					"ce-subject":     {"resource"},
+					"content-type":   {"application/json"},
+				},
+				Body:          `{"hello":"unittest"}`,
+				ContentLength: 20,
+			},
+		},
+		"Binary v1.0 Sender Result Are NACK For Non-2XX": {
+			now: now,
+			event: &cloudevents.Event{
+				Context: cloudevents.EventContextV1{
+					ID:              "ABC-123",
+					Type:            "unit.test.client.sent",
+					Source:          *cloudevents.ParseURIRef("/unit/test/client"),
+					Subject:         strptr("resource"),
+					DataContentType: cloudevents.StringOfApplicationJSON(),
+				}.AsV1(),
+				DataEncoded: toBytes(map[string]interface{}{"hello": "unittest"}),
+			},
+			serverReturnedStatusCode: http.StatusInternalServerError,
+			want:                     nil,
+			wantResult:               cloudevents.ResultNACK,
 			asSent: &TapValidation{
 				Method: "POST",
 				URI:    "/",
