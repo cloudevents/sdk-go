@@ -7,13 +7,14 @@ package gochan
 
 import (
 	"context"
+	"io"
+	"testing"
+	"time"
+
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/event"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
-	"io"
-	"testing"
-	"time"
 )
 
 func TestNew(t *testing.T) {
@@ -122,6 +123,72 @@ func TestSendReceive(t *testing.T) {
 					}
 				} else if err != nil {
 					t.Fatalf("Unexpected error: %v", err)
+				}
+			})
+		}
+	}
+}
+
+func TestSendCloser(t *testing.T) {
+	testCases := map[string]struct {
+		numSend            int
+		numReceivePreClose int
+		numClose           int // defaults to 1
+		wantErr            bool
+	}{
+		"closes none pending": {
+			numSend:            1,
+			numReceivePreClose: 1,
+		},
+		"closes still delivers pending": {
+			numSend:            2,
+			numReceivePreClose: 1,
+		},
+		"errors on double close": {
+			numClose: 2,
+			wantErr:  true,
+		},
+	}
+	for n, tc := range testCases {
+		for _, p := range protocols(t) {
+			t.Run(n, func(t *testing.T) {
+				ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+				defer cancel()
+				for i := 0; i < tc.numSend; i++ {
+					e := event.New()
+					if err := p.Send(ctx, binding.ToMessage(&e)); err != nil {
+						t.Fatalf("failed to send to protocol: %v", err)
+					}
+				}
+
+				for i := 0; i < tc.numReceivePreClose; i++ {
+					_, err := p.Receive(ctx)
+					if err != nil {
+						t.Fatalf("failed to receive from protocol: %v", err)
+					}
+				}
+
+				if tc.numClose == 0 {
+					tc.numClose = 1
+				}
+
+				var err error
+				for i := 0; i < tc.numClose; i++ {
+					err = p.Close(ctx)
+				}
+				if tc.wantErr != (err != nil) {
+					t.Fatalf("failed to close channel, wantErr = %v, got = %v", tc.wantErr, err)
+				}
+
+				for i := 0; i < tc.numSend-tc.numReceivePreClose; i++ {
+					_, err := p.Receive(ctx)
+					if err != nil {
+						t.Fatalf("failed to receive from protocol: %v", err)
+					}
+				}
+
+				if _, err = p.Receive(ctx); err != io.EOF {
+					t.Fatalf("expected protocol to be closed but got err = %v", err)
 				}
 			})
 		}
