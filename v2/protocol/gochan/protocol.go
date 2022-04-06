@@ -7,6 +7,7 @@ package gochan
 
 import (
 	"context"
+
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/protocol"
 )
@@ -18,7 +19,7 @@ const (
 // SendReceiver is a reference implementation for using the CloudEvents binding
 // integration.
 type SendReceiver struct {
-	sender   protocol.Sender
+	sender   protocol.SendCloser
 	receiver protocol.Receiver
 }
 
@@ -37,4 +38,8 @@ func (sr *SendReceiver) Send(ctx context.Context, in binding.Message, transforme
 
 func (sr *SendReceiver) Receive(ctx context.Context) (binding.Message, error) {
 	return sr.receiver.Receive(ctx)
+}
+
+func (sr *SendReceiver) Close(ctx context.Context) error {
+	return sr.sender.Close(ctx)
 }
