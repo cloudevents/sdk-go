@@ -45,6 +45,7 @@ type BlockingSenderReceiverTestOutput struct {
 type BlockingSenderReceiverTestCases map[string]BlockingSenderReceiverTest
 
 func TestNonBlockingSenderReceiver(t *testing.T) {
+	t.Parallel()
 	now := time.Now()
 
 	testCases := BlockingSenderReceiverTestCases{
@@ -103,6 +104,7 @@ func TestNonBlockingSenderReceiver(t *testing.T) {
 }
 
 func TestBlockingSenderReceiver(t *testing.T) {
+	t.Parallel()
 	now := time.Now()
 
 	testCases := BlockingSenderReceiverTestCases{
