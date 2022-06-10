@@ -7,20 +7,21 @@ package http
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
+	"sync"
 	"testing"
 	"time"
 
-	"github.com/cloudevents/sdk-go/v2/binding"
-	"github.com/cloudevents/sdk-go/v2/protocol"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/time/rate"
+
+	"github.com/cloudevents/sdk-go/v2/binding"
+	"github.com/cloudevents/sdk-go/v2/protocol"
 )
 
 func TestNew(t *testing.T) {
@@ -265,7 +266,7 @@ func ReceiveTest(t *testing.T, p *Protocol, ctx context.Context, rec *httptest.R
 }
 
 func TestServeHTTP_ReceiveWithLimiter(t *testing.T) {
-	var testCases = map[string]struct {
+	testCases := map[string]struct {
 		limiter RateLimiter
 		delay   time.Duration // client send
 
@@ -354,19 +355,31 @@ func (rl *rateLimiterTest) Close(_ context.Context) error {
 }
 
 type roundTripperTest struct {
+	sync.Mutex
 	statusCodes  []int
 	requestCount int
+	delays       []time.Duration
 }
 
-func (r *roundTripperTest) RoundTrip(req *http.Request) (*http.Response, error) {
-	code := r.statusCodes[r.requestCount]
-	r.requestCount++
-	if code == -1 {
-		time.Sleep(2 * time.Second)
-		return nil, errors.New("timeout")
-	}
+func (r *roundTripperTest) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
+	defer func() {
+		r.Lock()
+		r.requestCount++
+		r.Unlock()
+	}()
 
-	return &http.Response{StatusCode: code}, nil
+	r.Lock()
+	code := r.statusCodes[r.requestCount]
+	delay := time.Duration(0)
+	if r.delays != nil {
+		delay = r.delays[r.requestCount]
+	}
+	r.Unlock()
+
+	time.Sleep(delay)
+	if code != 200 {
+		http.Error(w, http.StatusText(code), code)
+	}
 }
 
 func newDoneContext() context.Context {
