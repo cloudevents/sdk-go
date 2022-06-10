@@ -4,6 +4,6 @@ go 1.14
 
 require (
 	github.com/Azure/go-amqp v0.17.0
-	github.com/cloudevents/sdk-go/v2 v2.10.0
+	github.com/cloudevents/sdk-go/v2 v2.10.1
 	github.com/stretchr/testify v1.5.1
 )
