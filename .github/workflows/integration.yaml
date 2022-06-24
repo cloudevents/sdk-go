@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         # Only test one go version: the integration tests don't seem to pass if NATS runs more one running at a time.
-        go-version: [1.14.x]
+        go-version: [1.17.x]
         platform: [ubuntu-latest]
 
     runs-on: ${{ matrix.platform }}
