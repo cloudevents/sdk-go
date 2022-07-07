@@ -201,7 +201,10 @@ func (t *Protocol) startSubscriber(ctx context.Context, sub subscriptionWithTopi
 	}
 	// Ok, ready to start pulling.
 	return conn.Receive(ctx, func(ctx context.Context, m *pubsub.Message) {
-		t.incoming <- *m
+		select {
+		case t.incoming <- *m:
+		case <-ctx.Done():
+		}
 	})
 }
 
