@@ -7,11 +7,13 @@ package format_test
 
 import (
 	"net/url"
+	"reflect"
 	"testing"
 	stdtime "time"
 
 	"github.com/stretchr/testify/require"
 
+	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/cloudevents/sdk-go/v2/event"
 	"github.com/cloudevents/sdk-go/v2/types"
 
@@ -90,4 +92,119 @@ func TestProtobufFormatWithProtobufCodec(t *testing.T) {
 	payload2 := &pb.CloudEventAttributeValue{}
 	require.NoError(e2.DataAs(payload2))
 	require.True(payload2.GetCeBoolean())
+}
+
+func TestFromProto(t *testing.T) {
+	tests := []struct {
+		name    string
+		proto   *pb.CloudEvent
+		want    *event.Event
+		wantErr bool
+	}{{
+		name: "happy binary json",
+		proto: &pb.CloudEvent{
+			SpecVersion: "1.0",
+			Id:          "abc-123",
+			Source:      "/source",
+			Type:        "some.type",
+			Attributes: map[string]*pb.CloudEventAttributeValue{
+				"datacontenttype": {Attr: &pb.CloudEventAttributeValue_CeString{CeString: "application/json"}},
+				"extra1":          {Attr: &pb.CloudEventAttributeValue_CeString{CeString: "extra1 value"}},
+				"extra2":          {Attr: &pb.CloudEventAttributeValue_CeInteger{CeInteger: 2}},
+				"extra3":          {Attr: &pb.CloudEventAttributeValue_CeBoolean{CeBoolean: true}},
+				"extra4":          {Attr: &pb.CloudEventAttributeValue_CeUri{CeUri: "https://example.com"}},
+			},
+			Data: &pb.CloudEvent_BinaryData{
+				BinaryData: []byte(`{"unit":"test"}`),
+			},
+		},
+		want: func() *event.Event {
+			out := event.New(cloudevents.VersionV1)
+			out.SetID("abc-123")
+			out.SetSource("/source")
+			out.SetType("some.type")
+			_ = out.SetData("application/json", map[string]interface{}{"unit": "test"})
+			out.SetExtension("extra1", "extra1 value")
+			out.SetExtension("extra2", 2)
+			out.SetExtension("extra3", true)
+			out.SetExtension("extra4", url.URL{Scheme: "https", Host: "example.com"})
+			return &out
+		}(),
+		wantErr: false,
+	}, {
+		name: "happy text",
+		proto: &pb.CloudEvent{
+			SpecVersion: "1.0",
+			Id:          "abc-123",
+			Source:      "/source",
+			Type:        "some.type",
+			Attributes: map[string]*pb.CloudEventAttributeValue{
+				"datacontenttype": {Attr: &pb.CloudEventAttributeValue_CeString{CeString: "text/plain"}},
+				"extra1":          {Attr: &pb.CloudEventAttributeValue_CeString{CeString: "extra1 value"}},
+				"extra2":          {Attr: &pb.CloudEventAttributeValue_CeInteger{CeInteger: 2}},
+				"extra3":          {Attr: &pb.CloudEventAttributeValue_CeBoolean{CeBoolean: true}},
+				"extra4":          {Attr: &pb.CloudEventAttributeValue_CeUri{CeUri: "https://example.com"}},
+			},
+			Data: &pb.CloudEvent_TextData{
+				TextData: `this is some text with a "quote"`,
+			},
+		},
+		want: func() *event.Event {
+			out := event.New(cloudevents.VersionV1)
+			out.SetID("abc-123")
+			out.SetSource("/source")
+			out.SetType("some.type")
+			_ = out.SetData("text/plain", `this is some text with a "quote"`)
+			out.SetExtension("extra1", "extra1 value")
+			out.SetExtension("extra2", 2)
+			out.SetExtension("extra3", true)
+			out.SetExtension("extra4", url.URL{Scheme: "https", Host: "example.com"})
+			return &out
+		}(),
+		wantErr: false,
+	}, {
+		name: "happy json as text",
+		proto: &pb.CloudEvent{
+			SpecVersion: "1.0",
+			Id:          "abc-123",
+			Source:      "/source",
+			Type:        "some.type",
+			Attributes: map[string]*pb.CloudEventAttributeValue{
+				"datacontenttype": {Attr: &pb.CloudEventAttributeValue_CeString{CeString: "application/json"}},
+				"extra1":          {Attr: &pb.CloudEventAttributeValue_CeString{CeString: "extra1 value"}},
+				"extra2":          {Attr: &pb.CloudEventAttributeValue_CeInteger{CeInteger: 2}},
+				"extra3":          {Attr: &pb.CloudEventAttributeValue_CeBoolean{CeBoolean: true}},
+				"extra4":          {Attr: &pb.CloudEventAttributeValue_CeUri{CeUri: "https://example.com"}},
+			},
+			Data: &pb.CloudEvent_TextData{
+				TextData: `{"unit":"test"}`,
+			},
+		},
+		want: func() *event.Event {
+			out := event.New(cloudevents.VersionV1)
+			out.SetID("abc-123")
+			out.SetSource("/source")
+			out.SetType("some.type")
+			_ = out.SetData("application/json", `{"unit":"test"}`)
+			out.SetExtension("extra1", "extra1 value")
+			out.SetExtension("extra2", 2)
+			out.SetExtension("extra3", true)
+			out.SetExtension("extra4", url.URL{Scheme: "https", Host: "example.com"})
+			return &out
+		}(),
+		wantErr: false,
+	},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := format.FromProto(tt.proto)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("FromProto() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("FromProto() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
