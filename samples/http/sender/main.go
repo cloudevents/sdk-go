@@ -7,10 +7,10 @@ package main
 
 import (
 	"context"
-	"log"
-
+	"fmt"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	cehttp "github.com/cloudevents/sdk-go/v2/protocol/http"
+	"log"
 )
 
 func main() {
@@ -41,7 +41,8 @@ func main() {
 		} else {
 			var httpResult *cehttp.Result
 			cloudevents.ResultAs(res, &httpResult)
-			log.Printf("Sent %d with status code %d", i, httpResult.StatusCode)
+			log.Printf("Sent %d with status code %d, error: %s", i, httpResult.StatusCode,
+				fmt.Errorf(httpResult.Format, httpResult.Args))
 		}
 	}
 }
