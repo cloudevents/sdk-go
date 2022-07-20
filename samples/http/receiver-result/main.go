@@ -8,9 +8,10 @@ package main
 import (
 	"context"
 	"fmt"
-	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"log"
 	"net/http"
+
+	cloudevents "github.com/cloudevents/sdk-go/v2"
 )
 
 func main() {

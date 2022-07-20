@@ -8,9 +8,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
+
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	cehttp "github.com/cloudevents/sdk-go/v2/protocol/http"
-	"log"
 )
 
 func main() {
