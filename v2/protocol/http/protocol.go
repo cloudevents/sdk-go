@@ -391,10 +391,8 @@ func (p *Protocol) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		}
 
 		rw.WriteHeader(status)
-		if errMsg != "" {
-			if _, err := rw.Write([]byte(errMsg)); err != nil {
-				return err
-			}
+		if _, err := rw.Write([]byte(errMsg)); err != nil {
+			return err
 		}
 		return nil
 	}

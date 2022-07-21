@@ -42,8 +42,9 @@ func main() {
 			var httpResult *cehttp.Result
 			if cloudevents.ResultAs(res, &httpResult) {
 				log.Printf("Sent %d with status code %d", i, httpResult.StatusCode)
+			} else {
+				log.Printf("Send did not return an HTTP response: %s", res)
 			}
-			log.Printf("Send did not return an HTTP response: %s", res)
 		}
 	}
 }

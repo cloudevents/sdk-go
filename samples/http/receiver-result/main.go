@@ -1,5 +1,5 @@
 /*
- Copyright 2021 The CloudEvents Authors
+ Copyright 2022 The CloudEvents Authors
  SPDX-License-Identifier: Apache-2.0
 */
 
