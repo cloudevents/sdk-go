@@ -153,7 +153,7 @@ func (c *Consumer) startConsumerGroupLoop(cg sarama.ConsumerGroup, ctx context.C
 	// Need to be wrapped in a for loop
 	// https://godoc.org/github.com/Shopify/sarama#ConsumerGroup
 	for {
-		err := cg.Consume(context.Background(), []string{c.topic}, c)
+		err := cg.Consume(ctx, []string{c.topic}, c)
 
 		select {
 		// If context is closed, then consumer group session was closed by the user
