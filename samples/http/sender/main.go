@@ -7,7 +7,9 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"net/http"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	cehttp "github.com/cloudevents/sdk-go/v2/protocol/http"
@@ -40,8 +42,15 @@ func main() {
 			log.Printf("Failed to send: %v", res)
 		} else {
 			var httpResult *cehttp.Result
-			cloudevents.ResultAs(res, &httpResult)
-			log.Printf("Sent %d with status code %d", i, httpResult.StatusCode)
+			if cloudevents.ResultAs(res, &httpResult) {
+				var err error
+				if httpResult.StatusCode != http.StatusOK {
+					err = fmt.Errorf(httpResult.Format, httpResult.Args...)
+				}
+				log.Printf("Sent %d with status code %d, error: %v", i, httpResult.StatusCode, err)
+			} else {
+				log.Printf("Send did not return an HTTP response: %s", res)
+			}
 		}
 	}
 }
