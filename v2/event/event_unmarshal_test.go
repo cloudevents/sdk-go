@@ -8,6 +8,7 @@ package event_test
 import (
 	"encoding/base64"
 	"encoding/json"
+	"github.com/stretchr/testify/assert"
 	"net/url"
 	"strings"
 	"testing"
@@ -1018,6 +1019,48 @@ func TestUnmarshalWithOrderingError(t *testing.T) {
 
 			require.Error(t, err)
 		})
+	}
+}
+
+func TestCloudEventUnmarshalling_invalidOrdering(t *testing.T) {
+	// Order should not matter.
+	{
+		structuredEventWithDataAfterDataContentType := `{
+			"specversion": "1.0",
+			"datacontenttype": "application",
+			"id": "test123",
+			"source": "/test/source",
+			"type": "test.event.type",
+			"time": "2021-07-21T01:00:59.365Z",
+			"data": {
+				"test": "test"
+			}
+		}`
+
+		e := &event.Event{}
+		err := e.UnmarshalJSON([]byte(structuredEventWithDataAfterDataContentType))
+		t.Logf("err1, %v", err)
+		assert.NotNil(t, err)
+		assert.Empty(t, e.Data())
+	}
+	{
+		structuredEventWithDataBeforeDataContentType := `{
+			"specversion": "1.0",
+			"data": {
+				"test": "test"
+			},
+			"datacontenttype": "application",
+			"id": "test123",
+			"source": "/test/source",
+			"type": "test.event.type",
+			"time": "2021-07-21T01:00:59.365Z"
+		}`
+
+		e := &event.Event{}
+		err := e.UnmarshalJSON([]byte(structuredEventWithDataBeforeDataContentType))
+		t.Logf("err2, %v", err)
+		assert.NotNil(t, err)
+		assert.Empty(t, e.Data())
 	}
 }
 
