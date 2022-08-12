@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/cloudevents/sdk-go/v2 v2.5.0
 	github.com/lightstep/tracecontext.go v0.0.0-20181129014701-1757c391b1ac
-	github.com/stretchr/testify v1.5.1
+	github.com/stretchr/testify v1.8.0
 	go.opencensus.io v0.22.0
 )
 
@@ -23,7 +23,7 @@ require (
 	go.uber.org/multierr v1.1.0 // indirect
 	go.uber.org/zap v1.10.0 // indirect
 	golang.org/x/net v0.0.0-20201202161906-c7110b5ffcbb // indirect
-	gopkg.in/yaml.v2 v2.3.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 replace github.com/cloudevents/sdk-go/v2 => ../../../v2

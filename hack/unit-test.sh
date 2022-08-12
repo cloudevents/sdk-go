@@ -15,7 +15,7 @@ do
   echo
   echo --- Testing $gomodule ---
   echo
-  
+
   pushd $gomodule
   touch ./coverage.tmp
   COVERPKG=$(go list ./... | grep -v /vendor | grep -v /test | tr "\n" ",")
@@ -25,6 +25,6 @@ do
 
   rm coverage.tmp
   # Remove test only deps.
-  go mod tidy
+  go mod tidy -compat=1.17
   popd
 done

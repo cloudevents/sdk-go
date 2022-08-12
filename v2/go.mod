@@ -6,7 +6,7 @@ require (
 	github.com/google/go-cmp v0.5.0
 	github.com/google/uuid v1.1.1
 	github.com/json-iterator/go v1.1.10
-	github.com/stretchr/testify v1.5.1
+	github.com/stretchr/testify v1.8.0
 	github.com/valyala/bytebufferpool v1.0.0
 	go.uber.org/zap v1.10.0
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
@@ -25,5 +25,5 @@ require (
 	go.uber.org/multierr v1.1.0 // indirect
 	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543 // indirect
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
-	gopkg.in/yaml.v2 v2.3.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
