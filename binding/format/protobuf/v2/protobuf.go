@@ -18,7 +18,7 @@ import (
 	"github.com/cloudevents/sdk-go/v2/event"
 	"github.com/cloudevents/sdk-go/v2/types"
 
-	"github.com/cloudevents/sdk-go/binding/format/protobuf/v2/internal/pb"
+	"github.com/cloudevents/sdk-go/binding/format/protobuf/v2/pb"
 )
 
 const (

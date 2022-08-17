@@ -18,7 +18,7 @@ import (
 	"github.com/cloudevents/sdk-go/v2/types"
 
 	format "github.com/cloudevents/sdk-go/binding/format/protobuf/v2"
-	pb "github.com/cloudevents/sdk-go/binding/format/protobuf/v2/internal/pb"
+	"github.com/cloudevents/sdk-go/binding/format/protobuf/v2/pb"
 )
 
 func TestProtobufFormatWithoutProtobufCodec(t *testing.T) {
