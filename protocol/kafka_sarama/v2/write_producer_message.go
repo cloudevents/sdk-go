@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"log"
 
 	"github.com/Shopify/sarama"
 
@@ -69,8 +70,9 @@ func (b *kafkaProducerMessageWriter) SetStructuredEvent(ctx context.Context, for
 	if err != nil {
 		return err
 	}
-
+	log.Printf("bytes: %v", buf.Bytes())
 	b.Value = sarama.ByteEncoder(buf.Bytes())
+	log.Printf("encode: %v", b.Value)
 	return nil
 }
 
