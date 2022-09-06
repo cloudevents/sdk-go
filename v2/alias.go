@@ -134,6 +134,10 @@ var (
 
 	ToMessage = binding.ToMessage
 
+	// Event Creation
+	NewEventFromHttpRequest  = http.NewEventFromHttpRequest
+	NewEventFromHttpResponse = http.NewEventFromHttpResponse
+
 	// HTTP Messages
 
 	WriteHTTPRequest = http.WriteRequest
