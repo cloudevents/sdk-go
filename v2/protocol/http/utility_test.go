@@ -35,11 +35,16 @@ func TestNewEventFromHttpRequest(t *testing.T) {
 	for _, tt := range tests {
 		test.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
 			t.Run(tt.name, func(t *testing.T) {
-				ctx := context.Background()
+				ctx := context.TODO()
+				if tt.encoding == binding.EncodingStructured {
+					ctx = binding.WithForceStructured(ctx)
+				} else if tt.encoding == binding.EncodingBinary {
+					ctx = binding.WithForceBinary(ctx)
+				}
+
 				req := httptest.NewRequest("POST", "http://localhost", nil)
 				require.NoError(t, WriteRequest(ctx, (*binding.EventMessage)(&eventIn), req))
 
-				NewEventFromHttpRequest(req)
 				got, err := NewEventFromHttpRequest(req)
 				require.NoError(t, err)
 				// Equals fails with diff like:
