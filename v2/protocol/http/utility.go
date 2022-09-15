@@ -14,7 +14,7 @@ import (
 )
 
 // NewEventFromHttpRequest returns an Event.
-func NewEventFromHttpRequest(req *nethttp.Request) (*event.Event, error) {
+func NewEventFromHTTPRequest(req *nethttp.Request) (*event.Event, error) {
 	msg := NewMessageFromHttpRequest(req)
 	return binding.ToEvent(context.Background(), msg, nil)
 }
