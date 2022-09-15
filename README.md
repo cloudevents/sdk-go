@@ -87,7 +87,7 @@ func main() {
 
 ```go
 func handler(w http.ResponseWriter, r *http.Request) {
-	event, err := cloudevents.NewCloudEventFromHttpRequest(r)
+	event, err := cloudevents.NewCloudEventFromHTTPRequest(r)
 	if err != nil {
 		log.Print("failed to parse CloudEvent from request: %v", err)
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)

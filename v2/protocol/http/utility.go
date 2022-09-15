@@ -13,19 +13,14 @@ import (
 	"github.com/cloudevents/sdk-go/v2/event"
 )
 
-// NewEventFromHttpRequest returns an Event.
+// NewEventFromHTTPRequest returns an Event.
 func NewEventFromHTTPRequest(req *nethttp.Request) (*event.Event, error) {
 	msg := NewMessageFromHttpRequest(req)
 	return binding.ToEvent(context.Background(), msg)
 }
 
-// NewEventFromHttpResponse returns an Event.
+// NewEventFromHTTPResponse returns an Event.
 func NewEventFromHTTPResponse(resp *nethttp.Response) (*event.Event, error) {
-	msg := NewMessageFromHTTPResponse(resp)
-	return binding.ToEvent(context.Background(), msg, nil)
+	msg := NewMessageFromHttpResponse(resp)
+	return binding.ToEvent(context.Background(), msg)
 }
-
-// Write tests
-// Add to pkg docs
-// Add to SDK site
-// Move code to preferred home.

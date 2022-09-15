@@ -45,14 +45,8 @@ func TestNewEventFromHttpRequest(t *testing.T) {
 				req := httptest.NewRequest("POST", "http://localhost", nil)
 				require.NoError(t, WriteRequest(ctx, (*binding.EventMessage)(&eventIn), req))
 
-				got, err := NewEventFromHttpRequest(req)
+				got, err := NewEventFromHTTPRequest(req)
 				require.NoError(t, err)
-				// Equals fails with diff like:
-				// - 	"exbinary": []uint8{0x00, 0x01, 0x02, 0x03},
-				// + 	"exbinary": string("AAECAw=="),
-				// - 	"exint":    int32(42),
-				// + 	"exint":    string("42"),
-				// test.AssertEventEquals(t, eventIn, *got)
 				test.AssertEvent(t, *got, test.IsValid())
 			})
 		})
@@ -89,7 +83,7 @@ func TestNewEventFromHttpResponse(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewEventFromHttpResponse(tt.resp)
+			got, err := NewEventFromHTTPResponse(tt.resp)
 			require.NoError(t, err)
 			test.AssertEvent(t, *got, test.IsValid())
 		})
