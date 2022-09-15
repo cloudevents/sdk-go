@@ -21,7 +21,7 @@ func NewEventFromHTTPRequest(req *nethttp.Request) (*event.Event, error) {
 
 // NewEventFromHttpResponse returns an Event.
 func NewEventFromHTTPResponse(resp *nethttp.Response) (*event.Event, error) {
-	msg := NewMessageFromHttpResponse(resp)
+	msg := NewMessageFromHTTPResponse(resp)
 	return binding.ToEvent(context.Background(), msg, nil)
 }
 
