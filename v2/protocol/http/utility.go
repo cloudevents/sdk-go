@@ -20,7 +20,7 @@ func NewEventFromHTTPRequest(req *nethttp.Request) (*event.Event, error) {
 }
 
 // NewEventFromHttpResponse returns an Event.
-func NewEventFromHttpResponse(resp *nethttp.Response) (*event.Event, error) {
+func NewEventFromHTTPResponse(resp *nethttp.Response) (*event.Event, error) {
 	msg := NewMessageFromHttpResponse(resp)
 	return binding.ToEvent(context.Background(), msg, nil)
 }
