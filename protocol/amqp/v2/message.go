@@ -18,12 +18,18 @@ import (
 	"github.com/cloudevents/sdk-go/v2/binding/spec"
 )
 
-const prefix = "cloudEvents:" // Name prefix for AMQP properties that hold CE attributes.
+const (
+	prefix     = "cloudEvents:" // Name prefix for AMQP properties that hold CE attributes.
+	amqpPrefix = "cloudEvents_" // AMQP prefix compatible with JMS 2.0
+)
 
 var (
 	// Use the package path as AMQP error condition name
 	condition = amqp.ErrorCondition(reflect.TypeOf(Message{}).PkgPath())
-	specs     = spec.WithPrefix(prefix)
+	specs     = []*spec.Versions{
+		spec.WithPrefix(prefix),
+		spec.WithPrefix(amqpPrefix),
+	}
 )
 
 // Message implements binding.Message by wrapping an *amqp.Message.
@@ -50,13 +56,15 @@ func NewMessage(message *amqp.Message, receiver *amqp.Receiver) *Message {
 	return &Message{AMQP: message, AMQPrcv: receiver, format: fmt, version: vn}
 }
 
-var _ binding.Message = (*Message)(nil)
-var _ binding.MessageMetadataReader = (*Message)(nil)
+var (
+	_ binding.Message               = (*Message)(nil)
+	_ binding.MessageMetadataReader = (*Message)(nil)
+)
 
 func getSpecVersion(message *amqp.Message) spec.Version {
-	if sv, ok := message.ApplicationProperties[specs.PrefixedSpecVersionName()]; ok {
+	if sv, ok := message.ApplicationProperties[specs[0].PrefixedSpecVersionName()]; ok {
 		if svs, ok := sv.(string); ok {
-			return specs.Version(svs)
+			return specs[0].Version(svs)
 		}
 	}
 	return nil
@@ -125,7 +133,7 @@ func (m *Message) GetAttribute(k spec.Kind) (spec.Attribute, interface{}) {
 }
 
 func (m *Message) GetExtension(name string) interface{} {
-	return m.AMQP.ApplicationProperties[prefix+name]
+	return m.AMQP.ApplicationProperties[amqpPrefix+name]
 }
 
 func (m *Message) Finish(err error) error {
