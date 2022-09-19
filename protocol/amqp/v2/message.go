@@ -62,9 +62,17 @@ var (
 )
 
 func getSpecVersion(message *amqp.Message) spec.Version {
-	if sv, ok := message.ApplicationProperties[specs[0].PrefixedSpecVersionName()]; ok {
+	specUsed := 1
+	sv, foundSpecVersion := message.ApplicationProperties[specs[specUsed].PrefixedSpecVersionName()]
+	if !foundSpecVersion {
+		// if not found try with the other spec
+		specUsed = 0
+		sv, foundSpecVersion = message.ApplicationProperties[specs[specUsed].PrefixedSpecVersionName()]
+	}
+
+	if foundSpecVersion {
 		if svs, ok := sv.(string); ok {
-			return specs[0].Version(svs)
+			return specs[specUsed].Version(svs)
 		}
 	}
 	return nil
@@ -87,6 +95,8 @@ func (m *Message) ReadStructured(ctx context.Context, encoder binding.Structured
 	return binding.ErrNotStructured
 }
 
+// ReadBinary transfers the AMQP message into binary (encoder)
+// it supports two type of prefix with ":" and "_"
 func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) error {
 	if m.version == nil {
 		return binding.ErrNotBinary
@@ -101,14 +111,31 @@ func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) 
 	}
 
 	for k, v := range m.AMQP.ApplicationProperties {
-		if strings.HasPrefix(k, prefix) {
-			attr := m.version.Attribute(k)
-			if attr != nil {
-				err = encoder.SetAttribute(attr, v)
-			} else {
-				err = encoder.SetExtension(strings.ToLower(strings.TrimPrefix(k, prefix)), v)
-			}
+
+		hasAMQPPrefix := strings.HasPrefix(k, amqpPrefix)
+		hasRegularPrefix := strings.HasPrefix(k, prefix)
+
+		// skip the properties if no prefix is there
+		if !hasAMQPPrefix && !hasRegularPrefix {
+			continue
 		}
+
+		// if the key is an attribue setup and continue
+		attr := m.version.Attribute(k)
+		if attr != nil {
+			err = encoder.SetAttribute(attr, v)
+			if err != nil {
+				return err
+			}
+			continue
+		}
+
+		// if the key is an extension, find which prefix is used
+		currentPrefix := amqpPrefix
+		if hasRegularPrefix {
+			currentPrefix = prefix
+		}
+		err = encoder.SetExtension(strings.ToLower(strings.TrimPrefix(k, currentPrefix)), v)
 		if err != nil {
 			return err
 		}
