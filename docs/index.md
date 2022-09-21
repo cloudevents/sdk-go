@@ -81,6 +81,19 @@ func main() {
 }
 ```
 
+## Create a CloudEvent from an HTTP Request
+
+```go
+func handler(w http.ResponseWriter, r *http.Request) {
+	event, err := cloudevents.NewCloudEventFromHTTPRequest(r)
+	if err != nil {
+		log.Print("failed to parse CloudEvent from request: %v", err)
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+	}
+	w.Write([]byte(*event.String()))
+}
+```
+
 ## Serialize/Deserialize a CloudEvent
 
 To marshal a CloudEvent into JSON:
