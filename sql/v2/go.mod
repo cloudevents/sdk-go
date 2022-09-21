@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/antlr/antlr4/runtime/Go/antlr v0.0.0-20211221011931-643d94fcab96
-	github.com/cloudevents/sdk-go/v2 v2.5.0
+	github.com/cloudevents/sdk-go/v2 v2.12.0
 	github.com/stretchr/testify v1.8.0
 	sigs.k8s.io/yaml v1.2.0
 )
@@ -23,5 +23,3 @@ require (
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace github.com/cloudevents/sdk-go/v2 => ../../v2
