@@ -137,7 +137,6 @@ err := json.Unmarshal(bytes, &event)
 - Slack: #cloudeventssdk channel under
   [CNCF's Slack workspace](https://slack.cncf.io/).
 - Email: https://lists.cncf.io/g/cncf-cloudevents-sdk
-- Contact for additional information: Scott Nichols (`@Scott Nichols` on slack).
 
 Each SDK may have its own unique processes, tooling and guidelines, common
 governance related material can be found in the
