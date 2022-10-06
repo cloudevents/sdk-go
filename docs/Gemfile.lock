@@ -7,8 +7,8 @@ GEM
       minitest (~> 5.1)
       tzinfo (~> 1.1)
       zeitwerk (~> 2.2, >= 2.2.2)
-    addressable (2.7.0)
-      public_suffix (>= 2.0.2, < 5.0)
+    addressable (2.8.1)
+      public_suffix (>= 2.0.2, < 6.0)
     coffee-script (2.4.1)
       coffee-script-source
       execjs
@@ -191,9 +191,8 @@ GEM
       gemoji (~> 3.0)
       html-pipeline (~> 2.2)
       jekyll (>= 3.0, < 5.0)
-    just-the-docs (0.2.8)
-      bundler (~> 2.1.4)
-      jekyll (>= 3.8.5, < 4.1.0)
+    just-the-docs (0.3.3)
+      jekyll (>= 3.8.5)
       jekyll-seo-tag (~> 2.0)
       rake (>= 12.3.1, < 13.1.0)
     kramdown (1.17.0)
