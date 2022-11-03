@@ -53,19 +53,25 @@ func (r *Receiver) Close(context.Context) error {
 }
 
 func (r *Receiver) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
-	for message := range claim.Messages() {
-		msg := message
-		m := NewMessageFromConsumerMessage(msg)
+	for {
+		select {
+		case msg, ok := <-claim.Messages():
+			if !ok {
+				return nil
+			}
+			m := NewMessageFromConsumerMessage(msg)
 
-		r.incoming <- msgErr{
-			msg: binding.WithFinish(m, func(err error) {
-				if protocol.IsACK(err) {
-					session.MarkMessage(msg, "")
-				}
-			}),
+			r.incoming <- msgErr{
+				msg: binding.WithFinish(m, func(err error) {
+					if protocol.IsACK(err) {
+						session.MarkMessage(msg, "")
+					}
+				}),
+			}
+		case <-session.Context().Done():
+			return nil
 		}
 	}
-	return nil
 }
 
 func (r *Receiver) Receive(ctx context.Context) (binding.Message, error) {
