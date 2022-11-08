@@ -76,7 +76,7 @@ func (r *Receiver) ConsumeClaim(session sarama.ConsumerGroupSession, claim saram
 		// Also checked Shopify/sarama code which calls this ConsumeClaim method, and don't see if there is any difference
 		// whether this method returns error or not. If it returns the error, as per current implementation, it could
 		// get printed in logs and later drained when the ConsumerGroup gets closed.
-		// For now, to be on safer side, returning nil instead of session.Context().Err() as sugeested in
+		// For now, to be on safer side, returning nil instead of session.Context().Err() as suggested in
 		// https://github.com/Shopify/sarama/blob/5e2c2ef0e429f895c86152189f625bfdad7d3452/examples/consumergroup/main.go
 		case <-session.Context().Done():
 			return nil
