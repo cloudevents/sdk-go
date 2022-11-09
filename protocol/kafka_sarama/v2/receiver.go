@@ -52,13 +52,17 @@ func (r *Receiver) Close(context.Context) error {
 	return nil
 }
 
+// ConsumeClaim must start a consumer loop of ConsumerGroupClaim's Messages().
+// Also the method should return when `session.Context()` is done.
+// Refer - https://github.com/Shopify/sarama/blob/5e2c2ef0e429f895c86152189f625bfdad7d3452/examples/consumergroup/main.go#L177
 func (r *Receiver) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
+	// NOTE:
+	// Do not move the code below to a goroutine.
+	// The `ConsumeClaim` itself is called within a goroutine, see:
+	// https://github.com/Shopify/sarama/blob/main/consumer_group.go#L27-L29
 	for {
 		select {
-		case msg, ok := <-claim.Messages():
-			if !ok {
-				return nil
-			}
+		case msg := <-claim.Messages():
 			m := NewMessageFromConsumerMessage(msg)
 
 			r.incoming <- msgErr{
