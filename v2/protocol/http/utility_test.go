@@ -8,6 +8,7 @@ package http
 import (
 	"bytes"
 	"context"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -88,4 +89,29 @@ func TestNewEventFromHttpResponse(t *testing.T) {
 			test.AssertEvent(t, *got, test.IsValid())
 		})
 	}
+}
+
+func TestNewEventsFromHTTPRequest(t *testing.T) {
+	req := httptest.NewRequest("POST", "http://localhost", bytes.NewReader([]byte(`[{"data":"foo","datacontenttype":"application/json","id":"id","source":"source","specversion":"1.0","type":"type"}]`)))
+	req.Header.Set(ContentType, event.ApplicationCloudEventsBatchJSON)
+
+	events, err := NewEventsFromHTTPRequest(req)
+	require.NoError(t, err)
+	require.Len(t, events, 1)
+	test.AssertEvent(t, events[0], test.IsValid())
+}
+
+func TestNewEventsFromHTTPResponse(t *testing.T) {
+	data := `[{"data":"foo","datacontenttype":"application/json","id":"id","source":"source","specversion":"1.0","type":"type"}]`
+	resp := http.Response{
+		Header: http.Header{
+			"Content-Type": {event.ApplicationCloudEventsBatchJSON},
+		},
+		Body:          io.NopCloser(bytes.NewReader([]byte(data))),
+		ContentLength: int64(len(data)),
+	}
+	events, err := NewEventsFromHTTPResponse(&resp)
+	require.NoError(t, err)
+	require.Len(t, events, 1)
+	test.AssertEvent(t, events[0], test.IsValid())
 }

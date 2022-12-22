@@ -24,3 +24,15 @@ func NewEventFromHTTPResponse(resp *nethttp.Response) (*event.Event, error) {
 	msg := NewMessageFromHttpResponse(resp)
 	return binding.ToEvent(context.Background(), msg)
 }
+
+// NewEventsFromHTTPRequest returns a batched set of Events from a http.Request
+func NewEventsFromHTTPRequest(req *nethttp.Request) ([]event.Event, error) {
+	msg := NewMessageFromHttpRequest(req)
+	return binding.ToEvents(context.Background(), msg, msg.BodyReader)
+}
+
+// NewEventsFromHTTPResponse returns a batched set of Events from a http.Response
+func NewEventsFromHTTPResponse(resp *nethttp.Response) ([]event.Event, error) {
+	msg := NewMessageFromHttpResponse(resp)
+	return binding.ToEvents(context.Background(), msg, msg.BodyReader)
+}
