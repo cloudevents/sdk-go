@@ -139,6 +139,7 @@ var (
 	NewEventFromHTTPResponse  = http.NewEventFromHTTPResponse
 	NewEventsFromHTTPRequest  = http.NewEventsFromHTTPRequest
 	NewEventsFromHTTPResponse = http.NewEventsFromHTTPResponse
+	NewHTTPRequestFromEvents  = http.NewHTTPRequestFromEvents
 
 	// HTTP Messages
 

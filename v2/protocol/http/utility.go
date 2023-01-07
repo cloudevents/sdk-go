@@ -6,7 +6,9 @@
 package http
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	nethttp "net/http"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
@@ -35,4 +37,28 @@ func NewEventsFromHTTPRequest(req *nethttp.Request) ([]event.Event, error) {
 func NewEventsFromHTTPResponse(resp *nethttp.Response) ([]event.Event, error) {
 	msg := NewMessageFromHttpResponse(resp)
 	return binding.ToEvents(context.Background(), msg, msg.BodyReader)
+}
+
+// NewHTTPRequestFromEvents creates a http.Request object that can be used with any http.Client.
+func NewHTTPRequestFromEvents(ctx context.Context, url string, events []event.Event) (*nethttp.Request, error) {
+	// Sending batch events is quite straightforward, as there is only JSON format, so a simple implementation.
+	for _, e := range events {
+		if err := e.Validate(); err != nil {
+			return nil, err
+		}
+	}
+	var buffer bytes.Buffer
+	err := json.NewEncoder(&buffer).Encode(events)
+	if err != nil {
+		return nil, err
+	}
+
+	request, err := nethttp.NewRequestWithContext(ctx, nethttp.MethodPost, url, &buffer)
+	if err != nil {
+		return nil, err
+	}
+
+	request.Header.Set(ContentType, event.ApplicationCloudEventsBatchJSON)
+
+	return request, nil
 }

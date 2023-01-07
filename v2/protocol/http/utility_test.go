@@ -14,11 +14,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/event"
 	"github.com/cloudevents/sdk-go/v2/test"
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewEventFromHttpRequest(t *testing.T) {
@@ -114,4 +114,43 @@ func TestNewEventsFromHTTPResponse(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, events, 1)
 	test.AssertEvent(t, events[0], test.IsValid())
+}
+
+func TestNewHTTPRequestFromEvents(t *testing.T) {
+	var events []event.Event
+	e := event.New()
+	e.SetID(uuid.New().String())
+	e.SetSource("example/uri")
+	e.SetType("example.type")
+	require.NoError(t, e.SetData(event.ApplicationJSON, map[string]string{"hello": "world"}))
+	events = append(events, e.Clone())
+
+	e.SetID(uuid.New().String())
+	require.NoError(t, e.SetData(event.ApplicationJSON, map[string]string{"goodbye": "world"}))
+	events = append(events, e)
+
+	require.Len(t, events, 2)
+	require.NotEqual(t, events[0], events[1])
+
+	// echo back what we get, so we can compare events at either side.
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set(ContentType, r.Header.Get(ContentType))
+		b, err := io.ReadAll(r.Body)
+		require.NoError(t, err)
+		require.NoError(t, r.Body.Close())
+		_, err = w.Write(b)
+		require.NoError(t, err)
+	}))
+	defer ts.Close()
+
+	req, err := NewHTTPRequestFromEvents(context.Background(), ts.URL, events)
+	require.NoError(t, err)
+
+	resp, err := ts.Client().Do(req)
+	require.NoError(t, err)
+
+	result, err := NewEventsFromHTTPResponse(resp)
+	require.NoError(t, err)
+
+	require.Equal(t, events, result)
 }
