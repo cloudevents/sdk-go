@@ -39,7 +39,25 @@ func NewEventsFromHTTPResponse(resp *nethttp.Response) ([]event.Event, error) {
 	return binding.ToEvents(context.Background(), msg, msg.BodyReader)
 }
 
-// NewHTTPRequestFromEvents creates a http.Request object that can be used with any http.Client.
+// NewHTTPRequestFromEvent creates a http.Request object that can be used with any http.Client for a singular event.
+func NewHTTPRequestFromEvent(ctx context.Context, url string, event event.Event) (*nethttp.Request, error) {
+	if err := event.Validate(); err != nil {
+		return nil, err
+	}
+
+	req, err := nethttp.NewRequestWithContext(ctx, nethttp.MethodPost, url, nil)
+	if err != nil {
+		return nil, err
+	}
+	if err := WriteRequest(ctx, (*binding.EventMessage)(&event), req); err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewHTTPRequestFromEvents creates a http.Request object that can be used with any http.Client for sending
+// a batched set of events.
 func NewHTTPRequestFromEvents(ctx context.Context, url string, events []event.Event) (*nethttp.Request, error) {
 	// Sending batch events is quite straightforward, as there is only JSON format, so a simple implementation.
 	for _, e := range events {
