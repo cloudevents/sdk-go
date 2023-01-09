@@ -3,7 +3,7 @@ module github.com/cloudevents/sdk-go/observability/opentelemetry/v2
 go 1.17
 
 require (
-	github.com/cloudevents/sdk-go/v2 v2.5.0
+	github.com/cloudevents/sdk-go/v2 v2.13.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.23.0
 	go.opentelemetry.io/otel v1.0.0
 	go.opentelemetry.io/otel/trace v1.0.0
@@ -22,5 +22,3 @@ require (
 	go.uber.org/multierr v1.1.0 // indirect
 	go.uber.org/zap v1.10.0 // indirect
 )
-
-replace github.com/cloudevents/sdk-go/v2 => ../../../v2

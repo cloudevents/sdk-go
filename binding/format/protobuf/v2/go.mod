@@ -3,7 +3,7 @@ module github.com/cloudevents/sdk-go/binding/format/protobuf/v2
 go 1.17
 
 require (
-	github.com/cloudevents/sdk-go/v2 v2.5.0
+	github.com/cloudevents/sdk-go/v2 v2.13.0
 	github.com/golang/protobuf v1.5.0
 	github.com/stretchr/testify v1.8.0
 	google.golang.org/protobuf v1.26.0
@@ -21,5 +21,3 @@ require (
 	go.uber.org/zap v1.10.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace github.com/cloudevents/sdk-go/v2 => ../../../../v2
