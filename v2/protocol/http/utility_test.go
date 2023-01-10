@@ -19,6 +19,7 @@ import (
 	"github.com/cloudevents/sdk-go/v2/event"
 	"github.com/cloudevents/sdk-go/v2/test"
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -234,4 +235,15 @@ func TestNewHTTPRequestFromEvents(t *testing.T) {
 	result, err := NewEventsFromHTTPResponse(resp)
 	require.NoError(t, err)
 	require.Equal(t, events, result)
+}
+
+func TestIsHTTPBatch(t *testing.T) {
+	header := http.Header{}
+	assert.False(t, IsHTTPBatch(header))
+
+	header.Set(ContentType, event.ApplicationJSON)
+	assert.False(t, IsHTTPBatch(header))
+
+	header.Set(ContentType, event.ApplicationCloudEventsBatchJSON)
+	assert.True(t, IsHTTPBatch(header))
 }

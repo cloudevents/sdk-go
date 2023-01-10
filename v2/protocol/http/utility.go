@@ -80,3 +80,9 @@ func NewHTTPRequestFromEvents(ctx context.Context, url string, events []event.Ev
 
 	return request, nil
 }
+
+// IsHTTPBatch returns of the current http.Request or http.Response is a batch event operation, by checking the
+// header `Content-Type` value.
+func IsHTTPBatch(header nethttp.Header) bool {
+	return header.Get(ContentType) == event.ApplicationCloudEventsBatchJSON
+}

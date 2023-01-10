@@ -135,11 +135,14 @@ var (
 	ToMessage = binding.ToMessage
 
 	// Event Creation
+
 	NewEventFromHTTPRequest   = http.NewEventFromHTTPRequest
 	NewEventFromHTTPResponse  = http.NewEventFromHTTPResponse
 	NewEventsFromHTTPRequest  = http.NewEventsFromHTTPRequest
 	NewEventsFromHTTPResponse = http.NewEventsFromHTTPResponse
 	NewHTTPRequestFromEvents  = http.NewHTTPRequestFromEvents
+	NewHTTPRequestFromEvent   = http.NewHTTPRequestFromEvent
+	IsHTTPBatch               = http.IsHTTPBatch
 
 	// HTTP Messages
 
