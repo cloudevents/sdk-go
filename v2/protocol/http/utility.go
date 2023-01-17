@@ -27,19 +27,20 @@ func NewEventFromHTTPResponse(resp *nethttp.Response) (*event.Event, error) {
 	return binding.ToEvent(context.Background(), msg)
 }
 
-// NewEventsFromHTTPRequest returns a batched set of Events from a http.Request
+// NewEventsFromHTTPRequest returns a batched set of Events from a HTTP Request
 func NewEventsFromHTTPRequest(req *nethttp.Request) ([]event.Event, error) {
 	msg := NewMessageFromHttpRequest(req)
 	return binding.ToEvents(context.Background(), msg, msg.BodyReader)
 }
 
-// NewEventsFromHTTPResponse returns a batched set of Events from a http.Response
+// NewEventsFromHTTPResponse returns a batched set of Events from a HTTP Response
 func NewEventsFromHTTPResponse(resp *nethttp.Response) ([]event.Event, error) {
 	msg := NewMessageFromHttpResponse(resp)
 	return binding.ToEvents(context.Background(), msg, msg.BodyReader)
 }
 
 // NewHTTPRequestFromEvent creates a http.Request object that can be used with any http.Client for a singular event.
+// This is an HTTP POST action to the provided url.
 func NewHTTPRequestFromEvent(ctx context.Context, url string, event event.Event) (*nethttp.Request, error) {
 	if err := event.Validate(); err != nil {
 		return nil, err
@@ -57,7 +58,7 @@ func NewHTTPRequestFromEvent(ctx context.Context, url string, event event.Event)
 }
 
 // NewHTTPRequestFromEvents creates a http.Request object that can be used with any http.Client for sending
-// a batched set of events.
+// a batched set of events. This is an HTTP POST action to the provided url.
 func NewHTTPRequestFromEvents(ctx context.Context, url string, events []event.Event) (*nethttp.Request, error) {
 	// Sending batch events is quite straightforward, as there is only JSON format, so a simple implementation.
 	for _, e := range events {
@@ -81,7 +82,7 @@ func NewHTTPRequestFromEvents(ctx context.Context, url string, events []event.Ev
 	return request, nil
 }
 
-// IsHTTPBatch returns of the current http.Request or http.Response is a batch event operation, by checking the
+// IsHTTPBatch returns if the current http.Request or http.Response is a batch event operation, by checking the
 // header `Content-Type` value.
 func IsHTTPBatch(header nethttp.Header) bool {
 	return header.Get(ContentType) == event.ApplicationCloudEventsBatchJSON

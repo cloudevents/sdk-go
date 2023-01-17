@@ -140,8 +140,8 @@ var (
 	NewEventFromHTTPResponse  = http.NewEventFromHTTPResponse
 	NewEventsFromHTTPRequest  = http.NewEventsFromHTTPRequest
 	NewEventsFromHTTPResponse = http.NewEventsFromHTTPResponse
-	NewHTTPRequestFromEvents  = http.NewHTTPRequestFromEvents
 	NewHTTPRequestFromEvent   = http.NewHTTPRequestFromEvent
+	NewHTTPRequestFromEvents  = http.NewHTTPRequestFromEvents
 	IsHTTPBatch               = http.IsHTTPBatch
 
 	// HTTP Messages

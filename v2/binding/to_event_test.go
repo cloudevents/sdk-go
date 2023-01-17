@@ -7,8 +7,12 @@ package binding_test
 
 import (
 	"context"
+	"io"
+	nethttp "net/http"
+	"strings"
 	"testing"
 
+	"github.com/cloudevents/sdk-go/v2/protocol/http"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
@@ -158,4 +162,50 @@ func TestToEvent_transformers_applied_once(t *testing.T) {
 			})
 		}
 	})
+}
+
+func TestToEvents(t *testing.T) {
+	fixture := map[string]struct {
+		contentType string
+		jsn         string
+		expected    func(*testing.T, []event.Event, error)
+	}{
+		"valid event": {
+			jsn: `[{"data":"foo","datacontenttype":"application/json","id":"id","source":"source","specversion":"1.0","type":"type"}]`,
+			expected: func(t *testing.T, list []event.Event, err error) {
+				require.NoError(t, err)
+				require.Len(t, list, 1)
+				require.Equal(t, "id", list[0].ID())
+			},
+		},
+		"invalid event": {
+			jsn: `[{"data":"foo","datacontenttype":"application/json","specversion":"0.1","type":"type"}]`,
+			expected: func(t *testing.T, _ []event.Event, err error) {
+				require.ErrorContains(t, err, "specversion: unknown value")
+			},
+		},
+		"bad content type": {
+			jsn:         `[{"data":"foo","datacontenttype":"application/json","id":"id","source":"source","specversion":"1.0","type":"type"}]`,
+			contentType: event.ApplicationJSON,
+			expected: func(t *testing.T, _ []event.Event, err error) {
+				require.ErrorContains(t, err, "cannot convert message to batched events")
+			},
+		},
+	}
+
+	for k, v := range fixture {
+		t.Run(k, func(t *testing.T) {
+			header := nethttp.Header{}
+			if len(v.contentType) == 0 {
+				header.Set(http.ContentType, event.ApplicationCloudEventsBatchJSON)
+			} else {
+				header.Set(http.ContentType, v.contentType)
+			}
+
+			buf := io.NopCloser(strings.NewReader(v.jsn))
+			msg := http.NewMessage(header, buf)
+			list, err := binding.ToEvents(context.Background(), msg, msg.BodyReader)
+			v.expected(t, list, err)
+		})
+	}
 }

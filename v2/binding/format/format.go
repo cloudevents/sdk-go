@@ -51,6 +51,9 @@ func (jb jsonBatchFmt) MediaType() string {
 	return event.ApplicationCloudEventsBatchJSON
 }
 
+// Marshal will return an error for jsonBatchFmt since the Format interface doesn't support batch Marshalling, and we
+// know it's structured batch json, we'll go direct to the json.UnMarshall() (see `ToEvents()`) since that is the best
+// way to support batch operations for now.
 func (jb jsonBatchFmt) Marshal(e *event.Event) ([]byte, error) {
 	return nil, errors.New("not supported for batch events")
 }

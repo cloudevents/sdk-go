@@ -77,8 +77,7 @@ func ToEvents(ctx context.Context, message MessageReader, body io.Reader) ([]eve
 	// Since Format doesn't support batch Marshalling, and we know it's structured batch json, we'll go direct to the
 	// json.UnMarshall(), since that is the best way to support batch operations for now.
 	var events []event.Event
-	err := json.NewDecoder(body).Decode(&events)
-	return events, err
+	return events, json.NewDecoder(body).Decode(&events)
 }
 
 type messageToEventBuilder event.Event
