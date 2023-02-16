@@ -19,7 +19,7 @@ import (
 	"github.com/cloudevents/sdk-go/v2/binding"
 )
 
-// In order to run this test, look at documentation in https://github.com/cloudevents/sdk-go/blob/master/v2/samples/kafka/README.md
+// In order to run this test, look at documentation in https://github.com/cloudevents/sdk-go/blob/main/samples/kafka/README.md
 func main() {
 	saramaConfig := sarama.NewConfig()
 	saramaConfig.Version = sarama.V2_0_0_0
@@ -64,7 +64,7 @@ func main() {
 				event.SetID(uuid.New().String())
 				event.SetTime(time.Now())
 				event.SetType("generated.examples")
-				event.SetSource("https://github.com/cloudevents/sdk-go/v2/samples/kafka/sender")
+				event.SetSource("https://github.com/cloudevents/sdk-go/samples/kafka/message-handle-non-cloudevents")
 
 				err = event.SetData(kafkaMessage.ContentType, kafkaMessage.Value)
 				if err != nil {
