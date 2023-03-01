@@ -1,6 +1,6 @@
 module github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2
 
-go 1.19
+go 1.17
 
 replace github.com/cloudevents/sdk-go/v2 => ../../../v2
 
