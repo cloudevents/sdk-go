@@ -62,7 +62,10 @@ func (r *Receiver) ConsumeClaim(session sarama.ConsumerGroupSession, claim saram
 	// https://github.com/Shopify/sarama/blob/main/consumer_group.go#L27-L29
 	for {
 		select {
-		case msg := <-claim.Messages():
+		case msg, ok := <-claim.Messages():
+			if !ok {
+				return nil
+			}
 			m := NewMessageFromConsumerMessage(msg)
 
 			r.incoming <- msgErr{
