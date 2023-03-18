@@ -20,9 +20,9 @@ type testPubsubClient struct {
 	conn *grpc.ClientConn
 }
 
-func (pc *testPubsubClient) NewWithOrderInterceptor(ctx context.Context, projectID, orderingKey string) (*pubsub.Client, error) {
+func (pc *testPubsubClient) NewWithInterceptor(ctx context.Context, projectID string, interceptor grpc.UnaryClientInterceptor) (*pubsub.Client, error) {
 	pc.srv = pstest.NewServer()
-	conn, err := grpc.Dial(pc.srv.Addr, grpc.WithInsecure(), grpc.WithUnaryInterceptor(orderingKeyInterceptor(orderingKey)))
+	conn, err := grpc.Dial(pc.srv.Addr, grpc.WithInsecure(), grpc.WithUnaryInterceptor(interceptor))
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func TestPublishMessageHasOrderingKey(t *testing.T) {
 
 	projectID, topicID, orderingKey := "test-project", "test-topic", "foobar"
 
-	client, err := pc.NewWithOrderInterceptor(ctx, projectID, orderingKey)
+	client, err := pc.NewWithInterceptor(ctx, projectID, orderingKeyInterceptor(orderingKey))
 	require.NoError(err, "create pubsub client")
 	defer client.Close()
 
@@ -71,5 +71,46 @@ func TestPublishMessageHasOrderingKey(t *testing.T) {
 	require.NoError(err, "create protocol")
 
 	err = prot.Send(WithOrderingKey(ctx, orderingKey), test.FullMessage())
+	require.NoError(err)
+}
+
+func attributesInterceptor(attributes map[string]string) grpc.UnaryClientInterceptor {
+	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
+		if method == "/google.pubsub.v1.Publisher/Publish" {
+			pr, _ := req.(*pb.PublishRequest)
+			for _, m := range pr.Messages {
+				for ak, av := range attributes {
+					if mav, ok := m.Attributes[ak]; !ok || mav != av {
+						return fmt.Errorf("invalid or missing attribute %q, got %q", ak, mav)
+					}
+				}
+			}
+		}
+		return invoker(ctx, method, req, reply, cc, opts...)
+	}
+}
+
+func TestPublishMessageWithAttributes(t *testing.T) {
+	require := require.New(t)
+	ctx := context.Background()
+	pc := &testPubsubClient{}
+	defer pc.Close()
+
+	projectID, topicID := "test-project", "test-topic"
+	attributes := map[string]string{"foo": "bar", "fizz": "buzz"}
+
+	client, err := pc.NewWithInterceptor(ctx, projectID, attributesInterceptor(attributes))
+	require.NoError(err, "create pubsub client")
+	defer client.Close()
+
+	prot, err := New(ctx,
+		WithClient(client),
+		WithProjectID(projectID),
+		WithTopicID(topicID),
+		AllowCreateTopic(true),
+	)
+	require.NoError(err, "create protocol")
+
+	err = prot.Send(WithAttributes(ctx, attributes), test.FullMessage())
 	require.NoError(err)
 }

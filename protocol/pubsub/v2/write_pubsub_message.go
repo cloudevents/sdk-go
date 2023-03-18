@@ -46,7 +46,9 @@ func (b *pubsubMessagePublisher) SetStructuredEvent(ctx context.Context, f forma
 }
 
 func (b *pubsubMessagePublisher) Start(ctx context.Context) error {
-	b.Attributes = make(map[string]string)
+	if b.Attributes == nil {
+		b.Attributes = make(map[string]string)
+	}
 	return nil
 }
 

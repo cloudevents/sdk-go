@@ -119,6 +119,10 @@ func (t *Protocol) Send(ctx context.Context, in binding.Message, transformers ..
 		msg.OrderingKey = key
 	}
 
+	if attributes, ok := ctx.Value(withAttributesKey{}).(map[string]string); ok {
+		msg.Attributes = attributes
+	}
+
 	if err := WritePubSubMessage(ctx, in, msg, transformers...); err != nil {
 		return err
 	}
@@ -238,4 +242,11 @@ type withOrderingKey struct{}
 // WithOrderingKey allows to set the Pub/Sub ordering key for publishing events.
 func WithOrderingKey(ctx context.Context, key string) context.Context {
 	return context.WithValue(ctx, withOrderingKey{}, key)
+}
+
+type withAttributesKey struct{}
+
+// WithAttributes allows to set the key-value pairs the Pub/Sub is labelled with for publishing events.
+func WithAttributes(ctx context.Context, attributes map[string]string) context.Context {
+	return context.WithValue(ctx, withAttributesKey{}, attributes)
 }
