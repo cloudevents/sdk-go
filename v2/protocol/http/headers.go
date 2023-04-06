@@ -7,11 +7,12 @@ package http
 
 import (
 	"context"
-	"github.com/cloudevents/sdk-go/v2/binding"
 	"net/http"
 	"net/textproto"
 	"strings"
 	"unicode"
+
+	"github.com/cloudevents/sdk-go/v2/binding"
 
 	"github.com/cloudevents/sdk-go/v2/binding/spec"
 )
@@ -52,4 +53,10 @@ func HeaderFrom(ctx context.Context) http.Header {
 
 func WithCustomHeader(ctx context.Context, header http.Header) context.Context {
 	return context.WithValue(ctx, headerKey, header)
+}
+
+func WithCustomHeaderField(ctx context.Context, name string, value string) context.Context {
+	headers := HeaderFrom(ctx)
+	headers.Set(name, value)
+	return WithCustomHeader(ctx, headers)
 }
