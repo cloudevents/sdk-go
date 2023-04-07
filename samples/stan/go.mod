@@ -19,8 +19,8 @@ require (
 	github.com/minio/highwayhash v1.0.2 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421 // indirect
 	github.com/modern-go/reflect2 v0.0.0-20180701023420-4b7aa43c6742 // indirect
-	github.com/nats-io/jwt/v2 v2.2.0 // indirect
-	github.com/nats-io/nats.go v1.11.1-0.20210623165838-4b75fc59ae30 // indirect
+	github.com/nats-io/jwt/v2 v2.2.1-0.20220113022732-58e87895b296 // indirect
+	github.com/nats-io/nats.go v1.13.1-0.20220308171302-2f2f6968e98d // indirect
 	github.com/nats-io/nkeys v0.3.0 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/nats-io/stan.go v0.6.0 // indirect
@@ -29,7 +29,8 @@ require (
 	go.uber.org/atomic v1.4.0 // indirect
 	go.uber.org/multierr v1.1.0 // indirect
 	go.uber.org/zap v1.10.0 // indirect
-	golang.org/x/crypto v0.0.0-20210616213533-5ff15b29337e // indirect
+	golang.org/x/crypto v0.1.0 // indirect
+	golang.org/x/time v0.0.0-20211116232009-f0f3c7e86c11 // indirect
 	golang.org/x/xerrors v0.0.0-20220609144429-65e65417b02f // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 )
