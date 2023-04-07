@@ -17,8 +17,10 @@ import (
 )
 
 type syncProducerMock struct {
-	lock sync.Mutex
-	sent []*sarama.ProducerMessage
+	lock            sync.Mutex
+	sent            []*sarama.ProducerMessage
+	isTransactional bool
+	status          sarama.ProducerTxnStatusFlag
 }
 
 func (s *syncProducerMock) SendMessage(msg *sarama.ProducerMessage) (partition int32, offset int64, err error) {
@@ -36,11 +38,58 @@ func (s *syncProducerMock) SendMessages(msgs []*sarama.ProducerMessage) error {
 }
 
 func (s *syncProducerMock) Close() error {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	return nil
+}
+
+func (s *syncProducerMock) IsTransactional() bool {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	return s.isTransactional
+}
+
+func (s *syncProducerMock) BeginTxn() error {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	s.status = sarama.ProducerTxnFlagInTransaction
+	return nil
+}
+
+func (s *syncProducerMock) CommitTxn() error {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	s.status = sarama.ProducerTxnFlagReady
+	return nil
+}
+
+func (s *syncProducerMock) AbortTxn() error {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	s.status = sarama.ProducerTxnFlagReady
+	return nil
+}
+
+func (s *syncProducerMock) TxnStatus() sarama.ProducerTxnStatusFlag {
+	return s.status
+}
+
+func (s *syncProducerMock) AddOffsetsToTxn(offsets map[string][]*sarama.PartitionOffsetMetadata, groupId string) error {
+	return nil
+}
+
+func (s *syncProducerMock) AddMessageToTxn(msg *sarama.ConsumerMessage, groupId string, metadata *string) error {
 	return nil
 }
 
 func TestSenderWithKey(t *testing.T) {
-	syncProducerMock := &syncProducerMock{}
+	syncProducerMock := &syncProducerMock{
+		isTransactional: true,
+		status:          sarama.ProducerTxnFlagReady,
+	}
 	topic := "aaa"
 
 	sender := &Sender{topic: topic, syncProducer: syncProducerMock}
