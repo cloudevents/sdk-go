@@ -2,10 +2,8 @@ module github.com/cloudevents/sdk-go/protocol/nats_jetstream/v2
 
 go 1.17
 
-replace github.com/cloudevents/sdk-go/v2 => ../../../v2
-
 require (
-	github.com/cloudevents/sdk-go/v2 v2.5.0
+	github.com/cloudevents/sdk-go/v2 v2.14.0
 	github.com/nats-io/nats.go v1.13.1-0.20220308171302-2f2f6968e98d
 )
 
