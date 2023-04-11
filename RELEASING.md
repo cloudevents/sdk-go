@@ -35,7 +35,18 @@ Steps:
    Or using the GitHub UI: search for `release-v2.1` and then click create
    branch.
 
+   The [`release`](.github/workflows/release.yaml) workflow will automatically
+   be run and it'll create a new Github release based on this new branch.
+
 2. Update the release description.
+
+   Once the new release is created, go to the
+   [Releases](https://github.com/cloudevents/sdk-go/releases) page and
+   open the editor for the release notes. There should be a
+   `Generate release notes` button at the top/right to auto-generate the list
+   of PRs, new contributors and a link to the full changelog. If everything
+   looks good, just press the `Update release` button at the bottom of the
+   page.
 
 That's it.
 
