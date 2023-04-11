@@ -74,6 +74,8 @@ func (s *syncProducerMock) AbortTxn() error {
 }
 
 func (s *syncProducerMock) TxnStatus() sarama.ProducerTxnStatusFlag {
+	s.lock.Lock()
+	defer s.lock.Unlock()
 	return s.status
 }
 
