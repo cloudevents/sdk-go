@@ -95,7 +95,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("failed to parse CloudEvent from request: %v", err)
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 	}
-	w.Write([]byte(*event.String()))
+	w.Write([]byte(event.String()))
 	log.Println(event.String())
 }
 ```
