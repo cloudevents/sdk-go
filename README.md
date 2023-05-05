@@ -59,6 +59,9 @@ func main() {
 	// Send that Event.
 	if result := c.Send(ctx, event); cloudevents.IsUndelivered(result) {
 		log.Fatalf("failed to send, %v", result)
+	} else {
+		log.Printf("sent: %v", event)
+		log.Printf("result: %v", result)
 	}
 }
 ```
@@ -89,10 +92,11 @@ func main() {
 func handler(w http.ResponseWriter, r *http.Request) {
 	event, err := cloudevents.NewEventFromHTTPRequest(r)
 	if err != nil {
-		log.Print("failed to parse CloudEvent from request: %v", err)
+		log.Printf("failed to parse CloudEvent from request: %v", err)
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 	}
-	w.Write([]byte(*event.String()))
+	w.Write([]byte(event.String()))
+	log.Println(event.String())
 }
 ```
 
