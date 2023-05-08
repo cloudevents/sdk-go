@@ -16,6 +16,7 @@ import (
 	"strconv"
 	"sync"
 	"sync/atomic"
+	"syscall"
 	"time"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
@@ -265,7 +266,7 @@ func (p *Protocol) Receive(ctx context.Context) (binding.Message, error) {
 // Respond receives the next incoming HTTP request as a CloudEvent and waits
 // for the response callback to invoked before continuing.
 // Returns non-nil error if the incoming HTTP request fails to parse as a CloudEvent
-// Returns io.EOF if the receiver is closed.
+// Returns io.EOF if the receiver is closed and on ECONNRESET.
 func (p *Protocol) Respond(ctx context.Context) (binding.Message, protocol.ResponseFn, error) {
 	if ctx == nil {
 		return nil, nil, fmt.Errorf("nil Context")
@@ -276,7 +277,9 @@ func (p *Protocol) Respond(ctx context.Context) (binding.Message, protocol.Respo
 		if !ok {
 			return nil, nil, io.EOF
 		}
-
+		if in.err != nil && errors.Is(in.err, syscall.ECONNRESET) {
+			in.err = io.EOF
+		}
 		if in.msg == nil {
 			return nil, in.respFn, in.err
 		}

@@ -210,7 +210,7 @@ func (c *ceClient) StartReceiver(ctx context.Context, fn interface{}) error {
 		return fmt.Errorf("mismatched receiver callback without protocol.Receiver supported by protocol")
 	}
 	if invoker.IsResponder() && c.responder == nil {
-		return fmt.Errorf("mismatched receiver callback without protocol.Responder supported by protocol")
+		return fmt.Errorf("mismatched responder callback without protocol.Responder supported by protocol")
 	}
 	c.invoker = invoker
 
@@ -243,7 +243,6 @@ func (c *ceClient) StartReceiver(ctx context.Context, fn interface{}) error {
 				if err == io.EOF { // Normal close
 					return
 				}
-
 				if err != nil {
 					cecontext.LoggerFrom(ctx).Warn("Error while receiving a message: ", err)
 					continue
