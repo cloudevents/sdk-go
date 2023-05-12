@@ -8,6 +8,7 @@ package kafka_sarama
 import (
 	"bytes"
 	"context"
+	"strconv"
 	"strings"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
@@ -35,8 +36,10 @@ type Message struct {
 }
 
 // Check if http.Message implements binding.Message
-var _ binding.Message = (*Message)(nil)
-var _ binding.MessageMetadataReader = (*Message)(nil)
+var (
+	_ binding.Message               = (*Message)(nil)
+	_ binding.MessageMetadataReader = (*Message)(nil)
+)
 
 // NewMessageFromConsumerMessage returns a binding.Message that holds the provided ConsumerMessage.
 // The returned binding.Message *can* be read several times safely
@@ -51,6 +54,9 @@ func NewMessageFromConsumerMessage(cm *sarama.ConsumerMessage) *Message {
 		}
 		headers[k] = r.Value
 	}
+	headers[prefix+"kafkaoffset"] = []byte(strconv.FormatInt(cm.Offset, 10))
+	headers[prefix+"kafkapartition"] = []byte(strconv.FormatInt(int64(cm.Partition), 10))
+	headers[prefix+"kafkatopic"] = []byte(cm.Topic)
 	return NewMessage(cm.Value, contentType, headers)
 }
 
