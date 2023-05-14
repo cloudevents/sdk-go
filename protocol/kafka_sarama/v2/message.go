@@ -46,7 +46,7 @@ var (
 // This function *doesn't* guarantee that the returned binding.Message is always a kafka_sarama.Message instance
 func NewMessageFromConsumerMessage(cm *sarama.ConsumerMessage) *Message {
 	var contentType string
-	headers := make(map[string][]byte, len(cm.Headers))
+	headers := make(map[string][]byte, len(cm.Headers)+3)
 	for _, r := range cm.Headers {
 		k := strings.ToLower(string(r.Key))
 		if k == contentTypeHeader {
