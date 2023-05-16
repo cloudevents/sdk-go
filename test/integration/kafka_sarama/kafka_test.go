@@ -21,7 +21,10 @@ import (
 )
 
 const (
-	TEST_GROUP_ID = "test_group_id"
+	TEST_GROUP_ID   = "test_group_id"
+	KAFKA_OFFSET    = "kafkaoffset"
+	KAFKA_PARTITION = "kafkapartition"
+	KAFKA_TOPIC     = "kafkatopic"
 )
 
 func TestSendEvent(t *testing.T) {
@@ -30,7 +33,11 @@ func TestSendEvent(t *testing.T) {
 		clienttest.SendReceive(t, func() interface{} {
 			return protocolFactory(t)
 		}, eventIn, func(e event.Event) {
-			test.AssertEventEquals(t, eventIn, test.ConvertEventExtensionsToString(t, e))
+			got := test.ConvertEventExtensionsToString(t, e)
+			eventIn.SetExtension(KAFKA_OFFSET, got.Extensions()[KAFKA_OFFSET])
+			eventIn.SetExtension(KAFKA_PARTITION, got.Extensions()[KAFKA_PARTITION])
+			eventIn.SetExtension(KAFKA_TOPIC, got.Extensions()[KAFKA_TOPIC])
+			test.AssertEventEquals(t, eventIn, got)
 		})
 	})
 }
