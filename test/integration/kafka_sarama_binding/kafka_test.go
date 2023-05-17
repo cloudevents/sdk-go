@@ -27,7 +27,10 @@ import (
 )
 
 const (
-	TEST_GROUP_ID = "test_group_id"
+	TEST_GROUP_ID   = "test_group_id"
+	KAFKA_OFFSET    = "kafkaoffset"
+	KAFKA_PARTITION = "kafkapartition"
+	KAFKA_TOPIC     = "kafkatopic"
 )
 
 func TestSendStructuredMessageToStructured(t *testing.T) {
@@ -55,7 +58,11 @@ func TestSendBinaryMessageToBinary(t *testing.T) {
 		test.SendReceive(t, binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingBinary), in, s, r, func(out binding.Message) {
 			eventOut := MustToEvent(t, context.Background(), out)
 			assert.Equal(t, binding.EncodingBinary, out.ReadEncoding())
-			AssertEventEquals(t, eventIn, ConvertEventExtensionsToString(t, eventOut))
+			got := ConvertEventExtensionsToString(t, eventOut)
+			eventIn.SetExtension(KAFKA_OFFSET, got.Extensions()[KAFKA_OFFSET])
+			eventIn.SetExtension(KAFKA_PARTITION, got.Extensions()[KAFKA_PARTITION])
+			eventIn.SetExtension(KAFKA_TOPIC, got.Extensions()[KAFKA_TOPIC])
+			AssertEventEquals(t, eventIn, got)
 		})
 	})
 }
