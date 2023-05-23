@@ -34,9 +34,14 @@ func TestSendEvent(t *testing.T) {
 			return protocolFactory(t)
 		}, eventIn, func(e event.Event) {
 			got := test.ConvertEventExtensionsToString(t, e)
-			eventIn.SetExtension(KAFKA_OFFSET, got.Extensions()[KAFKA_OFFSET])
-			eventIn.SetExtension(KAFKA_PARTITION, got.Extensions()[KAFKA_PARTITION])
-			eventIn.SetExtension(KAFKA_TOPIC, got.Extensions()[KAFKA_TOPIC])
+			extensions := got.Extensions()
+			require.NotEmpty(t, extensions[KAFKA_OFFSET])
+			require.NotEmpty(t, extensions[KAFKA_PARTITION])
+			require.NotEmpty(t, extensions[KAFKA_TOPIC])
+
+			eventIn.SetExtension(KAFKA_OFFSET, extensions[KAFKA_OFFSET])
+			eventIn.SetExtension(KAFKA_PARTITION, extensions[KAFKA_PARTITION])
+			eventIn.SetExtension(KAFKA_TOPIC, extensions[KAFKA_TOPIC])
 			test.AssertEventEquals(t, eventIn, got)
 		})
 	})
