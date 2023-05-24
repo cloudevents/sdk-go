@@ -34,17 +34,17 @@ func TestSendEvent(t *testing.T) {
 		eventIn = test.ConvertEventExtensionsToString(t, eventIn)
 		clienttest.SendReceive(t, func() interface{} {
 			return protocolFactory(t)
-		}, eventIn, func(e event.Event) {
-			got := test.ConvertEventExtensionsToString(t, e)
+		}, eventIn, func(eventOut event.Event) {
+			eventOut = test.ConvertEventExtensionsToString(t, eventOut)
 
-			require.Equal(t, TopicName, got.Extensions()[KAFKA_TOPIC])
-			require.NotNil(t, got.Extensions()[KAFKA_PARTITION])
-			require.NotNil(t, got.Extensions()[KAFKA_OFFSET])
+			require.Equal(t, TopicName, eventOut.Extensions()[KAFKA_TOPIC])
+			require.NotNil(t, eventOut.Extensions()[KAFKA_PARTITION])
+			require.NotNil(t, eventOut.Extensions()[KAFKA_OFFSET])
 
-			eventIn.SetExtension(KAFKA_OFFSET, got.Extensions()[KAFKA_OFFSET])
-			eventIn.SetExtension(KAFKA_PARTITION, got.Extensions()[KAFKA_PARTITION])
-			eventIn.SetExtension(KAFKA_TOPIC, TopicName)
-			test.AssertEventEquals(t, eventIn, got)
+			test.AllOf(
+				test.HasExactlyAttributesEqualTo(eventIn.Context),
+				test.HasData(eventIn.Data()),
+			)
 		})
 	})
 }

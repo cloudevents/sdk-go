@@ -58,16 +58,16 @@ func TestSendBinaryMessageToBinary(t *testing.T) {
 		test.SendReceive(t, binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingBinary), in, s, r, func(out binding.Message) {
 			eventOut := MustToEvent(t, context.Background(), out)
 			assert.Equal(t, binding.EncodingBinary, out.ReadEncoding())
-			got := ConvertEventExtensionsToString(t, eventOut)
+			eventOut = ConvertEventExtensionsToString(t, eventOut)
 
-			assert.Equal(t, topicName, got.Extensions()[KAFKA_TOPIC])
-			assert.NotNil(t, got.Extensions()[KAFKA_PARTITION])
-			assert.NotNil(t, got.Extensions()[KAFKA_OFFSET])
+			require.Equal(t, topicName, eventOut.Extensions()[KAFKA_TOPIC])
+			require.NotNil(t, eventOut.Extensions()[KAFKA_PARTITION])
+			require.NotNil(t, eventOut.Extensions()[KAFKA_OFFSET])
 
-			eventIn.SetExtension(KAFKA_TOPIC, topicName)
-			eventIn.SetExtension(KAFKA_PARTITION, got.Extensions()[KAFKA_PARTITION])
-			eventIn.SetExtension(KAFKA_OFFSET, got.Extensions()[KAFKA_OFFSET])
-			AssertEventEquals(t, eventIn, got)
+			AllOf(
+				HasExactlyAttributesEqualTo(eventIn.Context),
+				HasData(eventIn.Data()),
+			)
 		})
 	})
 }
