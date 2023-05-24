@@ -27,6 +27,8 @@ const (
 	KAFKA_TOPIC     = "kafkatopic"
 )
 
+var TopicName = "test-ce-client-" + uuid.New().String()
+
 func TestSendEvent(t *testing.T) {
 	test.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
 		eventIn = test.ConvertEventExtensionsToString(t, eventIn)
@@ -34,14 +36,14 @@ func TestSendEvent(t *testing.T) {
 			return protocolFactory(t)
 		}, eventIn, func(e event.Event) {
 			got := test.ConvertEventExtensionsToString(t, e)
-			extensions := got.Extensions()
-			require.NotEmpty(t, extensions[KAFKA_OFFSET])
-			require.NotEmpty(t, extensions[KAFKA_PARTITION])
-			require.NotEmpty(t, extensions[KAFKA_TOPIC])
 
-			eventIn.SetExtension(KAFKA_OFFSET, extensions[KAFKA_OFFSET])
-			eventIn.SetExtension(KAFKA_PARTITION, extensions[KAFKA_PARTITION])
-			eventIn.SetExtension(KAFKA_TOPIC, extensions[KAFKA_TOPIC])
+			require.Equal(t, TopicName, got.Extensions()[KAFKA_TOPIC])
+			require.NotNil(t, got.Extensions()[KAFKA_PARTITION])
+			require.NotNil(t, got.Extensions()[KAFKA_OFFSET])
+
+			eventIn.SetExtension(KAFKA_OFFSET, got.Extensions()[KAFKA_OFFSET])
+			eventIn.SetExtension(KAFKA_PARTITION, got.Extensions()[KAFKA_PARTITION])
+			eventIn.SetExtension(KAFKA_TOPIC, TopicName)
 			test.AssertEventEquals(t, eventIn, got)
 		})
 	})
@@ -72,11 +74,10 @@ func testClient(t testing.TB) sarama.Client {
 func protocolFactory(t testing.TB) *kafka_sarama.Protocol {
 	client := testClient(t)
 
-	topicName := "test-ce-client-" + uuid.New().String()
 	options := []kafka_sarama.ProtocolOptionFunc{
 		kafka_sarama.WithReceiverGroupId(TEST_GROUP_ID),
 	}
-	p, err := kafka_sarama.NewProtocolFromClient(client, topicName, topicName, options...)
+	p, err := kafka_sarama.NewProtocolFromClient(client, TopicName, TopicName, options...)
 	require.NoError(t, err)
 
 	return p

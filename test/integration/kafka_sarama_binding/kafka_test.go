@@ -34,7 +34,7 @@ const (
 )
 
 func TestSendStructuredMessageToStructured(t *testing.T) {
-	close, s, r := testSenderReceiver(t)
+	close, s, r, _ := testSenderReceiver(t)
 	defer close()
 	EachEvent(t, Events(), func(t *testing.T, eventIn event.Event) {
 		eventIn = ConvertEventExtensionsToString(t, eventIn)
@@ -49,7 +49,7 @@ func TestSendStructuredMessageToStructured(t *testing.T) {
 }
 
 func TestSendBinaryMessageToBinary(t *testing.T) {
-	close, s, r := testSenderReceiver(t)
+	close, s, r, topicName := testSenderReceiver(t)
 	defer close()
 	EachEvent(t, Events(), func(t *testing.T, eventIn event.Event) {
 		eventIn = ConvertEventExtensionsToString(t, eventIn)
@@ -59,14 +59,14 @@ func TestSendBinaryMessageToBinary(t *testing.T) {
 			eventOut := MustToEvent(t, context.Background(), out)
 			assert.Equal(t, binding.EncodingBinary, out.ReadEncoding())
 			got := ConvertEventExtensionsToString(t, eventOut)
-			extensions := got.Extensions()
-			require.NotEmpty(t, extensions[KAFKA_OFFSET])
-			require.NotEmpty(t, extensions[KAFKA_PARTITION])
-			require.NotEmpty(t, extensions[KAFKA_TOPIC])
 
-			eventIn.SetExtension(KAFKA_OFFSET, extensions[KAFKA_OFFSET])
-			eventIn.SetExtension(KAFKA_PARTITION, extensions[KAFKA_PARTITION])
-			eventIn.SetExtension(KAFKA_TOPIC, extensions[KAFKA_TOPIC])
+			assert.Equal(t, topicName, got.Extensions()[KAFKA_TOPIC])
+			assert.NotNil(t, got.Extensions()[KAFKA_PARTITION])
+			assert.NotNil(t, got.Extensions()[KAFKA_OFFSET])
+
+			eventIn.SetExtension(KAFKA_TOPIC, topicName)
+			eventIn.SetExtension(KAFKA_PARTITION, got.Extensions()[KAFKA_PARTITION])
+			eventIn.SetExtension(KAFKA_OFFSET, got.Extensions()[KAFKA_OFFSET])
 			AssertEventEquals(t, eventIn, got)
 		})
 	})
@@ -94,7 +94,7 @@ func testClient(t testing.TB) sarama.Client {
 	return client
 }
 
-func testSenderReceiver(t testing.TB) (func(), bindings.Sender, bindings.Receiver) {
+func testSenderReceiver(t testing.TB) (func(), bindings.Sender, bindings.Receiver, string) {
 	client := testClient(t)
 
 	topicName := "test-ce-client-" + uuid.New().String()
@@ -109,11 +109,11 @@ func testSenderReceiver(t testing.TB) (func(), bindings.Sender, bindings.Receive
 	return func() {
 		require.NoError(t, p.Close(context.TODO()))
 		require.NoError(t, client.Close())
-	}, p, p
+	}, p, p, topicName
 }
 
 func BenchmarkSendReceive(b *testing.B) {
-	c, s, r := testSenderReceiver(b)
+	c, s, r, _ := testSenderReceiver(b)
 	defer c() // Cleanup
 	test.BenchmarkSendReceive(b, s, r)
 }
