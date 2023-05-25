@@ -27,11 +27,14 @@ import (
 )
 
 const (
-	TEST_GROUP_ID = "test_group_id"
+	TEST_GROUP_ID   = "test_group_id"
+	KAFKA_OFFSET    = "kafkaoffset"
+	KAFKA_PARTITION = "kafkapartition"
+	KAFKA_TOPIC     = "kafkatopic"
 )
 
 func TestSendStructuredMessageToStructured(t *testing.T) {
-	close, s, r := testSenderReceiver(t)
+	close, s, r, _ := testSenderReceiver(t)
 	defer close()
 	EachEvent(t, Events(), func(t *testing.T, eventIn event.Event) {
 		eventIn = ConvertEventExtensionsToString(t, eventIn)
@@ -46,7 +49,7 @@ func TestSendStructuredMessageToStructured(t *testing.T) {
 }
 
 func TestSendBinaryMessageToBinary(t *testing.T) {
-	close, s, r := testSenderReceiver(t)
+	close, s, r, topicName := testSenderReceiver(t)
 	defer close()
 	EachEvent(t, Events(), func(t *testing.T, eventIn event.Event) {
 		eventIn = ConvertEventExtensionsToString(t, eventIn)
@@ -55,7 +58,16 @@ func TestSendBinaryMessageToBinary(t *testing.T) {
 		test.SendReceive(t, binding.WithPreferredEventEncoding(context.TODO(), binding.EncodingBinary), in, s, r, func(out binding.Message) {
 			eventOut := MustToEvent(t, context.Background(), out)
 			assert.Equal(t, binding.EncodingBinary, out.ReadEncoding())
-			AssertEventEquals(t, eventIn, ConvertEventExtensionsToString(t, eventOut))
+			eventOut = ConvertEventExtensionsToString(t, eventOut)
+
+			require.Equal(t, topicName, eventOut.Extensions()[KAFKA_TOPIC])
+			require.NotNil(t, eventOut.Extensions()[KAFKA_PARTITION])
+			require.NotNil(t, eventOut.Extensions()[KAFKA_OFFSET])
+
+			AllOf(
+				HasExactlyAttributesEqualTo(eventIn.Context),
+				HasData(eventIn.Data()),
+			)
 		})
 	})
 }
@@ -82,7 +94,7 @@ func testClient(t testing.TB) sarama.Client {
 	return client
 }
 
-func testSenderReceiver(t testing.TB) (func(), bindings.Sender, bindings.Receiver) {
+func testSenderReceiver(t testing.TB) (func(), bindings.Sender, bindings.Receiver, string) {
 	client := testClient(t)
 
 	topicName := "test-ce-client-" + uuid.New().String()
@@ -97,11 +109,11 @@ func testSenderReceiver(t testing.TB) (func(), bindings.Sender, bindings.Receive
 	return func() {
 		require.NoError(t, p.Close(context.TODO()))
 		require.NoError(t, client.Close())
-	}, p, p
+	}, p, p, topicName
 }
 
 func BenchmarkSendReceive(b *testing.B) {
-	c, s, r := testSenderReceiver(b)
+	c, s, r, _ := testSenderReceiver(b)
 	defer c() // Cleanup
 	test.BenchmarkSendReceive(b, s, r)
 }
