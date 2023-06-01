@@ -11,7 +11,6 @@ You can grab them and copy-paste in your project to start using sdk-go.
 * HTTP:
   * [Receiver](./http/receiver): Receive events using the CloudEvents Client.
   * [Direct receiver](./http/receiver-direct): Create an `http.Handler` to receive events without the CloudEvents Client.
-  * [Gin Gonic receiver](./http/receiver-gin): Receive events using [Gin Gonic](https://gin-gonic.com/).
   * [Gorilla receiver](./http/receiver-gorilla): Receive events using [Gorilla](https://www.gorillatoolkit.org/).
   * [Sleepy receiver](./http/receiver-sleepy): Receive events for 5 seconds, then stop the receiver. 
   * [Traced receiver](./http/receiver-traced): Receive events enabling tracing.
