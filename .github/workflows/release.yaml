@@ -12,10 +12,10 @@ jobs:
     outputs:
       next: ${{ steps.ggsv.outputs.next}}
     steps:
-      - name: Setup Go 1.17.x
+      - name: Setup Go 1.18
         uses: actions/setup-go@v2
         with:
-          go-version: 1.17.x
+          go-version: 1.18
 
       - name: Install Dependencies
         run: go install tableflip.dev/ggsv@latest
@@ -52,10 +52,10 @@ jobs:
     env:
       VERSION: ${{ needs.semver.outputs.next }}
     steps:
-      - name: Set up Go 1.17.x
+      - name: Set up Go 1.18
         uses: actions/setup-go@v2
         with:
-          go-version: 1.17.x
+          go-version: 1.18
 
       - name: Checkout Code
         uses: actions/checkout@v2
@@ -84,10 +84,10 @@ jobs:
     env:
       VERSION: ${{ needs.semver.outputs.next }}
     steps:
-      - name: Set up Go 1.17.x
+      - name: Set up Go 1.18
         uses: actions/setup-go@v2
         with:
-          go-version: 1.17.x
+          go-version: 1.18
 
       - name: Checkout Code
         uses: actions/checkout@v2
