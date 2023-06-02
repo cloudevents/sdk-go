@@ -8,8 +8,7 @@ An example of a Gin webframework CloudEvents receiver with a [TektonEvent](https
 Get dependencies
 ```shell
 cd samples/
- go get github.com/gin-gonic/gin
- go get github.com/rs/zerolog/log
+ go get
 
 ```
 
@@ -18,11 +17,11 @@ Run the app
  go run main.go
 ```
 
-Test a CloudEvent
+Send a CloudEvent
 ```shell
 curl -v \
  -H "Ce-Id: e7d95c20-6eb4-4614-946d-27b0ce41c7ff" \
- -H "Ce-Source: /apis///namespaces/dimitar//clone-build-n4qhgl" \
+ -H "Ce-Source: /apis/namespaces/dimitar/clone-build-n4qhgl" \
  -H "Ce-Subject: clone-build-n4qhgl"  \
  -H "Ce-Specversion: 1.0" \
  -H "Ce-Type: dev.tekton.event.pipelinerun.started.v1" \
@@ -39,7 +38,7 @@ Logs output
 Got an Event: Context Attributes,
   specversion: 1.0
   type: dev.tekton.event.pipelinerun.started.v1
-  source: /apis///namespaces/dimitar//clone-build-n4qhgl
+  source: /apis/namespaces/dimitar/clone-build-n4qhgl
   subject: clone-build-n4qhgl
   id: e7d95c20-6eb4-4614-946d-27b0ce41c7ff
   datacontenttype: application/json
