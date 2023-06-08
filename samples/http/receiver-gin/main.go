@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func receiveTektonEvent(event cloudevents.Event) {
+func receive(event cloudevents.Event) {
 	fmt.Printf("Got an Event: %s", event)
 }
 
@@ -23,7 +23,6 @@ func healthz(c *gin.Context) {
 }
 
 func cloudEventsHandler() gin.HandlerFunc {
-
 	return func(c *gin.Context) {
 		p, err := cloudevents.NewHTTP()
 		if err != nil {
@@ -32,7 +31,7 @@ func cloudEventsHandler() gin.HandlerFunc {
 				Msg("Failed to create protocol")
 		}
 
-		ceh, err := cloudevents.NewHTTPReceiveHandler(c, p, receiveTektonEvent)
+		ceh, err := cloudevents.NewHTTPReceiveHandler(c, p, receive)
 		if err != nil {
 			log.Fatal().
 				Err(err).
@@ -44,7 +43,6 @@ func cloudEventsHandler() gin.HandlerFunc {
 }
 
 func main() {
-
 	r := gin.Default()
 	r.SetTrustedProxies(nil)
 
