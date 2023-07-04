@@ -71,10 +71,9 @@ func (m *Message) ReadStructured(ctx context.Context, encoder binding.Structured
 }
 
 func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) (err error) {
-	if m.format != nil {
+	if m.version == nil {
 		return binding.ErrNotBinary
 	}
-
 	if v := m.internal.Properties.ContentType; v != "" {
 		err = encoder.SetAttribute(m.version.AttributeFromKind(spec.DataContentType), v)
 		if err != nil {
