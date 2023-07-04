@@ -28,7 +28,8 @@ type Message struct {
 
 // Check if pubsub.Message implements binding.Message
 var (
-	_ binding.Message = (*Message)(nil)
+	_ binding.Message               = (*Message)(nil)
+	_ binding.MessageMetadataReader = (*Message)(nil)
 )
 
 func NewMessage(msg *paho.Publish) *Message {
@@ -103,4 +104,20 @@ func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) 
 
 func (m *Message) Finish(error) error {
 	return nil
+}
+
+func (m *Message) GetAttribute(k spec.Kind) (spec.Attribute, interface{}) {
+	if k == spec.DataContentType {
+		return m.version.AttributeFromKind(spec.DataContentType), m.internal.Properties.ContentType
+	}
+
+	attr := m.version.AttributeFromKind(k)
+	if attr != nil {
+		return attr, m.internal.Properties.User.Get(prefix + attr.Name())
+	}
+	return nil, nil
+}
+
+func (m *Message) GetExtension(name string) interface{} {
+	return m.internal.Properties.User.Get(prefix + name)
 }

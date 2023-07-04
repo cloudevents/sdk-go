@@ -3,6 +3,7 @@ package mqtt_paho
 import (
 	"context"
 	"fmt"
+	"io"
 	"sync"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
@@ -13,7 +14,6 @@ import (
 )
 
 type Protocol struct {
-	ctx            context.Context
 	client         *paho.Client
 	connConfig     *paho.Connect
 	senderTopic    string
@@ -27,7 +27,6 @@ type Protocol struct {
 	openerMutex sync.Mutex
 }
 
-// MQTT protocol implements Sender, Receiver
 var (
 	_ protocol.Sender   = (*Protocol)(nil)
 	_ protocol.Opener   = (*Protocol)(nil)
@@ -39,6 +38,15 @@ func New(ctx context.Context, clientConfig *paho.ClientConfig, connConfig *paho.
 	ReceiverTopics []string, qos byte, retained bool,
 ) (*Protocol, error) {
 	client := paho.NewClient(*clientConfig)
+	ca, err := client.Connect(ctx, connConfig)
+	if err != nil {
+		return nil, err
+	}
+	if ca.ReasonCode != 0 {
+		return nil, fmt.Errorf("failed to connect to %s : %d - %s", client.Conn.RemoteAddr(), ca.ReasonCode,
+			ca.Properties.ReasonString)
+	}
+
 	return &Protocol{
 		client:         client,
 		connConfig:     connConfig,
@@ -60,11 +68,6 @@ func (t *Protocol) Send(ctx context.Context, m binding.Message, transformers ...
 		topic = t.senderTopic
 	}
 
-	err = t.connect(ctx)
-	if err != nil {
-		return err
-	}
-
 	msg := &paho.Publish{
 		QoS:    t.qos,
 		Retain: t.retained,
@@ -76,6 +79,9 @@ func (t *Protocol) Send(ctx context.Context, m binding.Message, transformers ...
 	}
 
 	_, err = t.client.Publish(ctx, msg)
+	if err != nil {
+		return err
+	}
 	return err
 }
 
@@ -84,9 +90,6 @@ func (t *Protocol) OpenInbound(ctx context.Context) error {
 	defer t.openerMutex.Unlock()
 
 	logger := cecontext.LoggerFrom(ctx)
-	if err := t.connect(ctx); err != nil {
-		return err
-	}
 
 	t.client.Router = paho.NewSingleHandlerRouter(func(m *paho.Publish) {
 		t.incoming <- m
@@ -100,7 +103,7 @@ func (t *Protocol) OpenInbound(ctx context.Context) error {
 		}
 	}
 
-	logger.Infof("Subscribing to topics: %v", t.receiverTopics)
+	logger.Infof("subscribe to topics: %v", t.receiverTopics)
 	_, err := t.client.Subscribe(ctx, &paho.Subscribe{
 		Subscriptions: subs,
 	})
@@ -109,18 +112,23 @@ func (t *Protocol) OpenInbound(ctx context.Context) error {
 	}
 
 	<-ctx.Done()
-	logger.Infof("context done: %v", ctx.Err())
 	return ctx.Err()
 }
 
-func (t *Protocol) connect(ctx context.Context) error {
-	ca, err := t.client.Connect(ctx, t.connConfig)
-	if err != nil {
-		return err
+// Receive implements Receiver.Receive
+func (t *Protocol) Receive(ctx context.Context) (binding.Message, error) {
+	select {
+	case m, ok := <-t.incoming:
+		if !ok {
+			return nil, io.EOF
+		}
+		msg := NewMessage(m)
+		return msg, nil
+	case <-ctx.Done():
+		return nil, io.EOF
 	}
-	if ca.ReasonCode != 0 {
-		return fmt.Errorf("failed to connect to %s : %d - %s", t.client.Conn.RemoteAddr(), ca.ReasonCode,
-			ca.Properties.ReasonString)
-	}
-	return nil
+}
+
+func (p *Protocol) Close(ctx context.Context) error {
+	return p.client.Disconnect(&paho.Disconnect{ReasonCode: 0})
 }
