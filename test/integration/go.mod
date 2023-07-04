@@ -14,14 +14,18 @@ replace github.com/cloudevents/sdk-go/protocol/nats/v2 => ../../protocol/nats/v2
 
 replace github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 => ../../protocol/kafka_sarama/v2
 
+replace github.com/cloudevents/sdk-go/protocol/mqtt_paho/v2 => ../../protocol/mqtt_paho/v2
+
 require (
 	github.com/Azure/go-amqp v0.17.0
 	github.com/Shopify/sarama v1.38.1
 	github.com/cloudevents/sdk-go/protocol/amqp/v2 v2.5.0
 	github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.5.0
+	github.com/cloudevents/sdk-go/protocol/mqtt_paho/v2 v2.0.0-00010101000000-000000000000
 	github.com/cloudevents/sdk-go/protocol/nats/v2 v2.5.0
 	github.com/cloudevents/sdk-go/protocol/stan/v2 v2.5.0
 	github.com/cloudevents/sdk-go/v2 v2.5.0
+	github.com/eclipse/paho.golang v0.11.0
 	github.com/google/go-cmp v0.5.8
 	github.com/google/uuid v1.1.1
 	github.com/nats-io/nats.go v1.13.1-0.20220308171302-2f2f6968e98d

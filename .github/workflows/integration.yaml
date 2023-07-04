@@ -54,6 +54,11 @@ jobs:
             }
         ports:
           - 5672:5672
+      
+      mqtt:
+        image: eclipse-mosquitto:1.6
+        ports:
+          - 1883:1883
 
     steps:
 
