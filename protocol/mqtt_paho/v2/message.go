@@ -26,7 +26,7 @@ type Message struct {
 	format   format.Format
 }
 
-// Check if pubsub.Message implements binding.Message
+// Check if .Message implements binding.Message
 var (
 	_ binding.Message               = (*Message)(nil)
 	_ binding.MessageMetadataReader = (*Message)(nil)
