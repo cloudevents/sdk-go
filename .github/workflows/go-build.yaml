@@ -18,15 +18,15 @@ jobs:
     runs-on: ${{ matrix.platform }}
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Set up Go ${{ matrix.go-version }}
-        uses: actions/setup-go@v2
+      - name: Setup Go ${{ matrix.go-version }}
+        uses: actions/setup-go@v4
         with:
           go-version: ${{ matrix.go-version }}
+          cache-dependency-path: v2/go.sum
         id: go
-
-      - name: Checkout code
-        uses: actions/checkout@v2
 
       - name: Build
         run: ./hack/build-test.sh

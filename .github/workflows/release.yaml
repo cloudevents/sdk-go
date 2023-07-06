@@ -13,9 +13,10 @@ jobs:
       next: ${{ steps.ggsv.outputs.next}}
     steps:
       - name: Setup Go 1.17.x
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
           go-version: 1.17.x
+          cache-dependency-path: v2/go.sum
 
       - name: Install Dependencies
         run: go install tableflip.dev/ggsv@latest
@@ -32,7 +33,7 @@ jobs:
     needs: semver
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Create Release ${{ needs.semver.outputs.next }}
         uses: actions/create-release@v1
@@ -52,13 +53,15 @@ jobs:
     env:
       VERSION: ${{ needs.semver.outputs.next }}
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
       - name: Set up Go 1.17.x
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
           go-version: 1.17.x
+          cache-dependency-path: v2/go.sum
 
-      - name: Checkout Code
-        uses: actions/checkout@v2
       - run: git pull
 
       - name: Update Modules
@@ -85,12 +88,13 @@ jobs:
       VERSION: ${{ needs.semver.outputs.next }}
     steps:
       - name: Set up Go 1.17.x
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
           go-version: 1.17.x
+          cache-dependency-path: v2/go.sum
 
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - run: git pull
 
       - name: Update Examples
