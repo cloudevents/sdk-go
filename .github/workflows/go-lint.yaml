@@ -24,7 +24,7 @@ jobs:
         id: go
 
       - id: golangci_configuration
-        uses: andstor/file-existence-action@v1
+        uses: andstor/file-existence-action@v2
         with:
           files: .golangci.yaml
 
