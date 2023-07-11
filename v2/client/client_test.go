@@ -23,6 +23,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
+	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/client"
 	"github.com/cloudevents/sdk-go/v2/event"
 	"github.com/cloudevents/sdk-go/v2/protocol"
@@ -399,6 +400,71 @@ func TestClientContext(t *testing.T) {
 	wg.Wait()
 }
 
+func TestClientStartReceiverWithAckMalformedEvent(t *testing.T) {
+	testCases := []struct {
+		name        string
+		opts        []client.Option
+		expectedAck bool
+	}{
+		{
+			name: "without ack",
+		},
+		{
+			name:        "with ack",
+			opts:        []client.Option{client.WithAckMalformedEvent()},
+			expectedAck: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// make sure the receiver goroutine is closed
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
+			receiver := &mockReceiver{
+				finished: make(chan struct{}),
+			}
+
+			// only need 1 goroutine to exercise this
+			tc.opts = append(tc.opts, client.WithPollGoroutines(1))
+
+			c, err := client.New(receiver, tc.opts...)
+			if err != nil {
+				t.Errorf("failed to construct client: %v", err)
+			}
+
+			go c.StartReceiver(ctx, func(ctx context.Context, e event.Event) protocol.Result {
+				t.Error("receiver callback called unexpectedly")
+				return nil
+			})
+
+			// wait for receive to occur
+			time.Sleep(time.Millisecond)
+
+			ctx, cancelTimeout := context.WithTimeout(ctx, time.Second)
+			defer cancelTimeout()
+
+			select {
+			case <-receiver.finished:
+				// continue to rest of the test
+			case <-ctx.Done():
+				t.Errorf("timeoued out waiting for receiver to complete")
+			}
+
+			if tc.expectedAck {
+				if protocol.IsNACK(receiver.result) {
+					t.Errorf("receiver did not receive ACK: %v", receiver.result)
+				}
+			} else {
+				if protocol.IsACK(receiver.result) {
+					t.Errorf("receiver did not receive NACK: %v", receiver.result)
+				}
+			}
+		})
+	}
+}
+
 type requestValidation struct {
 	Host    string
 	Headers http.Header
@@ -487,4 +553,39 @@ func isImportantHeader(h string) bool {
 		}
 	}
 	return true
+}
+
+type mockMessage struct{}
+
+func (m *mockMessage) ReadEncoding() binding.Encoding {
+	return binding.EncodingUnknown
+}
+
+func (m *mockMessage) ReadStructured(ctx context.Context, writer binding.StructuredWriter) error {
+	return nil
+}
+func (m *mockMessage) ReadBinary(ctx context.Context, writer binding.BinaryWriter) error { return nil }
+func (m *mockMessage) Finish(err error) error                                            { return nil }
+
+type mockReceiver struct {
+	mu       sync.Mutex
+	count    int
+	result   error
+	finished chan struct{}
+}
+
+func (m *mockReceiver) Receive(ctx context.Context) (binding.Message, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.count > 0 {
+		return nil, io.EOF
+	}
+
+	m.count++
+
+	return binding.WithFinish(&mockMessage{}, func(err error) {
+		m.result = err
+		close(m.finished)
+	}), nil
 }
