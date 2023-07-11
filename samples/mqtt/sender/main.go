@@ -1,3 +1,8 @@
+/*
+Copyright 2023 The CloudEvents Authors
+SPDX-License-Identifier: Apache-2.0
+*/
+
 package main
 
 import (
