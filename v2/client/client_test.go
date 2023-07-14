@@ -24,6 +24,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
+	"github.com/cloudevents/sdk-go/v2/binding/test"
 	"github.com/cloudevents/sdk-go/v2/client"
 	"github.com/cloudevents/sdk-go/v2/event"
 	"github.com/cloudevents/sdk-go/v2/protocol"
@@ -431,16 +432,13 @@ func TestClientStartReceiverWithAckMalformedEvent(t *testing.T) {
 
 			c, err := client.New(receiver, tc.opts...)
 			if err != nil {
-				t.Errorf("failed to construct client: %v", err)
+				t.Fatalf("failed to construct client: %v", err)
 			}
 
 			go c.StartReceiver(ctx, func(ctx context.Context, e event.Event) protocol.Result {
 				t.Error("receiver callback called unexpectedly")
 				return nil
 			})
-
-			// wait for receive to occur
-			time.Sleep(time.Millisecond)
 
 			ctx, cancelTimeout := context.WithTimeout(ctx, time.Second)
 			defer cancelTimeout()
@@ -449,7 +447,7 @@ func TestClientStartReceiverWithAckMalformedEvent(t *testing.T) {
 			case <-receiver.finished:
 				// continue to rest of the test
 			case <-ctx.Done():
-				t.Errorf("timeoued out waiting for receiver to complete")
+				t.Fatalf("timed out waiting for receiver to complete")
 			}
 
 			if tc.expectedAck {
@@ -555,18 +553,6 @@ func isImportantHeader(h string) bool {
 	return true
 }
 
-type mockMessage struct{}
-
-func (m *mockMessage) ReadEncoding() binding.Encoding {
-	return binding.EncodingUnknown
-}
-
-func (m *mockMessage) ReadStructured(ctx context.Context, writer binding.StructuredWriter) error {
-	return nil
-}
-func (m *mockMessage) ReadBinary(ctx context.Context, writer binding.BinaryWriter) error { return nil }
-func (m *mockMessage) Finish(err error) error                                            { return nil }
-
 type mockReceiver struct {
 	mu       sync.Mutex
 	count    int
@@ -584,7 +570,7 @@ func (m *mockReceiver) Receive(ctx context.Context) (binding.Message, error) {
 
 	m.count++
 
-	return binding.WithFinish(&mockMessage{}, func(err error) {
+	return binding.WithFinish(test.UnknownMessage, func(err error) {
 		m.result = err
 		close(m.finished)
 	}), nil
