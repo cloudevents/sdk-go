@@ -61,12 +61,10 @@ func TestSendBinaryMessageToBinary(t *testing.T) {
 			eventOut = ConvertEventExtensionsToString(t, eventOut)
 
 			require.Equal(t, topicName, eventOut.Extensions()[KAFKA_TOPIC])
-			require.NotNil(t, eventOut.Extensions()[KAFKA_PARTITION])
-			require.NotNil(t, eventOut.Extensions()[KAFKA_OFFSET])
-
 			AllOf(
 				HasExactlyAttributesEqualTo(eventIn.Context),
 				HasData(eventIn.Data()),
+				HasExtensionKeys([]string{KAFKA_OFFSET, KAFKA_PARTITION}),
 			)
 		})
 	})
