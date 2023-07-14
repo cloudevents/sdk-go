@@ -35,13 +35,11 @@ func TestSendEvent(t *testing.T) {
 		clienttest.SendReceive(t, func() interface{} {
 			return protocolFactory(t)
 		}, eventIn, func(eventOut event.Event) {
-			eventOut = test.ConvertEventExtensionsToString(t, eventOut)
-
-			require.Equal(t, TopicName, eventOut.Extensions()[KAFKA_TOPIC])
 			test.AllOf(
 				test.HasExactlyAttributesEqualTo(eventIn.Context),
 				test.HasData(eventIn.Data()),
 				test.HasExtensionKeys([]string{KAFKA_OFFSET, KAFKA_PARTITION}),
+				test.HasExtension(KAFKA_TOPIC, TopicName),
 			)
 		})
 	})
