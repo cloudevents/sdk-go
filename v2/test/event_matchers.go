@@ -184,7 +184,7 @@ func HasExtensions(ext map[string]interface{}) EventMatcher {
 	}
 }
 
-// HasExtensionKeys checks if the event contain the provided keys from its extensions
+// HasExtensionKeys checks if the event contains the provided keys from its extensions
 func HasExtensionKeys(keys []string) EventMatcher {
 	return func(have event.Event) error {
 		for _, k := range keys {
