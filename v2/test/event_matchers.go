@@ -289,7 +289,6 @@ func HasAttributeKind(kind spec.Kind, value interface{}) EventMatcher {
 // LICENSE: MIT License
 
 func isEmpty(object interface{}) bool {
-	
 	// get nil case out of the way
 	if object == nil {
 		return true
