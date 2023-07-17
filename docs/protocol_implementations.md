@@ -24,6 +24,7 @@ the `Write<DataStructure>` functions, while the latter is done implementing spec
 * [AMQP Protocol Binding](https://github.com/cloudevents/sdk-go/tree/main/protocol/amqp) using [go-amqp](https://github.com/Azure/go-amqp)
 * [HTTP Protocol Binding](https://github.com/cloudevents/sdk-go/tree/main/v2/protocol/http) using [net/http](https://golang.org/pkg/net/http/)
 * [Kafka Protocol Binding](https://github.com/cloudevents/sdk-go/tree/main/protocol/kafka_sarama) using [Sarama](https://github.com/Shopify/sarama)
+* [MQTT Protocol Binding](https://github.com/cloudevents/sdk-go/tree/main/protocol/mqtt_paho) using [eclipse/paho.golang](https://github.com/eclipse/paho.golang)
 * [NATS Protocol Binding](https://github.com/cloudevents/sdk-go/tree/main/protocol/nats) using [nats.go](https://github.com/nats-io/nats.go)
 * [STAN Protocol Binding](https://github.com/cloudevents/sdk-go/tree/main/protocol/stan) using [stan.go](https://github.com/nats-io/stan.go)
 * [PubSub Protocol Binding](https://github.com/cloudevents/sdk-go/tree/main/protocol/pubsub)
