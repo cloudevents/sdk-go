@@ -9,7 +9,6 @@ import (
 	"bytes"
 	"context"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -66,7 +65,7 @@ func TestNewEventFromHttpResponse(t *testing.T) {
 			Header: http.Header{
 				"Content-Type": {event.ApplicationCloudEventsJSON},
 			},
-			Body:          ioutil.NopCloser(bytes.NewReader([]byte(`{"data":"foo","datacontenttype":"application/json","id":"id","source":"source","specversion":"1.0","type":"type"}`))),
+			Body:          io.NopCloser(bytes.NewReader([]byte(`{"data":"foo","datacontenttype":"application/json","id":"id","source":"source","specversion":"1.0","type":"type"}`))),
 			ContentLength: 113,
 		},
 	}, {
@@ -94,7 +93,6 @@ func TestNewEventFromHttpResponse(t *testing.T) {
 }
 
 func TestNewEventsFromHTTPRequest(t *testing.T) {
-
 	type expected struct {
 		len           int
 		ids           []string
@@ -263,7 +261,6 @@ func TestNewHTTPRequestFromEvents(t *testing.T) {
 		_, err := NewHTTPRequestFromEvents(context.Background(), ts.URL, events)
 		require.ErrorContains(t, err, "id: MUST be a non-empty string")
 	})
-
 }
 
 func TestIsHTTPBatch(t *testing.T) {

@@ -9,7 +9,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -38,7 +38,6 @@ func TestNewMessageFromHttpRequest(t *testing.T) {
 	for _, tt := range tests {
 		test.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
 			t.Run(tt.name, func(t *testing.T) {
-
 				ctx := context.TODO()
 				if tt.encoding == binding.EncodingStructured {
 					ctx = binding.WithForceStructured(ctx)
@@ -167,7 +166,7 @@ func TestNewMessageFromHttpResponse(t *testing.T) {
 			Header: http.Header{
 				"Content-Type": {event.ApplicationCloudEventsJSON},
 			},
-			Body:          ioutil.NopCloser(bytes.NewReader([]byte(`{"data":"foo","datacontenttype":"application/json","id":"id","source":"source","specversion":"1.0","type":"type"}`))),
+			Body:          io.NopCloser(bytes.NewReader([]byte(`{"data":"foo","datacontenttype":"application/json","id":"id","source":"source","specversion":"1.0","type":"type"}`))),
 			ContentLength: 113,
 		},
 	}, {

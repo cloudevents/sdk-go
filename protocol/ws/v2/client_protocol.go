@@ -10,7 +10,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"sync"
 
 	"nhooyr.io/websocket"
@@ -110,8 +109,8 @@ func (c *ClientProtocol) UnsafeReceive(ctx context.Context) (binding.Message, er
 }
 
 func consumeStream(reader io.Reader) {
-	//TODO is there a less expensive way to consume the stream?
-	ioutil.ReadAll(reader)
+	// TODO is there a less expensive way to consume the stream?
+	io.ReadAll(reader)
 }
 
 func (c *ClientProtocol) Close(ctx context.Context) error {
@@ -131,6 +130,8 @@ func (c *ClientProtocol) Close(ctx context.Context) error {
 	return nil
 }
 
-var _ protocol.Receiver = (*ClientProtocol)(nil)
-var _ protocol.Sender = (*ClientProtocol)(nil)
-var _ protocol.Closer = (*ClientProtocol)(nil)
+var (
+	_ protocol.Receiver = (*ClientProtocol)(nil)
+	_ protocol.Sender   = (*ClientProtocol)(nil)
+	_ protocol.Closer   = (*ClientProtocol)(nil)
+)

@@ -10,9 +10,9 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -52,7 +52,7 @@ func main() {
 	if err != nil {
 		log.Fatalln("unable to load certs", err)
 	}
-	clientCACert, err := ioutil.ReadFile(env.ClientCert)
+	clientCACert, err := os.ReadFile(env.ClientCert)
 	if err != nil {
 		log.Fatal("unable to open cert", err)
 	}

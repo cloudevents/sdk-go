@@ -10,7 +10,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -181,7 +181,7 @@ func TestClientSend(t *testing.T) {
 func simpleBinaryOptions(port int, path string) []cehttp.Option {
 	opts := []cehttp.Option{
 		cehttp.WithPort(port),
-		//cehttp.WithBinaryEncoding(),
+		// cehttp.WithBinaryEncoding(),
 	}
 	if len(path) > 0 {
 		opts = append(opts, cehttp.WithPath(path))
@@ -192,7 +192,7 @@ func simpleBinaryOptions(port int, path string) []cehttp.Option {
 func simpleStructuredOptions(port int, path string) []cehttp.Option {
 	opts := []cehttp.Option{
 		cehttp.WithPort(port),
-		//cehttp.WithStructuredEncoding(),
+		// cehttp.WithStructuredEncoding(),
 	}
 	if len(path) > 0 {
 		opts = append(opts, cehttp.WithPath(path))
@@ -268,7 +268,6 @@ func TestClientReceive(t *testing.T) {
 	for n, tc := range testCases {
 		for _, path := range []string{"", "/", "/unittest/"} {
 			t.Run(n+" at path "+path, func(t *testing.T) {
-
 				events := make(chan event.Event)
 
 				p, err := cehttp.New(tc.optsFn(0, "")...)
@@ -318,7 +317,7 @@ func TestClientReceive(t *testing.T) {
 					Method:        "POST",
 					URL:           target,
 					Header:        tc.req.Headers,
-					Body:          ioutil.NopCloser(bytes.NewReader(tc.req.Body)),
+					Body:          io.NopCloser(bytes.NewReader(tc.req.Body)),
 					ContentLength: int64(len(tc.req.Body)),
 				}
 
@@ -373,7 +372,6 @@ func TestClientContext(t *testing.T) {
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}))
-
 	if err != nil {
 		t.Fatalf("error creating client: %v", err)
 	}
@@ -417,7 +415,7 @@ func (f *fakeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	// Make a copy of the request.
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		f.t.Error("failed to read the request body")
 	}

@@ -10,7 +10,6 @@ import (
 	"context"
 	"errors"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"time"
@@ -67,7 +66,7 @@ func (p *Protocol) doWithRetry(ctx context.Context, params *cecontext.RetryParam
 				cecontext.LoggerFrom(ctx).Warnw("could not close request body", zap.Error(err))
 			}
 		}()
-		body, err = ioutil.ReadAll(req.Body)
+		body, err = io.ReadAll(req.Body)
 		if err != nil {
 			panic(err)
 		}
@@ -134,12 +133,12 @@ func resetBody(req *http.Request, body []byte) {
 		return
 	}
 
-	req.Body = ioutil.NopCloser(bytes.NewReader(body))
+	req.Body = io.NopCloser(bytes.NewReader(body))
 
 	// do not modify existing GetBody function
 	if req.GetBody == nil {
 		req.GetBody = func() (io.ReadCloser, error) {
-			return ioutil.NopCloser(bytes.NewReader(body)), nil
+			return io.NopCloser(bytes.NewReader(body)), nil
 		}
 	}
 }

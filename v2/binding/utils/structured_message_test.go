@@ -8,7 +8,7 @@ package utils_test
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
+	"io"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -23,7 +23,7 @@ func TestNewStructuredMessage(t *testing.T) {
 	testEvent := test.ConvertEventExtensionsToString(t, test.FullEvent())
 	jsonBytes := test.MustJSON(t, testEvent)
 
-	message := utils.NewStructuredMessage(format.JSON, ioutil.NopCloser(bytes.NewReader(jsonBytes)))
+	message := utils.NewStructuredMessage(format.JSON, io.NopCloser(bytes.NewReader(jsonBytes)))
 
 	require.Equal(t, binding.EncodingStructured, message.ReadEncoding())
 
