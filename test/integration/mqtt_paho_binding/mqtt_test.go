@@ -126,13 +126,18 @@ func getProtocol(ctx context.Context, topic string) (*mqtt_paho.Protocol, error)
 	if err != nil {
 		return nil, err
 	}
-	cp := &paho.Connect{
-		KeepAlive:  30,
-		CleanStart: true,
+	config := &paho.ClientConfig{
+		Conn: conn,
+	}
+	publishOpt := &paho.Publish{
+		Topic: topic, QoS: 0,
+	}
+	subscribeOpt := &paho.Subscribe{
+		Subscriptions: map[string]paho.SubscribeOptions{
+			topic: {QoS: 0},
+		},
 	}
 
-	p, err := mqtt_paho.New(ctx, &paho.ClientConfig{
-		Conn: conn,
-	}, cp, topic, []string{topic}, 0, false)
+	p, err := mqtt_paho.New(ctx, config, mqtt_paho.WithPublish(publishOpt), mqtt_paho.WithSubscribe(subscribeOpt))
 	return p, err
 }

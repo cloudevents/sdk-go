@@ -19,12 +19,11 @@ import (
 )
 
 type Protocol struct {
-	client         *paho.Client
-	connConfig     *paho.Connect
-	senderTopic    string
-	receiverTopics []string
-	qos            byte
-	retained       bool
+	client          *paho.Client
+	config          *paho.ClientConfig
+	connOption      *paho.Connect
+	publishOption   *paho.Publish
+	subscribeOption *paho.Subscribe
 
 	// receiver
 	incoming chan *paho.Publish
@@ -41,80 +40,89 @@ var (
 	_ protocol.Closer   = (*Protocol)(nil)
 )
 
-func New(ctx context.Context, clientConfig *paho.ClientConfig, connConfig *paho.Connect, SenderTopic string,
-	ReceiverTopics []string, qos byte, retained bool,
-) (*Protocol, error) {
-	client := paho.NewClient(*clientConfig)
-	ca, err := client.Connect(ctx, connConfig)
+func New(ctx context.Context, config *paho.ClientConfig, opts ...Option) (*Protocol, error) {
+	if config == nil {
+		return nil, fmt.Errorf("the paho.ClientConfig must not be nil")
+	}
+
+	p := &Protocol{
+		client: paho.NewClient(*config),
+		// default connect option
+		connOption: &paho.Connect{
+			KeepAlive:  30,
+			CleanStart: true,
+		},
+		incoming:  make(chan *paho.Publish),
+		closeChan: make(chan struct{}),
+	}
+	if err := p.applyOptions(opts...); err != nil {
+		return nil, err
+	}
+
+	// Connect to the MQTT broker
+	connAck, err := p.client.Connect(ctx, p.connOption)
 	if err != nil {
 		return nil, err
 	}
-	if ca.ReasonCode != 0 {
-		return nil, fmt.Errorf("failed to connect to %s : %d - %s", client.Conn.RemoteAddr(), ca.ReasonCode,
-			ca.Properties.ReasonString)
+	if connAck.ReasonCode != 0 {
+		return nil, fmt.Errorf("failed to connect to %q : %d - %q", p.client.Conn.RemoteAddr(), connAck.ReasonCode,
+			connAck.Properties.ReasonString)
 	}
 
-	return &Protocol{
-		client:         client,
-		connConfig:     connConfig,
-		senderTopic:    SenderTopic,
-		receiverTopics: ReceiverTopics,
-		qos:            qos,
-		retained:       retained,
-		incoming:       make(chan *paho.Publish),
-		openerMutex:    sync.Mutex{},
-		closeChan:      make(chan struct{}),
-	}, nil
+	return p, nil
 }
 
-func (t *Protocol) Send(ctx context.Context, m binding.Message, transformers ...binding.Transformer) error {
+func (p *Protocol) applyOptions(opts ...Option) error {
+	for _, fn := range opts {
+		if err := fn(p); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (p *Protocol) Send(ctx context.Context, m binding.Message, transformers ...binding.Transformer) error {
+	if p.publishOption == nil {
+		return fmt.Errorf("the paho.Publish option must not be nil")
+	}
+
 	var err error
 	defer m.Finish(err)
 
-	topic := cecontext.TopicFrom(ctx)
-	if topic == "" {
-		topic = t.senderTopic
+	msg := p.publishOption
+	if cecontext.TopicFrom(ctx) != "" {
+		msg.Topic = cecontext.TopicFrom(ctx)
+		cecontext.WithTopic(ctx, "")
 	}
 
-	msg := &paho.Publish{
-		QoS:    t.qos,
-		Retain: t.retained,
-		Topic:  topic,
-	}
 	err = WritePubMessage(ctx, m, msg, transformers...)
 	if err != nil {
 		return err
 	}
 
-	_, err = t.client.Publish(ctx, msg)
+	_, err = p.client.Publish(ctx, msg)
 	if err != nil {
 		return err
 	}
 	return err
 }
 
-func (t *Protocol) OpenInbound(ctx context.Context) error {
-	t.openerMutex.Lock()
-	defer t.openerMutex.Unlock()
+func (p *Protocol) OpenInbound(ctx context.Context) error {
+	if p.subscribeOption == nil {
+		return fmt.Errorf("the paho.Subscribe option must not be nil")
+	}
+
+	p.openerMutex.Lock()
+	defer p.openerMutex.Unlock()
 
 	logger := cecontext.LoggerFrom(ctx)
 
-	t.client.Router = paho.NewSingleHandlerRouter(func(m *paho.Publish) {
-		t.incoming <- m
+	p.client.Router = paho.NewSingleHandlerRouter(func(m *paho.Publish) {
+		p.incoming <- m
 	})
 
-	subs := make(map[string]paho.SubscribeOptions)
-	for _, topic := range t.receiverTopics {
-		subs[topic] = paho.SubscribeOptions{
-			QoS:               t.qos,
-			RetainAsPublished: t.retained,
-		}
-	}
-
-	logger.Infof("subscribe to topics: %v", t.receiverTopics)
-	_, err := t.client.Subscribe(ctx, &paho.Subscribe{
-		Subscriptions: subs,
-	})
+	logger.Infof("subscribing to topics: %v", p.subscribeOption.Subscriptions)
+	_, err := p.client.Subscribe(ctx, p.subscribeOption)
 	if err != nil {
 		return err
 	}
@@ -122,15 +130,15 @@ func (t *Protocol) OpenInbound(ctx context.Context) error {
 	// Wait until external or internal context done
 	select {
 	case <-ctx.Done():
-	case <-t.closeChan:
+	case <-p.closeChan:
 	}
-	return t.client.Disconnect(&paho.Disconnect{ReasonCode: 0})
+	return p.client.Disconnect(&paho.Disconnect{ReasonCode: 0})
 }
 
 // Receive implements Receiver.Receive
-func (t *Protocol) Receive(ctx context.Context) (binding.Message, error) {
+func (p *Protocol) Receive(ctx context.Context) (binding.Message, error) {
 	select {
-	case m, ok := <-t.incoming:
+	case m, ok := <-p.incoming:
 		if !ok {
 			return nil, io.EOF
 		}
