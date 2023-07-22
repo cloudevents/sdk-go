@@ -6,7 +6,7 @@
 package test
 
 import (
-	"io/ioutil"
+	"io"
 	"os"
 	"path"
 	"runtime"
@@ -111,7 +111,7 @@ func TestTCK(t *testing.T) {
 		file, err := os.Open(testFilePath)
 		require.NoError(t, err)
 
-		fileBytes, err := ioutil.ReadAll(file)
+		fileBytes, err := io.ReadAll(file)
 		require.NoError(t, err)
 
 		tckFileModel := TckFile{}

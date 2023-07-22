@@ -8,7 +8,7 @@ package http
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -95,12 +95,12 @@ func (t *tapHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	r.Header.Del("ce-" + unitTestIDKey)
 
 	// Make a copy of the request.
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		fmt.Printf("failed to read the request body")
 	}
 	// Set the body back
-	r.Body = ioutil.NopCloser(bytes.NewReader(body))
+	r.Body = io.NopCloser(bytes.NewReader(body))
 
 	t.req[id] = TapValidation{
 		Method:        r.Method,
@@ -129,7 +129,7 @@ func (t *tapHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	w.WriteHeader(resp.StatusCode)
-	body, err = ioutil.ReadAll(resp.Body)
+	body, err = io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Printf("failed to read the resp body")
 	}

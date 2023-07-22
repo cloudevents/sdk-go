@@ -8,7 +8,6 @@ package main
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
 	nethttp "net/http"
 	"net/http/httptest"
 	"net/url"
@@ -52,7 +51,7 @@ func MockedClient() (cloudevents.Client, *http.Protocol) {
 		return &nethttp.Response{
 			StatusCode: 202,
 			Header:     make(nethttp.Header),
-			Body:       ioutil.NopCloser(bytes.NewReader([]byte{})),
+			Body:       io.NopCloser(bytes.NewReader([]byte{})),
 		}
 	})
 

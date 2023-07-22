@@ -8,7 +8,6 @@ package amqp
 import (
 	"context"
 	"io"
-	"io/ioutil"
 
 	"github.com/Azure/go-amqp"
 
@@ -37,7 +36,7 @@ func WriteMessage(ctx context.Context, m binding.Message, amqpMessage *amqp.Mess
 type amqpMessageWriter amqp.Message
 
 func (b *amqpMessageWriter) SetStructuredEvent(ctx context.Context, format format.Format, event io.Reader) error {
-	val, err := ioutil.ReadAll(event)
+	val, err := io.ReadAll(event)
 	if err != nil {
 		return err
 	}
@@ -58,7 +57,7 @@ func (b *amqpMessageWriter) End(ctx context.Context) error {
 }
 
 func (b *amqpMessageWriter) SetData(reader io.Reader) error {
-	data, err := ioutil.ReadAll(reader)
+	data, err := io.ReadAll(reader)
 	if err != nil {
 		return err
 	}
@@ -100,5 +99,7 @@ func (b *amqpMessageWriter) SetExtension(name string, value interface{}) error {
 	return nil
 }
 
-var _ binding.BinaryWriter = (*amqpMessageWriter)(nil)     // Test it conforms to the interface
-var _ binding.StructuredWriter = (*amqpMessageWriter)(nil) // Test it conforms to the interface
+var (
+	_ binding.BinaryWriter     = (*amqpMessageWriter)(nil) // Test it conforms to the interface
+	_ binding.StructuredWriter = (*amqpMessageWriter)(nil) // Test it conforms to the interface
+)

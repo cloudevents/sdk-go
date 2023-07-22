@@ -9,7 +9,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -113,7 +113,6 @@ func TestTracedClientReceiveError(t *testing.T) {
 	defer trace.UnregisterExporter(&te)
 
 	t.Run("RecordCallingInvoker error", func(t *testing.T) {
-
 		evt := func() event.Event {
 			e := event.Event{
 				Context: event.EventContextV03{
@@ -272,7 +271,6 @@ func TestTracingClientSend(t *testing.T) {
 }
 
 func TestTracingClientSendError(t *testing.T) {
-
 	// simple exporter that holds the spans in an array
 	trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
 	var te testExporter
@@ -291,7 +289,6 @@ func TestTracingClientSendError(t *testing.T) {
 	defer ts.Close()
 
 	t.Run("RecordSendingEvent error", func(t *testing.T) {
-
 		sender := simpleTracingBinaryClient(t, ts.URL, fakeObservabilityServiceWithError{})
 		event := func() event.Event {
 			e := event.Event{
@@ -391,7 +388,7 @@ func (f *fakeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	// Make a copy of the request.
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		f.t.Error("failed to read the request body")
 	}
