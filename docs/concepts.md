@@ -11,33 +11,33 @@ nav_order: 2
 
 ## Spec and SDK Terms
 
-- [Event](https://github.com/cloudevents/spec/blob/master/spec.md#event): 
+- [Event](https://github.com/cloudevents/spec/blob/main/cloudevents/spec.md####event): 
   The canonical form of the attributes and payload of the occurrence.
-- [Protocol](https://github.com/cloudevents/spec/blob/master/spec.md#protocol): 
+- [Protocol](https://github.com/cloudevents/spec/blob/main/cloudevents/spec.md#protocol): 
   Protocol is the messaging protocol used to send/receive events. In sdk-go all supported 
   Protocols are implemented through specific interfaces in 
-  [`protocol` module](../v2/protocol).
-- [Protocol Binding](https://github.com/cloudevents/spec/blob/master/spec.md#protocol-binding): 
+  [`protocol` module](https://github.com/cloudevents/sdk-go/tree/main/v2/protocol).
+- [Protocol Binding](https://github.com/cloudevents/spec/blob/main/cloudevents/spec.md#protocol-binding): 
   Definition of how Events are mapped into Messages for the given Protocol. In sdk-go all
   supported Protocol bindings are implemented through specific interfaces in 
-  [`binding` module](../v2/binding).
-- [Message](https://github.com/cloudevents/spec/blob/master/spec.md#message): 
+  [`binding` module](https://github.com/cloudevents/sdk-go/tree/main/v2/binding).
+- [Message](https://github.com/cloudevents/spec/blob/main/cloudevents/spec.md#message): 
   The encoded form of an Event for a given encoding and protocol. 
   When a message is received in the sdk-go, the protocol implementation wraps it in a 
-  [`Message`](../v2/binding/message.go)
+  [`Message`](https://github.com/cloudevents/sdk-go/blob/main/v2/binding/message.go)
   implementation specific to that protocol. This interface defines how to read the Message, 
   given the Protocol.
 - Message Writer: Logic required to take in a `Message` in a specific encoding and write out to a
   given Protocol (request, message). A Message Writer can be a 
-  [`StructuredWriter`](../v2/binding/structured_writer.go), 
-  a [`BinaryWriter`](../v2/binding/binary_writer.go) or both, depending on what encodings a 
+  [`StructuredWriter`](https://github.com/cloudevents/sdk-go/blob/main/v2/binding/structured_writer.go), 
+  a [`BinaryWriter`](https://github.com/cloudevents/sdk-go/blob/main/v2/binding/binary_writer.go) or both, depending on what encodings a 
   Protocol supports.
-- [`Client`](../v2/client/client.go): Interface to interact with a Protocol implementation 
+- [`Client`](https://github.com/cloudevents/sdk-go/blob/main/v2/client/client.go): Interface to interact with a Protocol implementation 
   to send/receive Events. Clients also provide protocol agnostic features that can be 
   applied to events, such as extensions.
 - Extensions: Anything that extends the base requirements from the CloudEvents spec. 
   There are several
-  [CloudEvents supported extensions](https://github.com/cloudevents/spec/tree/master/extensions).
+  [CloudEvents supported extensions](https://github.com/cloudevents/spec/tree/main/cloudevents/extensions).
 
 ## Investment Level
 
