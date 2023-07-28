@@ -12,6 +12,8 @@ replace github.com/cloudevents/sdk-go/protocol/stan/v2 => ../../protocol/stan/v2
 
 replace github.com/cloudevents/sdk-go/protocol/nats/v2 => ../../protocol/nats/v2
 
+replace github.com/cloudevents/sdk-go/protocol/nats_jetstream/v2 => ../../protocol/nats_jetstream/v2
+
 replace github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 => ../../protocol/kafka_sarama/v2
 
 replace github.com/cloudevents/sdk-go/protocol/mqtt_paho/v2 => ../../protocol/mqtt_paho/v2
@@ -23,6 +25,7 @@ require (
 	github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.5.0
 	github.com/cloudevents/sdk-go/protocol/mqtt_paho/v2 v2.0.0-00010101000000-000000000000
 	github.com/cloudevents/sdk-go/protocol/nats/v2 v2.5.0
+	github.com/cloudevents/sdk-go/protocol/nats_jetstream/v2 v2.0.0-00010101000000-000000000000
 	github.com/cloudevents/sdk-go/protocol/stan/v2 v2.5.0
 	github.com/cloudevents/sdk-go/v2 v2.5.0
 	github.com/eclipse/paho.golang v0.11.0

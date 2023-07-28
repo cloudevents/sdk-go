@@ -7,6 +7,7 @@ package nats_jetstream
 
 import (
 	"context"
+
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/protocol"
 
@@ -18,11 +19,11 @@ import (
 type Protocol struct {
 	Conn *nats.Conn
 
-	Consumer *Consumer
-	//consumerOptions []ConsumerOption
+	Consumer        *Consumer
+	consumerOptions []ConsumerOption
 
-	Sender *Sender
-	//senderOptions []SenderOption
+	Sender        *Sender
+	senderOptions []SenderOption
 
 	connOwned bool // whether this protocol created the nats connection
 }
@@ -55,11 +56,11 @@ func NewProtocolFromConn(conn *nats.Conn, stream, sendSubject, receiveSubject st
 		return nil, err
 	}
 
-	if p.Consumer, err = NewConsumerFromConn(conn, stream, receiveSubject, jsOpts, subOpts); err != nil {
+	if p.Consumer, err = NewConsumerFromConn(conn, stream, receiveSubject, jsOpts, subOpts, p.consumerOptions...); err != nil {
 		return nil, err
 	}
 
-	if p.Sender, err = NewSenderFromConn(conn, stream, sendSubject, jsOpts); err != nil {
+	if p.Sender, err = NewSenderFromConn(conn, stream, sendSubject, jsOpts, p.senderOptions...); err != nil {
 		return nil, err
 	}
 

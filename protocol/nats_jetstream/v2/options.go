@@ -22,6 +22,20 @@ func NatsOptions(opts ...nats.Option) []nats.Option {
 // ProtocolOption is the function signature required to be considered an nats.ProtocolOption.
 type ProtocolOption func(*Protocol) error
 
+func WithConsumerOptions(opts ...ConsumerOption) ProtocolOption {
+	return func(p *Protocol) error {
+		p.consumerOptions = opts
+		return nil
+	}
+}
+
+func WithSenderOptions(opts ...SenderOption) ProtocolOption {
+	return func(p *Protocol) error {
+		p.senderOptions = opts
+		return nil
+	}
+}
+
 type SenderOption func(*Sender) error
 
 type ConsumerOption func(*Consumer) error

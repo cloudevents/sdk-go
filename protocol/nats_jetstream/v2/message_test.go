@@ -3,8 +3,10 @@ package nats_jetstream
 import (
 	"context"
 	"encoding/json"
-	bindingtest "github.com/cloudevents/sdk-go/v2/binding/test"
 	"testing"
+
+	"github.com/cloudevents/sdk-go/v2/binding/spec"
+	bindingtest "github.com/cloudevents/sdk-go/v2/binding/test"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/test"
@@ -12,7 +14,10 @@ import (
 )
 
 var (
-	outBinaryMessage = bindingtest.MockBinaryMessage{}
+	outBinaryMessage = bindingtest.MockBinaryMessage{
+		Metadata:   map[spec.Attribute]interface{}{},
+		Extensions: map[string]interface{}{},
+	}
 	outStructMessage = bindingtest.MockStructuredMessage{}
 
 	testEvent     = test.FullEvent()
@@ -31,18 +36,44 @@ var (
 		Subject: "hello",
 		Data:    binaryData,
 	}
+	binaryConsumerMessage = &nats.Msg{
+		Subject: "hello",
+		Data:    testEvent.Data(),
+		Header: nats.Header{
+			"ce-type":            {testEvent.Type()},
+			"ce-source":          {testEvent.Source()},
+			"ce-id":              {testEvent.ID()},
+			"ce-time":            {test.Timestamp.String()},
+			"ce-specversion":     {"1.0"},
+			"ce-dataschema":      {test.Schema.String()},
+			"ce-datacontenttype": {"text/json"},
+			"ce-subject":         {"receiverTopic"},
+			"ce-exta":            {"someext"},
+		},
+	}
 )
 
 func TestNewMessage(t *testing.T) {
 	tests := []struct {
-		name             string
-		consumerMessage  *nats.Msg
-		expectedEncoding binding.Encoding
+		name                    string
+		consumerMessage         *nats.Msg
+		expectedEncoding        binding.Encoding
+		expectedStructuredError error
+		expectedBinaryError     error
 	}{
 		{
-			name:             "Structured encoding",
-			consumerMessage:  structuredConsumerMessage,
-			expectedEncoding: binding.EncodingStructured,
+			name:                    "Structured encoding",
+			consumerMessage:         structuredConsumerMessage,
+			expectedEncoding:        binding.EncodingStructured,
+			expectedStructuredError: nil,
+			expectedBinaryError:     binding.ErrNotBinary,
+		},
+		{
+			name:                    "Binary encoding",
+			consumerMessage:         binaryConsumerMessage,
+			expectedEncoding:        binding.EncodingBinary,
+			expectedStructuredError: binding.ErrNotStructured,
+			expectedBinaryError:     nil,
 		},
 	}
 	for _, tt := range tests {
@@ -52,17 +83,16 @@ func TestNewMessage(t *testing.T) {
 				t.Errorf("Error in NewMessage!")
 			}
 			err := got.ReadBinary(context.TODO(), &outBinaryMessage)
-			if err == nil {
-				t.Errorf("Response in ReadBinary should err")
+			if err != tt.expectedBinaryError {
+				t.Errorf("ReadBinary err:%s", err.Error())
 			}
 			err = got.ReadStructured(context.TODO(), &outStructMessage)
-			if err != nil {
+			if err != tt.expectedStructuredError {
 				t.Errorf("ReadStructured err:%s", err.Error())
 			}
 			if got.ReadEncoding() != tt.expectedEncoding {
 				t.Errorf("ExpectedEncoding %s, while got %s", tt.expectedEncoding, got.ReadEncoding())
 			}
-
 		})
 	}
 }
