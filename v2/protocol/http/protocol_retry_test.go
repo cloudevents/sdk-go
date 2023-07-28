@@ -14,6 +14,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap/zaptest"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
 	cecontext "github.com/cloudevents/sdk-go/v2/context"
@@ -192,6 +193,7 @@ func TestRequestWithRetries_linear(t *testing.T) {
 			}
 
 			ctx := cecontext.WithTarget(context.Background(), srv.URL)
+			ctx = cecontext.WithLogger(ctx, zaptest.NewLogger(t).Sugar())
 			ctxWithRetries := cecontext.WithRetriesLinearBackoff(ctx, tc.delay, tc.retries)
 
 			dummyMsg := binding.ToMessage(&tc.event)
