@@ -17,6 +17,7 @@ import (
 
 	mqtt_paho "github.com/cloudevents/sdk-go/protocol/mqtt_paho/v2"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
+	cecontext "github.com/cloudevents/sdk-go/v2/context"
 	"github.com/cloudevents/sdk-go/v2/event"
 	"github.com/cloudevents/sdk-go/v2/test"
 )
@@ -37,7 +38,7 @@ func TestSendEvent(t *testing.T) {
 		eventChan := make(chan receiveEvent)
 		defer close(eventChan)
 		go func() {
-			client, err := cloudevents.NewClient(protocolFactory(t, topicName))
+			client, err := cloudevents.NewClient(protocolFactory(ctx, t, topicName))
 			if err != nil {
 				eventChan <- receiveEvent{err: err}
 				return
@@ -51,8 +52,8 @@ func TestSendEvent(t *testing.T) {
 			}
 		}()
 
-		// start a cloudevents sender client go to send the event
-		client, err := cloudevents.NewClient(protocolFactory(t, topicName))
+		// start a cloudevents sender client go to send the event, set the topic on context
+		client, err := cloudevents.NewClient(protocolFactory(ctx, t, ""))
 		require.NoError(t, err)
 
 		timer := time.NewTimer(5 * time.Millisecond)
@@ -67,7 +68,10 @@ func TestSendEvent(t *testing.T) {
 				test.AssertEventEquals(t, inEvent, test.ConvertEventExtensionsToString(t, eventOut.event))
 				return
 			case <-timer.C:
-				result := client.Send(ctx, inEvent)
+				result := client.Send(
+					cecontext.WithTopic(ctx, topicName),
+					inEvent,
+				)
 				require.NoError(t, result)
 				// the receiver mightn't be ready before the sender send the message, so wait and we retry
 				continue
@@ -79,20 +83,27 @@ func TestSendEvent(t *testing.T) {
 // To start a local environment for testing:
 // docker run -it --rm --name mosquitto -p 1883:1883 eclipse-mosquitto:2.0 mosquitto -c /mosquitto-no-auth.conf
 // the protocolFactory will generate a unique connection clientId when it be invoked
-func protocolFactory(t testing.TB, topicName string) *mqtt_paho.Protocol {
-	ctx := context.Background()
-
+func protocolFactory(ctx context.Context, t testing.TB, topicName string) *mqtt_paho.Protocol {
 	broker := "127.0.0.1:1883"
 	conn, err := net.Dial("tcp", broker)
 	require.NoError(t, err)
-	clientConfig := &paho.ClientConfig{
+	config := &paho.ClientConfig{
 		Conn: conn,
 	}
-	cp := &paho.Connect{
+	connOpt := &paho.Connect{
 		KeepAlive:  30,
 		CleanStart: true,
 	}
-	p, err := mqtt_paho.New(ctx, clientConfig, cp, topicName, []string{topicName}, 0, false)
+	publishOpt := &paho.Publish{
+		Topic: topicName, QoS: 0,
+	}
+	subscribeOpt := &paho.Subscribe{
+		Subscriptions: map[string]paho.SubscribeOptions{
+			topicName: {QoS: 0},
+		},
+	}
+
+	p, err := mqtt_paho.New(ctx, config, mqtt_paho.WithConnect(connOpt), mqtt_paho.WithPublish(publishOpt), mqtt_paho.WithSubscribe(subscribeOpt))
 	require.NoError(t, err)
 
 	return p

@@ -15,7 +15,7 @@ import (
 	"github.com/eclipse/paho.golang/paho"
 	"github.com/google/uuid"
 
-	cemqtt "github.com/cloudevents/sdk-go/protocol/mqtt_paho/v2"
+	mqtt_paho "github.com/cloudevents/sdk-go/protocol/mqtt_paho/v2"
 	cecontext "github.com/cloudevents/sdk-go/v2/context"
 )
 
@@ -29,18 +29,19 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to connect to mqtt broker: %s", err.Error())
 	}
-	clientConfig := &paho.ClientConfig{
+	config := &paho.ClientConfig{
 		ClientID: "sender-client-id",
 		Conn:     conn,
 	}
-	cp := &paho.Connect{
+	// optional connect option
+	connOpt := &paho.Connect{
 		KeepAlive:  30,
 		CleanStart: true,
 	}
 	// set a default topic with test-topic1
-	p, err := cemqtt.New(ctx, clientConfig, cp, "test-topic1", nil, 0, false)
+	p, err := mqtt_paho.New(ctx, config, mqtt_paho.WithPublish(&paho.Publish{Topic: "test-topic1"}), mqtt_paho.WithConnect(connOpt))
 	if err != nil {
-		log.Fatalf("failed to create protocol: %s", err.Error())
+		log.Fatalf("failed to create protocol: %v", err)
 	}
 	defer p.Close(ctx)
 
