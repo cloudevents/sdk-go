@@ -136,3 +136,31 @@ func TestWith_Defaulters(t *testing.T) {
 		})
 	}
 }
+
+func TestWithAckMalformedEvent(t *testing.T) {
+	testCases := []struct {
+		name     string
+		opts     []Option
+		expected bool
+	}{
+		{
+			name: "unset",
+		},
+		{
+			name:     "set",
+			opts:     []Option{WithAckMalformedEvent()},
+			expected: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			client := &ceClient{}
+			client.applyOptions(tc.opts...)
+
+			if client.ackMalformedEvent != tc.expected {
+				t.Errorf("unexpected ackMalformedEvent; want: %t; got: %t", tc.expected, client.ackMalformedEvent)
+			}
+		})
+	}
+}
