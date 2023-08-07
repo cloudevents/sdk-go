@@ -8,7 +8,7 @@ package kafka_sarama
 import (
 	"context"
 
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
 )

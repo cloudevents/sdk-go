@@ -8,7 +8,7 @@ package kafka_sarama_test
 import (
 	"testing"
 
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2"

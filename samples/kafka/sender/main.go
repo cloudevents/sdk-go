@@ -9,7 +9,7 @@ import (
 	"context"
 	"log"
 
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 	"github.com/google/uuid"
 
 	"github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2"

@@ -15,7 +15,7 @@ import (
 	"github.com/cloudevents/sdk-go/v2/binding/format"
 	"github.com/cloudevents/sdk-go/v2/binding/spec"
 
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 )
 
 const (
