@@ -18,7 +18,7 @@ replace github.com/cloudevents/sdk-go/protocol/mqtt_paho/v2 => ../../protocol/mq
 
 require (
 	github.com/Azure/go-amqp v0.17.0
-	github.com/Shopify/sarama v1.38.1
+	github.com/IBM/sarama v1.40.1
 	github.com/cloudevents/sdk-go/protocol/amqp/v2 v2.5.0
 	github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.5.0
 	github.com/cloudevents/sdk-go/protocol/mqtt_paho/v2 v2.0.0-00010101000000-000000000000
@@ -30,7 +30,7 @@ require (
 	github.com/google/uuid v1.1.1
 	github.com/nats-io/nats.go v1.13.1-0.20220308171302-2f2f6968e98d
 	github.com/nats-io/stan.go v0.10.2
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.4
 	go.uber.org/atomic v1.4.0
 )
 
@@ -55,7 +55,7 @@ require (
 	github.com/jcmturner/gokrb5/v8 v8.4.3 // indirect
 	github.com/jcmturner/rpc/v2 v2.0.3 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/compress v1.15.14 // indirect
+	github.com/klauspost/compress v1.16.6 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
 	github.com/minio/highwayhash v1.0.2 // indirect
@@ -71,9 +71,9 @@ require (
 	go.etcd.io/bbolt v1.3.6 // indirect
 	go.uber.org/multierr v1.1.0 // indirect
 	go.uber.org/zap v1.10.0 // indirect
-	golang.org/x/crypto v0.1.0 // indirect
-	golang.org/x/net v0.7.0 // indirect
-	golang.org/x/sync v0.1.0 // indirect
+	golang.org/x/crypto v0.11.0 // indirect
+	golang.org/x/net v0.12.0 // indirect
+	golang.org/x/sync v0.3.0 // indirect
 	golang.org/x/time v0.0.0-20211116232009-f0f3c7e86c11 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

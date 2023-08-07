@@ -10,7 +10,7 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
 	cecontext "github.com/cloudevents/sdk-go/v2/context"

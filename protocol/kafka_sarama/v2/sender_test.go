@@ -10,7 +10,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cloudevents/sdk-go/v2/test"
