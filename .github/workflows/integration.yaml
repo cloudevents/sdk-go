@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         # Only test one go version: the integration tests don't seem to pass if NATS runs more one running at a time.
-        go-version: [1.17.x]
+        go-version: [1.20.x]
         platform: [ubuntu-latest]
 
     runs-on: ${{ matrix.platform }}
@@ -54,7 +54,7 @@ jobs:
             }
         ports:
           - 5672:5672
-      
+
       mqtt:
         image: eclipse-mosquitto:1.6
         ports:
@@ -69,8 +69,9 @@ jobs:
         with:
           go-version: ${{ matrix.go-version }}
           cache-dependency-path: v2/go.sum
+          check-latest: true
         id: go
-        
+
       - name: Test
         run: ./hack/integration-test.sh
 
