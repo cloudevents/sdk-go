@@ -22,7 +22,6 @@ jobs:
           go-version: '1.20'
           cache-dependency-path: v2/go.sum
           check-latest: true
-        id: go
 
       - id: golangci_configuration
         uses: andstor/file-existence-action@v2
@@ -35,4 +34,3 @@ jobs:
         with:
           version: v1.54
           working-directory: v2
-

@@ -70,8 +70,6 @@ jobs:
           go-version: ${{ matrix.go-version }}
           cache-dependency-path: v2/go.sum
           check-latest: true
-        id: go
 
       - name: Test
         run: ./hack/integration-test.sh
-

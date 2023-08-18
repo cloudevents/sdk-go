@@ -12,8 +12,14 @@ jobs:
     name: CloudEvents
     strategy:
       matrix:
-        go-version: [1.20.x]
-        platform: [ubuntu-latest]
+        go-version:
+          - '1.17'
+          - '1.18'
+          - '1.19'
+          - '1.20'
+          - '1.21'
+        platform:
+          - ubuntu-latest
 
     runs-on: ${{ matrix.platform }}
 
@@ -27,7 +33,6 @@ jobs:
           go-version: ${{ matrix.go-version }}
           cache-dependency-path: v2/go.sum
           check-latest: true
-        id: go
 
       - name: Update git submodule
         run: git submodule sync && git submodule update --init
