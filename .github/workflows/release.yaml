@@ -33,7 +33,7 @@ jobs:
     needs: semver
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Create Release ${{ needs.semver.outputs.next }}
         uses: actions/create-release@v1
@@ -54,7 +54,7 @@ jobs:
       VERSION: ${{ needs.semver.outputs.next }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Go 1.17.x
         uses: actions/setup-go@v4
@@ -94,7 +94,7 @@ jobs:
           cache-dependency-path: v2/go.sum
 
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - run: git pull
 
       - name: Update Examples
