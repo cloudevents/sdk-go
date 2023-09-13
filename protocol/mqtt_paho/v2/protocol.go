@@ -90,6 +90,7 @@ func (p *Protocol) Send(ctx context.Context, m binding.Message, transformers ...
 	defer m.Finish(err)
 
 	msg := p.publishOption
+	msg.Properties.User = make(paho.UserProperties, 0)
 	if cecontext.TopicFrom(ctx) != "" {
 		msg.Topic = cecontext.TopicFrom(ctx)
 		cecontext.WithTopic(ctx, "")
