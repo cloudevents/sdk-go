@@ -58,10 +58,10 @@ func (b *pubMessageWriter) SetStructuredEvent(ctx context.Context, f format.Form
 
 func (b *pubMessageWriter) Start(ctx context.Context) error {
 	if b.Properties == nil {
-		b.Properties = &paho.PublishProperties{
-			User: make([]paho.UserProperty, 0),
-		}
+		b.Properties = &paho.PublishProperties{}
 	}
+	// the UserProperties of publish message is used to load event extensions
+	b.Properties.User = make([]paho.UserProperty, 0)
 	return nil
 }
 
