@@ -8,7 +8,7 @@ import "google/protobuf/any.proto";
 import "google/protobuf/timestamp.proto";
 
 // CloudEvent is copied from
-// https://github.com/cloudevents/spec/blob/master/protobuf-format.md.
+// https://github.com/cloudevents/spec/blob/main/cloudevents/formats/protobuf-format.md.
 message CloudEvent {
   // Unique event identifier.
   string id = 1;
