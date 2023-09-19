@@ -56,13 +56,13 @@ support the following:
 
 ## Personas
 
-- [Producer](https://github.com/cloudevents/spec/blob/master/spec.md#producer),
+- [Producer](https://github.com/cloudevents/spec/blob/main/cloudevents/spec.md#producer),
   the "producer" is a specific instance, process or device that creates the data
   structure describing the CloudEvent.
-- [Consumer](https://github.com/cloudevents/spec/blob/master/spec.md#consumer),
+- [Consumer](https://github.com/cloudevents/spec/blob/main/cloudevents/spec.md#consumer),
   a "consumer" receives the event and acts upon it. It uses the context and data
   to execute some logic, which might lead to the occurrence of new events.
-- [Intermediary](https://github.com/cloudevents/spec/blob/master/spec.md#intermediary),
+- [Intermediary](https://github.com/cloudevents/spec/blob/main/cloudevents/spec.md#intermediary),
   An "intermediary" receives a message containing an event for the purpose of
   forwarding it to the next receiver, which might be another intermediary or a
   Consumer. A typical task for an intermediary is to route the event to

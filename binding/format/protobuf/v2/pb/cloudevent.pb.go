@@ -23,7 +23,7 @@ const (
 )
 
 // CloudEvent is copied from
-// https://github.com/cloudevents/spec/blob/master/protobuf-format.md.
+// https://github.com/cloudevents/spec/blob/main/cloudevents/formats/protobuf-format.md.
 type CloudEvent struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
