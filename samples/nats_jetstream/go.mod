@@ -1,6 +1,6 @@
 module github.com/cloudevents/sdk-go/samples/nats_jetstream
 
-go 1.17
+go 1.18
 
 require (
 	github.com/cloudevents/sdk-go/protocol/nats_jetstream/v2 v2.5.0

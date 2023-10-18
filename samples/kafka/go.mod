@@ -1,6 +1,6 @@
 module github.com/cloudevents/sdk-go/samples/kafka
 
-go 1.17
+go 1.18
 
 require (
 	github.com/IBM/sarama v1.40.1

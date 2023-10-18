@@ -1,6 +1,6 @@
 module github.com/cloudevents/sdk-go/observability/opencensus/v2
 
-go 1.17
+go 1.18
 
 require (
 	github.com/cloudevents/sdk-go/v2 v2.5.0
