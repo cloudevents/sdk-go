@@ -1,6 +1,6 @@
 module github.com/cloudevents/sdk-go/samples/amqp
 
-go 1.17
+go 1.18
 
 require (
 	github.com/Azure/go-amqp v0.17.0
