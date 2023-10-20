@@ -23,6 +23,7 @@ import (
 	"github.com/cloudevents/sdk-go/v2/extensions"
 	"github.com/cloudevents/sdk-go/v2/protocol"
 	"github.com/cloudevents/sdk-go/v2/protocol/http"
+	"github.com/cloudevents/sdk-go/v2/test"
 )
 
 var (
@@ -385,7 +386,7 @@ func TestRecordReceivedMalformedEvent(t *testing.T) {
 			os := otelObs.NewOTelObservabilityService()
 
 			// act
-			os.RecordReceivedMalformedEvent(ctx, tc.expectedResult)
+			os.RecordReceivedMalformedEvent(ctx, test.FullMessage(), tc.expectedResult)
 
 			spans := sr.Ended()
 

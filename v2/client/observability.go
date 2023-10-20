@@ -18,7 +18,7 @@ type ObservabilityService interface {
 	InboundContextDecorators() []func(context.Context, binding.Message) context.Context
 
 	// RecordReceivedMalformedEvent is invoked when an event was received but it's malformed or invalid.
-	RecordReceivedMalformedEvent(ctx context.Context, err error)
+	RecordReceivedMalformedEvent(ctx context.Context, m binding.Message, err error)
 	// RecordCallingInvoker is invoked before the user function is invoked.
 	// The returned callback will be invoked after the user finishes to process the event with the eventual processing error
 	// The error provided to the callback could be both a processing error, or a result
@@ -39,7 +39,8 @@ func (n noopObservabilityService) InboundContextDecorators() []func(context.Cont
 	return nil
 }
 
-func (n noopObservabilityService) RecordReceivedMalformedEvent(ctx context.Context, err error) {}
+func (n noopObservabilityService) RecordReceivedMalformedEvent(ctx context.Context, m binding.Message, err error) {
+}
 
 func (n noopObservabilityService) RecordCallingInvoker(ctx context.Context, event *event.Event) (context.Context, func(errOrResult error)) {
 	return ctx, func(errOrResult error) {}

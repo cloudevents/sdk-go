@@ -355,7 +355,7 @@ func (n fakeObservabilityServiceWithError) InboundContextDecorators() []func(con
 	return nil
 }
 
-func (n fakeObservabilityServiceWithError) RecordReceivedMalformedEvent(ctx context.Context, err error) {
+func (n fakeObservabilityServiceWithError) RecordReceivedMalformedEvent(ctx context.Context, m binding.Message, err error) {
 }
 
 func (n fakeObservabilityServiceWithError) RecordCallingInvoker(ctx context.Context, event *event.Event) (context.Context, func(errOrResult error)) {
