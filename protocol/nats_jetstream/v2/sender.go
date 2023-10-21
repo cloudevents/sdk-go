@@ -91,10 +91,18 @@ func (s *Sender) Send(ctx context.Context, in binding.Message, transformers ...b
 	}()
 
 	writer := new(bytes.Buffer)
-	if err = WriteMsg(ctx, in, writer, transformers...); err != nil {
+	header, err := WriteMsg(ctx, in, writer, transformers...)
+	if err != nil {
 		return err
 	}
-	_, err = s.Jsm.Publish(s.Subject, writer.Bytes())
+
+	natsMsg := &nats.Msg{
+		Subject: s.Subject,
+		Data:    writer.Bytes(),
+		Header:  header,
+	}
+
+	_, err = s.Jsm.PublishMsg(natsMsg)
 
 	return err
 }
