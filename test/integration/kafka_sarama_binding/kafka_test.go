@@ -10,6 +10,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/IBM/sarama"
 	"github.com/google/uuid"
@@ -100,6 +101,10 @@ func testSenderReceiver(t testing.TB) (func(), bindings.Sender, bindings.Receive
 	go func() {
 		require.NoError(t, p.OpenInbound(context.TODO()))
 	}()
+
+	// Not perfect but we need to give OpenInbound() as chance to start
+	// as it's a race condition. I couldn't find something on 'p' to wait for
+	time.Sleep(5 * time.Second)
 
 	return func() {
 		require.NoError(t, p.Close(context.TODO()))
