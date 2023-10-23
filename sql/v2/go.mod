@@ -1,6 +1,6 @@
 module github.com/cloudevents/sdk-go/sql/v2
 
-go 1.17
+go 1.18
 
 require (
 	github.com/antlr/antlr4/runtime/Go/antlr v1.4.10

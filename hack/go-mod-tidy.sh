@@ -10,6 +10,6 @@ set -o pipefail
 for gomodule in $(find . | grep "go\.mod" | awk '{gsub(/\/go.mod/,""); print $0}' | grep -v "./test" | grep -v "./conformance")
 do
   pushd $gomodule
-  go mod tidy -compat=1.17
+  go mod tidy -compat=1.18
   popd
 done

@@ -1,6 +1,6 @@
 module github.com/cloudevents/sdk-go/samples/stan
 
-go 1.17
+go 1.18
 
 require (
 	github.com/cloudevents/sdk-go/protocol/stan/v2 v2.5.0

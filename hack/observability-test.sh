@@ -26,6 +26,6 @@ done
 rm coverage.tmp
 
 # Remove test only deps.
-go mod tidy -compat=1.17
+go mod tidy -compat=1.18
 
 popd

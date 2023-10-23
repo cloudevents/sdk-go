@@ -7,7 +7,6 @@ package http
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"testing"
 
@@ -92,7 +91,7 @@ func Test_IsUndelivered(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			got := protocol.IsUndelivered(tc.result)
 			if got != tc.want {
-				t.Error(fmt.Sprintf("%v, expected result to be IsUndelivered == %t, got %t", tc.name, tc.want, got))
+				t.Errorf("%v, expected result to be IsUndelivered == %t, got %t", tc.name, tc.want, got)
 			}
 		})
 	}
