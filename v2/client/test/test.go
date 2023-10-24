@@ -31,7 +31,7 @@ func SendReceive(t *testing.T, protocolFactory func() interface{}, in event.Even
 	wg.Add(2)
 
 	// Give time for Kafka client protocol to get setup
-	time.Sleep(5 * time.Second)
+	time.Sleep(2 * time.Second)
 
 	go func() {
 		ctx, cancel := context.WithCancel(context.TODO())
@@ -54,7 +54,7 @@ func SendReceive(t *testing.T, protocolFactory func() interface{}, in event.Even
 	}()
 
 	// Give time for the receiever to start
-	time.Sleep(5 * time.Second)
+	time.Sleep(2 * time.Second)
 
 	go func() {
 		defer wg.Done()
