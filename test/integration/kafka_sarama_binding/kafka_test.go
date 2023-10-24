@@ -104,7 +104,7 @@ func testSenderReceiver(t testing.TB) (func(), bindings.Sender, bindings.Receive
 
 	// Not perfect but we need to give OpenInbound() as chance to start
 	// as it's a race condition. I couldn't find something on 'p' to wait for
-	time.Sleep(15 * time.Second)
+	time.Sleep(6 * time.Second)
 
 	return func() {
 		require.NoError(t, p.Close(context.TODO()))
