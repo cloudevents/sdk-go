@@ -12,7 +12,7 @@ require (
 	golang.org/x/sync v0.1.0
 	google.golang.org/api v0.114.0
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1
-	google.golang.org/grpc v1.56.1
+	google.golang.org/grpc v1.56.3
 )
 
 require (
