@@ -110,7 +110,9 @@ func (t *Protocol) Send(ctx context.Context, in binding.Message, transformers ..
 
 	conn := t.getOrCreateConnection(ctx, topic, "", "")
 
-	msg := &pubsub.Message{}
+	msg := &pubsub.Message{
+		Attributes: AttributesFrom(ctx),
+	}
 
 	if key, ok := ctx.Value(withOrderingKey{}).(string); ok {
 		if !t.MessageOrdering {
