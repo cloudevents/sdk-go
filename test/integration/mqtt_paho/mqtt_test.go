@@ -37,12 +37,18 @@ func TestSendEvent(t *testing.T) {
 		// start a cloudevents receiver client go to receive the event
 		eventChan := make(chan receiveEvent)
 		defer close(eventChan)
+
+		// Used to try to make sure the receiver is ready before we start to
+		// send events
+		wait := make(chan bool)
+
 		go func() {
 			client, err := cloudevents.NewClient(protocolFactory(ctx, t, topicName))
 			if err != nil {
 				eventChan <- receiveEvent{err: err}
 				return
 			}
+			wait <- true
 			err = client.StartReceiver(ctx, func(event cloudevents.Event) {
 				eventChan <- receiveEvent{event: event}
 			})
@@ -51,6 +57,11 @@ func TestSendEvent(t *testing.T) {
 				return
 			}
 		}()
+
+		// Wait until receiver thread starts, and then wait a second to
+		// give the "StartReceive" call a chance to start (finger's crossed)
+		<-wait
+		time.Sleep(time.Second)
 
 		// start a cloudevents sender client go to send the event, set the topic on context
 		client, err := cloudevents.NewClient(protocolFactory(ctx, t, ""))

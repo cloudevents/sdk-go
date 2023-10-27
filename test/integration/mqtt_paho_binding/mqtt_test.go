@@ -106,13 +106,25 @@ func startReceiver(ctx context.Context, topicName string, messageChan chan recei
 	if err != nil {
 		messageChan <- receiveMessage{err: err}
 	}
+
+	// Used to try to make sure the receiver is ready before we start to
+	// get events
+	wait := make(chan bool)
+
 	go func() {
+		wait <- true
 		err := receiver.OpenInbound(ctx)
 		if err != nil {
 			messageChan <- receiveMessage{err: err}
 		}
 		receiver.Close(ctx)
 	}()
+
+	// Wait for other thread to start and run OpenInbound + sleep a sec
+	// hoping that things will get ready before we call Receive() below
+	<-wait
+	time.Sleep(time.Second)
+
 	go func() {
 		msg, result := receiver.Receive(ctx)
 		messageChan <- receiveMessage{msg, result}

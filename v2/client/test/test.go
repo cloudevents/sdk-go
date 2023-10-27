@@ -25,13 +25,20 @@ import (
 func SendReceive(t *testing.T, protocolFactory func() interface{}, in event.Event, outAssert func(e event.Event), opts ...client.Option) {
 	t.Helper()
 	pf := protocolFactory()
-	c, err := client.New(pf, opts...)
+
+	// Create a sender and receiver client since we can't assume it's safe
+	// to use the same one for both roles
+
+	sender, err := client.New(pf, opts...)
 	require.NoError(t, err)
+
+	receiver, err := client.New(pf, opts...)
+	require.NoError(t, err)
+
 	wg := sync.WaitGroup{}
 	wg.Add(2)
 
-	// Give time for Kafka client protocol to get setup
-	time.Sleep(2 * time.Second)
+	receiverReady := make(chan bool)
 
 	go func() {
 		ctx, cancel := context.WithCancel(context.TODO())
@@ -42,7 +49,8 @@ func SendReceive(t *testing.T, protocolFactory func() interface{}, in event.Even
 			wg.Done()
 		}(inCh)
 		go func(channel chan event.Event) {
-			err := c.StartReceiver(ctx, func(e event.Event) {
+			receiverReady <- true
+			err := receiver.StartReceiver(ctx, func(e event.Event) {
 				channel <- e
 			})
 			if err != nil {
@@ -53,12 +61,14 @@ func SendReceive(t *testing.T, protocolFactory func() interface{}, in event.Even
 		outAssert(e)
 	}()
 
-	// Give time for the receiever to start
+	// Wait for receiver to be setup. Not 100% perefect but the channel + the
+	// sleep should do it
+	<-receiverReady
 	time.Sleep(2 * time.Second)
 
 	go func() {
 		defer wg.Done()
-		err := c.Send(context.Background(), in)
+		err := sender.Send(context.Background(), in)
 		require.NoError(t, err)
 	}()
 

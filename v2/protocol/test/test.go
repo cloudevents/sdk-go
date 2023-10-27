@@ -25,8 +25,13 @@ func SendReceive(t *testing.T, ctx context.Context, in binding.Message, s protoc
 	wg := sync.WaitGroup{}
 	wg.Add(2)
 
+	// Used to try to make sure the receiver is ready before we start to
+	// send events
+	wait := make(chan bool)
+
 	go func() {
 		defer wg.Done()
+		wait <- true
 		out, result := r.Receive(ctx)
 		if !protocol.IsACK(result) {
 			require.NoError(t, result)
@@ -35,6 +40,11 @@ func SendReceive(t *testing.T, ctx context.Context, in binding.Message, s protoc
 		finishErr := out.Finish(nil)
 		require.NoError(t, finishErr)
 	}()
+
+	// Wait until receiver thread starts, and then wait a second to
+	// give the "Receive" call a chance to start (finger's crossed)
+	<-wait
+	time.Sleep(time.Second)
 
 	go func() {
 		defer wg.Done()
