@@ -25,8 +25,9 @@ func SendReceive(t *testing.T, ctx context.Context, in binding.Message, s protoc
 	wg := sync.WaitGroup{}
 	wg.Add(2)
 
-	// Used to try to make sure the receiver is ready before we start to
-	// send events
+	// 'wait' is used to ensure that we at least wait until the Receiver
+	// thread starts. We'll then use a 'sleep' (hoping) that waits until
+	// the Receiver itself is ready
 	wait := make(chan bool)
 
 	go func() {
