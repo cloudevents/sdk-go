@@ -120,13 +120,14 @@ func (m *Message) GetExtension(name string) interface{} {
 }
 
 // Finish marks the message to be forgotten.
-// If err is nil, the underlying Psubsub message will be acked;
-// otherwise nacked.
+// If err is nil, the underlying Pubsub message will be acked;
+// otherwise nacked and return the error.
 func (m *Message) Finish(err error) error {
 	if err != nil {
 		m.internal.Nack()
-	} else {
-		m.internal.Ack()
+		return err
 	}
+
+	m.internal.Ack()
 	return nil
 }
