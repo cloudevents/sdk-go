@@ -27,8 +27,11 @@ func main() {
 		Conn:     conn,
 	}
 	subscribeOpt := &paho.Subscribe{
-		Subscriptions: map[string]paho.SubscribeOptions{
-			"test-topic": {QoS: 0},
+		Subscriptions: []paho.SubscribeOptions{
+			{
+				Topic: "test-topic",
+				QoS:   0,
+			},
 		},
 	}
 	p, err := mqtt_paho.New(ctx, config, mqtt_paho.WithSubscribe(subscribeOpt))
