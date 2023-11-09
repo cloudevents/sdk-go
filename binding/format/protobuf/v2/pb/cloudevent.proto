@@ -4,6 +4,7 @@ package io.cloudevents.v1;
 
 option go_package = "github.com/cloudevents/sdk-go/binding/format/protobuf/v2/pb";
 
+import "google/protobuf/empty.proto";
 import "google/protobuf/any.proto";
 import "google/protobuf/timestamp.proto";
 
@@ -57,5 +58,19 @@ message CloudEventAttributeValue {
     string ce_uri_ref = 6;
     // Timestamp value.
     google.protobuf.Timestamp ce_timestamp = 7;
+  }
+}
+
+message Subscription {
+  // Required. The subscription from which messages should be pulled.
+  // Format is `myhome/groundfloor/livingroom/temperature`.
+  string subscription = 1;
+}
+
+service CloudEventService {
+  rpc Publish(CloudEvent) returns (google.protobuf.Empty) {
+  }
+
+  rpc Subscribe(Subscription) returns (stream CloudEvent) {
   }
 }
