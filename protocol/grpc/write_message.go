@@ -93,7 +93,6 @@ func (b *pbEventWriter) SetData(reader io.Reader) error {
 }
 
 func (b *pbEventWriter) SetAttribute(attribute spec.Attribute, value interface{}) error {
-	fmt.Printf("setting attribute: %s, value: %v\n", attribute.Name(), value)
 	switch attribute.Kind() {
 	case spec.SpecVersion:
 		val, ok := value.(string)
@@ -158,7 +157,6 @@ func (b *pbEventWriter) SetAttribute(attribute spec.Attribute, value interface{}
 }
 
 func (b *pbEventWriter) SetExtension(name string, value interface{}) (err error) {
-	fmt.Printf("setting extension: %s, value: %v\n", name, value)
 	if value == nil {
 		delete(b.Attributes, prefix+name)
 	}

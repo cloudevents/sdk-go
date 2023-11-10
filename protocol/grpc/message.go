@@ -62,20 +62,16 @@ func NewMessage(msg *pb.CloudEvent) *Message {
 
 func (m *Message) ReadEncoding() binding.Encoding {
 	if m.version != nil {
-		fmt.Printf("reading encoding: %v\n", binding.EncodingBinary)
 		return binding.EncodingBinary
 	}
 	if m.format != nil {
-		fmt.Printf("reading encoding: %v\n", binding.EncodingStructured)
 		return binding.EncodingStructured
 	}
 
-	fmt.Printf("reading encoding: %v\n", binding.EncodingUnknown)
 	return binding.EncodingUnknown
 }
 
 func (m *Message) ReadStructured(ctx context.Context, encoder binding.StructuredWriter) error {
-	fmt.Printf("reading structured event...\n")
 	if m.version != nil {
 		return binding.ErrNotStructured
 	}
@@ -83,12 +79,10 @@ func (m *Message) ReadStructured(ctx context.Context, encoder binding.Structured
 		return binding.ErrNotStructured
 	}
 
-	fmt.Printf("read structured event: %v\n", m.internal.GetBinaryData())
 	return encoder.SetStructuredEvent(ctx, m.format, bytes.NewReader(m.internal.GetBinaryData()))
 }
 
 func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) error {
-	fmt.Printf("reading binary event...\n")
 	if m.format != nil {
 		return binding.ErrNotBinary
 	}
@@ -96,28 +90,24 @@ func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) 
 	if m.internal.SpecVersion == "" {
 		err := encoder.SetAttribute(m.version.AttributeFromKind(spec.SpecVersion), m.internal.SpecVersion)
 		if err != nil {
-			fmt.Printf("failed to set attribute: %v\n", err)
 			return err
 		}
 	}
 	if m.internal.Id != "" {
 		err := encoder.SetAttribute(m.version.AttributeFromKind(spec.ID), m.internal.Id)
 		if err != nil {
-			fmt.Printf("failed to set attribute: %v\n", err)
 			return err
 		}
 	}
 	if m.internal.Source != "" {
 		err := encoder.SetAttribute(m.version.AttributeFromKind(spec.Source), m.internal.Source)
 		if err != nil {
-			fmt.Printf("failed to set attribute: %v\n", err)
 			return err
 		}
 	}
 	if m.internal.Type != "" {
 		err := encoder.SetAttribute(m.version.AttributeFromKind(spec.Type), m.internal.Type)
 		if err != nil {
-			fmt.Printf("failed to set attribute: %v\n", err)
 			return err
 		}
 	}
@@ -135,21 +125,18 @@ func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) 
 				case spec.DataContentType, spec.DataSchema, spec.Subject, spec.Time:
 					err = encoder.SetAttribute(attr, v)
 					if err != nil {
-						fmt.Printf("failed to set attribute: %v\n", err)
 						return err
 					}
 				}
 			} else {
 				err = encoder.SetExtension(strings.TrimPrefix(name, prefix), v)
 				if err != nil {
-					fmt.Printf("failed to set extension: %v\n", err)
 					return err
 				}
 			}
 		} else if name == contenttype {
 			err = encoder.SetAttribute(m.version.AttributeFromKind(spec.DataContentType), v)
 			if err != nil {
-				fmt.Printf("failed to set content-type attribute: %v\n", err)
 				return err
 			}
 		}
@@ -168,7 +155,6 @@ func (m *Message) Finish(error) error {
 
 func (m *Message) GetAttribute(k spec.Kind) (spec.Attribute, interface{}) {
 	attr := m.version.AttributeFromKind(k)
-	fmt.Printf("getting attribute: %s\n", attr.Name())
 	if attr != nil {
 		switch attr.Kind() {
 		case spec.SpecVersion:
@@ -190,7 +176,6 @@ func (m *Message) GetAttribute(k spec.Kind) (spec.Attribute, interface{}) {
 }
 
 func (m *Message) GetExtension(name string) interface{} {
-	fmt.Printf("getting extension: %s\n", name)
 	return m.internal.Attributes[prefix+name]
 }
 
