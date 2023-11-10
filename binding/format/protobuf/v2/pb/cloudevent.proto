@@ -61,16 +61,23 @@ message CloudEventAttributeValue {
   }
 }
 
-message Subscription {
-  // Required. The subscription from which messages should be pulled.
+message PublishRequest {
+  // Required. The topic to which event should be published.
   // Format is `myhome/groundfloor/livingroom/temperature`.
-  string subscription = 1;
+  string topic = 1;
+  CloudEvent event = 2;
+}
+
+message SubscriptionRequest {
+  // Required. The topic from which event should be pulled.
+  // Format is `myhome/groundfloor/livingroom/temperature`.
+  string topic = 1;
 }
 
 service CloudEventService {
-  rpc Publish(CloudEvent) returns (google.protobuf.Empty) {
+  rpc Publish(PublishRequest) returns (google.protobuf.Empty) {
   }
 
-  rpc Subscribe(Subscription) returns (stream CloudEvent) {
+  rpc Subscribe(SubscriptionRequest) returns (stream CloudEvent) {
   }
 }

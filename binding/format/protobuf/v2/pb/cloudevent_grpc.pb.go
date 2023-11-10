@@ -28,8 +28,8 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CloudEventServiceClient interface {
-	Publish(ctx context.Context, in *CloudEvent, opts ...grpc.CallOption) (*empty.Empty, error)
-	Subscribe(ctx context.Context, in *Subscription, opts ...grpc.CallOption) (CloudEventService_SubscribeClient, error)
+	Publish(ctx context.Context, in *PublishRequest, opts ...grpc.CallOption) (*empty.Empty, error)
+	Subscribe(ctx context.Context, in *SubscriptionRequest, opts ...grpc.CallOption) (CloudEventService_SubscribeClient, error)
 }
 
 type cloudEventServiceClient struct {
@@ -40,7 +40,7 @@ func NewCloudEventServiceClient(cc grpc.ClientConnInterface) CloudEventServiceCl
 	return &cloudEventServiceClient{cc}
 }
 
-func (c *cloudEventServiceClient) Publish(ctx context.Context, in *CloudEvent, opts ...grpc.CallOption) (*empty.Empty, error) {
+func (c *cloudEventServiceClient) Publish(ctx context.Context, in *PublishRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
 	out := new(empty.Empty)
 	err := c.cc.Invoke(ctx, CloudEventService_Publish_FullMethodName, in, out, opts...)
 	if err != nil {
@@ -49,7 +49,7 @@ func (c *cloudEventServiceClient) Publish(ctx context.Context, in *CloudEvent, o
 	return out, nil
 }
 
-func (c *cloudEventServiceClient) Subscribe(ctx context.Context, in *Subscription, opts ...grpc.CallOption) (CloudEventService_SubscribeClient, error) {
+func (c *cloudEventServiceClient) Subscribe(ctx context.Context, in *SubscriptionRequest, opts ...grpc.CallOption) (CloudEventService_SubscribeClient, error) {
 	stream, err := c.cc.NewStream(ctx, &CloudEventService_ServiceDesc.Streams[0], CloudEventService_Subscribe_FullMethodName, opts...)
 	if err != nil {
 		return nil, err
@@ -85,8 +85,8 @@ func (x *cloudEventServiceSubscribeClient) Recv() (*CloudEvent, error) {
 // All implementations must embed UnimplementedCloudEventServiceServer
 // for forward compatibility
 type CloudEventServiceServer interface {
-	Publish(context.Context, *CloudEvent) (*empty.Empty, error)
-	Subscribe(*Subscription, CloudEventService_SubscribeServer) error
+	Publish(context.Context, *PublishRequest) (*empty.Empty, error)
+	Subscribe(*SubscriptionRequest, CloudEventService_SubscribeServer) error
 	mustEmbedUnimplementedCloudEventServiceServer()
 }
 
@@ -94,10 +94,10 @@ type CloudEventServiceServer interface {
 type UnimplementedCloudEventServiceServer struct {
 }
 
-func (UnimplementedCloudEventServiceServer) Publish(context.Context, *CloudEvent) (*empty.Empty, error) {
+func (UnimplementedCloudEventServiceServer) Publish(context.Context, *PublishRequest) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Publish not implemented")
 }
-func (UnimplementedCloudEventServiceServer) Subscribe(*Subscription, CloudEventService_SubscribeServer) error {
+func (UnimplementedCloudEventServiceServer) Subscribe(*SubscriptionRequest, CloudEventService_SubscribeServer) error {
 	return status.Errorf(codes.Unimplemented, "method Subscribe not implemented")
 }
 func (UnimplementedCloudEventServiceServer) mustEmbedUnimplementedCloudEventServiceServer() {}
@@ -114,7 +114,7 @@ func RegisterCloudEventServiceServer(s grpc.ServiceRegistrar, srv CloudEventServ
 }
 
 func _CloudEventService_Publish_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CloudEvent)
+	in := new(PublishRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -126,13 +126,13 @@ func _CloudEventService_Publish_Handler(srv interface{}, ctx context.Context, de
 		FullMethod: CloudEventService_Publish_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CloudEventServiceServer).Publish(ctx, req.(*CloudEvent))
+		return srv.(CloudEventServiceServer).Publish(ctx, req.(*PublishRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _CloudEventService_Subscribe_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(Subscription)
+	m := new(SubscriptionRequest)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}

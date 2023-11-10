@@ -48,6 +48,7 @@ func NewProtocol(clientConn grpc.ClientConnInterface, opts ...Option) (*Protocol
 		return nil, fmt.Errorf("the client connection must not be nil")
 	}
 
+	// TODO: support clientID and error handling in grpc connection
 	p := &Protocol{
 		client: pb.NewCloudEventServiceClient(clientConn),
 		// subClient:
@@ -72,6 +73,10 @@ func (p *Protocol) applyOptions(opts ...Option) error {
 }
 
 func (p *Protocol) Send(ctx context.Context, m binding.Message, transformers ...binding.Transformer) error {
+	if p.publishOption == nil {
+		return fmt.Errorf("the publish option must not be nil")
+	}
+
 	var err error
 	defer m.Finish(err)
 
@@ -81,7 +86,18 @@ func (p *Protocol) Send(ctx context.Context, m binding.Message, transformers ...
 		return err
 	}
 
-	_, err = p.client.Publish(ctx, msg)
+	topic := p.publishOption.Topic
+	if cecontext.TopicFrom(ctx) != "" {
+		topic = cecontext.TopicFrom(ctx)
+		cecontext.WithTopic(ctx, "")
+	}
+
+	logger := cecontext.LoggerFrom(ctx)
+	logger.Infof("publishing event to topic: %v", topic)
+	_, err = p.client.Publish(ctx, &pb.PublishRequest{
+		Topic: topic,
+		Event: msg,
+	})
 	if err != nil {
 		return err
 	}
@@ -93,32 +109,33 @@ func (p *Protocol) OpenInbound(ctx context.Context) error {
 		return fmt.Errorf("the subscribe option must not be nil")
 	}
 
-	if p.subscribeOption.Topic == "" {
-		return fmt.Errorf("the subscribe option topic must not be empty")
+	if len(p.subscribeOption.Topics) == 0 {
+		return fmt.Errorf("the subscribe option topics must not be empty")
 	}
 
 	p.openerMutex.Lock()
 	defer p.openerMutex.Unlock()
 
 	logger := cecontext.LoggerFrom(ctx)
-
-	logger.Infof("subscribing to topic: %v", p.subscribeOption.Topic)
-	subClient, err := p.client.Subscribe(ctx, &pb.Subscription{
-		Subscription: p.subscribeOption.Topic,
-	})
-	if err != nil {
-		return err
-	}
-
-	go func() {
-		for {
-			msg, err := subClient.Recv()
-			if err != nil {
-				return
-			}
-			p.incoming <- msg
+	for _, topic := range p.subscribeOption.Topics {
+		subClient, err := p.client.Subscribe(ctx, &pb.SubscriptionRequest{
+			Topic: topic,
+		})
+		if err != nil {
+			return err
 		}
-	}()
+
+		logger.Infof("subscribing to topic: %v", topic)
+		go func() {
+			for {
+				msg, err := subClient.Recv()
+				if err != nil {
+					return
+				}
+				p.incoming <- msg
+			}
+		}()
+	}
 
 	// Wait until external or internal context done
 	select {

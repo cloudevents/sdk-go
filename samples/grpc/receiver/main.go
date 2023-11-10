@@ -24,7 +24,7 @@ func main() {
 	}
 	defer conn.Close()
 
-	p, err := grpcprotocol.NewProtocol(conn, grpcprotocol.WithSubscribeOption(&grpcprotocol.SubscribeOption{Topic: "test-topic"}))
+	p, err := grpcprotocol.NewProtocol(conn, grpcprotocol.WithSubscribeOption(&grpcprotocol.SubscribeOption{Topics: []string{"test-topic"}}))
 	if err != nil {
 		log.Fatalf("failed to create protocol: %v", err)
 	}

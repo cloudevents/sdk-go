@@ -34,8 +34,8 @@ func newCloudEventServer() *cloudEventServer {
 	}
 }
 
-func (svr *cloudEventServer) Publish(_ context.Context, pbEvt *cepb.CloudEvent) (*emptypb.Empty, error) {
-	evt, err := cepbv2.FromProto(pbEvt)
+func (svr *cloudEventServer) Publish(_ context.Context, pubReq *cepb.PublishRequest) (*emptypb.Empty, error) {
+	evt, err := cepbv2.FromProto(pubReq.Event)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert protobuf to cloudevent: %v", err)
 	}
@@ -46,7 +46,7 @@ func (svr *cloudEventServer) Publish(_ context.Context, pbEvt *cepb.CloudEvent) 
 	return &emptypb.Empty{}, nil
 }
 
-func (svc *cloudEventServer) Subscribe(sub *cepb.Subscription, subServer cepb.CloudEventService_SubscribeServer) error {
+func (svc *cloudEventServer) Subscribe(subReq *cepb.SubscriptionRequest, subServer cepb.CloudEventService_SubscribeServer) error {
 	for evt := range svc.EventChan {
 		pbEvt, err := cepbv2.ToProto(evt)
 		if err != nil {

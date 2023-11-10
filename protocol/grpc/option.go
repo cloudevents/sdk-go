@@ -19,7 +19,7 @@ type PublishOption struct {
 
 // SubscribeOption
 type SubscribeOption struct {
-	Topic string
+	Topics []string
 }
 
 // WithPublishOption sets the Publish configuration for the client. This option is required if you want to send messages.
