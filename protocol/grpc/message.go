@@ -22,9 +22,9 @@ import (
 const (
 	prefix      = "ce-"
 	contenttype = "contenttype"
-	dataSchema  = "dataschema"
-	subject     = "subject"
-	time        = "time"
+	// dataSchema  = "dataschema"
+	subject = "subject"
+	time    = "time"
 )
 
 var specs = spec.WithPrefix(prefix)
@@ -72,9 +72,6 @@ func (m *Message) ReadEncoding() binding.Encoding {
 }
 
 func (m *Message) ReadStructured(ctx context.Context, encoder binding.StructuredWriter) error {
-	if m.version != nil {
-		return binding.ErrNotStructured
-	}
 	if m.format == nil {
 		return binding.ErrNotStructured
 	}
@@ -83,11 +80,15 @@ func (m *Message) ReadStructured(ctx context.Context, encoder binding.Structured
 }
 
 func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) error {
+	if m.version == nil {
+		return binding.ErrNotBinary
+	}
+
 	if m.format != nil {
 		return binding.ErrNotBinary
 	}
 
-	if m.internal.SpecVersion == "" {
+	if m.internal.SpecVersion != "" {
 		err := encoder.SetAttribute(m.version.AttributeFromKind(spec.SpecVersion), m.internal.SpecVersion)
 		if err != nil {
 			return err
@@ -113,7 +114,7 @@ func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) 
 	}
 
 	for name, value := range m.internal.Attributes {
-		v, err := valueFrom(value)
+		attrVal, err := valueFrom(value)
 		if err != nil {
 			return fmt.Errorf("failed to convert attribute %s: %s", name, err)
 		}
@@ -121,21 +122,18 @@ func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) 
 		if strings.HasPrefix(name, prefix) {
 			attr := m.version.Attribute(name)
 			if attr != nil {
-				switch attr.Kind() {
-				case spec.DataContentType, spec.DataSchema, spec.Subject, spec.Time:
-					err = encoder.SetAttribute(attr, v)
-					if err != nil {
-						return err
-					}
+				err = encoder.SetAttribute(attr, attrVal)
+				if err != nil {
+					return err
 				}
 			} else {
-				err = encoder.SetExtension(strings.TrimPrefix(name, prefix), v)
+				err = encoder.SetExtension(strings.TrimPrefix(name, prefix), attrVal)
 				if err != nil {
 					return err
 				}
 			}
 		} else if name == contenttype {
-			err = encoder.SetAttribute(m.version.AttributeFromKind(spec.DataContentType), v)
+			err = encoder.SetAttribute(m.version.AttributeFromKind(spec.DataContentType), attrVal)
 			if err != nil {
 				return err
 			}

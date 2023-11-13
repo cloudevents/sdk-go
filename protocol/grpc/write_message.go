@@ -19,9 +19,9 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-// WritePubMessage fills the provided pubMessage with the message m.
+// WritePBMessage fills the provided pubMessage with the message m.
 // Using context you can tweak the encoding processing (more details on binding.Write documentation).
-func WritePubMessage(ctx context.Context, m binding.Message, pbEvt *pb.CloudEvent, transformers ...binding.Transformer) error {
+func WritePBMessage(ctx context.Context, m binding.Message, pbEvt *pb.CloudEvent, transformers ...binding.Transformer) error {
 	structuredWriter := (*pbEventWriter)(pbEvt)
 	binaryWriter := (*pbEventWriter)(pbEvt)
 
@@ -100,70 +100,81 @@ func (b *pbEventWriter) SetAttribute(attribute spec.Attribute, value interface{}
 			return fmt.Errorf("invalid SpecVersion type, expected string got %T", value)
 		}
 		b.SpecVersion = val
-		return nil
 	case spec.ID:
 		val, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("invalid ID type, expected string got %T", value)
 		}
 		b.Id = val
-		return nil
 	case spec.Source:
 		val, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("invalid Source type, expected string got %T", value)
 		}
 		b.Source = val
-		return nil
 	case spec.Type:
 		val, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("invalid Type type, expected string got %T", value)
 		}
 		b.Type = val
-		return nil
 	case spec.DataContentType:
 		if value == nil {
 			delete(b.Attributes, contenttype)
+		} else {
+			attrVal, err := attributeFor(value)
+			if err != nil {
+				return err
+			}
+			b.Attributes[contenttype] = attrVal
 		}
-		b.Attributes[contenttype], _ = attributeFor(value)
-		return nil
-	case spec.DataSchema:
-		if value == nil {
-			delete(b.Attributes, prefix+dataSchema)
-		}
-		b.Attributes[prefix+dataSchema], _ = attributeFor(value)
-		return nil
 	case spec.Subject:
 		if value == nil {
 			delete(b.Attributes, prefix+subject)
+		} else {
+			attrVal, err := attributeFor(value)
+			if err != nil {
+				return err
+			}
+			b.Attributes[prefix+subject] = attrVal
 		}
-		b.Attributes[prefix+subject], _ = attributeFor(value)
-		return nil
 	case spec.Time:
 		if value == nil {
 			delete(b.Attributes, prefix+time)
+		} else {
+			attrVal, err := attributeFor(value)
+			if err != nil {
+				return err
+			}
+			b.Attributes[prefix+time] = attrVal
 		}
-		b.Attributes[prefix+time], _ = attributeFor(value)
-		return nil
 	default:
 		if value == nil {
 			delete(b.Attributes, prefix+attribute.Name())
+		} else {
+			attrVal, err := attributeFor(value)
+			if err != nil {
+				return err
+			}
+			b.Attributes[prefix+attribute.Name()] = attrVal
 		}
-		b.Attributes[prefix+attribute.Name()], _ = attributeFor(value)
 	}
 
 	return nil
 }
 
-func (b *pbEventWriter) SetExtension(name string, value interface{}) (err error) {
+func (b *pbEventWriter) SetExtension(name string, value interface{}) error {
 	if value == nil {
 		delete(b.Attributes, prefix+name)
+	} else {
+		attrVal, err := attributeFor(value)
+		if err != nil {
+			return err
+		}
+		b.Attributes[prefix+name] = attrVal
 	}
 
-	b.Attributes[prefix+name], err = attributeFor(value)
-
-	return
+	return nil
 }
 
 func attributeFor(v interface{}) (*pb.CloudEventAttributeValue, error) {

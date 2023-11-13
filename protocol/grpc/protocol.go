@@ -81,7 +81,7 @@ func (p *Protocol) Send(ctx context.Context, m binding.Message, transformers ...
 	defer m.Finish(err)
 
 	msg := &pb.CloudEvent{}
-	err = WritePubMessage(ctx, m, msg, transformers...)
+	err = WritePBMessage(ctx, m, msg, transformers...)
 	if err != nil {
 		return err
 	}
