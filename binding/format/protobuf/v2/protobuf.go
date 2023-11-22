@@ -88,7 +88,12 @@ func ToProto(e *event.Event) (*pb.CloudEvent, error) {
 		container.Attributes[datacontenttype], _ = attributeFor(e.DataContentType())
 	}
 	if e.DataSchema() != "" {
-		container.Attributes[dataschema], _ = attributeFor(e.DataSchema())
+		dataSchemaStr := e.DataSchema()
+		uri, err := url.Parse(dataSchemaStr)
+		if err != nil {
+			return nil, fmt.Errorf("failed to url.Parse %s: %s", dataSchemaStr, err)
+		}
+		container.Attributes[dataschema], _ = attributeFor(uri)
 	}
 	if e.Subject() != "" {
 		container.Attributes[subject], _ = attributeFor(e.Subject())
@@ -251,8 +256,8 @@ func FromProto(container *pb.CloudEvent) (*event.Event, error) {
 			vs, _ := v.(string)
 			e.SetDataContentType(vs)
 		case dataschema:
-			vs, _ := v.(string)
-			e.SetDataSchema(vs)
+			vs, _ := v.(types.URI)
+			e.SetDataSchema(vs.String())
 		case subject:
 			vs, _ := v.(string)
 			e.SetSubject(vs)

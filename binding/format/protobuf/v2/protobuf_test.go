@@ -109,6 +109,7 @@ func TestFromProto(t *testing.T) {
 			Type:        "some.type",
 			Attributes: map[string]*pb.CloudEventAttributeValue{
 				"datacontenttype": {Attr: &pb.CloudEventAttributeValue_CeString{CeString: "application/json"}},
+				"dataschema":      {Attr: &pb.CloudEventAttributeValue_CeUri{CeUri: "link"}},
 				"extra1":          {Attr: &pb.CloudEventAttributeValue_CeString{CeString: "extra1 value"}},
 				"extra2":          {Attr: &pb.CloudEventAttributeValue_CeInteger{CeInteger: 2}},
 				"extra3":          {Attr: &pb.CloudEventAttributeValue_CeBoolean{CeBoolean: true}},
@@ -124,6 +125,7 @@ func TestFromProto(t *testing.T) {
 			out.SetSource("/source")
 			out.SetType("some.type")
 			_ = out.SetData("application/json", map[string]interface{}{"unit": "test"})
+			out.SetDataSchema("link")
 			out.SetExtension("extra1", "extra1 value")
 			out.SetExtension("extra2", 2)
 			out.SetExtension("extra3", true)
@@ -140,6 +142,7 @@ func TestFromProto(t *testing.T) {
 			Type:        "some.type",
 			Attributes: map[string]*pb.CloudEventAttributeValue{
 				"datacontenttype": {Attr: &pb.CloudEventAttributeValue_CeString{CeString: "text/plain"}},
+				"dataschema":      {Attr: &pb.CloudEventAttributeValue_CeUri{CeUri: "link"}},
 				"extra1":          {Attr: &pb.CloudEventAttributeValue_CeString{CeString: "extra1 value"}},
 				"extra2":          {Attr: &pb.CloudEventAttributeValue_CeInteger{CeInteger: 2}},
 				"extra3":          {Attr: &pb.CloudEventAttributeValue_CeBoolean{CeBoolean: true}},
@@ -155,6 +158,7 @@ func TestFromProto(t *testing.T) {
 			out.SetSource("/source")
 			out.SetType("some.type")
 			_ = out.SetData("text/plain", `this is some text with a "quote"`)
+			out.SetDataSchema("link")
 			out.SetExtension("extra1", "extra1 value")
 			out.SetExtension("extra2", 2)
 			out.SetExtension("extra3", true)
@@ -171,6 +175,7 @@ func TestFromProto(t *testing.T) {
 			Type:        "some.type",
 			Attributes: map[string]*pb.CloudEventAttributeValue{
 				"datacontenttype": {Attr: &pb.CloudEventAttributeValue_CeString{CeString: "application/json"}},
+				"dataschema":      {Attr: &pb.CloudEventAttributeValue_CeUri{CeUri: "link"}},
 				"extra1":          {Attr: &pb.CloudEventAttributeValue_CeString{CeString: "extra1 value"}},
 				"extra2":          {Attr: &pb.CloudEventAttributeValue_CeInteger{CeInteger: 2}},
 				"extra3":          {Attr: &pb.CloudEventAttributeValue_CeBoolean{CeBoolean: true}},
@@ -186,6 +191,7 @@ func TestFromProto(t *testing.T) {
 			out.SetSource("/source")
 			out.SetType("some.type")
 			_ = out.SetData("application/json", `{"unit":"test"}`)
+			out.SetDataSchema("link")
 			out.SetExtension("extra1", "extra1 value")
 			out.SetExtension("extra2", 2)
 			out.SetExtension("extra3", true)
