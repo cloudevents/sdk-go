@@ -124,7 +124,8 @@ err := json.Unmarshal(bytes, &event)
 | AVRO Event Format                                                                       | :x:                                                   | :x:                                                   |
 | [HTTP Protocol Binding](https://github.com/cloudevents/sdk-go/tree/main/samples/http)   | :heavy_check_mark:                                    | :heavy_check_mark:                                    |
 | [JSON Event Format](event_data_structure.md#marshalunmarshal-event-to-json)             | :heavy_check_mark:                                    | :heavy_check_mark:                                    |
-| [Kafka Protocol Binding](https://github.com/cloudevents/sdk-go/tree/main/samples/kafka) | :heavy_check_mark:                                    | :heavy_check_mark:                                    |
+| [Sarama Kafka Protocol Binding](https://github.com/cloudevents/sdk-go/tree/main/samples/kafka) | :heavy_check_mark:                                    | :heavy_check_mark:                                    |
+| [Confluent Kafka Protocol Binding](https://github.com/cloudevents/sdk-go/tree/main/samples/kafka_confluent) | :heavy_check_mark:                                    | :heavy_check_mark:                                    |
 | MQTT Protocol Binding                                                                   | :x:                                                   | :x:                                                   |
 | [NATS Protocol Binding](https://github.com/cloudevents/sdk-go/tree/main/samples/nats)   | :heavy_check_mark:                                    | :heavy_check_mark:                                    |
 | [STAN Protocol Binding](https://github.com/cloudevents/sdk-go/tree/main/samples/stan)   | :heavy_check_mark:                                    | :heavy_check_mark:                                    |

@@ -27,6 +27,15 @@ jobs:
           - 9091:9091
           - 9092:9092
 
+      kafka_confluent:
+        image: confluentinc/confluent-local:7.6.0
+        ports:
+          - "9192:9192"
+        env:
+          KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://localhost:29192,PLAINTEXT_HOST://localhost:9192'
+          KAFKA_CONTROLLER_QUORUM_VOTERS: '1@localhost:29193'
+          KAFKA_LISTENERS: 'PLAINTEXT://localhost:29192,CONTROLLER://localhost:29193,PLAINTEXT_HOST://0.0.0.0:9192'
+
       natss:
         image: nats-streaming:0.22.1
         ports:
