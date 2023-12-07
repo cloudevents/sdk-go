@@ -145,8 +145,11 @@ func getProtocol(ctx context.Context, topic string) (*mqtt_paho.Protocol, error)
 		Topic: topic, QoS: 0,
 	}
 	subscribeOpt := &paho.Subscribe{
-		Subscriptions: map[string]paho.SubscribeOptions{
-			topic: {QoS: 0},
+		Subscriptions: []paho.SubscribeOptions{
+			{
+				Topic: topic,
+				QoS:   0,
+			},
 		},
 	}
 

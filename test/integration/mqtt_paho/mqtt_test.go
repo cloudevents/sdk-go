@@ -110,8 +110,11 @@ func protocolFactory(ctx context.Context, t testing.TB, topicName string) *mqtt_
 		Topic: topicName, QoS: 0,
 	}
 	subscribeOpt := &paho.Subscribe{
-		Subscriptions: map[string]paho.SubscribeOptions{
-			topicName: {QoS: 0},
+		Subscriptions: []paho.SubscribeOptions{
+			{
+				Topic: topicName,
+				QoS:   0,
+			},
 		},
 	}
 
