@@ -18,19 +18,23 @@ replace github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 => ../../protocol
 
 replace github.com/cloudevents/sdk-go/protocol/mqtt_paho/v2 => ../../protocol/mqtt_paho/v2
 
+replace github.com/cloudevents/sdk-go/protocol/kafka_confluent/v2 => ../../protocol/kafka_confluent/v2
+
 require (
 	github.com/Azure/go-amqp v0.17.0
 	github.com/IBM/sarama v1.40.1
 	github.com/cloudevents/sdk-go/protocol/amqp/v2 v2.5.0
+	github.com/cloudevents/sdk-go/protocol/kafka_confluent/v2 v2.0.0-00010101000000-000000000000
 	github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.5.0
 	github.com/cloudevents/sdk-go/protocol/mqtt_paho/v2 v2.0.0-00010101000000-000000000000
 	github.com/cloudevents/sdk-go/protocol/nats/v2 v2.5.0
 	github.com/cloudevents/sdk-go/protocol/nats_jetstream/v2 v2.0.0-00010101000000-000000000000
 	github.com/cloudevents/sdk-go/protocol/stan/v2 v2.5.0
-	github.com/cloudevents/sdk-go/v2 v2.14.0
+	github.com/cloudevents/sdk-go/v2 v2.15.2
+	github.com/confluentinc/confluent-kafka-go/v2 v2.3.0
 	github.com/eclipse/paho.golang v0.12.0
 	github.com/google/go-cmp v0.6.0
-	github.com/google/uuid v1.1.1
+	github.com/google/uuid v1.3.0
 	github.com/nats-io/nats.go v1.31.0
 	github.com/nats-io/stan.go v0.10.4
 	github.com/stretchr/testify v1.8.4
