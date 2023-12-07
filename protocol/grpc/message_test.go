@@ -29,7 +29,7 @@ func TestReadStructured(t *testing.T) {
 			name: "json format",
 			msg: &pb.CloudEvent{
 				Attributes: map[string]*pb.CloudEventAttributeValue{
-					contenttype: &pb.CloudEventAttributeValue{
+					contenttype: {
 						Attr: &pb.CloudEventAttributeValue_CeString{
 							CeString: event.ApplicationCloudEventsJSON,
 						},
