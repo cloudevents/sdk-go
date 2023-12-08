@@ -1,3 +1,3 @@
 package pb
 
-//go:generate protoc --go_out=. cloudevent.proto
+//go:generate protoc --go_out=. --go_opt=paths=source_relative cloudevent.proto
