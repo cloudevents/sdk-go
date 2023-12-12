@@ -91,7 +91,7 @@ func ToProto(e *event.Event) (*pb.CloudEvent, error) {
 		dataSchemaStr := e.DataSchema()
 		uri, err := url.Parse(dataSchemaStr)
 		if err != nil {
-			return nil, fmt.Errorf("failed to url.Parse %s: %s", dataSchemaStr, err)
+			return nil, fmt.Errorf("failed to url.Parse %s: %w", dataSchemaStr, err)
 		}
 		container.Attributes[dataschema], _ = attributeFor(uri)
 	}
