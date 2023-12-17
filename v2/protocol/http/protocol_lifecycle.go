@@ -11,11 +11,31 @@ import (
 	"net"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/cloudevents/sdk-go/v2/protocol"
 )
 
+type InboundReadTimeout struct{}
+type InboundWriteTimeout struct{}
+
 var _ protocol.Opener = (*Protocol)(nil)
+
+func readTimeout(ctx context.Context) time.Duration {
+	v, ok := ctx.Value(InboundReadTimeout{}).(time.Duration)
+	if !ok {
+		return DefaultTimeout
+	}
+	return v
+}
+
+func writeTimeout(ctx context.Context) time.Duration {
+	v, ok := ctx.Value(InboundWriteTimeout{}).(time.Duration)
+	if !ok {
+		return DefaultTimeout
+	}
+	return v
+}
 
 func (p *Protocol) OpenInbound(ctx context.Context) error {
 	p.reMu.Lock()
@@ -40,8 +60,8 @@ func (p *Protocol) OpenInbound(ctx context.Context) error {
 	p.server = &http.Server{
 		Addr:         listener.Addr().String(),
 		Handler:      attachMiddleware(p.Handler, p.middleware),
-		ReadTimeout:  DefaultTimeout,
-		WriteTimeout: DefaultTimeout,
+		ReadTimeout:  readTimeout(ctx),
+		WriteTimeout: writeTimeout(ctx),
 	}
 
 	// Shutdown
