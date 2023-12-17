@@ -1,4 +1,4 @@
-module github.com/fianulabs/sdk-go/v2
+module github.com/fianulabs/go-sdk/v2
 
 go 1.18
 
