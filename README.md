@@ -82,7 +82,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to create client, %v", err)
 	}
-	log.Fatal(c.StartReceiver(context.Background(), receive));
+	if err = c.StartReceiver(context.Background(), receive); err != nil {
+		log.Fatalf("failed to start receiver: %v", err)
+	}
 }
 ```
 
