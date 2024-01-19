@@ -11,9 +11,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+
 	"github.com/cloudevents/sdk-go/v2/event/datacodec"
 	"github.com/cloudevents/sdk-go/v2/types"
-	"github.com/google/go-cmp/cmp"
 )
 
 func strptr(s string) *string { return &s }
@@ -25,11 +26,12 @@ type Example struct {
 
 func TestCodecDecode(t *testing.T) {
 	testCases := map[string]struct {
-		contentType string
-		decoder     datacodec.Decoder
-		in          []byte
-		want        interface{}
-		wantErr     string
+		contentType      string
+		decoder          datacodec.Decoder
+		structuredSuffix string
+		in               []byte
+		want             interface{}
+		wantErr          string
 	}{
 		"empty": {},
 		"invalid content type": {
@@ -50,12 +52,24 @@ func TestCodecDecode(t *testing.T) {
 				"b": "banana",
 			},
 		},
+		"application/vnd.custom-type+json": {
+			contentType: "application/vnd.custom-type+json",
+			in:          []byte(`{"a":"apple","b":"banana"}`),
+			want: &map[string]string{
+				"a": "apple",
+				"b": "banana",
+			},
+		},
 		"application/xml": {
 			contentType: "application/xml",
 			in:          []byte(`<Example><Sequence>7</Sequence><Message>Hello, Structured Encoding v1.0!</Message></Example>`),
 			want:        &Example{Sequence: 7, Message: "Hello, Structured Encoding v1.0!"},
 		},
-
+		"application/vnd.custom-type+xml": {
+			contentType: "application/vnd.custom-type+xml",
+			in:          []byte(`<Example><Sequence>7</Sequence><Message>Hello, Structured Encoding v1.0!</Message></Example>`),
+			want:        &Example{Sequence: 7, Message: "Hello, Structured Encoding v1.0!"},
+		},
 		"custom content type": {
 			contentType: "unit/testing",
 			in:          []byte("Hello, Testing"),
@@ -82,12 +96,44 @@ func TestCodecDecode(t *testing.T) {
 			},
 			wantErr: "expecting unit test error",
 		},
+		"custom structured suffix": {
+			contentType:      "unit/testing+custom",
+			structuredSuffix: "custom",
+			in:               []byte("Hello, Testing"),
+			decoder: func(ctx context.Context, in []byte, out interface{}) error {
+				if s, k := out.(*map[string]string); k {
+					if (*s) == nil {
+						(*s) = make(map[string]string)
+					}
+					(*s)["upper"] = strings.ToUpper(string(in))
+					(*s)["lower"] = strings.ToLower(string(in))
+				}
+				return nil
+			},
+			want: &map[string]string{
+				"upper": "HELLO, TESTING",
+				"lower": "hello, testing",
+			},
+		},
+		"custom structured suffix error": {
+			contentType:      "unit/testing+custom",
+			structuredSuffix: "custom",
+			in:               []byte("Hello, Testing"),
+			decoder: func(ctx context.Context, in []byte, out interface{}) error {
+				return fmt.Errorf("expecting unit test error")
+			},
+			wantErr: "expecting unit test error",
+		},
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 
 			if tc.decoder != nil {
-				datacodec.AddDecoder(tc.contentType, tc.decoder)
+				if tc.structuredSuffix == "" {
+					datacodec.AddDecoder(tc.contentType, tc.decoder)
+				} else {
+					datacodec.AddStructuredSuffixDecoder(tc.structuredSuffix, tc.decoder)
+				}
 			}
 
 			got, _ := types.Allocate(tc.want)
@@ -111,11 +157,12 @@ func TestCodecDecode(t *testing.T) {
 
 func TestCodecEncode(t *testing.T) {
 	testCases := map[string]struct {
-		contentType string
-		encoder     datacodec.Encoder
-		in          interface{}
-		want        []byte
-		wantErr     string
+		contentType      string
+		structuredSuffix string
+		encoder          datacodec.Encoder
+		in               interface{}
+		want             []byte
+		wantErr          string
 	}{
 		"empty": {},
 		"invalid content type": {
@@ -138,8 +185,21 @@ func TestCodecEncode(t *testing.T) {
 			},
 			want: []byte(`{"a":"apple","b":"banana"}`),
 		},
+		"application/vnd.custom-type+json": {
+			contentType: "application/vnd.custom-type+json",
+			in: map[string]string{
+				"a": "apple",
+				"b": "banana",
+			},
+			want: []byte(`{"a":"apple","b":"banana"}`),
+		},
 		"application/xml": {
 			contentType: "application/xml",
+			in:          &Example{Sequence: 7, Message: "Hello, Structured Encoding v1.0!"},
+			want:        []byte(`<Example><Sequence>7</Sequence><Message>Hello, Structured Encoding v1.0!</Message></Example>`),
+		},
+		"application/vnd.custom-type+xml": {
+			contentType: "application/vnd.custom-type+xml",
 			in:          &Example{Sequence: 7, Message: "Hello, Structured Encoding v1.0!"},
 			want:        []byte(`<Example><Sequence>7</Sequence><Message>Hello, Structured Encoding v1.0!</Message></Example>`),
 		},
@@ -173,12 +233,47 @@ func TestCodecEncode(t *testing.T) {
 			},
 			wantErr: "expecting unit test error",
 		},
+		"custom structured suffix": {
+			contentType:      "unit/testing+custom",
+			structuredSuffix: "custom",
+			in: []string{
+				"Hello,",
+				"Testing",
+			},
+			encoder: func(ctx context.Context, in interface{}) ([]byte, error) {
+				if s, ok := in.([]string); ok {
+					sb := strings.Builder{}
+					for _, v := range s {
+						if sb.Len() > 0 {
+							sb.WriteString(" ")
+						}
+						sb.WriteString(v)
+					}
+					return []byte(sb.String()), nil
+				}
+				return nil, fmt.Errorf("don't get here")
+			},
+			want: []byte("Hello, Testing"),
+		},
+		"custom structured suffix error": {
+			contentType:      "unit/testing+custom",
+			structuredSuffix: "custom",
+			in:               []byte("Hello, Testing"),
+			encoder: func(ctx context.Context, in interface{}) ([]byte, error) {
+				return nil, fmt.Errorf("expecting unit test error")
+			},
+			wantErr: "expecting unit test error",
+		},
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 
 			if tc.encoder != nil {
-				datacodec.AddEncoder(tc.contentType, tc.encoder)
+				if tc.structuredSuffix == "" {
+					datacodec.AddEncoder(tc.contentType, tc.encoder)
+				} else {
+					datacodec.AddStructuredSuffixEncoder(tc.structuredSuffix, tc.encoder)
+				}
 			}
 
 			got, err := datacodec.Encode(context.TODO(), tc.contentType, tc.in)
