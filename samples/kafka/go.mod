@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/IBM/sarama v1.40.1
 	github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.5.0
-	github.com/cloudevents/sdk-go/v2 v2.5.0
+	github.com/cloudevents/sdk-go/v2 v2.15.0
 	github.com/google/uuid v1.1.1
 )
 
