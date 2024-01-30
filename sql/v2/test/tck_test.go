@@ -40,6 +40,7 @@ var TCKFileNames = []string{
 	"spec_examples",
 	"string_builtin_functions",
 	"sub_expression",
+	"subscriptions_api_recreations",
 }
 
 type ErrorType string
