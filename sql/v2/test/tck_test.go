@@ -40,6 +40,7 @@ var TCKFileNames = []string{
 	"spec_examples",
 	"string_builtin_functions",
 	"sub_expression",
+	"subscriptions_api_recreations",
 }
 
 type ErrorType string
@@ -93,6 +94,8 @@ func (tc TckTestCase) ExpectedResult() interface{} {
 		return int32(tc.Result.(int))
 	case float64:
 		return int32(tc.Result.(float64))
+	case bool:
+		return tc.Result.(bool)
 	}
 	return tc.Result
 }
@@ -125,6 +128,7 @@ func TestTCK(t *testing.T) {
 		t.Run(file.Name, func(t *testing.T) {
 			for j, testCase := range tckFiles[i].Tests {
 				j := j
+				testCase := testCase
 				t.Run(testCase.Name, func(t *testing.T) {
 					t.Parallel()
 					testCase := tckFiles[i].Tests[j]
