@@ -13,8 +13,8 @@ import (
 
 var ErrInvalidQueueName = errors.New("invalid queue name for QueueSubscriber")
 
-// NatsOptions is a helper function to group a variadic stan.ProtocolOption into
-// []stan.Option that can be used by either Sender, Consumer or Protocol
+// NatsOptions is a helper function to group a variadic nats.ProtocolOption into
+// []nats.Option that can be used by either Sender, Consumer or Protocol
 func NatsOptions(opts ...nats.Option) []nats.Option {
 	return opts
 }
