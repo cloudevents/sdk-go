@@ -42,7 +42,7 @@ func NewSender(url, stream, subject string, natsOpts []nats.Option, jsmOpts []na
 	return s, nil
 }
 
-// NewSenderFromConn creates a new protocol.Sender which leaves responsibility for opening and closing the STAN
+// NewSenderFromConn creates a new protocol.Sender which leaves responsibility for opening and closing the NATS
 // connection to the caller
 func NewSenderFromConn(conn *nats.Conn, stream, subject string, jsmOpts []nats.JSOpt, opts ...SenderOption) (*Sender, error) {
 	jsm, err := conn.JetStream(jsmOpts...)

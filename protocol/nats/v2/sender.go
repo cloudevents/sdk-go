@@ -22,7 +22,7 @@ type Sender struct {
 	connOwned bool
 }
 
-// NewSender creates a new protocol.Sender responsible for opening and closing the STAN connection
+// NewSender creates a new protocol.Sender responsible for opening and closing the NATS connection
 func NewSender(url, subject string, natsOpts []nats.Option, opts ...SenderOption) (*Sender, error) {
 	conn, err := nats.Connect(url, natsOpts...)
 	if err != nil {
@@ -40,7 +40,7 @@ func NewSender(url, subject string, natsOpts []nats.Option, opts ...SenderOption
 	return s, nil
 }
 
-// NewSenderFromConn creates a new protocol.Sender which leaves responsibility for opening and closing the STAN
+// NewSenderFromConn creates a new protocol.Sender which leaves responsibility for opening and closing the NATS
 // connection to the caller
 func NewSenderFromConn(conn *nats.Conn, subject string, opts ...SenderOption) (*Sender, error) {
 	s := &Sender{
