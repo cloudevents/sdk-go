@@ -24,7 +24,7 @@ type Protocol struct {
 	Sender        *Sender
 	senderOptions []SenderOption
 
-	connOwned bool // whether this protocol created the stan connection
+	connOwned bool // whether this protocol created the nats connection
 }
 
 // NewProtocol creates a new NATS protocol.
