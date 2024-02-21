@@ -2,10 +2,8 @@ module github.com/cloudevents/sdk-go/protocol/stan/v2
 
 go 1.18
 
-replace github.com/cloudevents/sdk-go/v2 => ../../../v2
-
 require (
-	github.com/cloudevents/sdk-go/v2 v2.14.0
+	github.com/cloudevents/sdk-go/v2 v2.15.1
 	github.com/nats-io/stan.go v0.10.4
 )
 

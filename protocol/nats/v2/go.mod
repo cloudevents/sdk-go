@@ -2,10 +2,8 @@ module github.com/cloudevents/sdk-go/protocol/nats/v2
 
 go 1.18
 
-replace github.com/cloudevents/sdk-go/v2 => ../../../v2
-
 require (
-	github.com/cloudevents/sdk-go/v2 v2.14.0
+	github.com/cloudevents/sdk-go/v2 v2.15.1
 	github.com/nats-io/nats.go v1.31.0
 )
 
