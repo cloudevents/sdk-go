@@ -1,5 +1,7 @@
 github.com/Azure/go-amqp v0.17.0 h1:HHXa3149nKrI0IZwyM7DRcRy5810t9ZICDutn4BYzj4=
 github.com/Azure/go-amqp v0.17.0/go.mod h1:9YJ3RhxRT1gquYnzpZO1vcYMMpAdJT+QEg6fwmw9Zlg=
+github.com/cloudevents/sdk-go/protocol/amqp/v2 v2.15.1 h1:WkKGJGOxCkTy5st94Bks3/aPs0XiaQPvCv8aCqfmpcA=
+github.com/cloudevents/sdk-go/protocol/amqp/v2 v2.15.1/go.mod h1:3DbFZh+uAQ5CFXfQGDhBxlg/7tDj8Vo1tD8PvFG25LQ=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

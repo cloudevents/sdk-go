@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/cloudevents/sdk-go/protocol/pubsub/v2 v2.5.0
-	github.com/cloudevents/sdk-go/v2 v2.5.0
+	github.com/cloudevents/sdk-go/v2 v2.15.1
 	github.com/kelseyhightower/envconfig v1.4.0
 )
 
