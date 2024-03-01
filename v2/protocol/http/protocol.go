@@ -103,7 +103,7 @@ func New(opts ...Option) (*Protocol, error) {
 
 	if p.Client == nil {
 		// This is how http.DefaultClient is initialized. We do not just use
-		// that because when WithTransport is used, it will change the client's
+		// that because when WithRoundTripper is used, it will change the client's
 		// transport, which would cause that transport to be used process-wide.
 		p.Client = &http.Client{}
 	}
