@@ -7,7 +7,7 @@ require (
 	github.com/cloudevents/sdk-go/binding/format/protobuf/v2 v2.5.0
 	github.com/cloudevents/sdk-go/observability/opencensus/v2 v2.5.0
 	github.com/cloudevents/sdk-go/observability/opentelemetry/v2 v2.5.0
-	github.com/cloudevents/sdk-go/v2 v2.5.0
+	github.com/cloudevents/sdk-go/v2 v2.15.2
 	github.com/gin-gonic/gin v1.8.2
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.7.3

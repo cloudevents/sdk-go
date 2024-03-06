@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/cloudevents/sdk-go/protocol/mqtt_paho/v2 v2.0.0-00010101000000-000000000000
-	github.com/cloudevents/sdk-go/v2 v2.14.0
+	github.com/cloudevents/sdk-go/v2 v2.15.2
 	github.com/eclipse/paho.golang v0.12.0
 	github.com/google/uuid v1.3.0
 )
