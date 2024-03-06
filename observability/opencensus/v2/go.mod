@@ -3,7 +3,7 @@ module github.com/cloudevents/sdk-go/observability/opencensus/v2
 go 1.18
 
 require (
-	github.com/cloudevents/sdk-go/v2 v2.5.0
+	github.com/cloudevents/sdk-go/v2 v2.15.2
 	github.com/lightstep/tracecontext.go v0.0.0-20181129014701-1757c391b1ac
 	github.com/stretchr/testify v1.8.0
 	go.opencensus.io v0.22.0
@@ -25,5 +25,3 @@ require (
 	golang.org/x/net v0.17.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace github.com/cloudevents/sdk-go/v2 => ../../../v2

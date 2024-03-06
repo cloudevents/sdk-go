@@ -2,11 +2,9 @@ module github.com/cloudevents/sdk-go/protocol/pubsub/v2
 
 go 1.18
 
-replace github.com/cloudevents/sdk-go/v2 => ../../../v2
-
 require (
 	cloud.google.com/go/pubsub v1.30.0
-	github.com/cloudevents/sdk-go/v2 v2.5.0
+	github.com/cloudevents/sdk-go/v2 v2.15.2
 	github.com/google/go-cmp v0.5.9
 	github.com/stretchr/testify v1.8.1
 	golang.org/x/sync v0.1.0
