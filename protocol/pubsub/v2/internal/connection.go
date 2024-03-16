@@ -136,7 +136,6 @@ func (c *Connection) getOrCreateTopicInfo(ctx context.Context, getAlreadyOpenOnl
 		// if publishSettings have been provided use them otherwise pubsub will use default settings
 		if c.PublishSettings != nil {
 			topic.PublishSettings = *c.PublishSettings
-			pubsub.DefaultPublishSettings
 		}
 
 		// Success.
