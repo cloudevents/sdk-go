@@ -100,9 +100,7 @@ func TestSenderReceiver_binary_v1(t *testing.T) {
 }
 
 func TestSenderReceiver_structured_v1(t *testing.T) {
-	// TODO: Format that to RFC3339.
 	now := time.Now()
-	// TODO: Use now.Truncate or another similar function like .Round to remove the milliseconds.
 	testCases := DirectTapTestCases{
 		"Structured v1.0": {
 			now: now,
