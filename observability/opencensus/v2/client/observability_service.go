@@ -24,7 +24,7 @@ func (o opencensusObservabilityService) InboundContextDecorators() []func(contex
 	return []func(context.Context, binding.Message) context.Context{tracePropagatorContextDecorator}
 }
 
-func (o opencensusObservabilityService) RecordReceivedMalformedEvent(ctx context.Context, err error) {
+func (o opencensusObservabilityService) RecordReceivedMalformedEvent(ctx context.Context, m binding.Message, err error) {
 	ctx, r := NewReporter(ctx, reportReceive)
 	r.Error()
 }

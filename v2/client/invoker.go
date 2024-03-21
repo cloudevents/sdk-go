@@ -65,13 +65,13 @@ func (r *receiveInvoker) Invoke(ctx context.Context, m binding.Message, respFn p
 	e, eventErr := binding.ToEvent(ctx, m)
 	switch {
 	case eventErr != nil && r.fn.hasEventIn:
-		r.observabilityService.RecordReceivedMalformedEvent(ctx, eventErr)
+		r.observabilityService.RecordReceivedMalformedEvent(ctx, m, eventErr)
 		return respFn(ctx, nil, protocol.NewReceipt(r.ackMalformedEvent, "failed to convert Message to Event: %w", eventErr))
 	case r.fn != nil:
 		// Check if event is valid before invoking the receiver function
 		if e != nil {
 			if validationErr := e.Validate(); validationErr != nil {
-				r.observabilityService.RecordReceivedMalformedEvent(ctx, validationErr)
+				r.observabilityService.RecordReceivedMalformedEvent(ctx, m, validationErr)
 				return respFn(ctx, nil, protocol.NewReceipt(r.ackMalformedEvent, "validation error in incoming event: %w", validationErr))
 			}
 		}
