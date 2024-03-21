@@ -13,7 +13,7 @@ import (
 	"time"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
-	"github.com/cloudevents/sdk-go/v2/types"
+	// "github.com/cloudevents/sdk-go/v2/types"
 )
 
 func TestSenderReceiver_binary_v1(t *testing.T) {
@@ -100,8 +100,9 @@ func TestSenderReceiver_binary_v1(t *testing.T) {
 }
 
 func TestSenderReceiver_structured_v1(t *testing.T) {
+	// TODO: Format that to RFC3339.
 	now := time.Now()
-
+	// TODO: Use now.Truncate or another similar function like .Round to remove the milliseconds.
 	testCases := DirectTapTestCases{
 		"Structured v1.0": {
 			now: now,
@@ -118,7 +119,7 @@ func TestSenderReceiver_structured_v1(t *testing.T) {
 				Context: cloudevents.EventContextV1{
 					ID:              "ABC-123",
 					Type:            "unit.test.client.sent",
-					Time:            &cloudevents.Timestamp{Time: now},
+					Time:            &cloudevents.Timestamp{Time: now.Truncate(time.Second)},
 					Source:          *cloudevents.ParseURIRef("/unit/test/client"),
 					Subject:         strptr("resource"),
 					DataContentType: cloudevents.StringOfApplicationJSON(),
@@ -131,7 +132,7 @@ func TestSenderReceiver_structured_v1(t *testing.T) {
 				Header: map[string][]string{
 					"content-type": {"application/cloudevents+json"},
 				},
-				Body:          fmt.Sprintf(`{"data":{"hello":"unittest"},"id":"ABC-123","source":"/unit/test/client","specversion":"1.0","subject":"resource","time":%q,"type":"unit.test.client.sent"}`, types.FormatTime(now.UTC())),
+				Body:          fmt.Sprintf(`{"data":{"hello":"unittest"},"id":"ABC-123","source":"/unit/test/client","specversion":"1.0","subject":"resource","time":%q,"type":"unit.test.client.sent"}`, now.Truncate(time.Second).Format(time.RFC3339)),
 				ContentLength: 182,
 			},
 		},
@@ -164,7 +165,7 @@ func TestSenderReceiver_data_base64_v1(t *testing.T) {
 				Context: cloudevents.EventContextV1{
 					ID:              "ABC-123",
 					Type:            "unit.test.client.sent",
-					Time:            &cloudevents.Timestamp{Time: now},
+					Time:            &cloudevents.Timestamp{Time: now.Truncate(time.Second)},
 					Source:          *cloudevents.ParseURIRef("/unit/test/client"),
 					Subject:         strptr("resource"),
 					DataContentType: cloudevents.StringOfTextPlain(),
@@ -177,7 +178,7 @@ func TestSenderReceiver_data_base64_v1(t *testing.T) {
 				Header: map[string][]string{
 					"content-type": {"application/cloudevents+json"},
 				},
-				Body:          fmt.Sprintf(`{"data_base64":"aGVsbG86IHVuaXR0ZXN0","id":"ABC-123","source":"/unit/test/client","specversion":"1.0","subject":"resource","time":%q,"type":"unit.test.client.sent"}`, now.UTC().Format(time.RFC3339Nano)),
+				Body:          fmt.Sprintf(`{"data_base64":"aGVsbG86IHVuaXR0ZXN0","id":"ABC-123","source":"/unit/test/client","specversion":"1.0","subject":"resource","time":%q,"type":"unit.test.client.sent"}`,now.Truncate(time.Second).Format(time.RFC3339) ),
 				ContentLength: 191,
 			},
 		},
