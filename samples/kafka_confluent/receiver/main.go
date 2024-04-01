@@ -33,8 +33,9 @@ func main() {
 	}
 	defer receiver.Close(ctx)
 
-	// Setting the 'client.WithPollGoroutines(1)' to make sure the events from kafka partition are processed in order
-	c, err := cloudevents.NewClient(receiver, client.WithPollGoroutines(1))
+	// The 'WithBlockingCallback()' is to make event processing serialized (no concurrency), use this option along with WithPollGoroutines(1).
+	// These two options make sure the events from kafka partition are processed in order
+	c, err := cloudevents.NewClient(receiver, client.WithBlockingCallback(), client.WithPollGoroutines(1))
 	if err != nil {
 		log.Fatalf("failed to create client, %v", err)
 	}

@@ -15,7 +15,7 @@ import (
 // Option is the function signature required to be considered an kafka_confluent.Option.
 type Option func(*Protocol) error
 
-// WithConfigMap sets the configMap to init the kafka client. This option is not required.
+// WithConfigMap sets the configMap to init the kafka client.
 func WithConfigMap(config *kafka.ConfigMap) Option {
 	return func(p *Protocol) error {
 		if config == nil {
@@ -26,7 +26,7 @@ func WithConfigMap(config *kafka.ConfigMap) Option {
 	}
 }
 
-// WithSenderTopic sets the defaultTopic for the kafka.Producer. This option is not required.
+// WithSenderTopic sets the defaultTopic for the kafka.Producer.
 func WithSenderTopic(defaultTopic string) Option {
 	return func(p *Protocol) error {
 		if defaultTopic == "" {
@@ -37,7 +37,7 @@ func WithSenderTopic(defaultTopic string) Option {
 	}
 }
 
-// WithReceiverTopics sets the topics for the kafka.Consumer. This option is not required.
+// WithReceiverTopics sets the topics for the kafka.Consumer.
 func WithReceiverTopics(topics []string) Option {
 	return func(p *Protocol) error {
 		if topics == nil {
@@ -48,7 +48,7 @@ func WithReceiverTopics(topics []string) Option {
 	}
 }
 
-// WithRebalanceCallBack sets the callback for rebalancing of the consumer group. This option is not required.
+// WithRebalanceCallBack sets the callback for rebalancing of the consumer group.
 func WithRebalanceCallBack(rebalanceCb kafka.RebalanceCb) Option {
 	return func(p *Protocol) error {
 		if rebalanceCb == nil {
@@ -59,7 +59,7 @@ func WithRebalanceCallBack(rebalanceCb kafka.RebalanceCb) Option {
 	}
 }
 
-// WithPollTimeout sets timeout of the consumer polling for message or events, return nil on timeout. This option is not required.
+// WithPollTimeout sets timeout of the consumer polling for message or events, return nil on timeout.
 func WithPollTimeout(timeoutMs int) Option {
 	return func(p *Protocol) error {
 		p.consumerPollTimeout = timeoutMs
@@ -67,7 +67,7 @@ func WithPollTimeout(timeoutMs int) Option {
 	}
 }
 
-// WithSender set a kafka.Producer instance to init the client directly. This option is not required.
+// WithSender set a kafka.Producer instance to init the client directly.
 func WithSender(producer *kafka.Producer) Option {
 	return func(p *Protocol) error {
 		if producer == nil {
@@ -78,7 +78,7 @@ func WithSender(producer *kafka.Producer) Option {
 	}
 }
 
-// WithErrorHandler provide a func on how to handle the kafka.Error which the kafka.Consumer has polled. This option is not required.
+// WithErrorHandler provide a func on how to handle the kafka.Error which the kafka.Consumer has polled.
 func WithErrorHandler(handler func(ctx context.Context, err kafka.Error)) Option {
 	return func(p *Protocol) error {
 		p.consumerErrorHandler = handler
@@ -86,7 +86,7 @@ func WithErrorHandler(handler func(ctx context.Context, err kafka.Error)) Option
 	}
 }
 
-// WithSender set a kafka.Consumer instance to init the client directly. This option is not required.
+// WithReceiver set a kafka.Consumer instance to init the client directly.
 func WithReceiver(consumer *kafka.Consumer) Option {
 	return func(p *Protocol) error {
 		if consumer == nil {
@@ -97,12 +97,12 @@ func WithReceiver(consumer *kafka.Consumer) Option {
 	}
 }
 
-// Opaque key type used to store topicPartitionOffsets: assign them from ctx. This option is not required.
+// Opaque key type used to store topicPartitionOffsets: assign them from ctx.
 type topicPartitionOffsetsType struct{}
 
 var offsetKey = topicPartitionOffsetsType{}
 
-// WithTopicPartitionOffsets will set the positions where the consumer starts consuming from. This option is not required.
+// WithTopicPartitionOffsets will set the positions where the consumer starts consuming from.
 func WithTopicPartitionOffsets(ctx context.Context, topicPartitionOffsets []kafka.TopicPartition) context.Context {
 	if len(topicPartitionOffsets) == 0 {
 		panic("the topicPartitionOffsets cannot be empty")
