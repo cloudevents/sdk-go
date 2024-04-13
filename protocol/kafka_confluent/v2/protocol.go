@@ -33,15 +33,14 @@ type Protocol struct {
 	consumerTopics       []string
 	consumerRebalanceCb  kafka.RebalanceCb                          // optional
 	consumerPollTimeout  int                                        // optional
-	consumerErrorHandler func(ctx context.Context, err kafka.Error) //optional
+	consumerErrorHandler func(ctx context.Context, err kafka.Error) // optional
 	consumerMux          sync.Mutex
 	consumerIncoming     chan *kafka.Message
 	consumerCtx          context.Context
 	consumerCancel       context.CancelFunc
 
 	producer             *kafka.Producer
-	producerDeliveryChan chan kafka.Event // optional
-	producerDefaultTopic string           // optional
+	producerDefaultTopic string // optional
 
 	closerMux sync.Mutex
 }
@@ -85,10 +84,16 @@ func New(opts ...Option) (*Protocol, error) {
 	if p.kafkaConfigMap == nil && p.producer == nil && p.consumer == nil {
 		return nil, errors.New("at least one of the following to initialize the protocol must be set: config, producer, or consumer")
 	}
-	if p.producer != nil {
-		p.producerDeliveryChan = make(chan kafka.Event)
-	}
 	return p, nil
+}
+
+// Events returns the events channel used by Confluent Kafka to deliver the result from a produce, i.e., send, operation.
+// When using this SDK to produce (send) messages, this channel must be monitored to avoid resource leaks and this channel becoming full. See Confluent SDK for Go for details on the implementation.
+func (p *Protocol) Events() (chan kafka.Event, error) {
+	if p.producer == nil {
+		return nil, errors.New("producer not set")
+	}
+	return p.producer.Events(), nil
 }
 
 func (p *Protocol) applyOptions(opts ...Option) error {
@@ -100,6 +105,7 @@ func (p *Protocol) applyOptions(opts ...Option) error {
 	return nil
 }
 
+// Send message by kafka.Producer. You must monitor the Events() channel when using this function.
 func (p *Protocol) Send(ctx context.Context, in binding.Message, transformers ...binding.Transformer) (err error) {
 	if p.producer == nil {
 		return errors.New("producer client must be set")
@@ -128,19 +134,12 @@ func (p *Protocol) Send(ctx context.Context, in binding.Message, transformers ..
 		kafkaMsg.Key = []byte(messageKey)
 	}
 
-	err = WriteProducerMessage(ctx, in, kafkaMsg, transformers...)
-	if err != nil {
-		return err
+	if err = WriteProducerMessage(ctx, in, kafkaMsg, transformers...); err != nil {
+		return fmt.Errorf("create producer message: %w", err)
 	}
 
-	err = p.producer.Produce(kafkaMsg, p.producerDeliveryChan)
-	if err != nil {
-		return err
-	}
-	e := <-p.producerDeliveryChan
-	m := e.(*kafka.Message)
-	if m.TopicPartition.Error != nil {
-		return m.TopicPartition.Error
+	if err = p.producer.Produce(kafkaMsg, nil); err != nil {
+		return fmt.Errorf("produce message: %w", err)
 	}
 	return nil
 }
@@ -231,15 +230,18 @@ func (p *Protocol) Receive(ctx context.Context) (binding.Message, error) {
 func (p *Protocol) Close(ctx context.Context) error {
 	p.closerMux.Lock()
 	defer p.closerMux.Unlock()
+	logger := cecontext.LoggerFrom(ctx)
 
 	if p.consumerCancel != nil {
 		p.consumerCancel()
 	}
 
 	if p.producer != nil && !p.producer.IsClosed() {
+		// Flush and close the producer with a 10 seconds timeout (closes Events channel)
+		for p.producer.Flush(10000) > 0 {
+			logger.Info("Flushing outstanding messages")
+		}
 		p.producer.Close()
-		close(p.producerDeliveryChan)
 	}
-
 	return nil
 }

@@ -131,7 +131,8 @@ func protocolFactory(sendTopic string, receiveTopic []string,
 	}
 	if sendTopic != "" {
 		p, err = confluent.New(confluent.WithConfigMap(&kafka.ConfigMap{
-			"bootstrap.servers": BOOTSTRAP_SERVER,
+			"bootstrap.servers":   BOOTSTRAP_SERVER,
+			"go.delivery.reports": false,
 		}), confluent.WithSenderTopic(sendTopic))
 	}
 	return p, err
