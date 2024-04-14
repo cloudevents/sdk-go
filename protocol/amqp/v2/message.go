@@ -50,8 +50,10 @@ func NewMessage(message *amqp.Message, receiver *amqp.Receiver) *Message {
 	return &Message{AMQP: message, AMQPrcv: receiver, format: fmt, version: vn}
 }
 
-var _ binding.Message = (*Message)(nil)
-var _ binding.MessageMetadataReader = (*Message)(nil)
+var (
+	_ binding.Message               = (*Message)(nil)
+	_ binding.MessageMetadataReader = (*Message)(nil)
+)
 
 func getSpecVersion(message *amqp.Message) spec.Version {
 	if sv, ok := message.ApplicationProperties[specs.PrefixedSpecVersionName()]; ok {
@@ -74,7 +76,8 @@ func (m *Message) ReadEncoding() binding.Encoding {
 
 func (m *Message) ReadStructured(ctx context.Context, encoder binding.StructuredWriter) error {
 	if m.format != nil {
-		return encoder.SetStructuredEvent(ctx, m.format, bytes.NewReader(m.AMQP.GetData()))
+		data := m.getAmqpData()
+		return encoder.SetStructuredEvent(ctx, m.format, bytes.NewReader(data))
 	}
 	return binding.ErrNotStructured
 }
@@ -106,7 +109,7 @@ func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) 
 		}
 	}
 
-	data := m.AMQP.GetData()
+	data := m.getAmqpData()
 	if len(data) != 0 { // Some data
 		err = encoder.SetData(bytes.NewBuffer(data))
 		if err != nil {
@@ -136,4 +139,16 @@ func (m *Message) Finish(err error) error {
 		})
 	}
 	return m.AMQPrcv.AcceptMessage(context.Background(), m.AMQP)
+}
+
+// fixes: github.com/cloudevents/spec/issues/1275
+func (m *Message) getAmqpData() []byte {
+	var data []byte
+	amqpData := m.AMQP.Data
+
+	// TODO: replace with slices.Concat once go mod bumped to 1.22
+	for idx := range amqpData {
+		data = append(data, amqpData[idx]...)
+	}
+	return data
 }
