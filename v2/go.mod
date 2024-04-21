@@ -1,4 +1,4 @@
-module github.com/fianulabs/go-sdk/v2
+module github.com/cloudevents/sdk-go/v2
 
 go 1.18
 
