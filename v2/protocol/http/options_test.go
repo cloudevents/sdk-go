@@ -315,6 +315,93 @@ func TestWithShutdownTimeout(t *testing.T) {
 	}
 }
 
+func TestWithReadTimeout(t *testing.T) {
+	testCases := map[string]struct {
+		t       *Protocol
+		timeout time.Duration
+		want    *Protocol
+		wantErr string
+	}{
+		"valid timeout": {
+			t:       &Protocol{},
+			timeout: time.Minute * 4,
+			want: &Protocol{
+				ReadTimeout: time.Minute * 4,
+			},
+		},
+		"nil protocol": {
+			wantErr: `http read timeout option can not set nil protocol`,
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+
+			err := tc.t.applyOptions(WithReadTimeout(tc.timeout))
+
+			if tc.wantErr != "" || err != nil {
+				var gotErr string
+				if err != nil {
+					gotErr = err.Error()
+				}
+				if diff := cmp.Diff(tc.wantErr, gotErr); diff != "" {
+					t.Errorf("unexpected error (-want, +got) = %v", diff)
+				}
+				return
+			}
+
+			got := tc.t
+
+			if diff := cmp.Diff(tc.want, got,
+				cmpopts.IgnoreUnexported(Protocol{})); diff != "" {
+				t.Errorf("unexpected (-want, +got) = %v", diff)
+			}
+		})
+	}
+}
+
+func TestWithWriteTimeout(t *testing.T) {
+	testCases := map[string]struct {
+		t       *Protocol
+		timeout time.Duration
+		want    *Protocol
+		wantErr string
+	}{
+		"valid timeout": {
+			t:       &Protocol{},
+			timeout: time.Minute * 4,
+			want: &Protocol{
+				WriteTimeout: time.Minute * 4,
+			},
+		},
+		"nil protocol": {
+			wantErr: `http write timeout option can not set nil protocol`,
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+
+			err := tc.t.applyOptions(WithWriteTimeout(tc.timeout))
+
+			if tc.wantErr != "" || err != nil {
+				var gotErr string
+				if err != nil {
+					gotErr = err.Error()
+				}
+				if diff := cmp.Diff(tc.wantErr, gotErr); diff != "" {
+					t.Errorf("unexpected error (-want, +got) = %v", diff)
+				}
+				return
+			}
+
+			got := tc.t
+
+			if diff := cmp.Diff(tc.want, got,
+				cmpopts.IgnoreUnexported(Protocol{})); diff != "" {
+				t.Errorf("unexpected (-want, +got) = %v", diff)
+			}
+		})
+	}
+}
 func TestWithPort(t *testing.T) {
 	testCases := map[string]struct {
 		t       *Protocol

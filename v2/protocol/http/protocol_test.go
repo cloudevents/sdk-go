@@ -26,6 +26,7 @@ import (
 
 func TestNew(t *testing.T) {
 	dst := DefaultShutdownTimeout
+	ot := DefaultTimeout
 
 	testCases := map[string]struct {
 		opts    []Option
@@ -36,6 +37,8 @@ func TestNew(t *testing.T) {
 			want: &Protocol{
 				Client:          http.DefaultClient,
 				ShutdownTimeout: dst,
+				ReadTimeout:     ot,
+				WriteTimeout:    ot,
 				Port:            -1,
 			},
 		},
