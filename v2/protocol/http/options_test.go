@@ -330,7 +330,7 @@ func TestWithReadTimeout(t *testing.T) {
 			},
 		},
 		"nil protocol": {
-			wantErr: `http read timeout option can not set nil protocol`,
+			wantErr: "http read timeout option can not set nil protocol",
 		},
 	}
 	for n, tc := range testCases {
