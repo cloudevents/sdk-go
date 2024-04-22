@@ -89,7 +89,7 @@ func WithReadTimeout(timeout time.Duration) Option {
 		if p == nil {
 			return fmt.Errorf("http read timeout option can not set nil protocol")
 		}
-		p.ReadTimeout = timeout
+		p.readTimeout = timeout
 		return nil
 	}
 }
@@ -100,7 +100,7 @@ func WithWriteTimeout(timeout time.Duration) Option {
 		if p == nil {
 			return fmt.Errorf("http write timeout option can not set nil protocol")
 		}
-		p.WriteTimeout = timeout
+		p.writeTimeout = timeout
 		return nil
 	}
 }

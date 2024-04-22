@@ -326,7 +326,14 @@ func TestWithReadTimeout(t *testing.T) {
 			t:       &Protocol{},
 			timeout: time.Minute * 4,
 			want: &Protocol{
-				ReadTimeout: time.Minute * 4,
+				readTimeout: time.Minute * 4,
+			},
+		},
+		"negative timeout": {
+			t:       &Protocol{},
+			timeout: -1,
+			want: &Protocol{
+				writeTimeout: -1,
 			},
 		},
 		"nil protocol": {
@@ -370,11 +377,18 @@ func TestWithWriteTimeout(t *testing.T) {
 			t:       &Protocol{},
 			timeout: time.Minute * 4,
 			want: &Protocol{
-				WriteTimeout: time.Minute * 4,
+				writeTimeout: time.Minute * 4,
+			},
+		},
+		"negative timeout": {
+			t:       &Protocol{},
+			timeout: -1,
+			want: &Protocol{
+				writeTimeout: -1,
 			},
 		},
 		"nil protocol": {
-			wantErr: `http write timeout option can not set nil protocol`,
+			wantErr: "http write timeout option can not set nil protocol",
 		},
 	}
 	for n, tc := range testCases {

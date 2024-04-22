@@ -72,17 +72,19 @@ type Protocol struct {
 
 	// ReadTimeout defines the http.Service ReadTimeout
 	// It is the maximum duration for reading the entire
-	// request, including the body. A zero or negative value means
+	// request, including the body. A negative value means
 	// there will be no timeout.
-	ReadTimeout time.Duration
+	// If 0, DefaultReadTimeout is used.
+	readTimeout time.Duration
 
 	// WriteTimeout defines the http.Service WriteTimeout
 	// It is the maximum duration before timing out
 	// writes of the response. It is reset whenever a new
 	// request's header is read. Like ReadTimeout, it does not
 	// let Handlers make decisions on a per-request basis.
-	// A zero or negative value means there will be no timeout.
-	WriteTimeout time.Duration
+	// A negative value means there will be no timeout.
+	// If 0, DefaultWriteTimeout is used.
+	writeTimeout time.Duration
 
 	// Port is the port configured to bind the receiver to. Defaults to 8080.
 	// If you want to know the effective port you're listening to, use GetListeningPort()
@@ -130,12 +132,12 @@ func New(opts ...Option) (*Protocol, error) {
 		p.ShutdownTimeout = DefaultShutdownTimeout
 	}
 
-	if p.ReadTimeout == 0 {
-		p.ReadTimeout = DefaultTimeout
+	if p.readTimeout == 0 {
+		p.readTimeout = DefaultTimeout
 	}
 
-	if p.WriteTimeout == 0 {
-		p.WriteTimeout = DefaultTimeout
+	if p.writeTimeout <= 0 {
+		p.writeTimeout = DefaultTimeout
 	}
 
 	if p.isRetriableFunc == nil {
