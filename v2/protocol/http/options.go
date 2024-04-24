@@ -83,7 +83,8 @@ func WithShutdownTimeout(timeout time.Duration) Option {
 	}
 }
 
-// WithReadTimeout sets the read timeout for the http server.
+// WithReadTimeout sets the read timeout for the http server. If not set, it will default to the
+// DefaultTimeout (600s). There is no maximum limit on the timeout for long-running processes.
 func WithReadTimeout(timeout time.Duration) Option {
 	return func(p *Protocol) error {
 		if p == nil {
@@ -94,7 +95,8 @@ func WithReadTimeout(timeout time.Duration) Option {
 	}
 }
 
-// WithWriteTimeout sets the write timeout for the http server.
+// WithWriteTimeout sets the write timeout for the http server. If not set, it will default to the
+// DefaultTimeout (600s). There is no maximum limit on the timeout for long-running processes.
 func WithWriteTimeout(timeout time.Duration) Option {
 	return func(p *Protocol) error {
 		if p == nil {

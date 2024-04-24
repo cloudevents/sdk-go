@@ -136,7 +136,7 @@ func New(opts ...Option) (*Protocol, error) {
 		p.readTimeout = DefaultTimeout
 	}
 
-	if p.writeTimeout <= 0 {
+	if p.writeTimeout == 0 {
 		p.writeTimeout = DefaultTimeout
 	}
 
