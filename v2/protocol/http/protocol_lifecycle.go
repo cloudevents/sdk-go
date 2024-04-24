@@ -38,10 +38,11 @@ func (p *Protocol) OpenInbound(ctx context.Context) error {
 	}
 
 	p.server = &http.Server{
-		Addr:         listener.Addr().String(),
-		Handler:      attachMiddleware(p.Handler, p.middleware),
-		ReadTimeout:  p.readTimeout,
-		WriteTimeout: p.writeTimeout,
+		Addr:    listener.Addr().String(),
+		Handler: attachMiddleware(p.Handler, p.middleware),
+		// Timeout values should always be set to either 0, the DefaultTimeout, or User Provided
+		ReadTimeout:  *p.readTimeout,
+		WriteTimeout: *p.writeTimeout,
 	}
 
 	// Shutdown

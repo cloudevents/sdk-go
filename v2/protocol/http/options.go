@@ -93,7 +93,7 @@ func WithReadTimeout(timeout time.Duration) Option {
 		if timeout < 0 {
 			return fmt.Errorf("http read timeout option can not be negative, for infinite timeouts we suggest setting an extremely high timeout")
 		}
-		p.readTimeout = timeout
+		p.readTimeout = &timeout
 		return nil
 	}
 }
@@ -108,7 +108,7 @@ func WithWriteTimeout(timeout time.Duration) Option {
 		if timeout < 0 {
 			return fmt.Errorf("http write timeout option can not be negative, for infinite timeouts we suggest setting an extremely high timeout")
 		}
-		p.writeTimeout = timeout
+		p.writeTimeout = &timeout
 		return nil
 	}
 }

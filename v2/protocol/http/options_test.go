@@ -316,6 +316,7 @@ func TestWithShutdownTimeout(t *testing.T) {
 }
 
 func TestWithReadTimeout(t *testing.T) {
+	expected := time.Minute * 4
 	testCases := map[string]struct {
 		t       *Protocol
 		timeout time.Duration
@@ -326,7 +327,7 @@ func TestWithReadTimeout(t *testing.T) {
 			t:       &Protocol{},
 			timeout: time.Minute * 4,
 			want: &Protocol{
-				readTimeout: time.Minute * 4,
+				readTimeout: &expected,
 			},
 		},
 		"negative timeout": {
@@ -365,6 +366,8 @@ func TestWithReadTimeout(t *testing.T) {
 }
 
 func TestWithWriteTimeout(t *testing.T) {
+	expected := time.Minute * 4
+
 	testCases := map[string]struct {
 		t       *Protocol
 		timeout time.Duration
@@ -375,7 +378,7 @@ func TestWithWriteTimeout(t *testing.T) {
 			t:       &Protocol{},
 			timeout: time.Minute * 4,
 			want: &Protocol{
-				writeTimeout: time.Minute * 4,
+				writeTimeout: &expected,
 			},
 		},
 		"negative timeout": {
