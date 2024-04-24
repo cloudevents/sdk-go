@@ -332,9 +332,7 @@ func TestWithReadTimeout(t *testing.T) {
 		"negative timeout": {
 			t:       &Protocol{},
 			timeout: -1,
-			want: &Protocol{
-				writeTimeout: -1,
-			},
+			wantErr: "http read timeout option can not be negative, for infinite timeouts we suggest setting an extremely high timeout",
 		},
 		"nil protocol": {
 			wantErr: "http read timeout option can not set nil protocol",
@@ -383,9 +381,7 @@ func TestWithWriteTimeout(t *testing.T) {
 		"negative timeout": {
 			t:       &Protocol{},
 			timeout: -1,
-			want: &Protocol{
-				writeTimeout: -1,
-			},
+			wantErr: "http write timeout option can not be negative, for infinite timeouts we suggest setting an extremely high timeout",
 		},
 		"nil protocol": {
 			wantErr: "http write timeout option can not set nil protocol",

@@ -90,6 +90,9 @@ func WithReadTimeout(timeout time.Duration) Option {
 		if p == nil {
 			return fmt.Errorf("http read timeout option can not set nil protocol")
 		}
+		if timeout < 0 {
+			return fmt.Errorf("http read timeout option can not be negative, for infinite timeouts we suggest setting an extremely high timeout")
+		}
 		p.readTimeout = timeout
 		return nil
 	}
@@ -101,6 +104,9 @@ func WithWriteTimeout(timeout time.Duration) Option {
 	return func(p *Protocol) error {
 		if p == nil {
 			return fmt.Errorf("http write timeout option can not set nil protocol")
+		}
+		if timeout < 0 {
+			return fmt.Errorf("http write timeout option can not be negative, for infinite timeouts we suggest setting an extremely high timeout")
 		}
 		p.writeTimeout = timeout
 		return nil
