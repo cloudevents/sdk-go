@@ -70,7 +70,7 @@ type Protocol struct {
 	// If 0, DefaultShutdownTimeout is used.
 	ShutdownTimeout time.Duration
 
-	// ReadTimeout defines the http.Service ReadTimeout
+	// readTimeout defines the http.Server ReadTimeout
 	// It is the maximum duration for reading the entire
 	// request, including the body. A negative value means
 	// there will be no timeout.
