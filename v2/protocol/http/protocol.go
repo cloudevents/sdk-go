@@ -77,7 +77,7 @@ type Protocol struct {
 	// If 0, DefaultReadTimeout is used.
 	readTimeout time.Duration
 
-	// WriteTimeout defines the http.Service WriteTimeout
+	// writeTimeout defines the http.Server WriteTimeout
 	// It is the maximum duration before timing out
 	// writes of the response. It is reset whenever a new
 	// request's header is read. Like ReadTimeout, it does not
