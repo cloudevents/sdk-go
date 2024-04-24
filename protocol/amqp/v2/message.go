@@ -22,7 +22,7 @@ const prefix = "cloudEvents:" // Name prefix for AMQP properties that hold CE at
 
 var (
 	// Use the package path as AMQP error condition name
-	condition = amqp.ErrorCondition(reflect.TypeOf(Message{}).PkgPath())
+	condition = amqp.ErrCond(reflect.TypeOf(Message{}).PkgPath())
 	specs     = spec.WithPrefix(prefix)
 )
 
