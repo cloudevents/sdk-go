@@ -16,14 +16,15 @@ import (
 
 // sender wraps an amqp.Sender as a binding.Sender
 type sender struct {
-	amqp *amqp.Sender
+	amqp    *amqp.Sender
+	options *amqp.SendOptions
 }
 
 func (s *sender) Send(ctx context.Context, in binding.Message, transformers ...binding.Transformer) error {
 	var err error
 	defer func() { _ = in.Finish(err) }()
 	if m, ok := in.(*Message); ok { // Already an AMQP message.
-		err = s.amqp.Send(ctx, m.AMQP)
+		err = s.amqp.Send(ctx, m.AMQP, s.options)
 		return err
 	}
 
@@ -33,15 +34,13 @@ func (s *sender) Send(ctx context.Context, in binding.Message, transformers ...b
 		return err
 	}
 
-	err = s.amqp.Send(ctx, &amqpMessage)
+	err = s.amqp.Send(ctx, &amqpMessage, s.options)
 	return err
 }
 
 // NewSender creates a new Sender which wraps an amqp.Sender in a binding.Sender
-func NewSender(amqpSender *amqp.Sender, options ...SenderOptionFunc) protocol.Sender {
-	s := &sender{amqp: amqpSender}
-	for _, o := range options {
-		o(s)
-	}
+func NewSender(amqpSender *amqp.Sender, options *amqp.SendOptions) protocol.Sender {
+	s := &sender{amqp: amqpSender, options: options}
+
 	return s
 }

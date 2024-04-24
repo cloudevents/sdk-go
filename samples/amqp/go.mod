@@ -3,10 +3,10 @@ module github.com/cloudevents/sdk-go/samples/amqp
 go 1.18
 
 require (
-	github.com/Azure/go-amqp v0.17.0
+	github.com/Azure/go-amqp v1.0.5
 	github.com/cloudevents/sdk-go/protocol/amqp/v2 v2.5.0
 	github.com/cloudevents/sdk-go/v2 v2.5.0
-	github.com/google/uuid v1.1.1
+	github.com/google/uuid v1.6.0
 )
 
 require (
