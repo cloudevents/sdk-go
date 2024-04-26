@@ -333,7 +333,7 @@ func TestWithReadTimeout(t *testing.T) {
 		"negative timeout": {
 			t:       &Protocol{},
 			timeout: -1,
-			wantErr: "http read timeout option can not be negative, for infinite timeouts we suggest setting an extremely high timeout",
+			wantErr: "http read timeout must not be negative",
 		},
 		"nil protocol": {
 			wantErr: "http read timeout option can not set nil protocol",
@@ -384,7 +384,7 @@ func TestWithWriteTimeout(t *testing.T) {
 		"negative timeout": {
 			t:       &Protocol{},
 			timeout: -1,
-			wantErr: "http write timeout option can not be negative, for infinite timeouts we suggest setting an extremely high timeout",
+			wantErr: "http write timeout must not be negative",
 		},
 		"nil protocol": {
 			wantErr: "http write timeout option can not set nil protocol",
@@ -489,9 +489,19 @@ func forceClose(tr *Protocol) {
 }
 
 func TestWithPort0(t *testing.T) {
+	noReadWriteTimeout := time.Duration(0)
+
 	testCases := map[string]func() (*Protocol, error){
-		"WithPort0": func() (*Protocol, error) { return New(WithPort(0)) },
-		"SetPort0":  func() (*Protocol, error) { return &Protocol{Port: 0}, nil },
+		"WithPort0": func() (*Protocol, error) {
+			return New(WithPort(0))
+		},
+		"SetPort0": func() (*Protocol, error) {
+			return &Protocol{
+				Port:         0,
+				readTimeout:  &noReadWriteTimeout,
+				writeTimeout: &noReadWriteTimeout,
+			}, nil
+		},
 	}
 	for name, f := range testCases {
 		t.Run(name, func(t *testing.T) {

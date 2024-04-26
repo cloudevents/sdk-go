@@ -83,30 +83,32 @@ func WithShutdownTimeout(timeout time.Duration) Option {
 	}
 }
 
-// WithReadTimeout sets the read timeout for the http server. If not set, it will default to the
-// DefaultTimeout (600s). There is no maximum limit on the timeout for long-running processes.
+// WithReadTimeout overwrites the default read timeout (600s) of the http
+// server. The specified timeout must not be negative. A timeout of 0 disables
+// read timeouts in the http server.
 func WithReadTimeout(timeout time.Duration) Option {
 	return func(p *Protocol) error {
 		if p == nil {
 			return fmt.Errorf("http read timeout option can not set nil protocol")
 		}
 		if timeout < 0 {
-			return fmt.Errorf("http read timeout option can not be negative, for infinite timeouts we suggest setting an extremely high timeout")
+			return fmt.Errorf("http read timeout must not be negative")
 		}
 		p.readTimeout = &timeout
 		return nil
 	}
 }
 
-// WithWriteTimeout sets the write timeout for the http server. If not set, it will default to the
-// DefaultTimeout (600s). There is no maximum limit on the timeout for long-running processes.
+// WithWriteTimeout overwrites the default write timeout (600s) of the http
+// server. The specified timeout must not be negative. A timeout of 0 disables
+// write timeouts in the http server.
 func WithWriteTimeout(timeout time.Duration) Option {
 	return func(p *Protocol) error {
 		if p == nil {
 			return fmt.Errorf("http write timeout option can not set nil protocol")
 		}
 		if timeout < 0 {
-			return fmt.Errorf("http write timeout option can not be negative, for infinite timeouts we suggest setting an extremely high timeout")
+			return fmt.Errorf("http write timeout must not be negative")
 		}
 		p.writeTimeout = &timeout
 		return nil
