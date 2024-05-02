@@ -10,12 +10,16 @@ import (
 	"os"
 	"path"
 	"runtime"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/yaml"
 
+	cesql "github.com/cloudevents/sdk-go/sql/v2"
+	"github.com/cloudevents/sdk-go/sql/v2/function"
 	"github.com/cloudevents/sdk-go/sql/v2/parser"
+	ceruntime "github.com/cloudevents/sdk-go/sql/v2/runtime"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/cloudevents/sdk-go/v2/binding/spec"
 	"github.com/cloudevents/sdk-go/v2/event"
@@ -41,6 +45,33 @@ var TCKFileNames = []string{
 	"string_builtin_functions",
 	"sub_expression",
 	"subscriptions_api_recreations",
+	"user_defined_functions",
+}
+
+var TCKUserDefinedFunctions = []cesql.Function{
+	function.NewFunction(
+		"HASPREFIX",
+		[]cesql.Type{cesql.StringType, cesql.StringType},
+		nil,
+		func(event cloudevents.Event, i []interface{}) (interface{}, error) {
+			str := i[0].(string)
+			prefix := i[1].(string)
+
+			return strings.HasPrefix(str, prefix), nil
+		},
+	),
+	function.NewFunction(
+		"KONKAT",
+		[]cesql.Type{},
+		cesql.TypePtr(cesql.StringType),
+		func(event cloudevents.Event, i []interface{}) (interface{}, error) {
+			var sb strings.Builder
+			for _, v := range i {
+				sb.WriteString(v.(string))
+			}
+			return sb.String(), nil
+		},
+	),
 }
 
 type ErrorType string
@@ -68,6 +99,13 @@ type TckTestCase struct {
 
 	Event          *cloudevents.Event     `json:"event"`
 	EventOverrides map[string]interface{} `json:"eventOverrides"`
+}
+
+func TestMain(m *testing.M) {
+	for _, f := range TCKUserDefinedFunctions {
+		ceruntime.AddFunction(f)
+	}
+	os.Exit(m.Run())
 }
 
 func (tc TckTestCase) InputEvent(t *testing.T) cloudevents.Event {
