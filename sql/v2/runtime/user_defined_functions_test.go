@@ -3,44 +3,56 @@
  SPDX-License-Identifier: Apache-2.0
 */
 
-package test
+package runtime_test
 
 import (
 	"io"
 	"os"
 	"path"
 	"runtime"
+	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-	"sigs.k8s.io/yaml"
-
+	cesql "github.com/cloudevents/sdk-go/sql/v2"
+	"github.com/cloudevents/sdk-go/sql/v2/function"
 	"github.com/cloudevents/sdk-go/sql/v2/parser"
+	ceruntime "github.com/cloudevents/sdk-go/sql/v2/runtime"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/cloudevents/sdk-go/v2/binding/spec"
 	"github.com/cloudevents/sdk-go/v2/event"
 	"github.com/cloudevents/sdk-go/v2/test"
+	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v2"
 )
 
 var TCKFileNames = []string{
-	"binary_math_operators",
-	"binary_logical_operators",
-	"binary_comparison_operators",
-	"case_sensitivity",
-	"casting_functions",
-	"context_attributes_access",
-	"exists_expression",
-	"in_expression",
-	"integer_builtin_functions",
-	"like_expression",
-	"literals",
-	"negate_operator",
-	"not_operator",
-	"parse_errors",
-	"spec_examples",
-	"string_builtin_functions",
-	"sub_expression",
-	"subscriptions_api_recreations",
+	"user_defined_functions",
+}
+
+var TCKUserDefinedFunctions = []cesql.Function{
+	function.NewFunction(
+		"HASPREFIX",
+		[]cesql.Type{cesql.StringType, cesql.StringType},
+		nil,
+		func(event cloudevents.Event, i []interface{}) (interface{}, error) {
+			str := i[0].(string)
+			prefix := i[1].(string)
+
+			return strings.HasPrefix(str, prefix), nil
+		},
+	),
+	function.NewFunction(
+		"KONKAT",
+		[]cesql.Type{},
+		cesql.TypePtr(cesql.StringType),
+		func(event cloudevents.Event, i []interface{}) (interface{}, error) {
+			var sb strings.Builder
+			for _, v := range i {
+				sb.WriteString(v.(string))
+			}
+			return sb.String(), nil
+		},
+	),
 }
 
 type ErrorType string
@@ -100,7 +112,44 @@ func (tc TckTestCase) ExpectedResult() interface{} {
 	return tc.Result
 }
 
-func TestTCK(t *testing.T) {
+func Test_functionTable_AddFunction(t *testing.T) {
+
+	type args struct {
+		functions []cesql.Function
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "Add user functions to global table",
+
+			args: args{
+				functions: TCKUserDefinedFunctions,
+			},
+			wantErr: false,
+		},
+		{
+			name: "Fail add user functions to global table",
+			args: args{
+				functions: TCKUserDefinedFunctions,
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			for _, fn := range tt.args.functions {
+				if err := ceruntime.AddFunction(fn); (err != nil) != tt.wantErr {
+					t.Errorf("functionTable.AddFunction() error = %v, wantErr %v", err, tt.wantErr)
+				}
+			}
+		})
+	}
+}
+
+func Test_UserFunctions(t *testing.T) {
 	tckFiles := make([]TckFile, 0, len(TCKFileNames))
 
 	_, basePath, _, _ := runtime.Caller(0)
@@ -110,7 +159,6 @@ func TestTCK(t *testing.T) {
 		testFilePath := path.Join(basePath, "tck", testFile+".yaml")
 
 		t.Logf("Loading file %s", testFilePath)
-
 		file, err := os.Open(testFilePath)
 		require.NoError(t, err)
 
