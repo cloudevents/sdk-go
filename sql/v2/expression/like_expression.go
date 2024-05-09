@@ -48,6 +48,10 @@ func matchString(text, pattern string) bool {
 	lastWildcardIdx := -1
 	lastMatchIdx := 0
 
+	if patternLen == 0 {
+		return patternLen == textLen
+	}
+
 	for textIdx < textLen {
 		if patternIdx < patternLen-1 && pattern[patternIdx] == '\\' &&
 			((pattern[patternIdx+1] == '_' || pattern[patternIdx+1] == '%') &&
