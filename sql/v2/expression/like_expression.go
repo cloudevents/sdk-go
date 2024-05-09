@@ -49,23 +49,23 @@ func matchString(text, pattern string) bool {
 	lastMatchIdx := 0
 
 	for textIdx < textLen {
-		// handle escaped characters -> pattern needs to increment two places here
 		if patternIdx < patternLen-1 && pattern[patternIdx] == '\\' &&
 			((pattern[patternIdx+1] == '_' || pattern[patternIdx+1] == '%') &&
 				pattern[patternIdx+1] == text[textIdx]) {
+			// handle escaped characters -> pattern needs to increment two places here
 			patternIdx += 2
 			textIdx += 1
-			// handle non escaped characters
 		} else if patternIdx < patternLen && (pattern[patternIdx] == '_' || pattern[patternIdx] == text[textIdx]) {
+			// handle non escaped characters
 			textIdx += 1
 			patternIdx += 1
-			// handle wildcard characters
 		} else if patternIdx < patternLen && pattern[patternIdx] == '%' {
+			// handle wildcard characters
 			lastWildcardIdx = patternIdx
 			lastMatchIdx = textIdx
 			patternIdx += 1
-			// greedy match didn't work, try again from the last known match
 		} else if lastWildcardIdx != -1 {
+			// greedy match didn't work, try again from the last known match
 			patternIdx = lastWildcardIdx + 1
 			lastMatchIdx += 1
 			textIdx = lastMatchIdx
