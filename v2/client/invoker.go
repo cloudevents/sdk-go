@@ -65,7 +65,7 @@ func (r *receiveInvoker) Invoke(ctx context.Context, m binding.Message, respFn p
 	var respMsg binding.Message
 	var result protocol.Result
 
-	e, eventErr := binding.ToEvent(ctx, m, r.receiverTransformers...)
+	e, eventErr := binding.ToEvent(ctx, m)
 	switch {
 	case eventErr != nil && r.fn.hasEventIn:
 		r.observabilityService.RecordReceivedMalformedEvent(ctx, eventErr)
@@ -76,6 +76,15 @@ func (r *receiveInvoker) Invoke(ctx context.Context, m binding.Message, respFn p
 			if validationErr := e.Validate(); validationErr != nil {
 				r.observabilityService.RecordReceivedMalformedEvent(ctx, validationErr)
 				return respFn(ctx, nil, protocol.NewReceipt(r.ackMalformedEvent, "validation error in incoming event: %w", validationErr))
+			}
+		}
+
+		mt, ok := m.(binding.MessageMetadataReader)
+		if ok {
+			encoder := (*binding.MessageToEventBuilder)(e)
+			err := binding.Transformers(r.receiverTransformers).Transform(mt, encoder)
+			if err != nil {
+				cecontext.LoggerFrom(ctx).Errorf("apply receiver transformers error on response event: %v", err)
 			}
 		}
 
