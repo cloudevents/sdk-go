@@ -139,3 +139,13 @@ func WithAckMalformedEvent() Option {
 		return nil
 	}
 }
+
+// WithReciverTransformers add a binding.Transformers to apply a binary/event message to the event metadata
+func WithReciverTransformers(trans binding.Transformers) Option {
+	return func(i interface{}) error {
+		if c, ok := i.(*ceClient); ok {
+			c.receiverTransformers = trans
+		}
+		return nil
+	}
+}

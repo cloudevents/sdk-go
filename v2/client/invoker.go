@@ -29,12 +29,14 @@ func newReceiveInvoker(
 	inboundContextDecorators []func(context.Context, binding.Message) context.Context,
 	fns []EventDefaulter,
 	ackMalformedEvent bool,
+	transformers ...binding.Transformer,
 ) (Invoker, error) {
 	r := &receiveInvoker{
 		eventDefaulterFns:        fns,
 		observabilityService:     observabilityService,
 		inboundContextDecorators: inboundContextDecorators,
 		ackMalformedEvent:        ackMalformedEvent,
+		receiverTransformers:     transformers,
 	}
 
 	if fn, err := receiver(fn); err != nil {
@@ -52,6 +54,7 @@ type receiveInvoker struct {
 	eventDefaulterFns        []EventDefaulter
 	inboundContextDecorators []func(context.Context, binding.Message) context.Context
 	ackMalformedEvent        bool
+	receiverTransformers     []binding.Transformer
 }
 
 func (r *receiveInvoker) Invoke(ctx context.Context, m binding.Message, respFn protocol.ResponseFn) (err error) {
@@ -62,7 +65,7 @@ func (r *receiveInvoker) Invoke(ctx context.Context, m binding.Message, respFn p
 	var respMsg binding.Message
 	var result protocol.Result
 
-	e, eventErr := binding.ToEvent(ctx, m)
+	e, eventErr := binding.ToEvent(ctx, m, r.receiverTransformers...)
 	switch {
 	case eventErr != nil && r.fn.hasEventIn:
 		r.observabilityService.RecordReceivedMalformedEvent(ctx, eventErr)

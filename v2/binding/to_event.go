@@ -62,7 +62,12 @@ func ToEvent(ctx context.Context, message MessageReader, transformers ...Transfo
 	if err != nil {
 		return nil, err
 	}
-	return &e, Transformers(transformers).Transform((*EventMessage)(&e), encoder)
+
+	if mt, ok := message.(MessageMetadataReader); ok {
+		return &e, Transformers(transformers).Transform(mt, encoder)
+	} else {
+		return &e, Transformers(transformers).Transform((*EventMessage)(&e), encoder)
+	}
 }
 
 // ToEvents translates a Batch Message and corresponding Reader data to a slice of Events.
@@ -82,8 +87,10 @@ func ToEvents(ctx context.Context, message MessageReader, body io.Reader) ([]eve
 
 type messageToEventBuilder event.Event
 
-var _ StructuredWriter = (*messageToEventBuilder)(nil)
-var _ BinaryWriter = (*messageToEventBuilder)(nil)
+var (
+	_ StructuredWriter = (*messageToEventBuilder)(nil)
+	_ BinaryWriter     = (*messageToEventBuilder)(nil)
+)
 
 func (b *messageToEventBuilder) SetStructuredEvent(ctx context.Context, format format.Format, ev io.Reader) error {
 	var buf bytes.Buffer

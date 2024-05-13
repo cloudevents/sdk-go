@@ -99,6 +99,8 @@ type ceClient struct {
 	pollGoroutines            int
 	blockingCallback          bool
 	ackMalformedEvent         bool
+
+	receiverTransformers []binding.Transformer
 }
 
 func (c *ceClient) applyOptions(opts ...Option) error {
@@ -209,6 +211,7 @@ func (c *ceClient) StartReceiver(ctx context.Context, fn interface{}) error {
 		c.inboundContextDecorators,
 		c.eventDefaulterFns,
 		c.ackMalformedEvent,
+		c.receiverTransformers...,
 	)
 	if err != nil {
 		return err
