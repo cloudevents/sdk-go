@@ -30,7 +30,7 @@ jobs:
 
       - name: Go Lint on ./v2
         if: steps.golangci_configuration.outputs.files_exists == 'true'
-        uses: golangci/golangci-lint-action@v5
+        uses: golangci/golangci-lint-action@v6
         with:
           version: v1.54
           working-directory: v2
