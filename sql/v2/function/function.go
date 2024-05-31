@@ -14,6 +14,7 @@ type function struct {
 	name         string
 	fixedArgs    []cesql.Type
 	variadicArgs *cesql.Type
+	returnType   cesql.Type
 	fn           func(cloudevents.Event, []interface{}) (interface{}, error)
 }
 
@@ -34,6 +35,10 @@ func (f function) ArgType(index int) *cesql.Type {
 		return &f.fixedArgs[index]
 	}
 	return f.variadicArgs
+}
+
+func (f function) ReturnType() cesql.Type {
+	return f.returnType
 }
 
 func (f function) Run(event cloudevents.Event, arguments []interface{}) (interface{}, error) {

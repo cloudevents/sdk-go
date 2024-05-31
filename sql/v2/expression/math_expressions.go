@@ -21,22 +21,22 @@ type mathExpression struct {
 func (s mathExpression) Evaluate(event cloudevents.Event) (interface{}, error) {
 	leftVal, err := s.left.Evaluate(event)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 
 	rightVal, err := s.right.Evaluate(event)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 
 	leftVal, err = utils.Cast(leftVal, cesql.IntegerType)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 
 	rightVal, err = utils.Cast(rightVal, cesql.IntegerType)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 
 	return s.fn(leftVal.(int32), rightVal.(int32))

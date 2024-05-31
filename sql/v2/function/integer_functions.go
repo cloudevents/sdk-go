@@ -14,6 +14,7 @@ var AbsFunction function = function{
 	name:         "ABS",
 	fixedArgs:    []cesql.Type{cesql.IntegerType},
 	variadicArgs: nil,
+	returnType:   cesql.IntegerType,
 	fn: func(event cloudevents.Event, i []interface{}) (interface{}, error) {
 		x := i[0].(int32)
 		if x < 0 {
