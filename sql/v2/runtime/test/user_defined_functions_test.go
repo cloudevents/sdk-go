@@ -1,5 +1,5 @@
 /*
- Copyright 2021 The CloudEvents Authors
+ Copyright 2024 The CloudEvents Authors
  SPDX-License-Identifier: Apache-2.0
 */
 
@@ -112,7 +112,7 @@ func (tc TckTestCase) ExpectedResult() interface{} {
 	return tc.Result
 }
 
-func Test_functionTable_AddFunction(t *testing.T) {
+func TestFunctionTableAddFunction(t *testing.T) {
 
 	type args struct {
 		functions []cesql.Function
@@ -142,14 +142,14 @@ func Test_functionTable_AddFunction(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			for _, fn := range tt.args.functions {
 				if err := ceruntime.AddFunction(fn); (err != nil) != tt.wantErr {
-					t.Errorf("functionTable.AddFunction() error = %v, wantErr %v", err, tt.wantErr)
+					t.Errorf("AddFunction() error = %v, wantErr %v", err, tt.wantErr)
 				}
 			}
 		})
 	}
 }
 
-func Test_UserFunctions(t *testing.T) {
+func TestUserFunctions(t *testing.T) {
 	tckFiles := make([]TckFile, 0, len(TCKFileNames))
 
 	_, basePath, _, _ := runtime.Caller(0)
