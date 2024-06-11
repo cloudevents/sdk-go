@@ -1,47 +1,58 @@
 /*
- Copyright 2021 The CloudEvents Authors
+ Copyright 2024 The CloudEvents Authors
  SPDX-License-Identifier: Apache-2.0
 */
 
-package test
+package runtime_test
 
 import (
-	"fmt"
 	"io"
 	"os"
 	"path"
 	"runtime"
+	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-	"sigs.k8s.io/yaml"
-
+	cesql "github.com/cloudevents/sdk-go/sql/v2"
+	"github.com/cloudevents/sdk-go/sql/v2/function"
 	"github.com/cloudevents/sdk-go/sql/v2/parser"
+	ceruntime "github.com/cloudevents/sdk-go/sql/v2/runtime"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/cloudevents/sdk-go/v2/binding/spec"
 	"github.com/cloudevents/sdk-go/v2/event"
 	"github.com/cloudevents/sdk-go/v2/test"
+	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v2"
 )
 
 var TCKFileNames = []string{
-	"binary_math_operators",
-	"binary_logical_operators",
-	"binary_comparison_operators",
-	"case_sensitivity",
-	"casting_functions",
-	"context_attributes_access",
-	"exists_expression",
-	"in_expression",
-	"integer_builtin_functions",
-	"like_expression",
-	"literals",
-	"negate_operator",
-	"not_operator",
-	"parse_errors",
-	"spec_examples",
-	"string_builtin_functions",
-	"sub_expression",
-	"subscriptions_api_recreations",
+	"user_defined_functions",
+}
+
+var TCKUserDefinedFunctions = []cesql.Function{
+	function.NewFunction(
+		"HASPREFIX",
+		[]cesql.Type{cesql.StringType, cesql.StringType},
+		nil,
+		func(event cloudevents.Event, i []interface{}) (interface{}, error) {
+			str := i[0].(string)
+			prefix := i[1].(string)
+
+			return strings.HasPrefix(str, prefix), nil
+		},
+	),
+	function.NewFunction(
+		"KONKAT",
+		[]cesql.Type{},
+		cesql.TypePtr(cesql.StringType),
+		func(event cloudevents.Event, i []interface{}) (interface{}, error) {
+			var sb strings.Builder
+			for _, v := range i {
+				sb.WriteString(v.(string))
+			}
+			return sb.String(), nil
+		},
+	),
 }
 
 type ErrorType string
@@ -71,7 +82,7 @@ type TckTestCase struct {
 	EventOverrides map[string]interface{} `json:"eventOverrides"`
 }
 
-func (tc TckTestCase) InputEvent(tb testing.TB) cloudevents.Event {
+func (tc TckTestCase) InputEvent(t *testing.T) cloudevents.Event {
 	var inputEvent cloudevents.Event
 	if tc.Event != nil {
 		inputEvent = *tc.Event
@@ -83,7 +94,7 @@ func (tc TckTestCase) InputEvent(tb testing.TB) cloudevents.Event {
 	inputEvent.SetSpecVersion(event.CloudEventsVersionV1)
 
 	for k, v := range tc.EventOverrides {
-		require.NoError(tb, spec.V1.SetAttribute(inputEvent.Context, k, v))
+		require.NoError(t, spec.V1.SetAttribute(inputEvent.Context, k, v))
 	}
 
 	return inputEvent
@@ -101,7 +112,44 @@ func (tc TckTestCase) ExpectedResult() interface{} {
 	return tc.Result
 }
 
-func TestTCK(t *testing.T) {
+func TestFunctionTableAddFunction(t *testing.T) {
+
+	type args struct {
+		functions []cesql.Function
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "Add user functions to global table",
+
+			args: args{
+				functions: TCKUserDefinedFunctions,
+			},
+			wantErr: false,
+		},
+		{
+			name: "Fail add user functions to global table",
+			args: args{
+				functions: TCKUserDefinedFunctions,
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			for _, fn := range tt.args.functions {
+				if err := ceruntime.AddFunction(fn); (err != nil) != tt.wantErr {
+					t.Errorf("AddFunction() error = %v, wantErr %v", err, tt.wantErr)
+				}
+			}
+		})
+	}
+}
+
+func TestUserFunctions(t *testing.T) {
 	tckFiles := make([]TckFile, 0, len(TCKFileNames))
 
 	_, basePath, _, _ := runtime.Caller(0)
@@ -111,7 +159,6 @@ func TestTCK(t *testing.T) {
 		testFilePath := path.Join(basePath, "tck", testFile+".yaml")
 
 		t.Logf("Loading file %s", testFilePath)
-
 		file, err := os.Open(testFilePath)
 		require.NoError(t, err)
 
@@ -155,63 +202,6 @@ func TestTCK(t *testing.T) {
 						require.NoError(t, err)
 						require.Equal(t, testCase.ExpectedResult(), result)
 					}
-				})
-			}
-		})
-	}
-}
-
-func BenchmarkTCK(b *testing.B) {
-	tckFiles := make([]TckFile, 0, len(TCKFileNames))
-
-	_, basePath, _, _ := runtime.Caller(0)
-	basePath, _ = path.Split(basePath)
-
-	for _, testFile := range TCKFileNames {
-		testFilePath := path.Join(basePath, "tck", testFile+".yaml")
-
-		b.Logf("Loading file %s", testFilePath)
-
-		file, err := os.Open(testFilePath)
-		require.NoError(b, err)
-
-		fileBytes, err := io.ReadAll(file)
-		require.NoError(b, err)
-
-		tckFileModel := TckFile{}
-		require.NoError(b, yaml.Unmarshal(fileBytes, &tckFileModel))
-
-		tckFiles = append(tckFiles, tckFileModel)
-	}
-
-	for i, file := range tckFiles {
-		i := i
-		b.Run(file.Name, func(b *testing.B) {
-			for j, testCase := range tckFiles[i].Tests {
-				j := j
-				testCase := testCase
-				b.Run(fmt.Sprintf("%v parse", testCase.Name), func(b *testing.B) {
-					testCase := tckFiles[i].Tests[j]
-					for k := 0; k < b.N; k++ {
-						_, _ = parser.Parse(testCase.Expression)
-					}
-				})
-
-				if testCase.Error == ParseError {
-					return
-				}
-
-				b.Run(fmt.Sprintf("%v evaluate", testCase.Name), func(b *testing.B) {
-					testCase := tckFiles[i].Tests[j]
-
-					expr, _ := parser.Parse(testCase.Expression)
-
-					inputEvent := testCase.InputEvent(b)
-
-					for k := 0; k < b.N; k++ {
-						_, _ = expr.Evaluate(inputEvent)
-					}
-
 				})
 			}
 		})
