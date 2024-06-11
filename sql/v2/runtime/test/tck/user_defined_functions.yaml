@@ -1,0 +1,27 @@
+name: User defined functions
+tests:
+  - name: HASPREFIX (1)
+    expression: "HASPREFIX('abcdef', 'ab')"
+    result: true
+  - name: HASPREFIX (2)
+    expression: "HASPREFIX('abcdef', 'abcdef')"
+    result: true  
+  - name: HASPREFIX (3)
+    expression: "HASPREFIX('abcdef', '')"
+    result: true  
+  - name: HASPREFIX (4)
+    expression: "HASPREFIX('abcdef', 'gh')"
+    result: false  
+  - name: HASPREFIX (5)
+    expression: "HASPREFIX('abcdef', 'abcdefg')"
+    result: false
+
+  - name: KONKAT (1)
+    expression: "KONKAT('a', 'b', 'c')"
+    result: abc
+  - name: KONKAT (2)
+    expression: "KONKAT()"
+    result: ""
+  - name: KONKAT (3)
+    expression: "KONKAT('a')"
+    result: "a"
