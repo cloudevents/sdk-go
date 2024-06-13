@@ -9,6 +9,7 @@ import (
 	"fmt"
 
 	cesql "github.com/cloudevents/sdk-go/sql/v2"
+	sqlerrors "github.com/cloudevents/sdk-go/sql/v2/errors"
 	"github.com/cloudevents/sdk-go/sql/v2/runtime"
 	"github.com/cloudevents/sdk-go/sql/v2/utils"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
@@ -22,7 +23,7 @@ type functionInvocationExpression struct {
 func (expr functionInvocationExpression) Evaluate(event cloudevents.Event) (interface{}, error) {
 	fn := runtime.ResolveFunction(expr.name, len(expr.argumentsExpression))
 	if fn == nil {
-		return false, fmt.Errorf("cannot resolve function %s", expr.name)
+		return false, sqlerrors.NewMissingFunctionError(expr.name)
 	}
 
 	args := make([]interface{}, len(expr.argumentsExpression))
@@ -37,7 +38,7 @@ func (expr functionInvocationExpression) Evaluate(event cloudevents.Event) (inte
 
 		argType := fn.ArgType(i)
 		if argType == nil {
-			return defaultVal, fmt.Errorf("cannot resolve arg type at index %d", i)
+			return defaultVal, sqlerrors.NewFunctionEvaluationError(fmt.Errorf("cannot resolve arg type at index %d for function %s", i, fn.Name()))
 		}
 
 		arg, err = utils.Cast(arg, *argType)
@@ -50,8 +51,15 @@ func (expr functionInvocationExpression) Evaluate(event cloudevents.Event) (inte
 
 	result, err := fn.Run(event, args)
 	if result == nil {
+		if err != nil {
+			err = sqlerrors.NewFunctionEvaluationError(fmt.Errorf("function %s encountered error %w and did not return any value, defaulting to the default value for the function", fn.Name(), err))
+		} else {
+			err = sqlerrors.NewFunctionEvaluationError(fmt.Errorf("function %s did not return any value, defaulting to the default value for the function", fn.Name()))
+		}
+
 		return defaultVal, err
 	}
+
 	return result, err
 }
 
