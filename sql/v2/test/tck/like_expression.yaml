@@ -115,7 +115,7 @@ tests:
     result: false
   - name: With type coercion from bool (4)
     expression: "FALSE LIKE 'fal%'"
-    result: true 
+    result: true
 
   - name: Invalid string literal in comparison causes parse error
     expression: "x LIKE 123"
