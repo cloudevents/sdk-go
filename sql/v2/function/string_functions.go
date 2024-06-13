@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	cesql "github.com/cloudevents/sdk-go/sql/v2"
+	sqlerrors "github.com/cloudevents/sdk-go/sql/v2/errors"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 )
 
@@ -97,7 +98,7 @@ var LeftFunction function = function{
 		}
 
 		if y < 0 {
-			return "", fmt.Errorf("LEFT y argument is < 0: %d", y)
+			return str, sqlerrors.NewFunctionEvaluationError(fmt.Errorf("LEFT y argument is < 0: %d", y))
 		}
 
 		return str[0:y], nil
@@ -117,7 +118,7 @@ var RightFunction function = function{
 		}
 
 		if y < 0 {
-			return "", fmt.Errorf("RIGHT y argument is < 0: %d", y)
+			return str, sqlerrors.NewFunctionEvaluationError(fmt.Errorf("RIGHT y argument is < 0: %d", y))
 		}
 
 		return str[len(str)-y:], nil
@@ -137,7 +138,7 @@ var SubstringFunction function = function{
 		}
 
 		if pos < -len(str) || pos > len(str) {
-			return "", fmt.Errorf("SUBSTRING invalid pos argument: %d", pos)
+			return "", sqlerrors.NewFunctionEvaluationError(fmt.Errorf("SUBSTRING invalid pos argument: %d", pos))
 		}
 
 		var beginning int
@@ -165,7 +166,7 @@ var SubstringWithLengthFunction function = function{
 		}
 
 		if pos < -len(str) || pos > len(str) {
-			return "", fmt.Errorf("SUBSTRING invalid pos argument: %d", pos)
+			return "", sqlerrors.NewFunctionEvaluationError(fmt.Errorf("SUBSTRING invalid pos argument: %d", pos))
 		}
 
 		var beginning int
