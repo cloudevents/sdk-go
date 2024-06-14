@@ -16,6 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/yaml"
 
+	sqlerrors "github.com/cloudevents/sdk-go/sql/v2/errors"
 	"github.com/cloudevents/sdk-go/sql/v2/parser"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/cloudevents/sdk-go/v2/binding/spec"
@@ -53,6 +54,7 @@ const (
 	MissingAttributeError   ErrorType = "missingAttribute"
 	MissingFunctionError    ErrorType = "missingFunction"
 	FunctionEvaluationError ErrorType = "functionEvaluation"
+	GenericError            ErrorType = "generic"
 )
 
 type TckFile struct {
@@ -101,6 +103,27 @@ func (tc TckTestCase) ExpectedResult() interface{} {
 	return tc.Result
 }
 
+func verifyErrorType(expectedType ErrorType, err error) bool {
+	switch expectedType {
+	case ParseError:
+		return sqlerrors.IsParseError(err)
+	case MathError:
+		return sqlerrors.IsMathError(err)
+	case CastError:
+		return sqlerrors.IsCastError(err)
+	case MissingFunctionError:
+		return sqlerrors.IsMissingFunctionError(err)
+	case FunctionEvaluationError:
+		return sqlerrors.IsFunctionEvaluationError(err)
+	case MissingAttributeError:
+		return sqlerrors.IsMissingAttributeError(err)
+	case GenericError:
+		return sqlerrors.IsGenericError(err)
+	default:
+		return false
+	}
+}
+
 func TestTCK(t *testing.T) {
 	tckFiles := make([]TckFile, 0, len(TCKFileNames))
 
@@ -139,6 +162,7 @@ func TestTCK(t *testing.T) {
 					if testCase.Error == ParseError {
 						_, err := parser.Parse(testCase.Expression)
 						require.NotNil(t, err)
+						require.True(t, sqlerrors.IsParseError(err))
 						return
 					}
 
@@ -151,10 +175,11 @@ func TestTCK(t *testing.T) {
 
 					if testCase.Error != "" {
 						require.NotNil(t, err)
+						require.Truef(t, verifyErrorType(testCase.Error, err), "should be %s error", testCase.Error)
 					} else {
 						require.NoError(t, err)
-						require.Equal(t, testCase.ExpectedResult(), result)
 					}
+					require.Equal(t, testCase.ExpectedResult(), result)
 				})
 			}
 		})

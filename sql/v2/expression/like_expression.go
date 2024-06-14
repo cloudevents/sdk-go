@@ -19,12 +19,12 @@ type likeExpression struct {
 func (l likeExpression) Evaluate(event cloudevents.Event) (interface{}, error) {
 	val, err := l.child.Evaluate(event)
 	if err != nil {
-		return nil, err
+		return false, err
 	}
 
 	val, err = utils.Cast(val, cesql.StringType)
 	if err != nil {
-		return nil, err
+		return false, err
 	}
 
 	return matchString(val.(string), l.pattern), nil
