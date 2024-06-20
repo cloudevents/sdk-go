@@ -47,6 +47,13 @@ type Client interface {
 	// * func(event.Event) (*event.Event, protocol.Result)
 	// * func(context.Context, event.Event) *event.Event
 	// * func(context.Context, event.Event) (*event.Event, protocol.Result)
+	// Details about the "fn" function returned values:
+	// * When using protocol.NewReceipt, protocol.ResultACK or protocol.ResultNACK as a result
+	//   (*protocol.Receipt implements protocol.Result) rather than an error,
+	//   protocols that support message ack will react regarding Receipt.ACK field.
+	// * A nil result is taken into account as a protocol.Receipt with acked enabled.
+	// * Also, Receipts whose ACK field is true will not trigger warning logs.
+	//   Note that you may use ObservabilityService to setup a custom logging policy.
 	StartReceiver(ctx context.Context, fn interface{}) error
 }
 
