@@ -19,10 +19,13 @@ import (
 const serverDown = "session ended by server"
 
 // receiver wraps an amqp.Receiver as a binding.Receiver
-type receiver struct{ amqp *amqp.Receiver }
+type receiver struct {
+	amqp    *amqp.Receiver
+	options amqp.ReceiveOptions
+}
 
 func (r *receiver) Receive(ctx context.Context) (binding.Message, error) {
-	m, err := r.amqp.Receive(ctx)
+	m, err := r.amqp.Receive(ctx, &r.options)
 	if err != nil {
 		if err == ctx.Err() {
 			return nil, io.EOF
@@ -38,6 +41,6 @@ func (r *receiver) Receive(ctx context.Context) (binding.Message, error) {
 }
 
 // NewReceiver create a new Receiver which wraps an amqp.Receiver in a binding.Receiver
-func NewReceiver(amqp *amqp.Receiver) protocol.Receiver {
-	return &receiver{amqp: amqp}
+func NewReceiver(amqp *amqp.Receiver, options amqp.ReceiveOptions) protocol.Receiver {
+	return &receiver{amqp: amqp, options: options}
 }
