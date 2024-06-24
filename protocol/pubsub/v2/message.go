@@ -126,9 +126,8 @@ func (m *Message) GetExtension(name string) interface{} {
 func (m *Message) Finish(err error) error {
 	if protocol.IsACK(err) {
 		m.internal.Ack()
-		return nil
+	} else {
+		m.internal.Nack()
 	}
-
-	m.internal.Nack()
 	return err
 }

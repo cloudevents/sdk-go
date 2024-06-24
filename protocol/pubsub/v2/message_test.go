@@ -77,7 +77,7 @@ func TestFinish(t *testing.T) {
 				ID: "testid",
 			},
 			err:     protocol.NewReceipt(true, "error"),
-			wantErr: false,
+			wantErr: true,
 		},
 		{
 			name: "no errors",
