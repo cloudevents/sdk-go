@@ -51,7 +51,7 @@ type Client interface {
 	// * When using protocol.NewReceipt, protocol.ResultACK or protocol.ResultNACK as a result
 	//   (*protocol.Receipt implements protocol.Result) rather than an error,
 	//   protocols that support message ack will react regarding Receipt.ACK field.
-	// * A nil result is taken into account as a protocol.Receipt with acked enabled.
+	// * A nil result is taken into account as a protocol.Receipt with acked disabled.
 	StartReceiver(ctx context.Context, fn interface{}) error
 }
 
