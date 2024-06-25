@@ -14,6 +14,7 @@ import (
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/binding/format"
 	"github.com/cloudevents/sdk-go/v2/binding/spec"
+	"github.com/cloudevents/sdk-go/v2/protocol"
 )
 
 const (
@@ -120,14 +121,13 @@ func (m *Message) GetExtension(name string) interface{} {
 }
 
 // Finish marks the message to be forgotten.
-// If err is nil, the underlying Pubsub message will be acked;
-// otherwise nacked and return the error.
+// Regarding protocol.IsAck, the Pubsub message will be acked or not.
+// If not acked, the original error will be returned.
 func (m *Message) Finish(err error) error {
-	if err != nil {
+	if protocol.IsACK(err) {
+		m.internal.Ack()
+	} else {
 		m.internal.Nack()
-		return err
 	}
-
-	m.internal.Ack()
-	return nil
+	return err
 }
