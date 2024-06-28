@@ -57,7 +57,7 @@ func (o OTelObservabilityService) InboundContextDecorators() []func(context.Cont
 }
 
 // RecordReceivedMalformedEvent records the error from a malformed event in the span.
-func (o OTelObservabilityService) RecordReceivedMalformedEvent(ctx context.Context, err error) {
+func (o OTelObservabilityService) RecordReceivedMalformedEvent(ctx context.Context, m binding.Message, err error) {
 	spanName := observability.ClientSpanName + ".malformed receive"
 	_, span := o.tracer.Start(
 		ctx, spanName,
