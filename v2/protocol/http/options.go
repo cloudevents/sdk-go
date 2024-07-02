@@ -72,6 +72,26 @@ func WithHeader(key, value string) Option {
 	}
 }
 
+// WithHost sets the outbound host header for all cloud events when using an HTTP request
+func WithHost(value string) Option {
+	return func(p *Protocol) error {
+		if p == nil {
+			return fmt.Errorf("http host option can not set nil protocol")
+		}
+		value = strings.TrimSpace(value)
+		if value != "" {
+			if p.RequestTemplate == nil {
+				p.RequestTemplate = &nethttp.Request{
+					Method: nethttp.MethodPost,
+				}
+			}
+			p.RequestTemplate.Host = value
+			return nil
+		}
+		return fmt.Errorf("http host option was empty string")
+	}
+}
+
 // WithShutdownTimeout sets the shutdown timeout when the http server is being shutdown.
 func WithShutdownTimeout(timeout time.Duration) Option {
 	return func(p *Protocol) error {
