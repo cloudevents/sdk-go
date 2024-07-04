@@ -120,9 +120,8 @@ func (m *Message) GetExtension(name string) interface{} {
 	return m.internal.Attributes[prefix+name]
 }
 
-// Finish marks the message to be forgotten.
-// Regarding protocol.IsAck, the Pubsub message will be acked or not.
-// If not acked, the original error will be returned.
+// Finish marks the message to be forgotten and returns the provided error without modification.
+// If err is nil or of type protocol.ResultACK the PubSub message will be acknowledged, otherwise nack-ed.
 func (m *Message) Finish(err error) error {
 	if protocol.IsACK(err) {
 		m.internal.Ack()

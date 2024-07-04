@@ -36,22 +36,18 @@ type Client interface {
 	// This call is blocking.
 	// Valid fn signatures are:
 	// * func()
-	// * func() error
 	// * func(context.Context)
-	// * func(context.Context) protocol.Result
 	// * func(event.Event)
-	// * func(event.Event) protocol.Result
 	// * func(context.Context, event.Event)
-	// * func(context.Context, event.Event) protocol.Result
 	// * func(event.Event) *event.Event
-	// * func(event.Event) (*event.Event, protocol.Result)
 	// * func(context.Context, event.Event) *event.Event
-	// * func(context.Context, event.Event) (*event.Event, protocol.Result)
-	// Details about the "fn" function returned values:
-	// * When using protocol.NewReceipt, protocol.ResultACK or protocol.ResultNACK as a result
-	//   (*protocol.Receipt implements protocol.Result) rather than an error,
-	//   protocols that support message ack will react regarding Receipt.ACK field.
-	// * A nil result is taken into account as a protocol.Receipt with acked disabled.
+	// These signatures are available with an additional error returned:
+	// * func() error
+	// * ...
+	// * func(context.Context, event.Event) (*event.Event, error)
+	// The error returned may impact the messages processing made by the protocol
+	// used (example: message acknowledgement). Please refer to each protocol's
+	// package documentation of the function "Finish(err error) error".
 	StartReceiver(ctx context.Context, fn interface{}) error
 }
 
