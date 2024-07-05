@@ -161,6 +161,58 @@ func TestPublishCreateTopic(t *testing.T) {
 	verifyTopicDeleteWorks(t, client, psconn, topicID)
 }
 
+// Test that publishing to a topic with non default publish settings
+func TestPublishWithCustomPublishSettings(t *testing.T) {
+	t.Run("create topic and publish to it with custom settings", func(t *testing.T) {
+		ctx := context.Background()
+		pc := &testPubsubClient{}
+		defer pc.Close()
+
+		projectID, topicID, subID := "test-project", "test-topic", "test-sub"
+
+		client, err := pc.New(ctx, projectID, nil)
+		if err != nil {
+			t.Fatalf("failed to create pubsub client: %v", err)
+		}
+		defer client.Close()
+
+		psconn := &Connection{
+			AllowCreateSubscription: true,
+			AllowCreateTopic:        true,
+			Client:                  client,
+			ProjectID:               projectID,
+			TopicID:                 topicID,
+			SubscriptionID:          subID,
+			PublishSettings: &pubsub.PublishSettings{
+				DelayThreshold:    100 * time.Millisecond,
+				CountThreshold:    00,
+				ByteThreshold:     2e6,
+				Timeout:           120 * time.Second,
+				BufferedByteLimit: 20 * pubsub.MaxPublishRequestBytes,
+				FlowControlSettings: pubsub.FlowControlSettings{
+					MaxOutstandingMessages: 10,
+					MaxOutstandingBytes:    0,
+					LimitExceededBehavior:  pubsub.FlowControlBlock,
+				},
+			},
+		}
+
+		topic, err := client.CreateTopic(ctx, topicID)
+		if err != nil {
+			t.Fatalf("failed to pre-create topic: %v", err)
+		}
+		topic.Stop()
+
+		msg := &pubsub.Message{
+			ID:   "msg-id-1",
+			Data: []byte("msg-data-1"),
+		}
+		if _, err := psconn.Publish(ctx, msg); err != nil {
+			t.Errorf("failed to publish message: %v", err)
+		}
+	})
+}
+
 // Test that publishing to an already created topic works and doesn't allow topic deletion
 func TestPublishExistingTopic(t *testing.T) {
 	for _, allowCreate := range []bool{true, false} {
