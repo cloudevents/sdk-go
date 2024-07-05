@@ -271,6 +271,77 @@ func TestWithHeader(t *testing.T) {
 	}
 }
 
+func TestWithHost(t *testing.T) {
+	testCases := map[string]struct {
+		t       *Protocol
+		value   string
+		want    *Protocol
+		wantErr string
+	}{
+		"valid host": {
+			t: &Protocol{
+				RequestTemplate: &http.Request{},
+			},
+			value: "test",
+			want: &Protocol{
+				RequestTemplate: &http.Request{
+					Host: "test",
+				},
+			},
+		},
+		"valid host, unset req": {
+			t:     &Protocol{},
+			value: "test",
+			want: &Protocol{
+				RequestTemplate: &http.Request{
+					Method: http.MethodPost,
+					Host:   "test",
+				},
+			},
+		},
+		"empty host value": {
+			t: &Protocol{
+				RequestTemplate: &http.Request{},
+			},
+			wantErr: `http host option was empty string`,
+		},
+		"whitespace key": {
+			t: &Protocol{
+				RequestTemplate: &http.Request{},
+			},
+			value:   " \t\n",
+			wantErr: `http host option was empty string`,
+		},
+		"nil protocol": {
+			wantErr: `http host option can not set nil protocol`,
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+
+			err := tc.t.applyOptions(WithHost(tc.value))
+
+			if tc.wantErr != "" || err != nil {
+				var gotErr string
+				if err != nil {
+					gotErr = err.Error()
+				}
+				if diff := cmp.Diff(tc.wantErr, gotErr); diff != "" {
+					t.Errorf("unexpected error (-want, +got) = %v", diff)
+				}
+				return
+			}
+
+			got := tc.t
+
+			if diff := cmp.Diff(tc.want, got,
+				cmpopts.IgnoreUnexported(Protocol{}), cmpopts.IgnoreUnexported(http.Request{})); diff != "" {
+				t.Errorf("unexpected (-want, +got) = %v", diff)
+			}
+		})
+	}
+}
+
 func TestWithShutdownTimeout(t *testing.T) {
 	testCases := map[string]struct {
 		t       *Protocol
@@ -315,6 +386,106 @@ func TestWithShutdownTimeout(t *testing.T) {
 	}
 }
 
+func TestWithReadTimeout(t *testing.T) {
+	expected := time.Minute * 4
+	testCases := map[string]struct {
+		t       *Protocol
+		timeout time.Duration
+		want    *Protocol
+		wantErr string
+	}{
+		"valid timeout": {
+			t:       &Protocol{},
+			timeout: time.Minute * 4,
+			want: &Protocol{
+				readTimeout: &expected,
+			},
+		},
+		"negative timeout": {
+			t:       &Protocol{},
+			timeout: -1,
+			wantErr: "http read timeout must not be negative",
+		},
+		"nil protocol": {
+			wantErr: "http read timeout option can not set nil protocol",
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+
+			err := tc.t.applyOptions(WithReadTimeout(tc.timeout))
+
+			if tc.wantErr != "" || err != nil {
+				var gotErr string
+				if err != nil {
+					gotErr = err.Error()
+				}
+				if diff := cmp.Diff(tc.wantErr, gotErr); diff != "" {
+					t.Errorf("unexpected error (-want, +got) = %v", diff)
+				}
+				return
+			}
+
+			got := tc.t
+
+			if diff := cmp.Diff(tc.want, got,
+				cmpopts.IgnoreUnexported(Protocol{})); diff != "" {
+				t.Errorf("unexpected (-want, +got) = %v", diff)
+			}
+		})
+	}
+}
+
+func TestWithWriteTimeout(t *testing.T) {
+	expected := time.Minute * 4
+
+	testCases := map[string]struct {
+		t       *Protocol
+		timeout time.Duration
+		want    *Protocol
+		wantErr string
+	}{
+		"valid timeout": {
+			t:       &Protocol{},
+			timeout: time.Minute * 4,
+			want: &Protocol{
+				writeTimeout: &expected,
+			},
+		},
+		"negative timeout": {
+			t:       &Protocol{},
+			timeout: -1,
+			wantErr: "http write timeout must not be negative",
+		},
+		"nil protocol": {
+			wantErr: "http write timeout option can not set nil protocol",
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+
+			err := tc.t.applyOptions(WithWriteTimeout(tc.timeout))
+
+			if tc.wantErr != "" || err != nil {
+				var gotErr string
+				if err != nil {
+					gotErr = err.Error()
+				}
+				if diff := cmp.Diff(tc.wantErr, gotErr); diff != "" {
+					t.Errorf("unexpected error (-want, +got) = %v", diff)
+				}
+				return
+			}
+
+			got := tc.t
+
+			if diff := cmp.Diff(tc.want, got,
+				cmpopts.IgnoreUnexported(Protocol{})); diff != "" {
+				t.Errorf("unexpected (-want, +got) = %v", diff)
+			}
+		})
+	}
+}
 func TestWithPort(t *testing.T) {
 	testCases := map[string]struct {
 		t       *Protocol
@@ -389,9 +560,19 @@ func forceClose(tr *Protocol) {
 }
 
 func TestWithPort0(t *testing.T) {
+	noReadWriteTimeout := time.Duration(0)
+
 	testCases := map[string]func() (*Protocol, error){
-		"WithPort0": func() (*Protocol, error) { return New(WithPort(0)) },
-		"SetPort0":  func() (*Protocol, error) { return &Protocol{Port: 0}, nil },
+		"WithPort0": func() (*Protocol, error) {
+			return New(WithPort(0))
+		},
+		"SetPort0": func() (*Protocol, error) {
+			return &Protocol{
+				Port:         0,
+				readTimeout:  &noReadWriteTimeout,
+				writeTimeout: &noReadWriteTimeout,
+			}, nil
+		},
 	}
 	for name, f := range testCases {
 		t.Run(name, func(t *testing.T) {

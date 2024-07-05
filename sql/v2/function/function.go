@@ -10,11 +10,13 @@ import (
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 )
 
+type FuncType func(cloudevents.Event, []interface{}) (interface{}, error)
+
 type function struct {
 	name         string
 	fixedArgs    []cesql.Type
 	variadicArgs *cesql.Type
-	fn           func(cloudevents.Event, []interface{}) (interface{}, error)
+	fn           FuncType
 }
 
 func (f function) Name() string {
@@ -38,4 +40,16 @@ func (f function) ArgType(index int) *cesql.Type {
 
 func (f function) Run(event cloudevents.Event, arguments []interface{}) (interface{}, error) {
 	return f.fn(event, arguments)
+}
+
+func NewFunction(name string,
+	fixedargs []cesql.Type,
+	variadicArgs *cesql.Type,
+	fn FuncType) cesql.Function {
+	return function{
+		name:         name,
+		fixedArgs:    fixedargs,
+		variadicArgs: variadicArgs,
+		fn:           fn,
+	}
 }

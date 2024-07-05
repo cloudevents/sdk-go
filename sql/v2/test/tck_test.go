@@ -6,6 +6,7 @@
 package test
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"path"
@@ -70,7 +71,7 @@ type TckTestCase struct {
 	EventOverrides map[string]interface{} `json:"eventOverrides"`
 }
 
-func (tc TckTestCase) InputEvent(t *testing.T) cloudevents.Event {
+func (tc TckTestCase) InputEvent(tb testing.TB) cloudevents.Event {
 	var inputEvent cloudevents.Event
 	if tc.Event != nil {
 		inputEvent = *tc.Event
@@ -82,7 +83,7 @@ func (tc TckTestCase) InputEvent(t *testing.T) cloudevents.Event {
 	inputEvent.SetSpecVersion(event.CloudEventsVersionV1)
 
 	for k, v := range tc.EventOverrides {
-		require.NoError(t, spec.V1.SetAttribute(inputEvent.Context, k, v))
+		require.NoError(tb, spec.V1.SetAttribute(inputEvent.Context, k, v))
 	}
 
 	return inputEvent
@@ -154,6 +155,63 @@ func TestTCK(t *testing.T) {
 						require.NoError(t, err)
 						require.Equal(t, testCase.ExpectedResult(), result)
 					}
+				})
+			}
+		})
+	}
+}
+
+func BenchmarkTCK(b *testing.B) {
+	tckFiles := make([]TckFile, 0, len(TCKFileNames))
+
+	_, basePath, _, _ := runtime.Caller(0)
+	basePath, _ = path.Split(basePath)
+
+	for _, testFile := range TCKFileNames {
+		testFilePath := path.Join(basePath, "tck", testFile+".yaml")
+
+		b.Logf("Loading file %s", testFilePath)
+
+		file, err := os.Open(testFilePath)
+		require.NoError(b, err)
+
+		fileBytes, err := io.ReadAll(file)
+		require.NoError(b, err)
+
+		tckFileModel := TckFile{}
+		require.NoError(b, yaml.Unmarshal(fileBytes, &tckFileModel))
+
+		tckFiles = append(tckFiles, tckFileModel)
+	}
+
+	for i, file := range tckFiles {
+		i := i
+		b.Run(file.Name, func(b *testing.B) {
+			for j, testCase := range tckFiles[i].Tests {
+				j := j
+				testCase := testCase
+				b.Run(fmt.Sprintf("%v parse", testCase.Name), func(b *testing.B) {
+					testCase := tckFiles[i].Tests[j]
+					for k := 0; k < b.N; k++ {
+						_, _ = parser.Parse(testCase.Expression)
+					}
+				})
+
+				if testCase.Error == ParseError {
+					return
+				}
+
+				b.Run(fmt.Sprintf("%v evaluate", testCase.Name), func(b *testing.B) {
+					testCase := tckFiles[i].Tests[j]
+
+					expr, _ := parser.Parse(testCase.Expression)
+
+					inputEvent := testCase.InputEvent(b)
+
+					for k := 0; k < b.N; k++ {
+						_, _ = expr.Evaluate(inputEvent)
+					}
+
 				})
 			}
 		})
