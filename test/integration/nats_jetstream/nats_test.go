@@ -55,6 +55,17 @@ func TestSendReceiveStructuredAndBinary(t *testing.T) {
 			},
 		},
 		{
+			name: "pull subscriber - structured",
+			args: args{
+				opts: []ce_nats.ProtocolOption{
+					ce_nats.WithConsumerOptions(
+						ce_nats.WithPullSubscriber(uuid.New().String(), fetchCallback),
+					),
+				},
+				bindingEncoding: binding.EncodingStructured,
+			},
+		},
+		{
 			name: "regular subscriber - binary",
 			args: args{
 				bindingEncoding: binding.EncodingBinary,
@@ -65,6 +76,17 @@ func TestSendReceiveStructuredAndBinary(t *testing.T) {
 				opts: []ce_nats.ProtocolOption{
 					ce_nats.WithConsumerOptions(
 						ce_nats.WithQueueSubscriber(uuid.New().String()),
+					),
+				},
+				bindingEncoding: binding.EncodingBinary,
+			},
+		},
+		{
+			name: "pull subscriber - binary",
+			args: args{
+				opts: []ce_nats.ProtocolOption{
+					ce_nats.WithConsumerOptions(
+						ce_nats.WithPullSubscriber(uuid.New().String(), fetchCallback),
 					),
 				},
 				bindingEncoding: binding.EncodingBinary,
@@ -135,6 +157,10 @@ func testProtocol(t testing.TB, natsConn *nats.Conn, opts ...ce_nats.ProtocolOpt
 		err = p.Close(context.TODO())
 		require.NoError(t, err)
 	}, p.Sender, p.Consumer
+}
+
+func fetchCallback(natsSub *nats.Subscription) ([]*nats.Msg, error) {
+	return natsSub.Fetch(1)
 }
 
 func BenchmarkSendReceive(b *testing.B) {

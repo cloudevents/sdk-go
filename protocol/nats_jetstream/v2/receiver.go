@@ -140,9 +140,22 @@ func (c *Consumer) OpenInbound(ctx context.Context) error {
 	}
 
 	// Wait until external or internal context done
-	select {
-	case <-ctx.Done():
-	case <-c.internalClose:
+	pullSubscriber, isPullSubscriber := c.Subscriber.(*PullSubscriber)
+	if isPullSubscriber {
+		err = c.pullSubscriptionProcessor(ctx, sub, pullSubscriber)
+		if err != nil {
+			errDrain := sub.Drain()
+			if errDrain != nil {
+				return errDrain
+			}
+			return err
+		}
+	} else {
+		// Wait until external or internal context done
+		select {
+		case <-ctx.Done():
+		case <-c.internalClose:
+		}
 	}
 
 	// Finish to consume messages in the queue and close the subscription
@@ -173,6 +186,27 @@ func (c *Consumer) applyOptions(opts ...ConsumerOption) error {
 		}
 	}
 	return nil
+}
+
+// pullSubscriptionProcessor allows the pull subscriber to control some aspects of the fetch calls
+func (c *Consumer) pullSubscriptionProcessor(ctx context.Context, natsSub *nats.Subscription, ps *PullSubscriber) error {
+	for {
+		// Wait until external or internal context done
+		select {
+		case <-ctx.Done():
+			return nil
+		case <-c.internalClose:
+			return nil
+		default:
+			msgs, err := ps.FetchCallback(natsSub)
+			if err != nil && err != nats.ErrTimeout {
+				return err
+			}
+			for i := range msgs {
+				c.Receiver.MsgHandler(msgs[i])
+			}
+		}
+	}
 }
 
 var _ protocol.Opener = (*Consumer)(nil)
