@@ -44,21 +44,28 @@ func NewSender(url, stream, subject string, natsOpts []nats.Option, jsmOpts []na
 
 // NewSenderFromConn creates a new protocol.Sender which leaves responsibility for opening and closing the NATS
 // connection to the caller
+// The stream parameter is only needed if auto-creation of the stream is needed when the stream does not exist.
 func NewSenderFromConn(conn *nats.Conn, stream, subject string, jsmOpts []nats.JSOpt, opts ...SenderOption) (*Sender, error) {
 	jsm, err := conn.JetStream(jsmOpts...)
 	if err != nil {
 		return nil, err
 	}
 
-	streamInfo, err := jsm.StreamInfo(stream, jsmOpts...)
+	// A Stream parameter is not needed for a send operation.
+	// A subject is all that is needed.
+	// Below, a stream is created with default stream config which may not be desired.
+	// It may be that the intention is for the call to fail if a stream does not exist.
+	if stream != "" {
+		streamInfo, err := jsm.StreamInfo(stream, jsmOpts...)
 
-	if streamInfo == nil || err != nil && err.Error() == "stream not found" {
-		_, err = jsm.AddStream(&nats.StreamConfig{
-			Name:     stream,
-			Subjects: []string{stream + ".*"},
-		})
-		if err != nil {
-			return nil, err
+		if streamInfo == nil || err != nil && err.Error() == "stream not found" {
+			_, err = jsm.AddStream(&nats.StreamConfig{
+				Name:     stream,
+				Subjects: []string{stream + ".*"},
+			})
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
