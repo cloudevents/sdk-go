@@ -19,6 +19,7 @@ const (
 	missingAttributeError
 	missingFunctionError
 	functionEvaluationError
+	dummyLastError // always add new error classes ABOVE this error
 )
 
 type cesqlError struct {
@@ -62,7 +63,7 @@ func NewParseError(errs []error) error {
 
 	return cesqlError{
 		kind:    parseError,
-		message: strings.Join(errorMessages, ","),
+		message: strings.Join(errorMessages, "|"),
 	}
 }
 
@@ -145,7 +146,7 @@ func NewFunctionEvaluationError(err error) error {
 
 func IsGenericError(err error) bool {
 	if cesqlErr, ok := err.(cesqlError); ok {
-		return cesqlErr.kind < parseError || cesqlErr.kind > functionEvaluationError
+		return cesqlErr.kind < 0 || cesqlErr.kind >= dummyLastError
 	}
 	return false
 }
