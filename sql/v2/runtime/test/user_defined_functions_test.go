@@ -34,6 +34,7 @@ var TCKUserDefinedFunctions = []cesql.Function{
 		"HASPREFIX",
 		[]cesql.Type{cesql.StringType, cesql.StringType},
 		nil,
+		cesql.BooleanType,
 		func(event cloudevents.Event, i []interface{}) (interface{}, error) {
 			str := i[0].(string)
 			prefix := i[1].(string)
@@ -45,6 +46,7 @@ var TCKUserDefinedFunctions = []cesql.Function{
 		"KONKAT",
 		[]cesql.Type{},
 		cesql.TypePtr(cesql.StringType),
+		cesql.StringType,
 		func(event cloudevents.Event, i []interface{}) (interface{}, error) {
 			var sb strings.Builder
 			for _, v := range i {
