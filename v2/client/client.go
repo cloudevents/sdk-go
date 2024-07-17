@@ -36,14 +36,16 @@ type Client interface {
 	// This call is blocking.
 	// Valid fn signatures are:
 	// * func()
-	// * func(context.Context)
-	// * func(event.Event)
-	// * func(context.Context, event.Event)
-	// * func(event.Event) *event.Event
-	// * func(context.Context, event.Event) *event.Event
-	// These signatures are available with an additional error returned:
 	// * func() error
-	// * ...
+	// * func(context.Context)
+	// * func(context.Context) error
+	// * func(event.Event)
+	// * func(event.Event) error
+	// * func(context.Context, event.Event)
+	// * func(context.Context, event.Event) error
+	// * func(event.Event) *event.Event
+	// * func(event.Event) (*event.Event, error)
+	// * func(context.Context, event.Event) *event.Event
 	// * func(context.Context, event.Event) (*event.Event, error)
 	// The error returned may impact the messages processing made by the protocol
 	// used (example: message acknowledgement). Please refer to each protocol's
