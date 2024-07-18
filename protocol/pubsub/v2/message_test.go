@@ -13,6 +13,7 @@ import (
 	"cloud.google.com/go/pubsub"
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/event"
+	"github.com/cloudevents/sdk-go/v2/protocol"
 )
 
 func TestReadStructured(t *testing.T) {
@@ -60,6 +61,22 @@ func TestFinish(t *testing.T) {
 				ID: "testid",
 			},
 			err:     fmt.Errorf("error"),
+			wantErr: true,
+		},
+		{
+			name: "result not acked",
+			pm: &pubsub.Message{
+				ID: "testid",
+			},
+			err:     protocol.NewReceipt(false, "error"),
+			wantErr: true,
+		},
+		{
+			name: "result acked",
+			pm: &pubsub.Message{
+				ID: "testid",
+			},
+			err:     protocol.NewReceipt(true, "error"),
 			wantErr: true,
 		},
 		{
