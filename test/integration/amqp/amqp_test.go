@@ -45,18 +45,18 @@ func TestSenderReceiverEvent(t *testing.T) {
 }
 
 func senderProtocolFactory(t *testing.T) *protocolamqp.Protocol {
-	c, ss, a, so, _ := testClient(t)
+	c, ss, a := testClient(t)
 
-	p, err := protocolamqp.NewSenderProtocolFromClient(context.Background(), c, ss, a, so)
+	p, err := protocolamqp.NewSenderProtocolFromClient(context.Background(), c, ss, a)
 	require.NoError(t, err)
 
 	return p
 }
 
 func receiverProtocolFactory(t *testing.T) *protocolamqp.Protocol {
-	c, ss, a, _, ro := testClient(t)
+	c, ss, a := testClient(t)
 
-	p, err := protocolamqp.NewReceiverProtocolFromClient(context.Background(), c, ss, a, ro)
+	p, err := protocolamqp.NewReceiverProtocolFromClient(context.Background(), c, ss, a)
 	require.NoError(t, err)
 
 	return p
@@ -69,8 +69,7 @@ func receiverProtocolFactory(t *testing.T) *protocolamqp.Protocol {
 // On option is http://qpid.apache.org/components/dispatch-router/indexthtml.
 // It can be installed from source or from RPMs, see https://qpid.apache.org/packages.html
 // Run `qdrouterd` and the tests will work with no further config.
-func testClient(t *testing.T) (client *amqp.Conn, session *amqp.Session, addr string,
-	senderOpts amqp.SenderOptions, receiverOpts amqp.ReceiverOptions) {
+func testClient(t *testing.T) (client *amqp.Conn, session *amqp.Session, addr string) {
 	t.Helper()
 	addr = "test"
 	s := os.Getenv("TEST_AMQP_URL")
@@ -83,17 +82,14 @@ func testClient(t *testing.T) (client *amqp.Conn, session *amqp.Session, addr st
 	}
 	session, err = client.NewSession(context.Background(), &amqp.SessionOptions{})
 	require.NoError(t, err)
-	senderOpts = amqp.SenderOptions{}
-	require.NotNil(t, senderOpts)
-	receiverOpts = amqp.ReceiverOptions{}
-	require.NotNil(t, receiverOpts)
-	return client, session, addr, senderOpts, receiverOpts
+
+	return client, session, addr
 }
 
 func protocolFactory(t *testing.T) *protocolamqp.Protocol {
-	c, ss, a, so, ro := testClient(t)
+	c, ss, a := testClient(t)
 
-	p, err := protocolamqp.NewProtocolFromClient(context.Background(), c, ss, a, so, ro)
+	p, err := protocolamqp.NewProtocolFromClient(context.Background(), c, ss, a)
 	require.NoError(t, err)
 
 	return p

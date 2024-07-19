@@ -90,8 +90,7 @@ func TestSendEventReceiveBinary(t *testing.T) {
 // On option is http://qpid.apache.org/components/dispatch-router/indexthtml.
 // It can be installed from source or from RPMs, see https://qpid.apache.org/packages.html
 // Run `qdrouterd` and the tests will work with no further config.
-func testClient(t testing.TB) (client *amqp.Conn, session *amqp.Session, addr string,
-	senderOpts *amqp.SenderOptions, receiverOpts *amqp.ReceiverOptions) {
+func testClient(t testing.TB) (client *amqp.Conn, session *amqp.Session, addr string) {
 	t.Helper()
 	addr = "test"
 	s := os.Getenv("TEST_AMQP_URL")
@@ -104,21 +103,18 @@ func testClient(t testing.TB) (client *amqp.Conn, session *amqp.Session, addr st
 	}
 	session, err = client.NewSession(context.Background(), &amqp.SessionOptions{})
 	require.NoError(t, err)
-	senderOpts = &amqp.SenderOptions{}
-	require.NotNil(t, senderOpts)
-	receiverOpts = &amqp.ReceiverOptions{}
-	require.NotNil(t, receiverOpts)
-	return client, session, addr, senderOpts, receiverOpts
+
+	return client, session, addr
 
 }
 
 func testSenderReceiver(t testing.TB) (io.Closer, bindings.Sender, bindings.Receiver) {
-	c, ss, a, so, ro := testClient(t)
-	r, err := ss.NewReceiver(context.Background(), a, ro)
+	c, ss, a := testClient(t)
+	r, err := ss.NewReceiver(context.Background(), a, nil)
 	require.NoError(t, err)
-	s, err := ss.NewSender(context.Background(), a, so)
+	s, err := ss.NewSender(context.Background(), a, nil)
 	require.NoError(t, err)
-	return c, protocolamqp.NewSender(s, &amqp.SendOptions{}), protocolamqp.NewReceiver(r, amqp.ReceiveOptions{})
+	return c, protocolamqp.NewSender(s, nil), protocolamqp.NewReceiver(r, amqp.ReceiveOptions{})
 }
 
 func BenchmarkSendReceive(b *testing.B) {

@@ -53,8 +53,7 @@ type Example struct {
 
 func main() {
 	host, node, opts := sampleConfig()
-	p, err := ceamqp.NewProtocol(context.Background(), host, node, opts, amqp.SessionOptions{}, amqp.SenderOptions{},
-		amqp.ReceiverOptions{})
+	p, err := ceamqp.NewProtocol(context.Background(), host, node, opts, amqp.SessionOptions{})
 	if err != nil {
 		log.Fatalf("Failed to create amqp protocol: %v", err)
 	}

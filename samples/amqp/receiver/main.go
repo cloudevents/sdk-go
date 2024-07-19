@@ -14,7 +14,6 @@ import (
 	"strings"
 
 	"github.com/Azure/go-amqp"
-
 	ceamqp "github.com/cloudevents/sdk-go/protocol/amqp/v2"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 )
@@ -44,8 +43,7 @@ func sampleConfig() (server, node string, opts amqp.ConnOptions) {
 
 func main() {
 	host, node, opts := sampleConfig()
-	p, err := ceamqp.NewProtocol(context.Background(), host, node, opts, amqp.SessionOptions{},
-		amqp.SenderOptions{}, amqp.ReceiverOptions{})
+	p, err := ceamqp.NewProtocol(context.Background(), host, node, opts, amqp.SessionOptions{})
 	if err != nil {
 		log.Fatalf("Failed to create AMQP protocol: %v", err)
 	}
