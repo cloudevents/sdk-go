@@ -36,3 +36,19 @@ func (s *QueueSubscriber) Subscribe(jsm nats.JetStreamContext, subject string, c
 }
 
 var _ Subscriber = (*QueueSubscriber)(nil)
+
+// FetchCallbackFunc defines a callback where Fetch should be called against nats.Subscription
+type FetchCallbackFunc func(natsSub *nats.Subscription) ([]*nats.Msg, error)
+
+// PullSubscriber creates pull subscriptions
+type PullSubscriber struct {
+	Durable       string
+	FetchCallback FetchCallbackFunc
+}
+
+// Subscribe implements Subscriber.Subscribe
+func (s *PullSubscriber) Subscribe(jsm nats.JetStreamContext, subject string, cb nats.MsgHandler, opts ...nats.SubOpt) (*nats.Subscription, error) {
+	return jsm.PullSubscribe(subject, s.Durable, opts...)
+}
+
+var _ Subscriber = (*PullSubscriber)(nil)
