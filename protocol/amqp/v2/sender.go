@@ -39,8 +39,15 @@ func (s *sender) Send(ctx context.Context, in binding.Message, transformers ...b
 }
 
 // NewSender creates a new Sender which wraps an amqp.Sender in a binding.Sender
-func NewSender(amqpSender *amqp.Sender, options *amqp.SendOptions) protocol.Sender {
-	s := &sender{amqp: amqpSender, options: options}
+func NewSender(amqpSender *amqp.Sender, opts ...SendOption) protocol.Sender {
+	s := &sender{amqp: amqpSender, options: nil}
+	applySenderOptions(s, opts...)
+	return s
+}
 
+func applySenderOptions(s *sender, opts ...SendOption) *sender {
+	for _, o := range opts {
+		o(s)
+	}
 	return s
 }

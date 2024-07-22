@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/url"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/Azure/go-amqp"
@@ -95,7 +96,7 @@ func testClient(t testing.TB) (client *amqp.Conn, session *amqp.Session, addr st
 	addr = "test"
 	s := os.Getenv("TEST_AMQP_URL")
 	if u, err := url.Parse(s); err == nil && u.Path != "" {
-		addr = u.Path
+		addr = strings.TrimPrefix(u.Path, "/")
 	}
 	client, err := amqp.Dial(context.Background(), s, &amqp.ConnOptions{})
 	if err != nil {
@@ -105,7 +106,6 @@ func testClient(t testing.TB) (client *amqp.Conn, session *amqp.Session, addr st
 	require.NoError(t, err)
 
 	return client, session, addr
-
 }
 
 func testSenderReceiver(t testing.TB) (io.Closer, bindings.Sender, bindings.Receiver) {
@@ -114,7 +114,7 @@ func testSenderReceiver(t testing.TB) (io.Closer, bindings.Sender, bindings.Rece
 	require.NoError(t, err)
 	s, err := ss.NewSender(context.Background(), a, nil)
 	require.NoError(t, err)
-	return c, protocolamqp.NewSender(s, nil), protocolamqp.NewReceiver(r, amqp.ReceiveOptions{})
+	return c, protocolamqp.NewSender(s), protocolamqp.NewReceiver(r)
 }
 
 func BenchmarkSendReceive(b *testing.B) {

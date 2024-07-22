@@ -12,7 +12,10 @@ import (
 // Option is the function signature required to be considered an amqp.Option.
 type Option func(*Protocol) error
 
-// WithConnOpt sets a connection option for amqp
+type SendOption func(sender *sender)
+type ReceiveOption func(receiver *receiver)
+
+// WithConnOpts sets a connection option for amqp
 func WithConnOpts(opt *amqp.ConnOptions) Option {
 	return func(t *Protocol) error {
 		t.connOpts = opt
@@ -26,7 +29,7 @@ func WithConnSASLPlain(opt *amqp.ConnOptions, username, password string) Option 
 	return WithConnOpts(opt)
 }
 
-// WithSessionOpt sets a session option for amqp
+// WithSessionOpts sets a session option for amqp
 func WithSessionOpts(opt *amqp.SessionOptions) Option {
 	return func(t *Protocol) error {
 		t.sessionOpts = opt
@@ -34,7 +37,7 @@ func WithSessionOpts(opt *amqp.SessionOptions) Option {
 	}
 }
 
-// WithSenderLinkOption sets a link option for amqp
+// WithSenderOpts sets a link option for amqp
 func WithSenderOpts(opt *amqp.SenderOptions) Option {
 	return func(t *Protocol) error {
 		t.senderOpts = opt
@@ -42,7 +45,7 @@ func WithSenderOpts(opt *amqp.SenderOptions) Option {
 	}
 }
 
-// WithReceiverLinkOption sets a link option for amqp
+// WithReceiverOpts sets a link option for amqp
 func WithReceiverOpts(opt *amqp.ReceiverOptions) Option {
 	return func(t *Protocol) error {
 		t.receiverOpts = opt
@@ -50,17 +53,33 @@ func WithReceiverOpts(opt *amqp.ReceiverOptions) Option {
 	}
 }
 
-func WithReceiveOpts(opt amqp.ReceiveOptions) Option {
+// WithReceiveOpts sets a receive option for amqp
+func WithReceiveOpts(opt *amqp.ReceiveOptions) Option {
 	return func(t *Protocol) error {
 		t.receiveOpts = opt
 		return nil
 	}
 }
 
+// WithSendOpts sets a send option for amqp
 func WithSendOpts(opt *amqp.SendOptions) Option {
 	return func(t *Protocol) error {
 		t.sendOpts = opt
 		return nil
+	}
+}
+
+// WithSendOptions sets send options for amqp
+func WithSendOptions(opts *amqp.SendOptions) SendOption {
+	return func(t *sender) {
+		t.options = opts
+	}
+}
+
+// WithReceiveOptions sets receive options for amqp
+func WithReceiveOptions(opts *amqp.ReceiveOptions) ReceiveOption {
+	return func(t *receiver) {
+		t.options = opts
 	}
 }
 

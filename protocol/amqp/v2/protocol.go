@@ -26,7 +26,7 @@ type Protocol struct {
 	senderOpts   *amqp.SenderOptions
 	receiverOpts *amqp.ReceiverOptions
 	sendOpts     *amqp.SendOptions
-	receiveOpts  amqp.ReceiveOptions
+	receiveOpts  *amqp.ReceiveOptions
 
 	// Sender
 	Sender                  *sender
@@ -60,14 +60,14 @@ func NewProtocolFromClient(
 		_ = session.Close(context.Background())
 		return nil, err
 	}
-	t.Sender = NewSender(amqpSender, t.sendOpts).(*sender)
+	t.Sender = NewSender(amqpSender, WithSendOptions(t.sendOpts)).(*sender)
 	t.SenderContextDecorators = []func(context.Context) context.Context{}
 
 	amqpReceiver, err := t.Session.NewReceiver(ctx, t.Node, t.receiverOpts)
 	if err != nil {
 		return nil, err
 	}
-	t.Receiver = NewReceiver(amqpReceiver, t.receiveOpts).(*receiver)
+	t.Receiver = NewReceiver(amqpReceiver, WithReceiveOptions(t.receiveOpts)).(*receiver)
 	return t, nil
 }
 
@@ -124,7 +124,8 @@ func NewSenderProtocolFromClient(
 		_ = session.Close(context.Background())
 		return nil, err
 	}
-	t.Sender = NewSender(amqpSender, t.sendOpts).(*sender)
+	t.Sender = NewSender(amqpSender).(*sender)
+
 	t.SenderContextDecorators = []func(context.Context) context.Context{}
 
 	return t, nil
@@ -152,7 +153,7 @@ func NewReceiverProtocolFromClient(
 	if err != nil {
 		return nil, err
 	}
-	t.Receiver = NewReceiver(amqpReceiver, t.receiveOpts).(*receiver)
+	t.Receiver = NewReceiver(amqpReceiver, WithReceiveOptions(t.receiveOpts)).(*receiver)
 	return t, nil
 }
 
