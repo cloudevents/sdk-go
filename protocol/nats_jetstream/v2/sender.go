@@ -11,13 +11,20 @@ import (
 	"fmt"
 
 	"github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/protocol"
 )
 
 type Sender struct {
-	Jsm       nats.JetStreamContext
+	// v1 implementation
+	Jsm nats.JetStreamContext
+
+	// v2 implementation
+	JetStream   jetstream.JetStream
+	PublishOpts []jetstream.PublishOpt
+
 	Conn      *nats.Conn
 	Subject   string
 	Stream    string
@@ -32,6 +39,24 @@ func NewSender(url, stream, subject string, natsOpts []nats.Option, jsmOpts []na
 	}
 
 	s, err := NewSenderFromConn(conn, stream, subject, jsmOpts, opts...)
+	if err != nil {
+		conn.Close()
+		return nil, err
+	}
+
+	s.connOwned = true
+
+	return s, nil
+}
+
+// NewSenderV2 creates a new protocol.Sender responsible for opening and closing the NATS connection
+func NewSenderV2(ctx context.Context, url, subject string, natsOpts []nats.Option, jsOpts []jetstream.JetStreamOpt, opts ...SenderOption) (*Sender, error) {
+	conn, err := nats.Connect(url, natsOpts...)
+	if err != nil {
+		return nil, err
+	}
+
+	s, err := NewSenderFromConnV2(ctx, conn, subject, jsOpts, opts...)
 	if err != nil {
 		conn.Close()
 		return nil, err
@@ -77,6 +102,35 @@ func NewSenderFromConn(conn *nats.Conn, stream, subject string, jsmOpts []nats.J
 	return s, nil
 }
 
+// NewSenderFromConnV2 creates a new protocol.Sender which leaves responsibility for opening and closing the NATS
+// connection to the caller
+func NewSenderFromConnV2(ctx context.Context, conn *nats.Conn, subject string, jsOpts []jetstream.JetStreamOpt, opts ...SenderOption) (*Sender, error) {
+	var js jetstream.JetStream
+	var err error
+	var stream string
+	if js, err = jetstream.New(conn, jsOpts...); err != nil {
+		return nil, err
+	}
+
+	if stream, err = js.StreamNameBySubject(ctx, subject); err != nil {
+		return nil, err
+	}
+
+	s := &Sender{
+		JetStream: js,
+		Conn:      conn,
+		Stream:    stream,
+		Subject:   subject,
+	}
+
+	err = s.applyOptions(opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	return s, nil
+}
+
 // Close implements Sender.Sender
 // Sender sends messages.
 func (s *Sender) Send(ctx context.Context, in binding.Message, transformers ...binding.Transformer) (err error) {
@@ -102,8 +156,15 @@ func (s *Sender) Send(ctx context.Context, in binding.Message, transformers ...b
 		Header:  header,
 	}
 
-	_, err = s.Jsm.PublishMsg(natsMsg)
-
+	version := s.getVersion()
+	switch version {
+	case 0:
+		return ErrNoJetstream
+	case 1:
+		_, err = s.Jsm.PublishMsg(natsMsg)
+	case 2:
+		_, err = s.JetStream.PublishMsg(ctx, natsMsg, s.PublishOpts...)
+	}
 	return err
 }
 
@@ -124,6 +185,18 @@ func (s *Sender) applyOptions(opts ...SenderOption) error {
 		}
 	}
 	return nil
+}
+
+// getVersion returns whether the consumer uses the older jsm or newer jetstream package
+// 0 - None, 1 - jsm, 2 - jetstream
+func (s *Sender) getVersion() int {
+	if s.Jsm != nil {
+		return 1
+	}
+	if s.JetStream != nil {
+		return 2
+	}
+	return 0
 }
 
 var _ protocol.Sender = (*Sender)(nil)

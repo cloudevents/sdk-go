@@ -12,6 +12,7 @@ import (
 	"github.com/cloudevents/sdk-go/v2/protocol"
 
 	"github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go/jetstream"
 )
 
 // Protocol is a reference implementation for using the CloudEvents binding
@@ -46,6 +47,24 @@ func NewProtocol(url, stream, sendSubject, receiveSubject string, natsOpts []nat
 	return p, nil
 }
 
+// NewProtocolV2 creates a new NATS protocol.
+func NewProtocolV2(ctx context.Context, url, stream, sendSubject string, natsOpts []nats.Option, jsOpts []jetstream.JetStreamOpt, opts ...ProtocolOption) (*Protocol, error) {
+	conn, err := nats.Connect(url, natsOpts...)
+	if err != nil {
+		return nil, err
+	}
+
+	p, err := NewProtocolFromConnV2(ctx, conn, stream, sendSubject, jsOpts, opts...)
+	if err != nil {
+		conn.Close()
+		return nil, err
+	}
+
+	p.connOwned = true
+
+	return p, nil
+}
+
 func NewProtocolFromConn(conn *nats.Conn, stream, sendSubject, receiveSubject string, jsOpts []nats.JSOpt, subOpts []nats.SubOpt, opts ...ProtocolOption) (*Protocol, error) {
 	var err error
 	p := &Protocol{
@@ -61,6 +80,36 @@ func NewProtocolFromConn(conn *nats.Conn, stream, sendSubject, receiveSubject st
 	}
 
 	if p.Sender, err = NewSenderFromConn(conn, stream, sendSubject, jsOpts, p.senderOptions...); err != nil {
+		return nil, err
+	}
+
+	return p, nil
+}
+
+func NewProtocolFromConnV2(ctx context.Context, conn *nats.Conn, stream, sendSubject string, jsOpts []jetstream.JetStreamOpt, opts ...ProtocolOption) (*Protocol, error) {
+	var err error
+	var js jetstream.JetStream
+	p := &Protocol{
+		Conn: conn,
+	}
+
+	if err := p.applyOptions(opts...); err != nil {
+		return nil, err
+	}
+
+	if js, err = jetstream.New(conn, jsOpts...); err != nil {
+		return nil, err
+	}
+	streamConfig := jetstream.StreamConfig{Name: stream, Subjects: []string{sendSubject}}
+	if _, err := js.CreateOrUpdateStream(ctx, streamConfig); err != nil {
+		return nil, err
+	}
+
+	if p.Consumer, err = NewConsumerFromConnV2(ctx, conn, jsOpts, p.consumerOptions...); err != nil {
+		return nil, err
+	}
+
+	if p.Sender, err = NewSenderFromConnV2(ctx, conn, sendSubject, jsOpts, p.senderOptions...); err != nil {
 		return nil, err
 	}
 
