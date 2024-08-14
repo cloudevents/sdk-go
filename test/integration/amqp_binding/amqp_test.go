@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/url"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/Azure/go-amqp"
@@ -90,29 +91,30 @@ func TestSendEventReceiveBinary(t *testing.T) {
 // On option is http://qpid.apache.org/components/dispatch-router/indexthtml.
 // It can be installed from source or from RPMs, see https://qpid.apache.org/packages.html
 // Run `qdrouterd` and the tests will work with no further config.
-func testClient(t testing.TB) (client *amqp.Client, session *amqp.Session, addr string) {
+func testClient(t testing.TB) (client *amqp.Conn, session *amqp.Session, addr string) {
 	t.Helper()
 	addr = "test"
 	s := os.Getenv("TEST_AMQP_URL")
 	if u, err := url.Parse(s); err == nil && u.Path != "" {
-		addr = u.Path
+		addr = strings.TrimPrefix(u.Path, "/")
 	}
-	client, err := amqp.Dial(s)
+	client, err := amqp.Dial(context.Background(), s, &amqp.ConnOptions{})
 	if err != nil {
 		t.Skipf("ampq.Dial(%#v): %v", s, err)
 	}
-	session, err = client.NewSession()
+	session, err = client.NewSession(context.Background(), &amqp.SessionOptions{})
 	require.NoError(t, err)
+
 	return client, session, addr
 }
 
-func testSenderReceiver(t testing.TB, senderOptions ...protocolamqp.SenderOptionFunc) (io.Closer, bindings.Sender, bindings.Receiver) {
+func testSenderReceiver(t testing.TB) (io.Closer, bindings.Sender, bindings.Receiver) {
 	c, ss, a := testClient(t)
-	r, err := ss.NewReceiver(amqp.LinkSourceAddress(a))
+	r, err := ss.NewReceiver(context.Background(), a, nil)
 	require.NoError(t, err)
-	s, err := ss.NewSender(amqp.LinkTargetAddress(a))
+	s, err := ss.NewSender(context.Background(), a, nil)
 	require.NoError(t, err)
-	return c, protocolamqp.NewSender(s, senderOptions...), protocolamqp.NewReceiver(r)
+	return c, protocolamqp.NewSender(s), protocolamqp.NewReceiver(r)
 }
 
 func BenchmarkSendReceive(b *testing.B) {

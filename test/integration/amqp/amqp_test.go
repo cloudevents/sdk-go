@@ -6,18 +6,17 @@
 package amqp
 
 import (
+	"context"
 	"net/url"
 	"os"
 	"testing"
 
 	"github.com/Azure/go-amqp"
-
-	"github.com/stretchr/testify/require"
-
 	protocolamqp "github.com/cloudevents/sdk-go/protocol/amqp/v2"
 	clienttest "github.com/cloudevents/sdk-go/v2/client/test"
 	"github.com/cloudevents/sdk-go/v2/event"
 	"github.com/cloudevents/sdk-go/v2/test"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSendEvent(t *testing.T) {
@@ -48,7 +47,7 @@ func TestSenderReceiverEvent(t *testing.T) {
 func senderProtocolFactory(t *testing.T) *protocolamqp.Protocol {
 	c, ss, a := testClient(t)
 
-	p, err := protocolamqp.NewSenderProtocolFromClient(c, ss, a)
+	p, err := protocolamqp.NewSenderProtocolFromClient(context.Background(), c, ss, a)
 	require.NoError(t, err)
 
 	return p
@@ -57,7 +56,7 @@ func senderProtocolFactory(t *testing.T) *protocolamqp.Protocol {
 func receiverProtocolFactory(t *testing.T) *protocolamqp.Protocol {
 	c, ss, a := testClient(t)
 
-	p, err := protocolamqp.NewReceiverProtocolFromClient(c, ss, a)
+	p, err := protocolamqp.NewReceiverProtocolFromClient(context.Background(), c, ss, a)
 	require.NoError(t, err)
 
 	return p
@@ -70,26 +69,27 @@ func receiverProtocolFactory(t *testing.T) *protocolamqp.Protocol {
 // On option is http://qpid.apache.org/components/dispatch-router/indexthtml.
 // It can be installed from source or from RPMs, see https://qpid.apache.org/packages.html
 // Run `qdrouterd` and the tests will work with no further config.
-func testClient(t *testing.T) (client *amqp.Client, session *amqp.Session, addr string) {
+func testClient(t *testing.T) (client *amqp.Conn, session *amqp.Session, addr string) {
 	t.Helper()
 	addr = "test"
 	s := os.Getenv("TEST_AMQP_URL")
 	if u, err := url.Parse(s); err == nil && u.Path != "" {
 		addr = u.Path
 	}
-	client, err := amqp.Dial(s)
+	client, err := amqp.Dial(context.Background(), s, &amqp.ConnOptions{})
 	if err != nil {
 		t.Skipf("ampq.Dial(%#v): %v", s, err)
 	}
-	session, err = client.NewSession()
+	session, err = client.NewSession(context.Background(), &amqp.SessionOptions{})
 	require.NoError(t, err)
+
 	return client, session, addr
 }
 
 func protocolFactory(t *testing.T) *protocolamqp.Protocol {
 	c, ss, a := testClient(t)
 
-	p, err := protocolamqp.NewProtocolFromClient(c, ss, a)
+	p, err := protocolamqp.NewProtocolFromClient(context.Background(), c, ss, a)
 	require.NoError(t, err)
 
 	return p
