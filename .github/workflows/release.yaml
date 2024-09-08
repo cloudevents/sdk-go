@@ -5,6 +5,9 @@ on:
     branches:
       - release-*
 
+permissions:  
+  contents: read
+
 jobs:
   semver:
     name: Calculate Next Release
@@ -28,6 +31,8 @@ jobs:
           echo "::set-output name=next::$NEXT"
 
   mainmodule:
+    permissions:
+      contents: write
     name: Release Main Module
     runs-on: ubuntu-latest
     needs: semver
@@ -45,6 +50,8 @@ jobs:
           prerelease: false
 
   submodules:
+    permissions:
+      contents: write
     name: Release Sub-Modules
     runs-on: ubuntu-latest
     needs:
@@ -78,6 +85,8 @@ jobs:
         run: ./hack/tag-release.sh --tag --push
 
   examples:
+    permissions:
+      contents: write 
     name: Update Examples
     runs-on: ubuntu-latest
     needs:
