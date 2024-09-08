@@ -13,10 +13,10 @@ jobs:
     steps:
 
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       - name: Woke
-        uses: get-woke/woke-action-reviewdog@v0
+        uses: get-woke/woke-action-reviewdog@d71fd0115146a01c3181439ce714e21a69d75e31 # v0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-pr-review
