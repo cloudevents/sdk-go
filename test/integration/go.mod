@@ -1,6 +1,6 @@
 module github.com/cloudevents/sdk-go/test/integration
 
-go 1.18
+go 1.21
 
 replace github.com/cloudevents/sdk-go/v2 => ../../v2
 
@@ -32,13 +32,14 @@ require (
 	github.com/cloudevents/sdk-go/protocol/stan/v2 v2.5.0
 	github.com/cloudevents/sdk-go/v2 v2.15.2
 	github.com/confluentinc/confluent-kafka-go/v2 v2.3.0
-	github.com/eclipse/paho.golang v0.12.0
+	github.com/eclipse/paho.golang v0.21.0
 	github.com/google/go-cmp v0.6.0
 	github.com/google/uuid v1.3.0
 	github.com/nats-io/nats.go v1.31.0
 	github.com/nats-io/stan.go v0.10.4
 	github.com/stretchr/testify v1.8.4
 	go.uber.org/atomic v1.4.0
+	golang.org/x/sync v0.4.0
 )
 
 require (
@@ -79,7 +80,6 @@ require (
 	go.uber.org/zap v1.10.0 // indirect
 	golang.org/x/crypto v0.21.0 // indirect
 	golang.org/x/net v0.23.0 // indirect
-	golang.org/x/sync v0.4.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/time v0.0.0-20211116232009-f0f3c7e86c11 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
