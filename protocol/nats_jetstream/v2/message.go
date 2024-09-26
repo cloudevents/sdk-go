@@ -99,7 +99,24 @@ func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) 
 
 // Finish *must* be called when message from a Receiver can be forgotten by the receiver.
 func (m *Message) Finish(err error) error {
-	return nil
+	// Ignore error if message has already been Ack/Nak.
+	// Ack and Nak first checks to see if the message has been acknowleged
+	// and immediately returns an error without applying any logic to the message on the server.
+	// A message will auto acknowledge unless manual ack is set or policy is set to AckNonePolicy
+	// see: ManualAck() subscription option
+	// see: ConsumerConfig.AckPolicy
+	if err != nil {
+		errNak := m.Msg.Nak()
+		if errNak == nats.ErrMsgAlreadyAckd || errNak == nats.ErrCantAckIfConsumerAckNone {
+			return nil
+		}
+		return errNak
+	}
+	errAck := m.Msg.Ack()
+	if errAck == nats.ErrMsgAlreadyAckd || errAck == nats.ErrCantAckIfConsumerAckNone {
+		return nil
+	}
+	return errAck
 }
 
 // GetAttribute implements binding.MessageMetadataReader
