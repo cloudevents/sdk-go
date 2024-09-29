@@ -16,7 +16,6 @@ import (
 	// "github.com/cloudevents/sdk-go/v2/types"
 )
 
-
 func TestSenderReceiver_binary_v1(t *testing.T) {
 	now := time.Now()
 
@@ -177,7 +176,7 @@ func TestSenderReceiver_data_base64_v1(t *testing.T) {
 				Header: map[string][]string{
 					"content-type": {"application/cloudevents+json"},
 				},
-				Body:          fmt.Sprintf(`{"data_base64":"aGVsbG86IHVuaXR0ZXN0","id":"ABC-123","source":"/unit/test/client","specversion":"1.0","subject":"resource","time":%q,"type":"unit.test.client.sent"}`,now.Truncate(time.Second).Format(time.RFC3339) ),
+				Body:          fmt.Sprintf(`{"data_base64":"aGVsbG86IHVuaXR0ZXN0","id":"ABC-123","source":"/unit/test/client","specversion":"1.0","subject":"resource","time":%q,"type":"unit.test.client.sent"}`, now.Truncate(time.Second).Format(time.RFC3339)),
 				ContentLength: 191,
 			},
 		},
