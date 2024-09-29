@@ -12,7 +12,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"time"
 
 	"github.com/cloudevents/sdk-go/v2/binding/format"
 	"github.com/cloudevents/sdk-go/v2/binding/spec"
@@ -139,16 +138,6 @@ func (b *messageToEventBuilder) SetAttribute(attribute spec.Attribute, value int
 		}
 		return nil
 	}
-
-	// Check if the attribute is 'time' and set it correctly
-    if attribute.Kind() == spec.Time {
-        t, ok := value.(time.Time)
-        if !ok {
-            return fmt.Errorf("expected time.Time for 'time' attribute, got %T", value)
-        }
-        return attribute.Set(b.Context, t)
-    }
-	
 	return attribute.Set(b.Context, value)
 }
 
