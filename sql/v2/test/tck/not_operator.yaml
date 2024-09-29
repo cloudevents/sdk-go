@@ -14,7 +14,11 @@ tests:
     expression: NOT 'FALSE'
     result: true
 
-  - name: Invalid int cast
+  - name: Not true with casting
     expression: NOT 10
-    result: true
-    error: cast
+    result: false
+
+  - name: Not missing attribute
+    expression: NOT missing
+    result: false
+    error: missingAttribute

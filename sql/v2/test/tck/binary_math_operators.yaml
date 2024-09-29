@@ -21,6 +21,14 @@ tests:
     expression: 5 % 0
     result: 0
     error: math
+  - name: Missing attribute in division results in missing attribute error, not divide by 0 error
+    expression: missing / 0
+    result: 0
+    error: missingAttribute
+  - name: Missing attribute in modulo results in missing attribute error, not divide by 0 error
+    expression: missing % 0
+    result: 0
+    error: missingAttribute
 
   - name: Positive plus positive number
     expression: 4 + 1
@@ -50,11 +58,6 @@ tests:
   - name: Implicit casting, with both values string
     expression: "'5' + '3'"
     result: 8
-  - name: Implicit casting, with invalid boolean value
+  - name: Implicit casting, with boolean value
     expression: "5 + TRUE"
-    result: 5
-    error: cast
-  - name: Implicit casting, with invalid string value
-    expression: "'5avc4' + 10"
-    result: 10
-    error: cast
+    result: 6

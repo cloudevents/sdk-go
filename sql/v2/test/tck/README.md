@@ -23,6 +23,7 @@ The `error` values could be any of the following:
 * `parse`: Error while parsing the expression
 * `math`: Math error while evaluating a math operator
 * `cast`: Casting error
-* `missingAttribute`: Addressed a missing attribute
 * `missingFunction`: Addressed a missing function
 * `functionEvaluation`: Error while evaluating a function
+* `missingAttribute`: Error due to a missing attribute
+* `generic`: A generic error

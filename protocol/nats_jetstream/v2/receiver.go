@@ -8,6 +8,7 @@ package nats_jetstream
 import (
 	"context"
 	"io"
+	"strings"
 	"sync"
 
 	"github.com/nats-io/nats.go"
@@ -89,10 +90,21 @@ func NewConsumerFromConn(conn *nats.Conn, stream, subject string, jsmOpts []nats
 
 	streamInfo, err := jsm.StreamInfo(stream, jsmOpts...)
 
+	subjectMatch := stream + ".*"
+	if strings.Count(strings.TrimPrefix(subject, stream), ".") > 1 {
+		// More than one "." in the remainder of subject, use ".>" to match
+		subjectMatch = stream + ".>"
+	}
+	if !strings.HasPrefix(subject, stream) {
+		// Use an empty subject parameter in conjunction with
+		// nats.ConsumerFilterSubjects
+		subjectMatch = ""
+	}
+
 	if streamInfo == nil || err != nil && err.Error() == "stream not found" {
 		_, err = jsm.AddStream(&nats.StreamConfig{
 			Name:     stream,
-			Subjects: []string{stream + ".*"},
+			Subjects: []string{subjectMatch},
 		})
 		if err != nil {
 			return nil, err

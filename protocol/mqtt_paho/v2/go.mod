@@ -1,12 +1,12 @@
 module github.com/cloudevents/sdk-go/protocol/mqtt_paho/v2
 
-go 1.18
+go 1.21
 
 replace github.com/cloudevents/sdk-go/v2 => ../../../v2
 
 require (
 	github.com/cloudevents/sdk-go/v2 v2.5.0
-	github.com/eclipse/paho.golang v0.12.0
+	github.com/eclipse/paho.golang v0.21.0
 	github.com/stretchr/testify v1.8.4
 )
 
@@ -20,6 +20,5 @@ require (
 	go.uber.org/atomic v1.4.0 // indirect
 	go.uber.org/multierr v1.1.0 // indirect
 	go.uber.org/zap v1.10.0 // indirect
-	golang.org/x/sync v0.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

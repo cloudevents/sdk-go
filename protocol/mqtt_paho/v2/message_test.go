@@ -32,7 +32,7 @@ func TestReadStructured(t *testing.T) {
 			msg: &paho.Publish{
 				Payload: []byte(""),
 				Properties: &paho.PublishProperties{
-					User: []paho.UserProperty{{Key: contentType, Value: event.ApplicationCloudEventsJSON}},
+					ContentType: event.ApplicationCloudEventsJSON,
 				},
 			},
 		},

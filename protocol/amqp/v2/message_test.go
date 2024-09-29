@@ -62,3 +62,58 @@ func TestNewMessage_message_unknown(t *testing.T) {
 	got := NewMessage(message, &rcv)
 	require.Equal(t, binding.EncodingUnknown, got.ReadEncoding())
 }
+
+func TestMessage_getAmqpData(t *testing.T) {
+	tests := []struct {
+		name    string
+		message *amqp.Message
+		want    []byte
+	}{
+		{
+			name:    "nil data",
+			message: amqp.NewMessage(nil),
+			want:    nil,
+		},
+		{
+			name:    "empty string",
+			message: amqp.NewMessage([]byte(`""`)),
+			want:    []byte(`""`),
+		},
+		{
+			name:    "simple string",
+			message: amqp.NewMessage([]byte("hello world")),
+			want:    []byte("hello world"),
+		},
+		{
+			name: "multiple data with simple strings",
+			message: &amqp.Message{Data: [][]byte{
+				[]byte("hello"),
+				[]byte(" "),
+				[]byte("world"),
+			}},
+			want: []byte("hello world"),
+		},
+		{
+			name: "multiple data to build JSON array",
+			message: &amqp.Message{Data: [][]byte{
+				[]byte("["),
+				[]byte("Foo"),
+				[]byte(","),
+				[]byte("Bar"),
+				[]byte(","),
+				[]byte("Baz"),
+				[]byte("]"),
+			}},
+			want: []byte("[Foo,Bar,Baz]"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m := &Message{
+				AMQP: tt.message,
+			}
+			got := m.getAmqpData()
+			require.Equal(t, tt.want, got)
+		})
+	}
+}

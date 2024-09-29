@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ 'main', 'release-*' ]
 
+permissions:
+  contents: read
+  
 jobs:
 
   lint:
@@ -14,23 +17,23 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
 
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
         with:
           go-version: 1.21.x
           cache-dependency-path: v2/go.sum
         id: go
 
       - id: golangci_configuration
-        uses: andstor/file-existence-action@v3
+        uses: andstor/file-existence-action@076e0072799f4942c8bc574a82233e1e4d13e9d6 # v3.0.0
         with:
           files: .golangci.yaml
 
       - name: Go Lint on ./v2
         if: steps.golangci_configuration.outputs.files_exists == 'true'
-        uses: golangci/golangci-lint-action@v4
+        uses: golangci/golangci-lint-action@aaa42aa0628b4ae2578232a66b541047968fac86 # v6.1.0
         with:
           version: v1.54
           working-directory: v2

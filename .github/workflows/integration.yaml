@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ 'main', 'release-*' ]
 
+permissions:
+  contents: read
+  
 jobs:
 
   integration:
@@ -26,6 +29,15 @@ jobs:
         ports:
           - 9091:9091
           - 9092:9092
+
+      kafka_confluent:
+        image: confluentinc/confluent-local:7.6.0
+        ports:
+          - "9192:9192"
+        env:
+          KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://localhost:29192,PLAINTEXT_HOST://localhost:9192'
+          KAFKA_CONTROLLER_QUORUM_VOTERS: '1@localhost:29193'
+          KAFKA_LISTENERS: 'PLAINTEXT://localhost:29192,CONTROLLER://localhost:29193,PLAINTEXT_HOST://0.0.0.0:9192'
 
       natss:
         image: nats-streaming:0.22.1
@@ -69,10 +81,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
 
       - name: Setup Go ${{ matrix.go-version }}
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
         with:
           go-version: ${{ matrix.go-version }}
           cache-dependency-path: v2/go.sum
