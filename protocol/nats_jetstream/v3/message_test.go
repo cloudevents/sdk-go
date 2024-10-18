@@ -9,11 +9,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"reflect"
 	"testing"
 
 	"github.com/cloudevents/sdk-go/v2/binding/spec"
 	bindingtest "github.com/cloudevents/sdk-go/v2/binding/test"
+	"github.com/cloudevents/sdk-go/v2/protocol"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/test"
@@ -23,11 +25,17 @@ import (
 
 type jetStreamMsg struct {
 	jetstream.Msg
-	msg *nats.Msg
+	msg        *nats.Msg
+	ackCalled  bool
+	ackErr     error
+	nackCalled bool
+	nackErr    error
 }
 
 func (j *jetStreamMsg) Data() []byte         { return j.msg.Data }
 func (j *jetStreamMsg) Headers() nats.Header { return j.msg.Header }
+func (j *jetStreamMsg) Ack() error           { j.ackCalled = true; return j.ackErr }
+func (j *jetStreamMsg) Nak() error           { j.nackCalled = true; return j.nackErr }
 
 var (
 	outBinaryMessage = bindingtest.MockBinaryMessage{
@@ -186,6 +194,119 @@ func TestGetExtension(t *testing.T) {
 			gotExtensionValue := message.GetExtension(tt.extensionName)
 			if gotExtensionValue != tt.expectedExtensionValue {
 				t.Errorf("ExpectedExtensionValue %s, while got %s", tt.expectedExtensionValue, gotExtensionValue)
+			}
+		})
+	}
+}
+
+func TestFinish(t *testing.T) {
+	type args struct {
+		err    error
+		ackErr error
+		nakErr error
+	}
+	type wants struct {
+		err        error
+		ackCalled  bool
+		nackCalled bool
+	}
+	tests := []struct {
+		name  string
+		args  args
+		wants wants
+	}{
+		{
+			name: "nil error given",
+			args: args{
+				err: nil,
+			},
+			wants: wants{
+				err:        nil,
+				ackCalled:  true,
+				nackCalled: false,
+			},
+		},
+		{
+			name: "ACK error given",
+			args: args{
+				err: protocol.ResultACK,
+			},
+			wants: wants{
+				err:        nil,
+				ackCalled:  true,
+				nackCalled: false,
+			},
+		},
+		{
+			name: "NACK error given",
+			args: args{
+				err: protocol.ResultNACK,
+			},
+			wants: wants{
+				err:        nil,
+				ackCalled:  false,
+				nackCalled: true,
+			},
+		},
+		{
+			name: "unknown error given",
+			args: args{
+				err: errors.New("unknown"),
+			},
+			wants: wants{
+				err:        nil,
+				ackCalled:  false,
+				nackCalled: false,
+			},
+		},
+		{
+			name: "jetstream.ErrMsgAlreadyAckd error returned from Ack",
+			args: args{
+				err:    protocol.ResultACK,
+				ackErr: jetstream.ErrMsgAlreadyAckd,
+			},
+			wants: wants{
+				err:        nil,
+				ackCalled:  true,
+				nackCalled: false,
+			},
+		},
+		{
+			name: "jetstream.ErrMsgAlreadyAckd error returned from Nak",
+			args: args{
+				err:    protocol.ResultNACK,
+				nakErr: jetstream.ErrMsgAlreadyAckd,
+			},
+			wants: wants{
+				err:        nil,
+				ackCalled:  false,
+				nackCalled: true,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			binaryReceiverMessage.ackCalled = false
+			binaryReceiverMessage.ackErr = tt.args.ackErr
+			binaryReceiverMessage.nackCalled = false
+			binaryReceiverMessage.nackErr = tt.args.nakErr
+			message := NewMessage(binaryReceiverMessage)
+			if message == nil {
+				t.Errorf("Error in NewMessage!")
+			}
+			gotErr := message.Finish(tt.args.err)
+			if gotErr != tt.wants.err {
+				t.Errorf("ExpectedErr %s, while got %s", tt.wants.err, gotErr)
+			}
+			var mockMessage *jetStreamMsg
+			if message != nil {
+				mockMessage = message.Msg.(*jetStreamMsg)
+			}
+			if mockMessage.ackCalled != tt.wants.ackCalled {
+				t.Errorf("ExpectedAck %t, while got %t", tt.wants.ackCalled, mockMessage.ackCalled)
+			}
+			if mockMessage.nackCalled != tt.wants.nackCalled {
+				t.Errorf("ExpectedNack %t, while got %t", tt.wants.nackCalled, mockMessage.nackCalled)
 			}
 		})
 	}

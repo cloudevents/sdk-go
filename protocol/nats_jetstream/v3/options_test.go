@@ -474,7 +474,7 @@ func TestWithJetStreamOptions(t *testing.T) {
 			wants: wants{
 				err: nil,
 				protocol: &Protocol{
-					jetSteamOpts: jetStreamOpts,
+					jetStreamOpts: jetStreamOpts,
 				},
 			},
 		},
