@@ -1,6 +1,6 @@
 module github.com/cloudevents/sdk-go/protocol/nats/v2
 
-go 1.18
+go 1.22
 
 replace github.com/cloudevents/sdk-go/v2 => ../../../v2
 

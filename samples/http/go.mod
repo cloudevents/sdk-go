@@ -1,15 +1,15 @@
 module github.com/cloudevents/sdk-go/samples/http
 
-go 1.18
+go 1.22
 
 require (
 	contrib.go.opencensus.io/exporter/prometheus v0.1.0
 	github.com/cloudevents/sdk-go/binding/format/protobuf/v2 v2.5.0
 	github.com/cloudevents/sdk-go/observability/opencensus/v2 v2.5.0
 	github.com/cloudevents/sdk-go/observability/opentelemetry/v2 v2.5.0
-	github.com/cloudevents/sdk-go/v2 v2.5.0
+	github.com/cloudevents/sdk-go/v2 v2.15.2
 	github.com/gin-gonic/gin v1.9.1
-	github.com/google/uuid v1.3.0
+	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.7.3
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/rs/zerolog v1.29.0
@@ -19,7 +19,7 @@ require (
 	go.opentelemetry.io/otel/exporters/jaeger v1.0.0
 	go.opentelemetry.io/otel/sdk v1.0.0
 	go.opentelemetry.io/otel/trace v1.18.0
-	google.golang.org/protobuf v1.33.0
+	google.golang.org/protobuf v1.35.1
 )
 
 require (
@@ -54,9 +54,8 @@ require (
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
 	go.opentelemetry.io/otel/metric v1.18.0 // indirect
-	go.uber.org/atomic v1.4.0 // indirect
-	go.uber.org/multierr v1.1.0 // indirect
-	go.uber.org/zap v1.10.0 // indirect
+	go.uber.org/multierr v1.11.0 // indirect
+	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/arch v0.3.0 // indirect
 	golang.org/x/crypto v0.27.0 // indirect
 	golang.org/x/net v0.29.0 // indirect
