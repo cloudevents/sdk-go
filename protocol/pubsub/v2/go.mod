@@ -1,14 +1,14 @@
 module github.com/cloudevents/sdk-go/protocol/pubsub/v2
 
-go 1.18
+go 1.22
 
 replace github.com/cloudevents/sdk-go/v2 => ../../../v2
 
 require (
 	cloud.google.com/go/pubsub v1.30.0
 	github.com/cloudevents/sdk-go/v2 v2.5.0
-	github.com/google/go-cmp v0.5.9
-	github.com/stretchr/testify v1.8.1
+	github.com/google/go-cmp v0.6.0
+	github.com/stretchr/testify v1.9.0
 	golang.org/x/sync v0.8.0
 	google.golang.org/api v0.114.0
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1
@@ -25,14 +25,13 @@ require (
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.3 // indirect
 	github.com/googleapis/gax-go/v2 v2.7.1 // indirect
-	github.com/json-iterator/go v1.1.10 // indirect
-	github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421 // indirect
-	github.com/modern-go/reflect2 v0.0.0-20180701023420-4b7aa43c6742 // indirect
+	github.com/json-iterator/go v1.1.12 // indirect
+	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
+	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	go.opencensus.io v0.24.0 // indirect
-	go.uber.org/atomic v1.4.0 // indirect
-	go.uber.org/multierr v1.1.0 // indirect
-	go.uber.org/zap v1.10.0 // indirect
+	go.uber.org/multierr v1.11.0 // indirect
+	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/net v0.29.0 // indirect
 	golang.org/x/oauth2 v0.7.0 // indirect
 	golang.org/x/sys v0.25.0 // indirect

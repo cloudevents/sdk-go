@@ -20,14 +20,14 @@ This library will help you to:
 _Note:_ Supported
 [CloudEvents specification](https://github.com/cloudevents/spec): 0.3, 1.0
 
-_Note:_ Supported go version: 1.18+
+_Note:_ Supported go version: 1.22+
 
 ## Get started
 
-Add the module as dependency using go mod:
+Add the module as dependency to your project:
 
-```shell
-go get github.com/cloudevents/sdk-go/v2@v2.12.0
+```console
+go get github.com/cloudevents/sdk-go/v2
 ```
 
 And import the module in your code

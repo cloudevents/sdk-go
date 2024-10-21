@@ -87,6 +87,8 @@ func TestReceiverFnInvalidTypes(t *testing.T) {
 
 func TestReceiverFnInvoke_1(t *testing.T) {
 	key := struct{}{}
+
+	//nolint:staticcheck
 	wantCtx := context.WithValue(context.TODO(), key, "UNIT TEST")
 	wantEvent := event.Event{
 		Context: &event.EventContextV1{ID: "UNIT TEST"},
@@ -124,6 +126,8 @@ func TestReceiverFnInvoke_1(t *testing.T) {
 
 func TestReceiverFnInvoke_2(t *testing.T) {
 	key := struct{}{}
+
+	//nolint:staticcheck
 	ctx := context.WithValue(context.TODO(), key, "UNIT TEST")
 	wantEvent := event.Event{
 		Context: &event.EventContextV1{
@@ -158,6 +162,8 @@ func TestReceiverFnInvoke_2(t *testing.T) {
 
 func TestReceiverFnInvoke_3(t *testing.T) {
 	key := struct{}{}
+
+	//nolint:staticcheck
 	ctx := context.WithValue(context.TODO(), key, "UNIT TEST")
 	wantEvent := event.Event{
 		Context: &event.EventContextV1{
@@ -192,6 +198,8 @@ func TestReceiverFnInvoke_3(t *testing.T) {
 
 func TestReceiverFnInvoke_4(t *testing.T) {
 	key := struct{}{}
+
+	//nolint:staticcheck
 	ctx := context.WithValue(context.TODO(), key, "UNIT TEST")
 	wantResp := &event.Event{
 		Context: &event.EventContextV1{ID: "UNIT TEST"},
@@ -218,6 +226,8 @@ func TestReceiverFnInvoke_4(t *testing.T) {
 
 func TestReceiverFnInvoke_5(t *testing.T) {
 	key := struct{}{}
+
+	//nolint:staticcheck
 	ctx := context.WithValue(context.TODO(), key, "UNIT TEST")
 
 	var wantResp *event.Event

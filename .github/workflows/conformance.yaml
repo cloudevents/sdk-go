@@ -15,7 +15,7 @@ jobs:
     name: CloudEvents
     strategy:
       matrix:
-        go-version: [1.21.x]
+        go-version: [1.23]
         platform: [ubuntu-latest]
 
     runs-on: ${{ matrix.platform }}

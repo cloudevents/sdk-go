@@ -1,6 +1,6 @@
 module github.com/cloudevents/sdk-go/test/sql
 
-go 1.20
+go 1.22
 
 require (
 	github.com/cloudevents/sdk-go/sql/v2 v2.14.0
