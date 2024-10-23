@@ -117,7 +117,7 @@ func TestSenderReceiver_structured_v1(t *testing.T) {
 				Context: cloudevents.EventContextV1{
 					ID:              "ABC-123",
 					Type:            "unit.test.client.sent",
-					Time:            &cloudevents.Timestamp{Time: now.Truncate(time.Second)},
+					Time:            &cloudevents.Timestamp{Time: now},
 					Source:          *cloudevents.ParseURIRef("/unit/test/client"),
 					Subject:         strptr("resource"),
 					DataContentType: cloudevents.StringOfApplicationJSON(),
@@ -130,7 +130,7 @@ func TestSenderReceiver_structured_v1(t *testing.T) {
 				Header: map[string][]string{
 					"content-type": {"application/cloudevents+json"},
 				},
-				Body:          fmt.Sprintf(`{"data":{"hello":"unittest"},"id":"ABC-123","source":"/unit/test/client","specversion":"1.0","subject":"resource","time":%q,"type":"unit.test.client.sent"}`, now.Truncate(time.Second).Format(time.RFC3339)),
+				Body:          fmt.Sprintf(`{"data":{"hello":"unittest"},"id":"ABC-123","source":"/unit/test/client","specversion":"1.0","subject":"resource","time":%q,"type":"unit.test.client.sent"}`, now.Format(time.RFC3339)),
 				ContentLength: 182,
 			},
 		},
@@ -163,7 +163,7 @@ func TestSenderReceiver_data_base64_v1(t *testing.T) {
 				Context: cloudevents.EventContextV1{
 					ID:              "ABC-123",
 					Type:            "unit.test.client.sent",
-					Time:            &cloudevents.Timestamp{Time: now.Truncate(time.Second)},
+					Time:            &cloudevents.Timestamp{Time: now},
 					Source:          *cloudevents.ParseURIRef("/unit/test/client"),
 					Subject:         strptr("resource"),
 					DataContentType: cloudevents.StringOfTextPlain(),
@@ -176,7 +176,7 @@ func TestSenderReceiver_data_base64_v1(t *testing.T) {
 				Header: map[string][]string{
 					"content-type": {"application/cloudevents+json"},
 				},
-				Body:          fmt.Sprintf(`{"data_base64":"aGVsbG86IHVuaXR0ZXN0","id":"ABC-123","source":"/unit/test/client","specversion":"1.0","subject":"resource","time":%q,"type":"unit.test.client.sent"}`, now.Truncate(time.Second).Format(time.RFC3339)),
+				Body:          fmt.Sprintf(`{"data_base64":"aGVsbG86IHVuaXR0ZXN0","id":"ABC-123","source":"/unit/test/client","specversion":"1.0","subject":"resource","time":%q,"type":"unit.test.client.sent"}`, now.Format(time.RFC3339)),
 				ContentLength: 191,
 			},
 		},

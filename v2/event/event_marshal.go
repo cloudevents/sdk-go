@@ -77,7 +77,7 @@ func WriteJson(in *Event, writer io.Writer) error {
 		if eventContext.Time != nil {
 			stream.WriteMore()
 			stream.WriteObjectField("time")
-			stream.WriteString(eventContext.Time.Format(time.RFC3339))
+			stream.WriteString(eventContext.Time.Format(time.RFC3339Nano))
 		}
 	case *EventContextV1:
 		// Set a bunch of variables we need later
@@ -121,7 +121,7 @@ func WriteJson(in *Event, writer io.Writer) error {
 		if eventContext.Time != nil {
 			stream.WriteMore()
 			stream.WriteObjectField("time")
-			stream.WriteString(eventContext.Time.Format(time.RFC3339))
+			stream.WriteString(eventContext.Time.Format(time.RFC3339Nano))
 		}
 	default:
 		return fmt.Errorf("missing event context")
