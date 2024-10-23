@@ -29,8 +29,8 @@ type Protocol struct {
 	natsOpts []nats.Option
 
 	// jetstream options
-	jetSteamOpts []jetstream.JetStreamOpt
-	jetStream    jetstream.JetStream
+	jetStreamOpts []jetstream.JetStreamOpt
+	jetStream     jetstream.JetStream
 
 	// receiver
 	incoming              chan msgErr
@@ -76,7 +76,7 @@ func New(ctx context.Context, opts ...ProtocolOption) (*Protocol, error) {
 		}
 	}
 
-	if p.jetStream, errConnection = jetstream.New(p.conn, p.jetSteamOpts...); errConnection != nil {
+	if p.jetStream, errConnection = jetstream.New(p.conn, p.jetStreamOpts...); errConnection != nil {
 		return nil, errConnection
 	}
 

@@ -42,7 +42,7 @@ func WithConnection(conn *nats.Conn) ProtocolOption {
 // WithJetStreamOptions sets jetstream options used in the protocol sender and receiver
 func WithJetStreamOptions(jetStreamOpts []jetstream.JetStreamOpt) ProtocolOption {
 	return func(p *Protocol) error {
-		p.jetSteamOpts = jetStreamOpts
+		p.jetStreamOpts = jetStreamOpts
 		return nil
 	}
 }
