@@ -7,7 +7,7 @@ replace github.com/cloudevents/sdk-go/v2 => ../../../v2
 require (
 	github.com/cloudevents/sdk-go/v2 v2.15.2
 	github.com/confluentinc/confluent-kafka-go/v2 v2.3.0
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 )
 
 require (

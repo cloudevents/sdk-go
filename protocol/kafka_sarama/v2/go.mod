@@ -7,7 +7,7 @@ replace github.com/cloudevents/sdk-go/v2 => ../../../v2
 require (
 	github.com/IBM/sarama v1.40.1
 	github.com/cloudevents/sdk-go/v2 v2.5.0
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 )
 
 require (

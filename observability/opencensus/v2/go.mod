@@ -5,7 +5,7 @@ go 1.22
 require (
 	github.com/cloudevents/sdk-go/v2 v2.5.0
 	github.com/lightstep/tracecontext.go v0.0.0-20181129014701-1757c391b1ac
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	go.opencensus.io v0.22.0
 )
 
