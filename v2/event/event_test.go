@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -530,13 +531,13 @@ func TestEvent_Clone(t *testing.T) {
 	require.Equal(t, original.Context, clone.Context)
 	require.NotSame(t, original.Context, clone.Context)
 	require.Equal(t, original.Data(), clone.Data())
-	require.NotSame(t, original.Data(), clone.Data())
+	require.NotSame(t, &original.Data()[0], &clone.Data()[0], "Slices share the same underlying data")
 
 	require.Equal(t, original.DataEncoded, clone.DataEncoded)
 	require.Equal(t, original.DataBase64, clone.DataBase64)
 
 	require.Equal(t, original.FieldErrors, clone.FieldErrors)
-	require.NotSame(t, original.FieldErrors, clone.FieldErrors)
+	require.NotEqual(t, reflect.ValueOf(original.FieldErrors).Pointer(), reflect.ValueOf(clone.FieldErrors).Pointer())
 
 	require.NoError(t, clone.SetData(event.ApplicationJSON, "bbb"))
 

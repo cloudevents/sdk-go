@@ -267,8 +267,6 @@ func TestCloneTimestamp(t *testing.T) {
 	cloned := types.Clone(original).(types.Timestamp)
 
 	require.Equal(t, original, cloned)
-	require.NotSame(t, original, cloned)
-	require.NotSame(t, original.Time, cloned.Time)
 }
 
 func TestCloneTimestampPointer(t *testing.T) {
@@ -277,7 +275,6 @@ func TestCloneTimestampPointer(t *testing.T) {
 
 	require.Equal(t, original, cloned)
 	require.NotSame(t, original, cloned)
-	require.NotSame(t, original.Time, cloned.Time)
 }
 
 func TestCloneTime(t *testing.T) {
@@ -285,7 +282,6 @@ func TestCloneTime(t *testing.T) {
 	cloned := types.Clone(original).(types.Timestamp)
 
 	require.Equal(t, original, cloned.Time)
-	require.NotSame(t, original, cloned.Time)
 }
 
 func TestCloneTimePointer(t *testing.T) {

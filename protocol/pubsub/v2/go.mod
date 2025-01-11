@@ -8,7 +8,7 @@ require (
 	cloud.google.com/go/pubsub v1.30.0
 	github.com/cloudevents/sdk-go/v2 v2.5.0
 	github.com/google/go-cmp v0.6.0
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	golang.org/x/sync v0.8.0
 	google.golang.org/api v0.114.0
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1
