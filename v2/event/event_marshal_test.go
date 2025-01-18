@@ -6,9 +6,12 @@
 package event_test
 
 import (
+	"bytes"
 	"encoding/base64"
 	"encoding/json"
 	"net/url"
+	"slices"
+	"strings"
 	"testing"
 	"time"
 
@@ -384,13 +387,13 @@ func TestMarshal(t *testing.T) {
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
-			event := tc.event
+			testEvent := tc.event
 
 			for k, v := range tc.eventExtensions {
-				event.SetExtension(k, v)
+				testEvent.SetExtension(k, v)
 			}
 
-			gotBytes, err := json.Marshal(event)
+			gotBytes, err := json.Marshal(testEvent)
 
 			if tc.wantErr != nil {
 				require.Error(t, err, *tc.wantErr)
@@ -398,6 +401,7 @@ func TestMarshal(t *testing.T) {
 			}
 
 			assertJsonEquals(t, tc.want, gotBytes)
+			assertExtensionsAreOrdered(t, tc.eventExtensions, gotBytes)
 		})
 	}
 }
@@ -419,4 +423,29 @@ func assertJsonEquals(t *testing.T, want map[string]interface{}, got []byte) {
 	require.NoError(t, json.Unmarshal(wantBytes, &wantToCompare))
 
 	require.Equal(t, wantToCompare, gotToCompare)
+}
+
+func assertExtensionsAreOrdered(t *testing.T, extensions map[string]any, got []byte) {
+	type extensionLocation struct {
+		extension string
+		idx       int
+	}
+	extensionLocations := make([]extensionLocation, 0, len(extensions))
+	for ext := range extensions {
+		extensionLocations = append(extensionLocations, extensionLocation{
+			extension: ext,
+			idx:       bytes.Index(got, []byte(ext)),
+		})
+	}
+
+	// Sort by extension name
+	slices.SortFunc(extensionLocations, func(i, j extensionLocation) int {
+		return strings.Compare(i.extension, j.extension)
+	})
+	indexes := make([]int, 0, len(extensions))
+	for ext := range extensionLocations {
+		indexes = append(indexes, extensionLocations[ext].idx)
+	}
+
+	require.IsIncreasingf(t, indexes, "Expected ordered extensions, found extensions at: %+v", extensionLocations)
 }
