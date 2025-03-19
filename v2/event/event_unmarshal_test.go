@@ -298,6 +298,31 @@ func TestUnmarshal(t *testing.T) {
 				DataBase64:  true,
 			},
 		},
+		"base64 json encoded data v1.0 - escaped json string": {
+			body: []byte(`{
+				"specversion":     "1.0",
+				"datacontenttype": "text/plain",
+				"data_base64": "\u002B\u002B\u002B\u002B",
+				"id":          "ABC-123",
+				"time":        "` + now.Format(time.RFC3339Nano) + `",
+				"type":        "com.example.test",
+				"dataschema":  "http://example.com/schema",
+				"source":      "http://example.com/source"
+			}`),
+			want: &event.Event{
+				Context: event.EventContextV1{
+					Type:            "com.example.test",
+					Source:          *sourceV1,
+					DataSchema:      schemaV1,
+					ID:              "ABC-123",
+					Time:            &now,
+					DataContentType: event.StringOfTextPlain(),
+				}.AsV1(),
+				// base64 decode of "++++"
+				DataEncoded: []byte{0xfb, 0xef, 0xbe},
+				DataBase64:  true,
+			},
+		},
 		"base64 xml encoded data v1.0": {
 			body: mustJsonMarshal(t, map[string]interface{}{
 				"specversion":     "1.0",
