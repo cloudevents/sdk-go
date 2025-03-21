@@ -1,6 +1,7 @@
 module github.com/cloudevents/sdk-go/test/conformance
 
 go 1.22
+toolchain go1.24.1
 
 replace github.com/cloudevents/sdk-go/v2 => ../../v2
 
@@ -48,6 +49,6 @@ require (
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
-	golang.org/x/crypto v0.31.0 // indirect
-	golang.org/x/net v0.29.0 // indirect
+	golang.org/x/crypto v0.35.0 // indirect
+	golang.org/x/net v0.36.0 // indirect
 )
