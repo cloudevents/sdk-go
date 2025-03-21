@@ -121,7 +121,7 @@ do
       go get -d $repoint@$tag
       go mod edit -dropreplace $repoint
     fi
-    go mod tidy -compat=1.18
+    go mod tidy
   done
   popd > /dev/null
 
