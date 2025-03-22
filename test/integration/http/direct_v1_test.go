@@ -13,7 +13,6 @@ import (
 	"time"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
-	"github.com/cloudevents/sdk-go/v2/types"
 )
 
 func TestSenderReceiver_binary_v1(t *testing.T) {
@@ -101,7 +100,6 @@ func TestSenderReceiver_binary_v1(t *testing.T) {
 
 func TestSenderReceiver_structured_v1(t *testing.T) {
 	now := time.Now()
-
 	testCases := DirectTapTestCases{
 		"Structured v1.0": {
 			now: now,
@@ -131,7 +129,7 @@ func TestSenderReceiver_structured_v1(t *testing.T) {
 				Header: map[string][]string{
 					"content-type": {"application/cloudevents+json"},
 				},
-				Body:          fmt.Sprintf(`{"data":{"hello":"unittest"},"id":"ABC-123","source":"/unit/test/client","specversion":"1.0","subject":"resource","time":%q,"type":"unit.test.client.sent"}`, types.FormatTime(now.UTC())),
+				Body:          fmt.Sprintf(`{"data":{"hello":"unittest"},"id":"ABC-123","source":"/unit/test/client","specversion":"1.0","subject":"resource","time":%q,"type":"unit.test.client.sent"}`, now.Format(time.RFC3339)),
 				ContentLength: 182,
 			},
 		},
@@ -177,7 +175,7 @@ func TestSenderReceiver_data_base64_v1(t *testing.T) {
 				Header: map[string][]string{
 					"content-type": {"application/cloudevents+json"},
 				},
-				Body:          fmt.Sprintf(`{"data_base64":"aGVsbG86IHVuaXR0ZXN0","id":"ABC-123","source":"/unit/test/client","specversion":"1.0","subject":"resource","time":%q,"type":"unit.test.client.sent"}`, now.UTC().Format(time.RFC3339Nano)),
+				Body:          fmt.Sprintf(`{"data_base64":"aGVsbG86IHVuaXR0ZXN0","id":"ABC-123","source":"/unit/test/client","specversion":"1.0","subject":"resource","time":%q,"type":"unit.test.client.sent"}`, now.Format(time.RFC3339)),
 				ContentLength: 191,
 			},
 		},
