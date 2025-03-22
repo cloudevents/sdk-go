@@ -1,6 +1,8 @@
 module github.com/cloudevents/sdk-go/protocol/nats/v2
 
-go 1.22
+go 1.23.0
+
+toolchain go1.24.1
 
 replace github.com/cloudevents/sdk-go/v2 => ../../../v2
 
@@ -16,6 +18,6 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/nats-io/nkeys v0.4.6 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
-	golang.org/x/crypto v0.31.0 // indirect
-	golang.org/x/sys v0.28.0 // indirect
+	golang.org/x/crypto v0.36.0 // indirect
+	golang.org/x/sys v0.31.0 // indirect
 )
