@@ -12,7 +12,7 @@ permissions:
 jobs:
 
   integration:
-    name: CloudEvents
+    name: CloudEvents Integration Test
     strategy:
       matrix:
         # Only test one go version: the integration tests don't seem to pass if NATS runs more one running at a time.
