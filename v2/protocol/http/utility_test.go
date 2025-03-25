@@ -38,9 +38,10 @@ func TestNewEventFromHttpRequest(t *testing.T) {
 		test.EachEvent(t, test.Events(), func(t *testing.T, eventIn event.Event) {
 			t.Run(tt.name, func(t *testing.T) {
 				ctx := context.TODO()
-				if tt.encoding == binding.EncodingStructured {
+				switch tt.encoding {
+				case binding.EncodingStructured:
 					ctx = binding.WithForceStructured(ctx)
-				} else if tt.encoding == binding.EncodingBinary {
+				case binding.EncodingBinary:
 					ctx = binding.WithForceBinary(ctx)
 				}
 
