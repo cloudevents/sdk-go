@@ -7,6 +7,7 @@ package client
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
@@ -126,11 +127,14 @@ func WithBlockingCallback() Option {
 // with a fixed number of goroutines.
 func WithParallelGoroutines(num int) Option {
 	return func(i interface{}) error {
-		if num > 0 {
-			if c, ok := i.(*ceClient); ok {
-				c.parallelGoroutines = num
-			}
+		if num <= 0 {
+			return errors.New("number of parallel goroutines must be greater than 0")
 		}
+
+		if c, ok := i.(*ceClient); ok {
+			c.parallelGoroutines = num
+		}
+
 		return nil
 	}
 }
