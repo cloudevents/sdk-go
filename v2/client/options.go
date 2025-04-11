@@ -119,15 +119,23 @@ func WithInboundContextDecorator(dec func(context.Context, binding.Message) cont
 // i.e. in each poll go routine, the next event will not be received until the callback on current event completes.
 // To make event processing serialized (no concurrency), use this option along with WithPollGoroutines(1)
 func WithBlockingCallback() Option {
+	return WithParallelGoroutines(1)
+}
+
+// WithParallelGoroutines enables the callback function of the passed-in StartReceiver to execute asynchronously
+// with a fixed number of goroutines.
+func WithParallelGoroutines(num int) Option {
 	return func(i interface{}) error {
-		if c, ok := i.(*ceClient); ok {
-			c.blockingCallback = true
+		if num > 0 {
+			if c, ok := i.(*ceClient); ok {
+				c.parallelGoroutines = num
+			}
 		}
 		return nil
 	}
 }
 
-// WithAckMalformedevents causes malformed events received within StartReceiver to be acknowledged
+// WithAckMalformedEvent causes malformed events received within StartReceiver to be acknowledged
 // rather than being permanently not-acknowledged. This can be useful when a protocol does not
 // provide a responder implementation and would otherwise cause the receiver to be partially or
 // fully stuck.

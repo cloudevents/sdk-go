@@ -100,7 +100,7 @@ type ceClient struct {
 	receiverMu                sync.Mutex
 	eventDefaulterFns         []EventDefaulter
 	pollGoroutines            int
-	blockingCallback          bool
+	parallelGoroutines        int
 	ackMalformedEvent         bool
 }
 
@@ -238,6 +238,10 @@ func (c *ceClient) StartReceiver(ctx context.Context, fn interface{}) error {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
+			var parallel chan struct{}
+			if c.parallelGoroutines > 0 {
+				parallel = make(chan struct{}, c.parallelGoroutines)
+			}
 			for {
 				var msg binding.Message
 				var respFn protocol.ResponseFn
@@ -265,8 +269,16 @@ func (c *ceClient) StartReceiver(ctx context.Context, fn interface{}) error {
 					}
 				}
 
-				if c.blockingCallback {
-					callback()
+				if parallel != nil {
+					wg.Add(1)
+					parallel <- struct{}{}
+					go func() {
+						defer func() {
+							<-parallel
+							wg.Done()
+						}()
+						callback()
+					}()
 				} else {
 					// Do not block on the invoker.
 					wg.Add(1)
