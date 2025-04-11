@@ -47,11 +47,11 @@ func main() {
 	natsSubject := "sample"
 	natsStream := "stream"
 
-	createStream(natsURL, natsStream, natsSubject)
+	createStream(natsURL, natsStream, natsSubject+".>")
 	ctx := context.Background()
 	urlOpt := cejsm.WithURL(natsURL)
-	sendopt := cejsm.WithSendSubject(natsSubject)
-	protocol, err := cejsm.New(ctx, urlOpt, sendopt)
+
+	protocol, err := cejsm.New(ctx, urlOpt)
 	if err != nil {
 		log.Fatalf("Failed to create nats protocol: %s", err.Error())
 	}
@@ -75,8 +75,10 @@ func main() {
 				Message:  fmt.Sprintf("Hello, %s!", contentType),
 			})
 
-			if result := c.Send(context.Background(), e); cloudevents.IsUndelivered(result) {
-				log.Printf("failed to send: %v", err)
+			ctx := cejsm.WithSubject(context.Background(), buildSubject(natsSubject, i))
+
+			if result := c.Send(ctx, e); cloudevents.IsUndelivered(result) {
+				log.Printf("failed to send: %v", result.Error())
 			} else {
 				log.Printf("sent: %d, accepted: %t", i, cloudevents.IsACK(result))
 			}
@@ -100,4 +102,14 @@ func createStream(url, streamName, subjectName string) error {
 
 	_, err = js.CreateOrUpdateStream(ctx, streamConfig)
 	return err
+}
+
+// buildSubject using base and message index.
+// `<base>.[odd|even].<index>`
+func buildSubject(base string, i int) string {
+	n := "even"
+	if i%2 != 0 {
+		n = "odd"
+	}
+	return fmt.Sprintf("%s.%s.%d", base, n, i)
 }
