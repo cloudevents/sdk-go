@@ -5,7 +5,7 @@ go 1.22
 require (
 	github.com/Azure/go-amqp v0.17.0
 	github.com/cloudevents/sdk-go/protocol/amqp/v2 v2.5.0
-	github.com/cloudevents/sdk-go/v2 v2.5.0
+	github.com/cloudevents/sdk-go/v2 v2.16.0
 	github.com/google/uuid v1.6.0
 )
 

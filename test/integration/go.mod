@@ -35,7 +35,7 @@ require (
 	github.com/cloudevents/sdk-go/protocol/nats_jetstream/v2 v2.0.0-00010101000000-000000000000
 	github.com/cloudevents/sdk-go/protocol/nats_jetstream/v3 v3.0.0-00010101000000-000000000000
 	github.com/cloudevents/sdk-go/protocol/stan/v2 v2.5.0
-	github.com/cloudevents/sdk-go/v2 v2.15.2
+	github.com/cloudevents/sdk-go/v2 v2.16.0
 	github.com/confluentinc/confluent-kafka-go/v2 v2.3.0
 	github.com/eclipse/paho.golang v0.21.0
 	github.com/google/go-cmp v0.7.0
