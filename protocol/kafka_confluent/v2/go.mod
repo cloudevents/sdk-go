@@ -1,18 +1,20 @@
 module github.com/cloudevents/sdk-go/protocol/kafka_confluent/v2
 
-go 1.22
+go 1.23.0
+
+toolchain go1.23.8
 
 replace github.com/cloudevents/sdk-go/v2 => ../../../v2
 
 require (
-	github.com/cloudevents/sdk-go/v2 v2.15.2
-	github.com/confluentinc/confluent-kafka-go/v2 v2.3.0
+	github.com/cloudevents/sdk-go/v2 v2.16.0
+	github.com/confluentinc/confluent-kafka-go/v2 v2.10.0
 	github.com/stretchr/testify v1.10.0
 )
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/google/go-cmp v0.6.0 // indirect
+	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect

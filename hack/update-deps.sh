@@ -31,9 +31,6 @@ for DIR in $DIRS; do
 
   pushd "$DIR" >/dev/null
 
-  # disable go toolchain switching
-  export GOTOOLCHAIN=local
-
   echo "  - Updating dependencies..."
   go get -u ./...
 
