@@ -20,7 +20,7 @@ This library will help you to:
 _Note:_ Supported
 [CloudEvents specification](https://github.com/cloudevents/spec): 0.3, 1.0
 
-_Note:_ Supported go version: 1.22+
+_Note:_ Tested and supported go version(s): 1.23+
 
 ## Get started
 
