@@ -1,13 +1,13 @@
 module github.com/cloudevents/sdk-go/binding/format/protobuf/v2
 
-go 1.22
+go 1.23.0
 
-toolchain go1.23.2
+toolchain go1.23.8
 
 require (
-	github.com/cloudevents/sdk-go/v2 v2.15.2
+	github.com/cloudevents/sdk-go/v2 v2.16.0
 	github.com/stretchr/testify v1.10.0
-	google.golang.org/protobuf v1.35.1
+	google.golang.org/protobuf v1.36.6
 )
 
 require (
