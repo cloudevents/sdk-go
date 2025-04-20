@@ -5,7 +5,7 @@ go 1.23.0
 toolchain go1.23.8
 
 require (
-	github.com/cloudevents/sdk-go/protocol/mqtt_paho/v2 v2.0.0-20250325190102-6de37de32b83
+	github.com/cloudevents/sdk-go/protocol/mqtt_paho/v2 v2.0.0-20250420115456-75bec0f02a5f
 	github.com/cloudevents/sdk-go/v2 v2.16.0
 	github.com/eclipse/paho.golang v0.22.0
 	github.com/google/uuid v1.6.0
