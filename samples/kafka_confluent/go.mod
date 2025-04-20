@@ -9,7 +9,7 @@ replace github.com/cloudevents/sdk-go/v2 => ../../v2
 replace github.com/cloudevents/sdk-go/protocol/kafka_confluent/v2 => ../../protocol/kafka_confluent/v2
 
 require (
-	github.com/cloudevents/sdk-go/protocol/kafka_confluent/v2 v2.0.0-20250325190102-6de37de32b83
+	github.com/cloudevents/sdk-go/protocol/kafka_confluent/v2 v2.0.0-20250420115456-75bec0f02a5f
 	github.com/cloudevents/sdk-go/v2 v2.16.0
 	github.com/confluentinc/confluent-kafka-go/v2 v2.10.0
 )
