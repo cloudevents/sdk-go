@@ -14,7 +14,7 @@ require (
 	golang.org/x/sync v0.13.0
 	google.golang.org/api v0.229.0
 	google.golang.org/genproto v0.0.0-20250414145226-207652e42e2e
-	google.golang.org/grpc v1.71.1
+	google.golang.org/grpc v1.72.0
 )
 
 require (

@@ -18,7 +18,7 @@ replace github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 => ../../protocol
 
 require (
 	github.com/IBM/sarama v1.45.1
-	github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.5.0
+	github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.16.0
 	github.com/cloudevents/sdk-go/v2 v2.16.0
 	github.com/cucumber/godog v0.9.0
 	github.com/cucumber/messages-go/v10 v10.0.3

@@ -6,10 +6,10 @@ toolchain go1.23.8
 
 replace github.com/cloudevents/sdk-go/v2 => ../../v2
 
-replace github.com/cloudevents/sdk-go/protocol/kafka_confluent/v2 => ../../protocol/kafka_confluent/v2
+replace github.com/cloudevents/sdk-go/protocol/kafka_confluent/v2 => ./../../protocol/kafka_confluent/v2
 
 require (
-	github.com/cloudevents/sdk-go/protocol/kafka_confluent/v2 v2.0.0-20250420131510-c1d6358719f3
+	github.com/cloudevents/sdk-go/protocol/kafka_confluent/v2 v2.16.0
 	github.com/cloudevents/sdk-go/v2 v2.16.0
 	github.com/confluentinc/confluent-kafka-go/v2 v2.10.0
 )
