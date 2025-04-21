@@ -5,7 +5,7 @@ go 1.23.0
 toolchain go1.23.8
 
 require (
-	github.com/cloudevents/sdk-go/protocol/pubsub/v2 v2.15.2
+	github.com/cloudevents/sdk-go/protocol/pubsub/v2 v2.16.0
 	github.com/cloudevents/sdk-go/v2 v2.16.0
 	github.com/kelseyhightower/envconfig v1.4.0
 )
@@ -47,7 +47,7 @@ require (
 	google.golang.org/genproto v0.0.0-20250414145226-207652e42e2e // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250414145226-207652e42e2e // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250414145226-207652e42e2e // indirect
-	google.golang.org/grpc v1.71.1 // indirect
+	google.golang.org/grpc v1.72.0 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
 )
 

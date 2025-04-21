@@ -5,7 +5,7 @@ go 1.23.0
 toolchain go1.23.8
 
 require (
-	github.com/cloudevents/sdk-go/protocol/stan/v2 v2.15.2
+	github.com/cloudevents/sdk-go/protocol/stan/v2 v2.16.0
 	github.com/cloudevents/sdk-go/v2 v2.16.0
 )
 

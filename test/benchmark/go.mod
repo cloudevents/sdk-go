@@ -18,7 +18,7 @@ replace github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 => ../../protocol
 
 require (
 	github.com/Shopify/sarama v1.38.1
-	github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.0.0
+	github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.16.0
 	github.com/cloudevents/sdk-go/v2 v2.16.0
 )
 
