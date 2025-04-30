@@ -7,9 +7,10 @@ package json
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"reflect"
+
+	"github.com/goccy/go-json"
 )
 
 // Decode takes `in` as []byte.

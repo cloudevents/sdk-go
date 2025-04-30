@@ -6,10 +6,11 @@
 package format
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/goccy/go-json"
 
 	"github.com/cloudevents/sdk-go/v2/event"
 )
