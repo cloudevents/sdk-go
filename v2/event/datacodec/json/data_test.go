@@ -200,17 +200,14 @@ func TestCodecDecode(t *testing.T) {
 					gotValue = got
 				}
 
-				var compareWith interface{}
 				switch tc.want.(type) {
 				case int, bool:
-					compareWith = tc.want
 					if diff := cmp.Diff(tc.want, gotValue); diff != "" {
 						t.Errorf("unexpected data (-want, +got) = %v", diff)
 					}
 				default:
-					compareWith = got
-					if tc.want != nil && compareWith != nil {
-						if diff := cmp.Diff(tc.want, compareWith); diff != "" {
+					if tc.want != nil && got != nil {
+						if diff := cmp.Diff(tc.want, got); diff != "" {
 							t.Errorf("unexpected data (-want, +got) = %v", diff)
 						}
 					}
