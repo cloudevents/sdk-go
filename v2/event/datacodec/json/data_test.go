@@ -50,8 +50,8 @@ func TestCodecDecode(t *testing.T) {
 			wantErr: "out is nil",
 		},
 		"null": {
-			in:   []byte(`null`),
-			want: nil,
+			in:      []byte(`null`),
+			want:    nil,
 			wantErr: "out is nil",
 		},
 		"error": {
