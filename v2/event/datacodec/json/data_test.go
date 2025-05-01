@@ -32,15 +32,9 @@ func (b BadMarshal) MarshalJSON() ([]byte, error) {
 	return nil, fmt.Errorf("BadMashal Error")
 }
 
-func skipTest(testname string) bool {
-	// These tests behave differently with goccy/go-json
-	skippedTests := map[string]bool{
-		"empty":      true,
-		"null":       true,
-		"text":       true,
-		"blank text": true,
-	}
-	return skippedTests[testname]
+// Helper function to create string pointers for tests
+func stringPtr(s string) *string {
+	return &s
 }
 
 func TestCodecDecode(t *testing.T) {
@@ -52,11 +46,13 @@ func TestCodecDecode(t *testing.T) {
 		wantErr string
 	}{
 		"empty": {
-			in: []byte{},
+			in:      []byte{},
+			wantErr: "out is nil",
 		},
 		"null": {
 			in:   []byte(`null`),
 			want: nil,
+			wantErr: "out is nil",
 		},
 		"error": {
 			in:      []byte(`"this is not valid json"`),
@@ -65,11 +61,11 @@ func TestCodecDecode(t *testing.T) {
 		},
 		"text": {
 			in:   []byte(`"hello"`),
-			want: "hello",
+			want: stringPtr("hello"),
 		},
 		"blank text": {
 			in:   []byte(`""`),
-			want: "",
+			want: stringPtr(""),
 		},
 		"number": {
 			in:   []byte(`100`),
@@ -161,10 +157,6 @@ func TestCodecDecode(t *testing.T) {
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
-			if skipTest(n) {
-				t.Skip("Skipping test due to goccy/go-json behavior differences")
-				return
-			}
 
 			got, _ := types.Allocate(tc.want)
 
