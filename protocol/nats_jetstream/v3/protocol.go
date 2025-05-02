@@ -19,6 +19,18 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 )
 
+type ctxKey string
+
+const (
+	ctxKeySubject ctxKey = "subject"
+)
+
+// WithSubject returns a new context with the subject set to the provided value.
+// This subject will be used when sending or receiving messages and overrides the default.
+func WithSubject(ctx context.Context, subject string) context.Context {
+	return context.WithValue(ctx, ctxKeySubject, subject)
+}
+
 // Protocol is a reference implementation for using the CloudEvents binding
 // integration. Protocol acts as both a NATS client and a NATS handler.
 type Protocol struct {
@@ -83,9 +95,18 @@ func New(ctx context.Context, opts ...ProtocolOption) (*Protocol, error) {
 	return p, nil
 }
 
+func (p *Protocol) getSendSubject(ctx context.Context) string {
+	subject, ok := ctx.Value(ctxKeySubject).(string)
+	if ok {
+		return subject
+	}
+	return p.sendSubject
+}
+
 // Send sends messages. Send implements Sender.Sender
 func (p *Protocol) Send(ctx context.Context, in binding.Message, transformers ...binding.Transformer) (err error) {
-	if p.sendSubject == "" {
+	subject := p.getSendSubject(ctx)
+	if subject == "" {
 		return newValidationError(fieldSendSubject, messageNoSendSubject)
 	}
 
@@ -99,7 +120,7 @@ func (p *Protocol) Send(ctx context.Context, in binding.Message, transformers ..
 		}
 	}()
 
-	if _, err = p.jetStream.StreamNameBySubject(ctx, p.sendSubject); err != nil {
+	if _, err = p.jetStream.StreamNameBySubject(ctx, subject); err != nil {
 		return err
 	}
 
@@ -110,7 +131,7 @@ func (p *Protocol) Send(ctx context.Context, in binding.Message, transformers ..
 	}
 
 	natsMsg := &nats.Msg{
-		Subject: p.sendSubject,
+		Subject: subject,
 		Data:    writer.Bytes(),
 		Header:  header,
 	}

@@ -21,7 +21,7 @@ func main() {
 	ctx := context.Background()
 
 	natsURL := "nats://localhost:4222"
-	natsSubject := "sample"
+	natsSubject := "sample.odd.>"
 	natsStream := "stream"
 
 	createStream(natsURL, natsStream, natsSubject)
