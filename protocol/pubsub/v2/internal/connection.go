@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/pubsub"
+
 	pscontext "github.com/cloudevents/sdk-go/protocol/pubsub/v2/context"
 	"github.com/cloudevents/sdk-go/v2/binding"
 )
@@ -61,6 +62,9 @@ type Connection struct {
 
 	// ReceiveSettings is used to configure Pubsub pull subscription.
 	ReceiveSettings *pubsub.ReceiveSettings
+
+	// PublishSettings is used to configure Publishing to a topic
+	PublishSettings *pubsub.PublishSettings
 
 	// AckDeadline is Pub/Sub AckDeadline.
 	// Default is 30 seconds.
@@ -128,6 +132,12 @@ func (c *Connection) getOrCreateTopicInfo(ctx context.Context, getAlreadyOpenOnl
 			}
 			ti.wasCreated = true
 		}
+
+		// if publishSettings have been provided use them otherwise pubsub will use default settings
+		if c.PublishSettings != nil {
+			topic.PublishSettings = *c.PublishSettings
+		}
+
 		// Success.
 		ti.topic = topic
 
