@@ -32,7 +32,7 @@ for DIR in $DIRS; do
   pushd "$DIR" >/dev/null
 
   echo "  - Updating dependencies..."
-  go get -u ./...
+  go get -u -t ./...
 
   echo "  - Running go mod tidy..."
   go mod tidy

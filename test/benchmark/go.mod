@@ -17,13 +17,12 @@ replace github.com/cloudevents/sdk-go/protocol/nats/v2 => ../../protocol/nats/v2
 replace github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 => ../../protocol/kafka_sarama/v2
 
 require (
-	github.com/Shopify/sarama v1.38.1
+	github.com/IBM/sarama v1.45.1
 	github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.16.0
 	github.com/cloudevents/sdk-go/v2 v2.16.0
 )
 
 require (
-	github.com/IBM/sarama v1.45.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/eapache/go-resiliency v1.7.0 // indirect
 	github.com/eapache/go-xerial-snappy v0.0.0-20230731223053-c322873962e3 // indirect
@@ -50,7 +49,7 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
-	golang.org/x/crypto v0.37.0 // indirect
-	golang.org/x/net v0.39.0 // indirect
+	golang.org/x/crypto v0.38.0 // indirect
+	golang.org/x/net v0.40.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
