@@ -16,30 +16,35 @@ import (
 	"github.com/cucumber/godog/colors"
 )
 
-var opt = godog.Options{
+var opts = godog.Options{
 	Output: colors.Colored(os.Stdout),
+	Format: "pretty",
 }
 
 func TestMain(m *testing.M) {
 	flag.Parse()
 	if len(flag.Args()) > 0 {
-		opt.Paths = flag.Args()
+		opts.Paths = flag.Args()
 	} else {
-		opt.Paths = []string{
+		opts.Paths = []string{
 			"../../conformance/features/",
 		}
 	}
 
-	opt.Format = "pretty"
-
-	status := godog.RunWithOptions("CloudEvents", func(s *godog.Suite) {
-		CloudEventsFeatureContext(s)
-		HTTPFeatureContext(s)
-		KafkaFeatureContext(s)
-	}, opt)
+	status := godog.TestSuite{
+		Name:                "CloudEvents",
+		ScenarioInitializer: InitializeScenario,
+		Options:             &opts,
+	}.Run()
 
 	if st := m.Run(); st > status {
 		status = st
 	}
 	os.Exit(status)
+}
+
+func InitializeScenario(ctx *godog.ScenarioContext) {
+	CloudEventsFeatureContext(ctx)
+	HTTPFeatureContext(ctx)
+	KafkaFeatureContext(ctx)
 }

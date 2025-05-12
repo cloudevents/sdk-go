@@ -35,18 +35,18 @@ require (
 	github.com/cloudevents/sdk-go/protocol/mqtt_paho/v2 v2.16.0
 	github.com/cloudevents/sdk-go/protocol/nats/v2 v2.16.0
 	github.com/cloudevents/sdk-go/protocol/nats_jetstream/v2 v2.16.0
-	github.com/cloudevents/sdk-go/protocol/nats_jetstream/v3 v3.0.0-20250420135935-7e40c8d19e9b
+	github.com/cloudevents/sdk-go/protocol/nats_jetstream/v3 v3.0.0-20250508140620-a443989d3a52
 	github.com/cloudevents/sdk-go/protocol/stan/v2 v2.16.0
 	github.com/cloudevents/sdk-go/v2 v2.16.0
 	github.com/confluentinc/confluent-kafka-go/v2 v2.10.0
 	github.com/eclipse/paho.golang v0.22.0
 	github.com/google/go-cmp v0.7.0
 	github.com/google/uuid v1.6.0
-	github.com/nats-io/nats.go v1.41.2
+	github.com/nats-io/nats.go v1.42.0
 	github.com/nats-io/stan.go v0.10.4
 	github.com/stretchr/testify v1.10.0
-	go.uber.org/atomic v1.4.0
-	golang.org/x/sync v0.13.0
+	go.uber.org/atomic v1.11.0
+	golang.org/x/sync v0.14.0
 )
 
 require (
@@ -83,8 +83,8 @@ require (
 	go.etcd.io/bbolt v1.3.6 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
-	golang.org/x/crypto v0.37.0 // indirect
-	golang.org/x/net v0.39.0 // indirect
-	golang.org/x/sys v0.32.0 // indirect
+	golang.org/x/crypto v0.38.0 // indirect
+	golang.org/x/net v0.40.0 // indirect
+	golang.org/x/sys v0.33.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

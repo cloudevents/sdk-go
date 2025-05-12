@@ -12,20 +12,19 @@ import (
 	"github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2"
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cucumber/godog"
-	messages "github.com/cucumber/messages-go/v10"
 )
 
 var consumerMessage *sarama.ConsumerMessage
 
-func KafkaFeatureContext(s *godog.Suite) {
-	s.BeforeScenario(func(message *messages.Pickle) {
+func KafkaFeatureContext(ctx *godog.ScenarioContext) {
+	ctx.BeforeScenario(func(*godog.Scenario) {
 		consumerMessage = nil
 	})
-	s.Step(`^Kafka Protocol Binding is supported$`, func() error {
+	ctx.Step(`^Kafka Protocol Binding is supported$`, func() error {
 		return nil
 	})
 
-	s.Step(`^a Kafka message with payload:$`, func(payload *messages.PickleStepArgument_PickleDocString) error {
+	ctx.Step(`^a Kafka message with payload:$`, func(payload *godog.DocString) error {
 		consumerMessage = &sarama.ConsumerMessage{
 			Value: []byte(payload.Content),
 		}
@@ -33,7 +32,7 @@ func KafkaFeatureContext(s *godog.Suite) {
 		return nil
 	})
 
-	s.Step(`^Kafka headers:$`, func(headers *messages.PickleStepArgument_PickleTable) error {
+	ctx.Step(`^Kafka headers:$`, func(headers *godog.Table) error {
 		consumerMessage.Headers = make([]*sarama.RecordHeader, len(headers.Rows))
 
 		for i, row := range headers.Rows {
@@ -45,7 +44,7 @@ func KafkaFeatureContext(s *godog.Suite) {
 		return nil
 	})
 
-	s.Step(`^parsed as Kafka message$`, func() error {
+	ctx.Step(`^parsed as Kafka message$`, func() error {
 		message := kafka_sarama.NewMessageFromConsumerMessage(consumerMessage)
 
 		event, err := binding.ToEvent(context.TODO(), message)

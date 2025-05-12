@@ -12,18 +12,17 @@ import (
 
 	"github.com/cloudevents/sdk-go/v2/event"
 	"github.com/cucumber/godog"
-	messages "github.com/cucumber/messages-go/v10"
 	"github.com/google/go-cmp/cmp"
 )
 
 var currentEvent *event.Event
 
-func CloudEventsFeatureContext(s *godog.Suite) {
-	s.BeforeScenario(func(message *messages.Pickle) {
+func CloudEventsFeatureContext(ctx *godog.ScenarioContext) {
+	ctx.BeforeScenario(func(*godog.Scenario) {
 		currentEvent = nil
 	})
 
-	s.Step(`^the attributes are:$`, func(attributes *messages.PickleStepArgument_PickleTable) error {
+	ctx.Step(`^the attributes are:$`, func(attributes *godog.Table) error {
 		for _, row := range attributes.Rows {
 			key := row.Cells[0].Value
 			value := row.Cells[1].Value
@@ -57,7 +56,7 @@ func CloudEventsFeatureContext(s *godog.Suite) {
 		return nil
 	})
 
-	s.Step(`^the data is equal to the following JSON:$`, func(jsonData *messages.PickleStepArgument_PickleDocString) error {
+	ctx.Step(`^the data is equal to the following JSON:$`, func(jsonData *godog.DocString) error {
 		actualBytes := currentEvent.Data()
 
 		var expectedJSONAsInterface, actualJSONAsInterface interface{}
