@@ -165,7 +165,97 @@ func TestMarshal(t *testing.T) {
 				"source":          "http://example.com/source",
 			},
 		},
-		"struct data v1.0": {
+		"structured mode data v1.0": {
+			event: func() event.Event {
+				e := event.Event{
+					Context: event.EventContextV1{
+						Type:       "com.example.test",
+						Source:     *sourceV1,
+						DataSchema: schemaV1,
+						ID:         "ABC-123",
+						Time:       &now,
+					}.AsV1(),
+				}
+				_ = e.SetData(event.ApplicationCloudEventsJSON, DataExample{
+					AnInt:   42,
+					AString: "testing",
+				})
+				return e
+			}(),
+			eventExtensions: map[string]interface{}{
+				"exbool":   true,
+				"exint":    int32(42),
+				"exstring": "exstring",
+				"exbinary": []byte{0, 1, 2, 3},
+				"exurl":    sourceV1,
+				"extime":   &now,
+			},
+			want: map[string]interface{}{
+				"specversion":     "1.0",
+				"datacontenttype": "application/cloudevents+json",
+				"data": map[string]interface{}{
+					"a": 42,
+					"b": "testing",
+				},
+				"id":         "ABC-123",
+				"time":       now.Format(time.RFC3339Nano),
+				"type":       "com.example.test",
+				"exbool":     true,
+				"exint":      42,
+				"exstring":   "exstring",
+				"exbinary":   "AAECAw==",
+				"exurl":      "http://example.com/source",
+				"extime":     now.Format(time.RFC3339Nano),
+				"dataschema": "http://example.com/schema",
+				"source":     "http://example.com/source",
+			},
+		},
+		"structured mode batch data v1.0": {
+			event: func() event.Event {
+				e := event.Event{
+					Context: event.EventContextV1{
+						Type:       "com.example.test",
+						Source:     *sourceV1,
+						DataSchema: schemaV1,
+						ID:         "ABC-123",
+						Time:       &now,
+					}.AsV1(),
+				}
+				_ = e.SetData(event.ApplicationCloudEventsBatchJSON, []DataExample{
+					{AnInt: 42, AString: "testing"},
+					{AnInt: 43, AString: "2nd testing"},
+				})
+				return e
+			}(),
+			eventExtensions: map[string]interface{}{
+				"exbool":   true,
+				"exint":    int32(42),
+				"exstring": "exstring",
+				"exbinary": []byte{0, 1, 2, 3},
+				"exurl":    sourceV1,
+				"extime":   &now,
+			},
+			want: map[string]interface{}{
+				"specversion":     "1.0",
+				"datacontenttype": "application/cloudevents-batch+json",
+				"data": []map[string]interface{}{
+					{"a": 42, "b": "testing"},
+					{"a": 43, "b": "2nd testing"},
+				},
+				"id":         "ABC-123",
+				"time":       now.Format(time.RFC3339Nano),
+				"type":       "com.example.test",
+				"exbool":     true,
+				"exint":      42,
+				"exstring":   "exstring",
+				"exbinary":   "AAECAw==",
+				"exurl":      "http://example.com/source",
+				"extime":     now.Format(time.RFC3339Nano),
+				"dataschema": "http://example.com/schema",
+				"source":     "http://example.com/source",
+			},
+		},
+		"binary mode data v1.0": {
 			event: func() event.Event {
 				e := event.Event{
 					Context: event.EventContextV1{
