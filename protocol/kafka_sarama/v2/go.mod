@@ -7,7 +7,7 @@ toolchain go1.23.8
 replace github.com/cloudevents/sdk-go/v2 => ../../../v2
 
 require (
-	github.com/IBM/sarama v1.45.1
+	github.com/IBM/sarama v1.45.2
 	github.com/cloudevents/sdk-go/v2 v2.16.0
 	github.com/stretchr/testify v1.10.0
 )
