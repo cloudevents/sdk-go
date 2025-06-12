@@ -365,7 +365,7 @@ func consumeDataAsBytes(e *Event, isBase64 bool, b []byte) error {
 	}
 
 	mt, _ := e.Context.GetDataMediaType()
-	if !ContentType(mt).IsJSON() {
+	if !isJSON(mt) {
 		// If not json, then data is encoded as string
 		iter := jsoniter.ParseBytes(jsoniter.ConfigFastest, b)
 		src := iter.ReadString() // handles escaping
@@ -401,7 +401,7 @@ func consumeData(e *Event, isBase64 bool, iter *jsoniter.Iterator) error {
 	}
 
 	mt, _ := e.Context.GetDataMediaType()
-	if !ContentType(mt).IsJSON() {
+	if !isJSON(mt) {
 		// If not json, then data is encoded as string
 		src := iter.ReadString() // handles escaping
 		e.DataEncoded = []byte(src)

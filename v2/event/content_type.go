@@ -14,11 +14,9 @@ const (
 	ApplicationCloudEventsBatchJSON = "application/cloudevents-batch+json"
 )
 
-type ContentType string
-
-// IsJSON returns true if the content type is a JSON type.
-func (c ContentType) IsJSON() bool {
-	switch c {
+// isJSON returns true if the content type is a JSON type.
+func isJSON(contentType string) bool {
+	switch contentType {
 	case ApplicationJSON, TextJSON, ApplicationCloudEventsJSON, ApplicationCloudEventsBatchJSON:
 		return true
 	case "":

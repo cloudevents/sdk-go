@@ -151,7 +151,7 @@ func WriteJson(in *Event, writer io.Writer) error {
 		}
 
 		// If IsJSON and no encoding to base64, we don't need to perform additional steps
-		if ContentType(mediaType).IsJSON() && !isBase64 {
+		if isJSON(mediaType) && !isBase64 {
 			stream.WriteObjectField("data")
 			_, err := stream.Write(in.DataEncoded)
 			if err != nil {

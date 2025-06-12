@@ -57,27 +57,3 @@ func TestStringOfApplicationCloudEventsBatchJSON(t *testing.T) {
 		t.Errorf("unexpected string (-want, +got) = %v", diff)
 	}
 }
-
-func TestContentTypeIsJSON(t *testing.T) {
-	tests := []struct {
-		name     string
-		ct       event.ContentType
-		expected bool
-	}{
-		{name: "Empty", ct: "", expected: true},
-		{name: "ApplicationJSON", ct: event.ApplicationJSON, expected: true},
-		{name: "TextJSON", ct: event.TextJSON, expected: true},
-		{name: "ApplicationCloudEventsJSON", ct: event.ApplicationCloudEventsJSON, expected: true},
-		{name: "ApplicationCloudEventsBatchJSON", ct: event.ApplicationCloudEventsBatchJSON, expected: true},
-		{name: "ApplicationXML", ct: event.ApplicationXML, expected: false},
-		{name: "TextPlain", ct: event.TextPlain, expected: false},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			if got := tc.ct.IsJSON(); got != tc.expected {
-				t.Errorf("ContentType.IsJSON() = %v, want %v", got, tc.expected)
-			}
-		})
-	}
-}
