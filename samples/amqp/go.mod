@@ -6,8 +6,8 @@ toolchain go1.23.8
 
 require (
 	github.com/Azure/go-amqp v1.4.0
-	github.com/cloudevents/sdk-go/protocol/amqp/v2 v2.16.0
-	github.com/cloudevents/sdk-go/v2 v2.16.0
+	github.com/cloudevents/sdk-go/protocol/amqp/v2 v2.16.1
+	github.com/cloudevents/sdk-go/v2 v2.16.1
 	github.com/google/uuid v1.6.0
 )
 
@@ -20,7 +20,5 @@ require (
 )
 
 replace github.com/cloudevents/sdk-go/v2 => ../../v2
-
-replace github.com/cloudevents/sdk-go/protocol/amqp/v2 => ../../protocol/amqp/v2
 
 replace github.com/Azure/go-amqp => github.com/Azure/go-amqp v0.17.0
