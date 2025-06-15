@@ -4,11 +4,9 @@ go 1.23.0
 
 toolchain go1.23.8
 
-replace github.com/cloudevents/sdk-go/v2 => ../../../v2
-
 require (
 	cloud.google.com/go/pubsub v1.49.0
-	github.com/cloudevents/sdk-go/v2 v2.16.0
+	github.com/cloudevents/sdk-go/v2 v2.16.1
 	github.com/google/go-cmp v0.7.0
 	github.com/stretchr/testify v1.10.0
 	golang.org/x/sync v0.15.0
