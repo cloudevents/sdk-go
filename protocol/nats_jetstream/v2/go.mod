@@ -7,7 +7,7 @@ toolchain go1.23.8
 replace github.com/cloudevents/sdk-go/v2 => ../../../v2
 
 require (
-	github.com/cloudevents/sdk-go/v2 v2.16.0
+	github.com/cloudevents/sdk-go/v2 v2.16.1
 	github.com/nats-io/nats.go v1.43.0
 )
 

@@ -8,11 +8,11 @@ replace github.com/cloudevents/sdk-go/v2 => ../../../v2
 
 require (
 	cloud.google.com/go/pubsub v1.49.0
-	github.com/cloudevents/sdk-go/v2 v2.16.0
+	github.com/cloudevents/sdk-go/v2 v2.16.1
 	github.com/google/go-cmp v0.7.0
 	github.com/stretchr/testify v1.10.0
 	golang.org/x/sync v0.15.0
-	google.golang.org/api v0.236.0
+	google.golang.org/api v0.237.0
 	google.golang.org/genproto v0.0.0-20250603155806-513f23925822
 	google.golang.org/grpc v1.73.0
 )
