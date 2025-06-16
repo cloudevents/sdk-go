@@ -7,8 +7,8 @@ toolchain go1.23.8
 replace github.com/cloudevents/sdk-go/v2 => ../../../v2
 
 require (
-	github.com/cloudevents/sdk-go/v2 v2.16.0
-	github.com/confluentinc/confluent-kafka-go/v2 v2.10.0
+	github.com/cloudevents/sdk-go/v2 v2.16.1
+	github.com/confluentinc/confluent-kafka-go/v2 v2.10.1
 	github.com/stretchr/testify v1.10.0
 )
 
