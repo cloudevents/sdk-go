@@ -11,7 +11,7 @@ replace github.com/cloudevents/sdk-go/protocol/kafka_confluent/v2 => ./../../pro
 require (
 	github.com/cloudevents/sdk-go/protocol/kafka_confluent/v2 v2.16.0
 	github.com/cloudevents/sdk-go/v2 v2.16.1
-	github.com/confluentinc/confluent-kafka-go/v2 v2.10.1
+	github.com/confluentinc/confluent-kafka-go/v2 v2.11.0
 )
 
 require (
