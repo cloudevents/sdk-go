@@ -1,0 +1,46 @@
+name: Update Dependencies
+
+on:
+  schedule:
+    # Runs every Monday at 3:00 AM UTC
+    - cron: '0 3 * * 1'
+  # Allow manual triggering
+  workflow_dispatch:
+
+jobs:
+  update-dependencies:
+    permissions:
+      contents: write
+      pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Go
+        uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+        with:
+          go-version: 1.23
+          cache-dependency-path: v2/go.sum
+
+      - name: Run update dependencies script
+        run: |
+          chmod +x ./hack/update-deps.sh
+          ./hack/update-deps.sh
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e
+        with:
+          base: main
+          commit-message: "chore: update dependencies"
+          title: "chore: update dependencies"
+          body: |
+            This PR updates Go dependencies.
+            
+            This is an automated PR created by the weekly dependency update workflow.
+          branch: automated-dependency-updates
+          delete-branch: true
+          labels: dependencies
+          reviewers: sdk-go-maintainers
+          signoff: true
+          sign-commits: true

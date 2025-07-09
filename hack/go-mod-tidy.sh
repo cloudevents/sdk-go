@@ -7,9 +7,9 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-for gomodule in $(find . | grep "go\.mod" | awk '{gsub(/\/go.mod/,""); print $0}' | grep -v "./test" | grep -v "./conformance")
+for gomodule in $(find . | grep "go\.mod" | awk '{gsub(/\/go.mod/,""); print $0}' | grep -v "./conformance")
 do
   pushd $gomodule
-  go mod tidy -compat=1.18
+  go mod tidy
   popd
 done

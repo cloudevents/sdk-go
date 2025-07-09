@@ -1,17 +1,17 @@
 module github.com/cloudevents/sdk-go/samples/kafka_confluent
 
-go 1.22
+go 1.23.0
 
-toolchain go1.23.2
+toolchain go1.23.8
 
 replace github.com/cloudevents/sdk-go/v2 => ../../v2
 
-replace github.com/cloudevents/sdk-go/protocol/kafka_confluent/v2 => ../../protocol/kafka_confluent/v2
+replace github.com/cloudevents/sdk-go/protocol/kafka_confluent/v2 => ./../../protocol/kafka_confluent/v2
 
 require (
-	github.com/cloudevents/sdk-go/protocol/kafka_confluent/v2 v2.0.0-20241015071046-36723c53f87f
-	github.com/cloudevents/sdk-go/v2 v2.15.2
-	github.com/confluentinc/confluent-kafka-go/v2 v2.6.0
+	github.com/cloudevents/sdk-go/protocol/kafka_confluent/v2 v2.16.0
+	github.com/cloudevents/sdk-go/v2 v2.16.1
+	github.com/confluentinc/confluent-kafka-go/v2 v2.11.0
 )
 
 require (

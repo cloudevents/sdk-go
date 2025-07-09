@@ -1,10 +1,12 @@
 module github.com/cloudevents/sdk-go/samples/ws
 
-go 1.22
+go 1.23.0
+
+toolchain go1.23.8
 
 require (
-	github.com/cloudevents/sdk-go/protocol/ws/v2 v2.15.2
-	github.com/cloudevents/sdk-go/v2 v2.15.2
+	github.com/cloudevents/sdk-go/protocol/ws/v2 v2.16.1
+	github.com/cloudevents/sdk-go/v2 v2.16.1
 )
 
 require (
