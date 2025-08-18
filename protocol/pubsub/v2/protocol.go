@@ -11,7 +11,7 @@ import (
 	"io"
 	"sync"
 
-	"cloud.google.com/go/pubsub"
+	"cloud.google.com/go/pubsub/v2"
 	"github.com/cloudevents/sdk-go/protocol/pubsub/v2/internal"
 	"github.com/cloudevents/sdk-go/v2/binding"
 	cecontext "github.com/cloudevents/sdk-go/v2/context"

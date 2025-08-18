@@ -13,20 +13,24 @@ import (
 	"sync"
 	"time"
 
-	"cloud.google.com/go/pubsub"
+	"cloud.google.com/go/pubsub/v2"
+	"cloud.google.com/go/pubsub/v2/apiv1/pubsubpb"
 	pscontext "github.com/cloudevents/sdk-go/protocol/pubsub/v2/context"
 	"github.com/cloudevents/sdk-go/v2/binding"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 type topicInfo struct {
-	topic      *pubsub.Topic
+	topic      *pubsub.Publisher
 	wasCreated bool
 	once       sync.Once
 	err        error
 }
 
 type subInfo struct {
-	sub        *pubsub.Subscription
+	sub        *pubsub.Subscriber
 	wasCreated bool
 	once       sync.Once
 	err        error
@@ -89,8 +93,35 @@ const (
 var DefaultReceiveSettings = pubsub.ReceiveSettings{
 	// Pubsub default receive settings will fill in other values.
 	// https://godoc.org/cloud.google.com/go/pubsub#Client.Subscription
+}
 
-	Synchronous: false,
+// pubsub/v2 dropped Exists methods and suggests optimistically using GetTopic instead
+func topicExists(ctx context.Context, client *pubsub.Client, topicID string) (bool, error) {
+	// Check if the topic exists.
+	_, err := client.TopicAdminClient.GetTopic(ctx, &pubsubpb.GetTopicRequest{
+		Topic: fmt.Sprintf("projects/%s/topics/%s", client.Project(), topicID),
+	})
+	if err != nil {
+		if st, ok := status.FromError(err); ok && st.Code() == codes.NotFound {
+			return false, nil
+		}
+		return false, fmt.Errorf("unable to get topic %q, %v", topicID, err)
+	}
+	return true, nil
+}
+
+func subscriptionExists(ctx context.Context, client *pubsub.Client, subID string) (bool, error) {
+	// Check if the subscription exists.
+	_, err := client.SubscriptionAdminClient.GetSubscription(ctx, &pubsubpb.GetSubscriptionRequest{
+		Subscription: fmt.Sprintf("projects/%s/subscriptions/%s", client.Project(), subID),
+	})
+	if err != nil {
+		if st, ok := status.FromError(err); ok && st.Code() == codes.NotFound {
+			return false, nil
+		}
+		return false, fmt.Errorf("unable to get subscription %q, %v", subID, err)
+	}
+	return true, nil
 }
 
 func (c *Connection) getOrCreateTopicInfo(ctx context.Context, getAlreadyOpenOnly bool) (*topicInfo, error) {
@@ -110,9 +141,7 @@ func (c *Connection) getOrCreateTopicInfo(ctx context.Context, getAlreadyOpenOnl
 	// Make sure the topic structure is initialized at most once.
 	ti.once.Do(func() {
 		var ok bool
-		// Load the topic.
-		topic := c.Client.Topic(c.TopicID)
-		ok, ti.err = topic.Exists(ctx)
+		ok, ti.err = topicExists(ctx, c.Client, c.TopicID)
 		if ti.err != nil {
 			return
 		}
@@ -122,14 +151,17 @@ func (c *Connection) getOrCreateTopicInfo(ctx context.Context, getAlreadyOpenOnl
 				ti.err = fmt.Errorf("protocol not allowed to create topic %q", c.TopicID)
 				return
 			}
-			topic, ti.err = c.Client.CreateTopic(ctx, c.TopicID)
+			_, ti.err = c.Client.TopicAdminClient.CreateTopic(ctx, &pubsubpb.Topic{
+				Name: fmt.Sprintf("projects/%s/topics/%s", c.Client.Project(), c.TopicID),
+			})
 			if ti.err != nil {
 				return
 			}
 			ti.wasCreated = true
 		}
-		// Success.
-		ti.topic = topic
+
+		// If the topic exists, we can use it
+		ti.topic = c.Client.Publisher(c.TopicID)
 
 		// EnableMessageOrdering is a runtime parameter only and not part of the topic
 		// Pub/Sub configuration. The Pub/Sub SDK requires this to be set to accept Pub/Sub
@@ -151,7 +183,7 @@ func (c *Connection) getOrCreateTopicInfo(ctx context.Context, getAlreadyOpenOnl
 	return ti, nil
 }
 
-func (c *Connection) getOrCreateTopic(ctx context.Context, getAlreadyOpenOnly bool) (*pubsub.Topic, error) {
+func (c *Connection) getOrCreateTopic(ctx context.Context, getAlreadyOpenOnly bool) (*pubsub.Publisher, error) {
 	ti, err := c.getOrCreateTopicInfo(ctx, getAlreadyOpenOnly)
 	if ti != nil {
 		return ti.topic, nil
@@ -170,11 +202,16 @@ func (c *Connection) DeleteTopic(ctx context.Context) error {
 	if !ti.wasCreated {
 		return errors.New("topic was not created by pubsub protocol")
 	}
-	if err := ti.topic.Delete(ctx); err != nil {
+
+	// Stop the publisher and send all messages before deleting the topic
+	ti.topic.Stop()
+
+	err = c.Client.TopicAdminClient.DeleteTopic(ctx, &pubsubpb.DeleteTopicRequest{
+		Topic: fmt.Sprintf("projects/%s/topics/%s", c.Client.Project(), ti.topic.ID()),
+	})
+	if err != nil {
 		return err
 	}
-
-	ti.topic.Stop()
 
 	c.initLock.Lock()
 	if ti == c.topicInfo {
@@ -211,10 +248,8 @@ func (c *Connection) getOrCreateSubscriptionInfo(ctx context.Context, getAlready
 
 	// Make sure the subscription structure is initialized at most once.
 	si.once.Do(func() {
-		// Load the subscription.
 		var ok bool
-		sub := c.Client.Subscription(c.SubscriptionID)
-		ok, si.err = sub.Exists(ctx)
+		ok, si.err = subscriptionExists(ctx, c.Client, c.SubscriptionID)
 		if si.err != nil {
 			return
 		}
@@ -226,7 +261,7 @@ func (c *Connection) getOrCreateSubscriptionInfo(ctx context.Context, getAlready
 			}
 
 			// Load the topic.
-			var topic *pubsub.Topic
+			var topic *pubsub.Publisher
 			topic, si.err = c.getOrCreateTopic(ctx, false)
 			if si.err != nil {
 				return
@@ -235,12 +270,13 @@ func (c *Connection) getOrCreateSubscriptionInfo(ctx context.Context, getAlready
 			// Create a new subscription to the previously created topic
 			// with the given name.
 			// TODO: allow to use push config + allow setting the SubscriptionConfig.
-			sub, si.err = c.Client.CreateSubscription(ctx, c.SubscriptionID, pubsub.SubscriptionConfig{
-				Topic:                 topic,
-				AckDeadline:           *c.AckDeadline,
-				RetentionDuration:     *c.RetentionDuration,
-				EnableMessageOrdering: c.MessageOrdering,
-				Filter:                c.Filter,
+			_, si.err = c.Client.SubscriptionAdminClient.CreateSubscription(ctx, &pubsubpb.Subscription{
+				Name:                     fmt.Sprintf("projects/%s/subscriptions/%s", c.Client.Project(), c.SubscriptionID),
+				Topic:                    fmt.Sprintf("projects/%s/topics/%s", c.Client.Project(), topic.ID()),
+				AckDeadlineSeconds:       int32(c.AckDeadline.Seconds()),
+				MessageRetentionDuration: durationpb.New(*c.RetentionDuration),
+				EnableMessageOrdering:    c.MessageOrdering,
+				Filter:                   c.Filter,
 			})
 			if si.err != nil {
 				return
@@ -248,13 +284,15 @@ func (c *Connection) getOrCreateSubscriptionInfo(ctx context.Context, getAlready
 
 			si.wasCreated = true
 		}
-		if c.ReceiveSettings == nil {
-			sub.ReceiveSettings = DefaultReceiveSettings
-		} else {
-			sub.ReceiveSettings = *c.ReceiveSettings
-		}
+
 		// Success.
-		si.sub = sub
+		si.sub = c.Client.Subscriber(c.SubscriptionID)
+
+		if c.ReceiveSettings == nil {
+			si.sub.ReceiveSettings = DefaultReceiveSettings
+		} else {
+			si.sub.ReceiveSettings = *c.ReceiveSettings
+		}
 	})
 	if si.sub == nil {
 		// Initialization failed, remove this attempt so that future callers
@@ -269,7 +307,7 @@ func (c *Connection) getOrCreateSubscriptionInfo(ctx context.Context, getAlready
 	return si, nil
 }
 
-func (c *Connection) getOrCreateSubscription(ctx context.Context, getAlreadyOpenOnly bool) (*pubsub.Subscription, error) {
+func (c *Connection) getOrCreateSubscription(ctx context.Context, getAlreadyOpenOnly bool) (*pubsub.Subscriber, error) {
 	si, err := c.getOrCreateSubscriptionInfo(ctx, getAlreadyOpenOnly)
 	if si != nil {
 		return si.sub, nil
@@ -289,7 +327,9 @@ func (c *Connection) DeleteSubscription(ctx context.Context) error {
 	if !si.wasCreated {
 		return errors.New("subscription was not created by pubsub protocol")
 	}
-	if err := si.sub.Delete(ctx); err != nil {
+	if err := c.Client.SubscriptionAdminClient.DeleteSubscription(ctx, &pubsubpb.DeleteSubscriptionRequest{
+		Subscription: fmt.Sprintf("projects/%s/subscriptions/%s", c.Client.Project(), si.sub.ID()),
+	}); err != nil {
 		return err
 	}
 

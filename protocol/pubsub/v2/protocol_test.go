@@ -6,12 +6,11 @@ import (
 	"reflect"
 	"testing"
 
-	"cloud.google.com/go/pubsub"
-	"cloud.google.com/go/pubsub/apiv1/pubsubpb"
-	"cloud.google.com/go/pubsub/pstest"
+	"cloud.google.com/go/pubsub/v2"
+	"cloud.google.com/go/pubsub/v2/apiv1/pubsubpb"
+	"cloud.google.com/go/pubsub/v2/pstest"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/api/option"
-	pb "google.golang.org/genproto/googleapis/pubsub/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -81,7 +80,7 @@ func customAttributesInterceptor(attrs map[string]string) grpc.UnaryClientInterc
 func orderingKeyInterceptor(orderingKey string) grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		if method == "/google.pubsub.v1.Publisher/Publish" {
-			pr, _ := req.(*pb.PublishRequest)
+			pr, _ := req.(*pubsubpb.PublishRequest)
 			for _, m := range pr.Messages {
 				if m.OrderingKey != orderingKey {
 					return fmt.Errorf("expecting ordering key %q, got %q", orderingKey, m.OrderingKey)
