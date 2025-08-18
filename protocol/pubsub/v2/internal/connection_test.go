@@ -12,9 +12,9 @@ import (
 	"testing"
 	"time"
 
-	"cloud.google.com/go/pubsub/v2/pstest"
 	"cloud.google.com/go/pubsub/v2"
 	"cloud.google.com/go/pubsub/v2/apiv1/pubsubpb"
+	"cloud.google.com/go/pubsub/v2/pstest"
 	"github.com/google/go-cmp/cmp"
 	"google.golang.org/api/option"
 	"google.golang.org/grpc"
@@ -33,6 +33,11 @@ type failPattern struct {
 	Count int
 	// Duration to block prior to making the call
 	Delay time.Duration
+}
+
+var TestDefaultReceiveSettings = pubsub.ReceiveSettings{
+	// pubsub.DefaultReceiveSettings.NumGoroutines is 1, so > 1 allows for assertions
+	NumGoroutines: 2,
 }
 
 // Create a pubsub client.  If failureMap is provided, it gives a set of failures to induce in specific methods.
@@ -425,6 +430,7 @@ func TestReceiveCreateTopicAndSubscription(t *testing.T) {
 		ProjectID:               projectID,
 		TopicID:                 topicID,
 		SubscriptionID:          subID,
+		ReceiveSettings:         &TestDefaultReceiveSettings,
 	}
 
 	ctx2, cancel := context.WithCancel(ctx)
@@ -453,9 +459,9 @@ func TestReceiveCreateTopicAndSubscription(t *testing.T) {
 	if err != nil {
 		t.Errorf("error getting subscription info %v", err)
 	}
-	if si.sub.ReceiveSettings.NumGoroutines != DefaultReceiveSettings.NumGoroutines {
+	if si.sub.ReceiveSettings.NumGoroutines != TestDefaultReceiveSettings.NumGoroutines {
 		t.Errorf("subscription receive settings have NumGoroutines=%d, want %d",
-			si.sub.ReceiveSettings.NumGoroutines, DefaultReceiveSettings.NumGoroutines)
+			si.sub.ReceiveSettings.NumGoroutines, TestDefaultReceiveSettings.NumGoroutines)
 	}
 
 	cancel()
@@ -494,6 +500,7 @@ func TestReceiveExistingTopic(t *testing.T) {
 				ProjectID:               projectID,
 				TopicID:                 topicID,
 				SubscriptionID:          subID,
+				ReceiveSettings:         &TestDefaultReceiveSettings,
 			}
 
 			_, err = client.TopicAdminClient.CreateTopic(ctx, &pubsubpb.Topic{
@@ -525,9 +532,9 @@ func TestReceiveExistingTopic(t *testing.T) {
 			if err != nil {
 				t.Errorf("error getting subscription info %v", err)
 			}
-			if si.sub.ReceiveSettings.NumGoroutines != DefaultReceiveSettings.NumGoroutines {
+			if si.sub.ReceiveSettings.NumGoroutines != TestDefaultReceiveSettings.NumGoroutines {
 				t.Errorf("subscription receive settings have NumGoroutines=%d, want %d",
-					si.sub.ReceiveSettings.NumGoroutines, DefaultReceiveSettings.NumGoroutines)
+					si.sub.ReceiveSettings.NumGoroutines, TestDefaultReceiveSettings.NumGoroutines)
 			}
 
 			cancel()
