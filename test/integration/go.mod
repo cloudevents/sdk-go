@@ -35,16 +35,16 @@ require (
 	github.com/cloudevents/sdk-go/protocol/mqtt_paho/v2 v2.16.0
 	github.com/cloudevents/sdk-go/protocol/nats/v2 v2.16.1
 	github.com/cloudevents/sdk-go/protocol/nats_jetstream/v2 v2.16.1
-	github.com/cloudevents/sdk-go/protocol/nats_jetstream/v3 v3.0.0-20250811193955-d8449ff1e35a
+	github.com/cloudevents/sdk-go/protocol/nats_jetstream/v3 v3.0.0-20250818103716-152dcacaf797
 	github.com/cloudevents/sdk-go/protocol/stan/v2 v2.16.1
 	github.com/cloudevents/sdk-go/v2 v2.16.1
-	github.com/confluentinc/confluent-kafka-go/v2 v2.11.0
+	github.com/confluentinc/confluent-kafka-go/v2 v2.11.1
 	github.com/eclipse/paho.golang v0.22.0
 	github.com/google/go-cmp v0.7.0
 	github.com/google/uuid v1.6.0
-	github.com/nats-io/nats.go v1.44.0
+	github.com/nats-io/nats.go v1.45.0
 	github.com/nats-io/stan.go v0.10.4
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.0
 	go.uber.org/atomic v1.11.0
 	golang.org/x/sync v0.16.0
 )
