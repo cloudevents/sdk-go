@@ -12,11 +12,13 @@ import (
 	"testing"
 	"time"
 
-	"cloud.google.com/go/pubsub"
-	"cloud.google.com/go/pubsub/pstest"
+	"cloud.google.com/go/pubsub/v2"
+	"cloud.google.com/go/pubsub/v2/apiv1/pubsubpb"
+	"cloud.google.com/go/pubsub/v2/pstest"
 	"github.com/google/go-cmp/cmp"
 	"google.golang.org/api/option"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 type testPubsubClient struct {
@@ -31,6 +33,11 @@ type failPattern struct {
 	Count int
 	// Duration to block prior to making the call
 	Delay time.Duration
+}
+
+var TestDefaultReceiveSettings = pubsub.ReceiveSettings{
+	// pubsub.DefaultReceiveSettings.NumGoroutines is 1, so > 1 allows for assertions
+	NumGoroutines: 2,
 }
 
 // Create a pubsub client.  If failureMap is provided, it gives a set of failures to induce in specific methods.
@@ -97,7 +104,7 @@ func makeFailureIntercept(failureMap map[string][]failPattern) grpc.UnaryClientI
 func verifyTopicDeleteWorks(t *testing.T, client *pubsub.Client, psconn *Connection, topicID string) {
 	ctx := context.Background()
 
-	if ok, err := client.Topic(topicID).Exists(ctx); err != nil || !ok {
+	if ok, err := topicExists(ctx, client, topicID); err != nil || !ok {
 		t.Errorf("topic id=%s got exists=%v want=true, err=%v", topicID, ok, err)
 	}
 
@@ -105,7 +112,7 @@ func verifyTopicDeleteWorks(t *testing.T, client *pubsub.Client, psconn *Connect
 		t.Errorf("delete topic failed: %v", err)
 	}
 
-	if ok, err := client.Topic(topicID).Exists(ctx); err != nil || ok {
+	if ok, err := topicExists(ctx, client, topicID); err != nil || ok {
 		t.Errorf("topic id=%s got exists=%v want=false, err=%v", topicID, ok, err)
 	}
 }
@@ -114,7 +121,7 @@ func verifyTopicDeleteWorks(t *testing.T, client *pubsub.Client, psconn *Connect
 func verifyTopicDeleteFails(t *testing.T, client *pubsub.Client, psconn *Connection, topicID string) {
 	ctx := context.Background()
 
-	if ok, err := client.Topic(topicID).Exists(ctx); err != nil || !ok {
+	if ok, err := topicExists(ctx, client, topicID); err != nil || !ok {
 		t.Errorf("topic id=%s got exists=%v want=true, err=%v", topicID, ok, err)
 	}
 
@@ -122,7 +129,7 @@ func verifyTopicDeleteFails(t *testing.T, client *pubsub.Client, psconn *Connect
 		t.Errorf("delete topic succeeded unexpectedly")
 	}
 
-	if ok, err := client.Topic(topicID).Exists(ctx); err != nil || !ok {
+	if ok, err := topicExists(ctx, client, topicID); err != nil || !ok {
 		t.Errorf("topic id=%s after delete got exists=%v want=true, err=%v", topicID, ok, err)
 	}
 }
@@ -186,11 +193,12 @@ func TestPublishExistingTopic(t *testing.T) {
 				SubscriptionID:          subID,
 			}
 
-			topic, err := client.CreateTopic(ctx, topicID)
+			_, err = client.TopicAdminClient.CreateTopic(ctx, &pubsubpb.Topic{
+				Name: fmt.Sprintf("projects/%s/topics/%s", projectID, topicID),
+			})
 			if err != nil {
 				t.Fatalf("failed to pre-create topic: %v", err)
 			}
-			topic.Stop()
 
 			msg := &pubsub.Message{
 				ID:   "msg-id-1",
@@ -327,7 +335,7 @@ func TestPublishCreateTopicNotAllowedFails(t *testing.T) {
 		t.Errorf("publish succeeded unexpectedly")
 	}
 
-	if ok, err := client.Topic(topicID).Exists(ctx); err == nil && ok {
+	if ok, err := topicExists(ctx, client, topicID); err == nil && ok {
 		t.Errorf("topic id=%s got exists=%v want=false, err=%v", topicID, ok, err)
 	}
 }
@@ -422,6 +430,7 @@ func TestReceiveCreateTopicAndSubscription(t *testing.T) {
 		ProjectID:               projectID,
 		TopicID:                 topicID,
 		SubscriptionID:          subID,
+		ReceiveSettings:         &TestDefaultReceiveSettings,
 	}
 
 	ctx2, cancel := context.WithCancel(ctx)
@@ -432,17 +441,17 @@ func TestReceiveCreateTopicAndSubscription(t *testing.T) {
 	// If it takes over a minute, run the test anyway to get failure logging
 	for _, delay := range []time.Duration{time.Second / 4, time.Second, 20 * time.Second, 40 * time.Second} {
 		time.Sleep(delay)
-		ok, err := client.Subscription(subID).Exists(ctx)
+		ok, err := subscriptionExists(ctx, client, subID)
 		if ok == true && err == nil {
 			break
 		}
 	}
 
-	if ok, err := client.Topic(topicID).Exists(ctx); err != nil || !ok {
+	if ok, err := topicExists(ctx, client, topicID); err != nil || !ok {
 		t.Errorf("topic id=%s got exists=%v want=true, err=%v", topicID, ok, err)
 	}
 
-	if ok, err := client.Subscription(subID).Exists(ctx); err != nil || !ok {
+	if ok, err := subscriptionExists(ctx, client, subID); err != nil || !ok {
 		t.Errorf("subscription id=%s got exists=%v want=true, err=%v", subID, ok, err)
 	}
 
@@ -450,9 +459,9 @@ func TestReceiveCreateTopicAndSubscription(t *testing.T) {
 	if err != nil {
 		t.Errorf("error getting subscription info %v", err)
 	}
-	if si.sub.ReceiveSettings.NumGoroutines != DefaultReceiveSettings.NumGoroutines {
+	if si.sub.ReceiveSettings.NumGoroutines != TestDefaultReceiveSettings.NumGoroutines {
 		t.Errorf("subscription receive settings have NumGoroutines=%d, want %d",
-			si.sub.ReceiveSettings.NumGoroutines, DefaultReceiveSettings.NumGoroutines)
+			si.sub.ReceiveSettings.NumGoroutines, TestDefaultReceiveSettings.NumGoroutines)
 	}
 
 	cancel()
@@ -461,7 +470,7 @@ func TestReceiveCreateTopicAndSubscription(t *testing.T) {
 		t.Errorf("delete subscription failed: %v", err)
 	}
 
-	if ok, err := client.Subscription(subID).Exists(ctx); err != nil || ok {
+	if ok, err := subscriptionExists(ctx, client, subID); err != nil || ok {
 		t.Errorf("subscription id=%s got exists=%v want=false, err=%v", subID, ok, err)
 	}
 
@@ -491,20 +500,24 @@ func TestReceiveExistingTopic(t *testing.T) {
 				ProjectID:               projectID,
 				TopicID:                 topicID,
 				SubscriptionID:          subID,
+				ReceiveSettings:         &TestDefaultReceiveSettings,
 			}
 
-			topic, err := client.CreateTopic(ctx, topicID)
+			_, err = client.TopicAdminClient.CreateTopic(ctx, &pubsubpb.Topic{
+				Name: fmt.Sprintf("projects/%s/topics/%s", projectID, topicID),
+			})
 			if err != nil {
 				pc.Close()
 				t.Fatalf("failed to pre-create topic: %v", err)
 			}
 
-			_, err = client.CreateSubscription(ctx, subID, pubsub.SubscriptionConfig{
-				Topic:             topic,
-				AckDeadline:       DefaultAckDeadline,
-				RetentionDuration: DefaultRetentionDuration,
+			_, err = client.SubscriptionAdminClient.CreateSubscription(ctx, &pubsubpb.Subscription{
+				Name:                     fmt.Sprintf("projects/%s/subscriptions/%s", projectID, subID),
+				Topic:                    fmt.Sprintf("projects/%s/topics/%s", projectID, topicID),
+				AckDeadlineSeconds:       int32(DefaultAckDeadline.Seconds()),
+				MessageRetentionDuration: durationpb.New(DefaultRetentionDuration),
 			})
-			topic.Stop()
+
 			if err != nil {
 				pc.Close()
 				t.Fatalf("failed to pre-createsubscription: %v", err)
@@ -519,9 +532,9 @@ func TestReceiveExistingTopic(t *testing.T) {
 			if err != nil {
 				t.Errorf("error getting subscription info %v", err)
 			}
-			if si.sub.ReceiveSettings.NumGoroutines != DefaultReceiveSettings.NumGoroutines {
+			if si.sub.ReceiveSettings.NumGoroutines != TestDefaultReceiveSettings.NumGoroutines {
 				t.Errorf("subscription receive settings have NumGoroutines=%d, want %d",
-					si.sub.ReceiveSettings.NumGoroutines, DefaultReceiveSettings.NumGoroutines)
+					si.sub.ReceiveSettings.NumGoroutines, TestDefaultReceiveSettings.NumGoroutines)
 			}
 
 			cancel()
@@ -530,7 +543,7 @@ func TestReceiveExistingTopic(t *testing.T) {
 				t.Errorf("delete subscription unexpectedly succeeded")
 			}
 
-			if ok, err := client.Subscription(subID).Exists(ctx); err != nil || !ok {
+			if ok, err := subscriptionExists(ctx, client, subID); err != nil || !ok {
 				t.Errorf("subscription id=%s got exists=%v want=true, err=%v", subID, ok, err)
 			}
 
@@ -604,7 +617,7 @@ func TestReceiveCreateSubscriptionAfterFailure(t *testing.T) {
 			// If it takes over a minute, run the test anyway to get failure logging
 			for _, delay := range []time.Duration{time.Second / 4, time.Second, 20 * time.Second, 40 * time.Second} {
 				time.Sleep(delay)
-				ok, err := client.Subscription(subID).Exists(ctx)
+				ok, err := subscriptionExists(ctx, client, subID)
 				if ok == true && err == nil {
 					break
 				}
@@ -614,11 +627,11 @@ func TestReceiveCreateSubscriptionAfterFailure(t *testing.T) {
 				t.Errorf("unexpected error from Receive: %v", err)
 			default:
 			}
-			if ok, err := client.Topic(topicID).Exists(ctx); err != nil || !ok {
+			if ok, err := topicExists(ctx, client, topicID); err != nil || !ok {
 				t.Errorf("topic id=%s got exists=%v want=true, err=%v", topicID, ok, err)
 			}
 
-			if ok, err := client.Subscription(subID).Exists(ctx); err != nil || !ok {
+			if ok, err := subscriptionExists(ctx, client, subID); err != nil || !ok {
 				t.Errorf("subscription id=%s got exists=%v want=true, err=%v", subID, ok, err)
 			}
 
