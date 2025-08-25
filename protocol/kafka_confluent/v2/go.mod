@@ -8,8 +8,8 @@ replace github.com/cloudevents/sdk-go/v2 => ../../../v2
 
 require (
 	github.com/cloudevents/sdk-go/v2 v2.16.1
-	github.com/confluentinc/confluent-kafka-go/v2 v2.11.0
-	github.com/stretchr/testify v1.10.0
+	github.com/confluentinc/confluent-kafka-go/v2 v2.11.1
+	github.com/stretchr/testify v1.11.0
 )
 
 require (

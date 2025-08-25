@@ -7,7 +7,7 @@ toolchain go1.23.8
 require (
 	github.com/cloudevents/sdk-go/v2 v2.16.1
 	github.com/lightstep/tracecontext.go v0.0.0-20181129014701-1757c391b1ac
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.0
 	go.opencensus.io v0.24.0
 )
 
