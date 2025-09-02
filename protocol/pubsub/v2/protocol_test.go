@@ -24,7 +24,7 @@ type testPubsubClient struct {
 
 func (pc *testPubsubClient) NewWithAttributesInterceptor(ctx context.Context, projectID, orderingKey string) (*pubsub.Client, error) {
 	pc.srv = pstest.NewServer()
-	conn, err := grpc.Dial(pc.srv.Addr, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithUnaryInterceptor(customAttributesInterceptor(map[string]string{
+	conn, err := grpc.NewClient(pc.srv.Addr, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithUnaryInterceptor(customAttributesInterceptor(map[string]string{
 		"Content-Type":        "text/json",
 		"ce-dataschema":       "http://example.com/schema",
 		"ce-exbinary":         "AAECAw==",
@@ -50,7 +50,7 @@ func (pc *testPubsubClient) NewWithAttributesInterceptor(ctx context.Context, pr
 
 func (pc *testPubsubClient) NewWithOrderInterceptor(ctx context.Context, projectID, orderingKey string) (*pubsub.Client, error) {
 	pc.srv = pstest.NewServer()
-	conn, err := grpc.Dial(pc.srv.Addr, grpc.WithInsecure(), grpc.WithUnaryInterceptor(orderingKeyInterceptor(orderingKey)))
+	conn, err := grpc.NewClient(pc.srv.Addr, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithUnaryInterceptor(orderingKeyInterceptor(orderingKey)))
 	if err != nil {
 		return nil, err
 	}

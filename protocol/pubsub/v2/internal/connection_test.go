@@ -18,6 +18,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"google.golang.org/api/option"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 
@@ -47,9 +48,9 @@ func (pc *testPubsubClient) New(ctx context.Context, projectID string, failureMa
 	var err error
 	var conn *grpc.ClientConn
 	if len(failureMap) == 0 {
-		conn, err = grpc.Dial(pc.srv.Addr, grpc.WithInsecure())
+		conn, err = grpc.NewClient(pc.srv.Addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	} else {
-		conn, err = grpc.Dial(pc.srv.Addr, grpc.WithInsecure(), grpc.WithUnaryInterceptor(makeFailureIntercept(failureMap)))
+		conn, err = grpc.NewClient(pc.srv.Addr, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithUnaryInterceptor(makeFailureIntercept(failureMap)))
 
 	}
 	if err != nil {
