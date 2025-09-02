@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"cloud.google.com/go/pubsub"
+	"cloud.google.com/go/pubsub/v2"
 )
 
 // ProtocolContext allows a Receiver to understand the context of a request.
