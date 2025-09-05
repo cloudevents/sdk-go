@@ -13,8 +13,11 @@ import (
 	"fmt"
 	"io"
 
+	"go.uber.org/zap"
+
 	"github.com/cloudevents/sdk-go/v2/binding/format"
 	"github.com/cloudevents/sdk-go/v2/binding/spec"
+	cecontext "github.com/cloudevents/sdk-go/v2/context"
 	"github.com/cloudevents/sdk-go/v2/event"
 	"github.com/cloudevents/sdk-go/v2/types"
 )
@@ -60,6 +63,7 @@ func ToEvent(ctx context.Context, message MessageReader, transformers ...Transfo
 		encoder,
 	)
 	if err != nil {
+		cecontext.LoggerFrom(ctx).Infow("Failed to convert message to event", zap.Error(err))
 		return nil, err
 	}
 	return &e, Transformers(transformers).Transform((*EventMessage)(&e), encoder)
