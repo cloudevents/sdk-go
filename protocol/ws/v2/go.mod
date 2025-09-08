@@ -8,7 +8,7 @@ replace github.com/cloudevents/sdk-go/v2 => ../../../v2
 
 require (
 	github.com/cloudevents/sdk-go/v2 v2.16.1
-	github.com/stretchr/testify v1.11.0
+	github.com/stretchr/testify v1.11.1
 	nhooyr.io/websocket v1.8.17
 )
 
