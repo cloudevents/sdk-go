@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"sync"
-	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 
@@ -104,13 +103,15 @@ func (p *Protocol) Send(ctx context.Context, m binding.Message, transformers ...
 	}
 
 	token := p.client.Publish(topic, p.qos, p.retained, payload)
-	if !token.WaitTimeout(time.Minute) {
-		err = fmt.Errorf("publish to %q: timeout", topic)
+
+	<-token.Done()
+	if token.Error() != nil {
+		err = fmt.Errorf("publish to %q: %w", topic, token.Error())
 		logger.Error(err)
 		return err
 	}
 
-	return token.Error()
+	return nil
 }
 
 func (p *Protocol) OpenInbound(ctx context.Context) error {
