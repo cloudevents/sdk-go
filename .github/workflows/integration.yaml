@@ -45,9 +45,8 @@ jobs:
           - 4222:4222
 
       jetstream:
-        image: bitnami/nats:latest
-        env: 
-          NATS_EXTRA_ARGS: "--jetstream --port 4223"
+        image: nats:latest
+        options: "-js"
         ports:
           - 4223:4223
 
