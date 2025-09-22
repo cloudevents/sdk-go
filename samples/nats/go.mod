@@ -1,8 +1,8 @@
 module github.com/cloudevents/sdk-go/samples/nats
 
-go 1.23.0
+go 1.24.0
 
-toolchain go1.23.8
+toolchain go1.24.7
 
 require (
 	github.com/cloudevents/sdk-go/protocol/nats/v2 v2.16.1
@@ -21,8 +21,8 @@ require (
 	github.com/nats-io/nuid v1.0.1 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
-	golang.org/x/crypto v0.41.0 // indirect
-	golang.org/x/sys v0.35.0 // indirect
+	golang.org/x/crypto v0.42.0 // indirect
+	golang.org/x/sys v0.36.0 // indirect
 )
 
 replace github.com/cloudevents/sdk-go/v2 => ../../v2
