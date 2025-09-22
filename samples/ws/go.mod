@@ -6,7 +6,7 @@ toolchain go1.23.8
 
 require (
 	github.com/cloudevents/sdk-go/protocol/ws/v2 v2.16.1
-	github.com/cloudevents/sdk-go/v2 v2.16.1
+	github.com/cloudevents/sdk-go/v2 v2.16.2
 )
 
 require (
