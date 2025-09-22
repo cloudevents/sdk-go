@@ -7,7 +7,7 @@ toolchain go1.24.7
 replace github.com/cloudevents/sdk-go/v2 => ../../../v2
 
 require (
-	github.com/cloudevents/sdk-go/v2 v2.16.1
+	github.com/cloudevents/sdk-go/v2 v2.16.2
 	github.com/eclipse/paho.golang v0.23.0
 	github.com/stretchr/testify v1.11.1
 )

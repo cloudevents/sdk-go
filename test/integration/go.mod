@@ -29,15 +29,15 @@ replace github.com/Azure/go-amqp => github.com/Azure/go-amqp v0.17.0
 require (
 	github.com/Azure/go-amqp v1.5.0
 	github.com/IBM/sarama v1.46.1
-	github.com/cloudevents/sdk-go/protocol/amqp/v2 v2.16.1
+	github.com/cloudevents/sdk-go/protocol/amqp/v2 v2.16.2
 	github.com/cloudevents/sdk-go/protocol/kafka_confluent/v2 v2.16.0
-	github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.16.1
+	github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.16.2
 	github.com/cloudevents/sdk-go/protocol/mqtt_paho/v2 v2.16.0
-	github.com/cloudevents/sdk-go/protocol/nats/v2 v2.16.1
-	github.com/cloudevents/sdk-go/protocol/nats_jetstream/v2 v2.16.1
-	github.com/cloudevents/sdk-go/protocol/nats_jetstream/v3 v3.0.0-20250904143103-af3e8599b331
-	github.com/cloudevents/sdk-go/protocol/stan/v2 v2.16.1
-	github.com/cloudevents/sdk-go/v2 v2.16.1
+	github.com/cloudevents/sdk-go/protocol/nats/v2 v2.16.2
+	github.com/cloudevents/sdk-go/protocol/nats_jetstream/v2 v2.16.2
+	github.com/cloudevents/sdk-go/protocol/nats_jetstream/v3 v3.0.0-20250922144431-372892d7c84d
+	github.com/cloudevents/sdk-go/protocol/stan/v2 v2.16.2
+	github.com/cloudevents/sdk-go/v2 v2.16.2
 	github.com/confluentinc/confluent-kafka-go/v2 v2.11.1
 	github.com/eclipse/paho.golang v0.23.0
 	github.com/google/go-cmp v0.7.0

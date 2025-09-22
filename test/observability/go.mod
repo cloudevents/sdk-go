@@ -5,8 +5,8 @@ go 1.24.0
 toolchain go1.24.7
 
 require (
-	github.com/cloudevents/sdk-go/observability/opentelemetry/v2 v2.16.1
-	github.com/cloudevents/sdk-go/v2 v2.16.1
+	github.com/cloudevents/sdk-go/observability/opentelemetry/v2 v2.16.2
+	github.com/cloudevents/sdk-go/v2 v2.16.2
 	github.com/stretchr/testify v1.11.1
 	go.opentelemetry.io/otel v1.38.0
 	go.opentelemetry.io/otel/sdk v1.38.0

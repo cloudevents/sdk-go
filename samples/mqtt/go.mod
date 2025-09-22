@@ -6,7 +6,7 @@ toolchain go1.24.7
 
 require (
 	github.com/cloudevents/sdk-go/protocol/mqtt_paho/v2 v2.16.0
-	github.com/cloudevents/sdk-go/v2 v2.16.1
+	github.com/cloudevents/sdk-go/v2 v2.16.2
 	github.com/eclipse/paho.golang v0.23.0
 	github.com/google/uuid v1.6.0
 )
