@@ -407,7 +407,7 @@ func TestPublishParallelFailure(t *testing.T) {
 		// Failure.  The loop will bump the delay and try again(unless we've hit the max reasonable delay)
 	}
 	if overallError != nil {
-		t.Errorf(overallError.Error())
+		t.Errorf("%s", overallError.Error())
 	}
 }
 
