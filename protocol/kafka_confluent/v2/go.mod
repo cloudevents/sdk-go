@@ -1,15 +1,13 @@
 module github.com/cloudevents/sdk-go/protocol/kafka_confluent/v2
 
-go 1.23.0
-
-toolchain go1.23.8
+go 1.24.0
 
 replace github.com/cloudevents/sdk-go/v2 => ../../../v2
 
 require (
-	github.com/cloudevents/sdk-go/v2 v2.16.1
+	github.com/cloudevents/sdk-go/v2 v2.16.2
 	github.com/confluentinc/confluent-kafka-go/v2 v2.11.1
-	github.com/stretchr/testify v1.11.0
+	github.com/stretchr/testify v1.11.1
 )
 
 require (

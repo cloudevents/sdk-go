@@ -1,15 +1,15 @@
 module github.com/cloudevents/sdk-go/protocol/mqtt_paho/v2
 
-go 1.23.0
+go 1.24.0
 
-toolchain go1.23.8
+toolchain go1.24.7
 
 replace github.com/cloudevents/sdk-go/v2 => ../../../v2
 
 require (
-	github.com/cloudevents/sdk-go/v2 v2.16.1
-	github.com/eclipse/paho.golang v0.22.0
-	github.com/stretchr/testify v1.11.0
+	github.com/cloudevents/sdk-go/v2 v2.16.2
+	github.com/eclipse/paho.golang v0.23.0
+	github.com/stretchr/testify v1.11.1
 )
 
 require (
