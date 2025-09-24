@@ -1,16 +1,14 @@
 module github.com/cloudevents/sdk-go/test/sql
 
-go 1.23.0
-
-toolchain go1.23.8
+go 1.24.0
 
 replace github.com/cloudevents/sdk-go/v2 => ./../../v2
 
 replace github.com/cloudevents/sdk-go/sql/v2 => ./../../sql/v2
 
 require (
-	github.com/cloudevents/sdk-go/sql/v2 v2.16.1
-	github.com/cloudevents/sdk-go/v2 v2.16.1
+	github.com/cloudevents/sdk-go/sql/v2 v2.16.2
+	github.com/cloudevents/sdk-go/v2 v2.16.2
 )
 
 require (

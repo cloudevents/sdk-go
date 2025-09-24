@@ -1,17 +1,15 @@
 module github.com/cloudevents/sdk-go/protocol/amqp/v2
 
-go 1.23.0
-
-toolchain go1.23.8
+go 1.24.0
 
 replace github.com/Azure/go-amqp => github.com/Azure/go-amqp v0.17.0
 
 replace github.com/cloudevents/sdk-go/v2 => ../../../v2
 
 require (
-	github.com/Azure/go-amqp v1.4.0
-	github.com/cloudevents/sdk-go/v2 v2.16.1
-	github.com/stretchr/testify v1.11.0
+	github.com/Azure/go-amqp v1.5.0
+	github.com/cloudevents/sdk-go/v2 v2.16.2
+	github.com/stretchr/testify v1.11.1
 )
 
 require (
