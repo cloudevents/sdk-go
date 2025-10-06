@@ -44,13 +44,6 @@ jobs:
         ports:
           - 4222:4222
 
-      jetstream:
-        image: bitnami/nats:latest
-        env: 
-          NATS_EXTRA_ARGS: "--jetstream --port 4223"
-        ports:
-          - 4223:4223
-
       amqp:
         image: scholzj/qpid-dispatch
         env:
@@ -89,7 +82,14 @@ jobs:
           go-version: ${{ matrix.go-version }}
           cache-dependency-path: v2/go.sum
         id: go
-        
+
+      - name: run jetstream
+        run: |
+          docker run --name nats-server -p 4223:4223 -d nats:2.12.0 -js       
+
       - name: Test
         run: ./hack/integration-test.sh
 
+      - name: stop jetstream
+        run: docker stop nats-server
+        if: always()
