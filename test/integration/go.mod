@@ -28,17 +28,17 @@ replace github.com/Azure/go-amqp => github.com/Azure/go-amqp v0.17.0
 
 require (
 	github.com/Azure/go-amqp v1.5.0
-	github.com/IBM/sarama v1.46.1
+	github.com/IBM/sarama v1.46.2
 	github.com/cloudevents/sdk-go/protocol/amqp/v2 v2.16.2
 	github.com/cloudevents/sdk-go/protocol/kafka_confluent/v2 v2.16.0
 	github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.16.2
 	github.com/cloudevents/sdk-go/protocol/mqtt_paho/v2 v2.16.0
 	github.com/cloudevents/sdk-go/protocol/nats/v2 v2.16.2
 	github.com/cloudevents/sdk-go/protocol/nats_jetstream/v2 v2.16.2
-	github.com/cloudevents/sdk-go/protocol/nats_jetstream/v3 v3.0.0-20250929074105-90cc91094d7a
+	github.com/cloudevents/sdk-go/protocol/nats_jetstream/v3 v3.0.0-20251008074731-f91b3b922b52
 	github.com/cloudevents/sdk-go/protocol/stan/v2 v2.16.2
 	github.com/cloudevents/sdk-go/v2 v2.16.2
-	github.com/confluentinc/confluent-kafka-go/v2 v2.11.1
+	github.com/confluentinc/confluent-kafka-go/v2 v2.12.0
 	github.com/eclipse/paho.golang v0.23.0
 	github.com/google/go-cmp v0.7.0
 	github.com/google/uuid v1.6.0
@@ -81,8 +81,8 @@ require (
 	go.etcd.io/bbolt v1.3.6 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
-	golang.org/x/crypto v0.42.0 // indirect
-	golang.org/x/net v0.44.0 // indirect
-	golang.org/x/sys v0.36.0 // indirect
+	golang.org/x/crypto v0.43.0 // indirect
+	golang.org/x/net v0.46.0 // indirect
+	golang.org/x/sys v0.37.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

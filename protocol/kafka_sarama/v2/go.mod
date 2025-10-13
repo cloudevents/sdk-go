@@ -7,7 +7,7 @@ toolchain go1.24.7
 replace github.com/cloudevents/sdk-go/v2 => ../../../v2
 
 require (
-	github.com/IBM/sarama v1.46.1
+	github.com/IBM/sarama v1.46.2
 	github.com/cloudevents/sdk-go/v2 v2.16.2
 	github.com/stretchr/testify v1.11.1
 )
@@ -36,7 +36,7 @@ require (
 	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
-	golang.org/x/crypto v0.42.0 // indirect
-	golang.org/x/net v0.44.0 // indirect
+	golang.org/x/crypto v0.43.0 // indirect
+	golang.org/x/net v0.46.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
