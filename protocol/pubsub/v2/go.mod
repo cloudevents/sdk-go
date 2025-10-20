@@ -7,7 +7,7 @@ toolchain go1.24.7
 replace github.com/cloudevents/sdk-go/v2 => ../../../v2
 
 require (
-	cloud.google.com/go/pubsub/v2 v2.2.0
+	cloud.google.com/go/pubsub/v2 v2.2.1
 	github.com/cloudevents/sdk-go/v2 v2.16.2
 	github.com/google/go-cmp v0.7.0
 	github.com/stretchr/testify v1.11.1
@@ -53,8 +53,8 @@ require (
 	golang.org/x/sys v0.37.0 // indirect
 	golang.org/x/text v0.30.0 // indirect
 	golang.org/x/time v0.14.0 // indirect
-	google.golang.org/genproto v0.0.0-20251007200510-49b9836ed3ff // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20251007200510-49b9836ed3ff // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20251007200510-49b9836ed3ff // indirect
+	google.golang.org/genproto v0.0.0-20251014184007-4626949a642f // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20251014184007-4626949a642f // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20251014184007-4626949a642f // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
