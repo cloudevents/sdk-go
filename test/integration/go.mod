@@ -28,14 +28,14 @@ replace github.com/Azure/go-amqp => github.com/Azure/go-amqp v0.17.0
 
 require (
 	github.com/Azure/go-amqp v1.5.0
-	github.com/IBM/sarama v1.46.2
+	github.com/IBM/sarama v1.46.3
 	github.com/cloudevents/sdk-go/protocol/amqp/v2 v2.16.2
 	github.com/cloudevents/sdk-go/protocol/kafka_confluent/v2 v2.16.0
 	github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.16.2
 	github.com/cloudevents/sdk-go/protocol/mqtt_paho/v2 v2.16.0
 	github.com/cloudevents/sdk-go/protocol/nats/v2 v2.16.2
 	github.com/cloudevents/sdk-go/protocol/nats_jetstream/v2 v2.16.2
-	github.com/cloudevents/sdk-go/protocol/nats_jetstream/v3 v3.0.0-20251013053725-c480c9b042a0
+	github.com/cloudevents/sdk-go/protocol/nats_jetstream/v3 v3.0.0-20251020142157-bf92e3ba1cfe
 	github.com/cloudevents/sdk-go/protocol/stan/v2 v2.16.2
 	github.com/cloudevents/sdk-go/v2 v2.16.2
 	github.com/confluentinc/confluent-kafka-go/v2 v2.12.0
@@ -68,7 +68,7 @@ require (
 	github.com/jcmturner/gokrb5/v8 v8.4.4 // indirect
 	github.com/jcmturner/rpc/v2 v2.0.3 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/compress v1.18.0 // indirect
+	github.com/klauspost/compress v1.18.1 // indirect
 	github.com/minio/highwayhash v1.0.2 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
