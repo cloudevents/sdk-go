@@ -24,8 +24,7 @@ import (
 
 // OTelObservabilityService implements the ObservabilityService interface from cloudevents
 type OTelObservabilityService struct {
-	traceProvider trace.TracerProvider
-
+	traceProvider        trace.TracerProvider
 	tracer               trace.Tracer
 	spanAttributesGetter func(cloudevents.Event) []attribute.KeyValue
 	spanNameFormatter    func(cloudevents.Event) string
