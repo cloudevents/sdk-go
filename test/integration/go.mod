@@ -1,8 +1,8 @@
 module github.com/cloudevents/sdk-go/test/integration
 
-go 1.24.0
+go 1.24.3
 
-toolchain go1.24.7
+toolchain go1.24.11
 
 replace github.com/cloudevents/sdk-go/v2 => ../../v2
 
@@ -27,7 +27,7 @@ replace github.com/cloudevents/sdk-go/protocol/kafka_confluent/v2 => ../../proto
 replace github.com/Azure/go-amqp => github.com/Azure/go-amqp v0.17.0
 
 require (
-	github.com/Azure/go-amqp v1.5.0
+	github.com/Azure/go-amqp v1.5.1
 	github.com/IBM/sarama v1.46.3
 	github.com/cloudevents/sdk-go/protocol/amqp/v2 v2.16.2
 	github.com/cloudevents/sdk-go/protocol/kafka_confluent/v2 v2.16.0
@@ -35,10 +35,10 @@ require (
 	github.com/cloudevents/sdk-go/protocol/mqtt_paho/v2 v2.16.0
 	github.com/cloudevents/sdk-go/protocol/nats/v2 v2.16.2
 	github.com/cloudevents/sdk-go/protocol/nats_jetstream/v2 v2.16.2
-	github.com/cloudevents/sdk-go/protocol/nats_jetstream/v3 v3.0.0-20251229084540-31cd6a0d7436
+	github.com/cloudevents/sdk-go/protocol/nats_jetstream/v3 v3.0.0-20260105115307-525140da7a04
 	github.com/cloudevents/sdk-go/protocol/stan/v2 v2.16.2
 	github.com/cloudevents/sdk-go/v2 v2.16.2
-	github.com/confluentinc/confluent-kafka-go/v2 v2.12.0
+	github.com/confluentinc/confluent-kafka-go/v2 v2.13.0
 	github.com/eclipse/paho.golang v0.23.0
 	github.com/google/go-cmp v0.7.0
 	github.com/google/uuid v1.6.0
@@ -83,6 +83,6 @@ require (
 	go.uber.org/zap v1.27.1 // indirect
 	golang.org/x/crypto v0.46.0 // indirect
 	golang.org/x/net v0.48.0 // indirect
-	golang.org/x/sys v0.39.0 // indirect
+	golang.org/x/sys v0.40.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
