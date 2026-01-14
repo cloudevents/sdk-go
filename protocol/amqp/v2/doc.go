@@ -4,6 +4,6 @@
 */
 
 /*
-Package amqp implements an AMQP binding using pack.ag/amqp module
+Package amqp implements the CloudEvents transport implementation using AMQP 1.0.
 */
 package amqp

@@ -22,7 +22,7 @@ const serverDown = "session ended by server"
 type receiver struct{ amqp *amqp.Receiver }
 
 func (r *receiver) Receive(ctx context.Context) (binding.Message, error) {
-	m, err := r.amqp.Receive(ctx)
+	m, err := r.amqp.Receive(ctx, nil)
 	if err != nil {
 		if err == ctx.Err() {
 			return nil, io.EOF
