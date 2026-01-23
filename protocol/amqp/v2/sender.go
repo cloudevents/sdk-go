@@ -23,7 +23,7 @@ func (s *sender) Send(ctx context.Context, in binding.Message, transformers ...b
 	var err error
 	defer func() { _ = in.Finish(err) }()
 	if m, ok := in.(*Message); ok { // Already an AMQP message.
-		err = s.amqp.Send(ctx, m.AMQP)
+		err = s.amqp.Send(ctx, m.AMQP, nil)
 		return err
 	}
 
@@ -33,7 +33,7 @@ func (s *sender) Send(ctx context.Context, in binding.Message, transformers ...b
 		return err
 	}
 
-	err = s.amqp.Send(ctx, &amqpMessage)
+	err = s.amqp.Send(ctx, &amqpMessage, nil)
 	return err
 }
 
