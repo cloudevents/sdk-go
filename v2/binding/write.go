@@ -55,7 +55,7 @@ func DirectWrite(
 // 1. It first tries direct encoding using DirectWrite
 // 2. If no direct encoding is possible, it uses ToEvent to generate an Event representation
 // 3. From the Event, the message is encoded back to the provided structured or binary encoders
-// You can tweak the encoding process using the context decorators WithForceStructured, WithForceStructured, etc.
+// You can tweak the encoding process using the context decorators WithForceStructured, WithForceBinary, etc.
 // transformers can be nil and this function guarantees that they are invoked only once during the encoding process.
 // Returns:
 // * EncodingStructured, nil if message is correctly encoded in structured encoding
