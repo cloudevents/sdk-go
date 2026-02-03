@@ -7,6 +7,7 @@ package client
 
 import (
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/cloudevents/sdk-go/v2/observability"
@@ -33,6 +34,15 @@ func WithSpanNameFormatter(nameFormatter func(cloudevents.Event) string) OTelObs
 	return func(os *OTelObservabilityService) {
 		if nameFormatter != nil {
 			os.spanNameFormatter = nameFormatter
+		}
+	}
+}
+
+// WithTracerProvider sets the tracer provider to use for creating spans.
+func WithTracerProvider(tracerProvider trace.TracerProvider) OTelObservabilityServiceOption {
+	return func(os *OTelObservabilityService) {
+		if tracerProvider != nil {
+			os.traceProvider = tracerProvider
 		}
 	}
 }
