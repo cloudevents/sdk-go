@@ -14,53 +14,52 @@ import (
 	"github.com/cloudevents/sdk-go/v2/protocol"
 )
 
+// Protocol is an AMQP 1.0 protocol binding for CloudEvents.
+// It manages the AMQP connection, session, and sender/receiver links.
 type Protocol struct {
-	connOpts         []amqp.ConnOption
-	sessionOpts      []amqp.SessionOption
-	senderLinkOpts   []amqp.LinkOption
-	receiverLinkOpts []amqp.LinkOption
+	senderLinkOpts   *amqp.SenderOptions
+	receiverLinkOpts *amqp.ReceiverOptions
 
-	// AMQP
-	Client      *amqp.Client
+	// AMQP connection and session
+	Conn        *amqp.Conn
 	Session     *amqp.Session
 	ownedClient bool
 	Node        string
 
-	// Sender
+	// Sender for publishing CloudEvents
 	Sender                  *sender
 	SenderContextDecorators []func(context.Context) context.Context
 
-	// Receiver
+	// Receiver for consuming CloudEvents
 	Receiver *receiver
 }
 
-// NewProtocolFromClient creates a new amqp transport.
-func NewProtocolFromClient(client *amqp.Client, session *amqp.Session, queue string, opts ...Option) (*Protocol, error) {
+// NewProtocolFromConn creates a new AMQP protocol from an existing connection and session.
+func NewProtocolFromConn(conn *amqp.Conn, session *amqp.Session, queue string, opts ...Option) (*Protocol, error) {
 	t := &Protocol{
 		Node:             queue,
-		senderLinkOpts:   []amqp.LinkOption(nil),
-		receiverLinkOpts: []amqp.LinkOption(nil),
-		Client:           client,
+		senderLinkOpts:   &amqp.SenderOptions{},
+		receiverLinkOpts: &amqp.ReceiverOptions{},
+		Conn:             conn,
 		Session:          session,
 	}
 	if err := t.applyOptions(opts...); err != nil {
 		return nil, err
 	}
 
-	t.senderLinkOpts = append(t.senderLinkOpts, amqp.LinkTargetAddress(queue))
-
 	// Create a sender
-	amqpSender, err := session.NewSender(t.senderLinkOpts...)
+	ctx := context.Background()
+	amqpSender, err := session.NewSender(ctx, queue, t.senderLinkOpts)
 	if err != nil {
-		_ = client.Close()
-		_ = session.Close(context.Background())
+		_ = conn.Close()
+		_ = session.Close(ctx)
 		return nil, err
 	}
 	t.Sender = NewSender(amqpSender).(*sender)
 	t.SenderContextDecorators = []func(context.Context) context.Context{}
 
-	t.receiverLinkOpts = append(t.receiverLinkOpts, amqp.LinkSourceAddress(t.Node))
-	amqpReceiver, err := t.Session.NewReceiver(t.receiverLinkOpts...)
+	// Create a receiver
+	amqpReceiver, err := t.Session.NewReceiver(ctx, t.Node, t.receiverLinkOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -68,21 +67,22 @@ func NewProtocolFromClient(client *amqp.Client, session *amqp.Session, queue str
 	return t, nil
 }
 
-// NewProtocol creates a new amqp transport.
-func NewProtocol(server, queue string, connOption []amqp.ConnOption, sessionOption []amqp.SessionOption, opts ...Option) (*Protocol, error) {
-	client, err := amqp.Dial(server, connOption...)
+// NewProtocol creates a new AMQP protocol.
+func NewProtocol(server, queue string, connOption *amqp.ConnOptions, sessionOption *amqp.SessionOptions, opts ...Option) (*Protocol, error) {
+	ctx := context.Background()
+	conn, err := amqp.Dial(ctx, server, connOption)
 	if err != nil {
 		return nil, err
 	}
 
 	// Open a session
-	session, err := client.NewSession(sessionOption...)
+	session, err := conn.NewSession(ctx, sessionOption)
 	if err != nil {
-		_ = client.Close()
+		_ = conn.Close()
 		return nil, err
 	}
 
-	p, err := NewProtocolFromClient(client, session, queue, opts...)
+	p, err := NewProtocolFromConn(conn, session, queue, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -91,24 +91,25 @@ func NewProtocol(server, queue string, connOption []amqp.ConnOption, sessionOpti
 	return p, nil
 }
 
-// NewSenderProtocolFromClient creates a new amqp sender transport.
-func NewSenderProtocolFromClient(client *amqp.Client, session *amqp.Session, address string, opts ...Option) (*Protocol, error) {
+// NewSenderProtocolFromConn creates a send-only AMQP protocol from an existing connection.
+func NewSenderProtocolFromConn(conn *amqp.Conn, session *amqp.Session, address string, opts ...Option) (*Protocol, error) {
 	t := &Protocol{
 		Node:             address,
-		senderLinkOpts:   []amqp.LinkOption(nil),
-		receiverLinkOpts: []amqp.LinkOption(nil),
-		Client:           client,
+		senderLinkOpts:   &amqp.SenderOptions{},
+		receiverLinkOpts: &amqp.ReceiverOptions{},
+		Conn:             conn,
 		Session:          session,
 	}
 	if err := t.applyOptions(opts...); err != nil {
 		return nil, err
 	}
-	t.senderLinkOpts = append(t.senderLinkOpts, amqp.LinkTargetAddress(address))
+
 	// Create a sender
-	amqpSender, err := session.NewSender(t.senderLinkOpts...)
+	ctx := context.Background()
+	amqpSender, err := session.NewSender(ctx, address, t.senderLinkOpts)
 	if err != nil {
-		_ = client.Close()
-		_ = session.Close(context.Background())
+		_ = conn.Close()
+		_ = session.Close(ctx)
 		return nil, err
 	}
 	t.Sender = NewSender(amqpSender).(*sender)
@@ -117,22 +118,21 @@ func NewSenderProtocolFromClient(client *amqp.Client, session *amqp.Session, add
 	return t, nil
 }
 
-// NewReceiverProtocolFromClient creates a new receiver amqp transport.
-func NewReceiverProtocolFromClient(client *amqp.Client, session *amqp.Session, address string, opts ...Option) (*Protocol, error) {
+// NewReceiverProtocolFromConn creates a receive-only AMQP protocol from an existing connection.
+func NewReceiverProtocolFromConn(conn *amqp.Conn, session *amqp.Session, address string, opts ...Option) (*Protocol, error) {
 	t := &Protocol{
 		Node:             address,
-		senderLinkOpts:   []amqp.LinkOption(nil),
-		receiverLinkOpts: []amqp.LinkOption(nil),
-		Client:           client,
+		senderLinkOpts:   &amqp.SenderOptions{},
+		receiverLinkOpts: &amqp.ReceiverOptions{},
+		Conn:             conn,
 		Session:          session,
 	}
 	if err := t.applyOptions(opts...); err != nil {
 		return nil, err
 	}
 
-	t.Node = address
-	t.receiverLinkOpts = append(t.receiverLinkOpts, amqp.LinkSourceAddress(address))
-	amqpReceiver, err := t.Session.NewReceiver(t.receiverLinkOpts...)
+	ctx := context.Background()
+	amqpReceiver, err := t.Session.NewReceiver(ctx, address, t.receiverLinkOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -140,21 +140,22 @@ func NewReceiverProtocolFromClient(client *amqp.Client, session *amqp.Session, a
 	return t, nil
 }
 
-// NewSenderProtocol creates a new sender amqp transport.
-func NewSenderProtocol(server, address string, connOption []amqp.ConnOption, sessionOption []amqp.SessionOption, opts ...Option) (*Protocol, error) {
-	client, err := amqp.Dial(server, connOption...)
+// NewSenderProtocol creates a send-only AMQP protocol.
+func NewSenderProtocol(server, address string, connOption *amqp.ConnOptions, sessionOption *amqp.SessionOptions, opts ...Option) (*Protocol, error) {
+	ctx := context.Background()
+	conn, err := amqp.Dial(ctx, server, connOption)
 	if err != nil {
 		return nil, err
 	}
 
 	// Open a session
-	session, err := client.NewSession(sessionOption...)
+	session, err := conn.NewSession(ctx, sessionOption)
 	if err != nil {
-		_ = client.Close()
+		_ = conn.Close()
 		return nil, err
 	}
 
-	p, err := NewSenderProtocolFromClient(client, session, address, opts...)
+	p, err := NewSenderProtocolFromConn(conn, session, address, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -163,21 +164,22 @@ func NewSenderProtocol(server, address string, connOption []amqp.ConnOption, ses
 	return p, nil
 }
 
-// NewReceiverProtocol creates a new receiver amqp transport.
-func NewReceiverProtocol(server, address string, connOption []amqp.ConnOption, sessionOption []amqp.SessionOption, opts ...Option) (*Protocol, error) {
-	client, err := amqp.Dial(server, connOption...)
+// NewReceiverProtocol creates a receive-only AMQP protocol.
+func NewReceiverProtocol(server, address string, connOption *amqp.ConnOptions, sessionOption *amqp.SessionOptions, opts ...Option) (*Protocol, error) {
+	ctx := context.Background()
+	conn, err := amqp.Dial(ctx, server, connOption)
 	if err != nil {
 		return nil, err
 	}
 
 	// Open a session
-	session, err := client.NewSession(sessionOption...)
+	session, err := conn.NewSession(ctx, sessionOption)
 	if err != nil {
-		_ = client.Close()
+		_ = conn.Close()
 		return nil, err
 	}
 
-	p, err := NewReceiverProtocolFromClient(client, session, address, opts...)
+	p, err := NewReceiverProtocolFromConn(conn, session, address, opts...)
 
 	if err != nil {
 		return nil, err
@@ -198,8 +200,8 @@ func (t *Protocol) applyOptions(opts ...Option) error {
 
 func (t *Protocol) Close(ctx context.Context) (err error) {
 	if t.ownedClient {
-		// Closing the client will close at cascade sender and receiver
-		return t.Client.Close()
+		// Closing the connection will close at cascade sender and receiver
+		return t.Conn.Close()
 	} else {
 		if t.Sender != nil {
 			if err = t.Sender.amqp.Close(ctx); err != nil {
