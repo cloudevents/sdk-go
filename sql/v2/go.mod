@@ -1,6 +1,6 @@
 module github.com/cloudevents/sdk-go/sql/v2
 
-go 1.24.0
+go 1.25.0
 
 require (
 	github.com/antlr/antlr4/runtime/Go/antlr v1.4.10
@@ -20,7 +20,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.1 // indirect
-	go.yaml.in/yaml/v2 v2.4.3 // indirect
+	go.yaml.in/yaml/v2 v2.4.4 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
