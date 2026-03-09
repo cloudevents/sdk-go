@@ -47,7 +47,7 @@ func (d dummySR) Receive(ctx context.Context) (binding.Message, error) {
 
 func TestSendReceive(t *testing.T) {
 	sr := make(dummySR)
-	allIn := []binding.Message{}
+	allIn := make([]binding.Message, 0, len(Events()))
 	for _, e := range Events() {
 		allIn = append(allIn, binding.ToMessage(&e))
 	}
