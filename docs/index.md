@@ -133,9 +133,8 @@ err := json.Unmarshal(bytes, &event)
 
 ## Go further
 
-_. Check out the
-[examples](https://github.com/cloudevents/sdk-go/tree/main/samples) _. Dig into
-the [Godoc](https://godoc.org/github.com/cloudevents/sdk-go/v2) _. Learn about
-the [architecture and concepts](concepts.md) of the SDK _. How to use the
-[CloudEvent in-memory representation](event_data_structure.md) \*. How to
-use/implement a [Protocol Binding](protocol_implementations.md)
+1. Check out the [examples](https://github.com/cloudevents/sdk-go/tree/main/samples)
+2. Dig into the [Godoc](https://godoc.org/github.com/cloudevents/sdk-go/v2)
+3. Learn about the [architecture and concepts](concepts.md) of the SDK
+4. How to use the [CloudEvent in-memory representation](event_data_structure.md)
+5. How to use/implement a [Protocol Binding](protocol_implementations.md)
