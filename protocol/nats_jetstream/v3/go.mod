@@ -1,8 +1,6 @@
 module github.com/cloudevents/sdk-go/protocol/nats_jetstream/v3
 
-go 1.24.0
-
-toolchain go1.24.7
+go 1.25.0
 
 replace github.com/cloudevents/sdk-go/v2 => ../../../v2
 
@@ -24,6 +22,6 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stretchr/testify v1.11.1 // indirect
 	golang.org/x/crypto v0.48.0 // indirect
-	golang.org/x/sys v0.41.0 // indirect
+	golang.org/x/sys v0.42.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

@@ -231,7 +231,7 @@ func TestNewHTTPRequestFromEvents(t *testing.T) {
 	defer ts.Close()
 
 	t.Run("valid events", func(t *testing.T) {
-		var events []event.Event
+		events := make([]event.Event, 0, 2)
 		e := event.New()
 		e.SetID(uuid.New().String())
 		e.SetSource("example/uri")
