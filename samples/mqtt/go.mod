@@ -1,8 +1,6 @@
 module github.com/cloudevents/sdk-go/samples/mqtt
 
-go 1.24.0
-
-toolchain go1.24.7
+go 1.25.0
 
 require (
 	github.com/cloudevents/sdk-go/protocol/mqtt_paho/v2 v2.16.0
