@@ -33,10 +33,10 @@ require (
 	github.com/cloudevents/sdk-go/protocol/mqtt_paho/v2 v2.16.0
 	github.com/cloudevents/sdk-go/protocol/nats/v2 v2.16.2
 	github.com/cloudevents/sdk-go/protocol/nats_jetstream/v2 v2.16.2
-	github.com/cloudevents/sdk-go/protocol/nats_jetstream/v3 v3.0.0-20260325073154-a8ab35c4af9d
+	github.com/cloudevents/sdk-go/protocol/nats_jetstream/v3 v3.0.0-20260403141127-c7533d6eaa1f
 	github.com/cloudevents/sdk-go/protocol/stan/v2 v2.16.2
 	github.com/cloudevents/sdk-go/v2 v2.16.2
-	github.com/confluentinc/confluent-kafka-go/v2 v2.13.3
+	github.com/confluentinc/confluent-kafka-go/v2 v2.14.0
 	github.com/eclipse/paho.golang v0.23.0
 	github.com/google/go-cmp v0.7.0
 	github.com/google/uuid v1.6.0
