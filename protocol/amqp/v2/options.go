@@ -10,41 +10,24 @@ import (
 )
 
 // Option is the function signature required to be considered an amqp.Option.
+// Options are applied to the Protocol during construction to configure
+// sender and receiver link behavior.
 type Option func(*Protocol) error
 
-// WithConnOpt sets a connection option for amqp
-func WithConnOpt(opt amqp.ConnOption) Option {
+// WithSenderOptions sets sender options for the AMQP sender link.
+// If called multiple times, later calls will override earlier ones.
+func WithSenderOptions(opts *amqp.SenderOptions) Option {
 	return func(t *Protocol) error {
-		t.connOpts = append(t.connOpts, opt)
+		t.senderLinkOpts = opts
 		return nil
 	}
 }
 
-// WithConnSASLPlain sets SASLPlain connection option for amqp
-func WithConnSASLPlain(username, password string) Option {
-	return WithConnOpt(amqp.ConnSASLPlain(username, password))
-}
-
-// WithSessionOpt sets a session option for amqp
-func WithSessionOpt(opt amqp.SessionOption) Option {
+// WithReceiverOptions sets receiver options for the AMQP receiver link.
+// If called multiple times, later calls will override earlier ones.
+func WithReceiverOptions(opts *amqp.ReceiverOptions) Option {
 	return func(t *Protocol) error {
-		t.sessionOpts = append(t.sessionOpts, opt)
-		return nil
-	}
-}
-
-// WithSenderLinkOption sets a link option for amqp
-func WithSenderLinkOption(opt amqp.LinkOption) Option {
-	return func(t *Protocol) error {
-		t.senderLinkOpts = append(t.senderLinkOpts, opt)
-		return nil
-	}
-}
-
-// WithReceiverLinkOption sets a link option for amqp
-func WithReceiverLinkOption(opt amqp.LinkOption) Option {
-	return func(t *Protocol) error {
-		t.receiverLinkOpts = append(t.receiverLinkOpts, opt)
+		t.receiverLinkOpts = opts
 		return nil
 	}
 }
