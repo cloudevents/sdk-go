@@ -5,6 +5,12 @@
 
 package event
 
+import (
+	"errors"
+	"mime"
+	"strings"
+)
+
 const (
 	TextPlain                       = "text/plain"
 	TextJSON                        = "text/json"
@@ -14,16 +20,26 @@ const (
 	ApplicationCloudEventsBatchJSON = "application/cloudevents-batch+json"
 )
 
-// isJSON returns true if the content type is a JSON type.
+// isJSON reports whether contentType denotes JSON: subtype "json" (e.g. application/json, text/json) or a subtype
+// whose final "+" facet is "json" per RFC 6838 (e.g. application/cloudevents+json). Parameters are ignored.
+// Empty or whitespace-only contentType is treated as JSON for backward compatibility.
 func isJSON(contentType string) bool {
-	switch contentType {
-	case ApplicationJSON, TextJSON, ApplicationCloudEventsJSON, ApplicationCloudEventsBatchJSON:
+	if strings.TrimSpace(contentType) == "" {
 		return true
-	case "":
-		return true // Empty content type assumes json
-	default:
-		return false
 	}
+
+	mediaType, _, err := mime.ParseMediaType(contentType)
+
+	// if err is for an invalid media parameter, we can still check the mediatype, since we don't use parameters:
+	if err == nil || errors.Is(err, mime.ErrInvalidMediaParameter) {
+		if _, subtype, ok := strings.Cut(mediaType, "/"); ok {
+			parts := strings.Split(subtype, "+")
+			return parts[len(parts)-1] == "json"
+		}
+	}
+
+	// fallback to checking the suffix of the entire Content-Type:
+	return strings.HasSuffix(contentType, "/json")
 }
 
 // StringOfApplicationJSON returns a string pointer to "application/json"
