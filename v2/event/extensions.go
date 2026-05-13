@@ -9,6 +9,8 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/cloudevents/sdk-go/v2/types"
 )
 
 const (
@@ -54,4 +56,35 @@ func validateExtensionName(key string) error {
 		}
 	}
 	return nil
+}
+
+// ExtractExtensions reads multiple extension attributes from an EventReader into the provided mapping.
+// It returns true if at least one extension was found and successfully mapped.
+func ExtractExtensions[T ~string](reader EventReader, mapping map[string]*T) bool {
+	found := false
+	extensions := reader.Extensions()
+	for name, target := range mapping {
+		v, ok := extensions[name]
+		if !ok {
+			continue
+		}
+		s, err := types.ToString(v)
+		if err != nil {
+			continue
+		}
+		*target = T(s)
+		found = true
+	}
+	return found
+}
+
+// AttachExtensions sets multiple extension attributes on an EventWriter using the provided mapping.
+// It skips empty values to ensure only valid data is written.
+func AttachExtensions[T ~string](writer EventWriter, mapping map[string]T) {
+	for name, value := range mapping {
+		if value == "" {
+			continue
+		}
+		writer.SetExtension(name, string(value))
+	}
 }
