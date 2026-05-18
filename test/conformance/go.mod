@@ -15,7 +15,7 @@ replace github.com/cloudevents/sdk-go/protocol/nats/v2 => ../../protocol/nats/v2
 replace github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 => ../../protocol/kafka_sarama/v2
 
 require (
-	github.com/IBM/sarama v1.48.1
+	github.com/IBM/sarama v1.48.2
 	github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.16.2
 	github.com/cloudevents/sdk-go/v2 v2.16.2
 	github.com/cucumber/godog v0.15.1
