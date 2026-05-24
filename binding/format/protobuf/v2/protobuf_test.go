@@ -6,6 +6,7 @@
 package format_test
 
 import (
+	"encoding/json"
 	"net/url"
 	"reflect"
 	"testing"
@@ -92,6 +93,36 @@ func TestProtobufFormatWithProtobufCodec(t *testing.T) {
 	payload2 := &pb.CloudEventAttributeValue{}
 	require.NoError(e2.DataAs(payload2))
 	require.True(payload2.GetCeBoolean())
+}
+
+func TestProtobufFormatWithoutDataDoesNotCreateInvalidJSON(t *testing.T) {
+	require := require.New(t)
+
+	e := event.New()
+	e.SetID("id")
+	e.SetSource("source")
+	e.SetType("type")
+	e.SetDataContentType(event.ApplicationJSON)
+
+	b, err := format.Protobuf.Marshal(&e)
+	require.NoError(err)
+
+	var e2 event.Event
+	require.NoError(format.Protobuf.Unmarshal(b, &e2))
+	require.Nil(e2.DataEncoded)
+
+	jsonData, err := e2.MarshalJSON()
+	require.NoError(err)
+	require.JSONEq(`{
+		"specversion":"1.0",
+		"id":"id",
+		"source":"source",
+		"type":"type",
+		"datacontenttype":"application/json"
+	}`, string(jsonData))
+
+	var out event.Event
+	require.NoError(json.Unmarshal(jsonData, &out))
 }
 
 func TestFromProto(t *testing.T) {
