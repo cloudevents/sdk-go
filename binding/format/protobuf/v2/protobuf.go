@@ -108,10 +108,12 @@ func ToProto(e *event.Event) (*pb.CloudEvent, error) {
 		}
 		container.Attributes[name] = attr
 	}
-	container.Data = &pb.CloudEvent_BinaryData{
-		BinaryData: e.Data(),
+	if e.Data() != nil {
+		container.Data = &pb.CloudEvent_BinaryData{
+			BinaryData: e.Data(),
+		}
 	}
-	if e.DataContentType() == ContentTypeProtobuf {
+	if e.Data() != nil && e.DataContentType() == ContentTypeProtobuf {
 		anymsg := &anypb.Any{
 			TypeUrl: e.DataSchema(),
 			Value:   e.Data(),
