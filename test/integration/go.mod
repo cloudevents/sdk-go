@@ -26,14 +26,14 @@ replace github.com/Azure/go-amqp => github.com/Azure/go-amqp v0.17.0
 
 require (
 	github.com/Azure/go-amqp v1.6.0
-	github.com/IBM/sarama v1.49.0
+	github.com/IBM/sarama v1.50.1
 	github.com/cloudevents/sdk-go/protocol/amqp/v2 v2.16.2
 	github.com/cloudevents/sdk-go/protocol/kafka_confluent/v2 v2.16.0
 	github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.16.2
 	github.com/cloudevents/sdk-go/protocol/mqtt_paho/v2 v2.16.0
 	github.com/cloudevents/sdk-go/protocol/nats/v2 v2.16.2
 	github.com/cloudevents/sdk-go/protocol/nats_jetstream/v2 v2.16.2
-	github.com/cloudevents/sdk-go/protocol/nats_jetstream/v3 v3.0.0-20260524195548-630fa55d88ee
+	github.com/cloudevents/sdk-go/protocol/nats_jetstream/v3 v3.0.0-20260531064940-dfe370874b8c
 	github.com/cloudevents/sdk-go/protocol/stan/v2 v2.16.2
 	github.com/cloudevents/sdk-go/v2 v2.16.2
 	github.com/confluentinc/confluent-kafka-go/v2 v2.14.1
@@ -51,7 +51,6 @@ require (
 	github.com/antithesishq/antithesis-sdk-go v0.6.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/eapache/go-resiliency v1.7.0 // indirect
-	github.com/eapache/queue v1.1.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/go-tpm v0.9.8 // indirect
 	github.com/hashicorp/go-hclog v1.1.0 // indirect
@@ -73,7 +72,7 @@ require (
 	github.com/nats-io/jwt/v2 v2.2.1-0.20220113022732-58e87895b296 // indirect
 	github.com/nats-io/nkeys v0.4.15 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
-	github.com/pierrec/lz4/v4 v4.1.26 // indirect
+	github.com/pierrec/lz4/v4 v4.1.27 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20250401214520-65e299d6c5c9 // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
