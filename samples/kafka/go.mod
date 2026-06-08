@@ -3,7 +3,7 @@ module github.com/cloudevents/sdk-go/samples/kafka
 go 1.25.0
 
 require (
-	github.com/IBM/sarama v1.50.1
+	github.com/IBM/sarama v1.50.2
 	github.com/cloudevents/sdk-go/protocol/kafka_sarama/v2 v2.16.2
 	github.com/cloudevents/sdk-go/v2 v2.16.2
 	github.com/google/uuid v1.6.0
