@@ -83,7 +83,15 @@ func (s *syncProducerMock) AddOffsetsToTxn(offsets map[string][]*sarama.Partitio
 	return nil
 }
 
+func (s *syncProducerMock) AddOffsetsToTxnWithGroupMetadata(offsets map[string][]*sarama.PartitionOffsetMetadata, groupMetadata *sarama.ConsumerGroupMetadata) error {
+	return nil
+}
+
 func (s *syncProducerMock) AddMessageToTxn(msg *sarama.ConsumerMessage, groupId string, metadata *string) error {
+	return nil
+}
+
+func (s *syncProducerMock) AddMessageToTxnWithGroupMetadata(msg *sarama.ConsumerMessage, groupMetadata *sarama.ConsumerGroupMetadata, metadata *string) error {
 	return nil
 }
 
