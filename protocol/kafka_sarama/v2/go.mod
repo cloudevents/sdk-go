@@ -5,7 +5,7 @@ go 1.25.0
 replace github.com/cloudevents/sdk-go/v2 => ../../../v2
 
 require (
-	github.com/IBM/sarama v1.50.2
+	github.com/IBM/sarama v1.50.3
 	github.com/cloudevents/sdk-go/v2 v2.16.2
 	github.com/stretchr/testify v1.11.1
 )
