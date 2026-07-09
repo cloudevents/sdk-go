@@ -102,3 +102,25 @@ func TestFinish(t *testing.T) {
 		})
 	}
 }
+
+func TestWritePubSubMessageNilAttributes(t *testing.T) {
+	e := event.New()
+	e.SetID("testid")
+	e.SetSource("test/source")
+	e.SetType("test.type")
+	if err := e.SetData(event.ApplicationJSON, map[string]string{"hello": "world"}); err != nil {
+		t.Fatalf("failed to set data: %v", err)
+	}
+
+	msg := (*binding.EventMessage)(&e)
+
+	// A pubsub.Message with nil Attributes must not panic when the writer
+	// assigns into the attribute map during binary encoding.
+	pm := &pubsub.Message{ID: "testid"}
+	if err := WritePubSubMessage(context.Background(), msg, pm); err != nil {
+		t.Errorf("unexpected error writing pubsub message: %v", err)
+	}
+	if pm.Attributes == nil {
+		t.Errorf("expected Attributes to be initialized, got nil")
+	}
+}
