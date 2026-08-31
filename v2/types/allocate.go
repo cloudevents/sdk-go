@@ -16,7 +16,7 @@ func Allocate(obj interface{}) (asPtr interface{}, asValue reflect.Value) {
 	}
 
 	switch t := reflect.TypeOf(obj); t.Kind() {
-	case reflect.Ptr:
+	case reflect.Pointer:
 		reflectPtr := reflect.New(t.Elem())
 		asPtr = reflectPtr.Interface()
 		asValue = reflectPtr

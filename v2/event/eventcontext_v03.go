@@ -322,7 +322,7 @@ func (ec EventContextV03) String() string {
 		}
 		sort.Strings(keys)
 		for _, key := range keys {
-			b.WriteString(fmt.Sprintf("  %s: %v\n", key, ec.Extensions[key]))
+			fmt.Fprintf(&b, "  %s: %v\n", key, ec.Extensions[key])
 		}
 	}
 
