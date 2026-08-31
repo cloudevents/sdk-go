@@ -46,7 +46,7 @@ func AnyOf(matchers ...EventMatcher) EventMatcher {
 		var sb strings.Builder
 		sb.WriteString("Cannot match any of the provided matchers\n")
 		for i, err := range errs {
-			sb.WriteString(fmt.Sprintf("%d: %s\n", i+1, err))
+			fmt.Fprintf(&sb, "%d: %s\n", i+1, err)
 		}
 		return errors.New(sb.String())
 	}
@@ -301,7 +301,7 @@ func isEmpty(object interface{}) bool {
 	case reflect.Array, reflect.Chan, reflect.Map, reflect.Slice:
 		return objValue.Len() == 0
 		// pointers are empty if nil or if the value they point to is empty
-	case reflect.Ptr:
+	case reflect.Pointer:
 		if objValue.IsNil() {
 			return true
 		}

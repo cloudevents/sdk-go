@@ -143,7 +143,7 @@ func Validate(v interface{}) (interface{}, error) {
 		return v, nil
 	}
 	rx := reflect.ValueOf(v)
-	if rx.Kind() == reflect.Ptr && !rx.IsNil() {
+	if rx.Kind() == reflect.Pointer && !rx.IsNil() {
 		// Allow pointers-to convertible types
 		return Validate(rx.Elem().Interface())
 	}
