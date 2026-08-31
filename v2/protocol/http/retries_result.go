@@ -57,3 +57,11 @@ func (e *RetriesResult) Error() string {
 	}
 	return fmt.Sprintf("%s (%dx)", e.Result.Error(), e.Retries)
 }
+
+// Unwrap returns the wrapped result to preserve standard error traversal.
+func (e *RetriesResult) Unwrap() error {
+	if e == nil {
+		return nil
+	}
+	return e.Result
+}
