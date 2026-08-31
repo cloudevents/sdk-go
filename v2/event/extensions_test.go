@@ -38,3 +38,70 @@ func TestEvent_validateExtensionName(t *testing.T) {
 		})
 	}
 }
+
+func TestExtractExtensions(t *testing.T) {
+	e := New()
+	e.SetExtension("test1", "value1")
+	e.SetExtension("test2", "value2")
+
+	var v1, v2, v3 string
+	mapping := map[string]*string{
+		"test1": &v1,
+		"test2": &v2,
+		"test3": &v3,
+	}
+
+	found := ExtractExtensions(&e, mapping)
+
+	if !found {
+		t.Errorf("expected found to be true")
+	}
+	if v1 != "value1" {
+		t.Errorf("expected v1 to be value1, got %s", v1)
+	}
+	if v2 != "value2" {
+		t.Errorf("expected v2 to be value2, got %s", v2)
+	}
+	if v3 != "" {
+		t.Errorf("expected v3 to be empty, got %s", v3)
+	}
+}
+
+func TestExtractExtensions_NotFound(t *testing.T) {
+	e := New()
+
+	var v1 string
+	mapping := map[string]*string{
+		"test1": &v1,
+	}
+
+	found := ExtractExtensions(&e, mapping)
+
+	if found {
+		t.Errorf("expected found to be false")
+	}
+	if v1 != "" {
+		t.Errorf("expected v1 to be empty, got %s", v1)
+	}
+}
+
+func TestAttachExtensions(t *testing.T) {
+	e := New()
+	mapping := map[string]string{
+		"test1": "value1",
+		"test2": "value2",
+		"test3": "",
+	}
+
+	AttachExtensions(&e, mapping)
+
+	if e.Extensions()["test1"] != "value1" {
+		t.Errorf("expected test1 to be value1, got %v", e.Extensions()["test1"])
+	}
+	if e.Extensions()["test2"] != "value2" {
+		t.Errorf("expected test2 to be value2, got %v", e.Extensions()["test2"])
+	}
+	if _, ok := e.Extensions()["test3"]; ok {
+		t.Errorf("expected test3 to be missing")
+	}
+}
