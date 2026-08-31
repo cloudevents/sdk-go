@@ -101,6 +101,7 @@ type ceClient struct {
 	eventDefaulterFns         []EventDefaulter
 	pollGoroutines            int
 	blockingCallback          bool
+	parallelGoroutines        int
 	ackMalformedEvent         bool
 }
 
@@ -238,6 +239,10 @@ func (c *ceClient) StartReceiver(ctx context.Context, fn interface{}) error {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
+			var parallel chan struct{}
+			if c.parallelGoroutines > 0 {
+				parallel = make(chan struct{}, c.parallelGoroutines)
+			}
 			for {
 				var msg binding.Message
 				var respFn protocol.ResponseFn
@@ -265,16 +270,33 @@ func (c *ceClient) StartReceiver(ctx context.Context, fn interface{}) error {
 					}
 				}
 
+				// if the blockingCallback option is set, we need to wait for the callback to finish
 				if c.blockingCallback {
+					// Wait for the callback to finish before receiving the next message.
 					callback()
-				} else {
-					// Do not block on the invoker.
+					continue
+				}
+
+				// if the parallelGoroutines option is set, we need to limit the number of goroutines
+				if parallel != nil {
 					wg.Add(1)
+					parallel <- struct{}{}
 					go func() {
-						defer wg.Done()
+						defer func() {
+							<-parallel
+							wg.Done()
+						}()
 						callback()
 					}()
+					continue
 				}
+
+				// otherwise, we can just call the callback directly in a new goroutine
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					callback()
+				}()
 			}
 		}()
 	}
