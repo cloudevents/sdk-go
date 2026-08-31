@@ -22,7 +22,7 @@ This library will help you to:
 _Note:_ Supported
 [CloudEvents specification](https://github.com/cloudevents/spec): 0.3, 1.0
 
-_Note:_ Minimum Go version required: 1.24 (tested with 1.24+). Note that some modules may require a higher Go version, such as `github.com/cloudevents/sdk-go/protocol/pubsub/v2` (Go 1.25), due to module dependencies.
+_Note:_ Minimum Go version required: 1.25 (CI builds and tests with 1.26). Note that some modules may require a higher Go version, such as `github.com/cloudevents/sdk-go/protocol/pubsub/v2` (Go 1.25.8), due to module dependencies.
 
 ## Get started
 
