@@ -9,16 +9,18 @@ import (
 	"context"
 	"errors"
 	"math"
+	"math/rand"
 	"time"
 )
 
 type BackoffStrategy string
 
 const (
-	BackoffStrategyNone        = "none"
-	BackoffStrategyConstant    = "constant"
-	BackoffStrategyLinear      = "linear"
-	BackoffStrategyExponential = "exponential"
+	BackoffStrategyNone                  = "none"
+	BackoffStrategyConstant              = "constant"
+	BackoffStrategyLinear                = "linear"
+	BackoffStrategyExponential           = "exponential"
+	BackoffStrategyExponentialWithJitter = "exponential-jitter"
 )
 
 var DefaultRetryParams = RetryParams{Strategy: BackoffStrategyNone}
@@ -36,6 +38,7 @@ type RetryParams struct {
 	// - for constant strategy: the delay interval between retries
 	// - for linear strategy: interval between retries = Period * retries
 	// - for exponential strategy: interval between retries = Period * retries^2
+	// - for exponential-jitter strategy: random interval between 0 and Period * 2^retries
 	Period time.Duration
 }
 
@@ -51,6 +54,19 @@ func (r *RetryParams) BackoffFor(tries int) time.Duration {
 	case BackoffStrategyExponential:
 		exp := math.Exp2(float64(tries))
 		return r.Period * time.Duration(exp)
+	case BackoffStrategyExponentialWithJitter:
+		if r.Period <= 0 {
+			return 0
+		}
+		ceiling := float64(r.Period) * math.Exp2(float64(tries))
+		if ceiling >= float64(math.MaxInt64) {
+			return time.Duration(rand.Int63n(math.MaxInt64))
+		}
+		maxCeil := int64(ceiling)
+		if maxCeil <= 0 {
+			return 0
+		}
+		return time.Duration(rand.Int63n(maxCeil))
 	case BackoffStrategyNone:
 		fallthrough // default
 	default:
@@ -64,7 +80,16 @@ func (r *RetryParams) Backoff(ctx context.Context, tries int) error {
 	if tries > r.MaxTries {
 		return errors.New("too many retries")
 	}
-	ticker := time.NewTicker(r.BackoffFor(tries))
+	d := r.BackoffFor(tries)
+	if d <= 0 {
+		select {
+		case <-ctx.Done():
+			return errors.New("context has been cancelled")
+		default:
+			return nil
+		}
+	}
+	ticker := time.NewTicker(d)
 	select {
 	case <-ctx.Done():
 		ticker.Stop()

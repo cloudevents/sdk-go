@@ -34,6 +34,8 @@ func main() {
 	send10(cloudevents.ContextWithRetriesLinearBackoff(ctx, 10*time.Millisecond, 10), c)
 	log.Println("--- Exponential ---")
 	send10(cloudevents.ContextWithRetriesExponentialBackoff(ctx, 10*time.Millisecond, 10), c)
+	log.Println("--- Exponential with Full Jitter ---")
+	send10(cloudevents.ContextWithRetriesExponentialBackoffWithJitter(ctx, 10*time.Millisecond, 10), c)
 }
 
 func send10(ctx context.Context, c cloudevents.Client) {

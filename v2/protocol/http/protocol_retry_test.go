@@ -224,3 +224,30 @@ func newEvent(t *testing.T, encoding string, body interface{}) event.Event {
 
 	return e
 }
+
+func TestRequestWithRetries_exponentialWithJitter(t *testing.T) {
+	mockSrv := &roundTripperTest{
+		statusCodes: []int{503, 200},
+	}
+	srv := httptest.NewServer(mockSrv)
+	defer srv.Close()
+
+	p, err := New(WithClient(http.Client{Timeout: time.Second}))
+	require.NoError(t, err)
+
+	ctx := cecontext.WithTarget(context.Background(), srv.URL)
+	ctx = cecontext.WithLogger(ctx, zaptest.NewLogger(t).Sugar())
+	ctxWithRetries := cecontext.WithRetriesExponentialBackoffWithJitter(ctx, time.Nanosecond, 3)
+
+	dummyEvent := newEvent(t, "", nil)
+	dummyMsg := binding.ToMessage(&dummyEvent)
+	_, got := p.Request(ctxWithRetries, dummyMsg)
+
+	srvCount := func() int {
+		mockSrv.Lock()
+		defer mockSrv.Unlock()
+		return mockSrv.requestCount
+	}
+	assert.Equal(t, 2, srvCount())
+	assert.True(t, protocol.IsACK(got))
+}

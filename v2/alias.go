@@ -150,11 +150,12 @@ var (
 
 	// Context
 
-	ContextWithTarget                    = context.WithTarget
-	TargetFromContext                    = context.TargetFrom
-	ContextWithRetriesConstantBackoff    = context.WithRetriesConstantBackoff
-	ContextWithRetriesLinearBackoff      = context.WithRetriesLinearBackoff
-	ContextWithRetriesExponentialBackoff = context.WithRetriesExponentialBackoff
+	ContextWithTarget                              = context.WithTarget
+	TargetFromContext                              = context.TargetFrom
+	ContextWithRetriesConstantBackoff              = context.WithRetriesConstantBackoff
+	ContextWithRetriesLinearBackoff                = context.WithRetriesLinearBackoff
+	ContextWithRetriesExponentialBackoff           = context.WithRetriesExponentialBackoff
+	ContextWithRetriesExponentialBackoffWithJitter = context.WithRetriesExponentialBackoffWithJitter
 
 	WithEncodingBinary     = binding.WithForceBinary
 	WithEncodingStructured = binding.WithForceStructured
