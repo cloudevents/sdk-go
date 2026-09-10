@@ -7,6 +7,7 @@ package context
 
 import (
 	"context"
+	"math"
 	"testing"
 	"time"
 )
@@ -37,6 +38,11 @@ func TestRetryParams_Backoff(t *testing.T) {
 		"exponential 1": {
 			ctx:   context.Background(),
 			rp:    &RetryParams{Strategy: BackoffStrategyExponential, MaxTries: 10, Period: 1 * time.Nanosecond},
+			tries: 1,
+		},
+		"exponential jitter 1": {
+			ctx:   context.Background(),
+			rp:    &RetryParams{Strategy: BackoffStrategyExponentialWithJitter, MaxTries: 10, Period: 1 * time.Nanosecond},
 			tries: 1,
 		},
 		"const timeout": {
@@ -115,5 +121,66 @@ func TestRetryParams_BackoffFor(t *testing.T) {
 				t.Errorf("BackoffFor() = %v, want %v", got, tc.want)
 			}
 		})
+	}
+}
+
+func TestRetryParams_BackoffFor_ExponentialWithJitter(t *testing.T) {
+	for _, period := range []time.Duration{0, -1, -time.Second} {
+		rp := &RetryParams{
+			Strategy: BackoffStrategyExponentialWithJitter,
+			MaxTries: 10,
+			Period:   period,
+		}
+		if got := rp.BackoffFor(1); got != 0 {
+			t.Errorf("BackoffFor() with period %v = %v, want 0", period, got)
+		}
+	}
+
+	basePeriod := 10 * time.Millisecond
+	rp := &RetryParams{
+		Strategy: BackoffStrategyExponentialWithJitter,
+		MaxTries: 10,
+		Period:   basePeriod,
+	}
+	for tries := 1; tries <= 5; tries++ {
+		ceiling := time.Duration(float64(basePeriod) * math.Exp2(float64(tries)))
+		for i := 0; i < 50; i++ {
+			got := rp.BackoffFor(tries)
+			if got < 0 || got >= ceiling {
+				t.Errorf("BackoffFor(%d) = %v, want in [0, %v)", tries, got, ceiling)
+			}
+		}
+	}
+
+	for _, tries := range []int{64, 1000} {
+		for i := 0; i < 10; i++ {
+			got := rp.BackoffFor(tries)
+			if got < 0 {
+				t.Errorf("BackoffFor(%d) = %v, want >= 0", tries, got)
+			}
+		}
+	}
+
+	ctx := context.Background()
+	for _, period := range []time.Duration{0, -time.Millisecond} {
+		rp := &RetryParams{
+			Strategy: BackoffStrategyExponentialWithJitter,
+			MaxTries: 10,
+			Period:   period,
+		}
+		if err := rp.Backoff(ctx, 1); err != nil {
+			t.Errorf("Backoff() with period %v error = %v, want nil", period, err)
+		}
+	}
+
+	canceledCtx, cancel := context.WithCancel(context.Background())
+	cancel()
+	rpZero := &RetryParams{
+		Strategy: BackoffStrategyExponentialWithJitter,
+		MaxTries: 10,
+		Period:   0,
+	}
+	if err := rpZero.Backoff(canceledCtx, 1); err == nil || err.Error() != "context has been cancelled" {
+		t.Errorf("Backoff() with canceled context got %v, want 'context has been cancelled'", err)
 	}
 }

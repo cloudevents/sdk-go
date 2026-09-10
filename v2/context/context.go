@@ -92,6 +92,17 @@ func WithRetriesExponentialBackoff(ctx context.Context, period time.Duration, ma
 	})
 }
 
+// WithRetriesExponentialBackoffWithJitter returns back a new context with retry parameters
+// using exponential backoff with full jitter strategy.
+// MaxTries is the maximum number for retries and period is the base interval.
+func WithRetriesExponentialBackoffWithJitter(ctx context.Context, period time.Duration, maxTries int) context.Context {
+	return WithRetryParams(ctx, &RetryParams{
+		Strategy: BackoffStrategyExponentialWithJitter,
+		Period:   period,
+		MaxTries: maxTries,
+	})
+}
+
 // WithRetryParams returns back a new context with retries parameters.
 func WithRetryParams(ctx context.Context, rp *RetryParams) context.Context {
 	return context.WithValue(ctx, retriesKey, rp)
