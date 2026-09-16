@@ -1,6 +1,6 @@
 module github.com/cloudevents/sdk-go/test/observability
 
-go 1.25.0
+go 1.26.0
 
 require (
 	github.com/cloudevents/sdk-go/observability/opentelemetry/v2 v2.16.2
@@ -26,7 +26,7 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.28.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
-	golang.org/x/sys v0.47.0 // indirect
+	golang.org/x/sys v0.48.0 // indirect
 )
 
 replace github.com/cloudevents/sdk-go/observability/opentelemetry/v2 => ../../observability/opentelemetry/v2
