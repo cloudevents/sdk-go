@@ -15,7 +15,7 @@ echo "Go Dependencies Update Script"
 echo "====================================="
 
 echo "Finding all directories with go.mod files..."
-DIRS=$(find . -name "go.mod" -exec dirname {} \;)
+DIRS=$(find . -name "go.mod" -exec dirname {} \; | sort)
 if [ -z "$DIRS" ]; then
   echo "No go.mod files found!"
   exit 0
@@ -44,5 +44,25 @@ for DIR in $DIRS; do
 
   COUNTER=$((COUNTER + 1))
 done
+
+# Satellite modules `replace` github.com/cloudevents/sdk-go/v2 with ../../../v2, so their
+# tidy result depends on v2/go.mod as it is on disk at that moment. A module tidied before
+# v2 gets its own `go get -u` misses any go directive bump v2 picks up later, and CI then
+# fails with "updates to go.mod needed". No single ordering fixes this, so tidy everything
+# once more now that every go.mod has its final dependencies.
+echo "====================================="
+echo "Re-tidying all modules"
+echo "====================================="
+echo
+
+COUNTER=1
+for DIR in $DIRS; do
+  echo "[$COUNTER/$DIR_COUNT] Re-tidying $DIR"
+  pushd "$DIR" >/dev/null
+  go mod tidy
+  popd >/dev/null
+  COUNTER=$((COUNTER + 1))
+done
+echo
 
 echo "All dependencies updated successfully!"
