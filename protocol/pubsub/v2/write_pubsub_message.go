@@ -41,11 +41,17 @@ func (b *pubsubMessagePublisher) SetStructuredEvent(ctx context.Context, f forma
 	if err != nil {
 		return err
 	}
+	if b.Attributes == nil {
+		b.Attributes = make(map[string]string)
+	}
+	b.Attributes[contentType] = f.MediaType()
 	b.Data = buf.Bytes()
 	return nil
 }
 
 func (b *pubsubMessagePublisher) Start(ctx context.Context) error {
+	// Clear a previous structured content type when reusing the message for binary encoding.
+	delete(b.Attributes, contentType)
 	return nil
 }
 
@@ -67,28 +73,24 @@ func (b *pubsubMessagePublisher) SetData(reader io.Reader) error {
 }
 
 func (b *pubsubMessagePublisher) SetAttribute(attribute spec.Attribute, value interface{}) error {
+	if value == nil {
+		delete(b.Attributes, prefix+attribute.Name())
+		if attribute.Kind() == spec.DataContentType {
+			delete(b.Attributes, legacyContentType)
+		}
+		return nil
+	}
+
+	// Everything is a string here
+	s, err := types.Format(value)
+	if err != nil {
+		return err
+	}
+	b.Attributes[prefix+attribute.Name()] = s
 	if attribute.Kind() == spec.DataContentType {
-		if value == nil {
-			delete(b.Attributes, contentType)
-		}
-
-		// Everything is a string here
-		s, err := types.Format(value)
-		if err != nil {
-			return err
-		}
-		b.Attributes[contentType] = s
-	} else {
-		if value == nil {
-			delete(b.Attributes, prefix+attribute.Name())
-		}
-
-		// Everything is a string here
-		s, err := types.Format(value)
-		if err != nil {
-			return err
-		}
-		b.Attributes[prefix+attribute.Name()] = s
+		// Retain Content-Type for backward compatibility with existing consumers.
+		// Use ce-datacontenttype when filtering binary-mode events by data content type.
+		b.Attributes[legacyContentType] = s
 	}
 	return nil
 }
