@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"strings"
 
 	"cloud.google.com/go/pubsub/v2"
 	"github.com/cloudevents/sdk-go/v2/binding"
@@ -44,19 +45,30 @@ func (b *pubsubMessagePublisher) SetStructuredEvent(ctx context.Context, f forma
 	if b.Attributes == nil {
 		b.Attributes = make(map[string]string)
 	}
+	b.clearCloudEventAttributes()
 	b.Attributes[contentType] = f.MediaType()
 	b.Data = buf.Bytes()
 	return nil
 }
 
 func (b *pubsubMessagePublisher) Start(ctx context.Context) error {
-	// Clear a previous structured content type when reusing the message for binary encoding.
-	delete(b.Attributes, contentType)
+	// Attributes and data omitted by the next event must not survive reuse.
+	b.clearCloudEventAttributes()
+	b.Data = nil
 	return nil
 }
 
 func (b *pubsubMessagePublisher) End(ctx context.Context) error {
 	return nil
+}
+
+func (b *pubsubMessagePublisher) clearCloudEventAttributes() {
+	// Preserve custom Pub/Sub attributes while removing metadata from the previous event.
+	for name := range b.Attributes {
+		if strings.HasPrefix(name, prefix) || name == contentType || name == legacyContentType {
+			delete(b.Attributes, name)
+		}
+	}
 }
 
 func (b *pubsubMessagePublisher) SetData(reader io.Reader) error {
