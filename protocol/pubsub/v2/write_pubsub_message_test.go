@@ -89,6 +89,87 @@ func TestWritePubSubMessageChangeEncoding(t *testing.T) {
 	}
 }
 
+func TestWritePubSubMessageReuseDataContentType(t *testing.T) {
+	tests := []struct {
+		name            string
+		dataContentType string
+	}{
+		{name: "different data content type", dataContentType: "application/json"},
+		{name: "no data content type"},
+	}
+	test.EachEvent(t, test.AllVersions([]event.Event{test.FullEvent()}), func(t *testing.T, previous event.Event) {
+		previous = test.ConvertEventExtensionsToString(t, previous)
+		for _, tt := range tests {
+			for _, encoding := range []binding.Encoding{binding.EncodingBinary, binding.EncodingStructured} {
+				t.Run(tt.name+"/"+encoding.String(), func(t *testing.T) {
+					pm := &pubsub.Message{Attributes: map[string]string{"custom": "preserved"}}
+					require.NoError(t, WritePubSubMessage(binding.WithForceBinary(context.Background()), binding.ToMessage(&previous), pm))
+
+					next := previous.Clone()
+					next.SetID(previous.ID() + "-next")
+					next.SetDataContentType(tt.dataContentType)
+					ctx := binding.WithPreferredEventEncoding(context.Background(), encoding)
+					require.NoError(t, WritePubSubMessage(ctx, binding.ToMessage(&next), pm))
+
+					require.Equal(t, "preserved", pm.Attributes["custom"])
+					if encoding == binding.EncodingStructured {
+						require.Equal(t, event.ApplicationCloudEventsJSON, pm.Attributes["content-type"])
+					} else {
+						require.NotContains(t, pm.Attributes, "content-type")
+					}
+					if encoding == binding.EncodingStructured || tt.dataContentType == "" {
+						require.NotContains(t, pm.Attributes, "ce-datacontenttype")
+						require.NotContains(t, pm.Attributes, "Content-Type")
+					} else {
+						require.Equal(t, tt.dataContentType, pm.Attributes["ce-datacontenttype"])
+						require.Equal(t, tt.dataContentType, pm.Attributes["Content-Type"])
+					}
+
+					msg := NewMessage(pm)
+					require.Equal(t, encoding, msg.ReadEncoding())
+					eventOut, err := binding.ToEvent(ctx, msg)
+					require.NoError(t, err)
+					test.AssertEventEquals(t, next, *eventOut)
+				})
+			}
+		}
+	})
+}
+
+func TestWritePubSubMessageReuseWithMinimalEvent(t *testing.T) {
+	test.EachEvent(t, test.AllVersions([]event.Event{test.MinEvent()}), func(t *testing.T, next event.Event) {
+		previous := test.ConvertEventExtensionsToString(t, test.FullEvent())
+		previous.Context = spec.VS.Version(next.SpecVersion()).Convert(previous.Context)
+		for _, encoding := range []binding.Encoding{binding.EncodingBinary, binding.EncodingStructured} {
+			t.Run(encoding.String(), func(t *testing.T) {
+				pm := &pubsub.Message{Attributes: map[string]string{"custom": "preserved"}}
+				require.NoError(t, WritePubSubMessage(binding.WithForceBinary(context.Background()), binding.ToMessage(&previous), pm))
+
+				ctx := binding.WithPreferredEventEncoding(context.Background(), encoding)
+				require.NoError(t, WritePubSubMessage(ctx, binding.ToMessage(&next), pm))
+
+				wantAttributes := map[string]string{"custom": "preserved"}
+				if encoding == binding.EncodingStructured {
+					wantAttributes["content-type"] = event.ApplicationCloudEventsJSON
+				} else {
+					wantAttributes["ce-specversion"] = next.SpecVersion()
+					wantAttributes["ce-id"] = next.ID()
+					wantAttributes["ce-source"] = next.Source()
+					wantAttributes["ce-type"] = next.Type()
+					require.Empty(t, pm.Data)
+				}
+				require.Equal(t, wantAttributes, pm.Attributes)
+
+				msg := NewMessage(pm)
+				require.Equal(t, encoding, msg.ReadEncoding())
+				eventOut, err := binding.ToEvent(ctx, msg)
+				require.NoError(t, err)
+				test.AssertEventEquals(t, next, *eventOut)
+			})
+		}
+	})
+}
+
 func TestWritePubSubMessageExistingDataContentType(t *testing.T) {
 	tests := []struct {
 		name       string
