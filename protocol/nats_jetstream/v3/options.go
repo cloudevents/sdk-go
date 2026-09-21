@@ -88,3 +88,12 @@ func WithPullConsumerOptions(pullConsumeOpts []jetstream.PullConsumeOpt) Protoco
 		return nil
 	}
 }
+
+// WithStreamName allows the user to specify a stream name directly,
+// bypassing the automatic stream resolution via subjects.
+func WithStreamName(streamName string) ProtocolOption {
+	return func(p *Protocol) error {
+		p.streamName = streamName
+		return nil
+	}
+}
