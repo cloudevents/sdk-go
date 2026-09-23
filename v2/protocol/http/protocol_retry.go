@@ -24,7 +24,7 @@ func (p *Protocol) do(ctx context.Context, req *http.Request) (binding.Message, 
 	params := cecontext.RetriesFrom(ctx)
 
 	switch params.Strategy {
-	case cecontext.BackoffStrategyConstant, cecontext.BackoffStrategyLinear, cecontext.BackoffStrategyExponential:
+	case cecontext.BackoffStrategyConstant, cecontext.BackoffStrategyLinear, cecontext.BackoffStrategyExponential, cecontext.BackoffStrategyExponentialWithJitter:
 		return p.doWithRetry(ctx, params, req)
 	case cecontext.BackoffStrategyNone:
 		fallthrough
