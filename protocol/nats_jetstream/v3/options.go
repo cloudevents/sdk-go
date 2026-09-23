@@ -63,6 +63,16 @@ func WithSendSubject(sendSubject string) ProtocolOption {
 	}
 }
 
+// WithStreamName sets the explicit stream name to use for send and receive operations.
+// This bypasses the automatic stream lookup via StreamNameBySubject, which is useful
+// when multiple streams exist for the same subject.
+func WithStreamName(streamName string) ProtocolOption {
+	return func(p *Protocol) error {
+		p.streamName = streamName
+		return nil
+	}
+}
+
 // WithConsumerConfig creates a unordered consumer used in the protocol receiver.
 // This option is mutually exclusive with WithOrderedConsumerConfig.
 func WithConsumerConfig(consumerConfig *jetstream.ConsumerConfig) ProtocolOption {
