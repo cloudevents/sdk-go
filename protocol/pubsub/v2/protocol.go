@@ -206,6 +206,12 @@ func (t *Protocol) startSubscriber(ctx context.Context, sub subscriptionWithTopi
 		select {
 		case t.incoming <- *m:
 		case <-ctx.Done():
+			// The subscriber is shutting down before the message was handed
+			// off. Nack it so Pub/Sub redelivers immediately instead of
+			// waiting out the ack deadline (which with exactly-once delivery
+			// can delay redelivery by minutes).
+			logger.Warnf("context cancelled while delivering message %s; nacking for redelivery", m.ID)
+			m.Nack()
 		}
 	})
 }
