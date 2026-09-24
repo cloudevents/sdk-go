@@ -20,6 +20,7 @@ You can grab them and copy-paste in your project to start using sdk-go.
   * [Responder](./http/responder): Receive and reply to events using the CloudEvents Client.
   * [Sender](./http/sender): Send events using the CloudEvents Client.
   * [Sender with retries](./http/sender-retry): Send events, retrying in case of a failure.
+  * [Correlation Extension](./http/correlation): Send and receive events using the Correlation extension.
   * [Receiver & Requester with metrics enabled](./http/metrics): Request events and handle events with metrics enabled.
 * Kafka
   * [Receiver](./kafka/receiver): Receive events using the CloudEvents Client. To run the tests look at [Kafka samples README](./kafka/README.md).
