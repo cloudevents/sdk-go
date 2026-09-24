@@ -383,7 +383,17 @@ func consumeDataAsBytes(e *Event, isBase64 bool, b []byte) error {
 		return nil
 	}
 
-	e.DataEncoded = b
+	// Parse as JSON to verify validity and handle zero-length slices properly
+	var parsed interface{}
+	if err := json.Unmarshal(b, &parsed); err != nil {
+		return fmt.Errorf("invalid JSON data: %w", err)
+	}
+	data, err := json.Marshal(parsed)
+	if err != nil {
+		return err
+	}
+	e.DataEncoded = data
+	e.DataBase64 = false
 	return nil
 }
 
