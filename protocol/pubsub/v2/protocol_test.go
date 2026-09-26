@@ -26,6 +26,7 @@ func (pc *testPubsubClient) NewWithAttributesInterceptor(ctx context.Context, pr
 	pc.srv = pstest.NewServer()
 	conn, err := grpc.NewClient(pc.srv.Addr, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithUnaryInterceptor(customAttributesInterceptor(map[string]string{
 		"Content-Type":        "text/json",
+		"ce-datacontenttype":  "text/json",
 		"ce-dataschema":       "http://example.com/schema",
 		"ce-exbinary":         "AAECAw==",
 		"ce-exbool":           "true",
