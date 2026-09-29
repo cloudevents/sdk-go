@@ -322,23 +322,13 @@ func (p *Protocol) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 // ServeHTTPWithHandler behaves like ServeHTTP, but delivers each parsed request
 // to handle inline within the request's own goroutine instead of routing it
-// through the incoming channel. Delivering inline keeps every request
-// self-contained: a request that is cancelled mid-flight can no longer orphan a
-// concurrent request's queued channel send, which is the receiver stall
-// reported in https://github.com/cloudevents/sdk-go/issues/1332.
+// through the incoming channel, so a request cancelled mid-flight can no longer
+// orphan a concurrent request's queued send (see issue #1332).
 //
-// handle must invoke the supplied protocol.ResponseFn exactly once, either
-// synchronously or asynchronously, to write the HTTP response; the method
-// blocks until it does. A handle that responds asynchronously must do so before
-// the method returns -- writing the response after ServeHTTP has returned
-// violates net/http's ResponseWriter contract. As a convenience, if handle
-// returns an error without having responded, the error is turned into the
-// response for it. A handle that returns nil and never responds blocks its own
-// request goroutine, exactly as a plain http.Handler that never writes would;
-// it can never stall a concurrent request.
-//
-// A handle must not both return an error and respond asynchronously: the
-// synchronous error self-completion would then race the asynchronous response.
+// handle must invoke the supplied protocol.ResponseFn exactly once, before it
+// returns; the method blocks until the response is written. As a convenience,
+// if handle returns an error without having responded, the error is turned into
+// the response.
 func (p *Protocol) ServeHTTPWithHandler(rw http.ResponseWriter, req *http.Request, handle func(ctx context.Context, m binding.Message, respFn protocol.ResponseFn) error) {
 	p.serveHTTP(rw, req, handle)
 }
@@ -462,9 +452,8 @@ func (p *Protocol) serveHTTP(rw http.ResponseWriter, req *http.Request, handle f
 		// Deliver inline: no shared channel and no second goroutine, so a
 		// concurrent request's cancellation cannot strand this delivery.
 		//
-		// respond guards fn with sync.Once so it runs at most once: a handler
-		// may both respond and then return an error, and a handler that returns
-		// an error WITHOUT responding is finalized via the self-completion below.
+		// respond guards fn with sync.Once so it runs at most once, whether
+		// handle responds itself or returns an error that we finalize below.
 		var once sync.Once
 		respond := func(ctx context.Context, respMsg binding.Message, res protocol.Result, transformers ...binding.Transformer) error {
 			var (
@@ -478,16 +467,12 @@ func (p *Protocol) serveHTTP(rw http.ResponseWriter, req *http.Request, handle f
 			return err
 		}
 		if err := handle(req.Context(), m, respond); err != nil {
-			// handle may have returned the error before responding; ensure the
-			// request completes. If it already responded, this is a no-op.
+			// handle returned an error; turn it into the response. A no-op if
+			// handle already responded.
 			_ = respond(req.Context(), nil, err)
 		}
 		// Block until the ResponseFn has run so net/http cannot finalize the
-		// response before it is written, even when handle responds
-		// asynchronously. A handle that returns nil and never responds blocks
-		// its own request goroutine -- exactly as a plain http.Handler that
-		// never writes would -- but it can never stall a *concurrent* request,
-		// which is the #1332 guarantee this inline delivery provides.
+		// response before it is written.
 		wg.Wait()
 		return
 	}
