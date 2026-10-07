@@ -313,13 +313,36 @@ func (p *Protocol) Respond(ctx context.Context) (binding.Message, protocol.Respo
 	}
 }
 
-// ServeHTTP implements http.Handler.
+// ServeHTTP implements http.Handler by routing each parsed request through the
+// incoming channel consumed by Receive/Respond.
 // Blocks until ResponseFn is invoked.
 func (p *Protocol) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+	p.serveHTTP(rw, req, nil)
+}
+
+// ServeHTTPWithHandler behaves like ServeHTTP, but delivers each parsed request
+// to handle inline within the request's own goroutine instead of routing it
+// through the incoming channel, so a request cancelled mid-flight can no longer
+// orphan a concurrent request's queued send (see issue #1332).
+//
+// handle must invoke the supplied protocol.ResponseFn exactly once, before it
+// returns; the method blocks until the response is written. As a convenience,
+// if handle returns an error without having responded, the error is turned into
+// the response.
+func (p *Protocol) ServeHTTPWithHandler(rw http.ResponseWriter, req *http.Request, handle func(ctx context.Context, m binding.Message, respFn protocol.ResponseFn) error) {
+	p.serveHTTP(rw, req, handle)
+}
+
+// serveHTTP implements both ServeHTTP (handle == nil: hand the message to a
+// Receive/Respond consumer via the incoming channel) and ServeHTTPWithHandler
+// (handle != nil: deliver the message inline).
+func (p *Protocol) serveHTTP(rw http.ResponseWriter, req *http.Request, handle func(ctx context.Context, m binding.Message, respFn protocol.ResponseFn) error) {
 	// always apply limiter first using req context
 	ok, reset, err := p.limiter.Allow(req.Context(), req)
 	if err != nil {
-		p.incoming <- msgErr{msg: nil, err: fmt.Errorf("unable to acquire rate limit token: %w", err)}
+		if handle == nil {
+			p.incoming <- msgErr{msg: nil, err: fmt.Errorf("unable to acquire rate limit token: %w", err)}
+		}
 		rw.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -360,7 +383,9 @@ func (p *Protocol) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	m := NewMessageFromHttpRequest(req)
 	if m == nil {
 		// Should never get here unless ServeHTTP is called directly.
-		p.incoming <- msgErr{msg: nil, err: binding.ErrUnknownEncoding}
+		if handle == nil {
+			p.incoming <- msgErr{msg: nil, err: binding.ErrUnknownEncoding}
+		}
 		rw.WriteHeader(http.StatusBadRequest)
 		return // if there was no message, return.
 	}
@@ -421,6 +446,35 @@ func (p *Protocol) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 			return err
 		}
 		return nil
+	}
+
+	if handle != nil {
+		// Deliver inline: no shared channel and no second goroutine, so a
+		// concurrent request's cancellation cannot strand this delivery.
+		//
+		// respond guards fn with sync.Once so it runs at most once, whether
+		// handle responds itself or returns an error that we finalize below.
+		var once sync.Once
+		respond := func(ctx context.Context, respMsg binding.Message, res protocol.Result, transformers ...binding.Transformer) error {
+			var (
+				ran bool
+				err error
+			)
+			once.Do(func() { ran = true; err = fn(ctx, respMsg, res, transformers...) })
+			if !ran {
+				return nil // already responded; ignore the duplicate
+			}
+			return err
+		}
+		if err := handle(req.Context(), m, respond); err != nil {
+			// handle returned an error; turn it into the response. A no-op if
+			// handle already responded.
+			_ = respond(req.Context(), nil, err)
+		}
+		// Block until the ResponseFn has run so net/http cannot finalize the
+		// response before it is written.
+		wg.Wait()
+		return
 	}
 
 	p.incoming <- msgErr{msg: m, respFn: fn} // Send to Request
