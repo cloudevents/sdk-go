@@ -24,6 +24,7 @@ import (
 
 // OTelObservabilityService implements the ObservabilityService interface from cloudevents
 type OTelObservabilityService struct {
+	traceProvider        trace.TracerProvider
 	tracer               trace.Tracer
 	spanAttributesGetter func(cloudevents.Event) []attribute.KeyValue
 	spanNameFormatter    func(cloudevents.Event) string
@@ -34,11 +35,8 @@ func NewOTelObservabilityService(opts ...OTelObservabilityServiceOption) *OTelOb
 	tracerProvider := otel.GetTracerProvider()
 
 	o := &OTelObservabilityService{
-		tracer: tracerProvider.Tracer(
-			instrumentationName,
-			// TODO: Can we have the package version here?
-			// trace.WithInstrumentationVersion("1.0.0"),
-		),
+		traceProvider:     tracerProvider,
+		tracer:            nil,
 		spanNameFormatter: defaultSpanNameFormatter,
 	}
 
@@ -46,6 +44,12 @@ func NewOTelObservabilityService(opts ...OTelObservabilityServiceOption) *OTelOb
 	for _, opt := range opts {
 		opt(o)
 	}
+
+	o.tracer = o.traceProvider.Tracer(
+		instrumentationName,
+		// TODO: Can we have the package version here?
+		// trace.WithInstrumentationVersion("1.0.0"),
+	)
 
 	return o
 }
