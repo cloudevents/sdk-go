@@ -56,6 +56,7 @@ type Protocol struct {
 	// sender
 	publishOpts []jetstream.PublishOpt
 	sendSubject string
+	streamName  string
 }
 
 // New creates a new NATS protocol.
@@ -121,7 +122,10 @@ func (p *Protocol) Send(ctx context.Context, in binding.Message, transformers ..
 	}()
 
 	if _, err = p.jetStream.StreamNameBySubject(ctx, subject); err != nil {
-		return err
+		// If an explicit stream name was provided, skip the lookup
+		if p.streamName == "" {
+			return err
+		}
 	}
 
 	writer := new(bytes.Buffer)
@@ -241,6 +245,11 @@ func (p *Protocol) createJetstreamConsumer(ctx context.Context) error {
 // getStreamFromSubjects finds the unique stream for the set of filter subjects
 // If more than one stream is found, returns ErrMoreThanOneStream
 func (p *Protocol) getStreamFromSubjects(ctx context.Context) (string, error) {
+	// If an explicit stream name was provided, use it directly
+	if p.streamName != "" {
+		return p.streamName, nil
+	}
+
 	var subjects []string
 	if p.consumerConfig != nil && p.consumerConfig.FilterSubject != "" {
 		subjects = []string{p.consumerConfig.FilterSubject}
