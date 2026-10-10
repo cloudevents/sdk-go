@@ -71,6 +71,19 @@ func TestRetriesNew_As(t *testing.T) {
 	}
 }
 
+func TestRetriesNewHTTPResult_As(t *testing.T) {
+	err := NewRetriesResult(NewResult(404, "this is an example error, %s", "yep"), 5, time.Now(), nil)
+
+	var result *Result
+	if !protocol.ResultAs(err, &result) {
+		t.Errorf("Expected error to unwrap to an HTTP Result, is not")
+	}
+
+	if result.StatusCode != 404 {
+		t.Errorf("Mismatched status code")
+	}
+}
+
 func TestRetriesNil_As(t *testing.T) {
 	var err error
 
