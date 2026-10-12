@@ -1,5 +1,5 @@
-github.com/confluentinc/confluent-kafka-go/v2 v2.15.1 h1:zqKvZk3Ay68ya4hnImXecb55T579qI1x7ozaHcCL+AY=
-github.com/confluentinc/confluent-kafka-go/v2 v2.15.1/go.mod h1:Jb4/23G4BMIa8vrwtoKx5bdk2h0eUYHbXC45m1FuOXI=
+github.com/confluentinc/confluent-kafka-go/v2 v2.16.0 h1:kf268ezKIaGmJHfrRQqrIzB7h0PuGl1h/Rsd7rsYcGg=
+github.com/confluentinc/confluent-kafka-go/v2 v2.16.0/go.mod h1:3uFmX9Hrc+Ie1cBHo/dPXEY0U1GQG1oz651fhM9pLS0=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/google/go-cmp v0.7.0 h1:wk8382ETsv4JYUZwIsn6YpYiWiBsYLSJiTsyBybVuN8=
