@@ -7,10 +7,13 @@ package client
 
 import (
 	"context"
+	"net/http"
+
+	"github.com/cloudevents/sdk-go/v2/binding"
 	cecontext "github.com/cloudevents/sdk-go/v2/context"
+	"github.com/cloudevents/sdk-go/v2/protocol"
 	thttp "github.com/cloudevents/sdk-go/v2/protocol/http"
 	"go.uber.org/zap"
-	"net/http"
 )
 
 func NewHTTPReceiveHandler(ctx context.Context, p *thttp.Protocol, fn interface{}) (*EventReceiver, error) {
@@ -31,15 +34,14 @@ type EventReceiver struct {
 }
 
 func (r *EventReceiver) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	// Prepare to handle the message if there's one (context cancellation will ensure this closes)
-	go func() {
-		ctx := req.Context()
-		msg, respFn, err := r.p.Respond(ctx)
-		if err != nil {
-			cecontext.LoggerFrom(context.TODO()).Debugw("failed to call Respond", zap.Error(err))
-		} else if err := r.invoker.Invoke(ctx, msg, respFn); err != nil {
-			cecontext.LoggerFrom(context.TODO()).Debugw("failed to call Invoke", zap.Error(err))
+	// Deliver each request to the invoker inline (see Protocol.ServeHTTPWithHandler),
+	// so a request cancelled mid-flight cannot orphan a concurrent request's
+	// delivery and stall the receiver.
+	r.p.ServeHTTPWithHandler(rw, req, func(ctx context.Context, m binding.Message, respFn protocol.ResponseFn) error {
+		if err := r.invoker.Invoke(ctx, m, respFn); err != nil {
+			cecontext.LoggerFrom(ctx).Debugw("failed to call Invoke", zap.Error(err))
+			return err
 		}
-	}()
-	r.p.ServeHTTP(rw, req)
+		return nil
+	})
 }
