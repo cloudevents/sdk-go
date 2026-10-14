@@ -52,6 +52,7 @@ type Protocol struct {
 	orderedConsumerConfig *jetstream.OrderedConsumerConfig
 	pullConsumeOpts       []jetstream.PullConsumeOpt
 	jetstreamConsumer     jetstream.Consumer
+	streamName            string
 
 	// sender
 	publishOpts []jetstream.PublishOpt
@@ -241,6 +242,11 @@ func (p *Protocol) createJetstreamConsumer(ctx context.Context) error {
 // getStreamFromSubjects finds the unique stream for the set of filter subjects
 // If more than one stream is found, returns ErrMoreThanOneStream
 func (p *Protocol) getStreamFromSubjects(ctx context.Context) (string, error) {
+	// If a stream name was explicitly provided, use it directly
+	if p.streamName != "" {
+		return p.streamName, nil
+	}
+
 	var subjects []string
 	if p.consumerConfig != nil && p.consumerConfig.FilterSubject != "" {
 		subjects = []string{p.consumerConfig.FilterSubject}
