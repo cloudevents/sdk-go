@@ -152,10 +152,15 @@ func WriteJson(in *Event, writer io.Writer) error {
 
 		// If IsJSON and no encoding to base64, we don't need to perform additional steps
 		if isJSON(mediaType) && !isBase64 {
-			stream.WriteObjectField("data")
-			_, err := stream.Write(in.DataEncoded)
-			if err != nil {
-				return fmt.Errorf("error while writing data: %w", err)
+			if len(in.DataEncoded) == 0 {
+				stream.WriteObjectField("data")
+				stream.WriteNil()
+			} else {
+				stream.WriteObjectField("data")
+				_, err := stream.Write(in.DataEncoded)
+				if err != nil {
+					return fmt.Errorf("error while writing data: %w", err)
+				}
 			}
 		} else {
 			if in.Context.GetSpecVersion() == CloudEventsVersionV1 && isBase64 {
