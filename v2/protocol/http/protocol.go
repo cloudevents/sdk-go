@@ -222,9 +222,14 @@ func (p *Protocol) Request(ctx context.Context, m binding.Message, transformers 
 }
 
 func (p *Protocol) makeRequest(ctx context.Context) *http.Request {
+	// Each request owns its headers, including the slices of header values.
+	headers := HeaderFrom(ctx).Clone()
+	if headers == nil {
+		headers = make(http.Header)
+	}
 	req := &http.Request{
 		Method: http.MethodPost,
-		Header: HeaderFrom(ctx),
+		Header: headers,
 	}
 
 	if p.RequestTemplate != nil {
