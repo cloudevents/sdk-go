@@ -4,3 +4,19 @@ updates:
   directory: "/"
   schedule:
       interval: "daily"
+- package-ecosystem: "gomod"
+  directories:
+    - "/**"
+  schedule:
+      interval: "weekly"
+  # Skip releases younger than a week, the window in which hijacked releases usually get caught.
+  # Security updates ignore this.
+  cooldown:
+      default-days: 7
+  # Indirect deps move only when a direct dep requires it, not on every upstream release.
+  allow:
+    - dependency-type: "direct"
+  groups:
+    go-deps:
+      patterns:
+        - "*"
