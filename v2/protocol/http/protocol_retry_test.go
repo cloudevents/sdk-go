@@ -251,3 +251,33 @@ func TestRequestWithRetries_exponentialWithJitter(t *testing.T) {
 	assert.Equal(t, 2, srvCount())
 	assert.True(t, protocol.IsACK(got))
 }
+
+func TestRequest_transportErrorIsUndelivered(t *testing.T) {
+	// Reserve a local address that nothing listens on to get "connection refused".
+	srv := httptest.NewServer(http.NotFoundHandler())
+	target := srv.URL
+	srv.Close()
+
+	p, err := New(WithClient(http.Client{Timeout: time.Second}))
+	require.NoError(t, err)
+
+	base := cecontext.WithTarget(context.Background(), target)
+	base = cecontext.WithLogger(base, zaptest.NewLogger(t).Sugar())
+
+	testCases := map[string]context.Context{
+		"no retries":   base,
+		"with retries": cecontext.WithRetriesConstantBackoff(base, time.Nanosecond, 2),
+	}
+	for name, ctx := range testCases {
+		t.Run(name, func(t *testing.T) {
+			dummyEvent := newEvent(t, "", nil)
+			dummyMsg := binding.ToMessage(&dummyEvent)
+			_, got := p.Request(ctx, dummyMsg)
+
+			require.Error(t, got)
+			assert.True(t, protocol.IsUndelivered(got), "transport error should be undelivered, got %v", got)
+			assert.False(t, protocol.IsACK(got))
+			assert.False(t, protocol.IsNACK(got))
+		})
+	}
+}
