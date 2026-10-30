@@ -6,6 +6,7 @@
 package types
 
 import (
+	"bytes"
 	"encoding/base64"
 	"fmt"
 	"math"
@@ -164,9 +165,7 @@ func Clone(v interface{}) interface{} {
 	case bool, int32, string, nil:
 		return v // Already a CloudEvents type, no validation needed.
 	case []byte:
-		clone := make([]byte, len(v))
-		copy(clone, v)
-		return v
+		return bytes.Clone(v)
 	case url.URL:
 		return URI{v}
 	case *url.URL:
