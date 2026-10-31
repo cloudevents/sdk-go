@@ -24,17 +24,17 @@ func Version(newVersion spec.Version) binding.TransformerFunc {
 				// Erase old attr
 				err := writer.SetAttribute(oldAttr, nil)
 				if err != nil {
-					return nil
+					return err
 				}
 				if newAttr.Kind() == spec.SpecVersion {
 					err = writer.SetAttribute(newAttr, newVersion.String())
 					if err != nil {
-						return nil
+						return err
 					}
 				} else {
 					err = writer.SetAttribute(newAttr, val)
 					if err != nil {
-						return nil
+						return err
 					}
 				}
 			}
