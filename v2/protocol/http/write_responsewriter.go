@@ -57,6 +57,7 @@ func (b *httpResponseWriter) SetAttribute(attribute spec.Attribute, value interf
 	mapping := attributeHeadersMapping[attribute.Name()]
 	if value == nil {
 		delete(b.rw.Header(), mapping)
+		return nil
 	}
 
 	// Http headers, everything is a string!
@@ -71,6 +72,7 @@ func (b *httpResponseWriter) SetAttribute(attribute spec.Attribute, value interf
 func (b *httpResponseWriter) SetExtension(name string, value interface{}) error {
 	if value == nil {
 		delete(b.rw.Header(), extNameToHeaderName(name))
+		return nil
 	}
 	// Http headers, everything is a string!
 	s, err := types.Format(value)
