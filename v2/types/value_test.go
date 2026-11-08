@@ -292,6 +292,24 @@ func TestCloneTimePointer(t *testing.T) {
 	require.NotSame(t, &original, &cloned.Time)
 }
 
+func TestCloneBytes(t *testing.T) {
+	original := []byte("hello")
+	cloned := types.Clone(original).([]byte)
+
+	require.Equal(t, []byte("hello"), cloned)
+
+	cloned[0] = 'H'
+	require.Equal(t, []byte("hello"), original, "changing the clone must not change the original")
+
+	original[1] = 'E'
+	require.Equal(t, []byte("Hello"), cloned, "changing the original must not change the clone")
+}
+
+func TestCloneBytesNilAndEmpty(t *testing.T) {
+	require.Equal(t, []byte(nil), types.Clone([]byte(nil)))
+	require.Equal(t, []byte{}, types.Clone([]byte{}))
+}
+
 func TestCloneNil(t *testing.T) {
 	cloned := types.Clone(nil)
 	require.Nil(t, cloned)
