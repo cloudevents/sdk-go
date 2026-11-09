@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"sync"
 
 	jsoniter "github.com/json-iterator/go"
@@ -225,7 +226,11 @@ func readJsonFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 			case "datacontentencoding":
 				datacontentencoding = iterator.ReadAny()
 			default:
-				extensions[key] = iterator.Read()
+				value, err := readExtensionValue(key, iterator)
+				if err != nil {
+					return err
+				}
+				extensions[key] = value
 			}
 			continue
 		}
@@ -304,7 +309,11 @@ func readJsonFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 				if eventContext.Extensions == nil {
 					eventContext.Extensions = make(map[string]interface{}, 1)
 				}
-				iterator.Error = eventContext.SetExtension(key, iterator.Read())
+				value, err := readExtensionValue(key, iterator)
+				if err != nil {
+					return err
+				}
+				iterator.Error = eventContext.SetExtension(key, value)
 			}
 		case *EventContextV1:
 			switch key {
@@ -328,7 +337,11 @@ func readJsonFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 				if eventContext.Extensions == nil {
 					eventContext.Extensions = make(map[string]interface{}, 1)
 				}
-				iterator.Error = eventContext.SetExtension(key, iterator.Read())
+				value, err := readExtensionValue(key, iterator)
+				if err != nil {
+					return err
+				}
+				iterator.Error = eventContext.SetExtension(key, value)
 			}
 		}
 	}
@@ -347,6 +360,19 @@ func readJsonFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 		return consumeDataAsBytes(out, checkFlag(state, dataBase64Flag), cachedData)
 	}
 	return nil
+}
+
+// readExtensionValue rejects fractional JSON numbers before SetExtension can
+// truncate them to the CloudEvents Integer type.
+func readExtensionValue(key string, iterator *jsoniter.Iterator) (interface{}, error) {
+	value := iterator.Read()
+	if iterator.Error != nil {
+		return nil, iterator.Error
+	}
+	if number, ok := value.(float64); ok && number != math.Trunc(number) {
+		return nil, ValidationError{key: fmt.Errorf("expected an integer, got %v", number)}
+	}
+	return value, nil
 }
 
 func consumeDataAsBytes(e *Event, isBase64 bool, b []byte) error {
