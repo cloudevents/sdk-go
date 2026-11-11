@@ -73,6 +73,52 @@ func TestEventReceiverServeHTTP_WithContext(t *testing.T) {
 	require.True(t, cloudevents.IsACK(result))
 }
 
+// A handler that returns an event exercises the respMsg != nil ->
+// WriteResponseWriter branch of the inline delivery path end-to-end through the
+// public NewHTTPReceiveHandler API.
+func TestEventReceiverServeHTTP_Responder(t *testing.T) {
+	p, err := cloudevents.NewHTTP()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	responder := func(_ context.Context, in cloudevents.Event) (*cloudevents.Event, cloudevents.Result) {
+		resp := cloudevents.NewEvent()
+		resp.SetID("response-id")
+		resp.SetSource("testResponseSource")
+		resp.SetType("testResponseType")
+		if err := resp.SetData(cloudevents.ApplicationJSON, map[string]string{"echo": in.Type()}); err != nil {
+			return nil, err
+		}
+		return &resp, nil
+	}
+
+	httpHandler, err := client.NewHTTPReceiveHandler(context.Background(), p, responder)
+	if err != nil {
+		t.Fatal(err)
+	}
+	c, err := cloudevents.NewClientHTTP()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	mux := http.NewServeMux()
+	mux.Handle("/test", httpHandler)
+	ts := httptest.NewServer(mux)
+	defer ts.Close()
+
+	in := cloudevents.NewEvent()
+	in.SetSource("testSource")
+	in.SetType("testType")
+
+	ctx := cloudevents.ContextWithTarget(context.Background(), ts.URL+"/test")
+	resp, result := c.Request(ctx, in)
+	require.True(t, cloudevents.IsACK(result))
+	require.NotNil(t, resp)
+	require.Equal(t, "testResponseType", resp.Type())
+	require.Equal(t, "testResponseSource", resp.Source())
+}
+
 func TestEventReceiverServeHTTP_Options(t *testing.T) {
 	p, err := cloudevents.NewHTTP()
 	if err != nil {
