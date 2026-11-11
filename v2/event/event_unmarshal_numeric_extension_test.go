@@ -27,6 +27,13 @@ func TestUnmarshalNumericExtension(t *testing.T) {
 		{name: "negative fraction", value: "-42.42", wantErr: true},
 		{name: "fraction below one", value: "0.5", wantErr: true},
 		{name: "fraction in exponent notation", value: "5e-1", wantErr: true},
+		{name: "fraction rounded to integer", value: "42.00000000000000000001", wantErr: true},
+		{name: "fraction rounded to maximum integer", value: "2147483646.99999999", wantErr: true},
+		{name: "fraction rounded to zero", value: "1e-400", wantErr: true},
+		{name: "integral decimal token", value: "42.0", wantErr: true},
+		{name: "integral exponent token", value: "42e0", wantErr: true},
+		{name: "above integer range", value: "2147483648", wantErr: true},
+		{name: "below integer range", value: "-2147483649", wantErr: true},
 		{name: "zero", value: "0", want: int32(0)},
 		{name: "positive integer", value: "42", want: int32(42)},
 		{name: "negative integer", value: "-42", want: int32(-42)},
@@ -35,29 +42,38 @@ func TestUnmarshalNumericExtension(t *testing.T) {
 		{name: "string", value: `"42.42"`, want: "42.42"},
 		{name: "boolean", value: "true", want: true},
 	}
-	for _, version := range []string{event.CloudEventsVersionV03, event.CloudEventsVersionV1} {
-		for _, extensionFirst := range []bool{false, true} {
-			for _, tt := range tests {
-				t.Run(fmt.Sprintf("%s/extensionFirst=%t/%s", version, extensionFirst, tt.name), func(t *testing.T) {
-					attributes := fmt.Sprintf(`"specversion":%q,"id":"1","type":"test.type","source":"http://localhost/source"`, version)
-					extension := `"number":` + tt.value
-					body := "{" + attributes + "," + extension + "}"
-					if extensionFirst {
-						body = "{" + extension + "," + attributes + "}"
-					}
+	for _, spec := range []struct {
+		version string
+		names   []string
+	}{
+		{event.CloudEventsVersionV03, []string{"number", "dataschema", "data_base64"}},
+		{event.CloudEventsVersionV1, []string{"number", "schemaurl", "datacontentencoding"}},
+	} {
+		version := spec.version
+		for _, name := range spec.names {
+			for _, extensionFirst := range []bool{false, true} {
+				for _, tt := range tests {
+					t.Run(fmt.Sprintf("%s/%s/extensionFirst=%t/%s", version, name, extensionFirst, tt.name), func(t *testing.T) {
+						attributes := fmt.Sprintf(`"specversion":%q,"id":"1","type":"test.type","source":"http://localhost/source"`, version)
+						extension := fmt.Sprintf("%q:%s", name, tt.value)
+						body := "{" + attributes + "," + extension + "}"
+						if extensionFirst {
+							body = "{" + extension + "," + attributes + "}"
+						}
 
-					var e event.Event
-					err := json.Unmarshal([]byte(body), &e)
-					if tt.wantErr {
-						require.Error(t, err)
-						var validationErr event.ValidationError
-						require.True(t, errors.As(err, &validationErr), "expected ValidationError, got %T: %v", err, err)
-						require.Contains(t, validationErr, "number")
-						return
-					}
-					require.NoError(t, err)
-					require.Equal(t, tt.want, e.Extensions()["number"])
-				})
+						var e event.Event
+						err := json.Unmarshal([]byte(body), &e)
+						if tt.wantErr {
+							require.Error(t, err)
+							var validationErr event.ValidationError
+							require.True(t, errors.As(err, &validationErr), "expected ValidationError, got %T: %v", err, err)
+							require.Contains(t, validationErr, name)
+							return
+						}
+						require.NoError(t, err)
+						require.Equal(t, tt.want, e.Extensions()[name])
+					})
+				}
 			}
 		}
 	}

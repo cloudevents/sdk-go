@@ -11,7 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"math"
+	"strconv"
 	"sync"
 
 	jsoniter "github.com/json-iterator/go"
@@ -82,7 +82,7 @@ func readJsonFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 		subject         *string
 		time            *types.Timestamp
 		datacontenttype *string
-		extensions      = make(map[string]interface{})
+		extensions      = make(map[string]jsoniter.Any)
 
 		// These fields require knowledge about the specversion to be parsed.
 		schemaurl           jsoniter.Any
@@ -140,10 +140,10 @@ func readJsonFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 
 				// ... add all remaining fields as extensions.
 				if schemaurl != nil {
-					extensions["schemaurl"] = schemaurl.GetInterface()
+					extensions["schemaurl"] = schemaurl
 				}
 				if datacontentencoding != nil {
-					extensions["datacontentencoding"] = datacontentencoding.GetInterface()
+					extensions["datacontentencoding"] = datacontentencoding
 				}
 
 				out.Context = con
@@ -178,10 +178,10 @@ func readJsonFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 
 				// ... add all remaining fields as extensions.
 				if dataschema != nil {
-					extensions["dataschema"] = dataschema.GetInterface()
+					extensions["dataschema"] = dataschema
 				}
 				if dataBase64 != nil {
-					extensions["data_base64"] = dataBase64.GetInterface()
+					extensions["data_base64"] = dataBase64
 				}
 
 				out.Context = con
@@ -191,8 +191,12 @@ func readJsonFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 			}
 
 			// Apply all extensions to the context object.
-			for key, val := range extensions {
-				if err := out.Context.SetExtension(key, val); err != nil {
+			for key, raw := range extensions {
+				value, err := extensionValue(key, raw)
+				if err != nil {
+					return err
+				}
+				if err := out.Context.SetExtension(key, value); err != nil {
 					return err
 				}
 			}
@@ -226,11 +230,7 @@ func readJsonFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 			case "datacontentencoding":
 				datacontentencoding = iterator.ReadAny()
 			default:
-				value, err := readExtensionValue(key, iterator)
-				if err != nil {
-					return err
-				}
-				extensions[key] = value
+				extensions[key] = iterator.ReadAny()
 			}
 			continue
 		}
@@ -362,17 +362,26 @@ func readJsonFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 	return nil
 }
 
-// readExtensionValue rejects fractional JSON numbers before SetExtension can
-// truncate them to the CloudEvents Integer type.
+// readExtensionValue validates numeric tokens before converting extension values.
 func readExtensionValue(key string, iterator *jsoniter.Iterator) (interface{}, error) {
-	value := iterator.Read()
+	value := iterator.ReadAny()
 	if iterator.Error != nil {
 		return nil, iterator.Error
 	}
-	if number, ok := value.(float64); ok && number != math.Trunc(number) {
-		return nil, ValidationError{key: fmt.Errorf("expected an integer, got %v", number)}
+	return extensionValue(key, value)
+}
+
+func extensionValue(key string, value jsoniter.Any) (interface{}, error) {
+	if value.ValueType() == jsoniter.NumberValue {
+		// The JSON format permits only the integer component of a number.
+		// Parse the original token so float64 rounding cannot hide fractions.
+		number, err := strconv.ParseInt(value.ToString(), 10, 32)
+		if err != nil {
+			return nil, ValidationError{key: fmt.Errorf("expected a 32-bit integer: %w", err)}
+		}
+		return int32(number), nil
 	}
-	return value, nil
+	return value.GetInterface(), nil
 }
 
 func consumeDataAsBytes(e *Event, isBase64 bool, b []byte) error {
