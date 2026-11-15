@@ -353,6 +353,15 @@ func (p *Protocol) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		p.GetHandlerFn(rw, req)
 		return
 
+	case http.MethodHead:
+		// Same handler as GET when one is set. The request method stays HEAD.
+		// net/http drops the response body and keeps the status and headers.
+		// With no GET handler, HEAD stays on the event receive path.
+		if p.GetHandlerFn != nil {
+			p.GetHandlerFn(rw, req)
+			return
+		}
+
 	case http.MethodDelete:
 		if p.DeleteHandlerFn == nil {
 			rw.WriteHeader(http.StatusMethodNotAllowed)

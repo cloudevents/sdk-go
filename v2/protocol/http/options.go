@@ -267,7 +267,9 @@ func WithClient(client nethttp.Client) Option {
 	}
 }
 
-// WithGetHandlerFunc sets the http GET handler func
+// WithGetHandlerFunc sets the http GET handler func. HEAD requests use this
+// handler too. The request method stays HEAD, and net/http omits the response
+// body. Without this option, HEAD is still delivered as an event.
 func WithGetHandlerFunc(fn nethttp.HandlerFunc) Option {
 	return func(p *Protocol) error {
 		if p == nil {
