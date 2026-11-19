@@ -38,7 +38,7 @@ func main() {
 
 	natsProtocol, err := cloudeventsnats.NewSender(env.NATSServer, env.Subject, cloudeventsnats.NatsOptions())
 	if err != nil {
-		log.Fatalf("failed to create nats protcol, %s", err.Error())
+		log.Fatalf("failed to create nats protocol, %s", err.Error())
 	}
 
 	defer natsProtocol.Close(ctx)

@@ -111,7 +111,7 @@ type ExactlyOnceMessage interface {
 	// Received is called by a forwarding QoS2 Sender when it gets
 	// acknowledgment of receipt (e.g. AMQP 'accept' or MQTT PUBREC)
 	//
-	// The receiver must call settle(nil) when it get's the ack-of-ack
+	// The receiver must call settle(nil) when it gets the ack-of-ack
 	// (e.g. AMQP 'settle' or MQTT PUBCOMP) or settle(err) if the
 	// transfer fails.
 	//

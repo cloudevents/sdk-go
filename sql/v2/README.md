@@ -56,7 +56,7 @@ expression, err := cesqlparser.Parse("HASPREFIX(type, 'dev.tekton.event')")
 		os.Exit(1)
 	}
 
-// Evalute the expression with the test event
+// Evaluate the expression with the test event
 res, err := expression.Evaluate(event)
 
 if res.(bool) {
