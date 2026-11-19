@@ -106,10 +106,10 @@ func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) 
 
 // Finish *must* be called when message from a Receiver can be forgotten by the receiver.
 func (m *Message) Finish(err error) error {
-	// Ack and Nak first checks to see if the message has been acknowleged
+	// Ack and Nak first checks to see if the message has been acknowledged
 	// and if Ack/Nak was done, it immediately returns an error without applying any logic to the message on the server.
-	// Nak will only be sent if the error given is explictly a NACK error(protocol.ResultNACK).
-	// AckPolicy effects if an explict Ack/Nak is needed.
+	// Nak will only be sent if the error given is explicitly a NACK error(protocol.ResultNACK).
+	// AckPolicy effects if an explicit Ack/Nak is needed.
 	// AckExplicit: The default policy. Each individual message must be acknowledged.
 	// 		Recommended for most reliability and functionality.
 	// AckNone: No acknowledgment needed; the server assumes acknowledgment on delivery.
