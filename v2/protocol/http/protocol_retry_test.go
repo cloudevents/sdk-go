@@ -9,6 +9,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
 	"time"
 
@@ -213,6 +214,48 @@ func TestRequestWithRetries_linear(t *testing.T) {
 			require.Equal(t, tc.wantResult.Error(), got.Error())
 		})
 	}
+}
+
+func TestSendWithRetriesPreservesResponseBody(t *testing.T) {
+	var (
+		mu           sync.Mutex
+		requestCount int
+	)
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		mu.Lock()
+		defer mu.Unlock()
+
+		requestCount++
+		switch requestCount {
+		case 1:
+			w.WriteHeader(http.StatusTooEarly)
+			_, _ = w.Write([]byte("retry this"))
+		default:
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = w.Write([]byte("final failure"))
+		}
+	}))
+	defer srv.Close()
+
+	p, err := New(WithClient(http.Client{Timeout: time.Second}))
+	require.NoError(t, err)
+
+	ctx := cecontext.WithTarget(context.Background(), srv.URL)
+	ctx = cecontext.WithRetriesLinearBackoff(ctx, time.Nanosecond, 2)
+
+	evt := newEvent(t, event.ApplicationJSON, map[string]string{"hello": "world"})
+	err = p.Send(ctx, binding.ToMessage(&evt))
+	require.Error(t, err)
+
+	mu.Lock()
+	assert.Equal(t, 2, requestCount)
+	mu.Unlock()
+
+	var result *Result
+	require.True(t, protocol.ResultAs(err, &result))
+	assert.Equal(t, http.StatusBadRequest, result.StatusCode)
+	assert.Contains(t, err.Error(), "final failure")
 }
 
 func newEvent(t *testing.T, encoding string, body interface{}) event.Event {
