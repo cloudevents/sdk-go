@@ -184,6 +184,7 @@ var (
 	WithListener                  = http.WithListener
 	WithRoundTripper              = http.WithRoundTripper
 	WithGetHandlerFunc            = http.WithGetHandlerFunc
+	WithHeadHandlerFunc           = http.WithHeadHandlerFunc
 	WithOptionsHandlerFunc        = http.WithOptionsHandlerFunc
 	WithDefaultOptionsHandlerFunc = http.WithDefaultOptionsHandlerFunc
 )
