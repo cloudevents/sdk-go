@@ -61,7 +61,11 @@ const upperHex = "0123456789ABCDEF"
 // encodeHeaderValue percent-encodes a CloudEvents header value. Bytes outside
 // U+0021-U+007E are encoded, along with '%' and '"'. Spaces are only encoded
 // when leading or trailing, since interior spaces are preserved by HTTP.
-func encodeHeaderValue(v string) string {
+// Values that are not valid UTF-8 are rejected, matching decodeHeaderValue.
+func encodeHeaderValue(v string) (string, error) {
+	if !utf8.ValidString(v) {
+		return "", fmt.Errorf("invalid UTF-8 in header value %q", v)
+	}
 	first, last := 0, len(v)
 	for first < last && v[first] == ' ' {
 		first++
@@ -82,7 +86,7 @@ func encodeHeaderValue(v string) string {
 			b.WriteByte(upperHex[c&0xF])
 		}
 	}
-	return b.String()
+	return b.String(), nil
 }
 
 func unhex(c byte) (byte, bool) {

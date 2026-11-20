@@ -58,10 +58,11 @@ func TestEncodeHeaderValue(t *testing.T) {
 		`back\slash`:        `back\slash`,
 	}
 	for in, want := range tests {
-		if got := encodeHeaderValue(in); got != want {
+		if got, err := encodeHeaderValue(in); err != nil || got != want {
 			t.Errorf("encode(%q) = %q, want %q", in, got, want)
 		}
-		if back, err := decodeHeaderValue(encodeHeaderValue(in)); err != nil || back != in {
+		enc, _ := encodeHeaderValue(in)
+		if back, err := decodeHeaderValue(enc); err != nil || back != in {
 			t.Errorf("round trip(%q) = %q, %v", in, back, err)
 		}
 	}
@@ -85,6 +86,11 @@ func TestDecodeHeaderValue(t *testing.T) {
 		{in: "%41", want: "A"},
 		{in: "100%", want: "100%"},
 		{in: "%zz", want: "%zz"},
+		{in: "ab%4", want: "ab%4"},
+		{in: `"\%41"`, want: "A"},
+		{in: `"%\41"`, want: "A"},
+		{in: `"\%FF"`, wantErr: true},
+		{in: "a\xffb", wantErr: true},
 		{in: "%C0%A0", wantErr: true},
 		{in: "%FF", wantErr: true},
 	}
@@ -93,5 +99,11 @@ func TestDecodeHeaderValue(t *testing.T) {
 		if (err != nil) != tc.wantErr || got != tc.want {
 			t.Errorf("decode(%q) = %q, %v; want %q (err=%v)", tc.in, got, err, tc.want, tc.wantErr)
 		}
+	}
+}
+
+func TestEncodeHeaderValueInvalidUTF8(t *testing.T) {
+	if _, err := encodeHeaderValue("a\xffb"); err == nil {
+		t.Error("expected error for invalid UTF-8")
 	}
 }

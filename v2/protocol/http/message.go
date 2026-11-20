@@ -154,6 +154,8 @@ func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) 
 	return
 }
 
+// GetAttribute and GetExtension cannot return errors, so a header that fails to
+// decode (invalid UTF-8) is returned raw; ReadBinary reports the error instead.
 func (m *Message) GetAttribute(k spec.Kind) (spec.Attribute, interface{}) {
 	attr := m.version.AttributeFromKind(k)
 	if attr != nil {
