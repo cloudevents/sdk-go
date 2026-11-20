@@ -265,6 +265,26 @@ func TestDistributedTracingExtension_ReadTransformer(t *testing.T) {
 	}
 }
 
+func TestGetDistributedTracingExtension(t *testing.T) {
+	wantExt := extensions.DistributedTracingExtension{
+		TraceParent: "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
+		TraceState:  "rojo=00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01,congo=lZWRzIHRoNhcm5hbCBwbGVhc3VyZS4=",
+	}
+	e := test.MinEvent()
+	wantExt.AddTracingAttributes(&e)
+
+	gotExt, ok := extensions.GetDistributedTracingExtension(e)
+	require.True(t, ok)
+	require.Equal(t, wantExt, gotExt)
+}
+
+func TestGetDistributedTracingExtension_NotSet(t *testing.T) {
+	e := test.MinEvent()
+	gotExt, ok := extensions.GetDistributedTracingExtension(e)
+	require.False(t, ok)
+	require.Zero(t, gotExt)
+}
+
 func TestDistributedTracingExtension_WriteTransformer(t *testing.T) {
 	e := test.MinEvent()
 	e.Context = e.Context.AsV1()
