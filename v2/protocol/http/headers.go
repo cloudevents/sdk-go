@@ -105,9 +105,13 @@ func unhex(c byte) (byte, bool) {
 func decodeHeaderValue(v string) (string, error) {
 	v = strings.Trim(v, " \t")
 	if !strings.ContainsAny(v, "%\"") {
+		if !utf8.ValidString(v) {
+			return "", fmt.Errorf("invalid UTF-8 in header value %q", v)
+		}
 		return v, nil
 	}
-	b := make([]byte, 0, len(v))
+	// Pass 1: remove quotes and resolve backslash escapes inside quotes.
+	u := make([]byte, 0, len(v))
 	inQuote := false
 	for i := 0; i < len(v); i++ {
 		c := v[i]
@@ -116,19 +120,25 @@ func decodeHeaderValue(v string) (string, error) {
 			inQuote = !inQuote
 		case c == '\\' && inQuote && i+1 < len(v):
 			i++
-			b = append(b, v[i])
-		case c == '%' && i+2 < len(v):
-			hi, ok1 := unhex(v[i+1])
-			lo, ok2 := unhex(v[i+2])
+			u = append(u, v[i])
+		default:
+			u = append(u, c)
+		}
+	}
+	// Pass 2: percent-decode.
+	b := make([]byte, 0, len(u))
+	for i := 0; i < len(u); i++ {
+		c := u[i]
+		if c == '%' && i+2 < len(u) {
+			hi, ok1 := unhex(u[i+1])
+			lo, ok2 := unhex(u[i+2])
 			if ok1 && ok2 {
 				b = append(b, hi<<4|lo)
 				i += 2
-			} else {
-				b = append(b, c)
+				continue
 			}
-		default:
-			b = append(b, c)
 		}
+		b = append(b, c)
 	}
 	if !utf8.Valid(b) {
 		return "", fmt.Errorf("invalid UTF-8 in header value %q", v)

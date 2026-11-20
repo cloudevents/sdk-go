@@ -61,7 +61,11 @@ func NewMessage(header nethttp.Header, body io.ReadCloser) *Message {
 		m.BodyReader = body
 	}
 	if m.format = format.Lookup(header.Get(ContentType)); m.format == nil {
-		m.version = specs.Version(m.Header.Get(specs.PrefixedSpecVersionName()))
+		sv := m.Header.Get(specs.PrefixedSpecVersionName())
+		if dec, err := decodeHeaderValue(sv); err == nil {
+			sv = dec
+		}
+		m.version = specs.Version(sv)
 	}
 	return &m
 }
