@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -18,9 +19,9 @@ import (
 )
 
 // finishIfReceived replies to one event queued by ServeHTTP.
-// HEAD with no GET handler blocks in ServeHTTP until that reply, so a test
-// that expects the GET handler still has to drain the queue. Otherwise the
-// old receive-path behavior hangs the test instead of failing it.
+// A HEAD request that stays on the receive path blocks in ServeHTTP until
+// that reply, so tests drain p.incoming with a cancellable goroutine so a
+// failing assertion neither hangs nor leaks.
 func finishIfReceived(p *Protocol, status int) (received func() bool, stop func()) {
 	got := make(chan struct{}, 1)
 	stopCh := make(chan struct{})
@@ -49,67 +50,105 @@ func finishIfReceived(p *Protocol, status int) (received func() bool, stop func(
 		}
 }
 
-func TestServeHTTP_HEAD_WithGetHandler(t *testing.T) {
+func serveHeadWithDeadline(t *testing.T, p *Protocol) (*httptest.ResponseRecorder, *Message) {
+	t.Helper()
+	gotMsg := make(chan *Message, 1)
+	done := make(chan struct{})
+
+	go func() {
+		select {
+		case in := <-p.incoming:
+			gotMsg <- in.msg
+			if in.respFn != nil {
+				_ = in.respFn(context.Background(), nil, NewResult(http.StatusAccepted, "accepted"))
+			}
+		case <-done:
+		}
+	}()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodHead, "http://unittest/health", nil).WithContext(ctx)
+	go func() {
+		defer close(done)
+		p.ServeHTTP(rec, req)
+	}()
+
+	select {
+	case <-done:
+	case <-ctx.Done():
+		t.Fatal("ServeHTTP did not return before deadline")
+	}
+
+	select {
+	case msg := <-gotMsg:
+		return rec, msg
+	default:
+		t.Fatalf("HEAD with a nil HeadHandlerFn was not delivered to the event receive path (status=%d)", rec.Code)
+		return nil, nil
+	}
+}
+
+func TestServeHTTP_HEAD_WithHeadHandler_DoesNotCallGet(t *testing.T) {
+	var headCalls, getCalls atomic.Int32
 	var sawMethod string
-	p, err := New(WithGetHandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		sawMethod = req.Method
-		rw.Header().Set("X-Health", "ok")
-		_, _ = rw.Write([]byte("healthy"))
-	}))
+	p, err := New(
+		WithHeadHandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+			headCalls.Add(1)
+			sawMethod = req.Method
+			rw.Header().Set("X-Health", "ok")
+			rw.WriteHeader(http.StatusNoContent)
+		}),
+		WithGetHandlerFunc(func(http.ResponseWriter, *http.Request) {
+			getCalls.Add(1)
+		}),
+	)
 	require.NoError(t, err)
 
 	received, stop := finishIfReceived(p, http.StatusAccepted)
 	defer stop()
 
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
 	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodHead, "http://unittest/health", nil)
-	p.ServeHTTP(rec, req)
-
-	require.Equal(t, http.MethodHead, sawMethod, "HEAD request should be dispatched to GetHandlerFn")
-	require.False(t, received(), "HEAD request must not be enqueued on the event receive path")
-	require.Equal(t, http.StatusOK, rec.Code)
-	require.Equal(t, "ok", rec.Header().Get("X-Health"))
-	// ResponseRecorder stores the handler write. net/http's Server drops that
-	// body for HEAD; TestServeHTTP_HEAD_WithGetHandler_Server covers the wire.
-	require.Equal(t, "healthy", rec.Body.String())
-}
-
-func TestServeHTTP_HEAD_WithoutGetHandler_ReceivePath(t *testing.T) {
-	p, err := New()
-	require.NoError(t, err)
-
-	gotMsg := make(chan *Message, 1)
+	req := httptest.NewRequest(http.MethodHead, "http://unittest/health", nil).WithContext(ctx)
+	done := make(chan struct{})
 	go func() {
-		in := <-p.incoming
-		gotMsg <- in.msg
-		if in.respFn != nil {
-			_ = in.respFn(context.Background(), nil, NewResult(http.StatusAccepted, "accepted"))
-		}
+		defer close(done)
+		p.ServeHTTP(rec, req)
 	}()
-
-	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodHead, "http://unittest/health", nil)
-	p.ServeHTTP(rec, req)
-
 	select {
-	case msg := <-gotMsg:
-		require.NotNil(t, msg, "HEAD without a GET handler must reach the event receive path")
-	case <-time.After(2 * time.Second):
-		t.Fatal("HEAD without a GET handler was not delivered to the event receive path")
+	case <-done:
+	case <-ctx.Done():
+		t.Fatal("ServeHTTP did not return before deadline")
 	}
-	require.Equal(t, http.StatusAccepted, rec.Code)
-	require.Equal(t, "accepted", rec.Body.String())
+
+	require.Equal(t, int32(1), headCalls.Load(), "HEAD request should be dispatched to HeadHandlerFn")
+	require.Equal(t, int32(0), getCalls.Load(), "HEAD request must not be dispatched to GetHandlerFn")
+	require.Equal(t, http.MethodHead, sawMethod)
+	require.False(t, received(), "HEAD request must not be enqueued on the event receive path")
+	require.Equal(t, http.StatusNoContent, rec.Code)
+	require.Equal(t, "ok", rec.Header().Get("X-Health"))
 }
 
-func TestServeHTTP_HEAD_WithGetHandler_Server(t *testing.T) {
-	p, err := New(WithGetHandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		if req.Method != http.MethodHead {
-			http.Error(rw, "unexpected method", http.StatusBadRequest)
-			return
-		}
-		rw.Header().Set("X-Health", "ok")
-		_, _ = rw.Write([]byte("healthy"))
-	}))
+func TestServeHTTP_HEAD_WithHeadHandler_Server(t *testing.T) {
+	var getCalls atomic.Int32
+	p, err := New(
+		WithHeadHandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+			if req.Method != http.MethodHead {
+				http.Error(rw, "unexpected method", http.StatusBadRequest)
+				return
+			}
+			rw.Header().Set("X-Health", "ok")
+			_, _ = rw.Write([]byte("healthy"))
+		}),
+		WithGetHandlerFunc(func(http.ResponseWriter, *http.Request) {
+			getCalls.Add(1)
+		}),
+	)
 	require.NoError(t, err)
 
 	received, stop := finishIfReceived(p, http.StatusAccepted)
@@ -118,7 +157,9 @@ func TestServeHTTP_HEAD_WithGetHandler_Server(t *testing.T) {
 	srv := httptest.NewServer(p)
 	defer srv.Close()
 
-	req, err := http.NewRequest(http.MethodHead, srv.URL+"/health", nil)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodHead, srv.URL+"/health", nil)
 	require.NoError(t, err)
 	resp, err := srv.Client().Do(req)
 	require.NoError(t, err)
@@ -126,7 +167,8 @@ func TestServeHTTP_HEAD_WithGetHandler_Server(t *testing.T) {
 	body, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
 
-	require.Equal(t, http.StatusOK, resp.StatusCode, "HEAD request should be dispatched to GetHandlerFn")
+	require.Equal(t, int32(0), getCalls.Load(), "HEAD request must not be dispatched to GetHandlerFn")
+	require.Equal(t, http.StatusOK, resp.StatusCode, "HEAD request should be dispatched to HeadHandlerFn")
 	require.Equal(t, "ok", resp.Header.Get("X-Health"))
 	require.Empty(t, body, "net/http Server must not send a HEAD body")
 	// chunkWriter.Write eats the body, then writeHeader sets Content-Length
@@ -137,23 +179,61 @@ func TestServeHTTP_HEAD_WithGetHandler_Server(t *testing.T) {
 	require.False(t, received(), "HEAD request must not be enqueued on the event receive path")
 }
 
-func TestServeHTTP_HEAD_WithoutGetHandler_ServerReceivePath(t *testing.T) {
+func TestServeHTTP_HEAD_NilHeadHandler_WithGetHandler_ReceivePath(t *testing.T) {
+	var getCalls atomic.Int32
+	p, err := New(WithGetHandlerFunc(func(http.ResponseWriter, *http.Request) {
+		getCalls.Add(1)
+	}))
+	require.NoError(t, err)
+	require.Nil(t, p.HeadHandlerFn)
+
+	rec, msg := serveHeadWithDeadline(t, p)
+
+	require.NotNil(t, msg, "HEAD with a nil HeadHandlerFn must reach the event receive path")
+	require.Equal(t, int32(0), getCalls.Load(), "HEAD must not call GetHandlerFn when HeadHandlerFn is nil")
+	require.Equal(t, http.StatusAccepted, rec.Code)
+	require.NotEqual(t, http.StatusMethodNotAllowed, rec.Code)
+	require.Equal(t, "accepted", rec.Body.String())
+}
+
+func TestServeHTTP_HEAD_NilHeadHandler_WithoutGetHandler_ReceivePath(t *testing.T) {
+	p, err := New()
+	require.NoError(t, err)
+	require.Nil(t, p.HeadHandlerFn)
+	require.Nil(t, p.GetHandlerFn)
+
+	rec, msg := serveHeadWithDeadline(t, p)
+
+	require.NotNil(t, msg, "HEAD without a HEAD handler must reach the event receive path")
+	require.Equal(t, http.StatusAccepted, rec.Code)
+	require.NotEqual(t, http.StatusMethodNotAllowed, rec.Code)
+	require.Equal(t, "accepted", rec.Body.String())
+}
+
+func TestServeHTTP_HEAD_NilHeadHandler_WithoutGetHandler_ServerReceivePath(t *testing.T) {
 	p, err := New()
 	require.NoError(t, err)
 
 	gotMsg := make(chan *Message, 1)
+	stopCh := make(chan struct{})
+	defer close(stopCh)
 	go func() {
-		in := <-p.incoming
-		gotMsg <- in.msg
-		if in.respFn != nil {
-			_ = in.respFn(context.Background(), nil, NewResult(http.StatusAccepted, "accepted"))
+		select {
+		case in := <-p.incoming:
+			gotMsg <- in.msg
+			if in.respFn != nil {
+				_ = in.respFn(context.Background(), nil, NewResult(http.StatusAccepted, "accepted"))
+			}
+		case <-stopCh:
 		}
 	}()
 
 	srv := httptest.NewServer(p)
 	defer srv.Close()
 
-	req, err := http.NewRequest(http.MethodHead, srv.URL+"/health", nil)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodHead, srv.URL+"/health", nil)
 	require.NoError(t, err)
 	resp, err := srv.Client().Do(req)
 	require.NoError(t, err)
@@ -163,10 +243,11 @@ func TestServeHTTP_HEAD_WithoutGetHandler_ServerReceivePath(t *testing.T) {
 
 	select {
 	case msg := <-gotMsg:
-		require.NotNil(t, msg, "HEAD without a GET handler must reach the event receive path")
+		require.NotNil(t, msg, "HEAD without a HEAD handler must reach the event receive path")
 	default:
-		t.Fatal("HEAD without a GET handler was not delivered to the event receive path")
+		t.Fatal("HEAD without a HEAD handler was not delivered to the event receive path")
 	}
 	require.Equal(t, http.StatusAccepted, resp.StatusCode)
+	require.NotEqual(t, http.StatusMethodNotAllowed, resp.StatusCode)
 	require.Empty(t, body)
 }

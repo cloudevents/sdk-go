@@ -267,15 +267,25 @@ func WithClient(client nethttp.Client) Option {
 	}
 }
 
-// WithGetHandlerFunc sets the http GET handler func. HEAD requests use this
-// handler too. The request method stays HEAD, and net/http omits the response
-// body. Without this option, HEAD is still delivered as an event.
+// WithGetHandlerFunc sets the http GET handler func
 func WithGetHandlerFunc(fn nethttp.HandlerFunc) Option {
 	return func(p *Protocol) error {
 		if p == nil {
 			return fmt.Errorf("http GET handler func can not set nil protocol")
 		}
 		p.GetHandlerFn = fn
+		return nil
+	}
+}
+
+// WithHeadHandlerFunc sets the http HEAD handler func.
+// When unset, HEAD requests fall through to the receive path.
+func WithHeadHandlerFunc(fn nethttp.HandlerFunc) Option {
+	return func(p *Protocol) error {
+		if p == nil {
+			return fmt.Errorf("http HEAD handler func can not set nil protocol")
+		}
+		p.HeadHandlerFn = fn
 		return nil
 	}
 }

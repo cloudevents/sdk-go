@@ -61,7 +61,11 @@ type Protocol struct {
 	OptionsHandlerFn http.HandlerFunc
 	WebhookConfig    *WebhookConfig
 
-	GetHandlerFn    http.HandlerFunc
+	GetHandlerFn http.HandlerFunc
+
+	// HeadHandlerFn handles HEAD requests. When nil, HEAD stays on the event
+	// receive path instead of returning 405, so existing callers are unchanged.
+	HeadHandlerFn   http.HandlerFunc
 	DeleteHandlerFn http.HandlerFunc
 
 	// To support Opener:
@@ -354,11 +358,11 @@ func (p *Protocol) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		return
 
 	case http.MethodHead:
-		// Same handler as GET when one is set. The request method stays HEAD.
-		// net/http drops the response body and keeps the status and headers.
-		// With no GET handler, HEAD stays on the event receive path.
-		if p.GetHandlerFn != nil {
-			p.GetHandlerFn(rw, req)
+		// A nil HeadHandlerFn falls through to the receive path. Do not
+		// answer 405: callers that already deliver HEAD as an event keep
+		// doing so, including when GetHandlerFn is set.
+		if p.HeadHandlerFn != nil {
+			p.HeadHandlerFn(rw, req)
 			return
 		}
 

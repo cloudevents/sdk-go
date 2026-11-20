@@ -815,6 +815,48 @@ func TestWithGetHandlerFunc(t *testing.T) {
 	}
 }
 
+func TestWithHeadHandlerFunc(t *testing.T) {
+	testCases := map[string]struct {
+		t       *Protocol
+		fn      http.HandlerFunc
+		wantErr string
+		wantNil bool
+	}{
+		"nil protocol": {
+			wantErr: "http HEAD handler func can not set nil protocol",
+		},
+		"nil handler": {
+			t:       &Protocol{},
+			fn:      nil,
+			wantNil: true,
+		},
+		"non-nil protocol": {
+			t:  &Protocol{},
+			fn: func(http.ResponseWriter, *http.Request) {},
+		},
+	}
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+			err := tc.t.applyOptions(WithHeadHandlerFunc(tc.fn))
+			if tc.wantErr != "" {
+				if err == nil || err.Error() != tc.wantErr {
+					t.Fatalf("Expected error '%s'. Actual '%v'", tc.wantErr, err)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("Unexpected error: %v", err)
+			}
+			if tc.wantNil && tc.t.HeadHandlerFn != nil {
+				t.Fatal("nil handler must leave HeadHandlerFn unset")
+			}
+			if !tc.wantNil && tc.t.HeadHandlerFn == nil {
+				t.Fatal("expected HeadHandlerFn to be set")
+			}
+		})
+	}
+}
+
 func TestWithOptionsHandlerFunc(t *testing.T) {
 	testCases := map[string]struct {
 		t       *Protocol
