@@ -179,8 +179,12 @@ func readJsonFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 				if dataschema != nil {
 					extensions["dataschema"] = dataschema.GetInterface()
 				}
+				// data_base64 is a 1.0 member. On a 0.3 event it is carried as
+				// an extension even though the name is not legal for SetExtension.
 				if dataBase64 != nil {
-					extensions["data_base64"] = dataBase64.GetInterface()
+					if err := con.setExtension("data_base64", dataBase64.GetInterface()); err != nil {
+						return err
+					}
 				}
 
 				out.Context = con
@@ -300,6 +304,9 @@ func readJsonFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 				eventContext.SchemaURL = readUriRefPtr(iterator)
 			case "data":
 				iterator.Error = consumeData(out, checkFlag(state, dataBase64Flag), iterator)
+			case "data_base64":
+				// See the specversion 0.3 branch: keep this 1.0 member as an extension.
+				iterator.Error = eventContext.setExtension(key, iterator.Read())
 			default:
 				if eventContext.Extensions == nil {
 					eventContext.Extensions = make(map[string]interface{}, 1)

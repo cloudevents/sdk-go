@@ -90,8 +90,21 @@ func (ec EventContextV03) ExtensionAs(name string, obj interface{}) error {
 }
 
 // SetExtension adds the extension 'name' with value 'value' to the CloudEvents
-// context. This function fails if the name uses a reserved event context key.
+// context. This function fails if the name doesn't respect the regex
+// ^[a-zA-Z][a-zA-Z0-9]*$ or if the name uses a reserved event context key.
+// The name is stored as given. Unlike EventContextV1.SetExtension, it is not
+// lower-cased.
 func (ec *EventContextV03) SetExtension(name string, value interface{}) error {
+	if err := validateExtensionNameV03(name); err != nil {
+		return err
+	}
+	return ec.setExtension(name, value)
+}
+
+// setExtension is SetExtension without the 0.3 name check. JSON decoding uses
+// it to keep carrying the 1.0 "data_base64" member of a 0.3 event as an
+// extension. That member is not a legal 0.3 attribute name.
+func (ec *EventContextV03) setExtension(name string, value interface{}) error {
 	if ec.Extensions == nil {
 		ec.Extensions = make(map[string]interface{})
 	}
