@@ -61,7 +61,11 @@ func NewMessage(header nethttp.Header, body io.ReadCloser) *Message {
 		m.BodyReader = body
 	}
 	if m.format = format.Lookup(header.Get(ContentType)); m.format == nil {
-		m.version = specs.Version(m.Header.Get(specs.PrefixedSpecVersionName()))
+		sv := m.Header.Get(specs.PrefixedSpecVersionName())
+		if dec, err := decodeHeaderValue(sv); err == nil {
+			sv = dec
+		}
+		m.version = specs.Version(sv)
 	}
 	return &m
 }
@@ -116,14 +120,24 @@ func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) 
 	for k, v := range m.Header {
 		attr := m.version.Attribute(k)
 		if attr != nil {
-			err = encoder.SetAttribute(attr, v[0])
+			val := v[0]
+			if k != ContentType {
+				if val, err = decodeHeaderValue(val); err != nil {
+					return err
+				}
+			}
+			err = encoder.SetAttribute(attr, val)
 		} else if strings.HasPrefix(k, prefix) && len(k) > len(prefix) {
 			// Trim Prefix + To lower
 			var b strings.Builder
 			b.Grow(len(k) - len(prefix))
 			b.WriteRune(unicode.ToLower(rune(k[len(prefix)])))
 			b.WriteString(k[len(prefix)+1:])
-			err = encoder.SetExtension(b.String(), v[0])
+			var val string
+			if val, err = decodeHeaderValue(v[0]); err != nil {
+				return err
+			}
+			err = encoder.SetExtension(b.String(), val)
 		}
 		if err != nil {
 			return err
@@ -140,11 +154,19 @@ func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) 
 	return
 }
 
+// GetAttribute and GetExtension cannot return errors, so a header that fails to
+// decode (invalid UTF-8) is returned raw; ReadBinary reports the error instead.
 func (m *Message) GetAttribute(k spec.Kind) (spec.Attribute, interface{}) {
 	attr := m.version.AttributeFromKind(k)
 	if attr != nil {
 		h := m.Header[attributeHeadersMapping[attr.Name()]]
 		if h != nil {
+			if attributeHeadersMapping[attr.Name()] == ContentType {
+				return attr, h[0]
+			}
+			if val, err := decodeHeaderValue(h[0]); err == nil {
+				return attr, val
+			}
 			return attr, h[0]
 		}
 		return attr, nil
@@ -155,6 +177,9 @@ func (m *Message) GetAttribute(k spec.Kind) (spec.Attribute, interface{}) {
 func (m *Message) GetExtension(name string) interface{} {
 	h := m.Header[extNameToHeaderName(name)]
 	if h != nil {
+		if val, err := decodeHeaderValue(h[0]); err == nil {
+			return val
+		}
 		return h[0]
 	}
 	return nil
