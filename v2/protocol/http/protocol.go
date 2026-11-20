@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -124,6 +125,22 @@ func New(opts ...Option) (*Protocol, error) {
 		p.Client.Transport = p.roundTripper
 	}
 
+	// A custom transport can attach credentials after net/http has stripped
+	// sensitive headers from a cross-origin redirect. Keep the default redirect
+	// policy origin-scoped when using a custom transport, unless the caller has
+	// explicitly supplied a redirect policy.
+	if p.Client.Transport != nil && p.Client.CheckRedirect == nil {
+		p.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+			if len(via) > 0 && !sameOrigin(via[0].URL, req.URL) {
+				return http.ErrUseLastResponse
+			}
+			if len(via) >= 10 {
+				return fmt.Errorf("stopped after 10 redirects")
+			}
+			return nil
+		}
+	}
+
 	if p.ShutdownTimeout == 0 {
 		p.ShutdownTimeout = DefaultShutdownTimeout
 	}
@@ -148,6 +165,26 @@ func New(opts ...Option) (*Protocol, error) {
 	}
 
 	return p, nil
+}
+
+func sameOrigin(a, b *url.URL) bool {
+	if a == nil || b == nil || a.Hostname() == "" || b.Hostname() == "" || !strings.EqualFold(a.Scheme, b.Scheme) || !strings.EqualFold(a.Hostname(), b.Hostname()) {
+		return false
+	}
+	port := func(u *url.URL) string {
+		if p := u.Port(); p != "" {
+			return p
+		}
+		switch strings.ToLower(u.Scheme) {
+		case "http":
+			return "80"
+		case "https":
+			return "443"
+		default:
+			return ""
+		}
+	}
+	return port(a) == port(b)
 }
 
 // NewObserved creates an HTTP protocol with trace propagating middleware.
