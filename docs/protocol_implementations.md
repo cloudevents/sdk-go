@@ -26,6 +26,7 @@ the `Write<DataStructure>` functions, while the latter is done implementing spec
 * [Kafka Protocol Binding](https://github.com/cloudevents/sdk-go/tree/main/protocol/kafka_sarama) using [Sarama](https://github.com/Shopify/sarama)
 * [Kafka Protocol Binding](https://github.com/cloudevents/sdk-go/tree/main/protocol/kafka_confluent) using [confluent-kafka-go](https://github.com/confluentinc/confluent-kafka-go)
   > It bring some new features compared the above [sarama](https://github.com/Shopify/sarama) binding. Like [pattern subscription](https://github.com/confluentinc/confluent-kafka-go/issues/96), [async message confirmation](https://github.com/cloudevents/sdk-go/issues/846) and other enhancements.
+* [Kafka Protocol Binding](https://github.com/cloudevents/sdk-go/tree/main/protocol/kafka_franz) using [franz-go](https://github.com/twmb/franz-go)
 * [MQTT Protocol Binding](https://github.com/cloudevents/sdk-go/tree/main/protocol/mqtt_paho) using [eclipse/paho.golang](https://github.com/eclipse/paho.golang)
 * [NATS Protocol Binding](https://github.com/cloudevents/sdk-go/tree/main/protocol/nats) using [nats.go](https://github.com/nats-io/nats.go)
 * [STAN Protocol Binding](https://github.com/cloudevents/sdk-go/tree/main/protocol/stan) using [stan.go](https://github.com/nats-io/stan.go)
