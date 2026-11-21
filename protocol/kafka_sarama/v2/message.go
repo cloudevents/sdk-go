@@ -135,13 +135,19 @@ func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) 
 func (m *Message) GetAttribute(k spec.Kind) (spec.Attribute, interface{}) {
 	attr := m.version.AttributeFromKind(k)
 	if attr != nil {
-		return attr, string(m.Headers[attr.PrefixedName()])
+		if h, ok := m.Headers[attr.PrefixedName()]; ok {
+			return attr, string(h)
+		}
+		return attr, nil
 	}
 	return nil, nil
 }
 
 func (m *Message) GetExtension(name string) interface{} {
-	return string(m.Headers[prefix+name])
+	if h, ok := m.Headers[prefix+name]; ok {
+		return string(h)
+	}
+	return nil
 }
 
 func (m *Message) Finish(error) error {
