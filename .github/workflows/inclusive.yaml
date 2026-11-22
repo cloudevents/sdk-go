@@ -3,14 +3,18 @@ name: Inclusive
 on:
   pull_request:
     branches: [ 'main', 'release-*' ]
+  merge_group:
 
 permissions:
   contents: read
-  
+
 jobs:
 
   language:
     name: Language
+    # Required check, so it must report on merge groups, where the skipped job
+    # reports success; reviewdog needs a PR to comment on.
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
 
     steps:

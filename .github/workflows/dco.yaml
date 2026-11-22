@@ -1,0 +1,56 @@
+name: DCO
+
+on:
+  pull_request:
+    branches: [ 'main', 'release-*' ]
+    # edited covers a base-branch change, which alters the commit range
+    types: [ opened, synchronize, reopened, edited ]
+  merge_group:
+
+permissions:
+  contents: read
+
+jobs:
+
+  dco:
+    name: DCO
+    # Merge groups only contain commits already checked on their PRs; the
+    # skipped job reports success, so the required check doesn't stall.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Check sign-off
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          shas=$(git rev-list --no-merges "$BASE_SHA..$HEAD_SHA") || exit 1
+          fail=0
+          for sha in $shas; do
+            name=$(git log -1 --format=%an "$sha")
+            email=$(git log -1 --format=%ae "$sha")
+            signoffs=$(git log -1 --format='%(trailers:key=Signed-off-by,valueonly)' "$sha")
+            signed=0
+            while IFS= read -r line; do
+              line=${line,,}
+              [[ $line == *"<${email,,}>" ]] && signed=1
+              # Bots such as dependabot sign off with a different email than they author with.
+              [[ $name == *'[bot]' && $line == "${name,,} <"* ]] && signed=1
+            done <<<"$signoffs"
+            if [[ $signed -eq 0 ]]; then
+              echo "::error::$sha by $name <$email> has no matching Signed-off-by line."
+              fail=1
+            fi
+          done
+          if [[ $fail -ne 0 ]]; then
+            echo "Sign off commits with 'git commit -s'. See https://developercertificate.org/"
+            exit 1
+          fi
+          echo "All commits are signed off."
