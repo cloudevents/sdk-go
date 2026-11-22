@@ -55,3 +55,17 @@ func validateExtensionName(key string) error {
 	}
 	return nil
 }
+
+// validateExtensionNameV03 applies the CloudEvents 0.3 naming rule, which
+// additionally requires attribute names to begin with a letter. v1.0 names
+// may begin with a digit. Upper-case letters are accepted; EventContextV03
+// stores the name unchanged.
+func validateExtensionNameV03(key string) error {
+	if err := validateExtensionName(key); err != nil {
+		return err
+	}
+	if c := key[0]; (c < 'a' || c > 'z') && (c < 'A' || c > 'Z') {
+		return fmt.Errorf("bad key %q, CloudEvents 0.3 attribute names MUST begin with a letter", key)
+	}
+	return nil
+}
