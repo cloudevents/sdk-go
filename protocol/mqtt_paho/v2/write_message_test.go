@@ -10,7 +10,9 @@ import (
 	"testing"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
+	"github.com/cloudevents/sdk-go/v2/binding/spec"
 	. "github.com/cloudevents/sdk-go/v2/binding/test"
+	"github.com/cloudevents/sdk-go/v2/binding/transformer"
 	"github.com/cloudevents/sdk-go/v2/event"
 	. "github.com/cloudevents/sdk-go/v2/test"
 	"github.com/eclipse/paho.golang/paho"
@@ -63,4 +65,24 @@ func TestEncodeMQTTPubMessage(t *testing.T) {
 			})
 		}
 	})
+}
+
+func TestEncodeMQTTPubMessageDeleteMetadata(t *testing.T) {
+	ctx := context.Background()
+	eventIn := FullEvent()
+	eventIn.SetExtension("deleteme", "value")
+	messageIn := MustCreateMockBinaryMessage(eventIn)
+
+	pubMessage := &paho.Publish{}
+	err := WritePubMessage(ctx, messageIn, pubMessage,
+		transformer.DeleteExtension("deleteme"),
+		transformer.DeleteAttribute(spec.Subject),
+		transformer.DeleteAttribute(spec.DataContentType),
+	)
+	require.NoError(t, err)
+
+	require.Empty(t, pubMessage.Properties.ContentType)
+	require.Empty(t, pubMessage.Properties.User.Get(prefix+"deleteme"))
+	require.Empty(t, pubMessage.Properties.User.Get(prefix+"subject"))
+	require.NotEmpty(t, pubMessage.Properties.User.Get(prefix+"id"))
 }

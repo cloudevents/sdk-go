@@ -84,6 +84,7 @@ func (b *pubMessageWriter) SetAttribute(attribute spec.Attribute, value interfac
 	if attribute.Kind() == spec.DataContentType {
 		if value == nil {
 			b.Properties.ContentType = ""
+			return nil
 		}
 		s, err := types.Format(value)
 		if err != nil {
@@ -93,6 +94,7 @@ func (b *pubMessageWriter) SetAttribute(attribute spec.Attribute, value interfac
 	} else {
 		if value == nil {
 			b.removeProperty(prefix + attribute.Name())
+			return nil
 		}
 		return b.addProperty(prefix+attribute.Name(), value)
 	}
@@ -102,6 +104,7 @@ func (b *pubMessageWriter) SetAttribute(attribute spec.Attribute, value interfac
 func (b *pubMessageWriter) SetExtension(name string, value interface{}) error {
 	if value == nil {
 		b.removeProperty(prefix + name)
+		return nil
 	}
 	return b.addProperty(prefix+name, value)
 }
