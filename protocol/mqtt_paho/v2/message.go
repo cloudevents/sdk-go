@@ -113,11 +113,25 @@ func (m *Message) Finish(error) error {
 func (m *Message) GetAttribute(k spec.Kind) (spec.Attribute, interface{}) {
 	attr := m.version.AttributeFromKind(k)
 	if attr != nil {
-		return attr, m.internal.Properties.User.Get(prefix + attr.Name())
+		if k == spec.DataContentType {
+			// MQTT carries the data content type in the PUBLISH Content Type property,
+			// which is where ReadBinary reads it and SetAttribute writes it back.
+			if contentType := m.internal.Properties.ContentType; contentType != "" {
+				return attr, contentType
+			}
+			return attr, nil
+		}
+		if values := m.internal.Properties.User.GetAll(prefix + attr.Name()); len(values) > 0 {
+			return attr, values[0]
+		}
+		return attr, nil
 	}
 	return nil, nil
 }
 
 func (m *Message) GetExtension(name string) interface{} {
-	return m.internal.Properties.User.Get(prefix + name)
+	if values := m.internal.Properties.User.GetAll(prefix + name); len(values) > 0 {
+		return values[0]
+	}
+	return nil
 }
