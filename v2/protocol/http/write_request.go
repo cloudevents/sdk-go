@@ -118,6 +118,11 @@ func (b *httpRequestWriter) SetAttribute(attribute spec.Attribute, value interfa
 	if err != nil {
 		return err
 	}
+	if mapping != ContentType {
+		if s, err = encodeHeaderValue(s); err != nil {
+			return err
+		}
+	}
 	b.Header[mapping] = append(b.Header[mapping], s)
 	return nil
 }
@@ -130,6 +135,9 @@ func (b *httpRequestWriter) SetExtension(name string, value interface{}) error {
 	// Http headers, everything is a string!
 	s, err := types.Format(value)
 	if err != nil {
+		return err
+	}
+	if s, err = encodeHeaderValue(s); err != nil {
 		return err
 	}
 	b.Header[extNameToHeaderName(name)] = []string{s}

@@ -234,3 +234,67 @@ func TestNewMessageFromHttpResponse(t *testing.T) {
 		})
 	}
 }
+
+func TestReadBinaryEncodedHeaders(t *testing.T) {
+	for _, sv := range []string{"%31.0", `"1.0"`} {
+		h := http.Header{}
+		h.Set("Ce-Specversion", sv)
+		h.Set("Ce-Id", "%41%20b")
+		h.Set("Ce-Source", "/")
+		h.Set("Ce-Type", "t")
+		h.Set("Ce-Subject", `"x, y"`)
+		h.Set("Ce-Myext", "%E2%82%AC")
+
+		m := NewMessage(h, nil)
+		require.Equal(t, binding.EncodingBinary, m.ReadEncoding(), sv)
+		e, err := binding.ToEvent(context.Background(), m)
+		require.NoError(t, err, sv)
+		require.Equal(t, "1.0", e.SpecVersion())
+		require.Equal(t, "A b", e.ID())
+		require.Equal(t, "x, y", e.Subject())
+		require.Equal(t, "€", e.Extensions()["myext"])
+	}
+}
+
+func TestReadBinaryInvalidUTF8Header(t *testing.T) {
+	for _, v := range []string{"%FF", "a\xffb"} {
+		h := http.Header{}
+		h.Set("Ce-Specversion", "1.0")
+		h.Set("Ce-Id", "1")
+		h.Set("Ce-Source", "/")
+		h.Set("Ce-Type", "t")
+		h.Set("Ce-Subject", v)
+
+		_, err := binding.ToEvent(context.Background(), NewMessage(h, nil))
+		require.Error(t, err, v)
+		require.Contains(t, err.Error(), "invalid UTF-8")
+	}
+}
+
+func TestWriteReadEncodedRoundTrip(t *testing.T) {
+	in := event.New()
+	in.SetID("100% \"q\" €")
+	in.SetSource("/s")
+	in.SetType("t")
+	in.SetSubject("a,b  c")
+	in.SetExtension("myext", "ü %41")
+
+	req, err := http.NewRequest("POST", "http://localhost", nil)
+	require.NoError(t, err)
+	require.NoError(t, WriteRequest(context.Background(), binding.ToMessage(&in), req))
+	require.Equal(t, "100%25 %22q%22 %E2%82%AC", req.Header.Get("Ce-Id"))
+
+	out, err := binding.ToEvent(context.Background(), NewMessageFromHttpRequest(req))
+	require.NoError(t, err)
+	require.Equal(t, in.ID(), out.ID())
+	require.Equal(t, in.Subject(), out.Subject())
+	require.Equal(t, "ü %41", out.Extensions()["myext"])
+
+	bad := event.New()
+	bad.SetID("1")
+	bad.SetSource("/s")
+	bad.SetType("t")
+	bad.SetSubject("a\xffb")
+	req2, _ := http.NewRequest("POST", "http://localhost", nil)
+	require.Error(t, WriteRequest(context.Background(), binding.ToMessage(&bad), req2))
+}

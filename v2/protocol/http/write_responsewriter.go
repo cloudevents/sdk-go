@@ -65,6 +65,11 @@ func (b *httpResponseWriter) SetAttribute(attribute spec.Attribute, value interf
 	if err != nil {
 		return err
 	}
+	if mapping != ContentType {
+		if s, err = encodeHeaderValue(s); err != nil {
+			return err
+		}
+	}
 	b.rw.Header()[mapping] = append(b.rw.Header()[mapping], s)
 	return nil
 }
@@ -77,6 +82,9 @@ func (b *httpResponseWriter) SetExtension(name string, value interface{}) error 
 	// Http headers, everything is a string!
 	s, err := types.Format(value)
 	if err != nil {
+		return err
+	}
+	if s, err = encodeHeaderValue(s); err != nil {
 		return err
 	}
 	b.rw.Header()[extNameToHeaderName(name)] = []string{s}
