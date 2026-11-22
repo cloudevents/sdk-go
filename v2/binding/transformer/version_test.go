@@ -7,6 +7,7 @@ package transformer
 
 import (
 	"context"
+	"errors"
 	"net/url"
 	"testing"
 
@@ -57,4 +58,40 @@ func TestVersionTranscoder(t *testing.T) {
 			Transformers: binding.Transformers{Version(spec.V1)},
 		},
 	})
+}
+
+type errorWriter struct{ err error }
+
+func (w *errorWriter) SetAttribute(attribute spec.Attribute, value interface{}) error { return w.err }
+func (w *errorWriter) SetExtension(name string, value interface{}) error              { return nil }
+
+type simpleReader struct {
+	version spec.Version
+	attrs   map[spec.Kind]interface{}
+}
+
+func (r *simpleReader) GetAttribute(k spec.Kind) (spec.Attribute, interface{}) {
+	if a := r.version.AttributeFromKind(k); a != nil {
+		return a, r.attrs[k]
+	}
+	return nil, nil
+}
+func (r *simpleReader) GetExtension(name string) interface{} { return nil }
+
+func TestVersionTransformerPropagatesSetAttributeErrors(t *testing.T) {
+	expectedErr := errors.New("set attribute failed")
+	reader := &simpleReader{
+		version: spec.V03,
+		attrs: map[spec.Kind]interface{}{
+			spec.ID:          "test-id",
+			spec.Source:      "http://example.com/source",
+			spec.SpecVersion: "0.3",
+			spec.Type:        "test.type",
+		},
+	}
+
+	err := Version(spec.V1).Transform(reader, &errorWriter{err: expectedErr})
+
+	require.Error(t, err, "Version transformer must propagate errors from SetAttribute")
+	require.True(t, errors.Is(err, expectedErr), "got: %v", err)
 }
