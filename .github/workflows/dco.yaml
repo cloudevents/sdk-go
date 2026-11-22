@@ -36,11 +36,18 @@ jobs:
           for sha in $shas; do
             name=$(git log -1 --format=%an "$sha")
             email=$(git log -1 --format=%ae "$sha")
+            cname=$(git log -1 --format=%cn "$sha")
+            cemail=$(git log -1 --format=%ce "$sha")
             signoffs=$(git log -1 --format='%(trailers:key=Signed-off-by,valueonly)' "$sha")
             signed=0
             while IFS= read -r line; do
               line=${line,,}
-              [[ $line == *"<${email,,}>" ]] && signed=1
+              # Same rule as the DCO app: name and email each match the author or the committer.
+              for n in "${name,,}" "${cname,,}"; do
+                for e in "${email,,}" "${cemail,,}"; do
+                  [[ $line == "$n <$e>" ]] && signed=1
+                done
+              done
               # Bots such as dependabot sign off with a different email than they author with.
               [[ $name == *'[bot]' && $line == "${name,,} <"* ]] && signed=1
             done <<<"$signoffs"
