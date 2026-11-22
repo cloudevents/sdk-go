@@ -278,6 +278,18 @@ func WithGetHandlerFunc(fn nethttp.HandlerFunc) Option {
 	}
 }
 
+// WithHeadHandlerFunc sets the http HEAD handler func.
+// When unset, HEAD requests fall through to the receive path.
+func WithHeadHandlerFunc(fn nethttp.HandlerFunc) Option {
+	return func(p *Protocol) error {
+		if p == nil {
+			return fmt.Errorf("http HEAD handler func can not set nil protocol")
+		}
+		p.HeadHandlerFn = fn
+		return nil
+	}
+}
+
 // WithOptionsHandlerFunc sets the http OPTIONS handler func
 func WithOptionsHandlerFunc(fn nethttp.HandlerFunc) Option {
 	return func(p *Protocol) error {
