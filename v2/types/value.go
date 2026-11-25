@@ -38,6 +38,9 @@ func ParseInteger(v string) (int32, error) {
 	if err != nil {
 		return 0, err
 	}
+	if math.IsNaN(f) {
+		return 0, convertErr(int32(0), v)
+	}
 	if f > math.MaxInt32 || f < math.MinInt32 {
 		return 0, rangeErr(v)
 	}
@@ -107,6 +110,9 @@ func Validate(v interface{}) (interface{}, error) {
 		return int32(i), nil
 	case float32, float64:
 		f := reflect.ValueOf(v).Float()
+		if math.IsNaN(f) {
+			return nil, convertErr(int32(0), v)
+		}
 		if f > math.MaxInt32 || f < math.MinInt32 {
 			return nil, rangeErr(v)
 		}
