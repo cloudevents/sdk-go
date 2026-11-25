@@ -7,13 +7,12 @@ package nats_jetstream
 
 import (
 	"context"
-	"fmt"
 	"io"
-	"time"
 
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/binding/format"
 	"github.com/cloudevents/sdk-go/v2/binding/spec"
+	"github.com/cloudevents/sdk-go/v2/types"
 	"github.com/nats-io/nats.go"
 )
 
@@ -59,11 +58,13 @@ type natsBinaryMessageWriter struct {
 // SetAttribute implements MessageMetadataWriter.SetAttribute
 func (w *natsBinaryMessageWriter) SetAttribute(attribute spec.Attribute, value interface{}) error {
 	prefixedName := withPrefix(attribute.Name())
-	convertedValue := fmt.Sprint(value)
-	switch attribute.Kind().String() {
-	case spec.Time.String():
-		timeValue := value.(time.Time)
-		convertedValue = timeValue.Format(time.RFC3339Nano)
+	if value == nil {
+		w.header.Del(prefixedName)
+		return nil
+	}
+	convertedValue, err := types.Format(value)
+	if err != nil {
+		return err
 	}
 	w.header.Set(prefixedName, convertedValue)
 	return nil
@@ -72,7 +73,14 @@ func (w *natsBinaryMessageWriter) SetAttribute(attribute spec.Attribute, value i
 // SetExtension implements MessageMetadataWriter.SetExtension
 func (w *natsBinaryMessageWriter) SetExtension(name string, value interface{}) error {
 	prefixedName := withPrefix(name)
-	convertedValue := fmt.Sprint(value)
+	if value == nil {
+		w.header.Del(prefixedName)
+		return nil
+	}
+	convertedValue, err := types.Format(value)
+	if err != nil {
+		return err
+	}
 	w.header.Set(prefixedName, convertedValue)
 	return nil
 }
