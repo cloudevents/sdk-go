@@ -155,6 +155,46 @@ func TestMessageTransformDeleteExtension(t *testing.T) {
 	require.Equal(t, eventIn.ID(), id)
 }
 
+func TestMessageTransformSetAttribute(t *testing.T) {
+	eventIn := test.ConvertEventExtensionsToString(t, test.FullEvent())
+	req := httptest.NewRequest("POST", "http://localhost", nil)
+	msg := bindingtest.MustCreateMockBinaryMessage(eventIn)
+
+	err := WriteRequest(
+		binding.WithForceBinary(context.TODO()),
+		msg,
+		req,
+		transformer.SetAttribute(spec.Type, func(interface{}) (interface{}, error) {
+			return "updated.type", nil
+		}),
+		transformer.SetAttribute(spec.Subject, func(interface{}) (interface{}, error) {
+			return "updated-subject", nil
+		}),
+		transformer.SetAttribute(spec.DataContentType, func(interface{}) (interface{}, error) {
+			return "text/plain", nil
+		}),
+	)
+	require.NoError(t, err)
+
+	require.Equal(t, []string{"updated.type"}, req.Header.Values("Ce-Type"))
+	require.Equal(t, []string{"updated-subject"}, req.Header.Values("Ce-Subject"))
+	require.Equal(t, []string{"text/plain"}, req.Header.Values("Content-Type"))
+
+	messageOut := NewMessageFromHttpRequest(req)
+	_, gotType := messageOut.GetAttribute(spec.Type)
+	require.Equal(t, "updated.type", gotType)
+	_, gotSubject := messageOut.GetAttribute(spec.Subject)
+	require.Equal(t, "updated-subject", gotSubject)
+	_, gotDCT := messageOut.GetAttribute(spec.DataContentType)
+	require.Equal(t, "text/plain", gotDCT)
+
+	eventOut, err := binding.ToEvent(context.Background(), messageOut)
+	require.NoError(t, err)
+	require.Equal(t, "updated.type", eventOut.Type())
+	require.Equal(t, "updated-subject", eventOut.Subject())
+	require.Equal(t, "text/plain", eventOut.DataContentType())
+}
+
 // TestReadBinaryEmptyCeHeaderNoPanic verifies that a header whose name is
 // exactly the "Ce-" prefix (i.e. no attribute/extension name follows it)
 // does not cause ReadBinary to panic with an index-out-of-range error.

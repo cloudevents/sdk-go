@@ -70,7 +70,7 @@ func (b *httpResponseWriter) SetAttribute(attribute spec.Attribute, value interf
 			return err
 		}
 	}
-	b.rw.Header()[mapping] = append(b.rw.Header()[mapping], s)
+	b.rw.Header()[mapping] = []string{s}
 	return nil
 }
 
