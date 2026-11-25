@@ -123,7 +123,7 @@ func (b *httpRequestWriter) SetAttribute(attribute spec.Attribute, value interfa
 			return err
 		}
 	}
-	b.Header[mapping] = append(b.Header[mapping], s)
+	b.Header[mapping] = []string{s}
 	return nil
 }
 

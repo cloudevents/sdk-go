@@ -14,6 +14,7 @@ import (
 
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/binding/buffering"
+	"github.com/cloudevents/sdk-go/v2/binding/spec"
 	bindingtest "github.com/cloudevents/sdk-go/v2/binding/test"
 	"github.com/cloudevents/sdk-go/v2/binding/transformer"
 	"github.com/cloudevents/sdk-go/v2/event"
@@ -187,4 +188,47 @@ func TestWriteHttpResponseWriter_using_transformers_fails(t *testing.T) {
 	response := res.Result()
 
 	require.Equal(t, 500, response.StatusCode)
+}
+
+func TestWriteHttpResponseWriter_set_attribute(t *testing.T) {
+	eventIn := test.ConvertEventExtensionsToString(t, test.FullEvent())
+	messageIn := bindingtest.MustCreateMockBinaryMessage(eventIn)
+
+	res := httptest.NewRecorder()
+	err := WriteResponseWriter(
+		context.TODO(),
+		messageIn,
+		202,
+		res,
+		transformer.SetAttribute(spec.Type, func(interface{}) (interface{}, error) {
+			return "updated.type", nil
+		}),
+		transformer.SetAttribute(spec.Subject, func(interface{}) (interface{}, error) {
+			return "updated-subject", nil
+		}),
+		transformer.SetAttribute(spec.DataContentType, func(interface{}) (interface{}, error) {
+			return "text/plain", nil
+		}),
+	)
+	require.NoError(t, err)
+
+	response := res.Result()
+	require.Equal(t, 202, response.StatusCode)
+	require.Equal(t, []string{"updated.type"}, response.Header.Values("Ce-Type"))
+	require.Equal(t, []string{"updated-subject"}, response.Header.Values("Ce-Subject"))
+	require.Equal(t, []string{"text/plain"}, response.Header.Values("Content-Type"))
+
+	messageOut := NewMessageFromHttpResponse(response)
+	_, gotType := messageOut.GetAttribute(spec.Type)
+	require.Equal(t, "updated.type", gotType)
+	_, gotSubject := messageOut.GetAttribute(spec.Subject)
+	require.Equal(t, "updated-subject", gotSubject)
+	_, gotDCT := messageOut.GetAttribute(spec.DataContentType)
+	require.Equal(t, "text/plain", gotDCT)
+
+	eventOut, err := binding.ToEvent(context.Background(), messageOut)
+	require.NoError(t, err)
+	require.Equal(t, "updated.type", eventOut.Type())
+	require.Equal(t, "updated-subject", eventOut.Subject())
+	require.Equal(t, "text/plain", eventOut.DataContentType())
 }
