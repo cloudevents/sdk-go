@@ -179,10 +179,43 @@ func TestInteger(t *testing.T) {
 	x.err(float64(2*math.MinInt32), "cannot convert -4.294967296e+09 to int32: out of range")
 	x.err(float64(-2*math.MaxInt32), "cannot convert -4.294967294e+09 to int32: out of range")
 	x.err("12147483647", "cannot convert \"12147483647\" to int32: out of range")
+	x.err(math.Inf(1), "cannot convert +Inf to int32: out of range")
+	x.err(math.Inf(-1), "cannot convert -Inf to int32: out of range")
+	x.err("Inf", "cannot convert \"Inf\" to int32: out of range")
+	x.err("-Inf", "cannot convert \"-Inf\" to int32: out of range")
+	x.err(math.NaN(), "cannot convert NaN to int32")
+	x.err(float32(math.NaN()), "cannot convert NaN to int32")
+	x.err("NaN", "cannot convert \"NaN\" to int32")
+	x.err("nan", "cannot convert \"nan\" to int32")
+	x.err("NAN", "cannot convert \"NAN\" to int32")
 
 	x.err("X", "strconv.ParseFloat: parsing \"X\": invalid syntax")
 	x.err(true, "cannot convert true to int32")
 	x.err(nil, "invalid CloudEvents value: <nil>")
+}
+
+func TestIntegerNaNRejected(t *testing.T) {
+	for _, s := range []string{"NaN", "nan", "NAN"} {
+		got, err := types.ParseInteger(s)
+		require.Error(t, err, "ParseInteger(%q) unexpectedly succeeded with %d", s, got)
+		var convErr *types.ConvertErr
+		require.ErrorAs(t, err, &convErr)
+		assert.Zero(t, got)
+	}
+
+	nan64 := math.NaN()
+	nan32 := float32(math.NaN())
+	for _, v := range []interface{}{nan64, nan32, &nan64, &nan32} {
+		got, err := types.Validate(v)
+		require.Error(t, err, "Validate(%#v) unexpectedly succeeded with %#v", v, got)
+		var convErr *types.ConvertErr
+		require.ErrorAs(t, err, &convErr)
+		assert.Nil(t, got)
+
+		formatted, err := types.Format(v)
+		require.Error(t, err, "Format(%#v) unexpectedly succeeded with %q", v, formatted)
+		assert.Empty(t, formatted)
+	}
 }
 
 func TestString(t *testing.T) {
