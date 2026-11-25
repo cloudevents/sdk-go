@@ -8,6 +8,7 @@ package nats_jetstream
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"fmt"
 	"reflect"
 	"testing"
@@ -47,8 +48,8 @@ func Test_WriteMsg(t *testing.T) {
 					"ce-exbool":     []string{fmt.Sprint(true)},
 					"ce-exint":      []string{fmt.Sprint(42)},
 					"ce-exstring":   []string{"exstring"},
-					"ce-exbinary":   []string{fmt.Sprint([]byte{0, 1, 2, 3})},
-					"ce-exurl":      []string{fmt.Sprint(test.Source)},
+					"ce-exbinary":   []string{base64.StdEncoding.EncodeToString([]byte{0, 1, 2, 3})},
+					"ce-exurl":      []string{test.Source.String()},
 					"ce-extime":     []string{test.Timestamp.String()},
 				},
 			},
@@ -68,5 +69,20 @@ func Test_WriteMsg(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+// Forwarding a message that arrived in binary mode hands the writer a string for
+// every attribute, including time.
+func Test_WriteMsg_ForwardBinaryMessage(t *testing.T) {
+	gotHeader, err := WriteMsg(context.Background(), NewMessage(binaryReceiverMessage), new(bytes.Buffer))
+	if err != nil {
+		t.Fatalf("WriteMsg() error = %v", err)
+	}
+	if got, want := gotHeader.Get("ce-time"), test.Timestamp.String(); got != want {
+		t.Errorf("WriteMsg() ce-time got = %v, want %v", got, want)
+	}
+	if got, want := gotHeader.Get("ce-id"), testEvent.ID(); got != want {
+		t.Errorf("WriteMsg() ce-id got = %v, want %v", got, want)
 	}
 }
