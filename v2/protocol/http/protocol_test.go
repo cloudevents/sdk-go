@@ -11,6 +11,7 @@ import (
 	"net/http/httptest"
 	"strconv"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -59,6 +60,99 @@ func TestNew(t *testing.T) {
 			}
 		})
 	}
+}
+
+type authorizationTransport struct {
+	http.RoundTripper
+}
+
+func (tr authorizationTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	req = req.Clone(req.Context())
+	if req.Header == nil {
+		req.Header = make(http.Header)
+	}
+	req.Header.Set("Authorization", "Bearer test")
+	return tr.RoundTripper.RoundTrip(req)
+}
+
+func TestCustomTransportRejectsCrossOriginRedirect(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		option func(http.RoundTripper) Option
+	}{
+		{"WithRoundTripper", WithRoundTripper},
+		{"WithClient", func(tr http.RoundTripper) Option {
+			return WithClient(http.Client{Transport: tr})
+		}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var requests atomic.Int32
+			var receivedAuthorization atomic.Bool
+			destination := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				requests.Add(1)
+				receivedAuthorization.Store(r.Header.Get("Authorization") != "")
+				w.WriteHeader(http.StatusNoContent)
+			}))
+			defer destination.Close()
+			source := httptest.NewServer(http.RedirectHandler(destination.URL, http.StatusFound))
+			defer source.Close()
+
+			p, err := New(tc.option(authorizationTransport{http.DefaultTransport}))
+			require.NoError(t, err)
+			resp, err := p.Client.Get(source.URL)
+			require.NoError(t, err)
+			defer resp.Body.Close()
+
+			assert.Equal(t, http.StatusFound, resp.StatusCode)
+			assert.Zero(t, requests.Load())
+			assert.False(t, receivedAuthorization.Load())
+		})
+	}
+}
+
+func TestCustomTransportFollowsSameOriginRedirect(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/start" {
+			http.Redirect(w, r, "/end", http.StatusFound)
+			return
+		}
+		if r.URL.Path != "/end" || r.Header.Get("Authorization") != "Bearer test" {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	defer server.Close()
+
+	p, err := New(WithRoundTripper(authorizationTransport{http.DefaultTransport}))
+	require.NoError(t, err)
+	resp, err := p.Client.Get(server.URL + "/start")
+	require.NoError(t, err)
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusNoContent, resp.StatusCode)
+}
+
+func TestCustomTransportHonorsCheckRedirect(t *testing.T) {
+	destination := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	defer destination.Close()
+	source := httptest.NewServer(http.RedirectHandler(destination.URL, http.StatusFound))
+	defer source.Close()
+
+	called := false
+	client := http.Client{CheckRedirect: func(req *http.Request, via []*http.Request) error {
+		called = true
+		return nil
+	}}
+	p, err := New(WithClient(client), WithRoundTripper(authorizationTransport{http.DefaultTransport}))
+	require.NoError(t, err)
+	resp, err := p.Client.Get(source.URL)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	assert.True(t, called)
+	assert.Equal(t, http.StatusNoContent, resp.StatusCode)
 }
 
 func protocols(t *testing.T) []*Protocol {
